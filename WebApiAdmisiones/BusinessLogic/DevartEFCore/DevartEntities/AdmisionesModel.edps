@@ -1,0 +1,1235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityDeveloper Version="7.3.235.0">
+  <ModelSettings xmlns:ed="http://devart.com/schemas/EntityDeveloper/1.0" ConnectionStringInAppConfig="False" TargetFramework="Net90" DetectTPTInheritance="False" SynchronizeNullableReferenceTypes="True" EntityFrameworkCoreVersion="Version9" DetectFunctionBasedColumnDefault="True">
+    <Connection SaveConnection="False" Provider="Oracle.ManagedDataAccess.Client" />
+    <Generation>
+      <GeneratedFiles>
+        <File Name="ModelContext.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartContext" />
+        <File Name="AcaCodigoDedRelacionFilial.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AcaCodigosDedRegiman.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AcaCodigosNacionalidad.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AcaCodigosPaise.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AcaCodigosSexo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AcaTipoDocumento.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Banco.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="T3100.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Pais.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Ciudad.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Empresa.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Estado.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Persona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TituloPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CajasBp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CargoPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CategoriaCjppu.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="FormaCobroPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Hijo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Idioma.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="IdiomaPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Imagen.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="NivelPostgrado.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="NivelProducto.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="ParametrosPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="PersonaSegurosalud.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="PreregistroScp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="SeguroSalud.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Sucursal.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TarjetaMacroPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoCargo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoCuenta.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoOcupacion.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Titulo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="BoletoPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="NivelTitulo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CurriculumPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CaracteristicaPai.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="FormaCobroPersonaTemp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoEmpresa.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="VdParametros3100.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaCodigoDedRelacionFilialRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaCodigoDedRelacionFilialRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaCodigosDedRegimanRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaCodigosDedRegimanRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaCodigosNacionalidadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaCodigosNacionalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaCodigosPaiseRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaCodigosPaiseRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaCodigosSexoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaCodigosSexoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAcaTipoDocumentoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAcaTipoDocumentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IBancoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IBancoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IT3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IT3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPaisRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICiudadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEstadoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITituloPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITituloPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICajasBpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICajasBpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICargoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICargoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICategoriaCjppuRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICategoriaCjppuRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IFormaCobroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IFormaCobroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IHijoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IHijoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IIdiomaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IIdiomaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IIdiomaPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IIdiomaPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IImagenRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="INivelPostgradoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="INivelPostgradoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="INivelProductoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="INivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IParametrosPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IParametrosPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPersonaSegurosaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPersonaSegurosaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPreregistroScpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPreregistroScpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ISeguroSaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ISeguroSaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ISucursalRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ISucursalRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITarjetaMacroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITarjetaMacroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoCargoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoCargoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoCuentaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoCuentaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoOcupacionRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoOcupacionRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IBoletoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IBoletoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="INivelTituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="INivelTituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICurriculumPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICurriculumPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICaracteristicaPaiRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICaracteristicaPaiRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IFormaCobroPersonaTempRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IFormaCobroPersonaTempRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IVdParametros3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IVdParametros3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaCodigoDedRelacionFilialRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaCodigoDedRelacionFilialRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaCodigosDedRegimanRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaCodigosDedRegimanRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaCodigosNacionalidadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaCodigosNacionalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaCodigosPaiseRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaCodigosPaiseRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaCodigosSexoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaCodigosSexoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AcaTipoDocumentoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AcaTipoDocumentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="BancoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="BancoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="T3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="T3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PaisRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CiudadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EstadoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TituloPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TituloPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CajasBpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CajasBpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CargoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CargoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CategoriaCjppuRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CategoriaCjppuRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="FormaCobroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="FormaCobroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="HijoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="HijoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="IdiomaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="IdiomaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="IdiomaPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="IdiomaPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ImagenRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="NivelPostgradoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="NivelPostgradoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="NivelProductoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="NivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ParametrosPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ParametrosPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PersonaSegurosaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PersonaSegurosaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PreregistroScpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PreregistroScpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="SeguroSaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="SeguroSaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="SucursalRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="SucursalRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TarjetaMacroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TarjetaMacroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoCargoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoCargoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoCuentaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoCuentaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoOcupacionRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoOcupacionRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="BoletoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="BoletoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="NivelTituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="NivelTituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CurriculumPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CurriculumPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CaracteristicaPaiRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CaracteristicaPaiRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="FormaCobroPersonaTempRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="FormaCobroPersonaTempRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="VdParametros3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="VdParametros3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="DtoAcaCodigoDedRelacionFilialDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAcaCodigosDedRegimanDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAcaCodigosNacionalidadDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAcaCodigosPaiseDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAcaCodigosSexoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAcaTipoDocumentoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoBancoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoT3100Devart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEstadoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTituloPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCajasBpDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCargoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCategoriaCjppuDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoFormaCobroPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoHijoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoIdiomaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoIdiomaPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoImagenDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoNivelPostgradoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoNivelProductoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoParametrosPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPersonaSegurosaludDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPreregistroScpDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoSeguroSaludDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoSucursalDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTarjetaMacroPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoCargoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoCuentaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoOcupacionDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTituloDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoBoletoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoNivelTituloDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCurriculumPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCaracteristicaPaiDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoFormaCobroPersonaTempDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoVdParametros3100Devart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="AcaCodigoDedRelacionFilialConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AcaCodigosDedRegimanConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AcaCodigosNacionalidadConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AcaCodigosPaiseConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AcaCodigosSexoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AcaTipoDocumentoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="BancoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="T3100Converter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EstadoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TituloPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CajasBpConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CargoPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CategoriaCjppuConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="FormaCobroPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="HijoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="IdiomaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="IdiomaPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ImagenConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="NivelPostgradoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="NivelProductoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ParametrosPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PersonaSegurosaludConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PreregistroScpConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="SeguroSaludConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="SucursalConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TarjetaMacroPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoCargoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoCuentaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoOcupacionConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TituloConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="BoletoPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="NivelTituloConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CurriculumPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CaracteristicaPaiConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="FormaCobroPersonaTempConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoEmpresaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="VdParametros3100Converter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+      </GeneratedFiles>
+    </Generation>
+    <DatabaseFirstNamingRules>
+      <EntitySet PluralizationName="Pluralize" />
+      <Class UseSchemaAsPrefix="False" PluralizeCollectionNavigationPropertyName="True" AddConstraintColumnsToNavigationPropertyName="False" RemoveUnderscores="True" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Capitalized" AddPrefix="" AddSuffix="" RemovePrefixes="T_" RemoveSuffixes="" PluralizationName="Singularize" />
+      <Property RemoveUnderscores="True" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Capitalized" AddPrefix="" AddSuffix="" RemovePrefixes="T_" RemoveSuffixes="" PluralizationName="Unchanged" RemoveGuid="False" />
+    </DatabaseFirstNamingRules>
+    <ModelFirst StorageSynchronizationEnabled="False" TargetSchema="CREADOR" TargetProviderName="Devart.Data.Oracle">
+      <TargetServer Server="Oracle" ServerVersion="19c" />
+      <ModelFirstNamingRules>
+        <Table RemoveUnderscores="False" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Unchanged" AddPrefix="" AddSuffix="" RemovePrefixes="" RemoveSuffixes="" PluralizationName="Pluralize" />
+        <Column RemoveUnderscores="False" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Unchanged" AddPrefix="" AddSuffix="" RemovePrefixes="" RemoveSuffixes="" PluralizationName="Unchanged" />
+      </ModelFirstNamingRules>
+    </ModelFirst>
+    <Diagrams>
+      <Diagram Name="Diagram1" DefaultDiagram="True" />
+    </Diagrams>
+    <Templates>
+      <Template Name="EF Core" Description="Use this template to generate classes for an Entity Framework Core model." Enabled="True" File=".\ADMISIONESModel.EF Core.tmpl">
+        <ed:Property Name="ValidationFramework" Type="EntityDeveloper.TemplateEngine.ValidationFramework, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationFramework>None</ValidationFramework>
+        </ed:Property>
+        <ed:Property Name="ValidationErrorMessages" Type="EntityDeveloper.TemplateEngine.ValidationErrorMessages, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationErrorMessages xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="ContextOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartContext</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="EntitiesOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="EnumOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder />
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="FilePerClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="PropertyChangeNotifiers" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="PropertyChangePartialMethods" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ImplementEquals" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ImplementCloneable" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateDummyComments" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateGeneratedCodeAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="IncludeEnvironmentVariables" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="JsonFileBasePath" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="PrimitiveDefaultValueGeneration" Type="EntityDeveloper.DefaultValueBehavior, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <DefaultValueBehavior>Literal</DefaultValueBehavior>
+        </ed:Property>
+        <ed:Property Name="CollectionPropertyType" Type="EntityDeveloper.EntityFrameworkCore.EFCoreCollectionPropertyType, EntityDeveloper.Orm.EntityFrameworkCore, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <EFCoreCollectionPropertyType>Default</EFCoreCollectionPropertyType>
+        </ed:Property>
+        <ed:Property Name="CollectionInitializationType" Type="EntityDeveloper.EntityFrameworkCore.EFCoreCollectionInitializationType, EntityDeveloper.Orm.EntityFrameworkCore, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <EFCoreCollectionInitializationType>Default</EFCoreCollectionInitializationType>
+        </ed:Property>
+        <ed:Property Name="NullableReferenceTypes" Type="EntityDeveloper.ReferenceTypeNullability, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ReferenceTypeNullability>Default</ReferenceTypeNullability>
+        </ed:Property>
+        <ed:Property Name="SelfContainedEntityConfiguration" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="EntitiesConfigurationOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder />
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="SerializationLibrary" Type="EntityDeveloper.SerializationLibrary, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <SerializationLibrary>None</SerializationLibrary>
+        </ed:Property>
+        <ed:Property Name="SerializeOriginalColumnNames" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="SerializeNullValues" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="SerializeNavigationProperties" Type="EntityDeveloper.NavigationPropertySerializationBehavior, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <NavigationPropertySerializationBehavior>All</NavigationPropertySerializationBehavior>
+        </ed:Property>
+        <ed:Property Name="GenerateSerializableAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateDataContracts" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+      </Template>
+      <Template Name="Repository And Unit of Work" Description="Use this template to generate Repositories and a Unit of Work for an Entity Framework Core model." Enabled="True" File=".\ADMISIONESModel.Repository And Unit of Work.tmpl">
+        <ed:Property Name="InterfaceLayerOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="DataAccessLayerOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartial" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="InterfaceLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="DataAccessLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="GenerateMemoryRepository" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenericRepositoryPattern" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateUnitOfWorkRepositoryProperties" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+      </Template>
+      <Template Name="Data Transfer Object" Description="Use this template to generate Data Transfer Object (DTO) classes." Enabled="True" PredefinedTemplateName="Data Transfer Object C#">
+        <ed:Property Name="ValidationFramework" Type="EntityDeveloper.TemplateEngine.ValidationFramework, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationFramework>DataAnnotations</ValidationFramework>
+        </ed:Property>
+        <ed:Property Name="ValidationErrorMessages" Type="EntityDeveloper.TemplateEngine.ValidationErrorMessages, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationErrorMessages xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="FilePerClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="DtosOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="ConvertersOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialDtos" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialConverters" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="DtoNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>AppLogic.DevartDTOs</string>
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>https://github.com/DesarrolloORT/api-fdp.git
+</string>
+        </ed:Property>
+        <ed:Property Name="NullableReferenceTypes" Type="EntityDeveloper.ReferenceTypeNullability, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ReferenceTypeNullability>Enable</ReferenceTypeNullability>
+        </ed:Property>
+        <ed:Property Name="DtoClassNamePrefix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Dto</string>
+        </ed:Property>
+        <ed:Property Name="DtoClassNameSuffix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Devart</string>
+        </ed:Property>
+        <ed:Property Name="GenerateDtoConstructors" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="UseDtoClassesInAssociations" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateConverters" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="ConverterClassNamePrefix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string />
+        </ed:Property>
+        <ed:Property Name="ConverterClassNameSuffix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Converter</string>
+        </ed:Property>
+        <ed:Property Name="SerializationLibrary" Type="EntityDeveloper.SerializationLibrary, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <SerializationLibrary>None</SerializationLibrary>
+        </ed:Property>
+        <ed:Property Name="SerializeNavigationProperties" Type="EntityDeveloper.NavigationPropertySerializationBehavior, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <NavigationPropertySerializationBehavior>None</NavigationPropertySerializationBehavior>
+        </ed:Property>
+        <ed:Property Name="WcfDataContractAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="WcfDataMemberOnNavigationProperties" Type="EntityDeveloper.WcfDataMemberGenerationBehavior, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <WcfDataMemberGenerationBehavior>None</WcfDataMemberGenerationBehavior>
+        </ed:Property>
+      </Template>
+    </Templates>
+    <AttributeAssemblies />
+    <UpdateFromDatabaseExcludes>
+      <Exclude Name="USUARIO_LOCKEADOR_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="PROCESO_LOCKEADOR_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ID_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ID_ACTIVIDAD" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="FECHA_REALIZADO_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ID_ESTADO_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="USUARIO_REALIZADO_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ID_ACCION_RESULTADO" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="OBSERVACIONES_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ID_PRUEBA" Table="CREADOR.T_ACCION" Type="Column" />
+      <Exclude Name="ACCION_KEY" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="PERSONA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ID_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="NOMBRE_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="FECHA_INICIO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="FECHA_FIN_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="ALIAS_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="ID_TIPO_PAQ_COM" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="VISIBLE_INTERNET_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="ANIO_MES_PRIMER_PAGO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="CANTIDAD_CUOTAS_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="FECHA_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="PROCESADO_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="MAILDOC_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="ID_MITADANIO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
+      <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
+      <Exclude Name="CLAVE_COMIENZO_UNICA" Table="CREADOR.T_COMIENZO" Type="Constraint" />
+      <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="NOMBRE_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="DESCRIPCION_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="FECHA_CREACION_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="ID_ESCUELA" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="CLAVE_DEPTO_RPG" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_RESPONSABLE" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="PTOID" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="NOMBRE_COORD_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="EMAIL_COORD_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USUARIO_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="FECHA_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="HORA_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="PROCESO_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_SECRETARIO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="ALIAS_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="GENERO_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="ID_ESCUELA_REAL" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_CONEST_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_COOGRAD_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_SECRETARIO_ADJUNTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="MAIL_BEDELIA_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="MAIL_FIRMA_ONLINE_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="USERNAME_COOACAD_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="ID_ESCUELA_CONTABLE" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="IP_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="RED_SOCIAL_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
+      <Exclude Name="DEPARTAMENTO_DUPLICADO_7101" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELA_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="NOMBRE_DEPTO_DUPLICADO_7092" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="CODIGO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="NOMBRE" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="OBSERVACIONES" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_PAIS" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_ESTADO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_CIUDAD" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_POSTAL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_FIDELIDAD_DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO1" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO2" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO3" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO4" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO5" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FAX1" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FAX2" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="EMAIL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="USUARIO_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HORA_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_FIDELIDAD_DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_TIPO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_VIGENCIA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="INSTITUCION_EDUCATIVA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="RUC_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="RAZONSOCIAL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_FACTURACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HABILITADA_INSCRIPCIONES" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_PAGOS_FINANCIADOS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_CANJE_CONTABLE_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_VOUCHER_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CLIENTE_PSIG" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_BACHILLERATO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_GRADO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_POSTGRADO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_CUIDANTIAS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="EMAIL_CUIDANTIAS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="NOMBRE_MAY_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_SGI_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="ID_SEGMENTO_LICEO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="T_EMPRESA_CLAVE_DUPLICADA_0084" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_008" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="NOMBRE_EMPRESA_DUPLICADO_0069" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="ID_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="NOMBRE_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="OBSERVACIONES_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="FECHA_CREACION_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="DESCRIPCION_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="USERNAME_RESPONSABLE" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="ORDEN_LISTADO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="ALIAS_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="ID_CENTRO_GASTOS_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="GENERO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="PARAWEB_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="USERNAME_VICEDECANO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="ES_FACULTAD_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="USERNAME_SECRETARIO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
+      <Exclude Name="ESCUELA_DUPLICADA_7113" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="CG_ESCUELA_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="USERRESP_ESCU_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="NOMBRE_ESCUELA_DUPLICADO_7104" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="FACTURADO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="AUTORIZADO_SIN_PAGO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ULTIMA_CUOTA_PAGA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CODIGO_EMPRESA" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_INSCRIPTO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_PLAN_PAGO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_TIPO_DESERCION" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_OFERTA" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="SALDO_FAVOR_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_COMPROMISO_PAGO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO_COMP_PAGO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="BAJA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_DESERCION_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_DESERCION_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_SIN_PAGO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="PORCENTAJE_PAGO_EMPRESA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="PORCENTAJE_DTO_TOTAL_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="PORCENTAJE_TOTAL_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="AUTORIZADOR_SIN_PAGO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="HORA_BAJA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="BAJA_AUTOMATICA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="MOTIVO_BAJA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_CAUSAL_INSCR_PAGO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CLAVE_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_GRUPO_OFERTA" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_COMPROMISO_PAGO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_SOLICITUD_INSCRIPCION" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_DOCUMENTO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="IMPORTE_PAGO_EMPRESA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="MONEDA_PAGO_EMPRESA_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_CAMBIO_ESTADO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="DEBITO_AUTOMATICO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_PRE_RECIBO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ESTADO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_VTO_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_INSCRIPTO_PRODUCTO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CERTIFICADA" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_PRODUCTO_REAL" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_CONFORME_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_VTO_CONFORME_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="MONTO_CONFORME_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_EMPRESA_CANJE" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_CONVENIO" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="HORA_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="USUARIO_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="VTO_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="OBSERVA_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="MONTO_CONFORME_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CURSA_EXTERIOR_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_GRUPO_OFERTA_AUX" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ACEPTO_SANTANDER_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CUOTA_COMPROMISO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="USERNAME_DECIDIO_SEGUIR_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="FECHA_DECIDIO_SEGUIR_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CUMPLIMIENTO_CONFORME_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CUMPLIMIENTO_PLUS_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="CUOTA_CONFORME_INSCR" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_PRODUCTO_PCOUNTER" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="ID_MOTIVO_BAJA_INSCRIPCION" Table="CREADOR.T_INSCRIPTO" Type="Column" />
+      <Exclude Name="INSCRIPTO_PRIMARY" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESA_INSCRIPTO_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="OFERTA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PERSONA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CAUSAINSCRPAGO_INSCRIPTO_FOREI" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRODUCTO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRODPCOUNTER_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="ID_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="DESCRIPCION_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="FECHA_INICIAL_INSTANCIA_WF" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="FECHA_FINAL_INSTANCIA_WF" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="ID_OBJETO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="FECHA_VTO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="SOLICITANTE_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="XML_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="FECHA_CANCELADO_INSTANCIA_WF" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="MOTIVO_CANCELACION" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="ID_TRAMITE_BANDEJA" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="RESOLUCION" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="ID_CATEGORIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
+      <Exclude Name="INSTANCIA_WORKFLOW_KEY" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="SOLICI_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="ID_FORMA_CONTACTO" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="CONTACTADOR_INTERES" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="OBSERVACIONES_INTERES" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="ID_LUGAR" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="ID_GRADO_PUREZA" Table="CREADOR.T_INTERES" Type="Column" />
+      <Exclude Name="INTERES_KEY" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PERSONA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PROCESO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PERSONAPROCESO_INTERES_UNI" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="ID_TIPO_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_GRADO_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_GRADO_INTERES_ANT" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_TURNO" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_ALTA_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="USUARIO_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="IDGRADOANT_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
+      <Exclude Name="INTERES_PRODUCTO_KEY" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="INTERES_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="PRODUCTO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="TURNO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USUAMOD_INTEREPRODUCT_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ID_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="NOMBRE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="ID_TITULO" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="SEMESTRE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="GENERA_PLAN_ANCLA_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="MINIMO_CREDITOS_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="OBSERVACIONES_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="CARRERA_RPG" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="ID_TIPO_PAQ_COM" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="VISIBLE_INTERNET_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="ADMITE_DESCUENTOS_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="ESTADO_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="CANT_CUOTAS_AJUSTE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
+      <Exclude Name="PAQUETE_PRIMARY" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="PRODUCTO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="TIPOPAQUETECOM_PAQUETE_INVALID" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="TITULO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="ID_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="NOMBRE_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="CANTIDAD_CUOTAS_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="PORCENTAJE_RECARGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="PORCENTAJE_MATRICULA" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="PORCENTAJE_SENIA_MINIMA" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="ID_MONEDA" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="ID_REGIMEN_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
+      <Exclude Name="PLAN_PAGO_PRIMARY" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
+      <Exclude Name="REGPLANPAG_PLANPAGO_INV" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
+      <Exclude Name="MONEDA_PLAN_PAGO_INVALIDO" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
+      <Exclude Name="ESTADO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="FECHA_FIN_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ID_TIPO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="NOMBRE_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ZAFID" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="MARCADO_PARAWEB_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="NRO_MES_PARAWEB_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="NRO_ANIO_PARAWEB_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="COMIENZO_SEMESTRE1_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA40PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA20PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="INICIO_PERIODO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="FIN_PERIODO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="HABILITADO_INTERES_SITIO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA50PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA60PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA30PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="ANTICIPADA70PORCIENTO_PROCESO" Table="CREADOR.T_PROCESO" Type="Column" />
+      <Exclude Name="PROCESO_KEY" Table="CREADOR.T_PROCESO" Type="Constraint" />
+      <Exclude Name="TIPOPROCESO_PROCESO_INV" Table="CREADOR.T_PROCESO" Type="Constraint" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="DESCRIPCION_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_CREACION_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_CADUCIDAD_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="DESTINO_REGALIA_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="DEPARTAMENTO_RPG" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="CARRERA_RPG" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="FICTICIO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="PERMITE_INTERESADO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_NIVEL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_CENTRO_COSTOS" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_CENTRO_GASTOS" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ALIAS_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="INTERMEDIO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="INSCRIBIBLE_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="MESES_DURACION_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_AGRUPACION" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="EMAIL_DISTRIB_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="COMPUTO_ESPECIAL_HL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="MIN_PAC_HONORES_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_COORD_ACAD_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="EMAIL_COORD_ACAD_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="CERTIFICACION_EXTERNA_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_CC_ANTES_PSIG" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_CG_ANTES_PSIG" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_NIVEL_POSTGRADO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_NIVEL_WEB_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ORIENTACION_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="USERNAME_COOACAD_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="TITULO_INTERMEDIO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="TITULO_FINAL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="RECONOCIMIENTO_MEC_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="TRAMITE_RECONOCIM_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="OTRO_RECONOCIMIENTO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="EMAIL_CONTACTO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="TELEFONO_CONTACTO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="DURACION_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="HORARIO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="REQUISITO_INGRESO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="COSTO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="REQUISITO_GRAD_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="FOLLETO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ACTIVO_WEB_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_WEB_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="EMAIL_ACTIVIDADES_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="DESC_AUTO_GRADUADO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="ENCGRAD_RECTOR_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="VISIBLE_ADMISIONES_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="COMIENZOENAGOSTO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="APLICA_CANILLA_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="USERNAME_COOADJ_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="USERNAME_COOADJ_SEG_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="EXCLUIR_CARTA_FRESCO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="CAJA_PROFESIONAL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="PRODUCTO_DUPLICADO_7081" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="DEPARTAMENTO_PRODUCTO_INV_7507" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROCOSTOS_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVEL_PRODUCTO_PROD_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ALIAS_PRODUCTO_UNICA" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NOMBRE_PRODUCTO_DUPLICADO_7073" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ID_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="ID_COMIENZO" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="ID_COMIENZO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="ID_TIPO_BECA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_LIMITE_GUIA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_ENTREGA_DJ_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_EXAMEN_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="CUPO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_EXAMEN_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_PRESENTACION_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_LIMITE_GUIA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_ENTREGA_DJ_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_RESULTADO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_RESULTADO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="ID_LOCALIDAD" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="ESTADO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_CADUCIDAD_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="CONTROL_INSCR_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HABILITADA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="LUGAR_RESULTADO_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="DURACION_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="FECHA_DIFUSIONWEB_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="HABILITADO_SITIOADMI_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
+      <Exclude Name="PRUEBA_PRIMARY" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="COMIENZO_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="TIPO_BECA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="DOCUMENTO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="SEXO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="OBSERVACIONES_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="FECHA_BAJA_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ACCIONES_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ACCIONES_FUTURAS_SOLICITU_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_ESTADO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="PRIMER_APELLIDO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="SEGUNDO_APELLIDO_SOLICITU_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="PRIMER_NOMBRE_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="SEGUNDO_NOMBRE_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="DIRECCION_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_PAIS" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_ESTADO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_CIUDAD" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="TELEFONO1_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="TELEFONO2_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="EMAIL_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="FECHA_NACIMIENTO_SOLICITU_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="TIPO_DOCUMENTO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="INTERES_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="USUARIO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="PROCESOFORMACONTACTO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_INSTITUCION" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ANIO_BACHILLER_PER" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_ORIENTACION" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_ANIO_BACHILLER" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="SE_ENVIO_MAIL_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_TIPO_ACCION" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
+      <Exclude Name="SOLICITUD_ALTA_KEY" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="CIUDAD_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ESTADO_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PAIS_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="INSTIT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="OREINT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_SOLICIALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PERSONA_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PROCESO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PRODUCTO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ID_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="NOMBRE_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ID_PAQUETE" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ID_COMIENZO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ID_CALENDARIO_PAGO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ID_MONEDA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="OBSERVACIONES_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ESTADO_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_COMIENZO" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="DEP_RPG" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="CARR_RPG" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_COM_RPG" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="SEMESTRE_RPG" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_INTERNET_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_REFERENCIA_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="CANCELADA_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_REFERENCIA_F_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="MARCA_DESERTORES_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="FECHA_RESERVA_LAB_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ADMITE_DESCUENTOS_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="ID_CALENDARIO_PAGO_6M6" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="MARCA_DESERTOR_6M6_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
+      <Exclude Name="SUPRAOFERTA_PRIMARY" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="COMIENZO_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="PAQUETE_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="ID_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="NOMBRE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="CODIGO_RPG_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="PORCENTAJE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="ES_FIJO_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="ALIAS_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="REIMPUTABLE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="VIGENCIA_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="ID_FAMILIA_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="REIMPUTABLELPD_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="ID_GRUPO_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="DETALLE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="TOPEADO_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="APLICA_IDT_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
+      <Exclude Name="TIPO_DESCUENTO_PRIMARY" Table="CREADOR.T_TIPO_DESCUENTO" Type="Constraint" />
+      <Exclude Name="FAMTIPODESC_TIPODESC_INV" Table="CREADOR.T_TIPO_DESCUENTO" Type="Constraint" />
+      <Exclude Name="CODIGO_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="NOMBRE" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="OBSERVACIONES" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ABREVIATURA_ETIQUETA" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="UBICACION_ETIQUETA_IZQ" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="BACHILLERATO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_NIVEL_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_NIVEL_POSTGRADO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ABREVIATURA_ETIQUETA_FEM" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ORIENTACION_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_ANIO_BACHILLER" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ORIENTACION_NEW_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="DOCENTE_TERCIARIO_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="T_TITULO_CLAVE_DUPLICADA_0152" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NIVELTITULO_TITULO_FORE" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTGRADO_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NOMBRE_DUPLICADO_0146" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="ID_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="DESCRIPCION_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="OBJETIVO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="METODOLOGIA_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="OBSERVACIONES_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_CREACION_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_CADUCIDAD_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_RECONOCIMIENTO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="DURACION_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="DEPARTAMENTO_TITULO_RPG" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="CARRERA_TITULO_RPG" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="PLAN_TITULO_RPG" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="MINIMO_MATERIAS_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="MINIMO_CREDITOS_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="MINIMO_PAC_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="MAXIMO_REVALIDAS_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_TIPO_DIPLOMA" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO1_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO2_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_UNIDAD_TIEMPO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_REQUISITO_PAC" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ESTADO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="PLAN_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_MASC1_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_MASC2_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_FEM1_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="NOMBRE_EXTENSO_FEM2_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ACTUALIZACION_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="PERMITE_ALTA_PLAN_GUIA_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="INTERMEDIO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ANIO_MES_PLAN" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="SE_PRESENTA_MEC_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_PRESENTACION_MEC_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="CODIGO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="CERTIFICADO_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="CANT_BLOQUES_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_REQUISITO_PREVIA" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_REQUISITO_PREVIA_ALT" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_REQUISITO_PREVIA_OTR" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="FECHA_ULT_ACT_PREREQ" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="CUARENTENA_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="ID_FAMILIA_TITULO" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="TIPO_TITULO_ORT" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="MAXIMO_CREDITOS_REV" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="VALIDADO_TITULO_ORT" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="PREVIAS_PARCIAL_IGUAL_TOTAL" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="GENERICO_FAMILIA" Table="CREADOR.T_TITULO_ORT" Type="Column" />
+      <Exclude Name="TITULO_DUPLICADO_7028" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTO_TITULO_INVALIDO_7502" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="CODIGOTITULO_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="TITULO_NOMBRE_DUPLICADO_9050" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
+      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="CG_ESCUELA_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="USERRESP_ESCU_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USUAMOD_INTEREPRODUCT_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="TIPOPAQUETECOM_PAQUETE_INVALID" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="REGPLANPAG_PLANPAGO_INV" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
+      <Exclude Name="MONEDA_PLAN_PAGO_INVALIDO" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
+      <Exclude Name="TIPOPROCESO_PROCESO_INV" Table="CREADOR.T_PROCESO" Type="Constraint" />
+      <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="FAMTIPODESC_TIPODESC_INV" Table="CREADOR.T_TIPO_DESCUENTO" Type="Constraint" />
+      <Exclude Name="NIVELTITULO_TITULO_FORE" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTGRADO_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+    </UpdateFromDatabaseExcludes>
+  </ModelSettings>
+</EntityDeveloper>
