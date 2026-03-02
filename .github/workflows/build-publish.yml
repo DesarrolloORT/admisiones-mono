@@ -1,0 +1,57 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches: [develop, testing, main]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      repository-projects: read
+
+    steps:
+      - name: Checkout code (incluye submódulos privados)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN }}  # << token con read a Core
+
+      - name: Set up QEMU (cross-platform)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tags
+        id: set_tags
+        run: |
+          case "${{ github.ref_name }}" in
+            "develop") ENV_SUFFIX="-dev";  LATEST_TAG="develop-latest" ;;
+            "testing") ENV_SUFFIX="-test"; LATEST_TAG="testing-latest" ;;
+            "main")    ENV_SUFFIX="";      LATEST_TAG="latest" ;;
+            *)         ENV_SUFFIX="-${{ github.ref_name }}"; LATEST_TAG="${{ github.ref_name }}-latest" ;;
+          esac
+          TAGS="ghcr.io/desarrolloort/api-fdp:${{ github.sha }}${ENV_SUFFIX}"
+          TAGS="${TAGS},ghcr.io/desarrolloort/api-fdp:${LATEST_TAG}"
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: FichaDePersona/WebApiFDP/Dockerfile
+          push: true
+          tags: ${{ steps.set_tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}

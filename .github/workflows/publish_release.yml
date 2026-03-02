@@ -1,0 +1,62 @@
+
+name: 🚀 Publish API Release
+
+on:
+  push:
+    branches:
+      - main
+
+
+env:
+  PROJECT_PATH: FichaDePersona/WebApiFDP/WebApiFDP.csproj
+  PUBLISH_DIR: ./publish
+  DOTNET_ROOT: /usr/share/dotnet
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout del código
+        uses: actions/checkout@v4
+
+      - name: 🛠 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 🏗 Publicar WebApiFDP
+        run: |
+          dotnet publish ${{ env.PROJECT_PATH }} \
+            -c Release \
+            -o ${{ env.PUBLISH_DIR }}
+
+      - name: 📦 Comprimir como .tar.gz
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/app-${{ github.run_number }}.tar.gz -C ${{ env.PUBLISH_DIR }} .
+
+      - name: 🏷 Crear tag
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag v1.0.${{ github.run_number }} -m "Release v1.0.${{ github.run_number }}"
+          git push origin v1.0.${{ github.run_number }}
+
+      - name: 📦 Crear GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+            Release automática generada desde el push a `main`.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⬆ Subir .tar.gz al release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          files: artifacts/app-${{ github.run_number }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
