@@ -1,0 +1,483 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityDeveloper Version="7.3.193.0">
+  <ModelSettings xmlns:ed="http://devart.com/schemas/EntityDeveloper/1.0" ConnectionStringInAppConfig="False" TargetFramework="Net90" DetectTPTInheritance="False" SynchronizeNulableReferenceTypes="True" EntityFrameworkCoreVersion="Version9" DetectFunctionBasedColumnDefault="True">
+    <Connection SaveConnection="False" Provider="Oracle.ManagedDataAccess.Client" />
+    <Generation>
+      <GeneratedFiles>
+        <File Name="ModelContext.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartContext" />
+        <File Name="Pais.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Ciudad.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Estado.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Persona.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="IUnitOfWork.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPaisRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPaisRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICiudadRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICiudadRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEstadoRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEstadoRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPersonaRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPersonaRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PaisRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PaisRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CiudadRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CiudadRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EstadoRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EstadoRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PersonaRepository.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PersonaRepository.Generated.cs" DestinationFolder="C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="DtoPaisDevart.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEstadoDevart.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPersonaDevart.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="PaisConverter.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CiudadConverter.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EstadoConverter.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PersonaConverter.cs" DestinationFolder="C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartConverters" />
+      </GeneratedFiles>
+    </Generation>
+    <DatabaseFirstNamingRules>
+      <EntitySet PluralizationName="Pluralize" />
+      <Class UseSchemaAsPrefix="False" PluralizeCollectionNavigationPropertyName="True" AddConstraintColumnsToNavigationPropertyName="False" RemoveUnderscores="True" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Capitalized" AddPrefix="" AddSuffix="" RemovePrefixes="T_" RemoveSuffixes="" PluralizationName="Singularize" />
+      <Property RemoveUnderscores="True" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Capitalized" AddPrefix="" AddSuffix="" RemovePrefixes="T_" RemoveSuffixes="" PluralizationName="Unchanged" RemoveGuid="False" />
+    </DatabaseFirstNamingRules>
+    <ModelFirst StorageSynchronizationEnabled="False" TargetSchema="CREADOR" TargetProviderName="Devart.Data.Oracle">
+      <TargetServer Server="Oracle" ServerVersion="19c" />
+      <ModelFirstNamingRules>
+        <Table RemoveUnderscores="False" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Unchanged" AddPrefix="" AddSuffix="" RemovePrefixes="" RemoveSuffixes="" PluralizationName="Pluralize" />
+        <Column RemoveUnderscores="False" AddUnderscores="False" RemoveInvalidCharacters="True" CodeCase="Unchanged" AddPrefix="" AddSuffix="" RemovePrefixes="" RemoveSuffixes="" PluralizationName="Unchanged" />
+      </ModelFirstNamingRules>
+    </ModelFirst>
+    <Diagrams>
+      <Diagram Name="ModelContextDiagram" DefaultDiagram="True" />
+    </Diagrams>
+    <Templates>
+      <Template Name="EF Core" Description="Use this template to generate classes for an Entity Framework Core model." Enabled="True" File=".\APIModel.EF Core.tmpl">
+        <ed:Property Name="ValidationFramework" Type="EntityDeveloper.TemplateEngine.ValidationFramework, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationFramework>DataAnnotations</ValidationFramework>
+        </ed:Property>
+        <ed:Property Name="ValidationErrorMessages" Type="EntityDeveloper.TemplateEngine.ValidationErrorMessages, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationErrorMessages xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="ContextOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartContext</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="EntitiesOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="EnumOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\DevartEntities</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="FilePerClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>https://github.com/DesarrolloORT/back-template.git</string>
+        </ed:Property>
+        <ed:Property Name="PropertyChangeNotifiers" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="PropertyChangePartialMethods" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ImplementEquals" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="ImplementCloneable" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateDummyComments" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateGeneratedCodeAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="IncludeEnvironmentVariables" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="JsonFileBasePath" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="PrimitiveDefaultValueGeneration" Type="EntityDeveloper.DefaultValueBehavior, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <DefaultValueBehavior>Literal</DefaultValueBehavior>
+        </ed:Property>
+        <ed:Property Name="CollectionPropertyType" Type="EntityDeveloper.EntityFrameworkCore.EFCoreCollectionPropertyType, EntityDeveloper.Orm.EntityFrameworkCore, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <EFCoreCollectionPropertyType>Default</EFCoreCollectionPropertyType>
+        </ed:Property>
+        <ed:Property Name="CollectionInitializationType" Type="EntityDeveloper.EntityFrameworkCore.EFCoreCollectionInitializationType, EntityDeveloper.Orm.EntityFrameworkCore, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <EFCoreCollectionInitializationType>Default</EFCoreCollectionInitializationType>
+        </ed:Property>
+        <ed:Property Name="NullableReferenceTypes" Type="EntityDeveloper.ReferenceTypeNullability, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ReferenceTypeNullability>Enable</ReferenceTypeNullability>
+        </ed:Property>
+        <ed:Property Name="SelfContainedEntityConfiguration" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="EntitiesConfigurationOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder />
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="SerializationLibrary" Type="EntityDeveloper.SerializationLibrary, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <SerializationLibrary>None</SerializationLibrary>
+        </ed:Property>
+        <ed:Property Name="SerializeOriginalColumnNames" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="SerializeNullValues" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="SerializeNavigationProperties" Type="EntityDeveloper.NavigationPropertySerializationBehavior, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <NavigationPropertySerializationBehavior>All</NavigationPropertySerializationBehavior>
+        </ed:Property>
+        <ed:Property Name="GenerateSerializableAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateDataContracts" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+      </Template>
+      <Template Name="Repository And Unit of Work" Description="Use this template to generate Repositories and a Unit of Work for an Entity Framework Core model." Enabled="True" File=".\APIModel.Repository And Unit of Work.tmpl">
+        <ed:Property Name="InterfaceLayerOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\BusinessLogic\DevartEFCore\IDevartRepositories</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="DataAccessLayerOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\DataAccess\DevartDataAccess\DevartRepositories</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartial" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="InterfaceLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>BusinessLogic.IDevartRepositories</string>
+        </ed:Property>
+        <ed:Property Name="DataAccessLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>DataAccess.DevartRepositories</string>
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>https://github.com/DesarrolloORT/back-template.git</string>
+        </ed:Property>
+        <ed:Property Name="GenerateMemoryRepository" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenericRepositoryPattern" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateUnitOfWorkRepositoryProperties" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+      </Template>
+      <Template Name="Data Transfer Object" Description="Use this template to generate Data Transfer Object (DTO) classes." Enabled="True" PredefinedTemplateName="Data Transfer Object C#">
+        <ed:Property Name="ValidationFramework" Type="EntityDeveloper.TemplateEngine.ValidationFramework, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationFramework>DataAnnotations</ValidationFramework>
+        </ed:Property>
+        <ed:Property Name="ValidationErrorMessages" Type="EntityDeveloper.TemplateEngine.ValidationErrorMessages, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ValidationErrorMessages xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
+        </ed:Property>
+        <ed:Property Name="FilePerClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="DtosOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartDTO</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="ConvertersOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Project />
+            <ProjectFolder />
+            <DestinationFolder>C:\Git\back-template\NewApi\AppLogic\DevartDTOs\DevartConverters</DestinationFolder>
+          </OutputInfo>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialDtos" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="GeneratePartialConverters" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="DtoNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>AppLogic.DevartDTOs</string>
+        </ed:Property>
+        <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>https://github.com/DesarrolloORT/WebApiTemplate.git
+</string>
+        </ed:Property>
+        <ed:Property Name="NullableReferenceTypes" Type="EntityDeveloper.ReferenceTypeNullability, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <ReferenceTypeNullability>Enable</ReferenceTypeNullability>
+        </ed:Property>
+        <ed:Property Name="DtoClassNamePrefix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Dto</string>
+        </ed:Property>
+        <ed:Property Name="DtoClassNameSuffix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Devart</string>
+        </ed:Property>
+        <ed:Property Name="GenerateDtoConstructors" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="UseDtoClassesInAssociations" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="GenerateConverters" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>true</boolean>
+        </ed:Property>
+        <ed:Property Name="ConverterClassNamePrefix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string />
+        </ed:Property>
+        <ed:Property Name="ConverterClassNameSuffix" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <string>Converter</string>
+        </ed:Property>
+        <ed:Property Name="SerializationLibrary" Type="EntityDeveloper.SerializationLibrary, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <SerializationLibrary>None</SerializationLibrary>
+        </ed:Property>
+        <ed:Property Name="SerializeNavigationProperties" Type="EntityDeveloper.NavigationPropertySerializationBehavior, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <NavigationPropertySerializationBehavior>None</NavigationPropertySerializationBehavior>
+        </ed:Property>
+        <ed:Property Name="WcfDataContractAttributes" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+          <boolean>false</boolean>
+        </ed:Property>
+        <ed:Property Name="WcfDataMemberOnNavigationProperties" Type="EntityDeveloper.WcfDataMemberGenerationBehavior, EntityDeveloper.Orm.Common, Version=7.3.193.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
+          <WcfDataMemberGenerationBehavior>None</WcfDataMemberGenerationBehavior>
+        </ed:Property>
+      </Template>
+    </Templates>
+    <AttributeAssemblies />
+    <UpdateFromDatabaseExcludes>
+      <Exclude Name="ID_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="DENOMINACION_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ID_TIPO_CARGO" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="NOMBRE_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="DIR_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_CIUDAD" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_ESTADO" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_PAIS" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CPOSTAL_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="TEL1_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="TEL2_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="E_MAIL_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ID_TIPO_OCUPACION" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_TIPO_EMPRESA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ANIO_INGRESO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="MES_INGRESO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="RELACIONCARRERA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ANIO_EGRESO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="MES_EGRESO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="INFO_ADICIONAL_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="GRADO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_GRADO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="MATERIA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CARRERA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="VALIDO_EGRESO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="RANGO_INGRESOS_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="PERSONASACARGO_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ID_NIVEL_DESTAQUE" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="URL_EMPRESA_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="INFO_ADICION_WEB_CARGO_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="ID_EMPLEADOR_PERSONA" Table="CREADOR.T_CARGO_PERSONA" Type="Column" />
+      <Exclude Name="CARGO_PERSONA_KEY" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="NIVELDESTAQUE_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="EMPLEADOR_CARGO_PERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="PERSONA_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="TIPOCARGA_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="TIPOOCUPACION_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="TIPOEMPRESA_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="CIUDAD_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="CODIGO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="NOMBRE" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="OBSERVACIONES" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_PAIS" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_ESTADO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_CIUDAD" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_POSTAL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_FIDELIDAD_DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO1" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO2" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO3" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO4" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="TELEFONO5" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FAX1" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FAX2" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="EMAIL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="USUARIO_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HORA_ULTIMA_ACTUALIZACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="FECHA_FIDELIDAD_DIRECCION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_TIPO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_VIGENCIA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="INSTITUCION_EDUCATIVA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="RUC_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="RAZONSOCIAL" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_FACTURACION" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="HABILITADA_INSCRIPCIONES" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_PAGOS_FINANCIADOS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_CANJE_CONTABLE_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_VOUCHER_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="CLIENTE_PSIG" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_BACHILLERATO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_GRADO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_POSTGRADO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_CUIDANTIAS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="EMAIL_CUIDANTIAS_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="NOMBRE_MAY_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="PARA_SGI_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="ID_SEGMENTO_LICEO" Table="CREADOR.T_EMPRESA" Type="Column" />
+      <Exclude Name="T_EMPRESA_CLAVE_DUPLICADA_0084" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_008" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="NOMBRE_EMPRESA_DUPLICADO_0069" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="ID_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="OBSERVACIONES_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="ORDEN_LISTADO_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="TIPO_ENTREGA_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="ID_COMIENZO_ACTIVO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="DESDE_COMIENZO_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="HASTA_COMIENZO_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="CANT_ALU_CONSIDERAR_DICTADO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="CANT_ALU_PARA_RAQUITICO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="NOMBRE_NIVEL_EN_INFORME" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="ORDEN_FORM_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="AGRUP_NIVEL_PRODUCTO" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Column" />
+      <Exclude Name="T_NIVEL_PRODUCTO_CLAV_DUP" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Constraint" />
+      <Exclude Name="COMIENZO_NIVELPRODUCTO_INV" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NOMBRE_NIVEL_PRODUCTO_DUPLICAD" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ID_PREREGISTRO_SCP" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="FECHA_PACTO_CREADO" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="VHR_PREREGISTRO_SCP" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="ESTADO_PREREGISTRO_SCP" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="ID_TIPO_CONTRATACION_SCP" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="MOTIVO_CIERRE_PREREG" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="FECHA_CIERRE_PREREG" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="CODIGO_CIERRE_PREREG" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="ID_PREREGISTRO_GECOS" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="FUNCIONARIO_ACTIVO_PERSONA" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="AVISO_MTSSBPS_PREREG" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="ERROR_AVISO_MTSSBPS_PREREG" Table="CREADOR.T_PREREGISTRO_SCP" Type="Column" />
+      <Exclude Name="PREREGISTRO_KEY" Table="CREADOR.T_PREREGISTRO_SCP" Type="Constraint" />
+      <Exclude Name="DEPO_PREREGISTROSCP_INV" Table="CREADOR.T_PREREGISTRO_SCP" Type="Constraint" />
+      <Exclude Name="PERSONA_PREREGISTROSCP_INV" Table="CREADOR.T_PREREGISTRO_SCP" Type="Constraint" />
+      <Exclude Name="CODIGO_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="NOMBRE" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="OBSERVACIONES" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ABREVIATURA_ETIQUETA" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="UBICACION_ETIQUETA_IZQ" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="BACHILLERATO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_NIVEL_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_NIVEL_POSTGRADO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ABREVIATURA_ETIQUETA_FEM" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ORIENTACION_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ID_ANIO_BACHILLER" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="ORIENTACION_NEW_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="DOCENTE_TERCIARIO_TITULO" Table="CREADOR.T_TITULO" Type="Column" />
+      <Exclude Name="T_TITULO_CLAVE_DUPLICADA_0152" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NIVELTITULO_TITULO_FORE" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTGRADO_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="NOMBRE_DUPLICADO_0146" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="IMAGENANVERSO_PERSONA_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="IMAGENREVERSO_PERSONA_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_PAIS" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="RECONOCIDO_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ID_NIVEL_POSTGRADO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ID_NIVEL_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_REVAL_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="REVAL_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_DOC_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="COMENTARIO_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="NOMBRE_INST_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="NOMBRE_TITULO_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ID_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FECHA_OBTENCION_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ANIO_FIN_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ANIO_INICIO_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_INSTITUCION" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_TITULO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="ID_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="NOM_P" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="UNI_P" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FI_P" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="FF_P" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="NIVEL_P" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="COMENTARIO_BAJA_TITULO_PERSONA" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="GRADUADO_DESTACADO" Table="CREADOR.T_TITULO_PERSONA" Type="Column" />
+      <Exclude Name="PERSONATITULO_KEY" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="PAIS_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="NIVELPOSTG_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="NIVELTITULO_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="TITULOORT_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="INSTITUCION_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="TITULONOORT_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="PERSONA_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+      <Exclude Name="NIVELDESTAQUE_CARGOPERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="EMPLEADOR_CARGO_PERSONA_INV" Table="CREADOR.T_CARGO_PERSONA" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="COMIENZO_NIVELPRODUCTO_INV" Table="CREADOR.T_NIVEL_PRODUCTO" Type="Constraint" />
+      <Exclude Name="DEPO_PREREGISTROSCP_INV" Table="CREADOR.T_PREREGISTRO_SCP" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
+      <Exclude Name="TITULOORT_PERSONATITULO_INV" Table="CREADOR.T_TITULO_PERSONA" Type="Constraint" />
+    </UpdateFromDatabaseExcludes>
+  </ModelSettings>
+</EntityDeveloper>
