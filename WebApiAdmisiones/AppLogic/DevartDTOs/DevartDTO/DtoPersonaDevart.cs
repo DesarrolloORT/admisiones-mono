@@ -522,6 +522,10 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoAceptacionReglamentoEstDevart> AceptacionReglamentoEsts { get; set; }
 
+        public DtoCaracteristicaPaiDevart CaracteristicaPai_IdCaracteristicaPaisTel1 { get; set; }
+
+        public DtoCaracteristicaPaiDevart CaracteristicaPai_IdCaracteristicaPaisTel2 { get; set; }
+
         #endregion
     }
 

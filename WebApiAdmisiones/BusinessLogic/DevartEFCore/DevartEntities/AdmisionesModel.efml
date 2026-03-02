@@ -3284,6 +3284,29 @@
       <column name="ACTIVO" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="CaracteristicaPai" entity-set="CaracteristicaPais" table="T_CARACTERISTICA_PAIS" schema="CREADOR" p1:Guid="59b3d0c4-724a-4190-9430-32bf9a2ee0b1">
+    <id name="IdCaracteristicaPais" type="Int64" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="06dd0c2f-8fcc-43ec-8fde-b0f1af94fe86">
+      <column name="ID_CARACTERISTICA_PAIS" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="NombrePais" type="String" p1:ValidateMaxLength="200" p1:ValidateRequired="true" p1:Guid="16033b1d-1438-4f44-8d0a-8d4ead782d7a">
+      <column name="NOMBRE_PAIS" not-null="True" length="200" sql-type="VARCHAR2" unique="True" p1:unicode="False" />
+    </property>
+    <property name="Iso2" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="4587606f-d3ca-4e99-a6f9-8a11e870e637">
+      <column name="ISO2" not-null="True" length="2" sql-type="CHAR" unique="True" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="Caracteristica" type="Decimal" p1:ValidateRequired="true" p1:Guid="daf42259-fc36-4e51-a19c-4a4b87d2c287">
+      <column name="CARACTERISTICA" not-null="True" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="1ccf5423-3d0f-44d7-b5eb-32bd42fb770c">
+      <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="90452956-ab96-4975-ada7-3420069785e9">
+      <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="a437452a-2591-4539-a630-12fe0bbc1cf3">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -3859,6 +3882,22 @@
       </end1>
       <end2 multiplicity="Many" name="AceptacionReglamentoEsts" class="Persona" relation-class="AceptacionReglamentoEst" lazy="False" p1:Guid="9b9ae612-ba1a-4c47-b300-ee62c60823df">
         <property name="CodigoPersona" />
+      </end2>
+    </association>
+    <association name="CaracteristicaPai_Persona" cardinality="OneToMany" p1:Guid="22db5915-163e-4a9e-85ee-8912be33d0ad">
+      <end1 multiplicity="One" name="CaracteristicaPai_IdCaracteristicaPaisTel1" class="Persona" relation-class="CaracteristicaPai" constrained="True" lazy="False" p1:Guid="0718c0dc-5937-4d63-a276-03f8ded15a4e">
+        <property name="IdCaracteristicaPais" />
+      </end1>
+      <end2 multiplicity="Many" name="Personas_IdCaracteristicaPaisTel1" class="CaracteristicaPai" relation-class="Persona" lazy="False" p1:Guid="bdfbbbce-5f51-4538-a847-85583a533ec2">
+        <property name="IdCaracteristicaPaisTel1" />
+      </end2>
+    </association>
+    <association name="CaracteristicaPai_Persona1" cardinality="OneToMany" p1:Guid="a0b7e1d7-5979-4106-8c79-98a000dbbc7c">
+      <end1 multiplicity="One" name="CaracteristicaPai_IdCaracteristicaPaisTel2" class="Persona" relation-class="CaracteristicaPai" constrained="True" lazy="False" p1:Guid="64809858-af89-4ae6-b654-8585689ae8d1">
+        <property name="IdCaracteristicaPais" />
+      </end1>
+      <end2 multiplicity="Many" name="Personas_IdCaracteristicaPaisTel2" class="CaracteristicaPai" relation-class="Persona" lazy="False" p1:Guid="41f6083e-e424-4344-a5c6-77e746c3660f">
+        <property name="IdCaracteristicaPaisTel2" />
       </end2>
     </association>
   </associations>

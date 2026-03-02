@@ -22,40 +22,44 @@ using System.Linq.Expressions;
 
 namespace BusinessLogic.Entities
 {
-    public partial class Pais {
+    public partial class CaracteristicaPai {
 
-        public Pais()
+        public CaracteristicaPai()
         {
-            this.Estado = new List<Estado>();
-            this.Personas = new List<Persona>();
-            this.SolicitudAltas = new List<SolicitudAlta>();
+            this.Personas_IdCaracteristicaPaisTel1 = new List<Persona>();
+            this.Personas_IdCaracteristicaPaisTel2 = new List<Persona>();
 
         }
 
         [Key]
         [Required()]
-        public long CodigoPais { get; set; }
+        public long IdCaracteristicaPais { get; set; }
 
-        [StringLength(50)]
+        [StringLength(200)]
         [Required()]
-        public string Nombre { get; set; }
+        public string NombrePais { get; set; }
+
+        [StringLength(2)]
+        [Required()]
+        public string Iso2 { get; set; }
+
+        [Required()]
+        public decimal Caracteristica { get; set; }
 
         [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
+        [Required()]
+        public string UsuarioIngreso { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
+        [Required()]
+        public DateTime FechaIngreso { get; set; }
 
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
+        [StringLength(8)]
+        [Required()]
+        public string HoraIngreso { get; set; }
 
-        [StringLength(10)]
-        public string? DgiPais { get; set; }
+        public virtual IList<Persona> Personas_IdCaracteristicaPaisTel1 { get; set; }
 
-        public virtual IList<Estado> Estado { get; set; }
-
-        public virtual IList<Persona> Personas { get; set; }
-
-        public virtual IList<SolicitudAlta> SolicitudAltas { get; set; }
+        public virtual IList<Persona> Personas_IdCaracteristicaPaisTel2 { get; set; }
 
         #region Extensibility Method Definitions
 

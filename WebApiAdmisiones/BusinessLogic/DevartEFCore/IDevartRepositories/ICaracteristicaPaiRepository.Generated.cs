@@ -12,9 +12,9 @@ using System.Collections.Generic;
 
 namespace BusinessLogic.IDevartRepositories
 {
-    public partial interface ITituloRepository : IRepository<BusinessLogic.Entities.Titulo>
+    public partial interface ICaracteristicaPaiRepository : IRepository<BusinessLogic.Entities.CaracteristicaPai>
     {
-        ICollection<BusinessLogic.Entities.Titulo> GetAll();
-        BusinessLogic.Entities.Titulo GetByKey(long _CodigoTitulo);
+        ICollection<BusinessLogic.Entities.CaracteristicaPai> GetAll();
+        BusinessLogic.Entities.CaracteristicaPai GetByKey(long _IdCaracteristicaPais);
     }
 }
