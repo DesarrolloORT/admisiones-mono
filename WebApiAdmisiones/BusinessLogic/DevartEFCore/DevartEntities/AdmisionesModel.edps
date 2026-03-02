@@ -4,300 +4,349 @@
     <Connection SaveConnection="False" Provider="Oracle.ManagedDataAccess.Client" />
     <Generation>
       <GeneratedFiles>
-        <File Name="ModelContext.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartContext" />
-        <File Name="AcaCodigoDedRelacionFilial.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="AcaCodigosDedRegiman.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="AcaCodigosNacionalidad.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="AcaCodigosPaise.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="AcaCodigosSexo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="AcaTipoDocumento.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Banco.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="T3100.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Pais.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Ciudad.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Empresa.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Estado.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Persona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TituloPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="CajasBp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="CargoPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="CategoriaCjppu.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="FormaCobroPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Hijo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Idioma.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="IdiomaPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Imagen.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="NivelPostgrado.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="NivelProducto.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="ParametrosPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="PersonaSegurosalud.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="PreregistroScp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="SeguroSalud.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Sucursal.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TarjetaMacroPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TipoCargo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TipoCuenta.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TipoOcupacion.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Titulo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="BoletoPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="NivelTitulo.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="CurriculumPersona.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="CaracteristicaPai.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="FormaCobroPersonaTemp.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="TipoEmpresa.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="VdParametros3100.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaCodigoDedRelacionFilialRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaCodigoDedRelacionFilialRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaCodigosDedRegimanRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaCodigosDedRegimanRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaCodigosNacionalidadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaCodigosNacionalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaCodigosPaiseRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaCodigosPaiseRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaCodigosSexoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaCodigosSexoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAcaTipoDocumentoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAcaTipoDocumentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IBancoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IBancoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IT3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IT3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IPaisRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IPaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICiudadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IEstadoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IEstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITituloPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITituloPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICajasBpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICajasBpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICargoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICargoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICategoriaCjppuRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICategoriaCjppuRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IFormaCobroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IFormaCobroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IHijoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IHijoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IIdiomaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IIdiomaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IIdiomaPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IIdiomaPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IImagenRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="INivelPostgradoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="INivelPostgradoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="INivelProductoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="INivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IParametrosPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IParametrosPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IPersonaSegurosaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IPersonaSegurosaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IPreregistroScpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IPreregistroScpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ISeguroSaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ISeguroSaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ISucursalRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ISucursalRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITarjetaMacroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITarjetaMacroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITipoCargoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITipoCargoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITipoCuentaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITipoCuentaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITipoOcupacionRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITipoOcupacionRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IBoletoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IBoletoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="INivelTituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="INivelTituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICurriculumPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICurriculumPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ICaracteristicaPaiRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ICaracteristicaPaiRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IFormaCobroPersonaTempRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IFormaCobroPersonaTempRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="ITipoEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="ITipoEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IVdParametros3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IVdParametros3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaCodigoDedRelacionFilialRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaCodigoDedRelacionFilialRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaCodigosDedRegimanRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaCodigosDedRegimanRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaCodigosNacionalidadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaCodigosNacionalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaCodigosPaiseRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaCodigosPaiseRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaCodigosSexoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaCodigosSexoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AcaTipoDocumentoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AcaTipoDocumentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="BancoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="BancoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="T3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="T3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="PaisRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="PaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CiudadRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="EmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="EmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="EstadoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="EstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="PersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="PersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TituloPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TituloPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CajasBpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CajasBpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CargoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CargoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CategoriaCjppuRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CategoriaCjppuRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="FormaCobroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="FormaCobroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="HijoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="HijoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="IdiomaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="IdiomaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="IdiomaPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="IdiomaPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="ImagenRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="ImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="NivelPostgradoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="NivelPostgradoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="NivelProductoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="NivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="ParametrosPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="ParametrosPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="PersonaSegurosaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="PersonaSegurosaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="PreregistroScpRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="PreregistroScpRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="SeguroSaludRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="SeguroSaludRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="SucursalRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="SucursalRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TarjetaMacroPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TarjetaMacroPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TipoCargoRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TipoCargoRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TipoCuentaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TipoCuentaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TipoOcupacionRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TipoOcupacionRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="BoletoPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="BoletoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="NivelTituloRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="NivelTituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CurriculumPersonaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CurriculumPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="CaracteristicaPaiRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="CaracteristicaPaiRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="FormaCobroPersonaTempRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="FormaCobroPersonaTempRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="TipoEmpresaRepository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="TipoEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="VdParametros3100Repository.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="VdParametros3100Repository.Generated.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="DtoAcaCodigoDedRelacionFilialDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAcaCodigosDedRegimanDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAcaCodigosNacionalidadDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAcaCodigosPaiseDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAcaCodigosSexoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAcaTipoDocumentoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoBancoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoT3100Devart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoEstadoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTituloPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCajasBpDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCargoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCategoriaCjppuDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoFormaCobroPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoHijoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoIdiomaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoIdiomaPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoImagenDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoNivelPostgradoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoNivelProductoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoParametrosPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoPersonaSegurosaludDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoPreregistroScpDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoSeguroSaludDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoSucursalDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTarjetaMacroPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTipoCargoDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTipoCuentaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTipoOcupacionDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTituloDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoBoletoPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoNivelTituloDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCurriculumPersonaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoCaracteristicaPaiDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoFormaCobroPersonaTempDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoTipoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoVdParametros3100Devart.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="AcaCodigoDedRelacionFilialConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AcaCodigosDedRegimanConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AcaCodigosNacionalidadConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AcaCodigosPaiseConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AcaCodigosSexoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AcaTipoDocumentoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="BancoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="T3100Converter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="EstadoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="PersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TituloPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CajasBpConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CargoPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CategoriaCjppuConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="FormaCobroPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="HijoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="IdiomaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="IdiomaPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="ImagenConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="NivelPostgradoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="NivelProductoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="ParametrosPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="PersonaSegurosaludConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="PreregistroScpConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="SeguroSaludConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="SucursalConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TarjetaMacroPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TipoCargoConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TipoCuentaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TipoOcupacionConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TituloConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="BoletoPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="NivelTituloConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CurriculumPersonaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="CaracteristicaPaiConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="FormaCobroPersonaTempConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="TipoEmpresaConverter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="VdParametros3100Converter.cs" DestinationFolder="C:\GIT\api-fdp\FichaDePersona\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ModelContext.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartContext" />
+        <File Name="Pais.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Ciudad.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Empresa.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Estado.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Persona.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Imagen.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="NivelProducto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Titulo.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="EncuestaIniAdmision.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Producto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="SolicitudAlta.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="ProcesoProducto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="ProcesoComienzo.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Proceso.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Departamento.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Paquete.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Supraoferta.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Oferta.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Intere.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="InteresProducto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Inscripto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="PlanPago.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Comienzo.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Localidad.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Turno.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Escuela.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoDesercion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TituloOrt.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CausalInscrPago.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="InstanciaWorkflow.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="InstWorkflowInscripcion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AccesoSitiosantander.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="BachilleratoPersona.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AnioBachiller.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Accion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="DeclaracionJuradaWeb.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoVivienda.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoDescuento.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="CentroCosto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="InscriptoPrueba.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Prueba.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="ImagenTemporal.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="MotivoOpcionesAdmision.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="PublicidadOpcionesAdmision.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoBecaNivelProducto.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="AceptacionReglamentoEst.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoParentesco.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="TipoEgresoDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPaisRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICiudadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEmpresaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEstadoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IImagenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="INivelProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="INivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITituloRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEncuestaIniAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEncuestaIniAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ISolicitudAltaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ISolicitudAltaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IProcesoProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IProcesoProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IProcesoComienzoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IProcesoComienzoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IProcesoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IProcesoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IDepartamentoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IDepartamentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPaqueteRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPaqueteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ISupraofertaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ISupraofertaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IOfertaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IOfertaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IIntereRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IIntereRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInteresProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInteresProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInscriptoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInscriptoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPlanPagoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPlanPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IComienzoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IComienzoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ILocalidadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ILocalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITurnoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITurnoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IEscuelaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IEscuelaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoDesercionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoDesercionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITituloOrtRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITituloOrtRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICausalInscrPagoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICausalInscrPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInstanciaWorkflowRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInstanciaWorkflowRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAccesoSitiosantanderRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAccesoSitiosantanderRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IBachilleratoPersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IBachilleratoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAnioBachillerRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAnioBachillerRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAccionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAccionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IDeclaracionJuradaWebRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IDeclaracionJuradaWebRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoViviendaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoViviendaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoDescuentoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoDescuentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ICentroCostoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ICentroCostoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInscriptoPruebaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInscriptoPruebaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPruebaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPruebaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IImagenTemporalRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IImagenTemporalRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IMotivoOpcionesAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IMotivoOpcionesAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IPublicidadOpcionesAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IPublicidadOpcionesAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoBecaNivelProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoBecaNivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IAceptacionReglamentoEstRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IAceptacionReglamentoEstRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoParentescoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoParentescoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="ITipoEgresoDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="ITipoEgresoDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PaisRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PaisRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CiudadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CiudadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EmpresaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EmpresaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EstadoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EstadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ImagenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ImagenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="NivelProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="NivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TituloRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TituloRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EncuestaIniAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EncuestaIniAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="SolicitudAltaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="SolicitudAltaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ProcesoProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ProcesoProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ProcesoComienzoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ProcesoComienzoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ProcesoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ProcesoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="DepartamentoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="DepartamentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PaqueteRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PaqueteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="SupraofertaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="SupraofertaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="OfertaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="OfertaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="IntereRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="IntereRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InteresProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InteresProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InscriptoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InscriptoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PlanPagoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PlanPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ComienzoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ComienzoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="LocalidadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="LocalidadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TurnoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TurnoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="EscuelaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="EscuelaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoDesercionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoDesercionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TituloOrtRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TituloOrtRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CausalInscrPagoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CausalInscrPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InstanciaWorkflowRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InstanciaWorkflowRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AccesoSitiosantanderRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AccesoSitiosantanderRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="BachilleratoPersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="BachilleratoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AnioBachillerRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AnioBachillerRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AccionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AccionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="DeclaracionJuradaWebRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="DeclaracionJuradaWebRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoViviendaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoViviendaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoDescuentoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoDescuentoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="CentroCostoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="CentroCostoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InscriptoPruebaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InscriptoPruebaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PruebaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PruebaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="ImagenTemporalRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="ImagenTemporalRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="MotivoOpcionesAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="MotivoOpcionesAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="PublicidadOpcionesAdmisionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="PublicidadOpcionesAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoBecaNivelProductoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoBecaNivelProductoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="AceptacionReglamentoEstRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="AceptacionReglamentoEstRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoParentescoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoParentescoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="TipoEgresoDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="TipoEgresoDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEstadoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPersonaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoImagenDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoNivelProductoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTituloDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEncuestaIniAdmisionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoProductoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoSolicitudAltaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoProcesoProductoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoProcesoComienzoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoProcesoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoDepartamentoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPaqueteDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoSupraofertaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoOfertaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoIntereDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInteresProductoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInscriptoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPlanPagoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoComienzoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoLocalidadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTurnoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoEscuelaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoDesercionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTituloOrtDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCausalInscrPagoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInstanciaWorkflowDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInstWorkflowInscripcionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAccesoSitiosantanderDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoBachilleratoPersonaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAnioBachillerDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAccionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoDeclaracionJuradaWebDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoViviendaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoDescuentoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoCentroCostoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInscriptoPruebaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPruebaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoImagenTemporalDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoMotivoOpcionesAdmisionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoPublicidadOpcionesAdmisionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoBecaNivelProductoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoAceptacionReglamentoEstDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoParentescoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoTipoEgresoDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EstadoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PersonaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ImagenConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="NivelProductoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TituloConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EncuestaIniAdmisionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ProductoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="SolicitudAltaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ProcesoProductoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ProcesoComienzoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ProcesoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="DepartamentoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PaqueteConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="SupraofertaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="OfertaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="IntereConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InteresProductoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InscriptoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PlanPagoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ComienzoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="LocalidadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TurnoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="EscuelaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoDesercionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TituloOrtConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CausalInscrPagoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InstanciaWorkflowConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InstWorkflowInscripcionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AccesoSitiosantanderConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="BachilleratoPersonaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AnioBachillerConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AccionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="DeclaracionJuradaWebConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoViviendaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoDescuentoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="CentroCostoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InscriptoPruebaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PruebaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="ImagenTemporalConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="MotivoOpcionesAdmisionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="PublicidadOpcionesAdmisionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoBecaNivelProductoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="AceptacionReglamentoEstConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoParentescoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="TipoEgresoDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>
@@ -318,7 +367,7 @@
     <Templates>
       <Template Name="EF Core" Description="Use this template to generate classes for an Entity Framework Core model." Enabled="True" File=".\ADMISIONESModel.EF Core.tmpl">
         <ed:Property Name="ValidationFramework" Type="EntityDeveloper.TemplateEngine.ValidationFramework, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
-          <ValidationFramework>None</ValidationFramework>
+          <ValidationFramework>DataAnnotations</ValidationFramework>
         </ed:Property>
         <ed:Property Name="ValidationErrorMessages" Type="EntityDeveloper.TemplateEngine.ValidationErrorMessages, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
           <ValidationErrorMessages xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
@@ -351,7 +400,7 @@
           <boolean>false</boolean>
         </ed:Property>
         <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </ed:Property>
         <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
@@ -390,7 +439,7 @@
           <EFCoreCollectionInitializationType>Default</EFCoreCollectionInitializationType>
         </ed:Property>
         <ed:Property Name="NullableReferenceTypes" Type="EntityDeveloper.ReferenceTypeNullability, EntityDeveloper.Orm.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
-          <ReferenceTypeNullability>Default</ReferenceTypeNullability>
+          <ReferenceTypeNullability>Enable</ReferenceTypeNullability>
         </ed:Property>
         <ed:Property Name="SelfContainedEntityConfiguration" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <boolean>false</boolean>
@@ -437,16 +486,16 @@
           </OutputInfo>
         </ed:Property>
         <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </ed:Property>
         <ed:Property Name="GeneratePartial" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <boolean>true</boolean>
         </ed:Property>
         <ed:Property Name="InterfaceLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+          <string>BusinessLogic.IDevartRepositories</string>
         </ed:Property>
         <ed:Property Name="DataAccessLayerNamespace" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
+          <string>DataAccess.DevartRepositories</string>
         </ed:Property>
         <ed:Property Name="HeaderTimestampVersionControlTag" Type="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <string d6p1:nil="true" xmlns:d6p1="http://www.w3.org/2001/XMLSchema-instance" />
@@ -553,31 +602,12 @@
       <Exclude Name="OBSERVACIONES_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
       <Exclude Name="ID_PRUEBA" Table="CREADOR.T_ACCION" Type="Column" />
       <Exclude Name="ACCION_KEY" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="PERSONA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ID_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="NOMBRE_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="OBSERVACIONES_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="FECHA_INICIO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="FECHA_FIN_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="ALIAS_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="ID_TIPO_PAQ_COM" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="VISIBLE_INTERNET_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="ANIO_MES_PRIMER_PAGO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="CANTIDAD_CUOTAS_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="FECHA_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="PROCESADO_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="MAILDOC_ENCUESTA_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="ID_MITADANIO_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
-      <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
-      <Exclude Name="CLAVE_COMIENZO_UNICA" Table="CREADOR.T_COMIENZO" Type="Constraint" />
+      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="NOMBRE_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="NOMBRE_EXTENSO_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
@@ -611,14 +641,14 @@
       <Exclude Name="IP_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="RED_SOCIAL_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="DEPARTAMENTO_DUPLICADO_7101" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELA_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="NOMBRE_DEPTO_DUPLICADO_7092" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="CODIGO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="NOMBRE" Table="CREADOR.T_EMPRESA" Type="Column" />
@@ -665,10 +695,10 @@
       <Exclude Name="PARA_SGI_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="ID_SEGMENTO_LICEO" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="T_EMPRESA_CLAVE_DUPLICADA_0084" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_008" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_008" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="NOMBRE_EMPRESA_DUPLICADO_0069" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="ID_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
       <Exclude Name="NOMBRE_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
@@ -758,16 +788,16 @@
       <Exclude Name="ID_PRODUCTO_PCOUNTER" Table="CREADOR.T_INSCRIPTO" Type="Column" />
       <Exclude Name="ID_MOTIVO_BAJA_INSCRIPCION" Table="CREADOR.T_INSCRIPTO" Type="Column" />
       <Exclude Name="INSCRIPTO_PRIMARY" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESA_INSCRIPTO_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="OFERTA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PERSONA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="CAUSAINSCRPAGO_INSCRIPTO_FOREI" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PRODUCTO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CAUSAINSCRPAGO_INSCRIPTO_FOREI" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="OFERTA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PERSONA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESA_INSCRIPTO_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRODUCTO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="PRODPCOUNTER_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="ID_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="ID_PROCESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="DESCRIPCION_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
@@ -787,9 +817,9 @@
       <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="ID_CATEGORIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="INSTANCIA_WORKFLOW_KEY" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
-      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
-      <Exclude Name="SOLICI_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="SOLICI_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="ID_PROCESO" Table="CREADOR.T_INTERES" Type="Column" />
@@ -802,12 +832,12 @@
       <Exclude Name="ID_LUGAR" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="ID_GRADO_PUREZA" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="INTERES_KEY" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="PERSONA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="PROCESO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PERSONA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="PERSONAPROCESO_INTERES_UNI" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="ID_TIPO_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
@@ -825,11 +855,11 @@
       <Exclude Name="FECHA_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="IDGRADOANT_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="INTERES_PRODUCTO_KEY" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
-      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="TURNO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="INTERES_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="PRODUCTO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
-      <Exclude Name="TURNO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUAMOD_INTEREPRODUCT_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="ID_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
@@ -850,9 +880,9 @@
       <Exclude Name="ESTADO_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="CANT_CUOTAS_AJUSTE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="PAQUETE_PRIMARY" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="TITULO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
       <Exclude Name="PRODUCTO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_PAQUETE_INVALID" Table="CREADOR.T_PAQUETE" Type="Constraint" />
-      <Exclude Name="TITULO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
       <Exclude Name="ID_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
       <Exclude Name="NOMBRE_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
       <Exclude Name="CANTIDAD_CUOTAS_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
@@ -955,13 +985,13 @@
       <Exclude Name="EXCLUIR_CARTA_FRESCO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="CAJA_PROFESIONAL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="PRODUCTO_DUPLICADO_7081" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="DEPARTAMENTO_PRODUCTO_INV_7507" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="CENTROCOSTOS_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="NIVEL_PRODUCTO_PROD_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROCOSTOS_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="DEPARTAMENTO_PRODUCTO_INV_7507" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="ALIAS_PRODUCTO_UNICA" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
@@ -993,9 +1023,9 @@
       <Exclude Name="FECHA_DIFUSIONWEB_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
       <Exclude Name="HABILITADO_SITIOADMI_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
       <Exclude Name="PRUEBA_PRIMARY" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
       <Exclude Name="COMIENZO_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
       <Exclude Name="TIPO_BECA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Constraint" />
-      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
       <Exclude Name="DOCUMENTO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="SEXO_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="OBSERVACIONES_SOLICITUD_ALTA" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
@@ -1033,18 +1063,18 @@
       <Exclude Name="ID_TIPO_ACCION" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="SOLICITUD_ALTA_KEY" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="CIUDAD_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="ESTADO_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PAIS_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="INSTIT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="OREINT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="ANIOBACHILLER_SOLICIALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PERSONA_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PROCESO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ESTADO_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PAIS_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="OREINT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PROCESO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PERSONA_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="CIUDAD_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="INSTIT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_SOLICIALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="PRODUCTO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="ID_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="NOMBRE_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="ID_PAQUETE" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
@@ -1071,10 +1101,10 @@
       <Exclude Name="ID_CALENDARIO_PAGO_6M6" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="MARCA_DESERTOR_6M6_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="SUPRAOFERTA_PRIMARY" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="COMIENZO_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="PAQUETE_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="COMIENZO_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="ID_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
       <Exclude Name="NOMBRE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
       <Exclude Name="CODIGO_RPG_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
@@ -1169,40 +1199,40 @@
       <Exclude Name="PREVIAS_PARCIAL_IGUAL_TOTAL" Table="CREADOR.T_TITULO_ORT" Type="Column" />
       <Exclude Name="GENERICO_FAMILIA" Table="CREADOR.T_TITULO_ORT" Type="Column" />
       <Exclude Name="TITULO_DUPLICADO_7028" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="PRODUCTO_TITULO_INVALIDO_7502" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="CODIGOTITULO_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTO_TITULO_INVALIDO_7502" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TITULO_NOMBRE_DUPLICADO_9050" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
-      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="CG_ESCUELA_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
       <Exclude Name="USERRESP_ESCU_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
+      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
-      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
@@ -1213,23 +1243,23 @@
       <Exclude Name="TIPOPROCESO_PROCESO_INV" Table="CREADOR.T_PROCESO" Type="Constraint" />
       <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="FAMTIPODESC_TIPODESC_INV" Table="CREADOR.T_TIPO_DESCUENTO" Type="Constraint" />
       <Exclude Name="NIVELTITULO_TITULO_FORE" Table="CREADOR.T_TITULO" Type="Constraint" />
       <Exclude Name="NIVELPOSTGRADO_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
-      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
     </UpdateFromDatabaseExcludes>
   </ModelSettings>
 </EntityDeveloper>

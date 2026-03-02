@@ -2058,10 +2058,10 @@
       <column name="ID_REGIMEN_PLAN_PAGO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
-  <class name="Comienzo" entity-set="Comienzos" table="T_COMIENZO" schema="CREADOR" query-type="True" p1:Guid="d005018f-b399-4e38-825c-cf0224d61024">
-    <property name="IdComienzo" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b4fa8015-7da3-4929-92e9-38c4bb35597b">
+  <class name="Comienzo" entity-set="Comienzos" table="T_COMIENZO" schema="CREADOR" p1:Guid="d005018f-b399-4e38-825c-cf0224d61024">
+    <id name="IdComienzo" type="Int64" p1:ValidateRequired="true" p1:Guid="b4fa8015-7da3-4929-92e9-38c4bb35597b">
       <column name="ID_COMIENZO" not-null="False" precision="18" scale="0" sql-type="NUMBER" unique="True" p1:unicode="False" />
-    </property>
+    </id>
     <property name="NombreComienzo" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d9fd18e8-41d0-45b9-8625-2c09cf7e8d3f">
       <column name="NOMBRE_COMIENZO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
