@@ -3,12 +3,14 @@
 // Code is generated on: 02/03/2026 12:08:20
 //
 //------------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IProcesoComienzoRepository
     {
+        BusinessLogic.Entities.ProcesoComienzo GetByKeyWithRelated(long idProceso, long idComienzo);
+        ICollection<BusinessLogic.Entities.ProcesoComienzo> GetAllWithRelated();
     }
 }

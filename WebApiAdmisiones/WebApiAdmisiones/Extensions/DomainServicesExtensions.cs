@@ -74,6 +74,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralServices, GeneralServices>();
             services.AddScoped<IBandejaService, BandejaService>();
+            services.AddScoped<IProcesoComienzoServices, ProcesoComienzoServices>();
 
             // Servicio de correo
             services.AddScoped<EnvioMail>(_ =>

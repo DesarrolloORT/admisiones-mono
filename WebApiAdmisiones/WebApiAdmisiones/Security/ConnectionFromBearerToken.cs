@@ -29,24 +29,21 @@ namespace WebApiAdmisiones.Security
         /// <returns>La cadena de conexión seleccionada o vacía si no se encuentra un token válido.</returns>
         public string GetConnectionString()
         {
-            string connectionString = string.Empty;
-            // Obtener el token JWT del HttpContext
-            var token = _httpContextAccessor.HttpContext?.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var token = _httpContextAccessor.HttpContext?
+                .Request.Headers.Authorization
+                .ToString()
+                .Replace("Bearer ", "");
 
             if (!string.IsNullOrEmpty(token))
             {
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
-
-                // Obtener el claim 'iss' directamente del token
-                string issuerClaim = "";
-                issuerClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "iss")?.Value ?? "";
-
-                // Aquí puedes implementar lógica para usar el token, como decodificarlo o extraer claims
-                // Por ejemplo, podrías usar el token para determinar la cadena de conexión adecuada
-                connectionString = GetConnectionStringFromToken(issuerClaim);
+                var issuerClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "iss")?.Value ?? "";
+                return GetConnectionStringFromToken(issuerClaim);
             }
-            return connectionString;
+
+            // Fallback: sin token, usar variable de entorno por defecto
+            return GetConnectionStringFromToken(string.Empty);
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerPaises_ReturnsSortedPaises()
         {
-            var paisRepo = new Mock<IPaisRepository>();
+            var paisRepo = new Mock<BusinessLogic.IDevartRepositories.IPaisRepository>();
             paisRepo.Setup(r => r.GetAll()).Returns(new List<Pais>
             {
                 new Pais { CodigoPais = 2, Nombre = "Argentina" },
@@ -49,7 +49,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerPais_PaisNotFound_ReturnsFailed()
         {
-            var paisRepo = new Mock<IPaisRepository>();
+            var paisRepo = new Mock<BusinessLogic.IDevartRepositories.IPaisRepository>();
             paisRepo.Setup(r => r.GetPaisAndCiudadesByKey(It.IsAny<long>())).Returns((Pais)null);
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 
@@ -92,7 +92,7 @@ namespace UnitTesting.AppLogic.Services
                     }
                 }
             };
-            var paisRepo = new Mock<IPaisRepository>();
+            var paisRepo = new Mock<BusinessLogic.IDevartRepositories.IPaisRepository>();
             paisRepo.Setup(r => r.GetPaisAndCiudadesByKey(1)).Returns(pais);
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 

@@ -19,7 +19,6 @@ namespace WebApiAdmisiones.Controllers
     /// <summary>
     /// Controlador para la gestión de la Ficha de Persona (FDP).
     /// </summary>
-    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class GeneralController : ApiBaseController<GeneralController>

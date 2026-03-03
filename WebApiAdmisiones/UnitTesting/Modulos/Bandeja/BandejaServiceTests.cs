@@ -8,10 +8,6 @@ using ModBandejaAppLogic.Interfaces;
 using ModBandejaBusinessLogic;
 using ModBandejaBusinessLogic.Entities;
 using ModBandejaBusinessLogic.IDevartRepositories;
-using AppLogic.DevartDTOs;
-using AppLogic.Services;
-using BusinessLogic.Entities;
-using BusinessLogic.IDevartRepositories;
 
 namespace UnitTesting.Modulos
 {
@@ -193,7 +189,5 @@ namespace UnitTesting.Modulos
             Assert.Equal("user1", instancias[0].UsuarioIngreso);
             Assert.Equal("user2", instancias[1].UsuarioIngreso);
         }
-
-
     }
 }

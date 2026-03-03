@@ -7,10 +7,26 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using BusinessLogic.IDevartRepositories;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class ProcesoComienzoRepository
     {
+        public virtual BusinessLogic.Entities.ProcesoComienzo GetByKeyWithRelated(long idProceso, long idComienzo)
+        {
+            return objectSet
+                .Include(pc => pc.Proceso)
+                .Include(pc => pc.Comienzo)
+                .FirstOrDefault(pc => pc.IdProceso == idProceso && pc.IdComienzo == idComienzo);
+        }
+
+        public virtual ICollection<BusinessLogic.Entities.ProcesoComienzo> GetAllWithRelated()
+        {
+            return objectSet
+                .Include(pc => pc.Proceso)
+                .Include(pc => pc.Comienzo)
+                .ToList();
+        }
     }
 }
