@@ -22,7 +22,6 @@ namespace AppLogic.Interfaces
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteres(long codigoPersona);
         OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
         OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcion(long codigoPersona);
-        OperationResult<DtoInscriptoDevart> ObtenerInscripcionPorProductoProceso(long codigoPersona, long idProducto, long idProceso);
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         #region PERSONA
@@ -51,11 +50,7 @@ namespace AppLogic.Interfaces
 
         #region INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
         OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona);
-        OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesRealizadas(long codigoPersona);
-        OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesPendientes(long codigoPersona);
-        OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesCanceladas(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona);
-        OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerProductosBeca(long codigoPersona);
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
     }
 }

@@ -3318,6 +3318,35 @@
       <column name="DESCR_TD" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="VdEsFrescoAdmision" entity-set="VdEsFrescoAdmisions" table="VD_ES_FRESCO_ADMISION" schema="CREADOR" query-type="True" p1:Guid="84aea6a4-bfd5-4d98-bab0-bf72b980055d">
+    <property name="CodigoPersona" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="05773c4f-6e68-44b0-894d-067dfced97c8">
+      <column name="CODIGO_PERSONA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaInscr" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="02b8bc7a-1d83-429e-8a3b-9ac49fed74d4">
+      <column name="FECHA_INSCR" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="0f925862-23f7-489d-8b1d-aa7859a7f647">
+      <column name="USUARIO_INGRESO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdTurno" type="Int64" p1:ValidateRequired="true" p1:Guid="f49362cf-3aa7-455f-b942-bf402bd84565">
+      <column name="ID_TURNO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="5850d6f7-f1e9-4cdd-b0e9-f88bba38a540">
+      <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdComienzo" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="161eb523-5238-4114-8faa-e50e1e843806">
+      <column name="ID_COMIENZO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="2364fa81-a9b1-4fa2-9994-87a66a6923d4">
+      <column name="FECHA_INICIO_COMIENZO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="TipoDocumento" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="28f8b63f-a2c1-4e38-833f-36916fad1665">
+      <column name="TIPO_DOCUMENTO" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="Documento" type="String" p1:nullable="True" p1:ValidateMaxLength="20" p1:ValidateRequired="false" p1:Guid="a424f5f6-e44c-4a94-98c9-3488c42921cc">
+      <column name="DOCUMENTO" not-null="False" length="20" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

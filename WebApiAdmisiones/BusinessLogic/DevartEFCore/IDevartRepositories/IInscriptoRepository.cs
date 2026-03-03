@@ -12,10 +12,5 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IInscriptoRepository
     {
         Inscripto GetUltimaInscripcion(long codigoPersona);
-        Inscripto GetInscripcionPorProductoProceso(long codigoPersona, long idProducto, long idProceso);
-        ICollection<Inscripto> GetInscripcionesRealizadas(long codigoPersona);
-        ICollection<Inscripto> GetInscripcionesPendientes(long codigoPersona);
-        ICollection<Inscripto> GetInscripcionesCanceladas(long codigoPersona);
-        ICollection<Inscripto> GetProductosBeca(long codigoPersona);
     }
 }

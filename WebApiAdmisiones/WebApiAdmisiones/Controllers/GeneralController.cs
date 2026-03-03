@@ -36,11 +36,11 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="envioMailORT">Servicio de envío de mails.</param>
         /// <param name="currentUser">Servicio que expone el usuario actual.</param>
         public GeneralController(
-            IGeneralServices FdpService,
+            IGeneralServices AdmisionesService,
             ILogger<GeneralController> logger,
             ICurrentUserService currentUser) : base(logger, currentUser)
         {
-            _GeneralService = FdpService;
+            _GeneralService = AdmisionesService;
         }
 
         #endregion PROPS & CONSTRUCTOR
@@ -146,25 +146,6 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerUltimaInscripcion()
         {
             var result = _GeneralService.ObtenerUltimaInscripcion(287023);
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene la inscripción de la persona autenticada para un producto y proceso específicos.
-        /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>Inscripción encontrada.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionPorProductoProceso")]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 400)]
-        public IActionResult ObtenerInscripcionPorProductoProceso([FromQuery] long idProducto, [FromQuery] long idProceso)
-        {
-            var result = _GeneralService.ObtenerInscripcionPorProductoProceso(_currentUser.GetUserId(), idProducto, idProceso);
             return ValidateResponse(result);
         }
 
@@ -420,57 +401,6 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las inscripciones realizadas (confirmadas) de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de inscripciones realizadas.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesRealizadas")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 400)]
-        public IActionResult ObtenerInscripcionesRealizadas()
-        {
-            var result = _GeneralService.ObtenerInscripcionesRealizadas(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene las inscripciones pendientes de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de inscripciones pendientes.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesPendientes")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 400)]
-        public IActionResult ObtenerInscripcionesPendientes()
-        {
-            var result = _GeneralService.ObtenerInscripcionesPendientes(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene las inscripciones canceladas de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de inscripciones canceladas.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesCanceladas")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 400)]
-        public IActionResult ObtenerInscripcionesCanceladas()
-        {
-            var result = _GeneralService.ObtenerInscripcionesCanceladas(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
         /// Obtiene los productos de interés de la persona autenticada que aún no tienen inscripción confirmada.
         /// </summary>
         /// <returns>Lista de productos de interés.</returns>
@@ -484,23 +414,6 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerProductoInteresPersona()
         {
             var result = _GeneralService.ObtenerProductoInteresPersona(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene los productos en los que la persona autenticada tiene una beca postulada.
-        /// </summary>
-        /// <returns>Lista de inscripciones con beca.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("ProductosBeca")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscriptoDevart>>), 400)]
-        public IActionResult ObtenerProductosBeca()
-        {
-            var result = _GeneralService.ObtenerProductosBeca(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 

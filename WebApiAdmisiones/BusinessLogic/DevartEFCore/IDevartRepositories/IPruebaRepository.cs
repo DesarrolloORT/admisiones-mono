@@ -11,6 +11,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IPruebaRepository
     {
-        ICollection<Prueba> GetPruebasVigentesParaAdmisiones(long idProceso);
+        ICollection<Prueba> GetPruebasVigentesParaAdmisiones(long idProducto, long idProceso);
     }
 }

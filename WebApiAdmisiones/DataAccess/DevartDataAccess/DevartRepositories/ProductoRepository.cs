@@ -17,9 +17,22 @@ namespace DataAccess.DevartRepositories
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteres(long codigoPersona)
         {
+            var today = DateTime.Today;
             return objectSet
-                .Where(p => p.InteresProductos.Any(ip =>
-                    ip.Intere != null && ip.Intere.CodigoPersona == codigoPersona))
+                .Where(p =>
+                    p.VisibleAdmisionesProducto == "SI"
+                    && p.InscribibleProducto == "SI"
+                    && p.PermiteInteresadoProducto == "SI"
+                    && p.ActivoWebProducto == "SI"
+                    && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
+                    && !p.Inscriptos_IdProductoReal.Any(i =>
+                        i.CodigoPersona == codigoPersona && i.BajaInscr == null)
+                    && p.InteresProductos.Any(ip =>
+                        ip.Intere != null
+                        && ip.Intere.CodigoPersona == codigoPersona
+                        && ip.IdGradoInteres != 5
+                        && ip.Intere.Proceso.HabilitadoInteresSitio == "SI"))
                 .Include(p => p.ProcesoProductos)
                     .ThenInclude(pp => pp.Proceso)
                 .ToList();
@@ -30,12 +43,22 @@ namespace DataAccess.DevartRepositories
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Producto> GetProductoInteresPersona(long codigoPersona)
         {
+            var today = DateTime.Today;
             return objectSet
                 .Where(p =>
-                    p.InteresProductos.Any(ip =>
-                        ip.Intere != null && ip.Intere.CodigoPersona == codigoPersona)
+                    p.VisibleAdmisionesProducto == "SI"
+                    && p.InscribibleProducto == "SI"
+                    && p.PermiteInteresadoProducto == "SI"
+                    && p.ActivoWebProducto == "SI"
+                    && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
                     && !p.Inscriptos_IdProductoReal.Any(i =>
-                        i.CodigoPersona == codigoPersona && i.BajaInscr == null))
+                        i.CodigoPersona == codigoPersona && i.BajaInscr == null)
+                    && p.InteresProductos.Any(ip =>
+                        ip.Intere != null
+                        && ip.Intere.CodigoPersona == codigoPersona
+                        && ip.IdGradoInteres != 5
+                        && ip.Intere.Proceso.HabilitadoInteresSitio == "SI"))
                 .Include(p => p.ProcesoProductos)
                     .ThenInclude(pp => pp.Proceso)
                 .ToList();

@@ -88,17 +88,6 @@ namespace AppLogic.Services
             return OperationResult<DtoInscriptoDevart>.Ok(inscripto.ToDto(), nameof(ObtenerUltimaInscripcion));
         }
 
-        public OperationResult<DtoInscriptoDevart> ObtenerInscripcionPorProductoProceso(
-            long codigoPersona, long idProducto, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var inscripto = uow.Inscriptos.GetInscripcionPorProductoProceso(codigoPersona, idProducto, idProceso);
-            if (inscripto == null)
-                return OperationResult<DtoInscriptoDevart>.IsFailed("GEN_IPP_01", nameof(ObtenerInscripcionPorProductoProceso), "No se encontró inscripción para el producto y proceso indicados.", 204);
-
-            return OperationResult<DtoInscriptoDevart>.Ok(inscripto.ToDto(), nameof(ObtenerInscripcionPorProductoProceso));
-        }
-
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         #region PERSONA
@@ -198,7 +187,7 @@ namespace AppLogic.Services
             long codigoPersona, long idProducto, long idProceso)
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Pruebas.GetPruebasVigentesParaAdmisiones(idProceso);
+            var entidades = uow.Pruebas.GetPruebasVigentesParaAdmisiones(idProducto, idProceso);
             return OperationResult<IEnumerable<DtoPruebaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerFondosDeBecaVigentes));
         }
 
@@ -223,39 +212,11 @@ namespace AppLogic.Services
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), nameof(ObtenerAceptacionReglamentoEstudiantil));
         }
 
-        public OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesRealizadas(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona);
-            return OperationResult<IEnumerable<DtoInscriptoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerInscripcionesRealizadas));
-        }
-
-        public OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesPendientes(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Inscriptos.GetInscripcionesPendientes(codigoPersona);
-            return OperationResult<IEnumerable<DtoInscriptoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerInscripcionesPendientes));
-        }
-
-        public OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerInscripcionesCanceladas(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Inscriptos.GetInscripcionesCanceladas(codigoPersona);
-            return OperationResult<IEnumerable<DtoInscriptoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerInscripcionesCanceladas));
-        }
-
         public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductoInteresPersona(codigoPersona);
             return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProductoInteresPersona));
-        }
-
-        public OperationResult<IEnumerable<DtoInscriptoDevart>> ObtenerProductosBeca(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Inscriptos.GetProductosBeca(codigoPersona);
-            return OperationResult<IEnumerable<DtoInscriptoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProductosBeca));
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
