@@ -5,10 +5,13 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IEmpresaRepository
     {
+        ICollection<Empresa> GetInstituciones(long codigoPais, long codigoEstado);
+        ICollection<Empresa> GetUniversidades();
     }
 }

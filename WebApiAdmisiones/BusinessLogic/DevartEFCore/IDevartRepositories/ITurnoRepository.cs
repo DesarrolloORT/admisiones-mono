@@ -5,10 +5,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface ITurnoRepository
     {
+        ICollection<Turno> GetTurnosParaAdmisiones(long idProducto, long idProceso);
     }
 }

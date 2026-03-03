@@ -5,10 +5,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface ITipoDescuentoRepository
     {
+        ICollection<TipoDescuento> GetFondosDeBecaVigentesPorProducto(long idProducto);
     }
 }

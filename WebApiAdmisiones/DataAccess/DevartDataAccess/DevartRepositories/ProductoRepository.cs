@@ -8,9 +8,37 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class ProductoRepository
     {
+        /// <summary>
+        /// Devuelve los productos en los que una persona tiene registrado algún interés.
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteres(long codigoPersona)
+        {
+            return objectSet
+                .Where(p => p.InteresProductos.Any(ip =>
+                    ip.Intere != null && ip.Intere.CodigoPersona == codigoPersona))
+                .Include(p => p.ProcesoProductos)
+                    .ThenInclude(pp => pp.Proceso)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Devuelve los productos en los que la persona tiene interés pero aún no tiene inscripción activa.
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductoInteresPersona(long codigoPersona)
+        {
+            return objectSet
+                .Where(p =>
+                    p.InteresProductos.Any(ip =>
+                        ip.Intere != null && ip.Intere.CodigoPersona == codigoPersona)
+                    && !p.Inscriptos_IdProductoReal.Any(i =>
+                        i.CodigoPersona == codigoPersona && i.BajaInscr == null))
+                .Include(p => p.ProcesoProductos)
+                    .ThenInclude(pp => pp.Proceso)
+                .ToList();
+        }
     }
 }

@@ -5,10 +5,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IAnioBachillerRepository
     {
+        AnioBachiller GetWithRelated(long idAnioBachillerato);
     }
 }
