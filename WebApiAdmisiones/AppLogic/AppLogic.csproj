@@ -6,6 +6,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />
 		<ProjectReference Include="..\..\Core\MailORT\MailORT.csproj" />
 		<ProjectReference Include="..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />
 		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />

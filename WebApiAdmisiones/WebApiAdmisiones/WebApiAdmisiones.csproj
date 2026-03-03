@@ -43,6 +43,8 @@
    <ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />  
    <ProjectReference Include="..\AppLogic\AppLogic.csproj" />  
    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />  
+   <ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />  
+   <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModDataAccess\ModGenericBaseDataAccess.csproj" />  
  </ItemGroup>  
  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>

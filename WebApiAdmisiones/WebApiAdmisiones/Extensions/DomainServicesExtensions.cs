@@ -1,3 +1,4 @@
+using AppLogic.IServices;
 using AppLogic.Interfaces;
 using AppLogic.Services;
 using BusinessLogic.IDevartRepositories;
@@ -6,6 +7,8 @@ using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
 using DataAccess.GenericAccess.Services;
+using LdapService.Interfaces;
+using LdapService.Services;
 using MailORT;
 using Microsoft.EntityFrameworkCore;
 using ModBandejaAppLogic.Interfaces;
@@ -64,11 +67,24 @@ namespace WebApiAdmisiones.Extensions
                 options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
             });
 
+            services.AddDbContext<ModGenericBaseDataAccess.GenericModelContext>((sp, options) =>
+            {
+                var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
+            });
+
             // Repositorios y UoW
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModBandejaDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
+            services.AddScoped<ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
+                               ModGenericBaseDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
+
+            // Autenticación LDAP
+            services.AddScoped<ILdap, Ldap>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAuthService, AuthService>();
 
             // Servicios de aplicación
             services.AddScoped<ICurrentUserService, CurrentUserService>();

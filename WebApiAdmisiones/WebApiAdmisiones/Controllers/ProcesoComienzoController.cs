@@ -8,6 +8,7 @@ using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class ProcesoComienzoController : ApiBaseController<ProcesoComienzoController>
