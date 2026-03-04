@@ -21,6 +21,8 @@ namespace DataAccess.DevartRepositories
                 .Where(e => e.CodigoPersona == codigoPersona)
                 .Include(e => e.Proceso)
                 .Include(e => e.Turno)
+                .Include(e => e.Comienzo)
+                .Include(e => e.Producto)
                 .OrderByDescending(e => e.FechaIngreso)
                 .FirstOrDefault();
         }

@@ -99,23 +99,6 @@ namespace WebApiAdmisiones.Controllers
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         /// <summary>
-        /// Obtiene los productos con interés registrados para la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de productos con interés.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("ProductosConInteres")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 400)]
-        public IActionResult ObtenerProductosConInteres()
-        {
-            var result = _GeneralService.ObtenerProductosConInteres(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
         /// Obtiene los procesos habilitados para un producto específico.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>

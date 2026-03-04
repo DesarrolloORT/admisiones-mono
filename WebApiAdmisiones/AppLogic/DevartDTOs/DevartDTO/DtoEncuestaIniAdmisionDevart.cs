@@ -185,6 +185,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoProductoDevart Producto { get; set; }
 
+        public DtoComienzoDevart Comienzo { get; set; }
+
         #endregion
     }
 

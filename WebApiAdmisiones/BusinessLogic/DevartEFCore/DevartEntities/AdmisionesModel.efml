@@ -733,8 +733,8 @@
     <property name="IdCaracteristicaPaisTel2" type="Int64" p1:ValidateRequired="true" p1:Guid="688d64a6-c6bd-4ae1-aead-be7b7b1fbcf7">
       <column name="ID_CARACTERISTICA_PAIS_TEL2" default="1" not-null="True" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
-      <column name="EMAIL_ORT_PERSONA" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="250" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
+      <column name="EMAIL_ORT_PERSONA" not-null="False" length="250" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <class name="Imagen" entity-set="Imagens" table="T_IMAGEN" schema="CREADOR" p1:Guid="6b637d4e-e743-46b5-85d5-f44fc8761de7">
@@ -3644,30 +3644,6 @@
         <property name="IdProductoPcounter" />
       </end2>
     </association>
-    <association name="Comienzo_NivelProducto" cardinality="OneToMany" p1:Guid="7de8f413-3459-438d-a471-8b588f9280ef">
-      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="NivelProducto" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="7acc46b9-3d64-4e0f-ac9b-86af9d4c1f2f">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="NivelProductos" class="Comienzo" relation-class="NivelProducto" lazy="False" p1:Guid="1f196e6f-2020-4706-b537-99147f9b3985">
-        <property name="IdComienzoActivo" />
-      </end2>
-    </association>
-    <association name="Comienzo_ProcesoComienzo" cardinality="OneToMany" p1:Guid="7428a7c7-bc5d-45dc-9b3f-a714a3b25593">
-      <end1 multiplicity="One" name="Comienzo" class="ProcesoComienzo" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="5ee3ee1f-b251-4ff4-8d05-3fbf8f188a36">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="ProcesoComienzos" class="Comienzo" relation-class="ProcesoComienzo" lazy="False" p1:Guid="0d794f8a-a452-445f-a5c9-466e752d91cf">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
-    <association name="Comienzo_Supraoferta" cardinality="OneToMany" p1:Guid="81953ccb-59e9-481e-b3cd-a3f4e8af472e">
-      <end1 multiplicity="One" name="Comienzo" class="Supraoferta" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="4584f894-fbf5-4f0b-b124-b07b1ef6f801">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="Supraofertas" class="Comienzo" relation-class="Supraoferta" lazy="False" p1:Guid="35e0759c-9f33-45df-adfb-74e4a9223a0e">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
     <association name="Localidad_Oferta" cardinality="OneToMany" p1:Guid="e5907151-c33b-48f0-b889-146bc4b402db">
       <end1 multiplicity="One" name="Localidad" class="Oferta" relation-class="Localidad" constrained="True" lazy="False" p1:Guid="136a8090-e0ab-4bfd-8e1b-ed18717ebb5d">
         <property name="IdLocalidad" />
@@ -3868,14 +3844,6 @@
         <property name="IdProductoOriginal" />
       </end2>
     </association>
-    <association name="Comienzo_Prueba" cardinality="OneToMany" p1:Guid="59f56d60-f9ce-4559-9ad1-68b032070908">
-      <end1 multiplicity="One" name="Comienzo" class="Prueba" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="d213ece1-cf0a-4de8-9e0d-dc2a98b294a7">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="Pruebas" class="Comienzo" relation-class="Prueba" lazy="False" p1:Guid="10f52287-8a44-4a78-aa4c-571e41adf4f7">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
     <association name="TipoDescuento_Prueba" cardinality="OneToMany" p1:Guid="d2714b4c-21e2-4586-91ab-55a82ee8093d">
       <end1 multiplicity="One" name="TipoDescuento" class="Prueba" relation-class="TipoDescuento" constrained="True" lazy="False" p1:Guid="e37182cb-9b68-40da-aa64-329c44fcd115">
         <property name="IdTipoDescuento" />
@@ -3938,6 +3906,54 @@
       </end1>
       <end2 multiplicity="Many" name="Personas_IdCaracteristicaPaisTel2" class="CaracteristicaPai" relation-class="Persona" lazy="False" p1:Guid="41f6083e-e424-4344-a5c6-77e746c3660f">
         <property name="IdCaracteristicaPaisTel2" />
+      </end2>
+    </association>
+    <association name="Producto_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="febbe5ea-740c-47fa-a367-4f7cc1b99dee">
+      <end1 multiplicity="ZeroOrOne" name="Producto" class="EncuestaIniAdmision" relation-class="Producto" constrained="True" lazy="False" p1:Guid="05ad64ff-c928-494e-a72f-93f6e5b4d790">
+        <property name="IdProducto" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Producto" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="dacd4948-da8a-4423-9bba-6ad1a3525337">
+        <property name="IdProducto" />
+      </end2>
+    </association>
+    <association name="Comienzo_NivelProducto" cardinality="OneToMany" p1:Guid="a61fc625-0ca5-4557-9034-25a153ba0e8c">
+      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="NivelProducto" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="a454b43c-a046-465d-9178-c0c468184cd3">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="NivelProductos" class="Comienzo" relation-class="NivelProducto" lazy="False" p1:Guid="49ff7d76-3a62-45c2-9df0-dd79b94da937">
+        <property name="IdComienzoActivo" />
+      </end2>
+    </association>
+    <association name="Comienzo_ProcesoComienzo" cardinality="OneToMany" p1:Guid="937f9962-3ac9-4d11-ab2d-19ab11c289c6">
+      <end1 multiplicity="One" name="Comienzo" class="ProcesoComienzo" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="93683cc5-94c0-43af-9da0-134295cc6fa9">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="ProcesoComienzos" class="Comienzo" relation-class="ProcesoComienzo" lazy="False" p1:Guid="73bbd28e-5f2a-42d7-bb49-0c2a208abffa">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Comienzo_Supraoferta" cardinality="OneToMany" p1:Guid="5f7dcfc8-da10-4705-b895-4e34cc0f68de">
+      <end1 multiplicity="One" name="Comienzo" class="Supraoferta" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="01ad74a2-ee9d-4849-95b9-601bf8df27c1">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="Supraofertas" class="Comienzo" relation-class="Supraoferta" lazy="False" p1:Guid="5f553faa-a73e-40a9-8c85-4e31db617786">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Comienzo_Prueba" cardinality="OneToMany" p1:Guid="7662a0d4-dec1-4d5e-ae64-5f03b716a47b">
+      <end1 multiplicity="One" name="Comienzo" class="Prueba" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="5d01c064-165e-4192-927f-b7ad62334f62">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="Pruebas" class="Comienzo" relation-class="Prueba" lazy="False" p1:Guid="ea74ff36-4100-4d10-81d4-47602bc32531">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="d6e871c3-26bf-4784-8077-295bf4702397">
+      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="a3a4a0e3-11cf-46b3-ad53-f978dd2206f5">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="c56200bf-3d50-4d92-a7f8-1a6ea6269189">
+        <property name="IdComienzo" />
       </end2>
     </association>
   </associations>
