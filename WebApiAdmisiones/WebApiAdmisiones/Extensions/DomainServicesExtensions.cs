@@ -89,6 +89,7 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de aplicación
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralServices, GeneralServices>();
+            services.AddScoped<IFondoDeBecaServices, FondoDeBecaServices>();
             services.AddScoped<IBandejaService, BandejaService>();
             services.AddScoped<IProcesoComienzoServices, ProcesoComienzoServices>();
 

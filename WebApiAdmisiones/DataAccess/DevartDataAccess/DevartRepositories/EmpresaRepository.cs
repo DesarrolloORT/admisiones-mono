@@ -49,6 +49,18 @@ namespace DataAccess.DevartRepositories
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Empresa> GetUniversidades()
         {
+            return GetUniversidades(1);
+        }
+
+        /// <summary>
+        /// Devuelve las universidades para el país indicado.
+        /// Para países distintos de Uruguay (1) devuelve únicamente ORT (2898).
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.Empresa> GetUniversidades(long codigoPais)
+        {
+            if (codigoPais != 1)
+                return objectSet.Where(e => e.CodigoEmpresa == 2898).ToList();
+
             return objectSet
                 .Where(e => (e.InstitucionEducativa == "SI"
                           && e.CodigoVigencia != "NO"

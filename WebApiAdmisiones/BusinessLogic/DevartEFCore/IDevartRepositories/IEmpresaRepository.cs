@@ -13,5 +13,6 @@ namespace BusinessLogic.IDevartRepositories
     {
         ICollection<Empresa> GetInstituciones(long codigoPais, long codigoEstado);
         ICollection<Empresa> GetUniversidades();
+        ICollection<Empresa> GetUniversidades(long codigoPais);
     }
 }
