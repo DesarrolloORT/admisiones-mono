@@ -51,8 +51,8 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Productos = source.Productos.ToDtosWithRelated(level - 1);
-              target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
               target.TipoBecaNivelProductos = source.TipoBecaNivelProductos.ToDtosWithRelated(level - 1);
+              target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
             }
 
             // User-defined partial method

@@ -58,13 +58,10 @@ namespace DataAccess.DevartRepositories
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Empresa> GetUniversidades(long codigoPais)
         {
-            if (codigoPais != 1)
-                return objectSet.Where(e => e.CodigoEmpresa == 2898).ToList();
-
             return objectSet
                 .Where(e => (e.InstitucionEducativa == "SI"
                           && e.CodigoVigencia != "NO"
-                          && e.CodigoPais == 1
+                          && e.CodigoPais == codigoPais
                           && e.CodigoGiroEmpresa == 30
                           && e.CodigoEmpresa != 5539)
                          || e.CodigoEmpresa == 2898)

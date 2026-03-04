@@ -485,7 +485,7 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public long IdCaracteristicaPaisTel2 { get; set; }
 
-        [StringLength(60)]
+        [StringLength(250)]
         public string? EmailOrtPersona { get; set; }
 
         #endregion

@@ -13,33 +13,11 @@ namespace DataAccess.DevartRepositories
     public partial class ProductoRepository
     {
         /// <summary>
-        /// Devuelve los productos en los que una persona tiene registrado algún interés.
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteres(long codigoPersona)
-        {
-            var today = DateTime.Today;
-            return objectSet
-                .Where(p =>
-                    p.VisibleAdmisionesProducto == "SI"
-                    && p.InscribibleProducto == "SI"
-                    && p.PermiteInteresadoProducto == "SI"
-                    && p.ActivoWebProducto == "SI"
-                    && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
-                    && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
-                    && !p.Inscriptos_IdProductoReal.Any(i =>
-                        i.CodigoPersona == codigoPersona && i.BajaInscr == null)
-                    && p.InteresProductos.Any(ip =>
-                        ip.Intere != null
-                        && ip.Intere.CodigoPersona == codigoPersona
-                        && ip.IdGradoInteres != 5
-                        && ip.Intere.Proceso.HabilitadoInteresSitio == "SI"))
-                .Include(p => p.ProcesoProductos)
-                    .ThenInclude(pp => pp.Proceso)
-                .ToList();
-        }
-
-        /// <summary>
-        /// Devuelve los productos en los que la persona tiene interés pero aún no tiene inscripción activa.
+        /// Devuelve los productos en los que la persona tiene interés registrado y no tiene
+        /// una inscripción pendiente en el workflow (sin baja ni finalización).
+        /// No excluye productos con inscripción activa en T_INSCRIPTO.
+        /// Excluye interés de grado 5 de forma simple (sin condiciones adicionales de proceso o VD_FRESCO).
+        /// Equivalente al filtro: setWhereConsultaProcesoVigenteInteresadoSinInscripciones (LogicaORT).
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Producto> GetProductoInteresPersona(long codigoPersona)
         {
@@ -52,8 +30,20 @@ namespace DataAccess.DevartRepositories
                     && p.ActivoWebProducto == "SI"
                     && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
                     && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
-                    && !p.Inscriptos_IdProductoReal.Any(i =>
-                        i.CodigoPersona == codigoPersona && i.BajaInscr == null)
+                    // Excluye productos que ya tienen una inscripción pendiente en el workflow para esta persona
+                    && !Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>().Any(iwi =>
+                        iwi.IdProducto == (decimal?)p.IdProducto
+                        && Context.Set<BusinessLogic.Entities.InstanciaWorkflow>().Any(iw =>
+                            iw.IdInstanciaWorkflow == iwi.IdInstanciaWorkflow
+                            && iw.IdObjetoInstanciaWorkflow == (decimal?)codigoPersona
+                            && iw.FechaCanceladoInstanciaWf == null
+                            && iw.FechaFinalInstanciaWf == null))
+                    // Excluye interés grado 5 para la persona (simple, sin condiciones adicionales)
+                    && !p.InteresProductos.Any(ip =>
+                        ip.Intere != null
+                        && ip.Intere.CodigoPersona == codigoPersona
+                        && ip.IdGradoInteres == 5)
+                    // La persona tiene al menos un interés activo (no grado 5) en proceso habilitado
                     && p.InteresProductos.Any(ip =>
                         ip.Intere != null
                         && ip.Intere.CodigoPersona == codigoPersona

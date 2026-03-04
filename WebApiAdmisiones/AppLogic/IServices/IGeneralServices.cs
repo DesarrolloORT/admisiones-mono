@@ -19,7 +19,6 @@ namespace AppLogic.Interfaces
         #endregion CONSULTAS GENERALES
 
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
-        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteres(long codigoPersona);
         OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
         OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcion(long codigoPersona);
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS

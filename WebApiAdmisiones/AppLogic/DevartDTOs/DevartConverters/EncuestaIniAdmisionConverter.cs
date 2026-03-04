@@ -95,6 +95,7 @@ namespace AppLogic.DevartDTOs
               target.Empresa = source.Empresa.ToDtoWithRelated(level - 1);
               target.Proceso = source.Proceso.ToDtoWithRelated(level - 1);
               target.Turno = source.Turno.ToDtoWithRelated(level - 1);
+              target.Producto = source.Producto.ToDtoWithRelated(level - 1);
             }
 
             // User-defined partial method

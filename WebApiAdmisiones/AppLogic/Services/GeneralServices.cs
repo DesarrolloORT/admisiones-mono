@@ -64,13 +64,6 @@ namespace AppLogic.Services
 
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
-        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteres(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosConInteres(codigoPersona);
-            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProductosConInteres));
-        }
-
         public OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto)
         {
             using var uow = _uowFactory.Create();

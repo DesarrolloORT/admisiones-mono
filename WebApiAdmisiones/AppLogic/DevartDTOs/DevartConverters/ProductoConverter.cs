@@ -111,6 +111,7 @@ namespace AppLogic.DevartDTOs
               target.CentroCosto = source.CentroCosto.ToDtoWithRelated(level - 1);
               target.InscriptoPruebas_IdProducto = source.InscriptoPruebas_IdProducto.ToDtosWithRelated(level - 1);
               target.InscriptoPruebas_IdProductoOriginal = source.InscriptoPruebas_IdProductoOriginal.ToDtosWithRelated(level - 1);
+              target.EncuestaIniAdmisions = source.EncuestaIniAdmisions.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

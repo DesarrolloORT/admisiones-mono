@@ -183,6 +183,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoTurnoDevart Turno { get; set; }
 
+        public DtoProductoDevart Producto { get; set; }
+
         #endregion
     }
 

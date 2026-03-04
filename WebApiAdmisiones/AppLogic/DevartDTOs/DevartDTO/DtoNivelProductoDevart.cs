@@ -62,9 +62,9 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoProductoDevart> Productos { get; set; }
 
-        public DtoComienzoDevart Comienzo { get; set; }
-
         public List<DtoTipoBecaNivelProductoDevart> TipoBecaNivelProductos { get; set; }
+
+        public DtoComienzoDevart Comienzo { get; set; }
 
         #endregion
     }

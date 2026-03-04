@@ -63,10 +63,10 @@ namespace AppLogic.DevartDTOs
 
             // Navigation Properties
             if (level > 0) {
-              target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
               target.TipoDescuento = source.TipoDescuento.ToDtoWithRelated(level - 1);
               target.Accions = source.Accions.ToDtosWithRelated(level - 1);
               target.InscriptoPruebas = source.InscriptoPruebas.ToDtosWithRelated(level - 1);
+              target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
             }
 
             // User-defined partial method

@@ -96,13 +96,13 @@ namespace AppLogic.DevartDTOs
 
         #region Navigation Properties
 
-        public DtoComienzoDevart Comienzo { get; set; }
-
         public DtoTipoDescuentoDevart TipoDescuento { get; set; }
 
         public List<DtoAccionDevart> Accions { get; set; }
 
         public List<DtoInscriptoPruebaDevart> InscriptoPruebas { get; set; }
+
+        public DtoComienzoDevart Comienzo { get; set; }
 
         #endregion
     }
