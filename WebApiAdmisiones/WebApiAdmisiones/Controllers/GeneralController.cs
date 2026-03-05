@@ -348,6 +348,24 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interés registrado y no está inscripta.
+        /// Equivalente al endpoint ProductosVigentesConInteres de la API anterior.
+        /// </summary>
+        /// <returns>Lista de productos vigentes con interés.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="204">Sin datos.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("ProductosVigentesConInteres")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 204)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 400)]
+        public IActionResult ObtenerProductosVigentesConInteres()
+        {
+            var result = _GeneralService.ObtenerProductosVigentesConInteres(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Obtiene los productos de interés de la persona autenticada que aún no tienen inscripción confirmada.
         /// </summary>
         /// <returns>Lista de productos de interés.</returns>

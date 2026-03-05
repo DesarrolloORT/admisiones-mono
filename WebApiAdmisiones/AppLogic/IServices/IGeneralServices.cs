@@ -48,6 +48,7 @@ namespace AppLogic.Interfaces
         #region INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
         OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona);
+        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona);
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
     }
 }

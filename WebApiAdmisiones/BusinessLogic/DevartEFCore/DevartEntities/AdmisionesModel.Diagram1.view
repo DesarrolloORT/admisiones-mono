@@ -2459,7 +2459,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>5d01c064-165e-4192-927f-b7ad62334f62</Path>
+                      <Path>6c8e83b9-edcc-43aa-8b67-fbae4fd05f49</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -7248,7 +7248,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>93683cc5-94c0-43af-9da0-134295cc6fa9</Path>
+                      <Path>990d56e7-ac0f-4f1e-982c-77e1a67bcdcb</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -7843,7 +7843,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>01ad74a2-ee9d-4849-95b9-601bf8df27c1</Path>
+                      <Path>cabb2ca9-9c55-441c-b4a3-ba61410b7310</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -11739,7 +11739,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>49ff7d76-3a62-45c2-9df0-dd79b94da937</Path>
+                      <Path>2a3c78c4-50b7-4bd9-aa44-ed3802f7be59</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -11758,7 +11758,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>73bbd28e-5f2a-42d7-bb49-0c2a208abffa</Path>
+                      <Path>8948f7e3-1a4f-445a-8079-a0ad09358922</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -11777,7 +11777,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>5f553faa-a73e-40a9-8c85-4e31db617786</Path>
+                      <Path>7a564be8-0a5d-43d2-82f7-241a96d1c50f</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -11796,7 +11796,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>ea74ff36-4100-4d10-81d4-47602bc32531</Path>
+                      <Path>f2687cd8-f3a8-47fa-826b-fd9f53946e08</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -11815,7 +11815,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>c56200bf-3d50-4d92-a7f8-1a6ea6269189</Path>
+                      <Path>a3c2011e-d9d6-44f7-bb6b-bc2b9f910550</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -13801,7 +13801,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>a454b43c-a046-465d-9178-c0c468184cd3</Path>
+                      <Path>ad72de75-5023-499b-a015-6693c810120b</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -18159,7 +18159,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>a3a4a0e3-11cf-46b3-ad53-f978dd2206f5</Path>
+                      <Path>48e3ce8a-35d7-4ed5-b101-66b24f656769</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -30668,13 +30668,117 @@
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
-          <Model xsi:type="AssociationVwModel">
+          <Model xsi:type="ClassVwModel">
             <CustomProperties>
               <OID>1586</OID>
+              <Parent>0</Parent>
+            </CustomProperties>
+            <Children>
+              <Model xsi:type="PropertiesVwModel">
+                <CustomProperties>
+                  <OID>1587</OID>
+                  <Parent>1586</Parent>
+                </CustomProperties>
+                <Children>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>1588</OID>
+                      <Parent>1587</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>0.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>5fe9fa61-3aaf-4816-b5f3-422d59ddd912</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>1589</OID>
+                      <Parent>1587</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>18.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>c729a926-69ac-4365-bc8e-7a14f8404504</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                </Children>
+                <Size>
+                  <Width>145 px</Width>
+                  <Height>37 px</Height>
+                </Size>
+                <MaxSize>
+                  <Width>0 px</Width>
+                  <Height>37 px</Height>
+                </MaxSize>
+              </Model>
+              <Model xsi:type="RelationPropertiesVwModel">
+                <CustomProperties>
+                  <OID>1590</OID>
+                  <Parent>1586</Parent>
+                </CustomProperties>
+                <Children />
+                <Location>
+                  <X>0 px</X>
+                  <Y>36 px</Y>
+                </Location>
+                <Size>
+                  <Width>145 px</Width>
+                  <Height>19 px</Height>
+                </Size>
+                <MaxSize>
+                  <Width>0 px</Width>
+                  <Height>19 px</Height>
+                </MaxSize>
+                <Hidden>false</Hidden>
+              </Model>
+            </Children>
+            <Location>
+              <X>2168 px</X>
+              <Y>2552 px</Y>
+            </Location>
+            <Size>
+              <Width>150 px</Width>
+              <Height>104 px</Height>
+            </Size>
+            <MinSize>
+              <Width>100 px</Width>
+              <Height>104 px</Height>
+            </MinSize>
+            <MaxSize>
+              <Width>800 px</Width>
+              <Height>104 px</Height>
+            </MaxSize>
+            <Ports />
+            <Oid xsi:type="SchemaModelOID">
+              <Path>3815fb17-8bb3-4884-85a4-b5fb1fa5d871</Path>
+              <TypeName>EntityDeveloper.EntityFrameworkCore.EntityClass</TypeName>
+            </Oid>
+            <FixedHeight>22 px</FixedHeight>
+          </Model>
+          <Model xsi:type="AssociationVwModel">
+            <CustomProperties>
+              <OID>1591</OID>
               <OutModel>594</OutModel>
               <InModel>699</InModel>
-              <OutPort>1587</OutPort>
-              <InPort>1588</InPort>
+              <OutPort>1592</OutPort>
+              <InPort>1593</InPort>
               <Parent>0</Parent>
             </CustomProperties>
             <PortAnchors>
@@ -30686,7 +30790,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
                 <CustomProperties>
-                  <OID>1587</OID>
+                  <OID>1592</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30698,7 +30802,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Right</Align>
                 <CustomProperties>
-                  <OID>1588</OID>
+                  <OID>1593</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30731,17 +30835,17 @@
             </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
-              <Path>a61fc625-0ca5-4557-9034-25a153ba0e8c</Path>
+              <Path>2503fa66-b951-4d73-908a-57c4428a52a1</Path>
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
           <Model xsi:type="AssociationVwModel">
             <CustomProperties>
-              <OID>1589</OID>
+              <OID>1594</OID>
               <OutModel>594</OutModel>
               <InModel>371</InModel>
-              <OutPort>1590</OutPort>
-              <InPort>1591</InPort>
+              <OutPort>1595</OutPort>
+              <InPort>1596</InPort>
               <Parent>0</Parent>
             </CustomProperties>
             <PortAnchors>
@@ -30753,7 +30857,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
                 <CustomProperties>
-                  <OID>1590</OID>
+                  <OID>1595</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30765,34 +30869,34 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Right</Align>
                 <CustomProperties>
-                  <OID>1591</OID>
+                  <OID>1596</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
             </PortAnchors>
             <BendPoints>
               <PointD>
-                <X>2532 px</X>
-                <Y>1580.91479492188 px</Y>
+                <X>1955 px</X>
+                <Y>1580.91479820628 px</Y>
               </PointD>
               <PointD>
-                <X>2532 px</X>
+                <X>1955 px</X>
                 <Y>1577 px</Y>
               </PointD>
             </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
-              <Path>937f9962-3ac9-4d11-ab2d-19ab11c289c6</Path>
+              <Path>dd6058c1-7e0f-4901-b90f-fcdd574e70c8</Path>
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
           <Model xsi:type="AssociationVwModel">
             <CustomProperties>
-              <OID>1592</OID>
+              <OID>1597</OID>
               <OutModel>594</OutModel>
               <InModel>381</InModel>
-              <OutPort>1593</OutPort>
-              <InPort>1594</InPort>
+              <OutPort>1598</OutPort>
+              <InPort>1599</InPort>
               <Parent>0</Parent>
             </CustomProperties>
             <PortAnchors>
@@ -30804,7 +30908,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
                 <CustomProperties>
-                  <OID>1593</OID>
+                  <OID>1598</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30816,7 +30920,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Right</Align>
                 <CustomProperties>
-                  <OID>1594</OID>
+                  <OID>1599</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30849,17 +30953,17 @@
             </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
-              <Path>5f7dcfc8-da10-4705-b895-4e34cc0f68de</Path>
+              <Path>ad04aaee-450c-48e2-a914-55cac74c5ea0</Path>
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
           <Model xsi:type="AssociationVwModel">
             <CustomProperties>
-              <OID>1595</OID>
+              <OID>1600</OID>
               <OutModel>594</OutModel>
               <InModel>98</InModel>
-              <OutPort>1596</OutPort>
-              <InPort>1597</InPort>
+              <OutPort>1601</OutPort>
+              <InPort>1602</InPort>
               <Parent>0</Parent>
             </CustomProperties>
             <PortAnchors>
@@ -30871,7 +30975,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
                 <CustomProperties>
-                  <OID>1596</OID>
+                  <OID>1601</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30883,34 +30987,34 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Right</Align>
                 <CustomProperties>
-                  <OID>1597</OID>
+                  <OID>1602</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
             </PortAnchors>
             <BendPoints>
               <PointD>
-                <X>2532 px</X>
+                <X>1379 px</X>
                 <Y>1886 px</Y>
               </PointD>
               <PointD>
-                <X>2532 px</X>
+                <X>1379 px</X>
                 <Y>1870.25 px</Y>
               </PointD>
             </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
-              <Path>7662a0d4-dec1-4d5e-ae64-5f03b716a47b</Path>
+              <Path>af565dca-62df-4ea8-b6d3-58c1b65647ee</Path>
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
           <Model xsi:type="AssociationVwModel">
             <CustomProperties>
-              <OID>1598</OID>
+              <OID>1603</OID>
               <OutModel>594</OutModel>
               <InModel>885</InModel>
-              <OutPort>1599</OutPort>
-              <InPort>1600</InPort>
+              <OutPort>1604</OutPort>
+              <InPort>1605</InPort>
               <Parent>0</Parent>
             </CustomProperties>
             <PortAnchors>
@@ -30922,7 +31026,7 @@
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
                 <CustomProperties>
-                  <OID>1599</OID>
+                  <OID>1604</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30934,7 +31038,7 @@
                 <Anchors>Left Right</Anchors>
                 <Align>Top</Align>
                 <CustomProperties>
-                  <OID>1600</OID>
+                  <OID>1605</OID>
                   <PortType>FloatAnchor</PortType>
                 </CustomProperties>
               </Port>
@@ -30963,7 +31067,7 @@
             </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
-              <Path>d6e871c3-26bf-4784-8077-295bf4702397</Path>
+              <Path>0933e475-24cd-4f97-bd4d-5b1eff2ce9c1</Path>
               <TypeName>EntityDeveloper.EntityFrameworkCore.EntityAssociation</TypeName>
             </Oid>
           </Model>
@@ -30971,10 +31075,10 @@
         <GridSize>8 px</GridSize>
         <ViewPort>
           <ScaleMode>Free</ScaleMode>
-          <Scale>0.501610339</Scale>
+          <Scale>0.475884765</Scale>
           <Location>
-            <X>326.947035725347 px</X>
-            <Y>1471.26155144071 px</Y>
+            <X>226.697509765625 px</X>
+            <Y>1251.26928710938 px</Y>
           </Location>
         </ViewPort>
         <Oid xsi:type="SchemaModelOID">

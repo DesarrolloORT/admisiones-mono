@@ -13,6 +13,76 @@ namespace DataAccess.DevartRepositories
     public partial class ProductoRepository
     {
         /// <summary>
+        /// Devuelve los productos vigentes con oferta abierta en los que la persona tiene interés,
+        /// sin inscripción activa y excluyendo interés grado 5 solo si la persona es fresca en ese producto
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosVigentesConInteres(long codigoPersona)
+        {
+            var today = DateTime.Today;
+
+            // 1. Comienzos válidos: proceso habilitado + producto nivel 1 o 2.
+            var comienzoIds = Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                .Where(pc =>
+                    pc.Proceso.HabilitadoInteresSitio == "SI"
+                    && pc.Proceso.ProcesoProductos.Any(pp =>
+                        pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2))
+                .Select(pc => pc.IdComienzo)
+                .Distinct()
+                .ToList();
+
+            // 2. Productos con inscripción activa (sin baja) para la persona.
+            var productosInscriptos = Context.Set<BusinessLogic.Entities.Inscripto>()
+                .Where(i => i.CodigoPersona == codigoPersona && i.BajaInscr == null && i.IdProductoReal.HasValue)
+                .Select(i => i.IdProductoReal!.Value)
+                .Distinct()
+                .ToList();
+
+            // 3. Productos con interés grado 5 en proceso marcado para web y habilitado.
+            var productosGrado5 = Context.Set<BusinessLogic.Entities.InteresProducto>()
+                .Where(ip =>
+                    ip.IdGradoInteres == 5m
+                    && ip.Intere.CodigoPersona == codigoPersona
+                    && ip.Intere.Proceso.MarcadoParawebProceso == "SI"
+                    && ip.Intere.Proceso.HabilitadoInteresSitio == "SI")
+                .Select(ip => ip.IdProducto)
+                .Distinct()
+                .ToList();
+
+            // 4. Productos donde la persona es "fresca".
+            var frescoProductoIds = Context.Set<BusinessLogic.Entities.VdFrescoProductoAdmisione>()
+                .Where(vd => vd.CodigoPersona == (long?)codigoPersona && vd.IdProducto.HasValue)
+                .Select(vd => vd.IdProducto!.Value)
+                .Distinct()
+                .ToList();
+
+            // 5. Excluir solo los grado 5 que también son frescos (intersección).
+            var productosGrado5Frescos = productosGrado5.Intersect(frescoProductoIds).ToList();
+
+            return objectSet
+                .Where(p =>
+                    p.VisibleAdmisionesProducto == "SI"
+                    && p.InscribibleProducto == "SI"
+                    && p.PermiteInteresadoProducto == "SI"
+                    && p.ActivoWebProducto == "SI"
+                    && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    // Tiene proceso habilitado
+                    && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
+                    // Tiene oferta abierta con semestre != 99 y comienzo en proceso habilitado
+                    && p.Paquetes.Any(pk =>
+                        pk.SemestrePaquete != 99
+                        && pk.Supraofertas.Any(so =>
+                            comienzoIds.Contains(so.IdComienzo)
+                            && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI")))
+                    // Sin inscripción activa
+                    && !productosInscriptos.Contains(p.IdProducto)
+                    // Sin interés grado 5 fresco
+                    && !productosGrado5Frescos.Contains(p.IdProducto))
+                .Include(p => p.ProcesoProductos)
+                    .ThenInclude(pp => pp.Proceso)
+                .ToList();
+        }
+
+        /// <summary>
         /// Devuelve los productos en los que la persona tiene interés registrado y no tiene
         /// una inscripción pendiente en el workflow (sin baja ni finalización).
         /// No excluye productos con inscripción activa en T_INSCRIPTO.

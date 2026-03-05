@@ -194,7 +194,14 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductoInteresPersona(codigoPersona);
-            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProductoInteresPersona));
+            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductoInteresPersona));
+        }
+
+        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
+            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductosVigentesConInteres));
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
