@@ -29,7 +29,6 @@ namespace AppLogic.Interfaces
 
         #region ENCUESTA
         OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerDatosPreInscripcion(long codigoPersona);
-        OperationResult<DateTime?> ObtenerFechaVtoAdmisiones(long codigoPersona, long idProceso);
         OperationResult<IEnumerable<DtoTurnoDevart>> ObtenerTurnos(long idProducto, long idProceso);
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();
@@ -43,7 +42,6 @@ namespace AppLogic.Interfaces
         #endregion BACHILLERATOS Y UNIVERSIDADES
 
         #region POSTULACION A BECAS
-        OperationResult<IEnumerable<DtoPruebaDevart>> ObtenerFondosDeBecaVigentes(long codigoPersona, long idProducto, long idProceso);
         OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorNivel(long idProducto);
         #endregion POSTULACION A BECAS
 

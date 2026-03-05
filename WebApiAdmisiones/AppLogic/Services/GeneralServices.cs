@@ -106,14 +106,7 @@ namespace AppLogic.Services
             if (encuesta == null)
                 return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerDatosPreInscripcion), "No se encontraron datos de pre-inscripción para la persona.", 204);
 
-            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDto(), nameof(ObtenerDatosPreInscripcion));
-        }
-
-        public OperationResult<DateTime?> ObtenerFechaVtoAdmisiones(long codigoPersona, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var fechaVto = uow.EncuestaIniAdmisions.GetFechaVtoAdmisiones(codigoPersona, idProceso);
-            return OperationResult<DateTime?>.Ok(fechaVto, nameof(ObtenerFechaVtoAdmisiones));
+            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerDatosPreInscripcion));
         }
 
         public OperationResult<IEnumerable<DtoTurnoDevart>> ObtenerTurnos(long idProducto, long idProceso)
@@ -175,14 +168,6 @@ namespace AppLogic.Services
         #endregion BACHILLERATOS Y UNIVERSIDADES
 
         #region POSTULACION A BECAS
-
-        public OperationResult<IEnumerable<DtoPruebaDevart>> ObtenerFondosDeBecaVigentes(
-            long codigoPersona, long idProducto, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Pruebas.GetPruebasVigentesParaAdmisiones(idProducto, idProceso);
-            return OperationResult<IEnumerable<DtoPruebaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerFondosDeBecaVigentes));
-        }
 
         public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorNivel(long idProducto)
         {

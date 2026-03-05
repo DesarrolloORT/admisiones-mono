@@ -12,27 +12,5 @@ namespace DataAccess.DevartRepositories
 {
     public partial class PruebaRepository
     {
-        /// <summary>
-        /// Devuelve las pruebas (fondos de beca) habilitadas para el sitio de admisiones
-        /// cuyo comienzo está vinculado al proceso indicado.
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.Prueba> GetPruebasVigentesParaAdmisiones(long idProducto, long idProceso)
-        {
-            var idNivelProducto = Context.Set<BusinessLogic.Entities.Producto>()
-                .Where(p => p.IdProducto == idProducto)
-                .Select(p => p.IdNivelProducto)
-                .FirstOrDefault();
-
-            return objectSet
-                .Where(p => p.HabilitadoSitioadmiPrueba == "SI"
-                         && p.HabilitadaPrueba == "SI"
-                         && p.EstadoPrueba == null
-                         && p.Comienzo.ProcesoComienzos.Any(pc => pc.IdProceso == idProceso)
-                         && p.TipoDescuento.TipoBecaNivelProductos
-                                .Any(bn => bn.IdNivelProducto == idNivelProducto))
-                .Include(p => p.TipoDescuento)
-                .Include(p => p.Comienzo)
-                .ToList();
-        }
     }
 }

@@ -12,6 +12,5 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IEncuestaIniAdmisionRepository
     {
         EncuestaIniAdmision GetByPersona(long codigoPersona);
-        DateTime? GetFechaVtoAdmisiones(long codigoPersona, long idProceso);
     }
 }

@@ -176,24 +176,6 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene la fecha de vencimiento de admisiones para la persona autenticada en un proceso dado.
-        /// </summary>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>Fecha de vencimiento.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("FechaVtoAdmisiones")]
-        [ProducesResponseType(typeof(OperationResult<DateTime?>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DateTime?>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DateTime?>), 400)]
-        public IActionResult ObtenerFechaVtoAdmisiones([FromQuery] long idProceso)
-        {
-            var result = _GeneralService.ObtenerFechaVtoAdmisiones(_currentUser.GetUserId(), idProceso);
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
         /// Obtiene los turnos disponibles para un producto y proceso de admisión.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
@@ -325,25 +307,6 @@ namespace WebApiAdmisiones.Controllers
         #endregion BACHILLERATOS Y UNIVERSIDADES
 
         #region POSTULACION A BECAS
-
-        /// <summary>
-        /// Obtiene los fondos de beca vigentes para la persona autenticada en un producto y proceso dados.
-        /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>Lista de fondos de beca vigentes.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("FondosDeBecaVigentes")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 400)]
-        public IActionResult ObtenerFondosDeBecaVigentes([FromQuery] long idProducto, [FromQuery] long idProceso)
-        {
-            var result = _GeneralService.ObtenerFondosDeBecaVigentes(_currentUser.GetUserId(), idProducto, idProceso);
-            return ValidateResponse(result);
-        }
 
         /// <summary>
         /// Obtiene los fondos de beca disponibles según el nivel de un producto.

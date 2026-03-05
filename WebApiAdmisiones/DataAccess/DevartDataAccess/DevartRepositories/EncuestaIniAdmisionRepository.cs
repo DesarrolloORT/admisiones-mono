@@ -27,16 +27,5 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault();
         }
 
-        /// <summary>
-        /// Devuelve la fecha de vencimiento de admisiones para la persona y proceso dados.
-        /// </summary>
-        public virtual DateTime? GetFechaVtoAdmisiones(long codigoPersona, long idProceso)
-        {
-            return objectSet
-                .Where(e => e.CodigoPersona == codigoPersona && e.IdProceso == idProceso)
-                .OrderByDescending(e => e.FechaIngreso)
-                .Select(e => e.FechaVtoAdmision)
-                .FirstOrDefault();
-        }
     }
 }
