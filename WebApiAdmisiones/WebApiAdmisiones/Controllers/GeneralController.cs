@@ -387,6 +387,25 @@ namespace WebApiAdmisiones.Controllers
         #region IMAGEN / DOCUMENTOS
 
         /// <summary>
+        /// Obtiene la foto de perfil del alumno autenticado.
+        /// </summary>
+        /// <returns>Imagen JPEG de la foto.</returns>
+        /// <response code="200">Foto obtenida correctamente.</response>
+        /// <response code="404">Foto no encontrada o sin imagen.</response>
+        [HttpGet("FotoAlumno")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
+        public IActionResult ObtenerFotoAlumno()
+        {
+            var result = _GeneralService.ObtenerFotoAlumno(_currentUser.GetUserId());
+
+            if (!result.Success)
+                return ValidateResponse(result);
+
+            return File(result.Data!, "image/jpeg");
+        }
+
+        /// <summary>
         /// Obtiene el documento de identidad (cédula) del alumno autenticado.
         /// </summary>
         /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>

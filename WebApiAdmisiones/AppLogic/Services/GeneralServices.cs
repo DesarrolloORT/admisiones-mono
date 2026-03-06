@@ -228,6 +228,20 @@ namespace AppLogic.Services
             return OperationResult<byte[]>.Ok(imagenTemporal.BlobImagen, nameof(ObtenerDocumentoAlumno));
         }
 
+        public OperationResult<byte[]> ObtenerFotoAlumno(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var imagen = uow.Imagens.GetFotoByPersona(codigoPersona);
+
+            if (imagen == null)
+                return OperationResult<byte[]>.IsFailed("GEN_FA_01", nameof(ObtenerFotoAlumno), "Foto no encontrada.", 404);
+
+            if (imagen.BlobImagen == null || imagen.BlobImagen.Length == 0)
+                return OperationResult<byte[]>.IsFailed("GEN_FA_02", nameof(ObtenerFotoAlumno), "La foto no contiene imagen.", 404);
+
+            return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoAlumno));
+        }
+
         #endregion IMAGEN / DOCUMENTOS
     }
 }

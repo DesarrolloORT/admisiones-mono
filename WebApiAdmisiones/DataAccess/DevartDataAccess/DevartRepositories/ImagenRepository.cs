@@ -7,10 +7,17 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class ImagenRepository
     {
+        public Imagen? GetFotoByPersona(long codigoPersona)
+        {
+            return Context.Set<Imagen>()
+                .FirstOrDefault(i => i.CodigoPersona == codigoPersona
+                                  && i.TipoImagen == "3");
+        }
     }
 }
