@@ -205,6 +205,30 @@ namespace AppLogic.Services
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
+
+        #region IMAGEN / DOCUMENTOS
+
+        public OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo)
+        {
+            if (tipo != 1 && tipo != 2)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_01", nameof(ObtenerDocumentoAlumno), "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).", 400);
+
+            using var uow = _uowFactory.Create();
+            var imagenTemporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+
+            if (imagenTemporal == null)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_02", nameof(ObtenerDocumentoAlumno), "Documento no encontrado.", 404);
+
+            if (imagenTemporal.FechaVtoDocumentoPersona.HasValue && imagenTemporal.FechaVtoDocumentoPersona.Value < DateTime.Now)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoAlumno), "El documento se encuentra vencido.", 204);
+
+            if (imagenTemporal.BlobImagen == null || imagenTemporal.BlobImagen.Length == 0)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_04", nameof(ObtenerDocumentoAlumno), "El documento no contiene imagen.", 404);
+
+            return OperationResult<byte[]>.Ok(imagenTemporal.BlobImagen, nameof(ObtenerDocumentoAlumno));
+        }
+
+        #endregion IMAGEN / DOCUMENTOS
     }
 }
 

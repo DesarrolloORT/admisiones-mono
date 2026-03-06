@@ -50,5 +50,9 @@ namespace AppLogic.Interfaces
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona);
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
+
+        #region IMAGEN / DOCUMENTOS
+        OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo);
+        #endregion IMAGEN / DOCUMENTOS
     }
 }

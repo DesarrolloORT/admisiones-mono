@@ -129,7 +129,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 400)]
         public IActionResult ObtenerUltimaInscripcion()
         {
-            var result = _GeneralService.ObtenerUltimaInscripcion(287023);
+            var result = _GeneralService.ObtenerUltimaInscripcion(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
@@ -383,6 +383,34 @@ namespace WebApiAdmisiones.Controllers
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
+
+        #region IMAGEN / DOCUMENTOS
+
+        /// <summary>
+        /// Obtiene el documento de identidad (cédula) del alumno autenticado.
+        /// </summary>
+        /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>
+        /// <returns>Imagen JPEG del documento.</returns>
+        /// <response code="200">Imagen obtenida correctamente.</response>
+        /// <response code="204">El documento está vencido.</response>
+        /// <response code="400">Tipo de documento inválido.</response>
+        /// <response code="404">Documento no encontrado o sin imagen.</response>
+        [HttpGet("DocumentoAlumno")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(OperationResult<byte[]>), 204)]
+        [ProducesResponseType(typeof(OperationResult<byte[]>), 400)]
+        [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
+        public IActionResult ObtenerDocumentoAlumno([FromQuery] int tipo)
+        {
+            var result = _GeneralService.ObtenerDocumentoAlumno(_currentUser.GetUserId(), tipo);
+
+            if (!result.Success)
+                return ValidateResponse(result);
+
+            return File(result.Data!, "image/jpeg");
+        }
+
+        #endregion IMAGEN / DOCUMENTOS
 
     }
 }
