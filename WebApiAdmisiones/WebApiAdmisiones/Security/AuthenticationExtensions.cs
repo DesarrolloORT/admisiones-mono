@@ -108,16 +108,19 @@ namespace WebApiAdmisiones.Security
                         /// </summary>
                         OnMessageReceived = context =>
                         {
-                            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+                            // 1. Intentar leer desde cookie HttpOnly (fuente preferida)
+                            var cookieToken = context.Request.Cookies[CookieAuthenticationHelper.AccessTokenCookieName];
+                            if (!string.IsNullOrEmpty(cookieToken))
+                            {
+                                context.Token = cookieToken;
+                                return Task.CompletedTask;
+                            }
 
+                            // 2. Fallback: Authorization header Bearer (para APIs externas)
+                            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
                             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                             {
                                 context.Token = authHeader.Substring("Bearer ".Length).Trim();
-                                Console.WriteLine($"Token extraído manualmente: {context.Token}");
-                            }
-                            else
-                            {
-                                Console.WriteLine("No se encontró Authorization o no empieza con 'Bearer '");
                             }
 
                             return Task.CompletedTask;

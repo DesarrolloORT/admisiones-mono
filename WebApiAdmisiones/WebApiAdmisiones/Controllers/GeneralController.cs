@@ -349,7 +349,6 @@ namespace WebApiAdmisiones.Controllers
 
         /// <summary>
         /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interés registrado y no está inscripta.
-        /// Equivalente al endpoint ProductosVigentesConInteres de la API anterior.
         /// </summary>
         /// <returns>Lista de productos vigentes con interés.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>

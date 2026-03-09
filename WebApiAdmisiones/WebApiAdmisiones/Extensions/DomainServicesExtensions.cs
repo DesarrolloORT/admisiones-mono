@@ -3,10 +3,12 @@ using AppLogic.Interfaces;
 using AppLogic.Services;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
+using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
 using DataAccess.GenericAccess.Services;
+using DataAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
 using MailORT;
@@ -84,6 +86,7 @@ namespace WebApiAdmisiones.Extensions
             // Autenticación LDAP
             services.AddScoped<ILdap, Ldap>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IAuthService, AuthService>();
 
             // Servicios de aplicación
