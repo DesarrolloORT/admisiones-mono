@@ -24,13 +24,12 @@ namespace DataAccess.DevartRepositories
         {
             var idNivelProducto = Context.Set<BusinessLogic.Entities.Producto>()
                 .Where(p => p.IdProducto == idProducto)
-                .Select(p => p.IdNivelProducto)
-                .FirstOrDefault();
+                .Select(p => p.IdNivelProducto);
 
             return objectSet
                 .Where(t => t.TipoBecaNivelProductos.Any(bn =>
                     bn.HabilitadoSitioOrt == "SI"
-                    && bn.IdNivelProducto == idNivelProducto))
+                    && idNivelProducto.Contains(bn.IdNivelProducto)))
                 .Include(t => t.TipoBecaNivelProductos)
                 .OrderBy(t => t.NombreTipoDescuento)
                 .ToList();

@@ -56,6 +56,7 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Persona = source.Persona.ToDtoWithRelated(level - 1);
+              target.InstWorkflowInscripcion = source.InstWorkflowInscripcion.ToDtoWithRelated(level - 1);
             }
 
             // User-defined partial method

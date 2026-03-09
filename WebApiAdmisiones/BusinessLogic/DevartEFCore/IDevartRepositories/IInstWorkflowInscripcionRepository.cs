@@ -6,9 +6,10 @@
 using System;
 using System.Collections.Generic;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IInstWorkflowInscripcionRepository
     {
+        ICollection<BusinessLogic.Entities.InstWorkflowInscripcion> GetByInstanciaIds(IEnumerable<decimal> ids);
     }
 }

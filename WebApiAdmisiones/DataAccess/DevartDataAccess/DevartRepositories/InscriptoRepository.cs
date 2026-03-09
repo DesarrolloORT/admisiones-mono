@@ -15,7 +15,7 @@ namespace DataAccess.DevartRepositories
         /// <summary>
         /// Devuelve la última inscripción activa (sin baja) de la persona incluyendo producto y comienzo.
         /// </summary>
-        public virtual BusinessLogic.Entities.Inscripto GetUltimaInscripcion(long codigoPersona)
+        public virtual BusinessLogic.Entities.Inscripto GetUltimaInscripcionActiva(long codigoPersona)
         {
             return objectSet
                 .Where(i => i.CodigoPersona == codigoPersona

@@ -20,7 +20,7 @@ namespace AppLogic.Interfaces
 
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
         OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
-        OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcion(long codigoPersona);
+        OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcionActiva(long codigoPersona);
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         #region PERSONA
@@ -28,7 +28,7 @@ namespace AppLogic.Interfaces
         #endregion PERSONA
 
         #region ENCUESTA
-        OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerDatosPreInscripcion(long codigoPersona);
+        OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicialAdmision(long codigoPersona);
         OperationResult<IEnumerable<DtoTurnoDevart>> ObtenerTurnos(long idProducto, long idProceso);
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();
@@ -42,13 +42,17 @@ namespace AppLogic.Interfaces
         #endregion BACHILLERATOS Y UNIVERSIDADES
 
         #region POSTULACION A BECAS
-        OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorNivel(long idProducto);
+        OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto);
         #endregion POSTULACION A BECAS
 
         #region INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
         OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona);
-        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona);
+        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteresActivo(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona);
+        OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
+        OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona);
+        OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona);
+        OperationResult<IEnumerable<DtoOfertaDevart>> ObtenerOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno);
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
 
         #region IMAGEN / DOCUMENTOS

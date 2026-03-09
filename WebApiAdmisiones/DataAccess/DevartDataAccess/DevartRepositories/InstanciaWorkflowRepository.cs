@@ -8,9 +8,37 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class InstanciaWorkflowRepository
     {
+        /// <summary>
+        /// Inscripciones en curso (sin fecha final ni cancelación) de la persona,
+        /// para los procesos de inscripción de alumnos frescos (75 y 82).
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesPendientes(long codigoPersona)
+        {
+            return objectSet
+                .Where(iw =>
+                    (iw.IdProceso == 75 || iw.IdProceso == 82)
+                    && iw.SolicitanteInstanciaWorkflow == codigoPersona
+                    && iw.FechaCanceladoInstanciaWf == null
+                    && iw.FechaFinalInstanciaWf == null)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Inscripciones canceladas (con fecha de cancelación) de la persona,
+        /// para los procesos de inscripción de alumnos frescos (75 y 82).
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesCanceladas(long codigoPersona)
+        {
+            return objectSet
+                .Where(iw =>
+                    (iw.IdProceso == 75 || iw.IdProceso == 82)
+                    && iw.IdObjetoInstanciaWorkflow == (decimal?)codigoPersona
+                    && iw.FechaCanceladoInstanciaWf != null)
+                .ToList();
+        }
     }
 }

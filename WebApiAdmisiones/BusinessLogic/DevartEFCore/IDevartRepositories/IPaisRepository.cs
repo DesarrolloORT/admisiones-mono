@@ -10,6 +10,7 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IPaisRepository
     {
-        BusinessLogic.Entities.Pais GetPaisAndCiudadesByKey(long _CodigoPais);
+        ICollection<BusinessLogic.Entities.Pais> GetPaisesOrdenados();
+        BusinessLogic.Entities.Pais GetPaisConEstadosYCiudades(long codigoPais);
     }
 }

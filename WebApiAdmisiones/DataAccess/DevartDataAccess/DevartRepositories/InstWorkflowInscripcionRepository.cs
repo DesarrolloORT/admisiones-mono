@@ -8,9 +8,18 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class InstWorkflowInscripcionRepository
     {
+        /// <summary>
+        /// Devuelve los registros de InstWorkflowInscripcion para los IDs de instancia dados.
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.InstWorkflowInscripcion> GetByInstanciaIds(IEnumerable<decimal> ids)
+        {
+            return objectSet
+                .Where(iwi => ids.Contains(iwi.IdInstanciaWorkflow))
+                .ToList();
+        }
     }
 }

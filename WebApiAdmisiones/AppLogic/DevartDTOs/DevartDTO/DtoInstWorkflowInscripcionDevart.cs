@@ -45,6 +45,12 @@ namespace AppLogic.DevartDTOs
         public string HoraIngreso { get; set; }
 
         #endregion
+
+        #region Navigation Properties
+
+        public DtoInstanciaWorkflowDevart InstanciaWorkflow { get; set; }
+
+        #endregion
     }
 
 }

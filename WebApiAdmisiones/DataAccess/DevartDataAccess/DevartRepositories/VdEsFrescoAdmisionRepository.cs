@@ -13,5 +13,24 @@ namespace DataAccess.DevartRepositories
 {
     public partial class VdEsFrescoAdmisionRepository
     {
+        /// <summary>
+        /// Devuelve true si la persona tiene una inscripción activa en VD_ES_FRESCO_ADMISION
+        /// para el producto y proceso indicados (proceso habilitado y comienzo vigente).
+        /// Equivalente a SetWhereTieneInscripcionAdmisiones del modelo anterior.
+        /// </summary>
+        public virtual bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
+        {
+            return objectSet.Any(v =>
+                v.CodigoPersona == codigoPersona
+                && v.IdProducto == idProducto
+                && Context.Set<BusinessLogic.Entities.ProcesoProducto>().Any(pp =>
+                    pp.IdProducto == v.IdProducto
+                    && pp.IdProceso == idProceso
+                    && pp.Proceso.HabilitadoInteresSitio == "SI")
+                && Context.Set<BusinessLogic.Entities.ProcesoComienzo>().Any(pc =>
+                    pc.IdComienzo == v.IdComienzo
+                    && pc.IdProceso == idProceso
+                    && pc.Proceso.HabilitadoInteresSitio == "SI"));
+        }
     }
 }

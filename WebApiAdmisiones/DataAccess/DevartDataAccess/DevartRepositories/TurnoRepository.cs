@@ -26,8 +26,7 @@ namespace DataAccess.DevartRepositories
                          && o.Supraoferta.Comienzo.ProcesoComienzos
                                 .Any(pc => pc.IdProceso == idProceso))
                 .Select(o => o.IdTurno)
-                .Distinct()
-                .ToList();
+                .Distinct();
 
             return objectSet
                 .Where(t => turnoIds.Contains(t.IdTurno))

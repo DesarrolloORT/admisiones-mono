@@ -8,9 +8,66 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class OfertaRepository
     {
+        /// <summary>
+        /// Devuelve las ofertas abiertas para inscripción de alumno fresco,
+        /// dado un producto, proceso y turno.
+        /// <para>
+        /// 1. Resuelve el comienzo activo buscando primero el comienzo habilitado
+        ///    para el proceso; si no existe, usa el comienzo de la primera supraoferta
+        ///    con inscripciones abiertas para el producto.
+        /// 2. Determina el semestre del paquete para ese comienzo (default 1).
+        /// 3. Filtra las ofertas por producto, comienzo, turno, semestre e inscripciones abiertas.
+        /// </para>
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.Oferta> GetOfertasParaInscripcionConProceso(
+            long idProducto, long idProceso, long idTurno)
+        {
+            // 1. Comienzo: primero el habilitado para el proceso,
+            //    con fallback en la primera supraoferta con oferta abierta del producto.
+            var idComienzo = Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                .Where(pc => pc.IdProceso == idProceso
+                          && pc.Proceso.HabilitadoInteresSitio == "SI")
+                .Select(pc => (long?)pc.IdComienzo)
+                .FirstOrDefault()
+                ?? Context.Set<BusinessLogic.Entities.Supraoferta>()
+                    .Where(so => so.Paquete.IdProducto == idProducto
+                              && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI"))
+                    .Select(so => (long?)so.IdComienzo)
+                    .FirstOrDefault();
+
+            if (idComienzo == null)
+                return new List<BusinessLogic.Entities.Oferta>();
+
+            // 2. Semestre del paquete para este producto y comienzo (default 1).
+            var semestre = Context.Set<BusinessLogic.Entities.Paquete>()
+                .Where(pk => pk.IdProducto == idProducto
+                          && pk.SemestrePaquete != 99
+                          && pk.Supraofertas.Any(so =>
+                              so.IdComienzo == idComienzo
+                              && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI")))
+                .Select(pk => pk.SemestrePaquete)
+                .FirstOrDefault() ?? 1m;
+
+            // 3. Ofertas filtradas.
+            return objectSet
+                .Where(o =>
+                    o.InscripcionesAbiertasOferta == "SI"
+                    && o.IdTurno == idTurno
+                    && o.Supraoferta.IdComienzo == idComienzo
+                    && o.Supraoferta.Paquete.IdProducto == idProducto
+                    && o.Supraoferta.Paquete.SemestrePaquete == semestre)
+                .Include(o => o.Supraoferta)
+                    .ThenInclude(so => so.Paquete)
+                        .ThenInclude(pk => pk.Producto)
+                .Include(o => o.Supraoferta)
+                    .ThenInclude(so => so.Comienzo)
+                .Include(o => o.Turno)
+                .Include(o => o.Localidad)
+                .ToList();
+        }
     }
 }

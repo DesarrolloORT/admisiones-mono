@@ -54,7 +54,7 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
 
-            var pais = uow.Paises.GetPaisAndCiudadesByKey(codigoPais);
+            var pais = uow.Paises.GetPaisConEstadosYCiudades(codigoPais);
             if (pais == null)
                 return OperationResult<IEnumerable<DtoEmpresaDevart>>.IsFailed(
                     "FDB_UV_01",

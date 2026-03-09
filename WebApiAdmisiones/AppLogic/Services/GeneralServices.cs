@@ -22,21 +22,16 @@ namespace AppLogic.Services
         public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaises()
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Paises.GetAll().ToList();
-            var sorted = entidades
-                .OrderBy(p => p.CodigoPais == 1 ? 0 : 1)
-                .ThenBy(p => p.Nombre)
-                .ToList();
-            var dtoList = sorted.ToDtos().ToList();
+            var dtoList = uow.Paises.GetPaisesOrdenados().ToDtos().ToList();
             return OperationResult<IEnumerable<DtoPaisDevart>>.Ok(dtoList, nameof(ObtenerPaises));
         }
 
         public OperationResult<DtoPaisDevart> ObtenerPais(long idPais)
         {
             using var uow = _uowFactory.Create();
-            var pais = uow.Paises.GetPaisAndCiudadesByKey(idPais);
+            var pais = uow.Paises.GetPaisConEstadosYCiudades(idPais);
             if (pais == null)
-                return OperationResult<DtoPaisDevart>.IsFailed("FDP_GPAC_01", nameof(ObtenerPais), "País no encontrado.", 204);
+                return OperationResult<DtoPaisDevart>.IsFailed("FDP_GPAC_01", nameof(ObtenerPais), "País no encontrado.", 404);
 
             if (pais.Estado != null)
             {
@@ -71,14 +66,14 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoProcesoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProcesosHabilitadosPorProducto));
         }
 
-        public OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcion(long codigoPersona)
+        public OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcionActiva(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
-            var inscripto = uow.Inscriptos.GetUltimaInscripcion(codigoPersona);
+            var inscripto = uow.Inscriptos.GetUltimaInscripcionActiva(codigoPersona);
             if (inscripto == null)
-                return OperationResult<DtoInscriptoDevart>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcion), "No se encontró inscripción para la persona.", 204);
+                return OperationResult<DtoInscriptoDevart>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
 
-            return OperationResult<DtoInscriptoDevart>.Ok(inscripto.ToDto(), nameof(ObtenerUltimaInscripcion));
+            return OperationResult<DtoInscriptoDevart>.Ok(inscripto.ToDto(), nameof(ObtenerUltimaInscripcionActiva));
         }
 
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
@@ -99,14 +94,14 @@ namespace AppLogic.Services
 
         #region ENCUESTA
 
-        public OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerDatosPreInscripcion(long codigoPersona)
+        public OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicialAdmision(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuesta == null)
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerDatosPreInscripcion), "No se encontraron datos de pre-inscripción para la persona.", 204);
+                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerEncuestaInicialAdmision), "No se encontraron datos de pre-inscripción para la persona.", 204);
 
-            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerDatosPreInscripcion));
+            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerEncuestaInicialAdmision));
         }
 
         public OperationResult<IEnumerable<DtoTurnoDevart>> ObtenerTurnos(long idProducto, long idProceso)
@@ -169,11 +164,11 @@ namespace AppLogic.Services
 
         #region POSTULACION A BECAS
 
-        public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorNivel(long idProducto)
+        public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.TipoDescuentos.GetFondosDeBecaVigentesPorProducto(idProducto);
-            return OperationResult<IEnumerable<DtoTipoDescuentoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerFondosDeBecaPorNivel));
+            return OperationResult<IEnumerable<DtoTipoDescuentoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerFondosDeBecaPorProducto));
         }
 
         #endregion POSTULACION A BECAS
@@ -190,11 +185,11 @@ namespace AppLogic.Services
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), nameof(ObtenerAceptacionReglamentoEstudiantil));
         }
 
-        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductoInteresPersona(long codigoPersona)
+        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteresActivo(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductoInteresPersona(codigoPersona);
-            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductoInteresPersona));
+            var entidades = uow.Productos.GetProductosConInteresActivo(codigoPersona);
+            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductosConInteresActivo));
         }
 
         public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona)
@@ -202,6 +197,60 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
             return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductosVigentesConInteres));
+        }
+
+        public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+            var tiene = uow.VdEsFrescoAdmisions.TieneInscripcionActivaParaProceso(codigoPersona, idProducto, idProceso);
+            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
+        }
+
+        public OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
+            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesDict = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(ids)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            var dtos = instancias.Select(iw =>
+            {
+                var dto = iw.ToDto();
+                if (inscripcionesDict.TryGetValue(iw.IdInstanciaWorkflow, out var iwi))
+                    dto.InstWorkflowInscripcion = iwi.ToDto();
+                return dto;
+            });
+
+            return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesPendientes));
+        }
+
+        public OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var instancias = uow.InstanciaWorkflows.GetInscripcionesCanceladas(codigoPersona);
+            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesDict = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(ids)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            var dtos = instancias.Select(iw =>
+            {
+                var dto = iw.ToDto();
+                if (inscripcionesDict.TryGetValue(iw.IdInstanciaWorkflow, out var iwi))
+                    dto.InstWorkflowInscripcion = iwi.ToDto();
+                return dto;
+            });
+
+            return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesCanceladas));
+        }
+
+        public OperationResult<IEnumerable<DtoOfertaDevart>> ObtenerOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno)
+        {
+            using var uow = _uowFactory.Create();
+            var entidades = uow.Ofertas.GetOfertasParaInscripcionConProceso(idProducto, idProceso, idTurno);
+            return OperationResult<IEnumerable<DtoOfertaDevart>>.Ok(entidades.ToDtosWithRelated(2), nameof(ObtenerOfertasParaInscripcionConProceso));
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS

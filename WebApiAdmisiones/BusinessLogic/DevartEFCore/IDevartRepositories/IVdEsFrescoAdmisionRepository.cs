@@ -10,5 +10,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IVdEsFrescoAdmisionRepository
     {
+        bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
     }
 }

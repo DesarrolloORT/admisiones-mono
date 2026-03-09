@@ -77,6 +77,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoPersonaDevart Persona { get; set; }
 
+        public DtoInstWorkflowInscripcionDevart InstWorkflowInscripcion { get; set; }
+
         #endregion
     }
 

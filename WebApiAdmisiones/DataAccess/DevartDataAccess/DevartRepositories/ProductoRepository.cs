@@ -89,7 +89,7 @@ namespace DataAccess.DevartRepositories
         /// Excluye interés de grado 5 de forma simple (sin condiciones adicionales de proceso o VD_FRESCO).
         /// Equivalente al filtro: setWhereConsultaProcesoVigenteInteresadoSinInscripciones (LogicaORT).
         /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductoInteresPersona(long codigoPersona)
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteresActivo(long codigoPersona)
         {
             var today = DateTime.Today;
             return objectSet

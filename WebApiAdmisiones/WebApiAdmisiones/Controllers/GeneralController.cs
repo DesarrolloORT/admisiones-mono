@@ -123,13 +123,13 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("UltimaInscripcion")]
+        [HttpGet("UltimaInscripcionActiva")]
         [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 400)]
-        public IActionResult ObtenerUltimaInscripcion()
+        public IActionResult ObtenerUltimaInscripcionActiva()
         {
-            var result = _GeneralService.ObtenerUltimaInscripcion(_currentUser.GetUserId());
+            var result = _GeneralService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
@@ -165,13 +165,13 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("DatosPreInscripcion")]
+        [HttpGet("EncuestaInicialAdmision")]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 400)]
-        public IActionResult ObtenerDatosPreInscripcion()
+        public IActionResult ObtenerEncuestaInicialAdmision()
         {
-            var result = _GeneralService.ObtenerDatosPreInscripcion(_currentUser.GetUserId());
+            var result = _GeneralService.ObtenerEncuestaInicialAdmision(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
@@ -316,13 +316,13 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("FondosDeBecaPorNivel")]
+        [HttpGet("FondosDeBecaPorProducto")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 400)]
-        public IActionResult ObtenerFondosDeBecaPorNivel([FromQuery] long idProducto)
+        public IActionResult ObtenerFondosDeBecaPorProducto([FromQuery] long idProducto)
         {
-            var result = _GeneralService.ObtenerFondosDeBecaPorNivel(idProducto);
+            var result = _GeneralService.ObtenerFondosDeBecaPorProducto(idProducto);
             return ValidateResponse(result);
         }
 
@@ -371,17 +371,88 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("ProductoInteresPersona")]
+        [HttpGet("ProductosConInteresActivo")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 400)]
-        public IActionResult ObtenerProductoInteresPersona()
+        public IActionResult ObtenerProductosConInteresActivo()
         {
-            var result = _GeneralService.ObtenerProductoInteresPersona(_currentUser.GetUserId());
+            var result = _GeneralService.ObtenerProductosConInteresActivo(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
+
+        #region INSCRIPCION — WORKFLOW
+
+        /// <summary>
+        /// Indica si la persona autenticada tiene una inscripción activa en VD_ES_FRESCO_ADMISION
+        /// para el producto y proceso dados.
+        /// </summary>
+        /// <param name="idProducto">ID del producto.</param>
+        /// <param name="idProceso">ID del proceso.</param>
+        /// <returns>true si existe inscripción activa, false en caso contrario.</returns>
+        /// <response code="200">Consulta realizada correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("InscripcionActivaParaProceso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        public IActionResult TieneInscripcionActivaParaProceso([FromQuery] long idProducto, [FromQuery] long idProceso)
+        {
+            var result = _GeneralService.TieneInscripcionActivaParaProceso(_currentUser.GetUserId(), idProducto, idProceso);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene las inscripciones en curso (workflow sin finalizar ni cancelar) de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripción.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("InscripcionesPendientes")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
+        public IActionResult ObtenerInscripcionesPendientes()
+        {
+            var result = _GeneralService.ObtenerInscripcionesPendientes(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene las inscripciones canceladas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripción.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("InscripcionesCanceladas")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
+        public IActionResult ObtenerInscripcionesCanceladas()
+        {
+            var result = _GeneralService.ObtenerInscripcionesCanceladas(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene las ofertas disponibles para inscripción de alumno fresco,
+        /// dado un producto, proceso y turno.
+        /// </summary>
+        /// <param name="idProducto">ID del producto.</param>
+        /// <param name="idProceso">ID del proceso.</param>
+        /// <param name="idTurno">ID del turno.</param>
+        /// <returns>Lista de ofertas disponibles.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("OfertasParaInscripcionConProceso")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoOfertaDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoOfertaDevart>>), 400)]
+        public IActionResult ObtenerOfertasParaInscripcionConProceso([FromQuery] long idProducto, [FromQuery] long idProceso, [FromQuery] long idTurno)
+        {
+            var result = _GeneralService.ObtenerOfertasParaInscripcionConProceso(idProducto, idProceso, idTurno);
+            return ValidateResponse(result);
+        }
+
+        #endregion INSCRIPCION — WORKFLOW
 
         #region IMAGEN / DOCUMENTOS
 
