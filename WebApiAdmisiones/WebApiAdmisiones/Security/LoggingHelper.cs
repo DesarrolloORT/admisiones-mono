@@ -5,32 +5,54 @@ namespace WebApiAdmisiones.Security
 {
     /// <summary>
     /// Helper centralizado para generar mensajes de log estandarizados.
-    /// Formato: Tipo | Origen (VERBO-UltimaParte) | Clase | CodigoPersona | Servicio | Datos | IP | UA | CorrelationId
-    /// Ejemplo de Origen: "GET-ConfirmarDeclaracion3100", "POST-CrearPersona"
+    /// Formato: Tipo | Origen (Sistema invocador) | Clase | CodigoPersona | Servicio (VERBO-Ruta) | Datos | IP | UA | CorrelationId
+    /// Ejemplo de Origen: "Funcionarios", "Gestion", "Admisiones", "Desconocido"
+    /// Ejemplo de Servicio: "POST-DatosLaborales/CargosPersona"
     /// </summary>
     public static class LoggingHelper
     {
         private const string Desconocido = "Desconocido";
-        
+
         /// <summary>
         /// Clave para almacenar el CorrelationId en HttpContext.Items.
         /// </summary>
         public const string CorrelationIdKey = "CorrelationId";
-        
+
         /// <summary>
-        /// Clave para indicar que ya se logueÃ³ la entrada del request.
+        /// Clave para indicar que ya se logueó la entrada del request.
         /// </summary>
         public const string EntradaLoggedKey = "EntradaLogged";
-        
+
         /// <summary>
-        /// Clave para indicar que ya se logueÃ³ la salida del request (evita duplicados en middleware).
+        /// Clave para indicar que ya se logueó la salida del request (evita duplicados en middleware).
         /// </summary>
         public const string SalidaLoggedKey = "SalidaLogged";
-        
+
+        /// <summary>
+        /// Clave para indicar que EfCoreLoggingInterceptor ya logueó un error de BD (evita duplicados en ExceptionHandlingMiddleware).
+        /// </summary>
+        public const string DbErrorLoggedKey = "DbErrorLogged";
+
+        public static Guid EnsureCorrelationId(HttpContext? context)
+        {
+            if (context is null)
+                return Guid.NewGuid();
+
+            if (!context.Items.ContainsKey(CorrelationIdKey))
+            {
+                context.Items[CorrelationIdKey] = Guid.NewGuid();
+            }
+
+            return context.Items.TryGetValue(CorrelationIdKey, out var storedId) && storedId is Guid guidValue
+                ? guidValue
+                : Guid.NewGuid();
+        }
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
         /// <summary>
@@ -38,9 +60,9 @@ namespace WebApiAdmisiones.Security
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">CÃ³digo de la persona autenticada (opcional).</param>
-        /// <param name="data">Datos adicionales a loguear (se redactarÃ¡n automÃ¡ticamente).</param>
-        /// <param name="correlationId">ID de correlaciÃ³n (opcional).</param>
+        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
+        /// <param name="data">Datos adicionales a loguear (se redactarán automáticamente).</param>
+        /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatEntrada(
             HttpContext? context,
@@ -57,9 +79,9 @@ namespace WebApiAdmisiones.Security
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">CÃ³digo de la persona autenticada (opcional).</param>
-        /// <param name="data">Datos adicionales a loguear (se redactarÃ¡n automÃ¡ticamente).</param>
-        /// <param name="correlationId">ID de correlaciÃ³n (opcional).</param>
+        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
+        /// <param name="data">Datos adicionales a loguear (se redactarán automáticamente).</param>
+        /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatSalida(
             HttpContext? context,
@@ -76,9 +98,9 @@ namespace WebApiAdmisiones.Security
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">CÃ³digo de la persona autenticada (opcional).</param>
+        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
         /// <param name="data">Datos adicionales a loguear.</param>
-        /// <param name="correlationId">ID de correlaciÃ³n (opcional).</param>
+        /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatError(
             HttpContext? context,
@@ -120,33 +142,35 @@ namespace WebApiAdmisiones.Security
 
         private static string GetServicePath(HttpContext? context)
         {
-            if (context?.Request?.Path == null)
-                return Desconocido;
-
-            var path = context.Request.Path.ToString();
-            return string.IsNullOrWhiteSpace(path) ? Desconocido : path.TrimStart('/');
-        }
-
-        /// <summary>
-        /// Genera el origen formateado con el verbo HTTP y la Ãºltima parte del path.
-        /// Ejemplo: "GET-ConfirmarDeclaracion3100" en vez de "Declaracion3100/ConfirmarDeclaracion3100"
-        /// </summary>
-        private static string GetFormattedOrigin(HttpContext? context)
-        {
             if (context?.Request == null)
                 return Desconocido;
 
             var httpMethod = context.Request.Method ?? Desconocido;
             var path = context.Request.Path.ToString();
+            var servicePath = string.IsNullOrWhiteSpace(path) ? Desconocido : path.TrimStart('/');
 
-            if (string.IsNullOrWhiteSpace(path))
-                return $"{httpMethod}-{Desconocido}";
+            return $"{httpMethod}-{servicePath}";
+        }
 
-            // Obtener la Ãºltima parte del path (despuÃ©s del Ãºltimo '/')
-            var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var lastSegment = segments.Length > 0 ? segments[^1] : Desconocido;
+        /// <summary>
+        /// Obtiene el nombre del sistema invocador basado en el issuer del token JWT.
+        /// </summary>
+        /// <returns>"Funcionarios", "Gestion", "Admisiones" o "Desconocido"</returns>
+        private static string GetFormattedOrigin(HttpContext? context)
+        {
+            if (context?.User?.Identity?.IsAuthenticated != true)
+                return Desconocido;
 
-            return $"{httpMethod}-{lastSegment}";
+            var issuerClaim = context.User.Claims
+                .FirstOrDefault(c => c.Type == "iss")?.Value;
+
+            return issuerClaim switch
+            {
+                "https://funcionarios.ort.edu.uy" => "Funcionarios",
+                "https://gestion.ort.edu.uy" => "Gestion",
+                "https://admisiones.ort.edu.uy" => "Admisiones",
+                _ => Desconocido
+            };
         }
 
         private static string GetIpAddress(HttpContext? context)
@@ -186,7 +210,7 @@ namespace WebApiAdmisiones.Security
         }
 
         /// <summary>
-        /// Extrae el cÃ³digo de persona del contexto HTTP desde los claims.
+        /// Extrae el código de persona del contexto HTTP desde los claims.
         /// </summary>
         public static string? GetCodigoPersonaFromContext(HttpContext? context)
         {
@@ -198,7 +222,7 @@ namespace WebApiAdmisiones.Security
         }
 
         /// <summary>
-        /// Extrae informaciÃ³n de contexto de la peticiÃ³n para logs de excepciÃ³n.
+        /// Extrae información de contexto de la petición para logs de excepción.
         /// </summary>
         public static string GetRequestContextInfo(HttpContext? context)
         {

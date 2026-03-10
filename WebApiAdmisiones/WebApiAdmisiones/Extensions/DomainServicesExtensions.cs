@@ -1,5 +1,5 @@
-using AppLogic.IServices;
 using AppLogic.Interfaces;
+using AppLogic.IServices;
 using AppLogic.Services;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
+using System.Web.Services.Description;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Extensions
@@ -33,32 +34,29 @@ namespace WebApiAdmisiones.Extensions
             IConfiguration configuration,
             IWebHostEnvironment environment)
         {
-            // Contexto de conexión desde JWT
-            services.AddScoped<ConnectionFromBearerToken>();
-
             services.AddScoped<IDbConnectionContext>(sp =>
             {
-                var connectionFromToken = sp.GetRequiredService<ConnectionFromBearerToken>();
-                var connectionString = connectionFromToken.GetConnectionString();
+                string? connectionString = Environment.GetEnvironmentVariable("OracleConnectionStringAdmisiones");
                 return new DbConnectionContext(connectionString);
             });
 
             services.AddScoped<DbConnectionContext>(sp =>
                 (DbConnectionContext)sp.GetRequiredService<IDbConnectionContext>());
 
+            // Interceptor de EF Core para logging estandarizado
+            services.AddScoped<EfCoreLoggingInterceptor>();
+
             // DbContexts con configuración por ambiente
             // Production y Preproduction NO habilitan logging sensible de BD
             services.AddDbContext<ModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
-                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
-                
+                var efCoreInterceptor = sp.GetRequiredService<EfCoreLoggingInterceptor>();
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection)
+                       .AddInterceptors(efCoreInterceptor);
                 if (!environment.IsProductionLike())
                 {
-                    options.LogTo(Console.WriteLine,
-                                 new[] { DbLoggerCategory.Database.Command.Name },
-                                 LogLevel.Information)
-                           .EnableSensitiveDataLogging()
+                    options.EnableSensitiveDataLogging()
                            .EnableDetailedErrors();
                 }
             });
