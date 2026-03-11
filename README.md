@@ -1,90 +1,113 @@
-# Template .NET 9 – WebApi (con submódulos)
+# API Admisiones – WebApi .NET 10
 
 ## Descripción
-Plantilla lista para crear APIs con .NET 9 y Visual Studio 2022, con estructura base, submódulos y scripts de renombrado para arrancar proyectos nuevos.
+API REST para el proceso de admisiones de ORT Uruguay. Expone servicios de consulta y gestión de pre-inscripciones, productos, procesos, becas, reglamentos y datos personales, consumida por el portal de autoservicio estudiantil.
 
-# Arquitectura Web API en .NET 9 con Entity Framework (EF)
-🚀  Este repositorio contiene un template base de una arquitectura .NET 9, API RESTful diseñada para proporcionar servicios de backend escalables y de alto rendimiento. Integra Entity Framework Core para gestionar de forma eficiente las operaciones con la base de datos, implementa una arquitectura limpia y modular, y está preparada para entornos cloud y contenedores.
+# Arquitectura Web API en .NET 10 con Entity Framework (EF Core + Devart)
+🚀 API RESTful diseñada para gestionar el flujo completo de admisiones: desde la consulta de productos y procesos habilitados hasta el registro de pre-inscripciones, encuestas iniciales y validación de becas. Integra EF Core con el proveedor Devart para Oracle.
 
 ## Características Tecnológicas
 
-- 🚀 **.NET 9**: Plataforma moderna con mejoras de rendimiento y nuevas funcionalidades.
-- 🛠️ **Entity Framework Core**: ORM robusto para modelado de datos y migraciones automáticas.
-- 🌐 **API RESTful**: Endpoints bien definidos y documentados con Swagger.
-- 🧩 **Arquitectura Limpia**: Separación de capas (Core, AppLogic, BusinessLogic, DataAccess, WebApi) para código mantenible.
-- 🔒 **Gestión de Secretos**: Uso de User Secrets y variables de entorno para proteger credenciales.
-- 🐳 **Docker & Contenedores**: Despliegue rápido y consistente en cualquier entorno.
-- 🧪 **Pruebas Unitarias y de Integración**: xUnit, Moq y Coverlet para asegurar calidad y cobertura de código.
+- 🚀 **.NET 10**: Plataforma de última generación con máximo rendimiento.
+- 🛠️ **EF Core + Devart Oracle**: ORM con proveedor Devart para base de datos Oracle, modelo generado con Entity Developer.
+- 🌐 **API RESTful**: Endpoints documentados con Swagger y autenticación JWT Bearer.
+- 🧩 **Arquitectura Limpia**: Separación estricta en capas (Core, AppLogic, BusinessLogic, DataAccess, WebApiAdmisiones).
+- 🔒 **Seguridad**: JWT Bearer, Kestrel hardening, User Secrets y variables de entorno para credenciales.
+- 🐳 **Docker**: Despliegue en contenedor Linux con configuración lista para CI/CD.
+- 🧪 **Pruebas**: xUnit + Moq con proyecto `UnitTesting` incluido en la solución.
 
 ## Arquitectura de la Solución
 
-La solución está organizada en capas y proyectos independientes:
+La solución `WebApiAdmisiones.sln` está organizada en capas y proyectos independientes:
 
 ```graphql
-├─ Core
-│   ├─ DbConnectionContext    (Contexto de conexión a base de datos)
-│   ├─ MailORT               (Servicio de envío de correo)
-│   ├─ Modules               (Módulos genéricos y específicos, p.ej., ModBandeja, ModGenericBase)
-│   └─ Utilities             (Clases auxiliares y validadores)
+├─ Core                          (submódulo git – reutilizable entre proyectos)
+│   ├─ DbConnectionContext       (contexto de conexión con Bearer token provider)
+│   ├─ MailORT                   (servicio de envío de correo)
+│   ├─ Modules
+│   │   ├─ ModBandeja            (módulo de bandeja de tareas)
+│   │   └─ ModGenericBase        (repositorio genérico, UoW base, entidades comunes)
+│   └─ Utilities                 (constantes, encriptado, OperationResult, validadores)
 │
 ├─ AppLogic
 │   └─ Servicios de aplicación (Casos de uso) y Helpers (DTOs y converters)
 │
 ├─ BusinessLogic
-│   └─ Lógica de dominio e interfaces de repositorios
+│   ├─ DevartEFCore
+│   │   ├─ DevartEntities        (entidades generadas por Devart Entity Developer)
+│   │   └─ IDevartRepositories   (interfaces de repositorios y IUnitOfWork)
+│   └─ IGenericRepository        (interfaz base IRepository<T>)
 │
 ├─ DataAccess
-│   └─ EF Core DbContext y repositorios de datos
+│   ├─ DevartContext             (ModelContext – DbContext generado por Devart)
+│   └─ DevartRepositories        (implementaciones de repositorios + EntityFrameworkUnitOfWork)
 │
-├─ WebApi
-│   └─ API REST (Controllers, Program.cs, configuración)
+├─ AppLogic
+│   ├─ DevartDTOs
+│   │   ├─ DevartDTO             (DTOs generados por Devart)
+│   │   └─ DevartConverters      (converters entidad ↔ DTO generados por Devart)
+│   ├─ IServices                 (interfaces de servicios de aplicación)
+│   ├─ Services                  (implementaciones de servicios de aplicación)
+│   ├─ Helpers                   (helpers de negocio)
+│   └─ Utilities                 (utilidades de capa AppLogic)
+│
+├─ WebApiAdmisiones
+│   ├─ Controllers               (endpoints REST)
+│   ├─ Extensions                (extensiones de DI, Serilog, OpenTelemetry, Kestrel)
+│   ├─ Security                  (JWT, CurrentUser)
+│   └─ Program.cs                (punto de entrada, pipeline HTTP)
 │
 └─ UnitTesting
     └─ Pruebas de integración y unitarias (xUnit, Moq)
 ```
 
-La solución principal se encuentra en el archivo `WebApi.sln`, que referencia todos los proyectos anteriores.
+## Endpoints migrados
 
-# PASOS A SEGUIR PARA TU NUEVO PROYECTO:
-##  1) 🧪 Crear un repo nuevo desde el template
-Desde la Web (recomendado)
- - Entrá al repo template en GitHub.
- - Click Use this template → Create a new repository.
- - Elegí nombre/visibilidad y crealo.
+| Controller | Endpoint | Descripción |
+|---|---|---|
+| `Auth` | `POST /Auth/Login` | Autenticación, devuelve JWT |
+| `General` | `GET /General/Paises` | Listado de países |
+| `General` | `GET /General/TipoDocumentos` | Tipos de documento |
+| `General` | `GET /General/ProcesosHabilitadosPorProducto` | Procesos vigentes por producto |
+| `General` | `GET /General/UltimaInscripcion` | Última inscripción del usuario |
+| `General` | `GET /General/Persona` | Datos personales del usuario |
+| `General` | `GET /General/DatosPreInscripcion` | Encuesta inicial / pre-inscripción |
+| `General` | `GET /General/Turnos` | Turnos disponibles para un proceso |
+| `General` | `GET /General/Bachilleratos` / `AnioBachiller` | Datos bachillerato |
+| `General` | `GET /General/Instituciones` / `Universidades` | Instituciones educativas |
+| `General` | `GET /General/FondosDeBecaPorNivel` | Becas disponibles |
+| `General` | `GET /General/AceptacionReglamentoEstudiantil` | Estado de aceptación de reglamento |
+| `General` | `GET /General/ProductoInteresPersona` | Productos de interés del usuario |
+| `FondoDeBeca` | — | Gestión de fondos de beca |
+| `ProcesoComienzo` | — | Gestión de procesos y comienzos |
 
-##  2) ⬇️ Clonar el nuevo repo (con submódulos)
- - git clone --recurse-submodules git@github.com:ORG/MI-NUEVO-REPO.git
-    
- - Si al clonarse no cargo los submódulos:
-   cd MI-NUEVO-REPO
-   git submodule update --init --recursive
-   *Si los submódulos son privados, el usuario debe tener permisos o usar un PAT.
+## Clonar el repositorio (con submódulos)
 
-##  3) ✏️ Renombrar el proyecto (scripts)
- - Una vez que tienes descargado tu proyecto en tu pc 
-   *Cerrá Visual Studio/VS Code antes de ejecutar (evitás archivos bloqueados).
+```bash
+git clone --recurse-submodules git@github.com:DesarrolloORT/api-admisiones.git
+```
 
-## Windows (doble clic)
-- Abrí scripts/rename.cmd (doble clic).
-- El script rename.ps1 te pedirá:
-- Nombre del PROYECTO → renombra la carpeta raíz (NewApi) y la solución (.sln).
-- Nombre del proyecto WEB API → renombra la carpeta interna (WebApiTemplate) y el .csproj. (por defecto: WebApi{Proyecto})
-- Namespace NUEVO → reemplaza WebApiFDP en todo el código. (por defecto: {Proyecto})
+Si los submódulos no se cargaron al clonar:
 
-¿Qué cambia exactamente?
- - NewApi/ → MiProyecto/
- - WebApiTemplate.sln → MiProyecto.sln
- - WebApiTemplate/ → WebApiMiProyecto/
- - WebApiTemplate.csproj → WebApiMiProyecto.csproj
- - namespace WebApiFDP → namespace Mi.Empresa.MiProyecto (o el que elijas)
- - Actualiza referencias en .sln, .csproj, .gitmodules, Dockerfile, YAMLs, etc.
+```bash
+cd api-admisiones
+git submodule update --init --recursive
+```
 
-🛠️ Restaurar y compilar
-   - dotnet restore "MiProyecto/MiProyecto.sln"
-   - dotnet build   "MiProyecto/MiProyecto.sln" -c Debug
-   - Si preferís, cd MiProyecto y corré dotnet restore && dotnet build.
+## Restaurar y compilar
 
-##  4) ✏️ Paso final
-- Si ya estas en tu propio repositorio y todo funciona correctamente. 
-- Ahora ya puedes eliminar los archivos rename.cmd y rename.ps1
-- También deberías editar tu readme.md y describir tu nuevo proyecto.
+```bash
+cd WebApiAdmisiones
+dotnet restore WebApiAdmisiones.sln
+dotnet build WebApiAdmisiones.sln -c Debug
+```
+
+## Configuración local
+
+La cadena de conexión y el JWT secret se manejan con **User Secrets**. Para configurar localmente:
+
+```bash
+cd WebApiAdmisiones/WebApiAdmisiones
+dotnet user-secrets set "ConnectionStrings:OracleConnection" "Data Source=...;User Id=...;Password=..."
+dotnet user-secrets set "Jwt:Key" "tu-clave-secreta"
+```
