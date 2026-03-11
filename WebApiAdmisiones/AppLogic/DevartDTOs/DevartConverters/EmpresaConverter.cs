@@ -51,9 +51,6 @@ namespace AppLogic.DevartDTOs
             target.Fax1 = source.Fax1;
             target.Fax2 = source.Fax2;
             target.Email = source.Email;
-            target.UsuarioUltimaActualizacion = source.UsuarioUltimaActualizacion;
-            target.FechaUltimaActualizacion = source.FechaUltimaActualizacion;
-            target.HoraUltimaActualizacion = source.HoraUltimaActualizacion;
             target.FechaFidelidadDireccion = source.FechaFidelidadDireccion;
             target.CodigoTipoEmpresa = source.CodigoTipoEmpresa;
             target.CodigoVigencia = source.CodigoVigencia;
@@ -118,9 +115,6 @@ namespace AppLogic.DevartDTOs
             target.Fax1 = source.Fax1;
             target.Fax2 = source.Fax2;
             target.Email = source.Email;
-            target.UsuarioUltimaActualizacion = source.UsuarioUltimaActualizacion;
-            target.FechaUltimaActualizacion = source.FechaUltimaActualizacion;
-            target.HoraUltimaActualizacion = source.HoraUltimaActualizacion;
             target.FechaFidelidadDireccion = source.FechaFidelidadDireccion;
             target.CodigoTipoEmpresa = source.CodigoTipoEmpresa;
             target.CodigoVigencia = source.CodigoVigencia;

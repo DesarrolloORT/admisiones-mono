@@ -38,10 +38,7 @@ namespace AppLogic.DevartDTOs
             target.EstadoProceso = source.EstadoProceso;
             target.FechaFinProceso = source.FechaFinProceso;
             target.IdTipoProceso = source.IdTipoProceso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ObservacionesProceso = source.ObservacionesProceso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.NombreProceso = source.NombreProceso;
             target.Zafid = source.Zafid;
             target.MarcadoParawebProceso = source.MarcadoParawebProceso;
@@ -62,8 +59,6 @@ namespace AppLogic.DevartDTOs
             if (level > 0) {
               target.EncuestaIniAdmisions = source.EncuestaIniAdmisions.ToDtosWithRelated(level - 1);
               target.SolicitudAltas = source.SolicitudAltas.ToDtosWithRelated(level - 1);
-              target.ProcesoProductos = source.ProcesoProductos.ToDtosWithRelated(level - 1);
-              target.ProcesoComienzos = source.ProcesoComienzos.ToDtosWithRelated(level - 1);
               target.Intere = source.Intere.ToDtoWithRelated(level - 1);
             }
 
@@ -85,10 +80,7 @@ namespace AppLogic.DevartDTOs
             target.EstadoProceso = source.EstadoProceso;
             target.FechaFinProceso = source.FechaFinProceso;
             target.IdTipoProceso = source.IdTipoProceso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ObservacionesProceso = source.ObservacionesProceso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.NombreProceso = source.NombreProceso;
             target.Zafid = source.Zafid;
             target.MarcadoParawebProceso = source.MarcadoParawebProceso;

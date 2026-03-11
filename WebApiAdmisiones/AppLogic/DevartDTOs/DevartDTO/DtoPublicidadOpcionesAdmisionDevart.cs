@@ -31,17 +31,6 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public string NombrePublicidad { get; set; }
 
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
         #endregion
     }
 

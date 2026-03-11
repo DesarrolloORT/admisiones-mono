@@ -51,17 +51,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(4000)]
         public string? MotivoCancelacion { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [StringLength(8)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
         public decimal? IdTramiteBandeja { get; set; }
 
         [StringLength(4000)]
@@ -74,8 +63,6 @@ namespace AppLogic.DevartDTOs
         #endregion
 
         #region Navigation Properties
-
-        public DtoPersonaDevart Persona { get; set; }
 
         public DtoInstWorkflowInscripcionDevart InstWorkflowInscripcion { get; set; }
 

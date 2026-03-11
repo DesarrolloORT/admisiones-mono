@@ -46,9 +46,6 @@ namespace AppLogic.DevartDTOs
             target.HorarioReferenciaOferta = source.HorarioReferenciaOferta;
             target.ObservacionesOferta = source.ObservacionesOferta;
             target.MinimoCreditosOferta = source.MinimoCreditosOferta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CantidadInscriptosOferta = source.CantidadInscriptosOferta;
             target.NombreCortoOferta = source.NombreCortoOferta;
             target.TurnoRpg = source.TurnoRpg;
@@ -63,7 +60,6 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Supraoferta = source.Supraoferta.ToDtoWithRelated(level - 1);
-              target.Inscriptos = source.Inscriptos.ToDtosWithRelated(level - 1);
               target.Localidad = source.Localidad.ToDtoWithRelated(level - 1);
               target.Turno = source.Turno.ToDtoWithRelated(level - 1);
             }
@@ -94,9 +90,6 @@ namespace AppLogic.DevartDTOs
             target.HorarioReferenciaOferta = source.HorarioReferenciaOferta;
             target.ObservacionesOferta = source.ObservacionesOferta;
             target.MinimoCreditosOferta = source.MinimoCreditosOferta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CantidadInscriptosOferta = source.CantidadInscriptosOferta;
             target.NombreCortoOferta = source.NombreCortoOferta;
             target.TurnoRpg = source.TurnoRpg;

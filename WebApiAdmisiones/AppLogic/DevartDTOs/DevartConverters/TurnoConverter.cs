@@ -38,16 +38,6 @@ namespace AppLogic.DevartDTOs
             target.NombreTurno = source.NombreTurno;
             target.ObservacionesTurno = source.ObservacionesTurno;
             target.CodigoRpgTurno = source.CodigoRpgTurno;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-
-            // Navigation Properties
-            if (level > 0) {
-              target.EncuestaIniAdmisions = source.EncuestaIniAdmisions.ToDtosWithRelated(level - 1);
-              target.Ofertas = source.Ofertas.ToDtosWithRelated(level - 1);
-              target.InteresProductos = source.InteresProductos.ToDtosWithRelated(level - 1);
-            }
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -67,9 +57,6 @@ namespace AppLogic.DevartDTOs
             target.NombreTurno = source.NombreTurno;
             target.ObservacionesTurno = source.ObservacionesTurno;
             target.CodigoRpgTurno = source.CodigoRpgTurno;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

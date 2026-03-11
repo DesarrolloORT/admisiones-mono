@@ -96,8 +96,6 @@ namespace AppLogic.DevartDTOs
 
         public DtoPaqueteDevart Paquete { get; set; }
 
-        public List<DtoOfertaDevart> Ofertas { get; set; }
-
         public DtoComienzoDevart Comienzo { get; set; }
 
         #endregion

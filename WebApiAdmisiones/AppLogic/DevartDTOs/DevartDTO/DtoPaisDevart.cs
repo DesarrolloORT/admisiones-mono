@@ -40,10 +40,6 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoEstadoDevart> Estado { get; set; }
 
-        public List<DtoPersonaDevart> Personas { get; set; }
-
-        public List<DtoSolicitudAltaDevart> SolicitudAltas { get; set; }
-
         #endregion
     }
 

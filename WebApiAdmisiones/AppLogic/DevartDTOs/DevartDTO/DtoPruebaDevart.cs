@@ -61,14 +61,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(12)]
         public string? HoraResultadoPrueba { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         public long? IdLocalidad { get; set; }
 
         [StringLength(1)]
@@ -97,10 +89,6 @@ namespace AppLogic.DevartDTOs
         #region Navigation Properties
 
         public DtoTipoDescuentoDevart TipoDescuento { get; set; }
-
-        public List<DtoAccionDevart> Accions { get; set; }
-
-        public List<DtoInscriptoPruebaDevart> InscriptoPruebas { get; set; }
 
         public DtoComienzoDevart Comienzo { get; set; }
 

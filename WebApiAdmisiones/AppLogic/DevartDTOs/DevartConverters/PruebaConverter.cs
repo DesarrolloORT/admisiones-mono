@@ -48,9 +48,6 @@ namespace AppLogic.DevartDTOs
             target.HoraEntregaDjPrueba = source.HoraEntregaDjPrueba;
             target.FechaResultadoPrueba = source.FechaResultadoPrueba;
             target.HoraResultadoPrueba = source.HoraResultadoPrueba;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdLocalidad = source.IdLocalidad;
             target.EstadoPrueba = source.EstadoPrueba;
             target.FechaCaducidadPrueba = source.FechaCaducidadPrueba;
@@ -64,8 +61,6 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.TipoDescuento = source.TipoDescuento.ToDtoWithRelated(level - 1);
-              target.Accions = source.Accions.ToDtosWithRelated(level - 1);
-              target.InscriptoPruebas = source.InscriptoPruebas.ToDtosWithRelated(level - 1);
               target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
             }
 
@@ -97,9 +92,6 @@ namespace AppLogic.DevartDTOs
             target.HoraEntregaDjPrueba = source.HoraEntregaDjPrueba;
             target.FechaResultadoPrueba = source.FechaResultadoPrueba;
             target.HoraResultadoPrueba = source.HoraResultadoPrueba;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdLocalidad = source.IdLocalidad;
             target.EstadoPrueba = source.EstadoPrueba;
             target.FechaCaducidadPrueba = source.FechaCaducidadPrueba;

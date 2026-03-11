@@ -37,9 +37,6 @@ namespace AppLogic.DevartDTOs
             target.IdAnioBachiller = source.IdAnioBachiller;
             target.NombreAnioBachiller = source.NombreAnioBachiller;
             target.ObservaAnioBachiller = source.ObservaAnioBachiller;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CantAniosAnioBachiller = source.CantAniosAnioBachiller;
 
             // Navigation Properties
@@ -65,9 +62,6 @@ namespace AppLogic.DevartDTOs
             target.IdAnioBachiller = source.IdAnioBachiller;
             target.NombreAnioBachiller = source.NombreAnioBachiller;
             target.ObservaAnioBachiller = source.ObservaAnioBachiller;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CantAniosAnioBachiller = source.CantAniosAnioBachiller;
 
             // User-defined partial method

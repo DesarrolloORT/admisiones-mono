@@ -41,8 +41,6 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Estado = source.Estado.ToDtosWithRelated(level - 1);
-              target.Personas = source.Personas.ToDtosWithRelated(level - 1);
-              target.SolicitudAltas = source.SolicitudAltas.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

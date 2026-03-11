@@ -73,17 +73,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(60)]
         public string? Email { get; set; }
 
-        [StringLength(31)]
-        [Required()]
-        public string UsuarioUltimaActualizacion { get; set; }
-
-        [Required()]
-        public DateTime FechaUltimaActualizacion { get; set; }
-
-        [StringLength(12)]
-        [Required()]
-        public string HoraUltimaActualizacion { get; set; }
-
         public DateTime? FechaFidelidadDireccion { get; set; }
 
         [Required()]

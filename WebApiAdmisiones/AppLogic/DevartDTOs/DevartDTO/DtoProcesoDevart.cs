@@ -34,16 +34,8 @@ namespace AppLogic.DevartDTOs
 
         public decimal? IdTipoProceso { get; set; }
 
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(200)]
         public string? ObservacionesProceso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
 
         [StringLength(60)]
         [Required()]
@@ -86,10 +78,6 @@ namespace AppLogic.DevartDTOs
         public List<DtoEncuestaIniAdmisionDevart> EncuestaIniAdmisions { get; set; }
 
         public List<DtoSolicitudAltaDevart> SolicitudAltas { get; set; }
-
-        public List<DtoProcesoProductoDevart> ProcesoProductos { get; set; }
-
-        public List<DtoProcesoComienzoDevart> ProcesoComienzos { get; set; }
 
         public DtoIntereDevart Intere { get; set; }
 

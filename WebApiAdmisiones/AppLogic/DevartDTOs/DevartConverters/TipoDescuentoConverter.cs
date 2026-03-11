@@ -43,9 +43,6 @@ namespace AppLogic.DevartDTOs
             target.AliasTipoDescuento = source.AliasTipoDescuento;
             target.ReimputableTipoDescuento = source.ReimputableTipoDescuento;
             target.VigenciaTipoDescuento = source.VigenciaTipoDescuento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdFamiliaTipoDescuento = source.IdFamiliaTipoDescuento;
             target.ReimputablelpdTipoDescuento = source.ReimputablelpdTipoDescuento;
             target.IdGrupoTipoDescuento = source.IdGrupoTipoDescuento;
@@ -83,9 +80,6 @@ namespace AppLogic.DevartDTOs
             target.AliasTipoDescuento = source.AliasTipoDescuento;
             target.ReimputableTipoDescuento = source.ReimputableTipoDescuento;
             target.VigenciaTipoDescuento = source.VigenciaTipoDescuento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdFamiliaTipoDescuento = source.IdFamiliaTipoDescuento;
             target.ReimputablelpdTipoDescuento = source.ReimputablelpdTipoDescuento;
             target.IdGrupoTipoDescuento = source.IdGrupoTipoDescuento;

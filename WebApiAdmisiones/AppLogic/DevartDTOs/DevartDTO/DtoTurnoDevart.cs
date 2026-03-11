@@ -36,24 +36,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(1)]
         public string? CodigoRpgTurno { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
-        #endregion
-
-        #region Navigation Properties
-
-        public List<DtoEncuestaIniAdmisionDevart> EncuestaIniAdmisions { get; set; }
-
-        public List<DtoOfertaDevart> Ofertas { get; set; }
-
-        public List<DtoInteresProductoDevart> InteresProductos { get; set; }
-
         #endregion
     }
 

@@ -61,9 +61,6 @@ namespace AppLogic.DevartDTOs
             target.ComparAmigoFamEncuestaIni = source.ComparAmigoFamEncuestaIni;
             target.ComparNadieEncuestaIni = source.ComparNadieEncuestaIni;
             target.ComparAmigoPropEncuestaIni = source.ComparAmigoPropEncuestaIni;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.InforOtrasLinea1Ini = source.InforOtrasLinea1Ini;
             target.InforOtrasLinea2Ini = source.InforOtrasLinea2Ini;
             target.TipoDocumento = source.TipoDocumento;
@@ -140,9 +137,6 @@ namespace AppLogic.DevartDTOs
             target.ComparAmigoFamEncuestaIni = source.ComparAmigoFamEncuestaIni;
             target.ComparNadieEncuestaIni = source.ComparNadieEncuestaIni;
             target.ComparAmigoPropEncuestaIni = source.ComparAmigoPropEncuestaIni;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.InforOtrasLinea1Ini = source.InforOtrasLinea1Ini;
             target.InforOtrasLinea2Ini = source.InforOtrasLinea2Ini;
             target.TipoDocumento = source.TipoDocumento;

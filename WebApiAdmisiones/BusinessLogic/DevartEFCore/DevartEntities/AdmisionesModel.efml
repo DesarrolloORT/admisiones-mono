@@ -100,13 +100,13 @@
     <property name="Email" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="55b2636f-9a5a-41ff-a43c-a954707a7364">
       <column name="EMAIL" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioUltimaActualizacion" type="String" value-generated="OnAdd" p1:ValidateMaxLength="31" p1:ValidateRequired="true" p1:Guid="2017b1ca-a3e6-44ad-83bf-2ef0d5f464da">
+    <property name="UsuarioUltimaActualizacion" type="String" value-generated="OnAdd" p1:ValidateMaxLength="31" p1:ValidateRequired="true" p1:Guid="2017b1ca-a3e6-44ad-83bf-2ef0d5f464da" p1:GenerateDTO="False">
       <column name="USUARIO_ULTIMA_ACTUALIZACION" default="user" not-null="True" length="31" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaUltimaActualizacion" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="216750a1-98ac-463a-b2fb-f0fc0c64fa31">
+    <property name="FechaUltimaActualizacion" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="216750a1-98ac-463a-b2fb-f0fc0c64fa31" p1:GenerateDTO="False">
       <column name="FECHA_ULTIMA_ACTUALIZACION" default="sysdate" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraUltimaActualizacion" type="String" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="true" p1:Guid="0b462362-dc6a-4005-8eac-8173511c4df9">
+    <property name="HoraUltimaActualizacion" type="String" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="true" p1:Guid="0b462362-dc6a-4005-8eac-8173511c4df9" p1:GenerateDTO="False">
       <column name="HORA_ULTIMA_ACTUALIZACION" default="to_char(sysdate,'hh24:mi:ss')" not-null="True" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="8fca6f37-c3c3-4a62-b5eb-cbd17216c2da" p1:GenerateDTO="False">
@@ -945,13 +945,13 @@
     <property name="ComparAmigoPropEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f700044e-7d27-4ca3-8413-175053dbe6f5">
       <column name="COMPAR_AMIGO_PROP_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f547ce17-ce50-4091-b69b-dfcd883462b8">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f547ce17-ce50-4091-b69b-dfcd883462b8" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="USER" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="b1f83528-33d4-4988-a770-2f9d2bf691ae">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="b1f83528-33d4-4988-a770-2f9d2bf691ae" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="f9f8bc91-bb24-4d20-a921-3d4e1a125fa0">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="f9f8bc91-bb24-4d20-a921-3d4e1a125fa0" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="TO_CHAR(SYSDATE,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="InforOtrasLinea1Ini" type="String" p1:nullable="True" p1:ValidateMaxLength="500" p1:ValidateRequired="false" p1:Guid="2c510e02-612c-4430-b40a-11ad61ed0946">
@@ -1376,16 +1376,16 @@
     <property name="IdTipoProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="58e56612-2fea-4002-b1db-a611cf6c8b0e">
       <column name="ID_TIPO_PROCESO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="cd2d77e9-7b3a-4134-936a-82a08ab00d98">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="cd2d77e9-7b3a-4134-936a-82a08ab00d98" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="ObservacionesProceso" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="5ae53940-11b2-4b82-b0f8-25b6c44b5123">
       <column name="OBSERVACIONES_PROCESO" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d7a4157a-1b43-4951-bdb7-6479db30c8d1">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d7a4157a-1b43-4951-bdb7-6479db30c8d1" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="27c7070a-b8fb-44e5-81c3-0eed7ace44fc">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="27c7070a-b8fb-44e5-81c3-0eed7ace44fc" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
     <property name="NombreProceso" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="639c333c-2cbf-4e4c-880a-838672165e28">
@@ -1557,13 +1557,13 @@
     <property name="ObservacionesPaquete" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="3e52211e-0453-4790-800e-b27f6a1ca214">
       <column name="OBSERVACIONES_PAQUETE" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="fc77d7dc-24d2-4908-be64-464d93e960ff">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="fc77d7dc-24d2-4908-be64-464d93e960ff" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="81da309e-8c32-47e2-97b9-c69858d1c591">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="81da309e-8c32-47e2-97b9-c69858d1c591" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="d0e9911a-850e-4c6d-8c23-196988565333">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="d0e9911a-850e-4c6d-8c23-196988565333" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="CarreraRpg" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="6156fdb2-6b63-41a1-abe0-70fdd81be775">
@@ -1699,13 +1699,13 @@
     <property name="MinimoCreditosOferta" type="Int64" p1:ValidateRequired="true" p1:Guid="234d1c1c-b2cd-4eda-ab1c-08ab8a990cfa">
       <column name="MINIMO_CREDITOS_OFERTA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="1c275228-0394-4d46-91d2-8724e01c4622">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="1c275228-0394-4d46-91d2-8724e01c4622" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="13b10938-4289-4d9e-ad3d-94e0fefd48a7">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="13b10938-4289-4d9e-ad3d-94e0fefd48a7" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="245997f9-8c47-4aac-b675-2c2463fee9bb">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="245997f9-8c47-4aac-b675-2c2463fee9bb" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="CantidadInscriptosOferta" type="Int64" p1:ValidateRequired="true" p1:Guid="22fb28f5-579f-4b88-b0b7-290d09d8941e">
@@ -2150,13 +2150,13 @@
     <property name="CodigoRpgTurno" type="String" p1:nullable="True" p1:ValidateMaxLength="1" p1:ValidateRequired="false" p1:Guid="48ab6107-f636-431a-bff4-c64de0e4b87d">
       <column name="CODIGO_RPG_TURNO" not-null="False" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="ed7f72b2-8a92-4ae4-802e-24fa8ad3affa">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="ed7f72b2-8a92-4ae4-802e-24fa8ad3affa" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="2942180d-5be3-4275-873d-a362f00e51e3">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="2942180d-5be3-4275-873d-a362f00e51e3" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="c8bf6279-86a4-4d11-b28d-e166263b70cf">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="c8bf6279-86a4-4d11-b28d-e166263b70cf" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -2448,13 +2448,13 @@
     <property name="MotivoCancelacion" type="String" p1:nullable="True" p1:ValidateMaxLength="4000" p1:ValidateRequired="false" p1:Guid="b18b84e5-a675-4c95-bfbe-02ea41f92360">
       <column name="MOTIVO_CANCELACION" not-null="False" length="4000" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="2829fb61-122d-41ce-b658-00efa09bc8d3">
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="2829fb61-122d-41ce-b658-00efa09bc8d3" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="6ed282fd-8093-4513-834e-96cee5398c58">
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="6ed282fd-8093-4513-834e-96cee5398c58" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="ad9018c9-361b-4c3c-bf4b-8c81df074a78">
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="ad9018c9-361b-4c3c-bf4b-8c81df074a78" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
     <property name="IdTramiteBandeja" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="14a6c540-4e53-468e-8d9c-2536ff117248">
@@ -2554,13 +2554,13 @@
     <property name="ObservaAnioBachiller" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="edf97efe-6799-4240-8791-7e3c8cf6e8f3">
       <column name="OBSERVA_ANIO_BACHILLER" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="3ab16230-5392-488d-8c4c-582ec85d1c9c">
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="3ab16230-5392-488d-8c4c-582ec85d1c9c" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="6da36062-8d94-4b7f-979f-92fedc49df48">
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="6da36062-8d94-4b7f-979f-92fedc49df48" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="56e4773d-6bd6-4917-8abe-44e0b83d0298">
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="56e4773d-6bd6-4917-8abe-44e0b83d0298" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'HH24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="CantAniosAnioBachiller" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="02392b39-f806-4f42-bc3f-c54b6b0a8c1e">
@@ -2844,13 +2844,13 @@
     <property name="VigenciaTipoDescuento" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="37af3d35-e334-4dfd-937b-e246391b4485">
       <column name="VIGENCIA_TIPO_DESCUENTO" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="37f9fc34-e94e-4a7a-b297-4d51f027d1df">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="37f9fc34-e94e-4a7a-b297-4d51f027d1df" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="e7f2727a-0cb5-44de-bf62-0bfa6d9e0e91">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="e7f2727a-0cb5-44de-bf62-0bfa6d9e0e91" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="f21c0586-0783-410a-a7d2-7c0235933c84">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="f21c0586-0783-410a-a7d2-7c0235933c84" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdFamiliaTipoDescuento" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c0797619-3946-40e7-aac0-6bc105132dfe">
@@ -3093,13 +3093,13 @@
     <property name="HoraResultadoPrueba" type="String" p1:nullable="True" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="26118a5c-fdf9-4b17-9faf-4349572e9aae">
       <column name="HORA_RESULTADO_PRUEBA" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="0b4b9a5a-956e-4798-b3f0-59e8a6749b87">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="0b4b9a5a-956e-4798-b3f0-59e8a6749b87" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="6314eb00-f3c0-46f6-8a49-42c93e4aa64a">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="6314eb00-f3c0-46f6-8a49-42c93e4aa64a" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="165dd566-29a5-4df3-a232-db13b615abe3">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="165dd566-29a5-4df3-a232-db13b615abe3" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdLocalidad" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6e0cc15a-1915-4656-b7d6-06263ab5cac1">
@@ -3166,13 +3166,13 @@
     <property name="NombreMotivo" type="String" p1:ValidateMaxLength="90" p1:ValidateRequired="true" p1:Guid="6e8f7a8f-8d4f-40a9-91aa-4f9bf5b75638">
       <column name="NOMBRE_MOTIVO" not-null="True" length="90" sql-type="VARCHAR2" unique="True" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="aa90310d-4172-4cd5-9b4a-607a283cccb5">
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="aa90310d-4172-4cd5-9b4a-607a283cccb5" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="2c316b74-5485-4e75-bcd7-065395056b91">
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="2c316b74-5485-4e75-bcd7-065395056b91" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="b2b09552-839b-431e-83df-109e02baa287">
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="b2b09552-839b-431e-83df-109e02baa287" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -3183,13 +3183,13 @@
     <property name="NombrePublicidad" type="String" p1:ValidateMaxLength="90" p1:ValidateRequired="true" p1:Guid="6092a81f-ee42-4cff-bdf0-7fe61b84eaa9">
       <column name="NOMBRE_PUBLICIDAD" not-null="True" length="90" sql-type="VARCHAR2" unique="True" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="ac7773dc-7228-42aa-b9d8-3c86d70c8898">
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="ac7773dc-7228-42aa-b9d8-3c86d70c8898" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="6c2c0f6b-a60e-4eba-94fa-cee629d90467">
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="6c2c0f6b-a60e-4eba-94fa-cee629d90467" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="4e00cfbb-fe56-4f8d-b3f0-c13e7df1a20b">
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="4e00cfbb-fe56-4f8d-b3f0-c13e7df1a20b" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -3231,13 +3231,13 @@
     <property name="IdSistema" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e9808207-1b91-4224-8be5-212e98aac5ea">
       <column name="ID_SISTEMA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="a8b28425-b443-46cd-9052-4f8c1d1ac805">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="a8b28425-b443-46cd-9052-4f8c1d1ac805" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="4b967594-a85d-4174-94b9-492cb9a0dd91">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="4b967594-a85d-4174-94b9-492cb9a0dd91" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="trunc(SYSDATE)" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="04db5d1f-aa9f-4975-9b90-e422c0b3caa1">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="04db5d1f-aa9f-4975-9b90-e422c0b3caa1" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -3428,7 +3428,7 @@
       <end1 multiplicity="ZeroOrOne" name="Pai" class="Persona" relation-class="Pais" constrained="True" lazy="False" p1:Guid="89f42b11-4423-4c5c-b56b-0369c702d11b">
         <property name="CodigoPais" />
       </end1>
-      <end2 multiplicity="Many" name="Personas" class="Pais" relation-class="Persona" lazy="False" p1:Guid="c10561a0-8021-4317-986b-553742a1b1cf">
+      <end2 multiplicity="Many" name="Personas" class="Pais" relation-class="Persona" lazy="False" p1:Guid="c10561a0-8021-4317-986b-553742a1b1cf" p1:GenerateDTO="False">
         <property name="CodigoPaisNacimiento" />
       </end2>
     </association>
@@ -3510,7 +3510,7 @@
       <end1 multiplicity="ZeroOrOne" name="Pais" class="SolicitudAlta" relation-class="Pais" constrained="True" lazy="False" p1:Guid="239cdb4e-7cd5-42ad-a846-493ec5818daf">
         <property name="CodigoPais" />
       </end1>
-      <end2 multiplicity="Many" name="SolicitudAltas" class="Pais" relation-class="SolicitudAlta" lazy="False" p1:Guid="827acefe-29c5-406d-8aa1-d4dacbc72412">
+      <end2 multiplicity="Many" name="SolicitudAltas" class="Pais" relation-class="SolicitudAlta" lazy="False" p1:Guid="827acefe-29c5-406d-8aa1-d4dacbc72412" p1:GenerateDTO="False">
         <property name="CodigoPais" />
       </end2>
     </association>
@@ -3574,7 +3574,7 @@
       <end1 multiplicity="One" name="Proceso" class="ProcesoProducto" relation-class="Proceso" constrained="True" lazy="False" p1:Guid="c7e5474d-83bf-4982-bee9-912a83d67438">
         <property name="IdProceso" />
       </end1>
-      <end2 multiplicity="Many" name="ProcesoProductos" class="Proceso" relation-class="ProcesoProducto" lazy="False" p1:Guid="a230c892-76e4-4127-b5a4-1120206a0f50">
+      <end2 multiplicity="Many" name="ProcesoProductos" class="Proceso" relation-class="ProcesoProducto" lazy="False" p1:Guid="a230c892-76e4-4127-b5a4-1120206a0f50" p1:GenerateDTO="False">
         <property name="IdProceso" />
       </end2>
     </association>
@@ -3582,7 +3582,7 @@
       <end1 multiplicity="One" name="Proceso" class="ProcesoComienzo" relation-class="Proceso" constrained="True" lazy="False" p1:Guid="79e52613-0c87-41f9-9528-6e1259ee5c78">
         <property name="IdProceso" />
       </end1>
-      <end2 multiplicity="Many" name="ProcesoComienzos" class="Proceso" relation-class="ProcesoComienzo" lazy="False" p1:Guid="403917e2-8009-4375-9574-c03558be6504">
+      <end2 multiplicity="Many" name="ProcesoComienzos" class="Proceso" relation-class="ProcesoComienzo" lazy="False" p1:Guid="403917e2-8009-4375-9574-c03558be6504" p1:GenerateDTO="False">
         <property name="IdProceso" />
       </end2>
     </association>
@@ -3606,7 +3606,7 @@
       <end1 multiplicity="One" name="Paquete" class="Supraoferta" relation-class="Paquete" constrained="True" lazy="False" p1:Guid="179ef4cf-54c0-4812-be48-c9182f0716e0">
         <property name="IdPaquete" />
       </end1>
-      <end2 multiplicity="Many" name="Supraofertas" class="Paquete" relation-class="Supraoferta" lazy="False" p1:Guid="1594e889-b965-4b75-880a-27a0aaa7f851">
+      <end2 multiplicity="Many" name="Supraofertas" class="Paquete" relation-class="Supraoferta" lazy="False" p1:Guid="1594e889-b965-4b75-880a-27a0aaa7f851" p1:GenerateDTO="False">
         <property name="IdPaquete" />
       </end2>
     </association>
@@ -3614,7 +3614,7 @@
       <end1 multiplicity="One" name="Supraoferta" class="Oferta" relation-class="Supraoferta" constrained="True" lazy="False" p1:Guid="eff30de1-7757-4690-9c8b-660e130cf3fd">
         <property name="IdSupraoferta" />
       </end1>
-      <end2 multiplicity="Many" name="Ofertas" class="Supraoferta" relation-class="Oferta" lazy="False" p1:Guid="9fbcb8a8-03c5-482d-9e63-1f31f100a73c">
+      <end2 multiplicity="Many" name="Ofertas" class="Supraoferta" relation-class="Oferta" lazy="False" p1:Guid="9fbcb8a8-03c5-482d-9e63-1f31f100a73c" p1:GenerateDTO="False">
         <property name="IdSupraoferta" />
       </end2>
     </association>
@@ -3662,7 +3662,7 @@
       <end1 multiplicity="ZeroOrOne" name="Oferta" class="Inscripto" relation-class="Oferta" constrained="True" lazy="False" p1:Guid="07d197c8-64ff-44cc-a47b-8309d49f0558">
         <property name="IdOferta" />
       </end1>
-      <end2 multiplicity="Many" name="Inscriptos" class="Oferta" relation-class="Inscripto" lazy="False" p1:Guid="9de7553a-7303-42f0-a5cc-fab6025b2b68">
+      <end2 multiplicity="Many" name="Inscriptos" class="Oferta" relation-class="Inscripto" lazy="False" p1:Guid="9de7553a-7303-42f0-a5cc-fab6025b2b68" p1:GenerateDTO="False">
         <property name="IdOferta" />
       </end2>
     </association>
@@ -3702,7 +3702,7 @@
       <end1 multiplicity="ZeroOrOne" name="Turno" class="EncuestaIniAdmision" relation-class="Turno" constrained="True" lazy="False" p1:Guid="84767fdf-f04c-41a9-b640-5cec0310fe0b">
         <property name="IdTurno" />
       </end1>
-      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Turno" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="fa9837d5-0cd4-44ee-9cb5-47d639c81aa6">
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Turno" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="fa9837d5-0cd4-44ee-9cb5-47d639c81aa6" p1:GenerateDTO="False">
         <property name="IdTurno" />
       </end2>
     </association>
@@ -3710,7 +3710,7 @@
       <end1 multiplicity="One" name="Turno" class="Oferta" relation-class="Turno" constrained="True" lazy="False" p1:Guid="8930b546-d4e7-4dd1-a440-3845805bdc66">
         <property name="IdTurno" />
       </end1>
-      <end2 multiplicity="Many" name="Ofertas" class="Turno" relation-class="Oferta" lazy="False" p1:Guid="ded748ce-eafe-43f7-aa8c-3d0f7cb35479">
+      <end2 multiplicity="Many" name="Ofertas" class="Turno" relation-class="Oferta" lazy="False" p1:Guid="ded748ce-eafe-43f7-aa8c-3d0f7cb35479" p1:GenerateDTO="False">
         <property name="IdTurno" />
       </end2>
     </association>
@@ -3718,7 +3718,7 @@
       <end1 multiplicity="ZeroOrOne" name="Turno" class="InteresProducto" relation-class="Turno" constrained="True" lazy="False" p1:Guid="b3ef260b-68ae-4fea-99bd-a8ce2f2d9acf">
         <property name="IdTurno" />
       </end1>
-      <end2 multiplicity="Many" name="InteresProductos" class="Turno" relation-class="InteresProducto" lazy="False" p1:Guid="ec6c03b6-d4ce-4027-9165-0f09cf523321">
+      <end2 multiplicity="Many" name="InteresProductos" class="Turno" relation-class="InteresProducto" lazy="False" p1:Guid="ec6c03b6-d4ce-4027-9165-0f09cf523321" p1:GenerateDTO="False">
         <property name="IdTurno" />
       </end2>
     </association>
@@ -3763,7 +3763,7 @@
       </end2>
     </association>
     <association name="Persona_InstanciaWorkflow" cardinality="OneToMany" p1:Guid="22ae361d-3e03-410a-b0a6-1351d820c640">
-      <end1 multiplicity="ZeroOrOne" name="Persona" class="InstanciaWorkflow" relation-class="Persona" constrained="True" lazy="False" p1:Guid="7c6f27a0-f7ad-4d6a-8c32-f295762a1908">
+      <end1 multiplicity="ZeroOrOne" name="Persona" class="InstanciaWorkflow" relation-class="Persona" constrained="True" lazy="False" p1:Guid="7c6f27a0-f7ad-4d6a-8c32-f295762a1908" p1:GenerateDTO="False">
         <property name="CodigoPersona" />
       </end1>
       <end2 multiplicity="Many" name="InstanciaWorkflows" class="Persona" relation-class="InstanciaWorkflow" lazy="False" p1:Guid="2ddef4a6-0645-4811-b84c-7e4316e986c0">
@@ -3902,7 +3902,7 @@
       <end1 multiplicity="ZeroOrOne" name="Prueba" class="Accion" relation-class="Prueba" constrained="True" lazy="False" p1:Guid="939b7c7f-e7d8-466f-9388-aecd5a66e853">
         <property name="IdPrueba" />
       </end1>
-      <end2 multiplicity="Many" name="Accions" class="Prueba" relation-class="Accion" lazy="False" p1:Guid="9af3d857-cd4d-44ae-978a-ba554ae75495">
+      <end2 multiplicity="Many" name="Accions" class="Prueba" relation-class="Accion" lazy="False" p1:Guid="9af3d857-cd4d-44ae-978a-ba554ae75495" p1:GenerateDTO="False">
         <property name="IdPrueba" />
       </end2>
     </association>
@@ -3910,7 +3910,7 @@
       <end1 multiplicity="One" name="Prueba" class="InscriptoPrueba" relation-class="Prueba" constrained="True" lazy="False" p1:Guid="08b0d845-5095-437e-b9a9-228bc3473fe0">
         <property name="IdPrueba" />
       </end1>
-      <end2 multiplicity="Many" name="InscriptoPruebas" class="Prueba" relation-class="InscriptoPrueba" lazy="False" p1:Guid="ac75e8b0-00c6-4a0f-9043-ec1c2b6de8b7">
+      <end2 multiplicity="Many" name="InscriptoPruebas" class="Prueba" relation-class="InscriptoPrueba" lazy="False" p1:Guid="ac75e8b0-00c6-4a0f-9043-ec1c2b6de8b7" p1:GenerateDTO="False">
         <property name="IdPrueba" />
       </end2>
     </association>

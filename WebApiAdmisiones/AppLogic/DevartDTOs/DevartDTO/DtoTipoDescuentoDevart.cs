@@ -54,14 +54,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? VigenciaTipoDescuento { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         public long? IdFamiliaTipoDescuento { get; set; }
 
         [StringLength(2)]

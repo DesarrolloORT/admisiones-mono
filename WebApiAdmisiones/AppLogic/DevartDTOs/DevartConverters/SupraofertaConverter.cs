@@ -63,7 +63,6 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Paquete = source.Paquete.ToDtoWithRelated(level - 1);
-              target.Ofertas = source.Ofertas.ToDtosWithRelated(level - 1);
               target.Comienzo = source.Comienzo.ToDtoWithRelated(level - 1);
             }
 

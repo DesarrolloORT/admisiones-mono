@@ -61,14 +61,6 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public long MinimoCreditosOferta { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         [Required()]
         public long CantidadInscriptosOferta { get; set; }
 
@@ -104,8 +96,6 @@ namespace AppLogic.DevartDTOs
         #region Navigation Properties
 
         public DtoSupraofertaDevart Supraoferta { get; set; }
-
-        public List<DtoInscriptoDevart> Inscriptos { get; set; }
 
         public DtoLocalidadDevart Localidad { get; set; }
 

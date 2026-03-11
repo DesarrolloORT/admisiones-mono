@@ -42,9 +42,6 @@ namespace AppLogic.DevartDTOs
             target.GeneraPlanAnclaPaquete = source.GeneraPlanAnclaPaquete;
             target.MinimoCreditosPaquete = source.MinimoCreditosPaquete;
             target.ObservacionesPaquete = source.ObservacionesPaquete;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CarreraRpg = source.CarreraRpg;
             target.IdTipoPaqCom = source.IdTipoPaqCom;
             target.VisibleInternetPaquete = source.VisibleInternetPaquete;
@@ -55,7 +52,6 @@ namespace AppLogic.DevartDTOs
             // Navigation Properties
             if (level > 0) {
               target.Producto = source.Producto.ToDtoWithRelated(level - 1);
-              target.Supraofertas = source.Supraofertas.ToDtosWithRelated(level - 1);
               target.TituloOrt = source.TituloOrt.ToDtoWithRelated(level - 1);
             }
 
@@ -81,9 +77,6 @@ namespace AppLogic.DevartDTOs
             target.GeneraPlanAnclaPaquete = source.GeneraPlanAnclaPaquete;
             target.MinimoCreditosPaquete = source.MinimoCreditosPaquete;
             target.ObservacionesPaquete = source.ObservacionesPaquete;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.CarreraRpg = source.CarreraRpg;
             target.IdTipoPaqCom = source.IdTipoPaqCom;
             target.VisibleInternetPaquete = source.VisibleInternetPaquete;

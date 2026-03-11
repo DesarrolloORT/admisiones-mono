@@ -46,14 +46,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(200)]
         public string? ObservacionesPaquete { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(2)]
         public string? CarreraRpg { get; set; }
 
@@ -75,8 +67,6 @@ namespace AppLogic.DevartDTOs
         #region Navigation Properties
 
         public DtoProductoDevart Producto { get; set; }
-
-        public List<DtoSupraofertaDevart> Supraofertas { get; set; }
 
         public DtoTituloOrtDevart TituloOrt { get; set; }
 

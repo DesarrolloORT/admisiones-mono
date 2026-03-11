@@ -45,9 +45,6 @@ namespace AppLogic.DevartDTOs
             target.XmlInstanciaWorkflow = source.XmlInstanciaWorkflow;
             target.FechaCanceladoInstanciaWf = source.FechaCanceladoInstanciaWf;
             target.MotivoCancelacion = source.MotivoCancelacion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdTramiteBandeja = source.IdTramiteBandeja;
             target.Resolucion = source.Resolucion;
             target.IdDepartamento = source.IdDepartamento;
@@ -55,7 +52,6 @@ namespace AppLogic.DevartDTOs
 
             // Navigation Properties
             if (level > 0) {
-              target.Persona = source.Persona.ToDtoWithRelated(level - 1);
               target.InstWorkflowInscripcion = source.InstWorkflowInscripcion.ToDtoWithRelated(level - 1);
             }
 
@@ -84,9 +80,6 @@ namespace AppLogic.DevartDTOs
             target.XmlInstanciaWorkflow = source.XmlInstanciaWorkflow;
             target.FechaCanceladoInstanciaWf = source.FechaCanceladoInstanciaWf;
             target.MotivoCancelacion = source.MotivoCancelacion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdTramiteBandeja = source.IdTramiteBandeja;
             target.Resolucion = source.Resolucion;
             target.IdDepartamento = source.IdDepartamento;
