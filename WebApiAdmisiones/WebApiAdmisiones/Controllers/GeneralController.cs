@@ -1,19 +1,11 @@
 using BusinessLogic.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
 using AppLogic.Interfaces;
-using AppLogic.Services;
-using MailORT;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using ModBandejaAppLogic.DevartDTOs;
-using AppLogic.Helpers;
 using WebApiAdmisiones.Security;
 using Utilities;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Net;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -33,9 +25,8 @@ namespace WebApiAdmisiones.Controllers
         /// Constructor del controlador FDP.
         /// En este punto validamos si existe un usuario y capturamos su UserId.
         /// </summary>
-        /// <param name="FdpService">Servicio de FDP.</param>
-        /// <param name="logger">Logger para FdpController.</param>
-        /// <param name="envioMailORT">Servicio de envío de mails.</param>
+        /// <param name="AdmisionesService">Servicio de admisiones.</param>
+        /// <param name="logger">Logger para GeneralController.</param>
         /// <param name="currentUser">Servicio que expone el usuario actual.</param>
         public GeneralController(
             IGeneralServices AdmisionesService,
@@ -59,7 +50,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpGet("Pais")]
         [ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 400)]
-        public IActionResult ObtenerPais(long id)
+        public IActionResult ObtenerPais([FromQuery] long id)
         {
             var result = _GeneralService.ObtenerPais(id);
             return ValidateResponse(result);
@@ -473,7 +464,10 @@ namespace WebApiAdmisiones.Controllers
             if (!result.Success)
                 return ValidateResponse(result);
 
-            return File(result.Data!, "image/jpeg");
+            if (result.Data is null)
+                return NotFound();
+
+            return File(result.Data, "image/jpeg");
         }
 
         /// <summary>
@@ -497,7 +491,10 @@ namespace WebApiAdmisiones.Controllers
             if (!result.Success)
                 return ValidateResponse(result);
 
-            return File(result.Data!, "image/jpeg");
+            if (result.Data is null)
+                return NotFound();
+
+            return File(result.Data, "image/jpeg");
         }
 
         #endregion IMAGEN / DOCUMENTOS
@@ -540,6 +537,5 @@ namespace WebApiAdmisiones.Controllers
         }
 
         #endregion ADMISIONES
-
     }
 }

@@ -93,6 +93,17 @@ namespace DataAccess.DevartRepositories
         public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteresActivo(long codigoPersona)
         {
             var today = DateTime.Today;
+
+            // Comienzos válidos: proceso habilitado + producto nivel 1 o 2.
+            var comienzoIds = Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                .Where(pc =>
+                    pc.Proceso.HabilitadoInteresSitio == "SI"
+                    && pc.Proceso.ProcesoProductos.Any(pp =>
+                        pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2))
+                .Select(pc => pc.IdComienzo)
+                .Distinct()
+                .ToList();
+
             return objectSet
                 .Where(p =>
                     p.VisibleAdmisionesProducto == "SI"
@@ -101,6 +112,12 @@ namespace DataAccess.DevartRepositories
                     && p.ActivoWebProducto == "SI"
                     && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
                     && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
+                    // Tiene oferta abierta con semestre != 99 y comienzo en proceso habilitado con nivel 1 o 2
+                    && p.Paquetes.Any(pk =>
+                        pk.SemestrePaquete != 99
+                        && pk.Supraofertas.Any(so =>
+                            comienzoIds.Contains(so.IdComienzo)
+                            && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI")))
                     // Excluye productos que ya tienen una inscripción pendiente en el workflow para esta persona
                     && !Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>().Any(iwi =>
                         iwi.IdProducto == (decimal?)p.IdProducto
@@ -113,12 +130,13 @@ namespace DataAccess.DevartRepositories
                     && !p.InteresProductos.Any(ip =>
                         ip.Intere != null
                         && ip.Intere.CodigoPersona == codigoPersona
-                        && ip.IdGradoInteres == 5)
-                    // La persona tiene al menos un interés activo (no grado 5) en proceso habilitado
+                        && ip.IdGradoInteres == 5m)
+                    // La persona tiene al menos un interés activo (grado != 0, grado != 5) en proceso habilitado
                     && p.InteresProductos.Any(ip =>
                         ip.Intere != null
                         && ip.Intere.CodigoPersona == codigoPersona
-                        && ip.IdGradoInteres != 5
+                        && ip.IdGradoInteres != 0m
+                        && ip.IdGradoInteres != 5m
                         && ip.Intere.Proceso.HabilitadoInteresSitio == "SI"))
                 .Include(p => p.ProcesoProductos)
                     .ThenInclude(pp => pp.Proceso)
