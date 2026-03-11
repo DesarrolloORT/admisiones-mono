@@ -11,5 +11,7 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IPruebaRepository
     {
+        ICollection<BusinessLogic.Entities.Prueba> GetFondosBecaVigentes(
+            long idNivelProducto, long idComienzo, long codigoPersona, long idProducto, long idProceso);
     }
 }

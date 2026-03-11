@@ -57,6 +57,7 @@
         <File Name="AcaTipoDocumento.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="VdEsFrescoAdmision.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="VdFrescoProductoAdmisione.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="Feriado.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
@@ -164,6 +165,8 @@
         <File Name="IVdEsFrescoAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IVdFrescoProductoAdmisioneRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IVdFrescoProductoAdmisioneRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IFeriadoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IFeriadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
@@ -271,6 +274,8 @@
         <File Name="VdEsFrescoAdmisionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="VdFrescoProductoAdmisioneRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="VdFrescoProductoAdmisioneRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="FeriadoRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="FeriadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -323,6 +328,7 @@
         <File Name="DtoAcaTipoDocumentoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoVdEsFrescoAdmisionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoVdFrescoProductoAdmisioneDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoFeriadoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -375,6 +381,7 @@
         <File Name="AcaTipoDocumentoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="VdEsFrescoAdmisionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="VdFrescoProductoAdmisioneConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="FeriadoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>

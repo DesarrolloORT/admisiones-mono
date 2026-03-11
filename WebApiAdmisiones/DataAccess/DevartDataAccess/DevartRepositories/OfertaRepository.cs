@@ -26,11 +26,9 @@ namespace DataAccess.DevartRepositories
         public virtual ICollection<BusinessLogic.Entities.Oferta> GetOfertasParaInscripcionConProceso(
             long idProducto, long idProceso, long idTurno)
         {
-            // 1. Comienzo: primero el habilitado para el proceso,
-            //    con fallback en la primera supraoferta con oferta abierta del producto.
+            // 1. Comienzo: primero el del proceso, con fallback en la primera supraoferta con oferta abierta del producto.
             var idComienzo = Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
-                .Where(pc => pc.IdProceso == idProceso
-                          && pc.Proceso.HabilitadoInteresSitio == "SI")
+                .Where(pc => pc.IdProceso == idProceso)
                 .Select(pc => (long?)pc.IdComienzo)
                 .FirstOrDefault()
                 ?? Context.Set<BusinessLogic.Entities.Supraoferta>()
@@ -42,15 +40,64 @@ namespace DataAccess.DevartRepositories
             if (idComienzo == null)
                 return new List<BusinessLogic.Entities.Oferta>();
 
-            // 2. Semestre del paquete para este producto y comienzo (default 1).
-            var semestre = Context.Set<BusinessLogic.Entities.Paquete>()
-                .Where(pk => pk.IdProducto == idProducto
-                          && pk.SemestrePaquete != 99
-                          && pk.Supraofertas.Any(so =>
-                              so.IdComienzo == idComienzo
-                              && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI")))
-                .Select(pk => pk.SemestrePaquete)
-                .FirstOrDefault() ?? 1m;
+            // 2. Semestre: misma lógica SQL que GetSemestreQueCorresponde en ProcesoRepository.
+            var semestreRaw = Context.Database
+                .SqlQuery<int>($"""
+                    SELECT semestre_paquete AS "Value" FROM (
+                        SELECT pk.semestre_paquete
+                        FROM CREADOR.T_SUPRAOFERTA so
+                        INNER JOIN CREADOR.T_PAQUETE  pk ON pk.id_paquete  = so.id_paquete
+                        INNER JOIN CREADOR.T_PRODUCTO pr ON pr.id_producto = pk.id_producto
+                        WHERE so.fecha_referencia_supraoferta >= TRUNC(SYSDATE)
+                          AND so.estado_supraoferta = 'D'
+                          AND pr.id_producto = {idProducto}
+                          AND pk.semestre_paquete = 1
+                          AND pr.certificacion_externa_producto <> 'SI'
+                          AND NOT (pr.id_centro_costos = 'OV' AND pr.id_centro_gastos = 93)
+                          AND 0 < (SELECT COUNT(*) FROM CREADOR.T_OFERTA o
+                                   WHERE o.inscripciones_abiertas_oferta = 'SI'
+                                     AND o.id_supraoferta = so.id_supraoferta)
+                          AND so.id_comienzo IN (
+                              SELECT DISTINCT pc.id_comienzo
+                              FROM CREADOR.T_PROCESO_COMIENZO pc
+                              INNER JOIN CREADOR.T_PROCESO          p   ON pc.id_proceso   = p.id_proceso
+                              INNER JOIN CREADOR.T_PROCESO_PRODUCTO pp  ON p.id_proceso    = pp.id_proceso
+                              INNER JOIN CREADOR.T_PRODUCTO         pr2 ON pr2.id_producto = pp.id_producto
+                              WHERE p.habilitado_interes_sitio = 'SI'
+                                AND p.id_proceso = {idProceso}
+                                AND pr2.id_nivel_producto IN (1, 2)
+                          )
+                        UNION ALL
+                        SELECT pk.semestre_paquete
+                        FROM CREADOR.T_SUPRAOFERTA so
+                        INNER JOIN CREADOR.T_PAQUETE  pk ON pk.id_paquete  = so.id_paquete
+                        INNER JOIN CREADOR.T_PRODUCTO pr ON pr.id_producto = pk.id_producto
+                        WHERE so.fecha_referencia_supraoferta >= TRUNC(SYSDATE)
+                          AND so.estado_supraoferta = 'D'
+                          AND pr.id_producto = {idProducto}
+                          AND pk.semestre_paquete = 2
+                          AND pr.comienzoenagosto_producto = 'SI'
+                          AND EXTRACT(MONTH FROM SYSDATE) = 8
+                          AND pr.certificacion_externa_producto <> 'SI'
+                          AND NOT (pr.id_centro_costos = 'OV' AND pr.id_centro_gastos = 93)
+                          AND 0 < (SELECT COUNT(*) FROM CREADOR.T_OFERTA o
+                                   WHERE o.inscripciones_abiertas_oferta = 'SI'
+                                     AND o.id_supraoferta = so.id_supraoferta)
+                          AND so.id_comienzo IN (
+                              SELECT DISTINCT pc.id_comienzo
+                              FROM CREADOR.T_PROCESO_COMIENZO pc
+                              INNER JOIN CREADOR.T_PROCESO          p   ON pc.id_proceso   = p.id_proceso
+                              INNER JOIN CREADOR.T_PROCESO_PRODUCTO pp  ON p.id_proceso    = pp.id_proceso
+                              INNER JOIN CREADOR.T_PRODUCTO         pr2 ON pr2.id_producto = pp.id_producto
+                              WHERE p.habilitado_interes_sitio = 'SI'
+                                AND p.id_proceso = {idProceso}
+                                AND pr2.id_nivel_producto IN (1, 2)
+                          )
+                    ) WHERE rownum = 1
+                """)
+                .FirstOrDefault();
+
+            decimal semestre = (semestreRaw != 0 ? semestreRaw : 1);
 
             // 3. Ofertas filtradas.
             return objectSet
@@ -69,5 +116,6 @@ namespace DataAccess.DevartRepositories
                 .Include(o => o.Localidad)
                 .ToList();
         }
+
     }
 }

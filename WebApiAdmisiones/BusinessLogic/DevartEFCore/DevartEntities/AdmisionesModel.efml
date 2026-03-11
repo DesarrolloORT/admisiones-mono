@@ -3355,6 +3355,44 @@
       <column name="ID_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
+  <class name="Feriado" entity-set="Feriados" table="T_FERIADO" schema="CREADOR" query-type="True" p1:Guid="b64032a8-a16f-41b4-91dd-1e1e41f4272b">
+    <property name="NombreFeriado" type="String" p1:ValidateMaxLength="80" p1:ValidateRequired="true" p1:Guid="bd30303f-31ae-4a54-ab80-644c44a23341">
+      <column name="NOMBRE_FERIADO" not-null="True" length="80" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaFeriado" type="DateTime" p1:ValidateRequired="true" p1:Guid="8df7301e-6b42-41db-8885-b7562bddb424">
+      <column name="FECHA_FERIADO" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraDesdeFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="d095547b-c9b3-437b-96e0-f6474814db37">
+      <column name="HORA_DESDE_FERIADO" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="HoraHastaFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="8aca2fac-ab85-46e8-a2a1-f99301769eed">
+      <column name="HORA_HASTA_FERIADO" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ObservacionesFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="255" p1:ValidateRequired="false" p1:Guid="4471d5ad-d8d2-46a6-85e6-2ea83b05aa8d">
+      <column name="OBSERVACIONES_FERIADO" not-null="False" length="255" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d64d3e38-ea22-4b87-b5b1-813b5bf44497">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="43cbf7dd-76f9-49b1-a63f-ca10a9104bb8">
+      <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="875db41e-1a08-468e-8680-855f910ece99">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="VtoCuotasFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="5b280541-0f4a-4d76-8a1b-24d3e2d529e7">
+      <column name="VTO_CUOTAS_FERIADO" default="'SI'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ClaseFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="32b4ee99-9aee-4fb8-827e-0b1cbc60d6f0">
+      <column name="CLASE_FERIADO" default="'SI'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AbreFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="7131172c-f6dd-47fe-a4cb-4f55dbbe141a">
+      <column name="ABRE_FERIADO" default="'SI'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PruebasFeriado" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="ab65a2ee-668b-4251-b14f-609defb6f88b">
+      <column name="PRUEBAS_FERIADO" default="'SI'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

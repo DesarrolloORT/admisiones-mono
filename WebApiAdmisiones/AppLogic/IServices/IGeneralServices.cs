@@ -59,5 +59,10 @@ namespace AppLogic.Interfaces
         OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo);
         OperationResult<byte[]> ObtenerFotoAlumno(long codigoPersona);
         #endregion IMAGEN / DOCUMENTOS
+
+        #region ADMISIONES
+        OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso);
+        OperationResult<IEnumerable<DtoPruebaDevart>> ObtenerFondosDeBecaVigentes(long idProducto, long idProceso, long codigoPersona);
+        #endregion ADMISIONES
     }
 }

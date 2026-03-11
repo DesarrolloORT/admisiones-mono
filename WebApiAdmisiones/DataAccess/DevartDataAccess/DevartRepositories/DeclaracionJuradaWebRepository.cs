@@ -8,9 +8,29 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class DeclaracionJuradaWebRepository
     {
+        /// <summary>
+        /// Devuelve la fecha de entrega de DJ de la prueba activa de admisiones del alumno,
+        /// donde dicha fecha aún no ha pasado (>= hoy). Retorna null si no existe.
+        /// </summary>
+        public virtual DateTime? GetFechaEntregaDjAdmisiones(long codigoPersona)
+        {
+            var hoy = DateTime.Today;
+            return (
+                from d in objectSet
+                join ip in Context.Set<BusinessLogic.Entities.InscriptoPrueba>()
+                    on d.IdInscriptoPrueba equals (decimal)ip.IdInscriptoPrueba
+                join p in Context.Set<BusinessLogic.Entities.Prueba>()
+                    on ip.IdPrueba equals p.IdPrueba
+                where d.CodigoPersona == codigoPersona
+                   && p.FechaEntregaDjPrueba.HasValue
+                   && p.FechaEntregaDjPrueba.Value.Date >= hoy
+                orderby d.IdDeclaracionjuradaWeb descending
+                select p.FechaEntregaDjPrueba
+            ).FirstOrDefault();
+        }
     }
 }

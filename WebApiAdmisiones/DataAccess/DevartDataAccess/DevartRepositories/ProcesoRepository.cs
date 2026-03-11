@@ -43,5 +43,70 @@ namespace DataAccess.DevartRepositories
                 .Include(p => p.ProcesoProductos)
                 .ToList();
         }
+
+        /// <summary>
+        /// Devuelve el semestre (1 o 2) que corresponde al producto dentro del proceso activo.
+        /// Retorna 1 por defecto si no aplica ningún semestre.
+        /// </summary>
+        public virtual int GetSemestreQueCorresponde(long idProducto, long idProceso)
+        {
+            var result = Context.Database
+                .SqlQuery<int>($"""
+                    SELECT semestre_paquete AS "Value" FROM (
+                        SELECT pk.semestre_paquete
+                        FROM CREADOR.T_SUPRAOFERTA so
+                        INNER JOIN CREADOR.T_PAQUETE  pk  ON pk.id_paquete  = so.id_paquete
+                        INNER JOIN CREADOR.T_PRODUCTO pr  ON pr.id_producto = pk.id_producto
+                        WHERE so.fecha_referencia_supraoferta >= TRUNC(SYSDATE)
+                          AND so.estado_supraoferta = 'D'
+                          AND pr.id_producto = {idProducto}
+                          AND pk.semestre_paquete = 1
+                          AND pr.certificacion_externa_producto <> 'SI'
+                          AND NOT (pr.id_centro_costos = 'OV' AND pr.id_centro_gastos = 93)
+                          AND 0 < (SELECT COUNT(*) FROM CREADOR.T_OFERTA o
+                                   WHERE o.inscripciones_abiertas_oferta = 'SI'
+                                     AND o.id_supraoferta = so.id_supraoferta)
+                          AND so.id_comienzo IN (
+                              SELECT DISTINCT pc.id_comienzo
+                              FROM CREADOR.T_PROCESO_COMIENZO pc
+                              INNER JOIN CREADOR.T_PROCESO          p   ON pc.id_proceso   = p.id_proceso
+                              INNER JOIN CREADOR.T_PROCESO_PRODUCTO pp  ON p.id_proceso    = pp.id_proceso
+                              INNER JOIN CREADOR.T_PRODUCTO         pr2 ON pr2.id_producto = pp.id_producto
+                              WHERE p.habilitado_interes_sitio = 'SI'
+                                AND p.id_proceso = {idProceso}
+                                AND pr2.id_nivel_producto IN (1, 2)
+                          )
+                        UNION ALL
+                        SELECT pk.semestre_paquete
+                        FROM CREADOR.T_SUPRAOFERTA so
+                        INNER JOIN CREADOR.T_PAQUETE  pk  ON pk.id_paquete  = so.id_paquete
+                        INNER JOIN CREADOR.T_PRODUCTO pr  ON pr.id_producto = pk.id_producto
+                        WHERE so.fecha_referencia_supraoferta >= TRUNC(SYSDATE)
+                          AND so.estado_supraoferta = 'D'
+                          AND pr.id_producto = {idProducto}
+                          AND pk.semestre_paquete = 2
+                          AND pr.comienzoenagosto_producto = 'SI'
+                          AND EXTRACT(MONTH FROM SYSDATE) = 8
+                          AND pr.certificacion_externa_producto <> 'SI'
+                          AND NOT (pr.id_centro_costos = 'OV' AND pr.id_centro_gastos = 93)
+                          AND 0 < (SELECT COUNT(*) FROM CREADOR.T_OFERTA o
+                                   WHERE o.inscripciones_abiertas_oferta = 'SI'
+                                     AND o.id_supraoferta = so.id_supraoferta)
+                          AND so.id_comienzo IN (
+                              SELECT DISTINCT pc.id_comienzo
+                              FROM CREADOR.T_PROCESO_COMIENZO pc
+                              INNER JOIN CREADOR.T_PROCESO          p   ON pc.id_proceso   = p.id_proceso
+                              INNER JOIN CREADOR.T_PROCESO_PRODUCTO pp  ON p.id_proceso    = pp.id_proceso
+                              INNER JOIN CREADOR.T_PRODUCTO         pr2 ON pr2.id_producto = pp.id_producto
+                              WHERE p.habilitado_interes_sitio = 'SI'
+                                AND p.id_proceso = {idProceso}
+                                AND pr2.id_nivel_producto IN (1, 2)
+                          )
+                    ) WHERE rownum = 1
+                """)
+                .FirstOrDefault();
+
+            return result != 0 ? result : 1;
+        }
     }
 }

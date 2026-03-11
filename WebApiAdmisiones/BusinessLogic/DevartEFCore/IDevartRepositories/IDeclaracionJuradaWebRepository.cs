@@ -6,9 +6,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IDeclaracionJuradaWebRepository
     {
+        /// <summary>
+        /// Devuelve la fecha de entrega de DJ de la prueba activa de admisiones del alumno,
+        /// donde dicha fecha aún no ha pasado (>= hoy). Retorna null si no existe.
+        /// </summary>
+        DateTime? GetFechaEntregaDjAdmisiones(long codigoPersona);
     }
 }

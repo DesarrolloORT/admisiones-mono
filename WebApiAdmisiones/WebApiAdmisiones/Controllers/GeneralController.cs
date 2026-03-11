@@ -501,5 +501,44 @@ namespace WebApiAdmisiones.Controllers
 
         #endregion IMAGEN / DOCUMENTOS
 
+        #region ADMISIONES
+
+        /// <summary>
+        /// Obtiene la fecha de vencimiento de admisiones para el alumno autenticado,
+        /// calculada en base al proceso y los días hábiles.
+        /// </summary>
+        /// <param name="idProceso">ID del proceso de admisiones seleccionado.</param>
+        /// <returns>Fecha de vencimiento calculada.</returns>
+        /// <response code="200">Fecha obtenida correctamente.</response>
+        /// <response code="400">Proceso inválido o sin fecha de comienzo.</response>
+        [HttpGet("FechaVencimientoAdmisiones")]
+        [ProducesResponseType(typeof(OperationResult<DateTime>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DateTime>), 400)]
+        public IActionResult ObtenerFechaVencimientoAdmisiones([FromQuery] long idProceso)
+        {
+            var result = _GeneralService.ObtenerFechaVencimientoAdmisiones(_currentUser.GetUserId(), idProceso);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene los fondos de beca vigentes para el alumno autenticado,
+        /// dado un producto y proceso.
+        /// </summary>
+        /// <param name="idProducto">ID del producto.</param>
+        /// <param name="idProceso">ID del proceso.</param>
+        /// <returns>Lista de pruebas de beca vigentes.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Producto inválido.</response>
+        [HttpGet("FondosDeBecaVigentes")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 400)]
+        public IActionResult ObtenerFondosDeBecaVigentes([FromQuery] long idProducto, [FromQuery] long idProceso)
+        {
+            var result = _GeneralService.ObtenerFondosDeBecaVigentes(idProducto, idProceso, _currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        #endregion ADMISIONES
+
     }
 }

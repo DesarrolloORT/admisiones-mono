@@ -292,6 +292,98 @@ namespace AppLogic.Services
         }
 
         #endregion IMAGEN / DOCUMENTOS
+
+        #region ADMISIONES
+
+        public OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+
+            var proceso = uow.Procesos.GetByKey(idProceso);
+            if (proceso?.ComienzoSemestre1Proceso == null)
+                return OperationResult<DateTime>.IsFailed("GEN_FVA_01", nameof(ObtenerFechaVencimientoAdmisiones),
+                    "Problema con la carga de fecha del comienzo del proceso.", 400);
+
+            var fechaComienzoSemestre = proceso.ComienzoSemestre1Proceso.Value;
+            var fechaActual = DateTime.Now;
+            const int cantDiasHabiles = 5;
+
+            DateTime fechaVencimiento;
+            if (fechaActual >= fechaComienzoSemestre)
+            {
+                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, 1, false);
+            }
+            else if (fechaActual > AddDiasHabilesaFecha(uow, fechaComienzoSemestre, cantDiasHabiles, true))
+            {
+                fechaVencimiento = fechaComienzoSemestre;
+            }
+            else
+            {
+                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, cantDiasHabiles, false);
+            }
+
+            var declaracion = uow.DeclaracionJuradaWebs.GetFechaEntregaDjAdmisiones(codigoPersona);
+            if (declaracion.HasValue && declaracion.Value < fechaVencimiento)
+                fechaVencimiento = declaracion.Value;
+
+            return OperationResult<DateTime>.Ok(fechaVencimiento, nameof(ObtenerFechaVencimientoAdmisiones));
+        }
+
+        public OperationResult<IEnumerable<DtoPruebaDevart>> ObtenerFondosDeBecaVigentes(long idProducto, long idProceso, long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+
+            var producto = uow.Productos.GetByKey(idProducto);
+            if (producto == null)
+                return OperationResult<IEnumerable<DtoPruebaDevart>>.IsFailed("GEN_FBV_01", nameof(ObtenerFondosDeBecaVigentes),
+                    "El producto indicado es inválido.", 400);
+
+            long idNivelProducto = producto.IdNivelProducto;
+            var pruebas = uow.Pruebas.GetFondosBecaVigentes(idNivelProducto, 0, codigoPersona, idProducto, idProceso);
+
+            var fechaActual = DateTime.Now;
+            var dtos = pruebas
+                .Where(p =>
+                {
+                    if (p.FechaEntregaDjPrueba?.Date == fechaActual.Date && p.HoraEntregaDjPrueba != null)
+                    {
+                        var partes = p.HoraEntregaDjPrueba.Split(':');
+                        if (partes.Length >= 2 && int.TryParse(partes[0], out int h) && int.TryParse(partes[1], out int m))
+                        {
+                            var limite = new DateTime(p.FechaEntregaDjPrueba.Value.Year,
+                                p.FechaEntregaDjPrueba.Value.Month,
+                                p.FechaEntregaDjPrueba.Value.Day, h, m, 0).AddHours(2);
+                            return fechaActual <= limite;
+                        }
+                    }
+                    return true;
+                })
+                .Select(p => p.ToDtoWithRelated(1));
+
+            return OperationResult<IEnumerable<DtoPruebaDevart>>.Ok(dtos, nameof(ObtenerFondosDeBecaVigentes));
+        }
+
+        #endregion ADMISIONES
+
+        #region HELPERS PRIVADOS
+
+        private static DateTime AddDiasHabilesaFecha(
+            IUnitOfWork uow, DateTime fecha, int cantDias, bool restar)
+        {
+            int signo = restar ? -1 : 1;
+            int diasContados = 0;
+            while (diasContados < cantDias)
+            {
+                fecha = fecha.AddDays(signo);
+                if (fecha.DayOfWeek != DayOfWeek.Saturday
+                    && fecha.DayOfWeek != DayOfWeek.Sunday
+                    && !uow.Feriados.EsFeriado(fecha))
+                    diasContados++;
+            }
+            return fecha;
+        }
+
+        #endregion HELPERS PRIVADOS
     }
 }
 
