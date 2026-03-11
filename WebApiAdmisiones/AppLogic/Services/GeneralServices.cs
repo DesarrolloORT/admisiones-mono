@@ -1,4 +1,5 @@
 using AppLogic.Interfaces;
+using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using AppLogic.DevartDTOs;
@@ -66,14 +67,23 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoProcesoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProcesosHabilitadosPorProducto));
         }
 
-        public OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcionActiva(long codigoPersona)
+        public OperationResult<DTOUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var inscripto = uow.Inscriptos.GetUltimaInscripcionActiva(codigoPersona);
             if (inscripto == null)
-                return OperationResult<DtoInscriptoDevart>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
+                return OperationResult<DTOUltimaInscripcion>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
 
-            return OperationResult<DtoInscriptoDevart>.Ok(inscripto.ToDto(), nameof(ObtenerUltimaInscripcionActiva));
+            var dto = new DTOUltimaInscripcion
+            {
+                IdInscripto    = inscripto.IdInscripto,
+                IdProducto     = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
+                NombreProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreProducto,
+                NombreExtensoProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
+                IdComienzo     = inscripto.Oferta?.Supraoferta?.Comienzo?.IdComienzo ?? 0,
+                NombreComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+            };
+            return OperationResult<DTOUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
         }
 
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
@@ -185,18 +195,39 @@ namespace AppLogic.Services
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), nameof(ObtenerAceptacionReglamentoEstudiantil));
         }
 
-        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteresActivo(long codigoPersona)
+        public OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosConInteresActivo(codigoPersona);
-            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductosConInteresActivo));
+            var dtos = entidades.Select(MapProductoAdmisiones);
+            return OperationResult<IEnumerable<DTOProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosConInteresActivo));
         }
 
-        public OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona)
+        public OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
-            return OperationResult<IEnumerable<DtoProductoDevart>>.Ok(entidades.ToDtosWithRelated(1), nameof(ObtenerProductosVigentesConInteres));
+            var dtos = entidades.Select(MapProductoAdmisiones);
+            return OperationResult<IEnumerable<DTOProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosVigentesConInteres));
+        }
+
+        private static DTOProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)
+        {
+            var proceso = p.ProcesoProductos?.FirstOrDefault()?.Proceso;
+            return new DTOProductoAdmisiones
+            {
+                IdProducto            = p.IdProducto,
+                NombreProducto        = p.NombreProducto,
+                NombreExtensoProducto = p.NombreExtensoProducto,
+                IdNivelProducto       = p.IdNivelProducto,
+                NombreNivelProducto   = p.NivelProducto?.NombreNivelProducto,
+                AliasProducto         = p.AliasProducto,
+                InscribibleProducto   = p.InscribibleProducto,
+                IntermedioProducto    = p.IntermedioProducto,
+                VisibleAdmisionesProducto = p.VisibleAdmisionesProducto,
+                IdProceso             = proceso?.IdProceso ?? 0,
+                NombreProceso         = proceso?.NombreProceso,
+            };
         }
 
         public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)

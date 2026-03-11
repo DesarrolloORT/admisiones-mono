@@ -1,4 +1,5 @@
 using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using System;
@@ -20,7 +21,7 @@ namespace AppLogic.Interfaces
 
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
         OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
-        OperationResult<DtoInscriptoDevart> ObtenerUltimaInscripcionActiva(long codigoPersona);
+        OperationResult<DTOUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona);
         #endregion INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         #region PERSONA
@@ -47,8 +48,8 @@ namespace AppLogic.Interfaces
 
         #region INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
         OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona);
-        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosConInteresActivo(long codigoPersona);
-        OperationResult<IEnumerable<DtoProductoDevart>> ObtenerProductosVigentesConInteres(long codigoPersona);
+        OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona);
+        OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona);
         OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
         OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona);
         OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona);

@@ -7,6 +7,7 @@ using AppLogic.Interfaces;
 using AppLogic.Services;
 using MailORT;
 using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using ModBandejaAppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using WebApiAdmisiones.Security;
@@ -124,9 +125,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("UltimaInscripcionActiva")]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DtoInscriptoDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 204)]
+        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 400)]
         public IActionResult ObtenerUltimaInscripcionActiva()
         {
             var result = _GeneralService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
@@ -355,9 +356,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("ProductosVigentesConInteres")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 204)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosVigentesConInteres()
         {
             var result = _GeneralService.ObtenerProductosVigentesConInteres(_currentUser.GetUserId());
@@ -372,9 +373,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("ProductosConInteresActivo")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoDevart>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 204)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosConInteresActivo()
         {
             var result = _GeneralService.ObtenerProductosConInteresActivo(_currentUser.GetUserId());

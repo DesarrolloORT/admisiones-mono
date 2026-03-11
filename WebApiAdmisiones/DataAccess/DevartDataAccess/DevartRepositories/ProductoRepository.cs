@@ -79,6 +79,7 @@ namespace DataAccess.DevartRepositories
                     && !productosGrado5Frescos.Contains(p.IdProducto))
                 .Include(p => p.ProcesoProductos)
                     .ThenInclude(pp => pp.Proceso)
+                .Include(p => p.NivelProducto)
                 .ToList();
         }
 
@@ -121,6 +122,7 @@ namespace DataAccess.DevartRepositories
                         && ip.Intere.Proceso.HabilitadoInteresSitio == "SI"))
                 .Include(p => p.ProcesoProductos)
                     .ThenInclude(pp => pp.Proceso)
+                .Include(p => p.NivelProducto)
                 .ToList();
         }
     }
