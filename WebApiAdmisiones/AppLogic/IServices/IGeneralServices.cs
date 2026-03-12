@@ -54,6 +54,9 @@ namespace AppLogic.Interfaces
         OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona);
         OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona);
         OperationResult<IEnumerable<DtoOfertaDevart>> ObtenerOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno);
+        OperationResult<IEnumerable<DTOInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona);
+        OperationResult<IEnumerable<DTOProductoBeca>> ObtenerProductosBeca(long codigoPersona);
+        OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
 
         #region IMAGEN / DOCUMENTOS

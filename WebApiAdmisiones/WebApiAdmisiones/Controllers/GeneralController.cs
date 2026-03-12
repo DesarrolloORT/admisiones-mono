@@ -444,6 +444,57 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Obtiene el historial de inscripciones realizadas por la persona autenticada,
+        /// en productos de nivel 1 o 2 con proceso habilitado. Una entrada por producto (la más antigua).
+        /// </summary>
+        /// <returns>Lista de inscripciones realizadas.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("InscripcionesRealizadas")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOInscripcionRealizada>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOInscripcionRealizada>>), 400)]
+        public IActionResult ObtenerInscripcionesRealizadas()
+        {
+            var result = _GeneralService.ObtenerInscripcionesRealizadas(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene los productos elegibles para beca de la persona autenticada:
+        /// combina inscripciones realizadas, pendientes en workflow e intereses activos.
+        /// Un registro por producto (el más antiguo por fecha de inscripción).
+        /// </summary>
+        /// <returns>Lista de productos beca.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("ProductosBeca")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoBeca>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoBeca>>), 400)]
+        public IActionResult ObtenerProductosBeca()
+        {
+            var result = _GeneralService.ObtenerProductosBeca(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Indica si la persona autenticada tiene una inscripción en T_INSCRIPTO (sin baja)
+        /// para el producto y proceso dados.
+        /// </summary>
+        /// <param name="idProducto">ID del producto.</param>
+        /// <param name="idProceso">ID del proceso.</param>
+        /// <returns>true si existe la inscripción, false en caso contrario.</returns>
+        /// <response code="200">Consulta realizada correctamente.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("InscripcionPorProductoProceso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        public IActionResult TieneInscripcionAdmisiones([FromQuery] long idProducto, [FromQuery] long idProceso)
+        {
+            var result = _GeneralService.TieneInscripcionAdmisiones(_currentUser.GetUserId(), idProducto, idProceso);
+            return ValidateResponse(result);
+        }
+
         #endregion INSCRIPCION — WORKFLOW
 
         #region IMAGEN / DOCUMENTOS

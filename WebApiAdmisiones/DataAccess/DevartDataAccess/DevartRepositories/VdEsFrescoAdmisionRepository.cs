@@ -16,7 +16,6 @@ namespace DataAccess.DevartRepositories
         /// <summary>
         /// Devuelve true si la persona tiene una inscripción activa en VD_ES_FRESCO_ADMISION
         /// para el producto y proceso indicados (proceso habilitado y comienzo vigente).
-        /// Equivalente a SetWhereTieneInscripcionAdmisiones del modelo anterior.
         /// </summary>
         public virtual bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
         {

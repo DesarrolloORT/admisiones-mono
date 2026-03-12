@@ -41,7 +41,6 @@ namespace DataAccess.DevartRepositories
 
         /// <summary>
         /// Devuelve la lista fija de universidades habilitadas para la encuesta inicial de admisiones.
-        /// IDs equivalentes al filtro setWhereUniversidadesEncuestaIni() de la API anterior.
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Empresa> GetUniversidades()
         {

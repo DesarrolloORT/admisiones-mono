@@ -284,6 +284,106 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoOfertaDevart>>.Ok(entidades.ToDtosWithRelated(2), nameof(ObtenerOfertasParaInscripcionConProceso));
         }
 
+        public OperationResult<IEnumerable<DTOInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var inscriptos = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona);
+            var dtos = inscriptos
+                .Select(i => new DTOInscripcionRealizada
+                {
+                    FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
+                    IdProducto       = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
+                    NombreProducto   = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
+                    NombreComienzo   = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+                    NombreTurno      = i.Oferta?.Turno?.NombreTurno,
+                })
+                .GroupBy(d => d.IdProducto)
+                .Select(g => g.OrderBy(d => d.FechaInscripcion).First())
+                .ToList();
+            return OperationResult<IEnumerable<DTOInscripcionRealizada>>.Ok(dtos, nameof(ObtenerInscripcionesRealizadas));
+        }
+
+        public OperationResult<IEnumerable<DTOProductoBeca>> ObtenerProductosBeca(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+
+            // 1. Inscripciones realizadas (T_INSCRIPTO)
+            var realizadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
+                .Select(i => new DTOProductoBeca
+                {
+                    FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
+                    IdProducto       = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
+                    IdNivelProducto  = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdNivelProducto ?? 0,
+                    NombreProducto   = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
+                    NombreComienzo   = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+                    NombreTurno      = i.Oferta?.Turno?.NombreTurno,
+                    IdProceso        = i.Oferta?.Supraoferta?.Comienzo?.ProcesoComienzos?
+                                           .FirstOrDefault()?.IdProceso ?? 0,
+                })
+                .ToList();
+
+            // 2. Inscripciones pendientes en workflow (T_INSTANCIA_WORKFLOW)
+            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
+            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesDict = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(ids)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            var pendientes = instancias
+                .Where(iw => inscripcionesDict.ContainsKey(iw.IdInstanciaWorkflow)
+                          && inscripcionesDict[iw.IdInstanciaWorkflow].IdProducto.HasValue)
+                .Select(iw =>
+                {
+                    var iwi        = inscripcionesDict[iw.IdInstanciaWorkflow];
+                    var idProducto = (long)iwi.IdProducto!.Value;
+                    var producto   = uow.Productos.GetByKey(idProducto);
+                    var comienzo   = iwi.IdComienzo.HasValue
+                        ? uow.Comienzos.GetByKey((long)iwi.IdComienzo.Value) : null;
+                    var turno      = iwi.IdTurno.HasValue
+                        ? uow.Turnos.GetByKey((long)iwi.IdTurno.Value) : null;
+
+                    return new DTOProductoBeca
+                    {
+                        FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
+                        IdProducto       = idProducto,
+                        IdNivelProducto  = producto?.IdNivelProducto ?? 0,
+                        NombreProducto   = producto?.NombreExtensoProducto,
+                        NombreComienzo   = comienzo?.NombreComienzo,
+                        NombreTurno      = turno?.NombreTurno,
+                        IdProceso        = (long)iw.IdProceso,
+                    };
+                })
+                .ToList();
+
+            // 3. Productos con interés activo (sin inscripción pendiente en workflow)
+            var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
+                .Select(p => new DTOProductoBeca
+                {
+                    FechaInscripcion = DateTime.MinValue,
+                    IdProducto       = p.IdProducto,
+                    IdNivelProducto  = p.IdNivelProducto,
+                    NombreProducto   = p.NombreExtensoProducto,
+                    NombreComienzo   = p.ProcesoProductos?.FirstOrDefault()?.Proceso?.NombreProceso,
+                    NombreTurno      = null,
+                    IdProceso        = p.ProcesoProductos?.FirstOrDefault()?.IdProceso ?? 0,
+                })
+                .ToList();
+
+            var todos = realizadas.Concat(pendientes).Concat(intereses)
+                .GroupBy(b => b.IdProducto)
+                .Select(g => g.OrderBy(b => b.FechaInscripcion).First())
+                .ToList();
+
+            return OperationResult<IEnumerable<DTOProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
+        }
+
+        public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+            var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
+            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
+        }
+
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
 
         #region IMAGEN / DOCUMENTOS
