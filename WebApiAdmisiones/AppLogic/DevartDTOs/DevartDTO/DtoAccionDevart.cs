@@ -68,6 +68,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoPruebaDevart Prueba { get; set; }
 
+        public DtoActividadDevart Actividad { get; set; }
+
         #endregion
     }
 

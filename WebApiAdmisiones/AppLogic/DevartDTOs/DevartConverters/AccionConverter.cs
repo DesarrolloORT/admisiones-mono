@@ -53,6 +53,7 @@ namespace AppLogic.DevartDTOs
             if (level > 0) {
               target.Persona = source.Persona.ToDtoWithRelated(level - 1);
               target.Prueba = source.Prueba.ToDtoWithRelated(level - 1);
+              target.Actividad = source.Actividad.ToDtoWithRelated(level - 1);
             }
 
             // User-defined partial method

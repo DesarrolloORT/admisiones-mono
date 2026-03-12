@@ -526,6 +526,10 @@ namespace AppLogic.DevartDTOs
 
         public DtoCaracteristicaPaiDevart CaracteristicaPai_IdCaracteristicaPaisTel2 { get; set; }
 
+        public DtoPersonaAdmiteDevart PersonaAdmite { get; set; }
+
+        public List<DtoRefreshTokenDevart> RefreshTokens { get; set; }
+
         #endregion
     }
 
