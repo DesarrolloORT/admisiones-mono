@@ -68,10 +68,5 @@ namespace AppLogic.Interfaces
         OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso);
         OperationResult<IEnumerable<DtoPruebaDevart>> ObtenerFondosDeBecaVigentes(long idProducto, long idProceso, long codigoPersona);
         #endregion ADMISIONES
-
-        #region POST
-        OperationResult<bool> ActualizarInteresProducto(long codigoPersona, DTOInteresProductoRequest dto);
-        OperationResult<bool> ActualizarPersona(long codigoPersona, DTOPutPersonaRequest dto);
-        #endregion POST
     }
 }

@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
-using System.Web.Services.Description;
+using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Extensions
@@ -83,13 +83,13 @@ namespace WebApiAdmisiones.Extensions
 
             // Autenticación LDAP
             services.AddScoped<ILdap, Ldap>();
-            services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-            services.AddScoped<IAuthService, AuthService>();
 
             // Servicios de aplicación
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralServices, GeneralServices>();
+            services.AddScoped<IPersonaService, PersonaService>();
+            services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaServices>();
             services.AddScoped<IBandejaService, BandejaService>();
             services.AddScoped<IProcesoComienzoServices, ProcesoComienzoServices>();

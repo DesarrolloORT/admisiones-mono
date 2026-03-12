@@ -2,31 +2,43 @@ using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Utilities;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Controllers
 {
     /// <summary>
-    /// Controlador de autenticación: delega toda la lógica a <see cref="IAuthService"/>.
-    /// Los tokens se transportan como cookies HttpOnly seguras.
+    /// Controlador para la autenticación de usuarios.
     /// </summary>
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(
-        IAuthService authService,
-        ILogger<AuthController> logger,
-        ICurrentUserService currentUser)
-        : ApiBaseController<AuthController>(logger, currentUser)
+    public class PersonaController : ApiBaseController<PersonaController>
     {
+        private readonly IPersonaService _ldapService;
+
         /// <summary>
-        /// Autentica un usuario contra LDAP y establece cookies de access y refresh token.
+        /// Constructor del controlador de Login.
         /// </summary>
+        /// <param name="ldapService">Servicio LDAP.</param>
+        /// <param name="logger">Logger para LoginController.</param>
+        /// <param name="currentUser">Servicio que expone el usuario actual.</param>
+        public PersonaController(
+            IPersonaService ldapService,
+            ILogger<PersonaController> logger,
+            ICurrentUserService currentUser) : base(logger, currentUser)
+        {
+            _ldapService = ldapService;
+        }
+
+        /// <summary>
+        /// Autentica un usuario mediante LDAP.
+        /// Los tokens se devuelven como cookies HttpOnly seguras, NO en el body de la respuesta.
+        /// </summary>
+        /// <param name="request">Datos de autenticación del usuario.</param>
+        /// <returns>Resultado de la autenticación con información del usuario. Los tokens se envían como cookies.</returns>
         /// <response code="200">Autenticación exitosa. Las cookies X-Access-Token y X-Refresh-Token han sido establecidas.</response>
         /// <response code="400">Error en los datos de entrada.</response>
         /// <response code="401">Credenciales inválidas.</response>
-        /// <response code="404">Usuario no encontrado en base de datos.</response>
         [AllowAnonymous]
         [HttpPost("Login")]
         [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 200)]
@@ -35,12 +47,16 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 404)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await authService.LoginAsync(request);
+            var result = await _ldapService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
 
             if (result.Success && result.Data != null)
             {
+                // Establecer los tokens como cookies HttpOnly seguras
                 CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, 15);
                 CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, 7);
+
+                // NO retornar los tokens en el body - solo la info del usuario
+                // Los tokens ya fueron establecidos como cookies HttpOnly
             }
 
             return ValidateResponse(result);
@@ -49,20 +65,25 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Cierra la sesión del usuario eliminando las cookies de autenticación.
         /// </summary>
+        /// <returns>Resultado de la operación.</returns>
         /// <response code="200">Logout exitoso.</response>
         [HttpPost("Logout")]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         public IActionResult Logout()
         {
+            // Eliminar las cookies de autenticación
             CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
+
             var result = OperationResult<string>.Ok("Sesión cerrada correctamente.", nameof(Logout));
             return ValidateResponse(result);
         }
 
         /// <summary>
         /// Renueva el access token usando el refresh token almacenado en cookies.
+        /// Este endpoint valida el refresh token contra la base de datos y genera nuevos tokens.
         /// </summary>
-        /// <response code="200">Tokens renovados correctamente.</response>
+        /// <returns>Resultado de la operación con mensaje de éxito.</returns>
+        /// <response code="200">Tokens renovados correctamente. Las cookies se actualizan automáticamente.</response>
         /// <response code="401">Refresh token inválido, expirado o no encontrado.</response>
         /// <response code="404">Usuario no encontrado en la base de datos.</response>
         [HttpPost("RefreshToken")]
@@ -71,20 +92,23 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 404)]
         public async Task<IActionResult> RefreshToken()
         {
-            // Leer refresh token de la cookie (HTTP concern)
+            // 1. Leer refresh token de la cookie (HTTP concern)
             var refreshToken = CookieAuthenticationHelper.GetRefreshTokenFromCookie(HttpContext);
 
-            // Obtener código de persona del access token actual (igual que PersonaController en servicios-desaweb)
-            var codigoPersonaClaim = ((System.Security.Claims.ClaimsIdentity)User.Identity!).Name;
+            // 2. Obtener código de persona del token actual (HTTP concern)
+            var codigoPersonaClaim = ((System.Security.Claims.ClaimsIdentity)User.Identity).Name;
 
-            var result = await authService.RefrescarTokensAsync(refreshToken, codigoPersonaClaim);
+            // 3. Delegar toda la lógica de negocio al servicio
+            var result = await _ldapService.RefrescarTokensAsync(refreshToken, codigoPersonaClaim);
 
             if (!result.Success)
             {
+                // Limpiar cookies si falló la renovación
                 CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
                 return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
             }
 
+            // 4. Establecer cookies con los nuevos tokens (HTTP concern)
             if (result.Data != null)
             {
                 CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, 15);
@@ -95,4 +119,3 @@ namespace WebApiAdmisiones.Controllers
         }
     }
 }
-

@@ -4,9 +4,9 @@ using Utilities;
 namespace AppLogic.IServices;
 
 /// <summary>
-/// Servicio de autenticación: delega LDAP al Core y gestiona tokens JWT + refresh tokens.
+/// Interfaz para el servicio de autenticación de usuarios.
 /// </summary>
-public interface IAuthService
+public interface IPersonaService
 {
     /// <summary>
     /// Autentica un usuario contra el servicio LDAP.
@@ -14,7 +14,7 @@ public interface IAuthService
     /// <param name="codigoPersona">Código de la persona a autenticar.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
-    Task<OperationResult<DTOAuthenticationResponse>> LoginAsync(LoginRequest request);
+    Task<OperationResult<DTOAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass);
 
     /// <summary>
     /// Refresca los tokens de autenticación usando el refresh token.
