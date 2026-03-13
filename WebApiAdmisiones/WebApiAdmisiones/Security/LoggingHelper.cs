@@ -6,7 +6,7 @@ namespace WebApiAdmisiones.Security
     /// <summary>
     /// Helper centralizado para generar mensajes de log estandarizados.
     /// Formato: Tipo | Origen (Sistema invocador) | Clase | CodigoPersona | Servicio (VERBO-Ruta) | Datos | IP | UA | CorrelationId
-    /// Ejemplo de Origen: "Funcionarios", "Gestion", "Admisiones", "Desconocido"
+    /// Ejemplo de Origen: "Admisiones"
     /// Ejemplo de Servicio: "POST-DatosLaborales/CargosPersona"
     /// </summary>
     public static class LoggingHelper
@@ -155,22 +155,10 @@ namespace WebApiAdmisiones.Security
         /// <summary>
         /// Obtiene el nombre del sistema invocador basado en el issuer del token JWT.
         /// </summary>
-        /// <returns>"Funcionarios", "Gestion", "Admisiones" o "Desconocido"</returns>
+        /// <returns>"Admisiones"</returns>
         private static string GetFormattedOrigin(HttpContext? context)
         {
-            if (context?.User?.Identity?.IsAuthenticated != true)
-                return Desconocido;
-
-            var issuerClaim = context.User.Claims
-                .FirstOrDefault(c => c.Type == "iss")?.Value;
-
-            return issuerClaim switch
-            {
-                "https://funcionarios.ort.edu.uy" => "Funcionarios",
-                "https://gestion.ort.edu.uy" => "Gestion",
-                "https://admisiones.ort.edu.uy" => "Admisiones",
-                _ => Desconocido
-            };
+            return SourceSystems.Admisiones;
         }
 
         private static string GetIpAddress(HttpContext? context)

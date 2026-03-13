@@ -12,10 +12,7 @@ namespace WebApiAdmisiones.Security
     /// </summary>
     public static class SourceSystems
     {
-        public const string Funcionarios = "Funcionarios";
-        public const string Gestion = "Gestion";
         public const string Admisiones = "Admisiones";
-        public const string Unknown = "Unknown";
     }
 
     public class CurrentUserService : ICurrentUserService
@@ -53,18 +50,10 @@ namespace WebApiAdmisiones.Security
         /// <summary>
         /// Determina el sistema de origen a partir del claim 'iss' del JWT.
         /// </summary>
-        /// <returns>Nombre del sistema: Funcionarios, Gestion, Admisiones o Unknown.</returns>
+        /// <returns>Nombre del sistema: Admisiones.</returns>
         public string GetSourceSystem()
         {
-            var issuerClaim = Context?.User?.FindFirstValue("iss");
-
-            return issuerClaim switch
-            {
-                "https://funcionarios.ort.edu.uy" => SourceSystems.Funcionarios,
-                "https://gestion.ort.edu.uy" => SourceSystems.Gestion,
-                "https://admisiones.ort.edu.uy" => SourceSystems.Admisiones,
-                _ => SourceSystems.Unknown
-            };
+            return SourceSystems.Admisiones;
         }
 
 

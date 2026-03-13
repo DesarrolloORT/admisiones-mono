@@ -43,16 +43,10 @@ namespace WebApiAdmisiones.Extensions
                 "http://localhost:4200",
                 "http://localhost:5001/",
 
-                "https://gestion.ort.edu.uy",
-                "https://gestionpreprod.ort.edu.uy",
-                "https://gestiontesting.ort.edu.uy",
-                "https://gestiondesa.ort.edu.uy",
-
-                "https://funcionarios.ort.edu.uy",
-                "https://funcionariospreprod64.ort.edu.uy",
-                "https://funcionariostesting64.ort.edu.uy",
-                "https://funcionariosdesa64.ort.edu.uy",
-                "https://funcionarios2.ort.edu.uy"
+                "https://admisiones.ort.edu.uy",
+                "https://admisionespreprod.ort.edu.uy",
+                "https://admisionestesting.ort.edu.uy",
+                "https://admisionesdesa.ort.edu.uy",
             };
 
             const string corsPolicy = "AllowAngularApp";
