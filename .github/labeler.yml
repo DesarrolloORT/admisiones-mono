@@ -1,0 +1,180 @@
+# Configuración de etiquetado automático para Pull Requests
+# Este archivo es leído por actions/labeler en el workflow pr-open.yml
+# Referencia: https://github.com/actions/labeler
+#
+# NOTA: El submódulo Core tiene su propio workflow de labeler.
+#       Aquí solo se etiquetan cambios en FichaDePersona.
+
+# ═══════════════════════════════════════════════════════════════════
+# ETIQUETAS POR CAPA DE ARQUITECTURA (FichaDePersona)
+# ═══════════════════════════════════════════════════════════════════
+
+# Capa de API (Controllers, Middlewares, Security)
+layer:api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/WebApiFDP/**/*'
+
+# Capa de Aplicación (Servicios, DTOs)
+layer:app-logic:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/**/*'
+
+# Capa de Negocio (Entidades, Interfaces de repositorio)
+layer:business-logic:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/BusinessLogic/**/*'
+
+# Capa de Acceso a Datos (Repositorios, DbContext)
+layer:data-access:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/DataAccess/**/*'
+
+# ═══════════════════════════════════════════════════════════════════
+# ETIQUETAS POR TIPO DE ARCHIVO
+# ═══════════════════════════════════════════════════════════════════
+# NOTA: Estas etiquetas aplican solo al código fuente, NO a tests.
+#       Los patrones están diseñados para excluir la carpeta UnitTesting.
+
+# Código auto-generado por Devart (NO modificar manualmente)
+auto-generated:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/DevartDTOs/**/*'
+          - 'FichaDePersona/BusinessLogic/DevartEFCore/**/*'
+          - 'FichaDePersona/DataAccess/DevartDataAccess/**/*'
+          - 'FichaDePersona/AppLogic/**/*.Generated.cs'
+          - 'FichaDePersona/BusinessLogic/**/*.Generated.cs'
+          - 'FichaDePersona/DataAccess/**/*.Generated.cs'
+          - 'FichaDePersona/WebApiFDP/**/*.Generated.cs'
+
+# DTOs (Data Transfer Objects) - solo código fuente, no tests
+type:dto:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/DTOs/**/*'
+          - 'FichaDePersona/AppLogic/DevartDTOs/**/*'
+          - 'FichaDePersona/AppLogic/**/*Dto*.cs'
+          - 'FichaDePersona/WebApiFDP/**/*Dto*.cs'
+
+# Servicios de aplicación - solo código fuente, no tests
+type:service:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/Services/**/*.cs'
+          - 'FichaDePersona/AppLogic/**/*Service.cs'
+          - 'FichaDePersona/AppLogic/**/*AppService.cs'
+
+# Interfaces - solo código fuente, no tests
+type:interface:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/IServices/**/*'
+          - 'FichaDePersona/BusinessLogic/IGenericRepository/**/*'
+
+# Repositorios - solo código fuente, no tests
+type:repository:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/DataAccess/GenericRepository/**/*'
+          - 'FichaDePersona/DataAccess/**/*Repository.cs'
+
+# Controllers - solo código fuente, no tests
+type:controller:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/WebApiFDP/Controllers/**/*'
+          - 'FichaDePersona/WebApiFDP/**/*Controller.cs'
+
+# Helpers y Utilities - solo código fuente, no tests
+type:helper:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/AppLogic/Helpers/**/*'
+          - 'FichaDePersona/AppLogic/Utilities/**/*'
+          - 'FichaDePersona/WebApiFDP/Helpers/**/*'
+          - 'FichaDePersona/WebApiFDP/Utilities/**/*'
+
+# ═══════════════════════════════════════════════════════════════════
+# ETIQUETAS DE DOCUMENTACIÓN Y CONFIGURACIÓN
+# ═══════════════════════════════════════════════════════════════════
+
+# Documentación (excluyendo Core)
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - 'FichaDePersona/**/*.md'
+          - 'docs/**/*'
+
+# Configuración de CI/CD y GitHub
+ci/cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+
+# Archivos de proyecto/solución
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/**/*.csproj'
+          - 'FichaDePersona/**/*.sln'
+          - 'FichaDePersona/**/Directory.Build.props'
+          - 'FichaDePersona/**/nuget.config'
+
+# Configuración de aplicación
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/**/appsettings*.json'
+          - 'FichaDePersona/**/*.config'
+
+# ═══════════════════════════════════════════════════════════════════
+# ETIQUETAS DE TESTS
+# ═══════════════════════════════════════════════════════════════════
+
+# Tests unitarios
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/UnitTesting/**/*'
+          - 'FichaDePersona/**/*Tests.cs'
+          - 'FichaDePersona/**/*Test.cs'
+          - 'FichaDePersona/**/*.runsettings'
+
+# ═══════════════════════════════════════════════════════════════════
+# ETIQUETAS DE SEGURIDAD Y INFRAESTRUCTURA
+# ═══════════════════════════════════════════════════════════════════
+
+# Seguridad (autenticación, autorización) - solo código fuente, no tests
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/WebApiFDP/Security/**/*'
+          - 'FichaDePersona/WebApiFDP/**/*Authentication*.cs'
+          - 'FichaDePersona/WebApiFDP/**/*Authorization*.cs'
+          - 'FichaDePersona/WebApiFDP/**/*Token*.cs'
+          - 'FichaDePersona/WebApiFDP/**/*Jwt*.cs'
+          - 'FichaDePersona/WebApiFDP/**/*Sanitize*.cs'
+          - 'FichaDePersona/AppLogic/**/*Authentication*.cs'
+          - 'FichaDePersona/AppLogic/**/*Authorization*.cs'
+
+# Docker y contenedores
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/**/Dockerfile*'
+          - 'docker-compose*.yml'
+          - '.dockerignore'
+
+# Middlewares - solo código fuente, no tests
+type:middleware:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'FichaDePersona/WebApiFDP/Middleware/**/*'
+          - 'FichaDePersona/WebApiFDP/**/*Middleware*.cs'
+          - 'FichaDePersona/WebApiFDP/Filters/**/*'
+          - 'FichaDePersona/WebApiFDP/**/*Filter*.cs'

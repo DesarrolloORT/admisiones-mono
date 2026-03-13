@@ -87,7 +87,7 @@ public class PersonaService : IPersonaService
                 codigoPersona,
                 "ADMISIONESWEB",
                 refreshTokenHash,
-                DateTime.UtcNow.AddDays(7)); // 7 días de expiración
+                DateTime.UtcNow.AddDays(double.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES")))); // 7 días de expiración
 
             // Crear respuesta de autenticación
             var authResponse = new DTOAuthenticationResponse
@@ -190,7 +190,7 @@ public class PersonaService : IPersonaService
 
             // 6. Guardar nuevo refresh token en la base de datos
             await _refreshTokenService.SaveRefreshTokenAsync(
-                codigoPersona, "ADMISIONESWEB", newRefreshTokenHash, DateTime.UtcNow.AddDays(7));
+                codigoPersona, "ADMISIONESWEB", newRefreshTokenHash, DateTime.UtcNow.AddDays(double.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES"))));
 
             // 7. Crear respuesta con los nuevos tokens
             var authResponse = new DTOAuthenticationResponse

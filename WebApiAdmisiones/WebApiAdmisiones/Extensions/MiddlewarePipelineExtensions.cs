@@ -54,9 +54,6 @@ namespace WebApiAdmisiones.Extensions
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // JWT token refresh
-            app.UseJwtTokenRefresh(configuration);
-
             // Model binding error handling
             app.UseMiddleware<ModelBindingErrorLoggingMiddleware>();
 
@@ -114,49 +111,6 @@ namespace WebApiAdmisiones.Extensions
                     return;
                 }
                 await next();
-            });
-        }
-
-        /// <summary>
-        /// Configura la renovación automática de tokens JWT cercanos a expirar.
-        /// </summary>
-        private static IApplicationBuilder UseJwtTokenRefresh(
-            this IApplicationBuilder app,
-            IConfiguration configuration)
-        {
-            return app.Use((ctx, next) =>
-            {
-                ctx.Response.OnStarting(() =>
-                {
-                    var user = ctx.User;
-                    if (user?.Identity?.IsAuthenticated == true)
-                    {
-                        var refreshThresholdMinutes = configuration.GetValue<int>("JWT:RefreshThresholdMinutes", 15);
-
-                        if (AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes))
-                        {
-                            var audience = user.FindFirst(JwtRegisteredClaimNames.Aud)?.Value;
-                            var issuer = user.FindFirst(JwtRegisteredClaimNames.Iss)?.Value;
-
-                            // Only create token if both issuer and audience are present
-                            if (!string.IsNullOrEmpty(issuer) && !string.IsNullOrEmpty(audience))
-                            {
-                                var identity = (ClaimsIdentity)user.Identity!;
-
-                                var newToken = AuthenticationExtensions.CreateAccessToken(
-                                    identity, issuer, audience, TimeSpan.FromMinutes(30));
-
-                                ctx.Response.Headers["x-token"] = newToken;
-                                ctx.Response.Headers.AccessControlExposeHeaders = "x-token";
-                                ctx.Response.Headers.CacheControl = "no-store";
-                            }
-                        }
-                    }
-
-                    return Task.CompletedTask;
-                });
-
-                return next();
             });
         }
     }

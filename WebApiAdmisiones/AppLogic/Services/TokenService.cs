@@ -33,10 +33,10 @@ namespace AppLogic.Services
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: Environment.GetEnvironmentVariable("JWT_ISSUER_TOKEN"),
-                audience: Environment.GetEnvironmentVariable("JWT_AUDIENCE_TOKEN"),
+                issuer: Environment.GetEnvironmentVariable("JWT_ISSUER_TOKEN_ADMISIONES"),
+                audience: Environment.GetEnvironmentVariable("JWT_AUDIENCE_TOKEN_ADMISIONES"),
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(double.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES"))),
+                expires: DateTime.UtcNow.AddMinutes(double.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES"))),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

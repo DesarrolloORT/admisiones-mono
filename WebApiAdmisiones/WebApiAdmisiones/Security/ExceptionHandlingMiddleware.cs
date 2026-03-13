@@ -35,56 +35,135 @@ namespace WebApiAdmisiones.Security
         /// <returns>Una tarea que representa la operación asincrónica.</returns>
         public async Task Invoke(HttpContext context)
         {
+            var correlationId = LoggingHelper.EnsureCorrelationId(context);
+
             try
             {
                 await _next(context);
             }
             catch (InputSanitizationException e)
             {
-                var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
-                var logMessage = LoggingHelper.FormatError(
-                    context,
-                    nameof(ExceptionHandlingMiddleware),
-                    codigoPersona,
-                    "Error de sanitización de entrada");
-
-                _logger.LogError(e, "{LogMessage}", logMessage);
-
-                if (!context.Response.HasStarted)
-                {
-                    context.Response.ContentType = "application/json";
-                    context.Response.StatusCode = StatusCodes.Status409Conflict;
-
-                    var result = OperationResult<string>.IsFailed("SANITIZATION_ERROR", nameof(ExceptionHandlingMiddleware),
-                                 "Error inesperado", StatusCodes.Status500InternalServerError, !_env.IsProductionLike() ? e.Message : null);
-                    await context.Response.WriteAsJsonAsync(result);
-                }
+                await HandleSanitizationExceptionAsync(context, e, correlationId);
             }
             catch (Exception ex)
             {
+                await HandleGeneralExceptionAsync(context, ex, correlationId);
+            }
+        }
+
+        private async Task HandleSanitizationExceptionAsync(HttpContext context, InputSanitizationException e, Guid correlationId)
+        {
                 var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
                 var logMessage = LoggingHelper.FormatError(
                     context,
                     nameof(ExceptionHandlingMiddleware),
                     codigoPersona,
-                    "Error inesperado");
+                "Error de sanitización de entrada",
+                correlationId);
+
+                _logger.LogError(e, "{LogMessage}", logMessage);
+
+            await WriteErrorResponseAsync(context, "SANITIZATION_ERROR", StatusCodes.Status409Conflict, e.Message);
+        }
+
+        private async Task HandleGeneralExceptionAsync(HttpContext context, Exception ex, Guid correlationId)
+                {
+            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            
+            LogGeneralException(context, ex, codigoPersona, correlationId);
+
+            if (context.Response.HasStarted)
+            {
+                _logger.LogWarning(ex, "The response has already started, so the error response could not be written.");
+                return;
+                }
+
+            await WriteErrorResponseAsync(context, "INTERNAL_ERROR", StatusCodes.Status500InternalServerError, ex.Message);
+            }
+
+        private void LogGeneralException(HttpContext context, Exception ex, string? codigoPersona, Guid correlationId)
+            {
+            var dbErrorAlreadyLogged = context.Items.TryGetValue(LoggingHelper.DbErrorLoggedKey, out var dbErrorMsg);
+            
+            var errorData = dbErrorAlreadyLogged
+                ? CreateDbErrorSummary(ex, dbErrorMsg)
+                : CreateFullErrorData(ex);
+            
+                var logMessage = LoggingHelper.FormatError(
+                    context,
+                    nameof(ExceptionHandlingMiddleware),
+                    codigoPersona,
+                errorData,
+                correlationId);
 
                 _logger.LogError(ex, "{LogMessage}", logMessage);
+        }
 
-                if (!context.Response.HasStarted)
+        private static object CreateDbErrorSummary(Exception ex, object? dbErrorMsg) => new
+        {
+            ExceptionType = ex.GetType().Name,
+            Referencia = "Ver log anterior de EfCoreLoggingInterceptor para detalles del comando SQL",
+            DbError = dbErrorMsg?.ToString()
+        };
+
+        private static object CreateFullErrorData(Exception ex) => new
                 {
-                    context.Response.ContentType = "application/json";
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            ExceptionType = ex.GetType().Name,
+            Message = GetFullExceptionMessage(ex),
+            StackTrace = GetRelevantStackTrace(ex)
+        };
 
-                    var result = OperationResult<string>.IsFailed("INTERNAL_ERROR", nameof(ExceptionHandlingMiddleware),
-                                 "Error inesperado", StatusCodes.Status500InternalServerError, !_env.IsProductionLike() ? ex.Message : null);
+        private async Task WriteErrorResponseAsync(HttpContext context, string errorCode, int statusCode, string? exceptionMessage)
+        {
+            if (context.Response.HasStarted)
+                return;
+
+                    context.Response.ContentType = "application/json";
+            context.Response.StatusCode = statusCode;
+
+            var result = OperationResult<string>.IsFailed(
+                errorCode,
+                nameof(ExceptionHandlingMiddleware),
+                "Error inesperado",
+                StatusCodes.Status500InternalServerError,
+                !_env.IsProductionLike() ? exceptionMessage : null);
+
                     await context.Response.WriteAsJsonAsync(result);
                 }
-                else
+
+        /// <summary>
+        /// Obtiene el mensaje completo incluyendo inner exceptions.
+        /// </summary>
+        private static string GetFullExceptionMessage(Exception ex)
                 {
-                    _logger.LogWarning("The response has already started, so the error response could not be written.");
+            var messages = new List<string> { ex.Message };
+            var inner = ex.InnerException;
+            
+            while (inner != null)
+            {
+                messages.Add(inner.Message);
+                inner = inner.InnerException;
                 }
+            
+            return string.Join(" -> ", messages);
             }
+
+        /// <summary>
+        /// Obtiene solo las líneas del stack trace relevantes al proyecto.
+        /// </summary>
+        private static string GetRelevantStackTrace(Exception ex)
+        {
+            if (string.IsNullOrEmpty(ex.StackTrace))
+                return string.Empty;
+
+            var relevantLines = ex.StackTrace
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .Where(line => line.Contains("AppLogic") || 
+                               line.Contains("WebApiEmpleos") || 
+                               line.Contains("DataAccess"))
+                .Take(5);
+
+            return string.Join(" | ", relevantLines.Select(l => l.Trim()));
         }
     }
 }

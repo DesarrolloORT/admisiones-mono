@@ -1,0 +1,116 @@
+name: PR – Update Status on Close
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: false  # No necesitamos el submódulo para actualizar labels
+
+    # Ensure status labels exist with colors
+    - name: Setup Status Labels
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh label create "merged" --color "6f42c1" --description "PR mergeado" --force 2>/dev/null || true
+        gh label create "closed" --color "cb2431" --description "PR cerrado sin merge" --force 2>/dev/null || true
+
+    - name: Determine PR State
+      id: state
+      run: |
+        if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+          echo "result=merged" >> $GITHUB_OUTPUT
+        else
+          echo "result=closed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Add status label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        if [ "${{ steps.state.outputs.result }}" = "merged" ]; then
+          gh pr edit "$PR_NUMBER" --add-label "merged"
+        else
+          gh pr edit "$PR_NUMBER" --add-label "closed"
+        fi
+
+    - name: Remove stale or temporary labels
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        gh pr edit "$PR_NUMBER" --remove-label "no-pr-activity" 2>/dev/null || true
+        gh pr edit "$PR_NUMBER" --remove-label "in-review" 2>/dev/null || true
+        gh pr edit "$PR_NUMBER" --remove-label "needs-info" 2>/dev/null || true
+
+    # Generate final report with architecture context
+    - name: Generate Final Report
+      id: final_report
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          const pr = context.payload.pull_request;
+          const merged = pr.merged;
+          const status = merged ? '✅ Mergeado' : '❌ Cerrado sin merge';
+          
+          const files = await github.rest.pulls.listFiles({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pr.number
+          });
+          
+          // Contar archivos por capa (excluyendo submódulo Core)
+          let webApi = 0, appLogic = 0, businessLogic = 0, dataAccess = 0, tests = 0;
+          
+          files.data.forEach(f => {
+            const name = f.filename;
+            if (name.startsWith('Empleos/WebApiEmpleos/')) webApi++;
+            else if (name.startsWith('Empleos/AppLogic/')) appLogic++;
+            else if (name.startsWith('Empleos/BusinessLogic/')) businessLogic++;
+            else if (name.startsWith('Empleos/DataAccess/')) dataAccess++;
+            else if (name.startsWith('Empleos/UnitTesting/')) tests++;
+          });
+          
+          let layersSummary = '';
+          if (webApi > 0) layersSummary += `\n- WebAPI: ${webApi} archivo(s)`;
+          if (appLogic > 0) layersSummary += `\n- AppLogic: ${appLogic} archivo(s)`;
+          if (businessLogic > 0) layersSummary += `\n- BusinessLogic: ${businessLogic} archivo(s)`;
+          if (dataAccess > 0) layersSummary += `\n- DataAccess: ${dataAccess} archivo(s)`;
+          if (tests > 0) layersSummary += `\n- Tests: ${tests} archivo(s)`;
+          
+          const report = `**Estado:** ${status}
+          **Archivos modificados:** ${files.data.length}
+          **Líneas:** +${pr.additions} / -${pr.deletions}
+          **Branch:** \`${pr.head.ref}\` → \`${pr.base.ref}\`
+          
+          **Capas afectadas:**${layersSummary || '\n- Ninguna capa principal'}`;
+          
+          return report;
+
+    - name: Comment on PR with Final Report
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPORT: ${{ steps.final_report.outputs.result }}
+      run: |
+        {
+          echo "### 🏁 Final Report"
+          echo ""
+          echo "$REPORT"
+        } > comment.md
+        
+        gh pr comment "$PR_NUMBER" --body-file comment.md

@@ -9,7 +9,7 @@ namespace WebApiAdmisiones.Security;
 
 /// <summary>
 /// Utiliza los mismos atributos [Redact] definidos en los DTO para producir
-/// una versiÃ³n redactada de objetos que se van a loguear como salida.
+/// una versión redactada de objetos que se van a loguear como salida.
 /// No modifica el objeto original; crea estructuras (diccionarios/listas) limpias.
 /// </summary>
 public static class ResponseRedactionHelper

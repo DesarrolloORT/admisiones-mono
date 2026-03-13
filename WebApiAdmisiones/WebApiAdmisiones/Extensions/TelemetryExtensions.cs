@@ -78,6 +78,14 @@ namespace WebApiAdmisiones.Extensions
                     .ReadFrom.Configuration(context.Configuration)
                     .Enrich.WithProperty("app", otlpServiceName)
                     .Enrich.WithProperty("timestamp", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+                    // Filtrar logs internos de ASP.NET Core y EF Core que no usan nuestro formato
+                    // Esto evita logs "crudos" sin CorrelationId (ej: "Connection id ... An unhandled exception")
+                    // Usamos Fatal para suprimir TODOS los logs (incluyendo Error) de estas categor�as
+                    .MinimumLevel.Override("Microsoft.AspNetCore.Server.Kestrel", Serilog.Events.LogEventLevel.Fatal)
+                    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Fatal)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Fatal)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Infrastructure", Serilog.Events.LogEventLevel.Fatal)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Update", Serilog.Events.LogEventLevel.Fatal) // Silencia logs crudos de SaveChanges - usamos EfCoreLoggingInterceptor
                     .WriteTo.Console(
                         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
                     .WriteTo.File(

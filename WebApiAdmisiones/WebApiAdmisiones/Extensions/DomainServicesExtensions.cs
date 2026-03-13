@@ -34,6 +34,8 @@ namespace WebApiAdmisiones.Extensions
             IConfiguration configuration,
             IWebHostEnvironment environment)
         {
+            // Conexion a partir de Enviroment
+            
             services.AddScoped<IDbConnectionContext>(sp =>
             {
                 string? connectionString = Environment.GetEnvironmentVariable("OracleConnectionStringAdmisiones");
@@ -64,13 +66,19 @@ namespace WebApiAdmisiones.Extensions
             services.AddDbContext<BandejaModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
-                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
+                var efCoreInterceptor = sp.GetRequiredService<EfCoreLoggingInterceptor>();
+
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection)
+                       .AddInterceptors(efCoreInterceptor);
             });
 
-            services.AddDbContext<ModGenericBaseDataAccess.GenericModelContext>((sp, options) =>
+            services.AddDbContext<GenericModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
-                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
+                var efCoreInterceptor = sp.GetRequiredService<EfCoreLoggingInterceptor>();
+
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection)
+                       .AddInterceptors(efCoreInterceptor);
             });
 
             // Repositorios y UoW
@@ -81,7 +89,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModGenericBaseDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
 
-            // Autenticación LDAP
+            // Servicios de autenticación (Core/Autenticacion)
             services.AddScoped<ILdap, Ldap>();
 
             // Servicios de aplicación

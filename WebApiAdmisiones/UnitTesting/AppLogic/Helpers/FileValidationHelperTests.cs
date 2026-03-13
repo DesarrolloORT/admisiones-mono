@@ -8,7 +8,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidatePdfFile_ValidPdf_ReturnsSuccess()
         {
-            // Arrange - PDF vÃ¡lido que comienza con %PDF
+            // Arrange - PDF válido que comienza con %PDF
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 }; // %PDF-1.4
             var fileName = "curriculum.pdf";
 
@@ -23,7 +23,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidatePdfFile_InvalidMagicBytes_ReturnsFailed()
         {
-            // Arrange - Archivo con extensiÃ³n .pdf pero contenido que no es PDF
+            // Arrange - Archivo con extensión .pdf pero contenido que no es PDF
             var invalidContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // Magic bytes de JPEG
             var fileName = "fake.pdf";
 
@@ -33,7 +33,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_VAL_06", result.ErrorCode);
-            Assert.Contains("no corresponde a un archivo '.pdf' vÃ¡lido", result.Message);
+            Assert.Contains("no corresponde a un archivo '.pdf' válido", result.Message);
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace UnitTesting.AppLogic.Helpers
         {
             // Arrange
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
-            var fileName = "curriculum.jpg"; // ExtensiÃ³n incorrecta
+            var fileName = "curriculum.jpg"; // Extensión incorrecta
 
             // Act
             var result = FileValidationHelper.ValidatePdfFile(pdfContent, fileName, nameof(ValidatePdfFile_WrongExtension_ReturnsFailed));
@@ -49,7 +49,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_VAL_04", result.ErrorCode);
-            Assert.Contains("no estÃ¡ permitida", result.Message);
+            Assert.Contains("no está permitida", result.Message);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_VAL_01", result.ErrorCode);
-            Assert.Contains("vacÃ­o", result.Message);
+            Assert.Contains("vacío", result.Message);
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace UnitTesting.AppLogic.Helpers
         {
             // Arrange
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46 };
-            var fileName = "curriculum"; // Sin extensiÃ³n
+            var fileName = "curriculum"; // Sin extensión
 
             // Act
             var result = FileValidationHelper.ValidatePdfFile(pdfContent, fileName, nameof(ValidatePdfFile_NoExtension_ReturnsFailed));
@@ -96,7 +96,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_VAL_03", result.ErrorCode);
-            Assert.Contains("no tiene extensiÃ³n", result.Message);
+            Assert.Contains("no tiene extensión", result.Message);
         }
 
         [Fact]
@@ -117,9 +117,9 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidatePdfFile_LargeFile_ReturnsFailed()
         {
-            // Arrange - Archivo de 11 MB (mayor al lÃ­mite de 10 MB)
+            // Arrange - Archivo de 11 MB (mayor al límite de 10 MB)
             var largeContent = new byte[11 * 1024 * 1024];
-            // Agregar magic bytes vÃ¡lidos al inicio
+            // Agregar magic bytes válidos al inicio
             largeContent[0] = 0x25; // %
             largeContent[1] = 0x50; // P
             largeContent[2] = 0x44; // D
@@ -132,13 +132,13 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_VAL_07", result.ErrorCode);
-            Assert.Contains("excede el tamaÃ±o mÃ¡ximo", result.Message);
+            Assert.Contains("excede el tamaño máximo", result.Message);
         }
 
         [Fact]
         public void ValidateImageFile_ValidJpeg_ReturnsSuccess()
         {
-            // Arrange - JPEG vÃ¡lido
+            // Arrange - JPEG válido
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
             var fileName = "photo.jpg";
 
@@ -153,7 +153,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateImageFile_ValidPng_ReturnsSuccess()
         {
-            // Arrange - PNG vÃ¡lido
+            // Arrange - PNG válido
             var pngContent = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
             var fileName = "image.png";
 
@@ -215,7 +215,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Arrange
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46 };
             var fileName = "test.pdf";
-            var whitelist = new System.Collections.Generic.List<string> { ".jpg", ".png" }; // PDF no estÃ¡ en la whitelist
+            var whitelist = new System.Collections.Generic.List<string> { ".jpg", ".png" }; // PDF no está en la whitelist
 
             // Act
             var result = FileValidationHelper.ValidateFile(pdfContent, fileName, whitelist, nameof(ValidateFile_NotInWhitelist_ReturnsFailed));
@@ -258,7 +258,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void SanitizePdfFileName_MultipleExtensions_ReturnsFailed()
         {
-            // Arrange - Intento de ataque con mÃºltiples extensiones
+            // Arrange - Intento de ataque con múltiples extensiones
             var fileName = "archivo.php.pdf";
 
             // Act
@@ -267,7 +267,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_SAN_05", result.ErrorCode);
-            Assert.Contains("extensiÃ³n potencialmente peligrosa", result.Message);
+            Assert.Contains("extensión potencialmente peligrosa", result.Message);
         }
 
         [Fact]
@@ -307,7 +307,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.True(result.Success);
             Assert.Equal("archivo_con_muchos_puntos.pdf", result.Data);
-            // Verificar que solo hay un punto (el de la extensiÃ³n)
+            // Verificar que solo hay un punto (el de la extensión)
             Assert.Equal(1, result.Data.Count(c => c == '.'));
         }
 
@@ -370,7 +370,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_SAN_04", result.ErrorCode);
-            Assert.Contains("no estÃ¡ permitida", result.Message);
+            Assert.Contains("no está permitida", result.Message);
         }
 
         [Fact]
@@ -393,7 +393,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void SanitizePdfFileName_TooLong_ReturnsFailed()
         {
-            // Arrange - Nombre de mÃ¡s de 255 caracteres
+            // Arrange - Nombre de más de 255 caracteres
             var longName = new string('a', 260) + ".pdf"; // 264 caracteres en total
 
             // Act
@@ -416,14 +416,14 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_SAN_06", result.ErrorCode);
-            Assert.Contains("no contiene caracteres vÃ¡lidos", result.Message);
+            Assert.Contains("no contiene caracteres válidos", result.Message);
         }
 
         [Fact]
         public void SanitizePdfFileName_ComplexRealWorldExample_SanitizesCorrectly()
         {
             // Arrange
-            var fileName = "CV - Juan PÃ©rez (2024).v2.final.pdf";
+            var fileName = "CV - Juan Pérez (2024).v2.final.pdf";
 
             // Act
             var result = FileValidationHelper.SanitizePdfFileName(fileName, nameof(SanitizePdfFileName_ComplexRealWorldExample_SanitizesCorrectly));
@@ -431,8 +431,8 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.True(result.Success);
             // Los puntos adicionales y espacios deben ser reemplazados
-            Assert.Equal("CV_-_Juan_PÃ©rez_(2024)_v2_final.pdf", result.Data);
-            // Verificar que solo hay un punto (el de la extensiÃ³n)
+            Assert.Equal("CV_-_Juan_Pérez_(2024)_v2_final.pdf", result.Data);
+            // Verificar que solo hay un punto (el de la extensión)
             Assert.Equal(1, result.Data.Count(c => c == '.'));
         }
 
@@ -480,7 +480,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_CONTENT_01", result.ErrorCode);
-            Assert.Contains("vacÃ­o", result.Message);
+            Assert.Contains("vacío", result.Message);
         }
 
         [Fact]
@@ -500,7 +500,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateFileContentOnly_TooSmall_ReturnsFailed()
         {
-            // Arrange - Solo 3 bytes, menos del mÃ­nimo de 4
+            // Arrange - Solo 3 bytes, menos del mínimo de 4
             var tooSmallContent = new byte[] { 0x25, 0x50, 0x44 };
 
             // Act
@@ -509,13 +509,13 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_CONTENT_02", result.ErrorCode);
-            Assert.Contains("demasiado pequeÃ±o", result.Message);
+            Assert.Contains("demasiado pequeño", result.Message);
         }
 
         [Fact]
         public void ValidateFileContentOnly_InvalidMagicBytes_ReturnsFailed()
         {
-            // Arrange - Contenido que no coincide con ningÃºn magic byte conocido
+            // Arrange - Contenido que no coincide con ningún magic byte conocido
             var invalidContent = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 };
 
             // Act
@@ -524,7 +524,7 @@ namespace UnitTesting.AppLogic.Helpers
             // Assert
             Assert.False(result.Success);
             Assert.Equal("FILE_CONTENT_03", result.ErrorCode);
-            Assert.Contains("no es un PDF, JPG o JPEG vÃ¡lido", result.Message);
+            Assert.Contains("no es un PDF, JPG o JPEG válido", result.Message);
         }
 
         #endregion
@@ -800,7 +800,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateDocumentFile_ValidDoc_ReturnsSuccess()
         {
-            // Arrange - DOC vÃ¡lido
+            // Arrange - DOC válido
             var docContent = new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 };
             var fileName = "document.doc";
 
@@ -814,7 +814,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateDocumentFile_ValidDocx_ReturnsSuccess()
         {
-            // Arrange - DOCX vÃ¡lido (ZIP)
+            // Arrange - DOCX válido (ZIP)
             var docxContent = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x00, 0x00 };
             var fileName = "document.docx";
 
@@ -828,7 +828,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateDocumentFile_DocxEmptyZip_ReturnsSuccess()
         {
-            // Arrange - DOCX con magic bytes de ZIP vacÃ­o
+            // Arrange - DOCX con magic bytes de ZIP vacío
             var docxEmptyContent = new byte[] { 0x50, 0x4B, 0x05, 0x06, 0x00, 0x00 };
             var fileName = "empty.docx";
 
@@ -856,7 +856,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateFile_FileTooSmallForMagicBytes_ReturnsFailed()
         {
-            // Arrange - Archivo muy pequeÃ±o que no puede contener los magic bytes completos
+            // Arrange - Archivo muy pequeño que no puede contener los magic bytes completos
             var tinyContent = new byte[] { 0x25, 0x50 }; // Solo 2 bytes, PDF necesita al menos 4
             var fileName = "tiny.pdf";
             var whitelist = new System.Collections.Generic.List<string> { ".pdf" };
@@ -872,7 +872,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateImageFile_LargeImage_ReturnsFailed()
         {
-            // Arrange - Imagen de 6 MB (mayor al lÃ­mite de 5 MB)
+            // Arrange - Imagen de 6 MB (mayor al límite de 5 MB)
             var largeContent = new byte[6 * 1024 * 1024];
             largeContent[0] = 0xFF;
             largeContent[1] = 0xD8;
@@ -891,7 +891,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidateDocumentFile_LargeDoc_ReturnsFailed()
         {
-            // Arrange - Documento de 11 MB (mayor al lÃ­mite de 10 MB)
+            // Arrange - Documento de 11 MB (mayor al límite de 10 MB)
             var largeContent = new byte[11 * 1024 * 1024];
             largeContent[0] = 0xD0;
             largeContent[1] = 0xCF;
@@ -1013,7 +1013,7 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void SanitizeFileName_ReservedNameCaseInsensitive_ReturnsFailed()
         {
-            // Arrange - Probar que la validaciÃ³n es case-insensitive
+            // Arrange - Probar que la validación es case-insensitive
             var testCases = new[] { "con.pdf", "Con.pdf", "CON.pdf", "cOn.pdf" };
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
@@ -1040,7 +1040,7 @@ namespace UnitTesting.AppLogic.Helpers
 
             // Assert
             Assert.True(result.Success);
-            // Los guiones bajos mÃºltiples deberÃ­an colapsar a uno solo
+            // Los guiones bajos múltiples deberían colapsar a uno solo
             Assert.DoesNotContain("__", result.Data);
         }
 

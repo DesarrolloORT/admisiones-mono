@@ -7,15 +7,22 @@ namespace WebApiAdmisiones.Security
     /// </summary>
     public static class CookieAuthenticationHelper
     {
-        /// <summary>Nombre de la cookie del access token.</summary>
+        /// <summary>
+        /// Nombre de la cookie del access token.
+        /// </summary>
         public const string AccessTokenCookieName = "X-Access-Token";
 
-        /// <summary>Nombre de la cookie del refresh token.</summary>
+        /// <summary>
+        /// Nombre de la cookie del refresh token.
+        /// </summary>
         public const string RefreshTokenCookieName = "X-Refresh-Token";
 
         /// <summary>
         /// Establece el access token como una cookie HttpOnly segura.
         /// </summary>
+        /// <param name="context">Contexto HTTP.</param>
+        /// <param name="accessToken">Token de acceso JWT.</param>
+        /// <param name="expiresInMinutes">Minutos hasta la expiración (por defecto 15).</param>
         public static void SetAccessTokenCookie(HttpContext context, string accessToken, int expiresInMinutes = 15)
         {
             var cookieOptions = new CookieOptions
@@ -34,6 +41,9 @@ namespace WebApiAdmisiones.Security
         /// <summary>
         /// Establece el refresh token como una cookie HttpOnly segura.
         /// </summary>
+        /// <param name="context">Contexto HTTP.</param>
+        /// <param name="refreshToken">Token de refresco.</param>
+        /// <param name="expiresInDays">Días hasta la expiración (por defecto 7).</param>
         public static void SetRefreshTokenCookie(HttpContext context, string refreshToken, int expiresInDays = 7)
         {
             var cookieOptions = new CookieOptions
@@ -49,15 +59,30 @@ namespace WebApiAdmisiones.Security
             context.Response.Cookies.Append(RefreshTokenCookieName, refreshToken, cookieOptions);
         }
 
-        /// <summary>Obtiene el access token desde la cookie.</summary>
+        /// <summary>
+        /// Obtiene el access token desde la cookie.
+        /// </summary>
+        /// <param name="context">Contexto HTTP.</param>
+        /// <returns>Access token o null si no existe.</returns>
         public static string? GetAccessTokenFromCookie(HttpContext context)
-            => context.Request.Cookies[AccessTokenCookieName];
+        {
+            return context.Request.Cookies[AccessTokenCookieName];
+        }
 
-        /// <summary>Obtiene el refresh token desde la cookie.</summary>
+        /// <summary>
+        /// Obtiene el refresh token desde la cookie.
+        /// </summary>
+        /// <param name="context">Contexto HTTP.</param>
+        /// <returns>Refresh token o null si no existe.</returns>
         public static string? GetRefreshTokenFromCookie(HttpContext context)
-            => context.Request.Cookies[RefreshTokenCookieName];
+        {
+            return context.Request.Cookies[RefreshTokenCookieName];
+        }
 
-        /// <summary>Elimina las cookies de autenticación (logout).</summary>
+        /// <summary>
+        /// Elimina las cookies de autenticación (logout).
+        /// </summary>
+        /// <param name="context">Contexto HTTP.</param>
         public static void ClearAuthenticationCookies(HttpContext context)
         {
             var options = new CookieOptions

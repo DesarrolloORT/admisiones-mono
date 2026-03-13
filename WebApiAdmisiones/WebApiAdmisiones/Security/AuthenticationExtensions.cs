@@ -11,9 +11,7 @@ namespace WebApiAdmisiones.Security
     /// </summary>
     public static class AuthenticationExtensions
     {
-        private const string IssuerGestion = "https://gestion.ort.edu.uy";
-        private const string IssuerFuncionarios = "https://funcionarios.ort.edu.uy";
-        private const string IssuerAdmisiones = "https://admisiones.ort.edu.uy";
+        private const string IssuerAdmisiones = "https://webapiadmisiones.ort.edu.uy";
 
         /// <summary>
         /// Agrega y configura la autenticación JWT Bearer al contenedor de servicios.
@@ -49,8 +47,6 @@ namespace WebApiAdmisiones.Security
                         /// </summary>
                         ValidAudiences =
                         [
-                            IssuerGestion,
-                            IssuerFuncionarios,
                             IssuerAdmisiones
                         ],
                         /// <summary>
@@ -58,8 +54,6 @@ namespace WebApiAdmisiones.Security
                         /// </summary>
                         ValidIssuers =
                         [
-                            IssuerGestion,
-                            IssuerFuncionarios,
                             IssuerAdmisiones
                         ],
 
@@ -78,9 +72,7 @@ namespace WebApiAdmisiones.Security
                             // Ejemplo de múltiples claves por issuer
                             var keysByIssuer = new Dictionary<string, string?>
                             {
-                                { IssuerGestion, Environment.GetEnvironmentVariable("JWT_Key_Gestion") },
-                                { IssuerFuncionarios, Environment.GetEnvironmentVariable("JWT_Key_Funcionarios") },
-                                { IssuerAdmisiones, Environment.GetEnvironmentVariable("JWT_Key_Admisiones") },
+                                { IssuerAdmisiones, Environment.GetEnvironmentVariable("JWT_SECRET_KEY") }
                             };
 
                             if (issuer != null && keysByIssuer.TryGetValue(issuer, out var secret))
@@ -105,22 +97,30 @@ namespace WebApiAdmisiones.Security
                     {
                         /// <summary>
                         /// Evento que se ejecuta cuando se recibe un mensaje con token.
+                        /// Prioriza la lectura del token desde cookies HttpOnly (más seguro).
                         /// </summary>
                         OnMessageReceived = context =>
                         {
-                            // 1. Intentar leer desde cookie HttpOnly (fuente preferida)
-                            var cookieToken = context.Request.Cookies[CookieAuthenticationHelper.AccessTokenCookieName];
-                            if (!string.IsNullOrEmpty(cookieToken))
+                            // PRIORIDAD 1: Intentar obtener el token desde la cookie HttpOnly (RECOMENDADO)
+                            var tokenFromCookie = CookieAuthenticationHelper.GetAccessTokenFromCookie(context.HttpContext);
+
+                            if (!string.IsNullOrEmpty(tokenFromCookie))
                             {
-                                context.Token = cookieToken;
+                                context.Token = tokenFromCookie;
+                                Console.WriteLine($"Token extraído desde cookie HttpOnly (seguro)");
                                 return Task.CompletedTask;
                             }
 
-                            // 2. Fallback: Authorization header Bearer (para APIs externas)
+                            // PRIORIDAD 2: Fallback al header Authorization (para compatibilidad con APIs externas)
                             var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
                             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                             {
                                 context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                                Console.WriteLine($"Token extraído desde Authorization header (fallback)");
+                            }
+                            else
+                            {
+                                Console.WriteLine("No se encontró token en cookie ni en Authorization header");
                             }
 
                             return Task.CompletedTask;
@@ -146,85 +146,5 @@ namespace WebApiAdmisiones.Security
 
             return services;
         }
-
-        /// <summary>
-        /// Crea un token de acceso JWT con las claims proporcionadas.
-        /// </summary>
-        /// <param name="identity">La identidad con las claims a incluir en el token.</param>
-        /// <param name="issuer">El emisor del token.</param>
-        /// <param name="audience">La audiencia del token.</param>
-        /// <param name="ttl">Tiempo de vida del token.</param>
-        /// <returns>Token JWT firmado.</returns>
-        public static string CreateAccessToken(ClaimsIdentity identity, string issuer, string audience, TimeSpan ttl)
-        {
-            var secret = string.Empty;
-
-            switch (issuer)
-            {
-                case IssuerGestion:
-                    secret = Environment.GetEnvironmentVariable("JWT_Key_Gestion");
-                    if (string.IsNullOrEmpty(secret))
-                    {
-                        throw new InvalidOperationException("JWT secret for 'gestion' is not set. Please configure the 'JWT_Key_Gestion' environment variable.");
-                    }
-                    break;
-                case IssuerFuncionarios:
-                    secret = Environment.GetEnvironmentVariable("JWT_Key_Funcionarios");
-                    if (string.IsNullOrEmpty(secret))
-                    {
-                        throw new InvalidOperationException("JWT secret for 'funcionarios' is not set. Please configure the 'JWT_Key_Funcionarios' environment variable.");
-                    }
-                    break;
-                case IssuerAdmisiones:
-                    secret = Environment.GetEnvironmentVariable("JWT_Key_Admisiones");
-                    if (string.IsNullOrEmpty(secret))
-                    {
-                        throw new InvalidOperationException("JWT secret for 'admisiones' is not set. Please configure the 'JWT_Key_Admisiones' environment variable.");
-                    }
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unknown issuer '{issuer}'. Supported issuers are: {IssuerGestion}, {IssuerFuncionarios}, {IssuerAdmisiones}");
-            }
-
-            var creds = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
-                SecurityAlgorithms.HmacSha256);
-
-
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: identity.Claims,
-                notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.Add(ttl),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        /// <summary>
-        /// Determina si un token necesita ser renovado basándose en su tiempo de expiración.
-        /// </summary>
-        /// <param name="user">El usuario autenticado con los claims del token.</param>
-        /// <param name="refreshThresholdMinutes">Umbral en minutos antes de la expiración para renovar el token. Por defecto 15 minutos.</param>
-        /// <returns>True si el token debe ser renovado, false en caso contrario.</returns>
-        public static bool ShouldRefreshToken(ClaimsPrincipal user, int refreshThresholdMinutes = 15)
-        {
-            if (user?.Identity?.IsAuthenticated != true)
-                return false;
-
-            var expClaim = user.FindFirst(JwtRegisteredClaimNames.Exp);
-            if (expClaim == null || !long.TryParse(expClaim.Value, out var exp))
-                return false;
-
-            // Convertir Unix timestamp a DateTime
-            var expirationTime = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
-            var currentTime = DateTime.UtcNow;
-            var timeUntilExpiration = expirationTime - currentTime;
-
-            // Renovar si queda menos tiempo que el umbral especificado
-            return timeUntilExpiration.TotalMinutes <= refreshThresholdMinutes;
-        }
-
     }
 }

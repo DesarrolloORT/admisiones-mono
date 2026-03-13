@@ -28,7 +28,7 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
             ? guidValue
             : Guid.NewGuid();
         
-        // Marcar que se logueÃ³ la entrada (para evitar duplicados en middleware)
+        // Marcar que se logueó la entrada (para evitar duplicados en middleware)
         httpContext.Items[LoggingHelper.EntradaLoggedKey] = true;
 
         // Evitar overhead en GET/HEAD sin argumentos relevantes

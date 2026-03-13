@@ -1,0 +1,44 @@
+name: PR - Validate Version Convention Title
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate version convention
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Usar variables de entorno para evitar inyección de comandos
+          TEXT="$PR_TITLE $PR_BODY"
+
+          FOUND=0
+
+          [[ "$TEXT" =~ v[0-9]+\.[0-9]+\.[0-9]+ ]] && FOUND=$((FOUND + 1))
+          [[ "$TEXT" =~ "#major" ]] && FOUND=$((FOUND + 1))
+          [[ "$TEXT" =~ "#minor" ]] && FOUND=$((FOUND + 1))
+          [[ "$TEXT" =~ "#patch" ]] && FOUND=$((FOUND + 1))
+
+          if [ "$FOUND" -eq 0 ]; then
+            echo "❌ El PR debe especificar una convención:"
+            echo "   - vX.Y.Z"
+            echo "   - #major"
+            echo "   - #minor"
+            echo "   - #patch"
+            exit 1
+          fi
+
+          if [ "$FOUND" -gt 1 ]; then
+            echo "❌ El PR no puede contener más de una convención de versión"
+            exit 1
+          fi
+
+          echo "✅ Convención de versión válida"

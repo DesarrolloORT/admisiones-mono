@@ -42,15 +42,11 @@ namespace UnitTesting.Security
             var services = new ServiceCollection();
             var inMemorySettings = new Dictionary<string, string?>
             {
-                { "JWT_Key_Gestion", "dummy" },
-                { "JWT_Key_Funcionarios", "dummy" },
-                { "JWT_Key_Admisiones", "dummy" }
+                { "JWT_SECRET_KEY", "dummy" }
             };
             var config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
 
-            Environment.SetEnvironmentVariable("JWT_Key_Gestion", "super-secret-gestion");
-            Environment.SetEnvironmentVariable("JWT_Key_Funcionarios", "super-secret-funcionarios");
-            Environment.SetEnvironmentVariable("JWT_Key_Admisiones", "super-secret-admisiones");
+            Environment.SetEnvironmentVariable("JWT_SECRET_KEY", "super-secret-admisiones-key-for-testing");
 
             // Act
             services.AddJwtAuthentication(config);
@@ -65,10 +61,10 @@ namespace UnitTesting.Security
             Assert.True(jwtOptions.TokenValidationParameters.ValidateLifetime);
             Assert.True(jwtOptions.TokenValidationParameters.ValidateIssuerSigningKey);
 
-            Assert.Contains("https://gestion.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
+            Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
             Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidAudiences);
 
-            var token = CreateTestJwt("https://gestion.ort.edu.uy");
+            var token = CreateTestJwt("https://admisiones.ort.edu.uy");
             var keys = jwtOptions.TokenValidationParameters.IssuerSigningKeyResolver(
                 token, null, null, jwtOptions.TokenValidationParameters);
 
@@ -144,113 +140,12 @@ namespace UnitTesting.Security
             Assert.Equal(expectedToken, context.Token);
         }
 
-        // ===== Tests para CreateAccessToken =====
-
-        [Fact]
-        public void CreateAccessToken_WithValidParameters_ReturnsToken()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("JWT_Key_Funcionarios", TestSecret);
-            
-            var claims = new List<Claim>
-            {
-                new Claim("sub", "12345"),
-                new Claim(ClaimTypes.Name, "Test User"),
-                new Claim(ClaimTypes.Email, "test@ort.edu.uy")
-            };
-            var identity = new ClaimsIdentity(claims);
-            var issuer = "https://funcionarios.ort.edu.uy";
-            var audience = "https://funcionarios.ort.edu.uy";
-            var ttl = TimeSpan.FromHours(1);
-
-            // Act
-            var token = AuthenticationExtensions.CreateAccessToken(identity, issuer, audience, ttl);
-
-            // Assert
-            Assert.NotNull(token);
-            Assert.NotEmpty(token);
-            
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            Assert.Equal(issuer, jwtToken.Issuer);
-            Assert.Contains(jwtToken.Audiences, a => a == audience);
-            
-            // JWT agrega claims automáticos (iat, nbf, exp, etc.), así que verificamos que contenga las nuestras
-            Assert.Contains(jwtToken.Claims, c => c.Type == "sub" && c.Value == "12345");
-            Assert.Contains(jwtToken.Claims, c => c.Type == ClaimTypes.Name && c.Value == "Test User");
-            Assert.Contains(jwtToken.Claims, c => c.Type == ClaimTypes.Email && c.Value == "test@ort.edu.uy");
-        }
-
-        [Fact]
-        public void CreateAccessToken_WithoutSecret_ThrowsException()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("JWT_Key_Funcionarios", null);
-            
-            var claims = new List<Claim> { new Claim("sub", "12345") };
-            var identity = new ClaimsIdentity(claims);
-            var issuer = "https://funcionarios.ort.edu.uy";
-            var audience = "https://funcionarios.ort.edu.uy";
-            var ttl = TimeSpan.FromHours(1);
-
-            // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() =>
-                AuthenticationExtensions.CreateAccessToken(identity, issuer, audience, ttl));
-            
-            Assert.Contains("JWT secret for 'funcionarios' is not set", exception.Message);
-            Assert.Contains("JWT_Key_Funcionarios", exception.Message);
-        }
-
-        [Fact]
-        public void CreateAccessToken_TokenContainsCorrectClaims()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("JWT_Key_Funcionarios", TestSecret);
-            
-            var claims = new List<Claim>
-            {
-                new Claim("sub", "12345"),
-                new Claim("custom_claim", "custom_value")
-            };
-            var identity = new ClaimsIdentity(claims);
-            var issuer = "https://funcionarios.ort.edu.uy";
-            var audience = "https://funcionarios.ort.edu.uy";
-            var ttl = TimeSpan.FromMinutes(30);
-
-            // Act
-            var token = AuthenticationExtensions.CreateAccessToken(identity, issuer, audience, ttl);
-
-            // Assert
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            
-            Assert.Contains(jwtToken.Claims, c => c.Type == "sub" && c.Value == "12345");
-            Assert.Contains(jwtToken.Claims, c => c.Type == "custom_claim" && c.Value == "custom_value");
-        }
-
-        [Fact]
-        public void CreateAccessToken_UsesHmacSha256Algorithm()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("JWT_Key_Funcionarios", TestSecret);
-            
-            var identity = new ClaimsIdentity(new[] { new Claim("sub", "12345") });
-            var issuer = "https://funcionarios.ort.edu.uy";
-            var audience = "https://funcionarios.ort.edu.uy";
-            var ttl = TimeSpan.FromHours(1);
-
-            // Act
-            var token = AuthenticationExtensions.CreateAccessToken(identity, issuer, audience, ttl);
-
-            // Assert
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            
-            Assert.Equal(SecurityAlgorithms.HmacSha256, jwtToken.SignatureAlgorithm);
-        }
-
         // ===== Tests para ShouldRefreshToken =====
+        // NOTA: Estos tests fueron deshabilitados porque ShouldRefreshToken fue eliminado.
+        // El refresh de tokens ahora se maneja mediante el endpoint /RefreshToken en PersonaController
+        // que valida el refresh token contra la base de datos.
 
+        /*
         [Fact]
         public void ShouldRefreshToken_WithNullUser_ReturnsFalse()
         {
@@ -384,5 +279,6 @@ namespace UnitTesting.Security
             Assert.False(AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 20));
             Assert.True(AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 30));
         }
+        */
     }
 }

@@ -29,7 +29,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerPaises_ReturnsSortedPaises()
         {
-            var paisRepo = new Mock<BusinessLogic.IDevartRepositories.IPaisRepository>();
+            var paisRepo = new Mock<IPaisRepository>();
             paisRepo.Setup(r => r.GetPaisesOrdenados()).Returns(new List<Pais>
             {
                 new Pais { CodigoPais = 1, Nombre = "Uruguay" },
@@ -59,56 +59,10 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("FDP_GPAC_01", result.ErrorCode);
         }
 
+      
+        
+      
        
-
-        [Fact]
-        public void ObtenerPais_PaisWithEstadosAndCiudades_ReturnsSorted()
-        {
-            var pais = new Pais
-            {
-                CodigoPais = 1,
-                Nombre = "Uruguay",
-                Estado = new List<Estado>
-                {
-                    new Estado
-                    {
-                        CodigoEstado = 2,
-                        Nombre = "Canelones",
-                        Ciudad = new List<Ciudad>
-                        {
-                            new Ciudad { CodigoCiudad = 2, Nombre = "Las Piedras" },
-                            new Ciudad { CodigoCiudad = 1, Nombre = "Canelones" }
-                        }
-                    },
-                    new Estado
-                    {
-                        CodigoEstado = 1,
-                        Nombre = "Montevideo",
-                        Ciudad = new List<Ciudad>
-                        {
-                            new Ciudad { CodigoCiudad = 3, Nombre = "Pocitos" },
-                            new Ciudad { CodigoCiudad = 4, Nombre = "Centro" }
-                        }
-                    }
-                }
-            };
-            var paisRepo = new Mock<BusinessLogic.IDevartRepositories.IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisConEstadosYCiudades(1)).Returns(pais);
-            _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
-
-            var result = _service.ObtenerPais(1);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            var estados = result.Data.Estado;
-            Assert.Equal("Canelones", estados[0].Nombre);
-            Assert.Equal("Montevideo", estados[1].Nombre);
-            Assert.Equal("Canelones", estados[0].Ciudad[0].Nombre);
-            Assert.Equal("Las Piedras", estados[0].Ciudad[1].Nombre);
-            Assert.Equal("Centro", estados[1].Ciudad[0].Nombre);
-            Assert.Equal("Pocitos", estados[1].Ciudad[1].Nombre);
-        }
-
         [Fact]
         public void AuditarPersona_WithoutConfirmacionDatosPersonales_SetsAuditFields()
         {
@@ -149,13 +103,13 @@ namespace UnitTesting.AppLogic.Services
         {
             var persona = new Persona
             {
-                // Datos bÃ¡sicos
+                // Datos básicos
                 CodigoPaisNacimiento = 1,
                 NacionalidadPersona = "Uruguaya",
                 FuncionarioActivoPersona = "SI",
                 // Documento
                 FechaVtoDocumentoPersona = DateTime.Now.AddYears(1),
-                // DirecciÃ³n
+                // Dirección
                 CodigoPais = 1,
                 CodigoEstado = 1,
                 CodigoCiudad = 1,
@@ -194,7 +148,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("DP_ACDP_BAS_01", result.ErrorCode);
-            Assert.Contains("paÃ­s de nacimiento", result.Message);
+            Assert.Contains("país de nacimiento", result.Message);
         }
 
         [Fact]
@@ -294,7 +248,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("DP_ACDP_DIR_01", result.ErrorCode);
-            Assert.Contains("paÃ­s de residencia", result.Message);
+            Assert.Contains("país de residencia", result.Message);
         }
 
         [Fact]
@@ -539,7 +493,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("DP_ACDP_CON_02", result.ErrorCode);
-            Assert.Contains("telÃ©fono principal", result.Message);
+            Assert.Contains("teléfono principal", result.Message);
         }
 
         [Fact]
@@ -588,7 +542,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("DP_ACDP_CON_03", result.ErrorCode);
-            Assert.Contains("caracterÃ­stica paÃ­s telÃ©fono 1", result.Message);
+            Assert.Contains("característica país teléfono 1", result.Message);
         }
 
         [Fact]

@@ -1,11 +1,15 @@
 using AppLogic.Interfaces;
+using AppLogic.IServices;
 using AppLogic.Services;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
+using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
 using DataAccess.GenericAccess.Services;
+using LdapService.Interfaces;
+using LdapService.Services;
 using MailORT;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -52,23 +56,6 @@ namespace UnitTesting.Extensions
             // Assert
             Assert.NotNull(result);
             Assert.IsAssignableFrom<IServiceCollection>(result);
-        }
-
-        [Fact]
-        public void AddDomainServices_RegistersConnectionFromBearerToken_AsScoped()
-        {
-            // Arrange
-            SetupEnvironmentMock("Production");
-            var configuration = BuildConfiguration();
-
-            // Act
-            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
-
-            // Assert
-            var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(ConnectionFromBearerToken) &&
-                sd.Lifetime == ServiceLifetime.Scoped);
-            Assert.NotNull(descriptor);
         }
 
         [Fact]
@@ -246,6 +233,23 @@ namespace UnitTesting.Extensions
             Assert.NotNull(descriptor);
         }
 
+        [Fact]
+        public void AddDomainServices_RegistersModGenericBaseUnitOfWorkFactory()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
         #endregion
 
         #region Application Services Registration Tests
@@ -300,6 +304,102 @@ namespace UnitTesting.Extensions
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
                 sd.ServiceType == typeof(IBandejaService) &&
                 sd.ImplementationType == typeof(BandejaService) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersIPersonaService()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(IPersonaService) &&
+                sd.ImplementationType == typeof(PersonaService) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersITokenService()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(ITokenService) &&
+                sd.ImplementationType == typeof(TokenService) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersIRefreshTokenService()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(IRefreshTokenService) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        #endregion
+
+        #region Authentication Services Registration Tests
+
+        [Fact]
+        public void AddDomainServices_RegistersILdap()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(ILdap) &&
+                sd.ImplementationType == typeof(Ldap) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        #endregion
+
+        #region Interceptor Registration Tests
+
+        [Fact]
+        public void AddDomainServices_RegistersEfCoreLoggingInterceptor()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(EfCoreLoggingInterceptor) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
         }
@@ -454,7 +554,26 @@ namespace UnitTesting.Extensions
             // Assert
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IGenericRepository)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IUnitOfWorkFactory)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(EnvioMail)));
+        }
+
+        [Fact]
+        public void AddDomainServices_AuthenticationServices_AreRegistered()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILdap)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITokenService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IRefreshTokenService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaService)));
         }
 
         #endregion
@@ -483,7 +602,39 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(IGeneralServices)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IPersonaService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(ITokenService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IRefreshTokenService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(ILdap)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(EfCoreLoggingInterceptor)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(EnvioMail)));
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersDbConnectionContext_WithFactoryPattern()
+        {
+            // Arrange
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            // Act
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            // Assert - Verify both interface and concrete type are registered
+            var interfaceDescriptor = _serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IDbConnectionContext));
+            var concreteDescriptor = _serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(DbConnectionContext));
+
+            Assert.NotNull(interfaceDescriptor);
+            Assert.NotNull(concreteDescriptor);
+            Assert.Equal(ServiceLifetime.Scoped, interfaceDescriptor.Lifetime);
+            Assert.Equal(ServiceLifetime.Scoped, concreteDescriptor.Lifetime);
         }
 
         [Fact]

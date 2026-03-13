@@ -1,0 +1,131 @@
+name: Docker Image Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Nombre de la rama a construir"
+        required: true
+        type: string
+      stable_branch_mode:
+        description: "Usar etiquetas de rama estable (como CI/CD automático)"
+        required: false
+        type: boolean
+        default: false
+      tag_suffix:
+        description: "Sufijo personalizado (solo si stable_branch_mode=false)"
+        required: false
+        type: string
+        default: "manual"
+
+env:
+  DOCKERFILE_PATH: Empleos/WebApiEmpleos/Dockerfile
+  IMAGE_NAME: ghcr.io/desarrolloort/api-empleos
+
+jobs:
+  docker-image-builder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+      repository-projects: read
+
+    steps:
+      - name: Validate branch exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.inputs.branch }}
+        run: |
+          if ! git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+            echo "❌ Error: La rama '$BRANCH' no existe"
+            exit 1
+          fi
+          echo "✅ Rama '$BRANCH' verificada"
+
+      - name: Checkout code (incluye submódulos privados)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN }}
+
+      - name: Set up QEMU (cross-platform)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ========================================================================
+      # Opción 1: Modo rama estable (misma lógica que CI/CD automático)
+      # ========================================================================
+      - name: Generate Docker metadata (stable branch mode)
+        if: ${{ github.event.inputs.stable_branch_mode == 'true' }}
+        id: meta_stable
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=${{ github.event.inputs.branch }}-
+            type=raw,value=${{ github.event.inputs.branch }}-latest
+            type=raw,value=latest,enable=${{ github.event.inputs.branch == 'main' }}
+
+      - name: Build and push Docker image (stable branch mode)
+        if: ${{ github.event.inputs.stable_branch_mode == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          push: true
+          tags: ${{ steps.meta_stable.outputs.tags }}
+          labels: ${{ steps.meta_stable.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ========================================================================
+      # Opción 2: Modo manual con sufijo personalizado
+      # ========================================================================
+      - name: Determine image tags (manual mode)
+        if: ${{ github.event.inputs.stable_branch_mode != 'true' }}
+        id: set_tags
+        run: |
+          IMAGE_BASE="${{ env.IMAGE_NAME }}"
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+          BRANCH_NAME="${{ github.event.inputs.branch }}"
+          TAG_SUFFIX="${{ github.event.inputs.tag_suffix }}"
+
+          # Sanitizar nombre de rama
+          SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+
+          TAGS="${IMAGE_BASE}:manual-${SHORT_SHA}"
+          TAGS="${TAGS},${IMAGE_BASE}:manual-${SAFE_BRANCH}-${TAG_SUFFIX}-${TIMESTAMP}"
+
+          echo "🔧 Build MANUAL desde rama: ${BRANCH_NAME}"
+          echo "📌 Sufijo personalizado: ${TAG_SUFFIX}"
+          echo "📦 Tags generados: $TAGS"
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image (manual mode)
+        if: ${{ github.event.inputs.stable_branch_mode != 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          push: true
+          tags: ${{ steps.set_tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.trigger=workflow_dispatch
