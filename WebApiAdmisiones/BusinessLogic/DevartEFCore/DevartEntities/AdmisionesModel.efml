@@ -2762,13 +2762,13 @@
     <property name="ExtensionPdfRevalidasDj" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="efd9f638-c580-4106-8ce6-4ef591526307">
       <column name="EXTENSION_PDF_REVALIDAS_DJ" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="7d818d49-85d3-4b02-ace4-549b8a40d2d0">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="7d818d49-85d3-4b02-ace4-549b8a40d2d0" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="fa3fc9c4-b997-41c6-b4c3-050c14b13727">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="fa3fc9c4-b997-41c6-b4c3-050c14b13727" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="490c2f96-e878-42c7-825d-b9c5eea2f5fa">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="490c2f96-e878-42c7-825d-b9c5eea2f5fa" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdPdfRevalidasDjFront" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="d8905002-bede-4fb1-9701-4c2ba8ebe1ee">

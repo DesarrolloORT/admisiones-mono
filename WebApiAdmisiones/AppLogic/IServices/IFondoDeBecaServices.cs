@@ -1,4 +1,5 @@
 using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using Utilities;
 
 namespace AppLogic.Interfaces
@@ -30,6 +31,10 @@ namespace AppLogic.Interfaces
         /// Devuelve las universidades disponibles. Valida que el país indicado exista.
         /// </summary>
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades(long codigoPais);
+
+        OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona);
+
+        OperationResult<DtoDeclaracionJuradaWebDevart> ObtenerFormularioDeclaracionJuradaWebDetalle(long codigoPersona, long idInscriptoPrueba);
 
         #endregion
     }
