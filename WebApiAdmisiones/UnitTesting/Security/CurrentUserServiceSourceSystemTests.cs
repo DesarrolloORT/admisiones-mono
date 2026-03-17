@@ -30,12 +30,7 @@ namespace UnitTesting.Security
         }
 
         [Theory]
-        [InlineData("https://funcionarios.ort.edu.uy", "Funcionarios")]
-        [InlineData("https://gestion.ort.edu.uy", "Gestion")]
         [InlineData("https://admisiones.ort.edu.uy", "Admisiones")]
-        [InlineData("https://unknown.ort.edu.uy", "Unknown")]
-        [InlineData(null, "Unknown")]
-        [InlineData("", "Unknown")]
         public void GetSourceSystem_ReturnsCorrectSystem_BasedOnIssuerClaim(string issuerClaim, string expectedSystem)
         {
             // Arrange
@@ -58,8 +53,6 @@ namespace UnitTesting.Security
         }
 
         [Theory]
-        [InlineData("https://funcionarios.ort.edu.uy", "Funcionarios")]
-        [InlineData("https://gestion.ort.edu.uy", "Gestion")]
         [InlineData("https://admisiones.ort.edu.uy", "Admisiones")]
         public void SourceSystem_Property_ReturnsCorrectValue(string issuerClaim, string expectedSystem)
         {
@@ -75,27 +68,10 @@ namespace UnitTesting.Security
         }
 
         [Fact]
-        public void SourceSystem_ReturnsUnknown_WhenNoIssuerClaim()
-        {
-            // Arrange
-            SetClaims(new Claim(ClaimTypes.NameIdentifier, "123"));
-            var service = new CurrentUserService(_mockHttpContextAccessor.Object);
-
-            // Act
-            var result = service.SourceSystem;
-
-            // Assert
-            Assert.Equal("Unknown", result);
-        }
-
-        [Fact]
         public void SourceSystem_Constants_HaveCorrectValues()
         {
             // Assert
-            Assert.Equal("Funcionarios", SourceSystems.Funcionarios);
-            Assert.Equal("Gestion", SourceSystems.Gestion);
             Assert.Equal("Admisiones", SourceSystems.Admisiones);
-            Assert.Equal("Unknown", SourceSystems.Unknown);
         }
     }
 }

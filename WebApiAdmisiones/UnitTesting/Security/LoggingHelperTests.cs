@@ -138,7 +138,7 @@ namespace UnitTesting.Security
             // Assert
             Assert.Contains("Tipo: ENTRADA", result);
             Assert.Contains("Clase: TestClass", result);
-            Assert.Contains("Origen: Desconocido", result);
+            Assert.Contains("Origen: Admisiones", result);
             Assert.Contains("Servicio: Desconocido", result);
         }
 
@@ -150,7 +150,7 @@ namespace UnitTesting.Security
                 method: "POST",
                 path: "/api/datos",
                 authenticated: true,
-                issuer: "https://funcionarios.ort.edu.uy",
+                issuer: "https://admisiones.ort.edu.uy",
                 ipAddress: "192.168.1.1",
                 userAgent: "TestAgent/1.0");
             var correlationId = Guid.NewGuid();
@@ -165,7 +165,7 @@ namespace UnitTesting.Security
 
             // Assert
             Assert.Contains("Tipo: ENTRADA", result);
-            Assert.Contains("Origen: Funcionarios", result);
+            Assert.Contains("Origen: Admisiones", result);
             Assert.Contains("Clase: TestController", result);
             Assert.Contains("CodigoPersona: 12345", result);
             Assert.Contains("Servicio: POST-api/datos", result);
@@ -241,7 +241,7 @@ namespace UnitTesting.Security
                 method: "POST",
                 path: "/api/create",
                 authenticated: true,
-                issuer: "https://gestion.ort.edu.uy");
+                issuer: "https://admisiones.ort.edu.uy");
             var errorData = new { errorType = "ValidationException", message = "Invalid input" };
 
             // Act
@@ -249,7 +249,7 @@ namespace UnitTesting.Security
 
             // Assert
             Assert.Contains("Tipo: ERROR", result);
-            Assert.Contains("Origen: Gestion", result);
+            Assert.Contains("Origen: Admisiones", result);
             Assert.Contains("ValidationException", result);
             Assert.Contains("Invalid input", result);
         }
@@ -259,11 +259,7 @@ namespace UnitTesting.Security
         #region GetFormattedOrigin Tests (via FormatLog)
 
         [Theory]
-        [InlineData("https://funcionarios.ort.edu.uy", "Funcionarios")]
-        [InlineData("https://gestion.ort.edu.uy", "Gestion")]
         [InlineData("https://admisiones.ort.edu.uy", "Admisiones")]
-        [InlineData("https://unknown.ort.edu.uy", "Desconocido")]
-        [InlineData(null, "Desconocido")]
         public void FormatEntrada_DifferentIssuers_ReturnsCorrectOrigin(string? issuer, string expectedOrigin)
         {
             // Arrange
@@ -288,7 +284,7 @@ namespace UnitTesting.Security
             var result = LoggingHelper.FormatEntrada(context, "Test");
 
             // Assert
-            Assert.Contains("Origen: Desconocido", result);
+            Assert.Contains("Origen: Admisiones", result);
         }
 
         #endregion

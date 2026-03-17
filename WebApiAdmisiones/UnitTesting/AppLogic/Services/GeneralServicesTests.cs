@@ -59,10 +59,221 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("FDP_GPAC_01", result.ErrorCode);
         }
 
-      
-        
-      
-       
+        [Fact]
+        public void ObtenerPersona_NotFound_ReturnsFailed()
+        {
+            var personaRepo = new Mock<BusinessLogic.IDevartRepositories.IPersonaRepository>();
+            personaRepo.Setup(r => r.GetPersonaWithRelated(123)).Returns((Persona)null);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var result = _service.ObtenerPersona(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_PER_01", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerEncuestaInicialAdmision_NotFound_ReturnsFailed()
+        {
+            var encuestaRepo = new Mock<BusinessLogic.IDevartRepositories.IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var result = _service.ObtenerEncuestaInicialAdmision(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DPI_01", result.ErrorCode);
+            Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerAnioBachiller_NotFound_ReturnsFailed()
+        {
+            var anioRepo = new Mock<BusinessLogic.IDevartRepositories.IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetWithRelated(10)).Returns((AnioBachiller)null);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.ObtenerAnioBachiller(10);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_ANB_01", result.ErrorCode);
+            Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerAceptacionReglamentoEstudiantil_NotFound_ReturnsFailed()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IAceptacionReglamentoEstRepository>();
+            repo.Setup(r => r.GetByPersona(123)).Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(repo.Object);
+
+            var result = _service.ObtenerAceptacionReglamentoEstudiantil(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_ARE_01", result.ErrorCode);
+            Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerUltimaInscripcionActiva_NotFound_ReturnsFailed()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoRepository>();
+            repo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns((Inscripto)null);
+            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
+
+            var result = _service.ObtenerUltimaInscripcionActiva(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_UI_01", result.ErrorCode);
+            Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerProductosConInteresActivo_ReturnsMappedItems()
+        {
+            var productoRepo = new Mock<BusinessLogic.IDevartRepositories.IProductoRepository>();
+            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>
+            {
+                new Producto
+                {
+                    IdProducto = 10,
+                    NombreProducto = "Producto A",
+                    NombreExtensoProducto = "Producto Extenso A",
+                    IdNivelProducto = 2,
+                    ProcesoProductos = new List<ProcesoProducto>
+                    {
+                        new ProcesoProducto
+                        {
+                            IdProceso = 7,
+                            Proceso = new Proceso { IdProceso = 7, NombreProceso = "Proceso A" }
+                        }
+                    }
+                }
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var result = _service.ObtenerProductosConInteresActivo(123);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            var list = new List<global::AppLogic.DTOs.DTOProductoAdmisiones>(result.Data);
+            Assert.Single(list);
+            Assert.Equal(10, list[0].IdProducto);
+            Assert.Equal(7, list[0].IdProceso);
+            Assert.Equal("Proceso A", list[0].NombreProceso);
+        }
+
+        [Fact]
+        public void TieneInscripcionActivaParaProceso_ReturnsRepositoryValue()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IVdEsFrescoAdmisionRepository>();
+            repo.Setup(r => r.TieneInscripcionActivaParaProceso(1, 2, 3)).Returns(true);
+            _uowMock.Setup(u => u.VdEsFrescoAdmisions).Returns(repo.Object);
+
+            var result = _service.TieneInscripcionActivaParaProceso(1, 2, 3);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+        }
+
+        [Fact]
+        public void TieneInscripcionAdmisiones_ReturnsRepositoryValue()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoRepository>();
+            repo.Setup(r => r.TieneInscripcionAdmisiones(1, 2, 3)).Returns(false);
+            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
+
+            var result = _service.TieneInscripcionAdmisiones(1, 2, 3);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoAlumno_TipoInvalido_ReturnsFailed()
+        {
+            var result = _service.ObtenerDocumentoAlumno(1, 9);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoAlumno_NotFound_ReturnsFailed()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IImagenTemporalRepository>();
+            repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
+
+            var result = _service.ObtenerDocumentoAlumno(1, 1);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoAlumno_Vencido_ReturnsFailed()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IImagenTemporalRepository>();
+            repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new ImagenTemporal
+            {
+                FechaVtoDocumentoPersona = DateTime.Now.AddDays(-1),
+                BlobImagen = new byte[] { 1, 2, 3 }
+            });
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
+
+            var result = _service.ObtenerDocumentoAlumno(1, 1);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DA_03", result.ErrorCode);
+            Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerFotoAlumno_SinImagen_ReturnsFailed()
+        {
+            var repo = new Mock<BusinessLogic.IDevartRepositories.IImagenRepository>();
+            repo.Setup(r => r.GetFotoByPersona(1)).Returns(new Imagen { BlobImagen = Array.Empty<byte>() });
+            _uowMock.Setup(u => u.Imagens).Returns(repo.Object);
+
+            var result = _service.ObtenerFotoAlumno(1);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_FA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerFechaVencimientoAdmisiones_ProcesoSinFecha_ReturnsFailed()
+        {
+            var procesoRepo = new Mock<BusinessLogic.IDevartRepositories.IProcesoRepository>();
+            procesoRepo.Setup(r => r.GetByKey(2)).Returns(new Proceso { IdProceso = 2, ComienzoSemestre1Proceso = null });
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var result = _service.ObtenerFechaVencimientoAdmisiones(1, 2);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_FVA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerFondosDeBecaVigentes_ProductoInvalido_ReturnsFailed()
+        {
+            var productoRepo = new Mock<BusinessLogic.IDevartRepositories.IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(2)).Returns((Producto)null);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var result = _service.ObtenerFondosDeBecaVigentes(2, 3, 4);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_FBV_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
         [Fact]
         public void AuditarPersona_WithoutConfirmacionDatosPersonales_SetsAuditFields()
         {
