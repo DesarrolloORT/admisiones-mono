@@ -12,11 +12,6 @@ namespace AppLogic.Services
 {
     public class GeneralServices : IGeneralServices
     {
-        private static readonly List<string> AllowedDocumentExtensions =
-        [
-            ".pdf", ".jpg", ".jpeg", ".png"
-        ];
-
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
 
@@ -616,13 +611,18 @@ namespace AppLogic.Services
 
         private static OperationResult<ImagenTemporal> GuardarDocumentoAlumno(long codigoPersona, int idImagenTemporal, int tipo, DateTime fecha, byte[] fileContent, string fileName)
         {
-            var validacion = ValidarArchivoDocumentoAlumno(fileContent, fileName, nameof(GuardarDocumentoAlumno));
+            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, nameof(GuardarDocumentoAlumno));
             if (!validacion.Success)
             {
                 return OperationResult<ImagenTemporal>.IsFailed(validacion.ErrorCode, nameof(GuardarDocumentoAlumno), validacion.Message, validacion.HttpCode);
             }
 
-            var extension = Path.GetExtension(validacion.Data) ?? ".jpg";
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                extension = ".pdf";
+            }
+
             var nombrePersistencia = $"{codigoPersona}_{tipo}{extension}";
 
             return OperationResult<ImagenTemporal>.Ok(
@@ -640,7 +640,7 @@ namespace AppLogic.Services
 
         private static OperationResult<bool> ModificarDocumentoAlumno(ImagenTemporal existing, int tipo, DateTime fecha, byte[] fileContent, string fileName)
         {
-            var validacion = ValidarArchivoDocumentoAlumno(fileContent, fileName, nameof(ModificarDocumentoAlumno));
+            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, nameof(ModificarDocumentoAlumno));
             if (!validacion.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -650,7 +650,12 @@ namespace AppLogic.Services
                     validacion.HttpCode);
             }
 
-            var extension = Path.GetExtension(validacion.Data) ?? ".jpg";
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                extension = ".pdf";
+            }
+
             existing.NombreImagen = $"{existing.CodigoPersona}_{tipo}{extension}";
             existing.TipoImagen = tipo.ToString();
             existing.BlobImagen = fileContent;
@@ -658,25 +663,7 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(ModificarDocumentoAlumno));
         }
 
-        private static OperationResult<string> ValidarArchivoDocumentoAlumno(byte[] fileContent, string fileName, string originMethod)
-        {
-            var validacion = FileValidationHelper.ValidateFile(fileContent, fileName, AllowedDocumentExtensions, originMethod);
-            if (!validacion.Success)
-            {
-                return OperationResult<string>.IsFailed(validacion.ErrorCode, originMethod, validacion.Message, validacion.HttpCode);
-            }
-
-            var nombreArchivo = FileValidationHelper.SanitizeFileName(fileName, AllowedDocumentExtensions, originMethod);
-            if (!nombreArchivo.Success)
-            {
-                return OperationResult<string>.IsFailed(nombreArchivo.ErrorCode, originMethod, nombreArchivo.Message, nombreArchivo.HttpCode);
-            }
-
-            return OperationResult<string>.Ok(nombreArchivo.Data!, originMethod);
-        }
-
         #endregion IMAGEN / DOCUMENTOS
-
 
         #region ADMISIONES
 
