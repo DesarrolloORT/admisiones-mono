@@ -1,5 +1,6 @@
-using AppLogic.DevartDTOs;
+﻿using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
+using AppLogic.Helpers;
 using AppLogic.Interfaces;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
@@ -8,6 +9,11 @@ namespace AppLogic.Services
 {
     public class FondoDeBecaServices : IFondoDeBecaServices
     {
+        private static readonly List<string> AllowedArchivoExtensions =
+        [
+            ".pdf", ".jpg", ".jpeg", ".png"
+        ];
+
         private readonly IUnitOfWorkFactory _uowFactory;
 
         public FondoDeBecaServices(IUnitOfWorkFactory uowFactory)
@@ -57,11 +63,13 @@ namespace AppLogic.Services
 
             var pais = uow.Paises.GetPaisConEstadosYCiudades(codigoPais);
             if (pais == null)
+            {
                 return OperationResult<IEnumerable<DtoEmpresaDevart>>.IsFailed(
                     "FDB_UV_01",
                     nameof(ObtenerUniversidades),
                     "El país indicado es inválido.",
                     400);
+            }
 
             var entidades = uow.Empresas.GetUniversidades(codigoPais).ToList();
             return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(
@@ -129,6 +137,102 @@ namespace AppLogic.Services
                 nameof(ObtenerFormularioDeclaracionJuradaWebDetalle));
         }
 
+        public OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName)
+        {
+            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoIngreso));
+            if (!archivoValidado.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    archivoValidado.ErrorCode,
+                    nameof(SubirArchivoIngreso),
+                    archivoValidado.Message,
+                    archivoValidado.HttpCode);
+            }
+
+            using var uow = _uowFactory.Create();
+            var ingreso = uow.IngresoMensualNfDjs.GetByKey(idIngresoMensualNF);
+
+            if (ingreso is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAI_01",
+                    nameof(SubirArchivoIngreso),
+                    "No se encontró el ingreso mensual indicado.",
+                    404);
+            }
+
+            ingreso.NombreArchivoIngreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;
+            ingreso.ExtensionArchivoIngreso = Path.GetExtension(archivoValidado.Data) ?? string.Empty;
+            ingreso.ArchivoIngresoNfDj = fileContent;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(SubirArchivoIngreso));
+        }
+
+        public OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName)
+        {
+            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoEgreso));
+            if (!archivoValidado.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    archivoValidado.ErrorCode,
+                    nameof(SubirArchivoEgreso),
+                    archivoValidado.Message,
+                    archivoValidado.HttpCode);
+            }
+
+            using var uow = _uowFactory.Create();
+            var egreso = uow.EgresoMensualNfDjs.GetByKey(idEgresoMensualNF);
+
+            if (egreso is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAE_01",
+                    nameof(SubirArchivoEgreso),
+                    "No se encontró el egreso mensual indicado.",
+                    404);
+            }
+
+            egreso.NombreArchivoEgreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;
+            egreso.ExtensionArchivoEgreso = Path.GetExtension(archivoValidado.Data) ?? string.Empty;
+            egreso.ArchivoEgresoMensualNfDj = fileContent;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(SubirArchivoEgreso));
+        }
+
+        public OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName)
+        {
+            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoRevalidaDJ));
+            if (!archivoValidado.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    archivoValidado.ErrorCode,
+                    nameof(SubirArchivoRevalidaDJ),
+                    archivoValidado.Message,
+                    archivoValidado.HttpCode);
+            }
+
+            using var uow = _uowFactory.Create();
+            var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
+
+            if (declaracion is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAR_01",
+                    nameof(SubirArchivoRevalidaDJ),
+                    "No se encontró la declaración jurada indicada.",
+                    404);
+            }
+
+            declaracion.NombrePdfRevalidasDj = Path.GetFileNameWithoutExtension(archivoValidado.Data);
+            declaracion.ExtensionPdfRevalidasDj = Path.GetExtension(archivoValidado.Data);
+            declaracion.PdfFormRevalidasDj = fileContent;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(SubirArchivoRevalidaDJ));
+        }
+
         #endregion
 
         private static DtoDeclaracionJuradaWebDevart MapDeclaracionBase(BusinessLogic.Entities.DeclaracionJuradaWeb entity)
@@ -158,6 +262,21 @@ namespace AppLogic.Services
             dto.TipoDescuento = prueba.TipoDescuento?.ToDto();
             dto.Comienzo = prueba.Comienzo?.ToDto();
             return dto;
+        }
+
+        private static OperationResult<string> ValidarArchivoAdjunto(byte[] fileContent, string fileName, string methodName)
+        {
+            var validacion = FileValidationHelper.ValidateFile(fileContent, fileName, AllowedArchivoExtensions, methodName);
+            if (!validacion.Success)
+            {
+                return OperationResult<string>.IsFailed(
+                    validacion.ErrorCode,
+                    methodName,
+                    validacion.Message,
+                    validacion.HttpCode);
+            }
+
+            return FileValidationHelper.SanitizeFileName(fileName, AllowedArchivoExtensions, methodName);
         }
     }
 }

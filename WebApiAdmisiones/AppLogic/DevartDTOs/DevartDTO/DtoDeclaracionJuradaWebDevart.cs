@@ -187,6 +187,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoTipoDescuentoDevart TipoDescuento { get; set; }
 
+        public List<DtoEgresoMensualNfDjDevart> EgresoMensualNfDjs { get; set; }
+
         #endregion
     }
 

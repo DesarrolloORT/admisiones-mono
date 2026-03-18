@@ -99,6 +99,7 @@ namespace AppLogic.DevartDTOs
               target.Persona = source.Persona.ToDtoWithRelated(level - 1);
               target.Producto = source.Producto.ToDtoWithRelated(level - 1);
               target.TipoDescuento = source.TipoDescuento.ToDtoWithRelated(level - 1);
+              target.EgresoMensualNfDjs = source.EgresoMensualNfDjs.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

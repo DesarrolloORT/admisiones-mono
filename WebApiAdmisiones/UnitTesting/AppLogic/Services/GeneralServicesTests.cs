@@ -9,6 +9,7 @@ using AppLogic.DevartDTOs;
 using Utilities;
 using BusinessLogic.IDevartRepositories;
 using AppLogic.Utilities;
+using ConnectionContext;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -16,14 +17,16 @@ namespace UnitTesting.AppLogic.Services
     {
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
+        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly GeneralServices _service;
 
         public GeneralServicesTests()
         {
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
+            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new GeneralServices(_uowFactoryMock.Object);
+            _service = new GeneralServices(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
         }
 
         [Fact]
@@ -792,6 +795,54 @@ namespace UnitTesting.AppLogic.Services
             // If this functionality is needed, it should be added to GeneralServices first
             // For now, we'll skip this test
             Assert.True(true, "Test removed - GetPreregistroScp is not implemented in GeneralServices");
+        }
+
+        [Fact]
+        public void SubirFotoAlumno_JpegValido_ActualizaFoto()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns((Imagen)null);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN)).Returns(123);
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirFotoAlumno(1, jpegContent, "foto.jpg");
+
+            Assert.True(result.Success);
+            imagenRepo.Verify(r => r.Add(It.Is<Imagen>(i =>
+                i.IdImagen == 123 &&
+                i.CodigoPersona == 1 &&
+                i.NombreImagen == "1_3.jpg" &&
+                i.TipoImagen == "3" &&
+                i.BlobImagen == jpegContent)), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void SubirFotoAlumno_Png_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns((Imagen)null);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN)).Returns(123);
+            var pngContent = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+            var result = _service.SubirFotoAlumno(1, pngContent, "foto.png");
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SFA_02", result.ErrorCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+            imagenRepo.Verify(r => r.Add(It.IsAny<Imagen>()), Times.Never);
         }
 
     }

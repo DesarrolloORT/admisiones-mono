@@ -6,11 +6,13 @@ using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using WebApiAdmisiones.Security;
 using Utilities;
+using WebApiAdmisiones.Helpers;
+using WebApiAdmisiones.Models;
 
 namespace WebApiAdmisiones.Controllers
 {
     /// <summary>
-    /// Controlador para la gestión de la Ficha de Persona (FDP).
+    /// Controlador para la gestiÃƒÂ³n de la Ficha de Persona (FDP).
     /// </summary>
     [Authorize]
     [ApiController]
@@ -41,10 +43,10 @@ namespace WebApiAdmisiones.Controllers
         #region CONSULTAS(GET) GENERALES
 
         /// <summary>
-        /// Obtiene el país y sus ciudades asociadas.
+        /// Obtiene el paÃƒÂ­s y sus ciudades asociadas.
         /// </summary>
-        /// <param name="id">ID del país.</param>
-        /// <returns>País y ciudades.</returns>
+        /// <param name="id">ID del paÃƒÂ­s.</param>
+        /// <returns>PaÃƒÂ­s y ciudades.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("Pais")]
@@ -57,9 +59,9 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene la lista de países.
+        /// Obtiene la lista de paÃƒÂ­ses.
         /// </summary>
-        /// <returns>Lista de países.</returns>
+        /// <returns>Lista de paÃƒÂ­ses.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("Paises")]
@@ -74,7 +76,7 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Obtiene el listado de tipos de documento disponibles.
         /// </summary>
-        /// <returns>OperationResult con colección de DtoAcaTipoDocumentoDevart.</returns>
+        /// <returns>OperationResult con colecciÃƒÂ³n de DtoAcaTipoDocumentoDevart.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("TipoDocumentos")]
@@ -91,7 +93,7 @@ namespace WebApiAdmisiones.Controllers
         #region INTERES, PRODUCTOS, PROCESOS HABILITADOS
 
         /// <summary>
-        /// Obtiene los procesos habilitados para un producto específico.
+        /// Obtiene los procesos habilitados para un producto especÃƒÂ­fico.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <returns>Lista de procesos habilitados.</returns>
@@ -109,9 +111,9 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene la última inscripción de la persona autenticada.
+        /// Obtiene la ÃƒÂºltima inscripciÃƒÂ³n de la persona autenticada.
         /// </summary>
-        /// <returns>Última inscripción del alumno.</returns>
+        /// <returns>ÃƒÅ¡ltima inscripciÃƒÂ³n del alumno.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -151,9 +153,9 @@ namespace WebApiAdmisiones.Controllers
         #region ENCUESTA
 
         /// <summary>
-        /// Obtiene los datos de pre-inscripción (encuesta inicial) de la persona autenticada.
+        /// Obtiene los datos de pre-inscripciÃƒÂ³n (encuesta inicial) de la persona autenticada.
         /// </summary>
-        /// <returns>Datos de pre-inscripción.</returns>
+        /// <returns>Datos de pre-inscripciÃƒÂ³n.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -168,7 +170,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene los turnos disponibles para un producto y proceso de admisión.
+        /// Obtiene los turnos disponibles para un producto y proceso de admisiÃƒÂ³n.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <param name="idProceso">ID del proceso.</param>
@@ -187,7 +189,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene los motivos de elección disponibles para la encuesta de admisión.
+        /// Obtiene los motivos de elecciÃƒÂ³n disponibles para la encuesta de admisiÃƒÂ³n.
         /// </summary>
         /// <returns>Lista de motivos.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
@@ -204,7 +206,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las publicidades de elección disponibles para la encuesta de admisión.
+        /// Obtiene las publicidades de elecciÃƒÂ³n disponibles para la encuesta de admisiÃƒÂ³n.
         /// </summary>
         /// <returns>Lista de publicidades.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
@@ -225,9 +227,9 @@ namespace WebApiAdmisiones.Controllers
         #region BACHILLERATOS Y UNIVERSIDADES
 
         /// <summary>
-        /// Obtiene los bachilleratos para un año de bachiller dado.
+        /// Obtiene los bachilleratos para un aÃƒÂ±o de bachiller dado.
         /// </summary>
-        /// <param name="idAnioBachillerato">ID del año de bachillerato.</param>
+        /// <param name="idAnioBachillerato">ID del aÃƒÂ±o de bachillerato.</param>
         /// <returns>Lista de bachilleratos.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
@@ -243,10 +245,10 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene los datos de un año de bachiller por su ID.
+        /// Obtiene los datos de un aÃƒÂ±o de bachiller por su ID.
         /// </summary>
-        /// <param name="idAnioBachillerato">ID del año de bachillerato.</param>
-        /// <returns>Datos del año de bachiller.</returns>
+        /// <param name="idAnioBachillerato">ID del aÃƒÂ±o de bachillerato.</param>
+        /// <returns>Datos del aÃƒÂ±o de bachiller.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -261,10 +263,10 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las instituciones educativas para un país y estado dados.
+        /// Obtiene las instituciones educativas para un paÃƒÂ­s y estado dados.
         /// </summary>
-        /// <param name="codigoPais">Código del país.</param>
-        /// <param name="codigoEstado">Código del estado/departamento.</param>
+        /// <param name="codigoPais">CÃƒÂ³digo del paÃƒÂ­s.</param>
+        /// <param name="codigoEstado">CÃƒÂ³digo del estado/departamento.</param>
         /// <returns>Lista de instituciones educativas.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
@@ -301,7 +303,7 @@ namespace WebApiAdmisiones.Controllers
         #region POSTULACION A BECAS
 
         /// <summary>
-        /// Obtiene los fondos de beca disponibles según el nivel de un producto.
+        /// Obtiene los fondos de beca disponibles segÃƒÂºn el nivel de un producto.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <returns>Lista de tipos de descuento (fondos de beca).</returns>
@@ -323,9 +325,9 @@ namespace WebApiAdmisiones.Controllers
         #region INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
 
         /// <summary>
-        /// Obtiene la aceptación del reglamento estudiantil de la persona autenticada.
+        /// Obtiene la aceptaciÃƒÂ³n del reglamento estudiantil de la persona autenticada.
         /// </summary>
-        /// <returns>Datos de aceptación del reglamento.</returns>
+        /// <returns>Datos de aceptaciÃƒÂ³n del reglamento.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -340,9 +342,9 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interés registrado y no está inscripta.
+        /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interÃƒÂ©s registrado y no estÃƒÂ¡ inscripta.
         /// </summary>
-        /// <returns>Lista de productos vigentes con interés.</returns>
+        /// <returns>Lista de productos vigentes con interÃƒÂ©s.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -357,9 +359,9 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene los productos de interés de la persona autenticada que aún no tienen inscripción confirmada.
+        /// Obtiene los productos de interÃƒÂ©s de la persona autenticada que aÃƒÂºn no tienen inscripciÃƒÂ³n confirmada.
         /// </summary>
-        /// <returns>Lista de productos de interés.</returns>
+        /// <returns>Lista de productos de interÃƒÂ©s.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -375,15 +377,15 @@ namespace WebApiAdmisiones.Controllers
 
         #endregion INSCRIPCION DE ALUMNOS FRESCOS A PRODUCTOS
 
-        #region INSCRIPCION — WORKFLOW
+        #region INSCRIPCION Ã¢â‚¬â€ WORKFLOW
 
         /// <summary>
-        /// Indica si la persona autenticada tiene una inscripción activa en VD_ES_FRESCO_ADMISION
+        /// Indica si la persona autenticada tiene una inscripciÃƒÂ³n activa en VD_ES_FRESCO_ADMISION
         /// para el producto y proceso dados.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe inscripción activa, false en caso contrario.</returns>
+        /// <returns>true si existe inscripciÃƒÂ³n activa, false en caso contrario.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("InscripcionActivaParaProceso")]
@@ -398,7 +400,7 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Obtiene las inscripciones en curso (workflow sin finalizar ni cancelar) de la persona autenticada.
         /// </summary>
-        /// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripción.</returns>
+        /// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripciÃƒÂ³n.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("InscripcionesPendientes")]
@@ -413,7 +415,7 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Obtiene las inscripciones canceladas de la persona autenticada.
         /// </summary>
-        /// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripción.</returns>
+        /// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripciÃƒÂ³n.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("InscripcionesCanceladas")]
@@ -426,7 +428,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las ofertas disponibles para inscripción de alumno fresco,
+        /// Obtiene las ofertas disponibles para inscripciÃƒÂ³n de alumno fresco,
         /// dado un producto, proceso y turno.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
@@ -446,7 +448,7 @@ namespace WebApiAdmisiones.Controllers
 
         /// <summary>
         /// Obtiene el historial de inscripciones realizadas por la persona autenticada,
-        /// en productos de nivel 1 o 2 con proceso habilitado. Una entrada por producto (la más antigua).
+        /// en productos de nivel 1 o 2 con proceso habilitado. Una entrada por producto (la mÃƒÂ¡s antigua).
         /// </summary>
         /// <returns>Lista de inscripciones realizadas.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
@@ -463,7 +465,7 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Obtiene los productos elegibles para beca de la persona autenticada:
         /// combina inscripciones realizadas, pendientes en workflow e intereses activos.
-        /// Un registro por producto (el más antiguo por fecha de inscripción).
+        /// Un registro por producto (el mÃƒÂ¡s antiguo por fecha de inscripciÃƒÂ³n).
         /// </summary>
         /// <returns>Lista de productos beca.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
@@ -478,12 +480,12 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Indica si la persona autenticada tiene una inscripción en T_INSCRIPTO (sin baja)
+        /// Indica si la persona autenticada tiene una inscripciÃƒÂ³n en T_INSCRIPTO (sin baja)
         /// para el producto y proceso dados.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe la inscripción, false en caso contrario.</returns>
+        /// <returns>true si existe la inscripciÃƒÂ³n, false en caso contrario.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("InscripcionPorProductoProceso")]
@@ -495,7 +497,7 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        #endregion INSCRIPCION — WORKFLOW
+        #endregion INSCRIPCION Ã¢â‚¬â€ WORKFLOW
 
         #region IMAGEN / DOCUMENTOS
 
@@ -522,13 +524,13 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene el documento de identidad (cédula) del alumno autenticado.
+        /// Obtiene el documento de identidad (cÃƒÂ©dula) del alumno autenticado.
         /// </summary>
         /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>
         /// <returns>Imagen JPEG del documento.</returns>
         /// <response code="200">Imagen obtenida correctamente.</response>
-        /// <response code="204">El documento está vencido.</response>
-        /// <response code="400">Tipo de documento inválido.</response>
+        /// <response code="204">El documento estÃƒÂ¡ vencido.</response>
+        /// <response code="400">Tipo de documento invÃƒÂ¡lido.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
         [HttpGet("DocumentoAlumno")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
@@ -548,18 +550,66 @@ namespace WebApiAdmisiones.Controllers
             return File(result.Data, "image/jpeg");
         }
 
+        /// <summary>
+        /// Sube la foto del alumno autenticado.
+        /// </summary>
+        /// <param name="request">JSON con el nombre del archivo y los bytes de la imagen.</param>
+        /// <returns>true si la foto se guardÃ³ correctamente.</returns>
+        /// <response code="200">Archivo guardado correctamente.</response>
+        /// <response code="400">Request inválido o archivo no permitido.</response>
+        /// <response code="404">No se encontrÃ³ la persona autenticada.</response>
+        [HttpPost("SubirFotoAlumno")]
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult SubirFotoAlumno([FromBody] UploadArchivoRequest request)
+        {
+            var fileContent = request.Archivo ?? Array.Empty<byte>();
+            var fileName = string.IsNullOrWhiteSpace(request.NombreArchivo) ? "image.jpg" : request.NombreArchivo;
+            var result = _GeneralService.SubirFotoAlumno(_currentUser.GetUserId(), fileContent, fileName);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Sube un documento del alumno autenticado para el tipo y fecha de vencimiento indicados.
+        /// </summary>
+        /// <param name="request">JSON con tipo, fecha de vencimiento, nombre del archivo y bytes del documento.</param>
+        /// <returns>true si el documento se guardÃ³ correctamente.</returns>
+        /// <response code="200">Archivo guardado correctamente.</response>
+        /// <response code="400">Request inválido o archivo no permitido.</response>
+        /// <response code="404">No se encontrÃ³ la persona autenticada.</response>
+        [HttpPost("SubirDocumentoAlumno")]
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult SubirDocumentoAlumno([FromBody] UploadDocumentoAlumnoRequest request)
+        {
+            var fileContent = request.Archivo ?? Array.Empty<byte>();
+            var fileName = request.NombreArchivo ?? string.Empty;
+            var result = _GeneralService.SubirDocumentoAlumno(
+                _currentUser.GetUserId(),
+                request.Tipo,
+                request.Fecha,
+                fileContent,
+                fileName);
+
+            return ValidateResponse(result);
+        }
+
         #endregion IMAGEN / DOCUMENTOS
 
         #region ADMISIONES
 
         /// <summary>
         /// Obtiene la fecha de vencimiento de admisiones para el alumno autenticado,
-        /// calculada en base al proceso y los días hábiles.
+        /// calculada en base al proceso y los dÃƒÂ­as hÃƒÂ¡biles.
         /// </summary>
         /// <param name="idProceso">ID del proceso de admisiones seleccionado.</param>
         /// <returns>Fecha de vencimiento calculada.</returns>
         /// <response code="200">Fecha obtenida correctamente.</response>
-        /// <response code="400">Proceso inválido o sin fecha de comienzo.</response>
+        /// <response code="400">Proceso invÃƒÂ¡lido o sin fecha de comienzo.</response>
         [HttpGet("FechaVencimientoAdmisiones")]
         [ProducesResponseType(typeof(OperationResult<DateTime>), 200)]
         [ProducesResponseType(typeof(OperationResult<DateTime>), 400)]
@@ -577,7 +627,7 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idProceso">ID del proceso.</param>
         /// <returns>Lista de pruebas de beca vigentes.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Producto inválido.</response>
+        /// <response code="400">Producto invÃƒÂ¡lido.</response>
         [HttpGet("FondosDeBecaVigentes")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 400)]

@@ -1,21 +1,30 @@
-using AppLogic.Interfaces;
+﻿using AppLogic.Interfaces;
 using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
+using ConnectionContext;
 using Utilities;
 
 namespace AppLogic.Services
 {
     public class GeneralServices : IGeneralServices
     {
+        private static readonly List<string> AllowedDocumentExtensions =
+        [
+            ".pdf", ".jpg", ".jpeg", ".png"
+        ];
+
         private readonly IUnitOfWorkFactory _uowFactory;
+        private readonly IDbConnectionContext _dbConnectionContext;
 
         public GeneralServices(
-             IUnitOfWorkFactory uowFactory)
+             IUnitOfWorkFactory uowFactory,
+             IDbConnectionContext dbConnectionContext)
         {
             _uowFactory = uowFactory;
+            _dbConnectionContext = dbConnectionContext;
         }
 
         #region CONSULTAS GENERALES
@@ -422,7 +431,235 @@ namespace AppLogic.Services
             return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoAlumno));
         }
 
+        public OperationResult<bool> SubirFotoAlumno(long codigoPersona, byte[] fileContent, string fileName)
+        {
+            using var uow = _uowFactory.Create();
+
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona is null)
+            {
+                return OperationResult<bool>.IsFailed("GEN_SFA_01", nameof(SubirFotoAlumno), "Persona no encontrada.", 404);
+            }
+
+            var imagenExistente = uow.Imagens.GetFotoByPersona(codigoPersona);
+
+            if (imagenExistente is null)
+            {
+                var resultadoGuardado = GuardarFotoAlumno(
+                    persona,
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
+                    fileContent);
+
+                if (!resultadoGuardado.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoGuardado.ErrorCode,
+                        nameof(SubirFotoAlumno),
+                        resultadoGuardado.Message,
+                        resultadoGuardado.HttpCode);
+                }
+
+                uow.Imagens.Add(resultadoGuardado.Data!);
+            }
+            else
+            {
+                var resultadoModificacion = ModificarFotoAlumno(imagenExistente, fileContent);
+                if (!resultadoModificacion.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoModificacion.ErrorCode,
+                        nameof(SubirFotoAlumno),
+                        resultadoModificacion.Message,
+                        resultadoModificacion.HttpCode);
+                }
+
+                uow.Imagens.Update(imagenExistente);
+            }
+
+            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirFotoAlumno));
+        }
+
+        public OperationResult<bool> SubirDocumentoAlumno(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName)
+        {
+            if (tipo != 1 && tipo != 2)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_SDA_01",
+                    nameof(SubirDocumentoAlumno),
+                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
+                    400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona is null)
+            {
+                return OperationResult<bool>.IsFailed("GEN_SDA_02", nameof(SubirDocumentoAlumno), "Persona no encontrada.", 404);
+            }
+
+            var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+
+            if (documentoExistente is null)
+            {
+                var resultadoGuardado = GuardarDocumentoAlumno(
+                    codigoPersona,
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
+                    tipo,
+                    fecha,
+                    fileContent,
+                    fileName);
+
+                if (!resultadoGuardado.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoGuardado.ErrorCode,
+                        nameof(SubirDocumentoAlumno),
+                        resultadoGuardado.Message,
+                        resultadoGuardado.HttpCode);
+                }
+
+                uow.ImagenTemporals.Add(resultadoGuardado.Data!);
+            }
+            else
+            {
+                var resultadoModificacion = ModificarDocumentoAlumno(documentoExistente, tipo, fecha, fileContent, fileName);
+                if (!resultadoModificacion.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoModificacion.ErrorCode,
+                        nameof(SubirDocumentoAlumno),
+                        resultadoModificacion.Message,
+                        resultadoModificacion.HttpCode);
+                }
+
+                uow.ImagenTemporals.Update(documentoExistente);
+            }
+
+            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirDocumentoAlumno));
+        }
+
+        private static OperationResult<Imagen> GuardarFotoAlumno(Persona persona, int idImagen, byte[] fileContent)
+        {
+            if (fileContent == null || fileContent.Length == 0)
+                return OperationResult<Imagen>.IsFailed("GEN_SFA_03", nameof(GuardarFotoAlumno), "La imagen no puede estar vacía.", 400);
+
+            var imageValidation = FileValidationHelper.ValidateImageFile(
+                fileContent,
+                "image.jpg",
+                nameof(GuardarFotoAlumno));
+
+            if (!imageValidation.Success)
+            {
+                return OperationResult<Imagen>.IsFailed(
+                    "GEN_SFA_02",
+                    nameof(GuardarFotoAlumno),
+                    $"La imagen no es válida. Solo se permiten imágenes en formato JPG. Detalle: {imageValidation.Message}",
+                    400);
+            }
+
+            return OperationResult<Imagen>.Ok(
+                new Imagen
+                {
+                    IdImagen = idImagen,
+                    CodigoPersona = persona.CodigoPersona,
+                    NombreImagen = persona.CodigoPersona + "_3.jpg",
+                    TipoImagen = "3",
+                    BlobImagen = fileContent
+                },
+                nameof(GuardarFotoAlumno));
+        }
+
+        private static OperationResult<bool> ModificarFotoAlumno(Imagen existing, byte[] fileContent)
+        {
+            if (fileContent == null || fileContent.Length == 0)
+                return OperationResult<bool>.IsFailed("GEN_SFA_04", nameof(ModificarFotoAlumno), "La imagen no puede estar vacía.", 400);
+
+            var imageValidation = FileValidationHelper.ValidateImageFile(
+                fileContent,
+                "image.jpg",
+                nameof(ModificarFotoAlumno));
+
+            if (!imageValidation.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_SFA_05",
+                    nameof(ModificarFotoAlumno),
+                    $"La imagen no es válida. Solo se permiten imágenes en formato JPG. Detalle: {imageValidation.Message}",
+                    400);
+            }
+
+            existing.NombreImagen = (existing.CodigoPersona ?? 0) + "_3.jpg";
+            existing.TipoImagen = "3";
+            existing.BlobImagen = fileContent;
+            return OperationResult<bool>.Ok(true, nameof(ModificarFotoAlumno));
+        }
+
+        private static OperationResult<ImagenTemporal> GuardarDocumentoAlumno(long codigoPersona, int idImagenTemporal, int tipo, DateTime fecha, byte[] fileContent, string fileName)
+        {
+            var validacion = ValidarArchivoDocumentoAlumno(fileContent, fileName, nameof(GuardarDocumentoAlumno));
+            if (!validacion.Success)
+            {
+                return OperationResult<ImagenTemporal>.IsFailed(validacion.ErrorCode, nameof(GuardarDocumentoAlumno), validacion.Message, validacion.HttpCode);
+            }
+
+            var extension = Path.GetExtension(validacion.Data) ?? ".jpg";
+            var nombrePersistencia = $"{codigoPersona}_{tipo}{extension}";
+
+            return OperationResult<ImagenTemporal>.Ok(
+                new ImagenTemporal
+                {
+                    IdImagenTemporal = idImagenTemporal,
+                    CodigoPersona = codigoPersona,
+                    NombreImagen = nombrePersistencia,
+                    TipoImagen = tipo.ToString(),
+                    BlobImagen = fileContent,
+                    FechaVtoDocumentoPersona = fecha
+                },
+                nameof(GuardarDocumentoAlumno));
+        }
+
+        private static OperationResult<bool> ModificarDocumentoAlumno(ImagenTemporal existing, int tipo, DateTime fecha, byte[] fileContent, string fileName)
+        {
+            var validacion = ValidarArchivoDocumentoAlumno(fileContent, fileName, nameof(ModificarDocumentoAlumno));
+            if (!validacion.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    validacion.ErrorCode,
+                    nameof(ModificarDocumentoAlumno),
+                    validacion.Message,
+                    validacion.HttpCode);
+            }
+
+            var extension = Path.GetExtension(validacion.Data) ?? ".jpg";
+            existing.NombreImagen = $"{existing.CodigoPersona}_{tipo}{extension}";
+            existing.TipoImagen = tipo.ToString();
+            existing.BlobImagen = fileContent;
+            existing.FechaVtoDocumentoPersona = fecha;
+            return OperationResult<bool>.Ok(true, nameof(ModificarDocumentoAlumno));
+        }
+
+        private static OperationResult<string> ValidarArchivoDocumentoAlumno(byte[] fileContent, string fileName, string originMethod)
+        {
+            var validacion = FileValidationHelper.ValidateFile(fileContent, fileName, AllowedDocumentExtensions, originMethod);
+            if (!validacion.Success)
+            {
+                return OperationResult<string>.IsFailed(validacion.ErrorCode, originMethod, validacion.Message, validacion.HttpCode);
+            }
+
+            var nombreArchivo = FileValidationHelper.SanitizeFileName(fileName, AllowedDocumentExtensions, originMethod);
+            if (!nombreArchivo.Success)
+            {
+                return OperationResult<string>.IsFailed(nombreArchivo.ErrorCode, originMethod, nombreArchivo.Message, nombreArchivo.HttpCode);
+            }
+
+            return OperationResult<string>.Ok(nombreArchivo.Data!, originMethod);
+        }
+
         #endregion IMAGEN / DOCUMENTOS
+
 
         #region ADMISIONES
 
@@ -517,4 +754,10 @@ namespace AppLogic.Services
         #endregion HELPERS PRIVADOS
     }
 }
+
+
+
+
+
+
 

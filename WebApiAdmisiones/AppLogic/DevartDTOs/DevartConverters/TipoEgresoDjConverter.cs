@@ -43,6 +43,11 @@ namespace AppLogic.DevartDTOs
             target.Orden = source.Orden;
             target.Activo = source.Activo;
 
+            // Navigation Properties
+            if (level > 0) {
+              target.EgresoMensualNfDjs = source.EgresoMensualNfDjs.ToDtosWithRelated(level - 1);
+            }
+
             // User-defined partial method
             OnDtoCreating(source, target);
 

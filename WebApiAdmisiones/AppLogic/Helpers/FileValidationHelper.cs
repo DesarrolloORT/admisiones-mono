@@ -80,6 +80,30 @@ namespace AppLogic.Helpers
                     new byte[] { 0x50, 0x4B, 0x05, 0x06 }, // ZIP vacío
                     new byte[] { 0x50, 0x4B, 0x07, 0x08 }  // ZIP spanned
                 } 
+            },
+            { ".xls", new List<byte[]>
+                {
+                    new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }
+                }
+            },
+            { ".xlsx", new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 },
+                    new byte[] { 0x50, 0x4B, 0x05, 0x06 },
+                    new byte[] { 0x50, 0x4B, 0x07, 0x08 }
+                }
+            },
+            { ".ppt", new List<byte[]>
+                {
+                    new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }
+                }
+            },
+            { ".pptx", new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 },
+                    new byte[] { 0x50, 0x4B, 0x05, 0x06 },
+                    new byte[] { 0x50, 0x4B, 0x07, 0x08 }
+                }
             }
         };
 
@@ -91,7 +115,11 @@ namespace AppLogic.Helpers
             { ".jpeg", 5 * 1024 * 1024 },    // 5 MB para imágenes
             { ".png", 5 * 1024 * 1024 },     // 5 MB para imágenes
             { ".doc", 10 * 1024 * 1024 },    // 10 MB para documentos
-            { ".docx", 10 * 1024 * 1024 }    // 10 MB para documentos
+            { ".docx", 10 * 1024 * 1024 },   // 10 MB para documentos
+            { ".xls", 10 * 1024 * 1024 },    // 10 MB para planillas
+            { ".xlsx", 10 * 1024 * 1024 },   // 10 MB para planillas
+            { ".ppt", 10 * 1024 * 1024 },    // 10 MB para presentaciones
+            { ".pptx", 10 * 1024 * 1024 }    // 10 MB para presentaciones
         };
 
         /// <summary>

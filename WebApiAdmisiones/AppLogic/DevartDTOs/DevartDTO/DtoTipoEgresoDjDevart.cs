@@ -47,6 +47,12 @@ namespace AppLogic.DevartDTOs
         public string? Activo { get; set; }
 
         #endregion
+
+        #region Navigation Properties
+
+        public List<DtoEgresoMensualNfDjDevart> EgresoMensualNfDjs { get; set; }
+
+        #endregion
     }
 
 }

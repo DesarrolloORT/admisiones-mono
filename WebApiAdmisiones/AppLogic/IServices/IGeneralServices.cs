@@ -62,6 +62,8 @@ namespace AppLogic.Interfaces
         #region IMAGEN / DOCUMENTOS
         OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo);
         OperationResult<byte[]> ObtenerFotoAlumno(long codigoPersona);
+        OperationResult<bool> SubirFotoAlumno(long codigoPersona, byte[] fileContent, string fileName);
+        OperationResult<bool> SubirDocumentoAlumno(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName);
         #endregion IMAGEN / DOCUMENTOS
 
         #region ADMISIONES

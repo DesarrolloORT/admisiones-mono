@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Helpers;
+using WebApiAdmisiones.Models;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -104,6 +106,81 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult GetFormularioDeclaracionJuradaWebDetalle([FromQuery] long idInscriptoPrueba)
         {
             var result = fondoDeBecaServices.ObtenerFormularioDeclaracionJuradaWebDetalle(_currentUser.GetUserId(), idInscriptoPrueba);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Sube el archivo asociado a un ingreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="request">JSON con el ID del ingreso mensual, nombre del archivo y bytes del adjunto.</param>
+        /// <returns>true si el archivo se guardó correctamente.</returns>
+        /// <response code="200">Archivo guardado correctamente.</response>
+        /// <response code="400">Request inválido o archivo no permitido.</response>
+        /// <response code="404">No se encontró el ingreso mensual indicado.</response>
+        [HttpPost("SubirArchivoIngreso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult SubirArchivoIngreso([FromBody] UploadArchivoIngresoRequest request)
+        {
+            var fileContent = request.Archivo ?? Array.Empty<byte>();
+            var fileName = request.NombreArchivo ?? string.Empty;
+            var result = fondoDeBecaServices.SubirArchivoIngreso(
+                _currentUser.GetUserId(),
+                request.IdIngresoMensualNF,
+                fileContent,
+                fileName);
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Sube el archivo asociado a un egreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="request">JSON con el ID del egreso mensual, nombre del archivo y bytes del adjunto.</param>
+        /// <returns>true si el archivo se guardó correctamente.</returns>
+        /// <response code="200">Archivo guardado correctamente.</response>
+        /// <response code="400">Request inválido o archivo no permitido.</response>
+        /// <response code="404">No se encontró el egreso mensual indicado.</response>
+        [HttpPost("SubirArchivoEgreso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult SubirArchivoEgreso([FromBody] UploadArchivoEgresoRequest request)
+        {
+            var fileContent = request.Archivo ?? Array.Empty<byte>();
+            var fileName = request.NombreArchivo ?? string.Empty;
+            var result = fondoDeBecaServices.SubirArchivoEgreso(
+                _currentUser.GetUserId(),
+                request.IdEgresoMensualNF,
+                fileContent,
+                fileName);
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Sube el archivo de reválida asociado a una declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="request">JSON con el ID de la declaración jurada, nombre del archivo y bytes del adjunto.</param>
+        /// <returns>true si el archivo se guardó correctamente.</returns>
+        /// <response code="200">Archivo guardado correctamente.</response>
+        /// <response code="400">Request inválido o archivo no permitido.</response>
+        /// <response code="404">No se encontró la declaración jurada indicada.</response>
+        [HttpPost("SubirArchivoRevalidaDJ")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult SubirArchivoRevalidaDj([FromBody] UploadArchivoRevalidaDjRequest request)
+        {
+            var fileContent = request.Archivo ?? Array.Empty<byte>();
+            var fileName = request.NombreArchivo ?? string.Empty;
+            var result = fondoDeBecaServices.SubirArchivoRevalidaDJ(
+                _currentUser.GetUserId(),
+                request.IdDeclaracionJuradaWeb,
+                fileContent,
+                fileName);
+
             return ValidateResponse(result);
         }
 
