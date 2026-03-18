@@ -117,6 +117,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró el ingreso mensual indicado.</response>
+        /// <response code="403">El ingreso mensual no pertenece al usuario autenticado.</response>
         [HttpPost("SubirArchivoIngreso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -143,6 +144,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró el egreso mensual indicado.</response>
+        /// <response code="403">El egreso mensual no pertenece al usuario autenticado.</response>
         [HttpPost("SubirArchivoEgreso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -169,6 +171,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró la declaración jurada indicada.</response>
+        /// <response code="403">La declaracion jurada no pertenece al usuario autenticado.</response>
         [HttpPost("SubirArchivoRevalidaDJ")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]

@@ -405,7 +405,7 @@ namespace AppLogic.Services
                 return OperationResult<byte[]>.IsFailed("GEN_DA_02", nameof(ObtenerDocumentoAlumno), "Documento no encontrado.", 404);
 
             if (imagenTemporal.FechaVtoDocumentoPersona.HasValue && imagenTemporal.FechaVtoDocumentoPersona.Value < DateTime.Now)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoAlumno), "El documento se encuentra vencido.", 204);
+                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoAlumno), "El documento se encuentra vencido.", 409);
 
             if (imagenTemporal.BlobImagen == null || imagenTemporal.BlobImagen.Length == 0)
                 return OperationResult<byte[]>.IsFailed("GEN_DA_04", nameof(ObtenerDocumentoAlumno), "El documento no contiene imagen.", 404);
@@ -560,18 +560,14 @@ namespace AppLogic.Services
                     400);
             }
 
-            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".jpg";
-            }
+            var extension = ResolverExtensionPersistida(fileName, ".jpg");
 
             return OperationResult<Imagen>.Ok(
                 new Imagen
                 {
                     IdImagen = idImagen,
                     CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = persona.CodigoPersona + "_3" + extension,
+                    NombreImagen = ConstruirNombrePersistido(persona.CodigoPersona, 3, extension),
                     TipoImagen = "3",
                     BlobImagen = fileContent
                 },
@@ -597,13 +593,9 @@ namespace AppLogic.Services
                     400);
             }
 
-            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".jpg";
-            }
+            var extension = ResolverExtensionPersistida(fileName, ".jpg");
 
-            existing.NombreImagen = (existing.CodigoPersona ?? 0) + "_3" + extension;
+            existing.NombreImagen = ConstruirNombrePersistido(existing.CodigoPersona ?? 0, 3, extension);
             existing.TipoImagen = "3";
             existing.BlobImagen = fileContent;
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoAlumno));
@@ -617,13 +609,8 @@ namespace AppLogic.Services
                 return OperationResult<ImagenTemporal>.IsFailed(validacion.ErrorCode, nameof(GuardarDocumentoAlumno), validacion.Message, validacion.HttpCode);
             }
 
-            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".pdf";
-            }
-
-            var nombrePersistencia = $"{codigoPersona}_{tipo}{extension}";
+            var extension = ResolverExtensionPersistida(fileName, ".pdf");
+            var nombrePersistencia = ConstruirNombrePersistido(codigoPersona, tipo, extension);
 
             return OperationResult<ImagenTemporal>.Ok(
                 new ImagenTemporal
@@ -650,17 +637,23 @@ namespace AppLogic.Services
                     validacion.HttpCode);
             }
 
-            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".pdf";
-            }
-
-            existing.NombreImagen = $"{existing.CodigoPersona}_{tipo}{extension}";
+            var extension = ResolverExtensionPersistida(fileName, ".pdf");
+            existing.NombreImagen = ConstruirNombrePersistido(existing.CodigoPersona ?? 0, tipo, extension);
             existing.TipoImagen = tipo.ToString();
             existing.BlobImagen = fileContent;
             existing.FechaVtoDocumentoPersona = fecha;
             return OperationResult<bool>.Ok(true, nameof(ModificarDocumentoAlumno));
+        }
+
+        private static string ResolverExtensionPersistida(string fileName, string defaultExtension)
+        {
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            return string.IsNullOrWhiteSpace(extension) ? defaultExtension : extension;
+        }
+
+        private static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
+        {
+            return $"{codigoPersona}_{tipoImagen}{extension}";
         }
 
         #endregion IMAGEN / DOCUMENTOS

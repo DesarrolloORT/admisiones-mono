@@ -626,6 +626,38 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirArchivoEgreso_HappyPath_GuardaArchivo()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 1
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirArchivoEgreso(1, 10, jpegContent, "egreso.jpg");
+
+            Assert.True(result.Success);
+            Assert.Equal("egreso", egreso.NombreArchivoEgreso);
+            Assert.Equal(".jpg", egreso.ExtensionArchivoEgreso);
+            Assert.Equal(jpegContent, egreso.ArchivoEgresoMensualNfDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
         public void SubirArchivoRevalidaDJ_CuandoNoPerteneceALaPersona_ReturnsForbidden()
         {
             var declaracion = new DeclaracionJuradaWeb
@@ -646,6 +678,30 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("FDB_SAR_02", result.ErrorCode);
             Assert.Equal(403, result.HttpCode);
             _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirArchivoRevalidaDJ_HappyPath_GuardaArchivo()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 1
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoRevalidaDJ(1, 55, pdfContent, "revalida.pdf");
+
+            Assert.True(result.Success);
+            Assert.Equal("revalida", declaracion.NombrePdfRevalidasDj);
+            Assert.Equal(".pdf", declaracion.ExtensionPdfRevalidasDj);
+            Assert.Equal(pdfContent, declaracion.PdfFormRevalidasDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
         }
 
         #endregion UNIVERSIDADES
