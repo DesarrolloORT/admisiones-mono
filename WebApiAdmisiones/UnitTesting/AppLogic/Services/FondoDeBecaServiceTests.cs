@@ -474,6 +474,60 @@ namespace UnitTesting.AppLogic.Services
             Assert.Null(result.Data.ObjTipoVivienda);
         }
 
+        [Fact]
+        public void SubirArchivoEgreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 999
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirArchivoEgreso(1, 10, jpegContent, "egreso.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAE_02", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirArchivoRevalidaDJ_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 999
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoRevalidaDJ(1, 55, pdfContent, "revalida.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAR_02", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
         #endregion UNIVERSIDADES
     }
 }

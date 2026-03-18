@@ -40,6 +40,11 @@ namespace AppLogic.DevartDTOs
             target.FechaIngreso = source.FechaIngreso;
             target.HoraIngreso = source.HoraIngreso;
 
+            // Navigation Properties
+            if (level > 0) {
+              target.IntegranteNfDjs = source.IntegranteNfDjs.ToDtosWithRelated(level - 1);
+            }
+
             // User-defined partial method
             OnDtoCreating(source, target);
 

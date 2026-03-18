@@ -189,6 +189,8 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoEgresoMensualNfDjDevart> EgresoMensualNfDjs { get; set; }
 
+        public List<DtoIntegranteNfDjDevart> IntegranteNfDjs { get; set; }
+
         #endregion
     }
 

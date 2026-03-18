@@ -3609,6 +3609,38 @@
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="IntegranteNfDj" entity-set="IntegranteNfDjs" table="T_INTEGRANTE_NF_DJ" schema="CREADOR" p1:Guid="5bd15b90-61e4-484b-b6e1-e4e6c6dfea6b">
+    <id name="IdIntegranteNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="89bdc304-17a4-450e-9d26-dc43255b0ae7">
+      <column name="ID_INTEGRANTE_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdTipoParentesco" type="Decimal" p1:ValidateRequired="true" p1:Guid="6ac51ab4-7c1e-479b-b7d5-67398d385599">
+      <column name="ID_TIPO_PARENTESCO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreIntegranteNfDj" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="17ff953a-dccb-4da4-a77a-22fd2a61bddf">
+      <column name="NOMBRE_INTEGRANTE_NF_DJ" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="EdadIntegranteNfDj" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6d9a7e21-b22d-4edf-9192-13efb3d46ad8">
+      <column name="EDAD_INTEGRANTE_NF_DJ" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="ActividadIntegranteNfDj" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="d686b433-59f1-4c99-8940-2c80eebe52a4">
+      <column name="ACTIVIDAD_INTEGRANTE_NF_DJ" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DetalleOtroParentesco" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="3fb21a8d-b471-4824-93c0-899c8a7a2250">
+      <column name="DETALLE_OTRO_PARENTESCO" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdDeclaracionjuradaWeb" type="Decimal" p1:ValidateRequired="true" p1:Guid="6d01ff3a-b90f-4fc5-b5f7-82c7ceb34af5">
+      <column name="ID_DECLARACIONJURADA_WEB" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="d532e3da-a529-4806-960a-0adb345ec97a">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="a671c0b1-25ce-4d59-93bd-6799841deede">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="cbb2e9ed-868c-425f-afc2-06cb6a022dfd">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -4272,6 +4304,30 @@
       </end1>
       <end2 multiplicity="Many" name="EgresoMensualNfDjs" class="DeclaracionJuradaWeb" relation-class="EgresoMensualNfDj" lazy="False" p1:Guid="d3eb5cf4-a5a7-453a-a62a-40196bf9c841">
         <property name="IdDeclaracionjuradaWeb" />
+      </end2>
+    </association>
+    <association name="DeclaracionJuradaWeb_IntegranteNfDj" cardinality="OneToMany" p1:Guid="d3376a5c-802d-4400-bdc6-8c460fc5abab">
+      <end1 multiplicity="One" name="DeclaracionJuradaWeb" class="IntegranteNfDj" relation-class="DeclaracionJuradaWeb" constrained="True" lazy="False" p1:Guid="f11f3c17-deed-439e-a5fa-b44e927edcba">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end1>
+      <end2 multiplicity="Many" name="IntegranteNfDjs" class="DeclaracionJuradaWeb" relation-class="IntegranteNfDj" lazy="False" p1:Guid="19c9e4dd-cb2d-4981-a212-e04b6d5f5d2b">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end2>
+    </association>
+    <association name="TipoParentesco_IntegranteNfDj" cardinality="OneToMany" p1:Guid="a331af01-25cc-442a-96c6-cdff477ef312">
+      <end1 multiplicity="One" name="TipoParentesco" class="IntegranteNfDj" relation-class="TipoParentesco" constrained="True" lazy="False" p1:Guid="2934144a-b362-4613-a7f0-d95e84331942">
+        <property name="IdTipoParentesco" />
+      </end1>
+      <end2 multiplicity="Many" name="IntegranteNfDjs" class="TipoParentesco" relation-class="IntegranteNfDj" lazy="False" p1:Guid="14c44919-451d-494d-a1e0-31247bb56461">
+        <property name="IdTipoParentesco" />
+      </end2>
+    </association>
+    <association name="IntegranteNfDj_IngresoMensualNfDj" cardinality="OneToMany" p1:Guid="78605bd1-e3c7-44e1-abde-b1bbaf5d33cd">
+      <end1 multiplicity="One" name="IntegranteNfDj" class="IngresoMensualNfDj" relation-class="IntegranteNfDj" constrained="True" lazy="False" p1:Guid="e1bc273c-c069-4f27-a436-3b8149a46bb3">
+        <property name="IdIntegranteNfDj" />
+      </end1>
+      <end2 multiplicity="Many" name="IngresoMensualNfDjs" class="IntegranteNfDj" relation-class="IngresoMensualNfDj" lazy="False" p1:Guid="3f1ae9d2-b2ca-478f-9a53-147b3627c5c5">
+        <property name="IdIntegranteNfDj" />
       </end2>
     </association>
   </associations>

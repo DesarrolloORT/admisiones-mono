@@ -801,8 +801,10 @@ namespace UnitTesting.AppLogic.Services
         public void SubirFotoAlumno_JpegValido_ActualizaFoto()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            var persona = new Persona { CodigoPersona = 1 };
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(persona);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
 
             var imagenRepo = new Mock<IImagenRepository>();
             imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns((Imagen)null);
@@ -814,6 +816,9 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirFotoAlumno(1, jpegContent, "foto.jpg");
 
             Assert.True(result.Success);
+            Assert.Equal("1", persona.UsuarioModifFdp);
+            Assert.Equal("DBUSER", persona.UsuarioUltimaActualizacion);
+            Assert.True(persona.FechaUltimaActualizacion.HasValue);
             imagenRepo.Verify(r => r.Add(It.Is<Imagen>(i =>
                 i.IdImagen == 123 &&
                 i.CodigoPersona == 1 &&
@@ -824,11 +829,13 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_Png_ReturnsFailed()
+        public void SubirFotoAlumno_PngValido_ActualizaFoto()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            var persona = new Persona { CodigoPersona = 1 };
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(persona);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
 
             var imagenRepo = new Mock<IImagenRepository>();
             imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns((Imagen)null);
@@ -839,10 +846,53 @@ namespace UnitTesting.AppLogic.Services
 
             var result = _service.SubirFotoAlumno(1, pngContent, "foto.png");
 
-            Assert.False(result.Success);
-            Assert.Equal("GEN_SFA_02", result.ErrorCode);
-            _uowMock.Verify(u => u.Save(), Times.Never);
-            imagenRepo.Verify(r => r.Add(It.IsAny<Imagen>()), Times.Never);
+            Assert.True(result.Success);
+            Assert.Equal("1", persona.UsuarioModifFdp);
+            Assert.Equal("DBUSER", persona.UsuarioUltimaActualizacion);
+            imagenRepo.Verify(r => r.Add(It.Is<Imagen>(i =>
+                i.IdImagen == 123 &&
+                i.CodigoPersona == 1 &&
+                i.NombreImagen == "1_3.png" &&
+                i.TipoImagen == "3" &&
+                i.BlobImagen == pngContent)), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_ActualizaFechaDocumentoPersonaYAuditoria()
+        {
+            var fechaVencimiento = new DateTime(2030, 12, 31);
+            var persona = new Persona { CodigoPersona = 1 };
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            imagenTemporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL))
+                .Returns(456);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirDocumentoAlumno(1, 1, fechaVencimiento, pdfContent, "cedula.pdf");
+
+            Assert.True(result.Success);
+            Assert.Equal(fechaVencimiento, persona.FechaVtoDocumentoPersona);
+            Assert.Equal("1", persona.UsuarioModifFdp);
+            Assert.Equal("DBUSER", persona.UsuarioUltimaActualizacion);
+            Assert.True(persona.FechaUltimaActualizacion.HasValue);
+            imagenTemporalRepo.Verify(r => r.Add(It.Is<ImagenTemporal>(i =>
+                i.IdImagenTemporal == 456 &&
+                i.CodigoPersona == 1 &&
+                i.TipoImagen == "1" &&
+                i.FechaVtoDocumentoPersona == fechaVencimiento &&
+                i.BlobImagen == pdfContent)), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
         }
 
     }

@@ -193,6 +193,15 @@ namespace AppLogic.Services
                     404);
             }
 
+            if (!PerteneceAPersona(uow, egreso.IdDeclaracionjuradaWeb, codigoPersona))
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAE_02",
+                    nameof(SubirArchivoEgreso),
+                    "El egreso mensual indicado no pertenece a la persona autenticada.",
+                    403);
+            }
+
             egreso.NombreArchivoEgreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;
             egreso.ExtensionArchivoEgreso = Path.GetExtension(archivoValidado.Data) ?? string.Empty;
             egreso.ArchivoEgresoMensualNfDj = fileContent;
@@ -223,6 +232,15 @@ namespace AppLogic.Services
                     nameof(SubirArchivoRevalidaDJ),
                     "No se encontró la declaración jurada indicada.",
                     404);
+            }
+
+            if (declaracion.CodigoPersona != codigoPersona)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAR_02",
+                    nameof(SubirArchivoRevalidaDJ),
+                    "La declaración jurada indicada no pertenece a la persona autenticada.",
+                    403);
             }
 
             declaracion.NombrePdfRevalidasDj = Path.GetFileNameWithoutExtension(archivoValidado.Data);
@@ -277,6 +295,12 @@ namespace AppLogic.Services
             }
 
             return FileValidationHelper.SanitizeFileName(fileName, AllowedArchivoExtensions, methodName);
+        }
+
+        private static bool PerteneceAPersona(IUnitOfWork uow, decimal idDeclaracionJuradaWeb, long codigoPersona)
+        {
+            var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
+            return declaracion?.CodigoPersona == codigoPersona;
         }
     }
 }

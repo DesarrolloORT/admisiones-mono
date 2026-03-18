@@ -6,6 +6,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using ConnectionContext;
 using Utilities;
+using AppLogic.Utilities;
 
 namespace AppLogic.Services
 {
@@ -448,7 +449,8 @@ namespace AppLogic.Services
                 var resultadoGuardado = GuardarFotoAlumno(
                     persona,
                     _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
-                    fileContent);
+                    fileContent,
+                    fileName);
 
                 if (!resultadoGuardado.Success)
                 {
@@ -463,7 +465,7 @@ namespace AppLogic.Services
             }
             else
             {
-                var resultadoModificacion = ModificarFotoAlumno(imagenExistente, fileContent);
+                var resultadoModificacion = ModificarFotoAlumno(imagenExistente, fileContent, fileName);
                 if (!resultadoModificacion.Success)
                 {
                     return OperationResult<bool>.IsFailed(
@@ -476,6 +478,7 @@ namespace AppLogic.Services
                 uow.Imagens.Update(imagenExistente);
             }
 
+            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
             uow.Save();
             return OperationResult<bool>.Ok(true, nameof(SubirFotoAlumno));
         }
@@ -537,18 +540,20 @@ namespace AppLogic.Services
                 uow.ImagenTemporals.Update(documentoExistente);
             }
 
+            persona.FechaVtoDocumentoPersona = fecha;
+            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
             uow.Save();
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoAlumno));
         }
 
-        private static OperationResult<Imagen> GuardarFotoAlumno(Persona persona, int idImagen, byte[] fileContent)
+        private static OperationResult<Imagen> GuardarFotoAlumno(Persona persona, int idImagen, byte[] fileContent, string fileName)
         {
             if (fileContent == null || fileContent.Length == 0)
                 return OperationResult<Imagen>.IsFailed("GEN_SFA_03", nameof(GuardarFotoAlumno), "La imagen no puede estar vacía.", 400);
 
             var imageValidation = FileValidationHelper.ValidateImageFile(
                 fileContent,
-                "image.jpg",
+                fileName,
                 nameof(GuardarFotoAlumno));
 
             if (!imageValidation.Success)
@@ -556,8 +561,14 @@ namespace AppLogic.Services
                 return OperationResult<Imagen>.IsFailed(
                     "GEN_SFA_02",
                     nameof(GuardarFotoAlumno),
-                    $"La imagen no es válida. Solo se permiten imágenes en formato JPG. Detalle: {imageValidation.Message}",
+                    $"La imagen no es válida. Solo se permiten imágenes válidas en formato JPG, JPEG o PNG. Detalle: {imageValidation.Message}",
                     400);
+            }
+
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                extension = ".jpg";
             }
 
             return OperationResult<Imagen>.Ok(
@@ -565,21 +576,21 @@ namespace AppLogic.Services
                 {
                     IdImagen = idImagen,
                     CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = persona.CodigoPersona + "_3.jpg",
+                    NombreImagen = persona.CodigoPersona + "_3" + extension,
                     TipoImagen = "3",
                     BlobImagen = fileContent
                 },
                 nameof(GuardarFotoAlumno));
         }
 
-        private static OperationResult<bool> ModificarFotoAlumno(Imagen existing, byte[] fileContent)
+        private static OperationResult<bool> ModificarFotoAlumno(Imagen existing, byte[] fileContent, string fileName)
         {
             if (fileContent == null || fileContent.Length == 0)
                 return OperationResult<bool>.IsFailed("GEN_SFA_04", nameof(ModificarFotoAlumno), "La imagen no puede estar vacía.", 400);
 
             var imageValidation = FileValidationHelper.ValidateImageFile(
                 fileContent,
-                "image.jpg",
+                fileName,
                 nameof(ModificarFotoAlumno));
 
             if (!imageValidation.Success)
@@ -587,11 +598,17 @@ namespace AppLogic.Services
                 return OperationResult<bool>.IsFailed(
                     "GEN_SFA_05",
                     nameof(ModificarFotoAlumno),
-                    $"La imagen no es válida. Solo se permiten imágenes en formato JPG. Detalle: {imageValidation.Message}",
+                    $"La imagen no es válida. Solo se permiten imágenes válidas en formato JPG, JPEG o PNG. Detalle: {imageValidation.Message}",
                     400);
             }
 
-            existing.NombreImagen = (existing.CodigoPersona ?? 0) + "_3.jpg";
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                extension = ".jpg";
+            }
+
+            existing.NombreImagen = (existing.CodigoPersona ?? 0) + "_3" + extension;
             existing.TipoImagen = "3";
             existing.BlobImagen = fileContent;
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoAlumno));

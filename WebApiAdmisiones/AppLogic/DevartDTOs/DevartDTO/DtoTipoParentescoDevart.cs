@@ -39,6 +39,12 @@ namespace AppLogic.DevartDTOs
         public string? HoraIngreso { get; set; }
 
         #endregion
+
+        #region Navigation Properties
+
+        public List<DtoIntegranteNfDjDevart> IntegranteNfDjs { get; set; }
+
+        #endregion
     }
 
 }

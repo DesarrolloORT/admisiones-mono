@@ -56,6 +56,12 @@ namespace AppLogic.DevartDTOs
         public string? UsuarioIngreso { get; set; }
 
         #endregion
+
+        #region Navigation Properties
+
+        public DtoIntegranteNfDjDevart IntegranteNfDj { get; set; }
+
+        #endregion
     }
 
 }

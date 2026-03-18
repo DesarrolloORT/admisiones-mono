@@ -100,7 +100,6 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaServices>();
             services.AddScoped<IBandejaService, BandejaService>();
-            services.AddScoped<IProcesoComienzoServices, ProcesoComienzoServices>();
 
             // Servicio de correo
             services.AddScoped<EnvioMail>(_ =>
