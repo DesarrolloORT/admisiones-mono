@@ -120,6 +120,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("SubirArchivoIngreso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoIngreso([FromBody] UploadArchivoIngresoRequest request)
         {
@@ -145,6 +146,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("SubirArchivoEgreso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoEgreso([FromBody] UploadArchivoEgresoRequest request)
         {
@@ -170,6 +172,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("SubirArchivoRevalidaDJ")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoRevalidaDj([FromBody] UploadArchivoRevalidaDjRequest request)
         {

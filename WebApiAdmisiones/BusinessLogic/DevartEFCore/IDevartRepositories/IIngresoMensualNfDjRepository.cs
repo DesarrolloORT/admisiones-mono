@@ -10,5 +10,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IIngresoMensualNfDjRepository
     {
+        BusinessLogic.Entities.IngresoMensualNfDj? GetWithIntegranteYDeclaracion(decimal idIngresoMensualNfDj);
     }
 }

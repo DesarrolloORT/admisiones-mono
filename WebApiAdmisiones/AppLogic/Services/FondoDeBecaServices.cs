@@ -150,7 +150,7 @@ namespace AppLogic.Services
             }
 
             using var uow = _uowFactory.Create();
-            var ingreso = uow.IngresoMensualNfDjs.GetByKey(idIngresoMensualNF);
+            var ingreso = uow.IngresoMensualNfDjs.GetWithIntegranteYDeclaracion(idIngresoMensualNF);
 
             if (ingreso is null)
             {
@@ -159,6 +159,35 @@ namespace AppLogic.Services
                     nameof(SubirArchivoIngreso),
                     "No se encontró el ingreso mensual indicado.",
                     404);
+            }
+
+            var integrante = ingreso.IntegranteNfDj;
+            if (integrante is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAI_02",
+                    nameof(SubirArchivoIngreso),
+                    "No se encontró el integrante asociado al ingreso mensual indicado.",
+                    404);
+            }
+
+            var declaracion = integrante.DeclaracionJuradaWeb;
+            if (declaracion is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAI_03",
+                    nameof(SubirArchivoIngreso),
+                    "No se encontró la declaración jurada asociada al ingreso mensual indicado.",
+                    404);
+            }
+
+            if (declaracion.CodigoPersona != codigoPersona)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_SAI_04",
+                    nameof(SubirArchivoIngreso),
+                    "El ingreso mensual indicado no pertenece a la persona autenticada.",
+                    403);
             }
 
             ingreso.NombreArchivoIngreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;

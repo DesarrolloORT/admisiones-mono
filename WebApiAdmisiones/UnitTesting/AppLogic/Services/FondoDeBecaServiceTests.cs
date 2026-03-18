@@ -475,6 +475,126 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirArchivoIngreso_HappyPath_GuardaArchivo()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                IdIntegranteNfDj = 20,
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    IdDeclaracionjuradaWeb = 30,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 1
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoIngreso(1, 10, pdfContent, "ingreso.pdf");
+
+            Assert.True(result.Success);
+            Assert.Equal("ingreso", ingreso.NombreArchivoIngreso);
+            Assert.Equal(".pdf", ingreso.ExtensionArchivoIngreso);
+            Assert.Equal(pdfContent, ingreso.ArchivoIngresoNfDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void SubirArchivoIngreso_CuandoNoExisteIntegrante_ReturnsNotFound()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                IdIntegranteNfDj = 20,
+                IntegranteNfDj = null
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoIngreso(1, 10, pdfContent, "ingreso.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAI_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirArchivoIngreso_CuandoNoExisteDeclaracion_ReturnsNotFound()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                IdIntegranteNfDj = 20,
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    IdDeclaracionjuradaWeb = 30,
+                    DeclaracionJuradaWeb = null
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoIngreso(1, 10, pdfContent, "ingreso.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAI_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                IdIntegranteNfDj = 20,
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    IdDeclaracionjuradaWeb = 30,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 999
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoIngreso(1, 10, pdfContent, "ingreso.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAI_04", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
         public void SubirArchivoEgreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
         {
             var egreso = new EgresoMensualNfDj

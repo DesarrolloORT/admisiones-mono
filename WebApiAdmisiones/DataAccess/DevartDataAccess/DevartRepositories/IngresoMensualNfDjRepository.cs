@@ -13,5 +13,12 @@ namespace DataAccess.DevartRepositories
 {
     public partial class IngresoMensualNfDjRepository
     {
+        public BusinessLogic.Entities.IngresoMensualNfDj? GetWithIntegranteYDeclaracion(decimal idIngresoMensualNfDj)
+        {
+            return objectSet
+                .Include(i => i.IntegranteNfDj)
+                .ThenInclude(integrante => integrante.DeclaracionJuradaWeb)
+                .SingleOrDefault(i => i.IdIngresoMensualNfDj == idIngresoMensualNfDj);
+        }
     }
 }
