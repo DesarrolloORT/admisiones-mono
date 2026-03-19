@@ -78,6 +78,10 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        #endregion
+
+        #region DECLARACIÓN JURADA
+
         /// <summary>
         /// Devuelve el resumen de formularios de declaración jurada web vigentes del usuario autenticado.
         /// </summary>
@@ -190,6 +194,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        #endregion
+        #endregion DECLARACIÓN JURADA
     }
 }

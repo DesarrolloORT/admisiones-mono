@@ -72,6 +72,10 @@ namespace AppLogic.Services
                 nameof(ObtenerUniversidades));
         }
 
+        #endregion
+
+        #region DECLARACIÓN JURADA
+
         public OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
@@ -131,10 +135,6 @@ namespace AppLogic.Services
                 detalle,
                 nameof(ObtenerFormularioDeclaracionJuradaWebDetalle));
         }
-
-        #endregion
-
-        #region ARCHIVOS DECLARACIÓN JURADA
 
         public OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName)
         {
@@ -279,7 +279,7 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoRevalidaDJ));
         }
 
-        #endregion
+        #endregion DECLARACIÓN JURADA
 
         #region METODOS PRIVADOS
 

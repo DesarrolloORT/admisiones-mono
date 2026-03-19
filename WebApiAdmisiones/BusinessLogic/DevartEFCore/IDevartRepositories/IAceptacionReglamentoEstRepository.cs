@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IAceptacionReglamentoEstRepository
     {
         AceptacionReglamentoEst GetByPersona(long codigoPersona);
+        AceptacionReglamentoEst GetByPersonaProductoComienzo(long codigoPersona, long idProducto, long idComienzo);
     }
 }
