@@ -125,8 +125,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoIngreso([FromBody] UploadArchivoIngresoRequest request)
         {
-            var fileContent = request.Archivo ?? Array.Empty<byte>();
-            var fileName = request.NombreArchivo ?? string.Empty;
+            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
+            var fileName = request.ArchivoAdjunto.NombreArchivo ?? string.Empty;
             var result = fondoDeBecaServices.SubirArchivoIngreso(
                 _currentUser.GetUserId(),
                 request.IdIngresoMensualNF,
@@ -152,8 +152,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoEgreso([FromBody] UploadArchivoEgresoRequest request)
         {
-            var fileContent = request.Archivo ?? Array.Empty<byte>();
-            var fileName = request.NombreArchivo ?? string.Empty;
+            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
+            var fileName = request.ArchivoAdjunto.NombreArchivo ?? string.Empty;
             var result = fondoDeBecaServices.SubirArchivoEgreso(
                 _currentUser.GetUserId(),
                 request.IdEgresoMensualNF,
@@ -179,8 +179,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirArchivoRevalidaDj([FromBody] UploadArchivoRevalidaDjRequest request)
         {
-            var fileContent = request.Archivo ?? Array.Empty<byte>();
-            var fileName = request.NombreArchivo ?? string.Empty;
+            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
+            var fileName = request.ArchivoAdjunto.NombreArchivo ?? string.Empty;
             var result = fondoDeBecaServices.SubirArchivoRevalidaDJ(
                 _currentUser.GetUserId(),
                 request.IdDeclaracionJuradaWeb,

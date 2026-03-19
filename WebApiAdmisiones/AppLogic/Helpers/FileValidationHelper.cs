@@ -372,6 +372,22 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
+        /// Valida archivos adjuntos de declaración jurada (PDF o imágenes).
+        /// </summary>
+        /// <param name="fileContent">Contenido del archivo adjunto en bytes.</param>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el adjunto es válido.</returns>
+        public static OperationResult<bool> ValidateDeclaracionJuradaAttachment(
+            byte[] fileContent,
+            string fileName,
+            string originMethod)
+        {
+            var allowedExtensions = new List<string> { ".pdf", ".jpg", ".jpeg", ".png" };
+            return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
+        }
+
+        /// <summary>
         /// Valida archivos de documentos (PDF, DOC, DOCX).
         /// </summary>
         /// <param name="fileContent">Contenido del archivo de documento en bytes.</param>
@@ -784,6 +800,17 @@ namespace AppLogic.Helpers
             string originMethod)
         {
             return SanitizeFileName(fileNameWithoutExtension, extension, new List<string> { ".pdf" }, originMethod);
+        }
+
+        /// <summary>
+        /// Sanitiza el nombre de un archivo adjunto de declaración jurada.
+        /// </summary>
+        /// <param name="fileName">Nombre del archivo original.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
+        public static OperationResult<string> SanitizeDeclaracionJuradaAttachmentName(string fileName, string originMethod)
+        {
+            return SanitizeFileName(fileName, new List<string> { ".pdf", ".jpg", ".jpeg", ".png" }, originMethod);
         }
     }
 }

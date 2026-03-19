@@ -9,11 +9,6 @@ namespace AppLogic.Services
 {
     public class FondoDeBecaServices : IFondoDeBecaServices
     {
-        private static readonly List<string> AllowedArchivoExtensions =
-        [
-            ".pdf", ".jpg", ".jpeg", ".png"
-        ];
-
         private readonly IUnitOfWorkFactory _uowFactory;
 
         public FondoDeBecaServices(IUnitOfWorkFactory uowFactory)
@@ -136,6 +131,10 @@ namespace AppLogic.Services
                 detalle,
                 nameof(ObtenerFormularioDeclaracionJuradaWebDetalle));
         }
+
+        #endregion
+
+        #region ARCHIVOS DECLARACIÓN JURADA
 
         public OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName)
         {
@@ -282,6 +281,8 @@ namespace AppLogic.Services
 
         #endregion
 
+        #region METODOS PRIVADOS
+
         private static DtoDeclaracionJuradaWebDevart MapDeclaracionBase(BusinessLogic.Entities.DeclaracionJuradaWeb entity)
         {
             var dto = entity.ToDto();
@@ -313,7 +314,7 @@ namespace AppLogic.Services
 
         private static OperationResult<string> ValidarArchivoAdjunto(byte[] fileContent, string fileName, string methodName)
         {
-            var validacion = FileValidationHelper.ValidateFile(fileContent, fileName, AllowedArchivoExtensions, methodName);
+            var validacion = FileValidationHelper.ValidateDeclaracionJuradaAttachment(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<string>.IsFailed(
@@ -323,7 +324,7 @@ namespace AppLogic.Services
                     validacion.HttpCode);
             }
 
-            return FileValidationHelper.SanitizeFileName(fileName, AllowedArchivoExtensions, methodName);
+            return FileValidationHelper.SanitizeDeclaracionJuradaAttachmentName(fileName, methodName);
         }
 
         private static bool PerteneceAPersona(IUnitOfWork uow, decimal idDeclaracionJuradaWeb, long codigoPersona)
@@ -331,5 +332,8 @@ namespace AppLogic.Services
             var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
             return declaracion?.CodigoPersona == codigoPersona;
         }
+
+        #endregion METODOS PRIVADOS
+
     }
 }

@@ -2,30 +2,39 @@ using System;
 
 namespace WebApiAdmisiones.Models
 {
-    public class UploadArchivoRequest
+    public class ArchivoPayload
     {
         public string? NombreArchivo { get; set; }
         public byte[]? Archivo { get; set; }
     }
 
-    public class UploadDocumentoAlumnoRequest : UploadArchivoRequest
+    public class SubirFotoAlumnoRequest
+    {
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
+    }
+
+    public class UploadDocumentoAlumnoRequest
     {
         public int Tipo { get; set; }
         public DateTime Fecha { get; set; }
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
-    public class UploadArchivoIngresoRequest : UploadArchivoRequest
+    public class UploadArchivoIngresoRequest
     {
         public long IdIngresoMensualNF { get; set; }
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
-    public class UploadArchivoEgresoRequest : UploadArchivoRequest
+    public class UploadArchivoEgresoRequest
     {
         public long IdEgresoMensualNF { get; set; }
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
-    public class UploadArchivoRevalidaDjRequest : UploadArchivoRequest
+    public class UploadArchivoRevalidaDjRequest
     {
         public long IdDeclaracionJuradaWeb { get; set; }
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 }
