@@ -273,24 +273,6 @@ namespace UnitTesting.Extensions
         }
 
         [Fact]
-        public void AddDomainServices_RegistersIGeneralServices()
-        {
-            // Arrange
-            SetupEnvironmentMock("Development");
-            var configuration = BuildConfiguration();
-
-            // Act
-            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
-
-            // Assert
-            var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(IGeneralServices) &&
-                sd.ImplementationType == typeof(GeneralServices) &&
-                sd.Lifetime == ServiceLifetime.Scoped);
-            Assert.NotNull(descriptor);
-        }
-
-        [Fact]
         public void AddDomainServices_RegistersIBandejaService()
         {
             // Arrange
@@ -309,7 +291,7 @@ namespace UnitTesting.Extensions
         }
 
         [Fact]
-        public void AddDomainServices_RegistersIPersonaService()
+        public void AddDomainServices_RegistersILoginService()
         {
             // Arrange
             SetupEnvironmentMock("Development");
@@ -320,10 +302,25 @@ namespace UnitTesting.Extensions
 
             // Assert
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(IPersonaService) &&
-                sd.ImplementationType == typeof(PersonaService) &&
+                sd.ServiceType == typeof(ILoginService) &&
+                sd.ImplementationType == typeof(LoginService) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersDomainServices()
+        {
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPreinscripcionService) && sd.ImplementationType == typeof(PreinscripcionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaAdmisionService) && sd.ImplementationType == typeof(PersonaAdmisionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));
         }
 
         [Fact]
@@ -536,8 +533,12 @@ namespace UnitTesting.Extensions
 
             // Assert - Verify all application services are registered
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICurrentUserService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IGeneralServices)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBandejaService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPreinscripcionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaAdmisionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService)));
             
         }
 
@@ -573,7 +574,7 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILdap)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITokenService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IRefreshTokenService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILoginService)));
         }
 
         #endregion
@@ -600,9 +601,17 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ICurrentUserService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IGeneralServices)));
+                sd.ServiceType == typeof(ILoginService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IPersonaService)));
+                sd.ServiceType == typeof(ICatalogosService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IInscripcionesService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IPreinscripcionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IPersonaAdmisionService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
+                sd.ServiceType == typeof(IBecasService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ITokenService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
@@ -672,7 +681,8 @@ namespace UnitTesting.Extensions
             return new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    { "SoapSettings:ServiosOffice365Url", "https://office365.example.com/api" }
+                    { "SoapSettings:ServiosOffice365Url", "https://office365.example.com/api" },
+                    { "Admisiones:IdSistemaAdmisiones", "25" }
                 })
                 .Build();
         }
@@ -682,7 +692,8 @@ namespace UnitTesting.Extensions
             return new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    { "SoapSettings:ServiosOffice365Url", mailUrl }
+                    { "SoapSettings:ServiosOffice365Url", mailUrl },
+                    { "Admisiones:IdSistemaAdmisiones", "25" }
                 })
                 .Build();
         }

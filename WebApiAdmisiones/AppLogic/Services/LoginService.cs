@@ -8,11 +8,7 @@ using Utilities;
 
 namespace AppLogic.Services;
 
-/// <summary>
-/// Servicio LDAP que actúa como pasamanos delegando la autenticación
-/// al proyecto Core/Autenticacion y resolviendo la entidad Persona.
-/// </summary>
-public class PersonaService : IPersonaService
+public class LoginService : ILoginService
 {
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
@@ -23,10 +19,10 @@ public class PersonaService : IPersonaService
     /// Constructor del servicio LDAP.
     /// </summary>
     /// <param name="ldap">Servicio de autenticación LDAP (Core/Autenticacion).</param>
-    /// <param name="empleosUowFactory">Factory para crear unidades de trabajo (Personas).</param>
+    /// <param name="admisionesUowFactory">Factory para crear unidades de trabajo (Personas).</param>
     /// <param name="tokenService">Servicio para la generación de tokens JWT.</param>
     /// <param name="refreshTokenService">Servicio para gestionar refresh tokens en la base de datos.</param>
-    public PersonaService(
+    public LoginService(
         ILdap ldap,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
         IGenericRepository genericRepository,
@@ -224,4 +220,3 @@ public class PersonaService : IPersonaService
         }
     }
 }
-
