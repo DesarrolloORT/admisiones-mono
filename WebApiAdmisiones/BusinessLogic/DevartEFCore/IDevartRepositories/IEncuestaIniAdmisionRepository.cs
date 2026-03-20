@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IEncuestaIniAdmisionRepository
     {
         EncuestaIniAdmision GetByPersona(long codigoPersona);
+        EncuestaIniAdmision GetByPersonaProductoComienzo(long codigoPersona, long idProducto, long idComienzo);
     }
 }

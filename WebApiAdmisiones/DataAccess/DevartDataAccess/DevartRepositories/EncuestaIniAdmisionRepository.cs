@@ -27,5 +27,18 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault();
         }
 
+        public virtual BusinessLogic.Entities.EncuestaIniAdmision GetByPersonaProductoComienzo(
+            long codigoPersona,
+            long idProducto,
+            long idComienzo)
+        {
+            return objectSet
+                .Where(e => e.CodigoPersona == codigoPersona
+                         && e.IdProducto == idProducto
+                         && e.IdComienzo == idComienzo)
+                .OrderByDescending(e => e.FechaIngreso)
+                .FirstOrDefault();
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.Interfaces;
+using AppLogic.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -37,6 +38,24 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Actualiza los datos personales editables de la persona autenticada.
+        /// </summary>
+        /// <param name="request">Datos personales a actualizar.</param>
+        /// <returns>`true` si la actualización se realizó correctamente.</returns>
+        /// <response code="200">Datos actualizados correctamente.</response>
+        /// <response code="400">Los datos enviados son inválidos.</response>
+        /// <response code="404">No se encontró la persona autenticada.</response>
+        [HttpPut("Persona")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult ActualizarPersona([FromBody] ActualizarPersonaRequest request)
+        {
+            var result = personaAdmisionService.ActualizarPersona(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
         /// </summary>
         /// <returns>Datos de preinscripción.</returns>
@@ -50,6 +69,26 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerEncuestaInicialAdmision()
         {
             var result = personaAdmisionService.ObtenerEncuestaInicialAdmision(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Guarda los datos de la persona y registra la encuesta inicial de admisión.
+        /// </summary>
+        /// <param name="request">Datos de persona y encuesta a registrar.</param>
+        /// <returns>`true` si la encuesta se guardó correctamente.</returns>
+        /// <response code="200">Encuesta guardada correctamente.</response>
+        /// <response code="400">Los datos enviados son inválidos.</response>
+        /// <response code="404">No se encontró la persona, el producto o el proceso indicado.</response>
+        /// <response code="409">Ya existe una encuesta para la misma persona, producto y comienzo.</response>
+        [HttpPost("DatosPersonaEncuesta")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult GuardarDatosPersonaEncuesta([FromBody] GuardarDatosPersonaEncuestaRequest request)
+        {
+            var result = personaAdmisionService.GuardarDatosPersonaEncuesta(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 

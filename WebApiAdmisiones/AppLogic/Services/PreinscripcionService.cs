@@ -8,10 +8,12 @@ namespace AppLogic.Services
     public class PreinscripcionService : IPreinscripcionService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
+        private readonly IGeneralService _generalService;
 
-        public PreinscripcionService(IUnitOfWorkFactory uowFactory)
+        public PreinscripcionService(IUnitOfWorkFactory uowFactory, IGeneralService generalService)
         {
             _uowFactory = uowFactory;
+            _generalService = generalService;
         }
 
         public OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto)
@@ -37,52 +39,17 @@ namespace AppLogic.Services
 
         public OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso)
         {
-            using var uow = _uowFactory.Create();
-
-            var proceso = uow.Procesos.GetByKey(idProceso);
-            if (proceso?.ComienzoSemestre1Proceso == null)
-                return OperationResult<DateTime>.IsFailed("GEN_FVA_01", nameof(ObtenerFechaVencimientoAdmisiones),
-                    "Problema con la carga de fecha del comienzo del proceso.", 400);
-
-            var fechaComienzoSemestre = proceso.ComienzoSemestre1Proceso.Value;
-            var fechaActual = DateTime.Now;
-            const int cantDiasHabiles = 5;
-
-            DateTime fechaVencimiento;
-            if (fechaActual >= fechaComienzoSemestre)
+            var result = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, idProceso);
+            if (!result.Success)
             {
-                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, 1, false);
-            }
-            else if (fechaActual > AddDiasHabilesaFecha(uow, fechaComienzoSemestre, cantDiasHabiles, true))
-            {
-                fechaVencimiento = fechaComienzoSemestre;
-            }
-            else
-            {
-                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, cantDiasHabiles, false);
+                return OperationResult<DateTime>.IsFailed(
+                    result.ErrorCode,
+                    nameof(ObtenerFechaVencimientoAdmisiones),
+                    result.Message,
+                    result.HttpCode);
             }
 
-            var declaracion = uow.DeclaracionJuradaWebs.GetFechaEntregaDjAdmisiones(codigoPersona);
-            if (declaracion.HasValue && declaracion.Value < fechaVencimiento)
-                fechaVencimiento = declaracion.Value;
-
-            return OperationResult<DateTime>.Ok(fechaVencimiento, nameof(ObtenerFechaVencimientoAdmisiones));
-        }
-
-        private static DateTime AddDiasHabilesaFecha(
-            IUnitOfWork uow, DateTime fecha, int cantDias, bool restar)
-        {
-            int signo = restar ? -1 : 1;
-            int diasContados = 0;
-            while (diasContados < cantDias)
-            {
-                fecha = fecha.AddDays(signo);
-                if (fecha.DayOfWeek != DayOfWeek.Saturday
-                    && fecha.DayOfWeek != DayOfWeek.Sunday
-                    && !uow.Feriados.EsFeriado(fecha))
-                    diasContados++;
-            }
-            return fecha;
+            return OperationResult<DateTime>.Ok(result.Data, nameof(ObtenerFechaVencimientoAdmisiones));
         }
     }
 }
