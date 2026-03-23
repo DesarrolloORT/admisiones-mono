@@ -1,4 +1,5 @@
 using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using AppLogic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -88,6 +89,23 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerFechaVencimientoAdmisiones([FromQuery] long idProceso)
         {
             var result = preinscripcionService.ObtenerFechaVencimientoAdmisiones(_currentUser.GetUserId(), idProceso);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene los datos resumidos de la preinscripción vigente del alumno autenticado.
+        /// </summary>
+        /// <returns>Resumen de producto, proceso, comienzo, turno, oferta y fecha de vencimiento.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="204">Sin datos de preinscripción.</response>
+        /// <response code="400">Error interno del servidor.</response>
+        [HttpGet("DatosPreInscripcion")]
+        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 204)]
+        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 400)]
+        public IActionResult ObtenerDatosPreInscripcion()
+        {
+            var result = preinscripcionService.ObtenerDatosPreInscripcion(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
