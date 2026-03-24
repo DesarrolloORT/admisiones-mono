@@ -116,7 +116,9 @@ namespace WebApiAdmisiones.Security
         private async Task WriteErrorResponseAsync(HttpContext context, string errorCode, int statusCode, string? exceptionMessage)
         {
             if (context.Response.HasStarted)
+            {
                 return;
+            }
 
                     context.Response.ContentType = "application/json";
             context.Response.StatusCode = statusCode;

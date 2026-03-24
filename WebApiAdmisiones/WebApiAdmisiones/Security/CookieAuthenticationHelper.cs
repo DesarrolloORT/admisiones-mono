@@ -28,7 +28,7 @@ namespace WebApiAdmisiones.Security
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = context.Request.IsHttps,   // false en HTTP local, true en producción HTTPS
+                Secure = true,   // false en HTTP local, true en producción HTTPS
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
@@ -49,7 +49,7 @@ namespace WebApiAdmisiones.Security
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = context.Request.IsHttps,   // false en HTTP local, true en producción HTTPS
+                Secure = true,   // false en HTTP local, true en producción HTTPS
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddDays(expiresInDays),
                 Path = "/",
@@ -88,7 +88,7 @@ namespace WebApiAdmisiones.Security
             var options = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = context.Request.IsHttps,
+                Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Path = "/"
             };

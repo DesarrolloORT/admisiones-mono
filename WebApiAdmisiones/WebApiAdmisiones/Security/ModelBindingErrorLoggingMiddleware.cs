@@ -54,7 +54,7 @@ namespace WebApiAdmisiones.Security
                 
                 // Si la entrada fue logueada por este middleware (no por el filtro), 
                 // también debemos loguear la salida aquí para mantener trazabilidad
-                if (!entradaLoggedByFilter)
+                if (!entradaLoggedByFilter && _logger.IsEnabled(LogLevel.Information))
                 {
                     var logSalida = LoggingHelper.FormatSalida(
                         context,
@@ -72,6 +72,8 @@ namespace WebApiAdmisiones.Security
                 // Si no se logueó entrada, loguear entrada aquí antes del error
                 if (!context.Items.ContainsKey(LoggingHelper.EntradaLoggedKey))
                 {
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
                     var logEntrada = LoggingHelper.FormatEntrada(
                         context,
                         nameof(ModelBindingErrorLoggingMiddleware),
@@ -79,6 +81,7 @@ namespace WebApiAdmisiones.Security
                         "Request con excepción",
                         correlationId);
                     _logger.LogInformation(ex, LogMessageTemplate, logEntrada);
+                    }
                     context.Items[LoggingHelper.EntradaLoggedKey] = true;
                 }
                 
@@ -96,6 +99,8 @@ namespace WebApiAdmisiones.Security
 
             if (!entradaLoggedByFilter)
             {
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
                 var logEntrada = LoggingHelper.FormatEntrada(
                     context,
                     nameof(ModelBindingErrorLoggingMiddleware),
@@ -103,6 +108,7 @@ namespace WebApiAdmisiones.Security
                     "Request procesado por middleware (no llegó al filtro)",
                     correlationId);
                 _logger.LogInformation(LogMessageTemplate, logEntrada);
+                }
                 context.Items[LoggingHelper.EntradaLoggedKey] = true;
             }
 

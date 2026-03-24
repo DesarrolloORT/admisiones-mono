@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+      - develop
+      - testing
+  workflow_dispatch:
+    inputs:
+      skip_quality_gate:
+        description: "Skip Quality Gate?"
+        required: false
+        default: "false"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,8 +21,8 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  DOCKERFILE_PATH: Empleos/WebApiEmpleos/Dockerfile
-  IMAGE_NAME: ghcr.io/desarrolloort/api-empleos
+  DOCKERFILE_PATH: WebApiAdmisiones/WebApiAdmisiones/Dockerfile
+  IMAGE_NAME: ghcr.io/desarrolloort/api-admisiones
 
 jobs:
   # ============================================================================
@@ -22,10 +30,11 @@ jobs:
   # Solo se ejecuta en main 
   # ============================================================================
   quality-gate-check:
-    name: Quality Gate & Docker Publish
+    name: Quality Gate Check
     runs-on: sonar-runner
     environment: production
     timeout-minutes: 15
+    if: github.ref_name == 'main' && github.event.inputs.skip_quality_gate != 'true'
 
     steps:
       - name: Poll SonarQube Quality Gate
@@ -53,34 +62,19 @@ jobs:
           $branchName = $env:BRANCH_NAME
           $encodedBranch = [uri]::EscapeDataString($branchName)
           
-          Write-Host "SonarQube URL: $sonarUrl"
-          Write-Host "Project Key: $projectKey"
-          Write-Host "Branch: $branchName"
-          
           for ($i = 1; $i -le $maxRetries; $i++) {
             try {
               $authHeader = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${sonarToken}:"))
               $headers = @{ Authorization = "Basic $authHeader" }
               $url = "${sonarUrl}/api/qualitygates/project_status?projectKey=${projectKey}&branch=${encodedBranch}"
               
-              Write-Host "Calling: $url"
-              
               $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get -ErrorAction Stop
-              
-              Write-Host "Response received: $($response | ConvertTo-Json -Depth 3)"
-              
               $qualityGateStatus = $response.projectStatus.status
               
               if (-not $qualityGateStatus) {
                 $qualityGateStatus = "UNKNOWN"
-                Write-Host "Status field not found in response"
               }
             } catch {
-              Write-Host "Error calling SonarQube API:"
-              Write-Host "Exception Message: $($_.Exception.Message)"
-              Write-Host "Full Error: $_"
-              
-              # Si es un error de analisis pendiente, esperar y reintentar
               if ($_.Exception.Message -match "pending" -or $_.Exception.Message -match "not found") {
                 $qualityGateStatus = "PENDING"
               } else {
@@ -90,23 +84,11 @@ jobs:
             
             Write-Host "Attempt $i/$maxRetries -> $qualityGateStatus"
             
-            if ($qualityGateStatus -eq "OK") {
-              break
-            }
-            
-            if ($qualityGateStatus -eq "ERROR") {
-              # En caso de ERROR, no salir inmediatamente, dar mas reintentos
-              if ($i -ge 3) {
-                break
-              }
-            }
-            
-            if ($qualityGateStatus -eq "NONE") {
-              break
-            }
+            if ($qualityGateStatus -eq "OK") { break }
+            if ($qualityGateStatus -eq "ERROR" -and $i -ge 3) { break }
+            if ($qualityGateStatus -eq "NONE") { break }
             
             if ($i -lt $maxRetries) {
-              Write-Host "Waiting $sleepSeconds seconds before next attempt..."
               Start-Sleep -Seconds $sleepSeconds
             }
           }
@@ -132,7 +114,26 @@ jobs:
             "**Quality Gate: FAILED**" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
             "The code does not meet the quality standards. Docker image will NOT be built." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           }
+  # ============================================================================
+  # Job intermedio: Log cuando se saltea el Quality Gate
+  # ============================================================================
+  log-skip:
+    name: Log Quality Gate Skip
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main' && github.event.inputs.skip_quality_gate == 'true'
 
+    steps:
+      - name: Log skip info
+        run: |
+          echo "?? Quality Gate SKIPPED" 
+          echo "Actor: ${{ github.actor }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          
+          echo "## ?? Quality Gate Skipped" >> $GITHUB_STEP_SUMMARY
+          echo "**Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
   # ============================================================================
   # Job 2: Build and Publish Docker Image
   # En main: solo si Quality Gate pasa
@@ -141,8 +142,15 @@ jobs:
   build-and-push:
     name: Build and Publish Docker Image
     runs-on: ubuntu-latest
-    needs: quality-gate-check
-    if: always() && (needs.quality-gate-check.result == 'success' || needs.quality-gate-check.result == 'skipped')
+    needs: [quality-gate-check, log-skip]
+    if: |
+      always() && 
+      (
+        (github.ref_name == 'main' && 
+          (needs.quality-gate-check.result == 'success' || github.event.inputs.skip_quality_gate == 'true')
+        ) ||
+        (github.ref_name == 'develop' || github.ref_name == 'testing')
+      )
 
     permissions:
       contents: read

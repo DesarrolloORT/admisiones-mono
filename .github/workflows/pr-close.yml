@@ -78,11 +78,11 @@ jobs:
           
           files.data.forEach(f => {
             const name = f.filename;
-            if (name.startsWith('Empleos/WebApiEmpleos/')) webApi++;
-            else if (name.startsWith('Empleos/AppLogic/')) appLogic++;
-            else if (name.startsWith('Empleos/BusinessLogic/')) businessLogic++;
-            else if (name.startsWith('Empleos/DataAccess/')) dataAccess++;
-            else if (name.startsWith('Empleos/UnitTesting/')) tests++;
+            if (name.startsWith('WebApiAdmisiones/WebApiAdmisiones/')) webApi++;
+            else if (name.startsWith('WebApiAdmisiones/AppLogic/')) appLogic++;
+            else if (name.startsWith('WebApiAdmisiones/BusinessLogic/')) businessLogic++;
+            else if (name.startsWith('WebApiAdmisiones/DataAccess/')) dataAccess++;
+            else if (name.startsWith('WebApiAdmisiones/UnitTesting/')) tests++;
           });
           
           let layersSummary = '';

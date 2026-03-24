@@ -23,8 +23,8 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  SOLUTION_PATH: Empleos/WebApiEmpleos.sln
-  TEST_PROJECT_PATH: Empleos/UnitTesting/UnitTesting.csproj
+  SOLUTION_PATH: WebApiAdmisiones/WebApiAdmisiones.sln
+  TEST_PROJECT_PATH: WebApiAdmisiones/UnitTesting/UnitTesting.csproj
 
 jobs:
   sonar-and-tests:
@@ -72,7 +72,7 @@ jobs:
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" ^
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" ^
             /d:sonar.scm.disabled=true ^
-            /d:sonar.exclusions="**/bin/**,**/obj/**,**/Properties/**,**/Empleos/AppLogic/DevartDTOs/**,**/Empleos/BusinessLogic/DevartEFCore/**,**/Empleos/DataAccess/DevartDataAccess/**,**/Core/**" ^
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/Properties/**,**/WebApiAdmisiones/AppLogic/DevartDTOs/**,**/WebApiAdmisiones/BusinessLogic/DevartEFCore/**,**/WebApiAdmisiones/DataAccess/DevartDataAccess/**,**/Core/**" ^
             /d:"sonar.inclusions=**/*.cs" ^
             /d:sonar.cs.opencover.reportsPaths=TestResults/**/coverage.opencover.xml ^
             /d:sonar.coverage.exclusions=**/Program.cs ^
@@ -89,7 +89,7 @@ jobs:
           dotnet test ${{ env.TEST_PROJECT_PATH }} ^
             --configuration Release ^
             --no-build ^
-            --settings Empleos/UnitTesting/tests.runsettings ^
+            --settings WebApiAdmisiones/UnitTesting/tests.runsettings ^
             --results-directory ./TestResults ^
             --logger "trx;LogFileName=test_results.trx" ^
             /p:CollectCoverage=true ^

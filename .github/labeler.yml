@@ -3,35 +3,35 @@
 # Referencia: https://github.com/actions/labeler
 #
 # NOTA: El submódulo Core tiene su propio workflow de labeler.
-#       Aquí solo se etiquetan cambios en FichaDePersona.
+#       Aquí solo se etiquetan cambios en ApiAdmisiones.
 
 # ═══════════════════════════════════════════════════════════════════
-# ETIQUETAS POR CAPA DE ARQUITECTURA (FichaDePersona)
+# ETIQUETAS POR CAPA DE ARQUITECTURA (ApiAdmisiones)
 # ═══════════════════════════════════════════════════════════════════
 
 # Capa de API (Controllers, Middlewares, Security)
 layer:api:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/WebApiFDP/**/*'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*'
 
 # Capa de Aplicación (Servicios, DTOs)
 layer:app-logic:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/**/*'
+          - 'WebApiAdmisiones/AppLogic/**/*'
 
 # Capa de Negocio (Entidades, Interfaces de repositorio)
 layer:business-logic:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/BusinessLogic/**/*'
+          - 'WebApiAdmisiones/BusinessLogic/**/*'
 
 # Capa de Acceso a Datos (Repositorios, DbContext)
 layer:data-access:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/DataAccess/**/*'
+          - 'WebApiAdmisiones/DataAccess/**/*'
 
 # ═══════════════════════════════════════════════════════════════════
 # ETIQUETAS POR TIPO DE ARCHIVO
@@ -43,60 +43,60 @@ layer:data-access:
 auto-generated:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/DevartDTOs/**/*'
-          - 'FichaDePersona/BusinessLogic/DevartEFCore/**/*'
-          - 'FichaDePersona/DataAccess/DevartDataAccess/**/*'
-          - 'FichaDePersona/AppLogic/**/*.Generated.cs'
-          - 'FichaDePersona/BusinessLogic/**/*.Generated.cs'
-          - 'FichaDePersona/DataAccess/**/*.Generated.cs'
-          - 'FichaDePersona/WebApiFDP/**/*.Generated.cs'
+          - 'WebApiAdmisiones/AppLogic/DevartDTOs/**/*'
+          - 'WebApiAdmisiones/BusinessLogic/DevartEFCore/**/*'
+          - 'WebApiAdmisiones/DataAccess/DevartDataAccess/**/*'
+          - 'WebApiAdmisiones/AppLogic/**/*.Generated.cs'
+          - 'WebApiAdmisiones/BusinessLogic/**/*.Generated.cs'
+          - 'WebApiAdmisiones/DataAccess/**/*.Generated.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*.Generated.cs'
 
 # DTOs (Data Transfer Objects) - solo código fuente, no tests
 type:dto:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/DTOs/**/*'
-          - 'FichaDePersona/AppLogic/DevartDTOs/**/*'
-          - 'FichaDePersona/AppLogic/**/*Dto*.cs'
-          - 'FichaDePersona/WebApiFDP/**/*Dto*.cs'
+          - 'WebApiAdmisiones/AppLogic/DTOs/**/*'
+          - 'WebApiAdmisiones/AppLogic/DevartDTOs/**/*'
+          - 'WebApiAdmisiones/AppLogic/**/*Dto*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Dto*.cs'
 
 # Servicios de aplicación - solo código fuente, no tests
 type:service:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/Services/**/*.cs'
-          - 'FichaDePersona/AppLogic/**/*Service.cs'
-          - 'FichaDePersona/AppLogic/**/*AppService.cs'
+          - 'WebApiAdmisiones/AppLogic/Services/**/*.cs'
+          - 'WebApiAdmisiones/AppLogic/**/*Service.cs'
+          - 'WebApiAdmisiones/AppLogic/**/*AppService.cs'
 
 # Interfaces - solo código fuente, no tests
 type:interface:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/IServices/**/*'
-          - 'FichaDePersona/BusinessLogic/IGenericRepository/**/*'
+          - 'WebApiAdmisiones/AppLogic/IServices/**/*'
+          - 'WebApiAdmisiones/BusinessLogic/IGenericRepository/**/*'
 
 # Repositorios - solo código fuente, no tests
 type:repository:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/DataAccess/GenericRepository/**/*'
-          - 'FichaDePersona/DataAccess/**/*Repository.cs'
+          - 'WebApiAdmisiones/DataAccess/GenericRepository/**/*'
+          - 'WebApiAdmisiones/DataAccess/**/*Repository.cs'
 
 # Controllers - solo código fuente, no tests
 type:controller:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/WebApiFDP/Controllers/**/*'
-          - 'FichaDePersona/WebApiFDP/**/*Controller.cs'
+          - 'WebApiAdmisiones/WebApiFDP/Controllers/**/*'
+          - 'WebApiAdmisiones/WebApiFDP/**/*Controller.cs'
 
 # Helpers y Utilities - solo código fuente, no tests
 type:helper:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/AppLogic/Helpers/**/*'
-          - 'FichaDePersona/AppLogic/Utilities/**/*'
-          - 'FichaDePersona/WebApiFDP/Helpers/**/*'
-          - 'FichaDePersona/WebApiFDP/Utilities/**/*'
+          - 'WebApiAdmisiones/AppLogic/Helpers/**/*'
+          - 'WebApiAdmisiones/AppLogic/Utilities/**/*'
+          - 'WebApiAdmisiones/WebApiFDP/Helpers/**/*'
+          - 'WebApiAdmisiones/WebApiFDP/Utilities/**/*'
 
 # ═══════════════════════════════════════════════════════════════════
 # ETIQUETAS DE DOCUMENTACIÓN Y CONFIGURACIÓN
@@ -107,7 +107,7 @@ documentation:
   - changed-files:
       - any-glob-to-any-file:
           - '*.md'
-          - 'FichaDePersona/**/*.md'
+          - 'WebApiAdmisiones/**/*.md'
           - 'docs/**/*'
 
 # Configuración de CI/CD y GitHub
@@ -120,17 +120,17 @@ ci/cd:
 build:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/**/*.csproj'
-          - 'FichaDePersona/**/*.sln'
-          - 'FichaDePersona/**/Directory.Build.props'
-          - 'FichaDePersona/**/nuget.config'
+          - 'WebApiAdmisiones/**/*.csproj'
+          - 'WebApiAdmisiones/**/*.sln'
+          - 'WebApiAdmisiones/**/Directory.Build.props'
+          - 'WebApiAdmisiones/**/nuget.config'
 
 # Configuración de aplicación
 config:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/**/appsettings*.json'
-          - 'FichaDePersona/**/*.config'
+          - 'WebApiAdmisiones/**/appsettings*.json'
+          - 'WebApiAdmisiones/**/*.config'
 
 # ═══════════════════════════════════════════════════════════════════
 # ETIQUETAS DE TESTS
@@ -140,10 +140,10 @@ config:
 tests:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/UnitTesting/**/*'
-          - 'FichaDePersona/**/*Tests.cs'
-          - 'FichaDePersona/**/*Test.cs'
-          - 'FichaDePersona/**/*.runsettings'
+          - 'WebApiAdmisiones/UnitTesting/**/*'
+          - 'WebApiAdmisiones/**/*Tests.cs'
+          - 'WebApiAdmisiones/**/*Test.cs'
+          - 'WebApiAdmisiones/**/*.runsettings'
 
 # ═══════════════════════════════════════════════════════════════════
 # ETIQUETAS DE SEGURIDAD Y INFRAESTRUCTURA
@@ -153,20 +153,20 @@ tests:
 security:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/WebApiFDP/Security/**/*'
-          - 'FichaDePersona/WebApiFDP/**/*Authentication*.cs'
-          - 'FichaDePersona/WebApiFDP/**/*Authorization*.cs'
-          - 'FichaDePersona/WebApiFDP/**/*Token*.cs'
-          - 'FichaDePersona/WebApiFDP/**/*Jwt*.cs'
-          - 'FichaDePersona/WebApiFDP/**/*Sanitize*.cs'
-          - 'FichaDePersona/AppLogic/**/*Authentication*.cs'
-          - 'FichaDePersona/AppLogic/**/*Authorization*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/Security/**/*'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Authentication*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Authorization*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Token*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Jwt*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Sanitize*.cs'
+          - 'WebApiAdmisiones/AppLogic/**/*Authentication*.cs'
+          - 'WebApiAdmisiones/AppLogic/**/*Authorization*.cs'
 
 # Docker y contenedores
 docker:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/**/Dockerfile*'
+          - 'WebApiAdmisiones/**/Dockerfile*'
           - 'docker-compose*.yml'
           - '.dockerignore'
 
@@ -174,7 +174,7 @@ docker:
 type:middleware:
   - changed-files:
       - any-glob-to-any-file:
-          - 'FichaDePersona/WebApiFDP/Middleware/**/*'
-          - 'FichaDePersona/WebApiFDP/**/*Middleware*.cs'
-          - 'FichaDePersona/WebApiFDP/Filters/**/*'
-          - 'FichaDePersona/WebApiFDP/**/*Filter*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/Middleware/**/*'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Middleware*.cs'
+          - 'WebApiAdmisiones/WebApiAdmisiones/Filters/**/*'
+          - 'WebApiAdmisiones/WebApiAdmisiones/**/*Filter*.cs'

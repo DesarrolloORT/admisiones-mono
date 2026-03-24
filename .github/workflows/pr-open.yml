@@ -171,19 +171,19 @@ jobs:
             const name = f.filename;
             
             // Categorizar por estructura del proyecto
-            if (name.startsWith('Empleos/WebApiEmpleos/')) {
+            if (name.startsWith('WebApiAdmisiones/WebApiAdmisiones/')) {
               categories['WebAPI (Controllers/Middlewares)'].push(name);
-            } else if (name.startsWith('Empleos/AppLogic/')) {
+            } else if (name.startsWith('WebApiAdmisiones/AppLogic/')) {
               if (name.includes('Dto') || name.includes('DTO') || name.includes('/DTOs/')) {
                 categories['DTOs'].push(name);
               } else {
                 categories['Servicios (AppLogic)'].push(name);
               }
-            } else if (name.startsWith('Empleos/BusinessLogic/')) {
+            } else if (name.startsWith('WebApiAdmisiones/BusinessLogic/')) {
               categories['Entidades (BusinessLogic)'].push(name);
-            } else if (name.startsWith('Empleos/DataAccess/')) {
+            } else if (name.startsWith('WebApiAdmisiones/DataAccess/')) {
               categories['Repositorios (DataAccess)'].push(name);
-            } else if (name.startsWith('Empleos/UnitTesting/') || name.includes('Test')) {
+            } else if (name.startsWith('WebApiAdmisiones/UnitTesting/') || name.includes('Test')) {
               categories['Tests'].push(name);
             } else if (name.startsWith('.github/')) {
               categories['CI/CD'].push(name);
