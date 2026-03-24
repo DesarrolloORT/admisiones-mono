@@ -328,7 +328,7 @@ namespace UnitTesting.Security
         }
 
         [Fact]
-        public async Task Invoke_LogsErrorAndRethrows_OnException()
+        public async Task Invoke_RethrowsException_WithoutLoggingWarning()
         {
             // Arrange
             var logger = new Mock<ILogger<ModelBindingErrorLoggingMiddleware>>();
@@ -344,14 +344,16 @@ namespace UnitTesting.Security
                 await CaptureResponseBodyAsync(context, () => middleware.Invoke(context))
             );
 
+            // Verificar que NO se logueó warning (se eliminó el log redundante)
+            // Solo se debe loguear la entrada como Information si no fue logueada antes
             logger.Verify(
                 l => l.Log(
-                    LogLevel.Error,
+                    LogLevel.Warning,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error en middleware de logging")),
-                    exception,
+                    It.IsAny<It.IsAnyType>(),
+                    null,
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
+                Times.Never);
         }
     }
 }

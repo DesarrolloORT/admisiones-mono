@@ -156,14 +156,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(5)]
         public string? ExtensionPdfRevalidasDj { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         public decimal? IdPdfRevalidasDjFront { get; set; }
 
         [StringLength(1)]
@@ -194,6 +186,10 @@ namespace AppLogic.DevartDTOs
         public DtoProductoDevart Producto { get; set; }
 
         public DtoTipoDescuentoDevart TipoDescuento { get; set; }
+
+        public List<DtoEgresoMensualNfDjDevart> EgresoMensualNfDjs { get; set; }
+
+        public List<DtoIntegranteNfDjDevart> IntegranteNfDjs { get; set; }
 
         #endregion
     }

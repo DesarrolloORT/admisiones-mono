@@ -60,6 +60,7 @@ namespace AppLogic.DevartDTOs
               target.EncuestaIniAdmisions = source.EncuestaIniAdmisions.ToDtosWithRelated(level - 1);
               target.SolicitudAltas = source.SolicitudAltas.ToDtosWithRelated(level - 1);
               target.Intere = source.Intere.ToDtoWithRelated(level - 1);
+              target.Actividads = source.Actividads.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

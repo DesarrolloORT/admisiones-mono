@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UserSecretsId>8abcadd3-75de-430d-8949-c94c1c570067</UserSecretsId>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="DevartDataAccess\DevartContext\" />
+		<Folder Include="DevartDataAccess\DevartRepositories\" />
+	</ItemGroup>
+</Project>

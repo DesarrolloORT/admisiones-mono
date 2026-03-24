@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
-using System.Web.Services.Description;
+using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Extensions
@@ -34,6 +34,7 @@ namespace WebApiAdmisiones.Extensions
             IConfiguration configuration,
             IWebHostEnvironment environment)
         {
+            // Conexión a partir del environment.
             services.AddScoped<IDbConnectionContext>(sp =>
             {
                 string? connectionString = Environment.GetEnvironmentVariable("OracleConnectionStringAdmisiones");
@@ -43,11 +44,11 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<DbConnectionContext>(sp =>
                 (DbConnectionContext)sp.GetRequiredService<IDbConnectionContext>());
 
-            // Interceptor de EF Core para logging estandarizado
+            // Interceptor de EF Core para logging estandarizado.
             services.AddScoped<EfCoreLoggingInterceptor>();
 
-            // DbContexts con configuración por ambiente
-            // Production y Preproduction NO habilitan logging sensible de BD
+            // DbContexts con configuración por ambiente.
+            // Production y Preproduction no habilitan logging sensible de BD.
             services.AddDbContext<ModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
@@ -64,16 +65,22 @@ namespace WebApiAdmisiones.Extensions
             services.AddDbContext<BandejaModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
-                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
+                var efCoreInterceptor = sp.GetRequiredService<EfCoreLoggingInterceptor>();
+
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection)
+                       .AddInterceptors(efCoreInterceptor);
             });
 
-            services.AddDbContext<ModGenericBaseDataAccess.GenericModelContext>((sp, options) =>
+            services.AddDbContext<GenericModelContext>((sp, options) =>
             {
                 var dbConnectionContext = sp.GetRequiredService<IDbConnectionContext>();
-                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection);
+                var efCoreInterceptor = sp.GetRequiredService<EfCoreLoggingInterceptor>();
+
+                options.UseOracle((System.Data.Common.DbConnection)dbConnectionContext.Connection)
+                       .AddInterceptors(efCoreInterceptor);
             });
 
-            // Repositorios y UoW
+            // Repositorios y UoW.
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
@@ -81,20 +88,24 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModGenericBaseDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
 
-            // Autenticación LDAP
+            // Servicios de autenticación (Core/Autenticacion).
             services.AddScoped<ILdap, Ldap>();
-            services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-            services.AddScoped<IAuthService, AuthService>();
 
-            // Servicios de aplicación
+            // Servicios de aplicación.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IGeneralServices, GeneralServices>();
+            services.AddScoped<IGeneralService, GeneralService>();
+            services.AddScoped<ICatalogosService, CatalogosService>();
+            services.AddScoped<IInscripcionesService, InscripcionesService>();
+            services.AddScoped<IPreinscripcionService, PreinscripcionService>();
+            services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
+            services.AddScoped<IBecasService, BecasService>();
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaServices>();
             services.AddScoped<IBandejaService, BandejaService>();
-            services.AddScoped<IProcesoComienzoServices, ProcesoComienzoServices>();
 
-            // Servicio de correo
+            // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 

@@ -2762,13 +2762,13 @@
     <property name="ExtensionPdfRevalidasDj" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="efd9f638-c580-4106-8ce6-4ef591526307">
       <column name="EXTENSION_PDF_REVALIDAS_DJ" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="7d818d49-85d3-4b02-ace4-549b8a40d2d0">
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="7d818d49-85d3-4b02-ace4-549b8a40d2d0" p1:GenerateDTO="False">
       <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="fa3fc9c4-b997-41c6-b4c3-050c14b13727">
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="fa3fc9c4-b997-41c6-b4c3-050c14b13727" p1:GenerateDTO="False">
       <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="490c2f96-e878-42c7-825d-b9c5eea2f5fa">
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="490c2f96-e878-42c7-825d-b9c5eea2f5fa" p1:GenerateDTO="False">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdPdfRevalidasDjFront" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="d8905002-bede-4fb1-9701-4c2ba8ebe1ee">
@@ -3393,6 +3393,254 @@
       <column name="PRUEBAS_FERIADO" default="'SI'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="PersonaAdmite" entity-set="PersonaAdmites" table="T_PERSONA_ADMITE" schema="CREADOR" p1:Guid="efd258d1-bb7a-4ca0-a700-c3e283e49dd8">
+    <id name="CodigoPersona" type="Int64" p1:ValidateRequired="true" p1:Guid="c8ea6c95-1881-40b9-a0e1-eaa49617f891">
+      <column name="CODIGO_PERSONA" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="NroAdmite2" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1a23a766-c1cf-46e5-8a3c-34dbfa4b3657">
+      <column name="NRO_ADMITE_2" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="EstadoAdmite" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="0d185a9b-9460-49a5-a136-7f9702d00eb9">
+      <column name="ESTADO_ADMITE" default="'NO'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="NroAdmite1" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="42df6353-2f07-4147-955a-e1c5df83f2c4">
+      <column name="NRO_ADMITE_1" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="2652da15-57da-430b-b1c8-5c576ace41a3">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="821b2695-0937-4e19-81a3-aff9a12ac91c">
+      <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f2907385-5e8a-4374-b122-e23a3fd0f27b">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ProcesadoPersonaAdmite" type="String" p1:nullable="True" p1:ValidateMaxLength="1" p1:ValidateRequired="false" p1:Guid="060aef5f-4a42-4861-a09b-4df464403590">
+      <column name="PROCESADO_PERSONA_ADMITE" default="'N'" not-null="False" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="ProcesahistoriaPersonaAdmite" type="String" p1:nullable="True" p1:ValidateMaxLength="1" p1:ValidateRequired="false" p1:Guid="e751f469-7273-458e-89d3-de8ed9e8b149">
+      <column name="PROCESAHISTORIA_PERSONA_ADMITE" default="'N'" not-null="False" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="PreferenciaPersonaAdmite" type="String" p1:nullable="True" p1:ValidateMaxLength="512" p1:ValidateRequired="false" p1:Guid="8ae4acf7-3412-4607-9f42-4e0e074cc52a">
+      <column name="PREFERENCIA_PERSONA_ADMITE" not-null="False" length="512" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaFrescoPersonaAdmite" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="82cc8891-b92c-4bd2-b869-85053f38c180">
+      <column name="FECHA_FRESCO_PERSONA_ADMITE" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="Actividad" entity-set="Actividads" table="T_ACTIVIDAD" schema="CREADOR" p1:Guid="c8bfb534-76b7-4468-a9a6-971322f21478">
+    <id name="IdActividad" type="Decimal" p1:ValidateRequired="true" p1:Guid="c1865e85-416d-4537-a505-f0d86d1db51a">
+      <column name="ID_ACTIVIDAD" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdFormaContacto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="fb4f4dae-c240-4c45-a719-193c6bcec4ea">
+      <column name="ID_FORMA_CONTACTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdTipoActividad" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="40ac0d2b-9935-481a-9152-26dfcd103a2f">
+      <column name="ID_TIPO_ACTIVIDAD" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdTipoAccion" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5c782cf7-5160-4d20-b227-ab2e5fe4741c">
+      <column name="ID_TIPO_ACCION" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdSeleccionPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c17b88bd-8730-4e51-bbd6-fd8702319169">
+      <column name="ID_SELECCION_PERSONA" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsernameAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="31" p1:ValidateRequired="false" p1:Guid="cb31e594-1585-4055-9746-13dae2641767">
+      <column name="USERNAME_ASIGNADO_ACTIVIDAD" not-null="False" length="31" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdGrupoTrabajo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="a906a82b-39fa-48aa-bc1f-4feb67011132">
+      <column name="ID_GRUPO_TRABAJO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaDesdeAsignadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="32960f2e-b3a4-4039-be90-6defc396ac3c">
+      <column name="FECHA_DESDE_ASIGNADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="FechaHastaAsignadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="405d1900-af0d-43d7-8a2e-3d19483fbaab">
+      <column name="FECHA_HASTA_ASIGNADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraDesdeAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="43b81543-daf0-4406-ab24-58f8583c2724">
+      <column name="HORA_DESDE_ASIGNADO_ACTIVIDAD" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="HoraHastaAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="1743c4ee-d984-4c71-bcee-852e7823457e">
+      <column name="HORA_HASTA_ASIGNADO_ACTIVIDAD" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdEstadoAccion" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="dfb6bb7a-bc25-4c35-91a1-79906170f285">
+      <column name="ID_ESTADO_ACCION" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsernameGeneradorActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="31" p1:ValidateRequired="false" p1:Guid="57c45db5-cf62-4f11-8358-bca0378e00fe">
+      <column name="USERNAME_GENERADOR_ACTIVIDAD" not-null="False" length="31" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaGeneradorActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0bd3aafe-4045-4fe4-af9f-f1d81a328ddf">
+      <column name="FECHA_GENERADOR_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="ObservacionesActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="500" p1:ValidateRequired="false" p1:Guid="09a490cd-4141-4734-b383-14a5cd3356c9">
+      <column name="OBSERVACIONES_ACTIVIDAD" not-null="False" length="500" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaRealizadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e202fec0-7f32-45e6-95e6-ae5b6850e752">
+      <column name="FECHA_REALIZADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="UsernameRealizadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="7732a3c3-4656-4f61-93ee-b03426c25089">
+      <column name="USERNAME_REALIZADO_ACTIVIDAD" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="61c12e43-9b9b-443a-a21d-9c41870647f8">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="68642589-284d-4a26-8021-842491e0067e">
+      <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="246392d3-68a0-4516-9f79-36a974bd0b99">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdEvento" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="7f0cca1a-da99-4663-bf5d-73c5c36c9dea">
+      <column name="ID_EVENTO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdProceso" type="Int64" p1:ValidateRequired="true" p1:Guid="61a6ed1e-823d-405a-b13d-0337ee3cc911">
+      <column name="ID_PROCESO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="RefreshToken" entity-set="RefreshTokens" table="T_REFRESH_TOKEN" schema="CREADOR" p1:Guid="011650a5-2d6a-4045-9e9f-8f748d87fc89">
+    <composite-id>
+      <key-property name="CodigoPersona" type="Int64" p1:ValidateRequired="true" p1:Guid="0d3c0601-24f9-4879-bff9-8c41da416693">
+        <column name="CODIGO_PERSONA" not-null="True" sql-type="NUMBER" p1:unicode="False" />
+      </key-property>
+      <key-property name="Sistema" type="String" primary-key-index="1" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="42e91875-9ed9-4d94-b8ce-e4a63e88b666">
+        <column name="SISTEMA" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+      </key-property>
+    </composite-id>
+    <property name="TokenHash" type="String" p1:ValidateMaxLength="200" p1:ValidateRequired="true" p1:Guid="ffb813e2-dce8-4897-a73d-8128adb1de05">
+      <column name="TOKEN_HASH" not-null="True" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ExpiresAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="2e3c34b2-575e-4ccd-850c-e9e623af684c">
+      <column name="EXPIRES_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="CreatedAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="9ee72a9f-cb5a-45b4-9b0d-219ac1dd5064">
+      <column name="CREATED_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="RevokedAt" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="17501676-4a59-4c10-813e-47027b052301">
+      <column name="REVOKED_AT" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="RemplaceByTokenId" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="d43ddbb8-0bc8-4fed-a3dc-83aeb7042482">
+      <column name="REMPLACE_BY_TOKEN_ID" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IsActive" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="704c8d8e-ee40-4888-b705-8741e1b86cc4">
+      <column name="IS_ACTIVE" default="'NO'" not-null="True" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="929cd9e1-a5c0-4d63-b6ab-378248052c9c">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="de246e44-dfd0-410d-8d1b-d41ff06c89d4">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="20629366-c9f5-49ec-bf07-43d401c50c4f">
+      <column name="USUARIO_INGRESO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="IngresoMensualNfDj" entity-set="IngresoMensualNfDjs" table="T_INGRESO_MENSUAL_NF_DJ" schema="CREADOR" p1:Guid="b8d7df5a-abec-4a26-9aef-ee4ebb9a8ba5">
+    <id name="IdIngresoMensualNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="4fb499cd-f2f6-43e4-9fae-cb2278f46c53">
+      <column name="ID_INGRESO_MENSUAL_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="NominalIngresoNfDj" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="91c7d3ac-afa2-44b0-935c-b98c4cd6a368">
+      <column name="NOMINAL_INGRESO_NF_DJ" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DescuentoslegalesIngresoNf" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e104d888-a7f5-4988-b218-daaa87673c0d">
+      <column name="DESCUENTOSLEGALES_INGRESO_NF" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="LiquidoIngresoNfDj" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="db4ee306-0385-404a-b304-57a81302b632">
+      <column name="LIQUIDO_INGRESO_NF_DJ" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="ArchivoIngresoNfDj" type="Blob" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="173e7326-15b6-45ee-9b9e-7036455b7f61">
+      <column name="ARCHIVO_INGRESO_NF_DJ" not-null="False" sql-type="BLOB" p1:unicode="False" />
+    </property>
+    <property name="IdIntegranteNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="ad25549f-436c-4376-8379-88440bd14dcb">
+      <column name="ID_INTEGRANTE_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdIngresoFront" type="String" p1:nullable="True" p1:ValidateMaxLength="50" p1:ValidateRequired="false" p1:Guid="d79d5b48-b182-477b-9123-d76842858ed9">
+      <column name="ID_INGRESO_FRONT" not-null="False" length="50" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ExtensionArchivoIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="ddaf0320-340d-49ac-a20f-61ebdc4c5d56">
+      <column name="EXTENSION_ARCHIVO_INGRESO" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="NombreArchivoIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="150" p1:ValidateRequired="false" p1:Guid="f9079032-0971-4d4a-8463-d63d966971cd">
+      <column name="NOMBRE_ARCHIVO_INGRESO" not-null="False" length="150" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="bd784451-a9c5-479b-99de-99d626340a42">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="cfba4108-f1df-48ea-ba38-4313c9ace0e9">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d5c88d37-e83c-4ea9-90f9-2625e1e54d28">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="EgresoMensualNfDj" entity-set="EgresoMensualNfDjs" table="T_EGRESO_MENSUAL_NF_DJ" schema="CREADOR" p1:Guid="12bcb268-9687-45cf-9140-654e045f4d69">
+    <id name="IdEgresoMensualNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="ba2aadb1-84e2-47c3-a479-97defcf08bb1">
+      <column name="ID_EGRESO_MENSUAL_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdTipoEgresoDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="7dc75857-403a-4e35-9f54-8dd0794b1737">
+      <column name="ID_TIPO_EGRESO_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MontoEgresoMensualNfDj" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="675eae32-1c9f-4b7f-ba09-324810bf712a">
+      <column name="MONTO_EGRESO_MENSUAL_NF_DJ" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="ArchivoEgresoMensualNfDj" type="Blob" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5b1dedb3-1aa8-473d-9131-60408060f3db">
+      <column name="ARCHIVO_EGRESO_MENSUAL_NF_DJ" not-null="False" sql-type="BLOB" p1:unicode="False" />
+    </property>
+    <property name="IdDeclaracionjuradaWeb" type="Decimal" p1:ValidateRequired="true" p1:Guid="b37df14c-8353-43c8-88b9-0be4d5bd309e">
+      <column name="ID_DECLARACIONJURADA_WEB" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DetalleOtroEgreso" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="cac3a416-fe69-436b-ac03-3c76ae228fe3">
+      <column name="DETALLE_OTRO_EGRESO" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdEgresoFront" type="String" p1:nullable="True" p1:ValidateMaxLength="50" p1:ValidateRequired="false" p1:Guid="74354e09-2951-46e6-8de9-278a3987fe1a">
+      <column name="ID_EGRESO_FRONT" not-null="False" length="50" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ExtensionArchivoEgreso" type="String" p1:nullable="True" p1:ValidateMaxLength="5" p1:ValidateRequired="false" p1:Guid="f29dc21d-a971-4463-ada3-4b88dd8b182f">
+      <column name="EXTENSION_ARCHIVO_EGRESO" not-null="False" length="5" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="NombreArchivoEgreso" type="String" p1:nullable="True" p1:ValidateMaxLength="150" p1:ValidateRequired="false" p1:Guid="a6785afc-c4f5-4c9a-bb71-860624eb9127">
+      <column name="NOMBRE_ARCHIVO_EGRESO" not-null="False" length="150" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="ee3c8a30-3fcd-4b42-9e95-6e1c41ef256c">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="969b0972-8fc8-4cf6-ad5f-7d29798a60f2">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="4945739e-00bf-438b-9bad-a5f5ac6ce3cf">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="IntegranteNfDj" entity-set="IntegranteNfDjs" table="T_INTEGRANTE_NF_DJ" schema="CREADOR" p1:Guid="5bd15b90-61e4-484b-b6e1-e4e6c6dfea6b">
+    <id name="IdIntegranteNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="89bdc304-17a4-450e-9d26-dc43255b0ae7">
+      <column name="ID_INTEGRANTE_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdTipoParentesco" type="Decimal" p1:ValidateRequired="true" p1:Guid="6ac51ab4-7c1e-479b-b7d5-67398d385599">
+      <column name="ID_TIPO_PARENTESCO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreIntegranteNfDj" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="17ff953a-dccb-4da4-a77a-22fd2a61bddf">
+      <column name="NOMBRE_INTEGRANTE_NF_DJ" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="EdadIntegranteNfDj" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6d9a7e21-b22d-4edf-9192-13efb3d46ad8">
+      <column name="EDAD_INTEGRANTE_NF_DJ" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="ActividadIntegranteNfDj" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="d686b433-59f1-4c99-8940-2c80eebe52a4">
+      <column name="ACTIVIDAD_INTEGRANTE_NF_DJ" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DetalleOtroParentesco" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="3fb21a8d-b471-4824-93c0-899c8a7a2250">
+      <column name="DETALLE_OTRO_PARENTESCO" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdDeclaracionjuradaWeb" type="Decimal" p1:ValidateRequired="true" p1:Guid="6d01ff3a-b90f-4fc5-b5f7-82c7ceb34af5">
+      <column name="ID_DECLARACIONJURADA_WEB" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="d532e3da-a529-4806-960a-0adb345ec97a">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="a671c0b1-25ce-4d59-93bd-6799841deede">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="cbb2e9ed-868c-425f-afc2-06cb6a022dfd">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -4008,6 +4256,78 @@
       </end1>
       <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="ba507567-9a7e-43b9-b317-2d2468ede231">
         <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Persona_PersonaAdmite" cardinality="OneToOne" p1:Guid="53272471-03ab-44ec-ac94-7f9ea5afb1c0">
+      <end1 multiplicity="One" name="Persona" class="PersonaAdmite" relation-class="Persona" constrained="True" lazy="False" p1:Guid="e9c425aa-66bf-4dba-8a51-73904feccb68">
+        <property name="CodigoPersona" />
+      </end1>
+      <end2 multiplicity="ZeroOrOne" name="PersonaAdmite" class="Persona" relation-class="PersonaAdmite" constrained="False" lazy="False" p1:Guid="be6ff4bc-abdf-4b28-94fa-ad07cf5155d2">
+        <property name="CodigoPersona" />
+      </end2>
+    </association>
+    <association name="Proceso_Actividad" cardinality="OneToMany" p1:Guid="42bb0c57-d6d2-477f-a6d3-1be17a59bbf8">
+      <end1 multiplicity="One" name="Proceso" class="Actividad" relation-class="Proceso" constrained="True" lazy="False" p1:Guid="878e8dde-609a-493f-a90c-3a5ddd8ff2f0">
+        <property name="IdProceso" />
+      </end1>
+      <end2 multiplicity="Many" name="Actividads" class="Proceso" relation-class="Actividad" lazy="False" p1:Guid="55932075-2059-42ce-a45f-52a2e85d3bce">
+        <property name="IdProceso" />
+      </end2>
+    </association>
+    <association name="Actividad_Accion" cardinality="OneToMany" p1:Guid="d0b62376-966b-4907-949e-8a934bec8530">
+      <end1 multiplicity="One" name="Actividad" class="Accion" relation-class="Actividad" constrained="True" lazy="False" p1:Guid="9028f791-3fb3-46b0-bcff-5835af34fc55">
+        <property name="IdActividad" />
+      </end1>
+      <end2 multiplicity="Many" name="Accions" class="Actividad" relation-class="Accion" lazy="False" p1:Guid="3c0883c2-897f-4bf8-b0c5-b76435a9c234">
+        <property name="IdActividad" />
+      </end2>
+    </association>
+    <association name="Persona_RefreshToken" cardinality="OneToMany" p1:Guid="d4d9bafb-8687-493c-b861-bc3f7fa9d4e1">
+      <end1 multiplicity="One" name="Persona" class="RefreshToken" relation-class="Persona" constrained="True" lazy="False" p1:Guid="c6e010b8-3d2a-4ec9-b200-97bcddb4acde">
+        <property name="CodigoPersona" />
+      </end1>
+      <end2 multiplicity="Many" name="RefreshTokens" class="Persona" relation-class="RefreshToken" lazy="False" p1:Guid="f06da042-12bf-4080-99cf-b4541d03bd6d">
+        <property name="CodigoPersona" />
+      </end2>
+    </association>
+    <association name="TipoEgresoDj_EgresoMensualNfDj" cardinality="OneToMany" p1:Guid="9b0e2685-9d30-4c0d-a2b9-c1db461f77c8">
+      <end1 multiplicity="One" name="TipoEgresoDj" class="EgresoMensualNfDj" relation-class="TipoEgresoDj" constrained="True" lazy="False" p1:Guid="5436da9d-573e-42bf-9d74-ba87b338ecd8">
+        <property name="IdTipoEgresoDj" />
+      </end1>
+      <end2 multiplicity="Many" name="EgresoMensualNfDjs" class="TipoEgresoDj" relation-class="EgresoMensualNfDj" lazy="False" p1:Guid="1fa6acbc-8c65-4bd5-8143-f9c48b7e1e83">
+        <property name="IdTipoEgresoDj" />
+      </end2>
+    </association>
+    <association name="DeclaracionJuradaWeb_EgresoMensualNfDj" cardinality="OneToMany" p1:Guid="5e548322-6ce6-4db8-ba33-6c18642bf14d">
+      <end1 multiplicity="One" name="DeclaracionJuradaWeb" class="EgresoMensualNfDj" relation-class="DeclaracionJuradaWeb" constrained="True" lazy="False" p1:Guid="dc92cd24-9454-4584-b5bb-42c971fa8141">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end1>
+      <end2 multiplicity="Many" name="EgresoMensualNfDjs" class="DeclaracionJuradaWeb" relation-class="EgresoMensualNfDj" lazy="False" p1:Guid="d3eb5cf4-a5a7-453a-a62a-40196bf9c841">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end2>
+    </association>
+    <association name="DeclaracionJuradaWeb_IntegranteNfDj" cardinality="OneToMany" p1:Guid="d3376a5c-802d-4400-bdc6-8c460fc5abab">
+      <end1 multiplicity="One" name="DeclaracionJuradaWeb" class="IntegranteNfDj" relation-class="DeclaracionJuradaWeb" constrained="True" lazy="False" p1:Guid="f11f3c17-deed-439e-a5fa-b44e927edcba">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end1>
+      <end2 multiplicity="Many" name="IntegranteNfDjs" class="DeclaracionJuradaWeb" relation-class="IntegranteNfDj" lazy="False" p1:Guid="19c9e4dd-cb2d-4981-a212-e04b6d5f5d2b">
+        <property name="IdDeclaracionjuradaWeb" />
+      </end2>
+    </association>
+    <association name="TipoParentesco_IntegranteNfDj" cardinality="OneToMany" p1:Guid="a331af01-25cc-442a-96c6-cdff477ef312">
+      <end1 multiplicity="One" name="TipoParentesco" class="IntegranteNfDj" relation-class="TipoParentesco" constrained="True" lazy="False" p1:Guid="2934144a-b362-4613-a7f0-d95e84331942">
+        <property name="IdTipoParentesco" />
+      </end1>
+      <end2 multiplicity="Many" name="IntegranteNfDjs" class="TipoParentesco" relation-class="IntegranteNfDj" lazy="False" p1:Guid="14c44919-451d-494d-a1e0-31247bb56461">
+        <property name="IdTipoParentesco" />
+      </end2>
+    </association>
+    <association name="IntegranteNfDj_IngresoMensualNfDj" cardinality="OneToMany" p1:Guid="78605bd1-e3c7-44e1-abde-b1bbaf5d33cd">
+      <end1 multiplicity="One" name="IntegranteNfDj" class="IngresoMensualNfDj" relation-class="IntegranteNfDj" constrained="True" lazy="False" p1:Guid="e1bc273c-c069-4f27-a436-3b8149a46bb3">
+        <property name="IdIntegranteNfDj" />
+      </end1>
+      <end2 multiplicity="Many" name="IngresoMensualNfDjs" class="IntegranteNfDj" relation-class="IngresoMensualNfDj" lazy="False" p1:Guid="3f1ae9d2-b2ca-478f-9a53-147b3627c5c5">
+        <property name="IdIntegranteNfDj" />
       </end2>
     </association>
   </associations>

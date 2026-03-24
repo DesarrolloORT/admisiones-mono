@@ -84,9 +84,6 @@ namespace AppLogic.DevartDTOs
             target.PdfFormRevalidasDj = source.PdfFormRevalidasDj;
             target.NombrePdfRevalidasDj = source.NombrePdfRevalidasDj;
             target.ExtensionPdfRevalidasDj = source.ExtensionPdfRevalidasDj;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdPdfRevalidasDjFront = source.IdPdfRevalidasDjFront;
             target.ModalidadPostulacionDj = source.ModalidadPostulacionDj;
             target.TipoBachillerato = source.TipoBachillerato;
@@ -102,6 +99,8 @@ namespace AppLogic.DevartDTOs
               target.Persona = source.Persona.ToDtoWithRelated(level - 1);
               target.Producto = source.Producto.ToDtoWithRelated(level - 1);
               target.TipoDescuento = source.TipoDescuento.ToDtoWithRelated(level - 1);
+              target.EgresoMensualNfDjs = source.EgresoMensualNfDjs.ToDtosWithRelated(level - 1);
+              target.IntegranteNfDjs = source.IntegranteNfDjs.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method
@@ -168,9 +167,6 @@ namespace AppLogic.DevartDTOs
             target.PdfFormRevalidasDj = source.PdfFormRevalidasDj;
             target.NombrePdfRevalidasDj = source.NombrePdfRevalidasDj;
             target.ExtensionPdfRevalidasDj = source.ExtensionPdfRevalidasDj;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdPdfRevalidasDjFront = source.IdPdfRevalidasDjFront;
             target.ModalidadPostulacionDj = source.ModalidadPostulacionDj;
             target.TipoBachillerato = source.TipoBachillerato;

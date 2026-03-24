@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.DTOs;
-
+namespace AppLogic.DTOs
+{
 /// <summary>
 /// DTO para la solicitud de autenticación de usuario.
 /// </summary>
@@ -20,4 +20,5 @@ public class LoginRequest
     /// </summary>
     [Required(ErrorMessage = "La contraseña es requerida.")]
     public required string Password { get; set; }
+    }
 }

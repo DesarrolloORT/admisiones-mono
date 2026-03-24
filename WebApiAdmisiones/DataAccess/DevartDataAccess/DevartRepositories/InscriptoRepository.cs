@@ -23,9 +23,9 @@ namespace DataAccess.DevartRepositories
                          && (i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 1
                              || i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 2)
                          && i.Oferta.Supraoferta.Paquete.Producto.ProcesoProductos
-                                .Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
+                                .Count(pp => pp.Proceso.HabilitadoInteresSitio == "SI") > 0
                          && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
-                                .Any(pc => pc.Proceso.HabilitadoInteresSitio == "SI"))
+                                .Count(pc => pc.Proceso.HabilitadoInteresSitio == "SI") > 0)
                 .Include(i => i.Oferta)
                     .ThenInclude(o => o.Supraoferta)
                         .ThenInclude(s => s.Paquete)
@@ -35,6 +35,51 @@ namespace DataAccess.DevartRepositories
                         .ThenInclude(s => s.Comienzo)
                 .OrderByDescending(i => i.FechaInscr)
                 .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Devuelve todas las inscripciones activas (sin baja) de la persona en productos de nivel 1 o 2
+        /// con proceso habilitado. Incluye Oferta, Producto, Turno y Comienzo.
+        /// </summary>
+        public virtual IEnumerable<BusinessLogic.Entities.Inscripto> GetInscripcionesRealizadas(long codigoPersona)
+        {
+            return objectSet
+                .Where(i =>
+                    i.CodigoPersona == codigoPersona
+                    && i.BajaInscr == null
+                    && (i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 1
+                        || i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 2)
+                    && i.Oferta.Supraoferta.Paquete.Producto.ProcesoProductos
+                           .Count(pp => pp.Proceso.HabilitadoInteresSitio == "SI") > 0
+                    && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
+                           .Count(pc => pc.Proceso.HabilitadoInteresSitio == "SI") > 0)
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Supraoferta)
+                        .ThenInclude(s => s.Paquete)
+                            .ThenInclude(p => p.Producto)
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Turno)
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Supraoferta)
+                        .ThenInclude(s => s.Comienzo)
+                .OrderBy(i => i.FechaInscr)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Devuelve true si la persona tiene al menos una inscripción activa (sin baja)
+        /// para el producto e IdProceso indicados (via ProcesoComienzo).
+        /// </summary>
+        public virtual bool TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
+        {
+            return objectSet
+                .Where(i =>
+                    i.CodigoPersona == codigoPersona
+                    && i.BajaInscr == null
+                    && i.IdProductoReal == idProducto
+                    && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
+                           .Count(pc => pc.IdProceso == idProceso) > 0)
+                .Count() > 0;
         }
     }
 }

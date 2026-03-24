@@ -88,7 +88,6 @@ namespace DataAccess.DevartRepositories
         /// una inscripción pendiente en el workflow (sin baja ni finalización).
         /// No excluye productos con inscripción activa en T_INSCRIPTO.
         /// Excluye interés de grado 5 de forma simple (sin condiciones adicionales de proceso o VD_FRESCO).
-        /// Equivalente al filtro: setWhereConsultaProcesoVigenteInteresadoSinInscripciones (LogicaORT).
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosConInteresActivo(long codigoPersona)
         {

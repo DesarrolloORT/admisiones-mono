@@ -27,5 +27,18 @@ namespace DataAccess.DevartRepositories
                 .OrderByDescending(a => a.FechaIngreso)
                 .FirstOrDefault();
         }
+
+        /// <summary>
+        /// Devuelve la aceptación del reglamento para la persona, producto y comienzo indicados.
+        /// </summary>
+        public virtual BusinessLogic.Entities.AceptacionReglamentoEst GetByPersonaProductoComienzo(long codigoPersona, long idProducto, long idComienzo)
+        {
+            return objectSet
+                .Where(a => a.CodigoPersona == codigoPersona
+                    && a.IdProducto == idProducto
+                    && a.IdComienzo == idComienzo)
+                .OrderByDescending(a => a.FechaIngreso)
+                .FirstOrDefault();
+        }
     }
 }

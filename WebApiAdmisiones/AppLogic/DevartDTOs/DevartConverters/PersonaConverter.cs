@@ -227,6 +227,8 @@ namespace AppLogic.DevartDTOs
               target.AceptacionReglamentoEsts = source.AceptacionReglamentoEsts.ToDtosWithRelated(level - 1);
               target.CaracteristicaPai_IdCaracteristicaPaisTel1 = source.CaracteristicaPai_IdCaracteristicaPaisTel1.ToDtoWithRelated(level - 1);
               target.CaracteristicaPai_IdCaracteristicaPaisTel2 = source.CaracteristicaPai_IdCaracteristicaPaisTel2.ToDtoWithRelated(level - 1);
+              target.PersonaAdmite = source.PersonaAdmite.ToDtoWithRelated(level - 1);
+              target.RefreshTokens = source.RefreshTokens.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

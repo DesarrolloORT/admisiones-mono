@@ -27,7 +27,7 @@ namespace WebApiAdmisiones.Security
         public async Task Invoke(HttpContext context)
         {
 #pragma warning disable S2139
-            var correlationId = EnsureCorrelationId(context);
+            var correlationId = LoggingHelper.EnsureCorrelationId(context);
 
             try
             {
@@ -54,7 +54,7 @@ namespace WebApiAdmisiones.Security
                 
                 // Si la entrada fue logueada por este middleware (no por el filtro), 
                 // también debemos loguear la salida aquí para mantener trazabilidad
-                if (!entradaLoggedByFilter)
+                if (!entradaLoggedByFilter && _logger.IsEnabled(LogLevel.Information))
                 {
                     var logSalida = LoggingHelper.FormatSalida(
                         context,
@@ -72,38 +72,24 @@ namespace WebApiAdmisiones.Security
                 // Si no se logueó entrada, loguear entrada aquí antes del error
                 if (!context.Items.ContainsKey(LoggingHelper.EntradaLoggedKey))
                 {
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
                     var logEntrada = LoggingHelper.FormatEntrada(
                         context,
                         nameof(ModelBindingErrorLoggingMiddleware),
                         codigoPersona,
                         "Request con excepción",
                         correlationId);
-                    _logger.LogInformation(LogMessageTemplate, logEntrada);
+                    _logger.LogInformation(ex, LogMessageTemplate, logEntrada);
+                    }
+                    context.Items[LoggingHelper.EntradaLoggedKey] = true;
                 }
                 
-                var logMessage = LoggingHelper.FormatError(
-                    context,
-                    nameof(ModelBindingErrorLoggingMiddleware),
-                    codigoPersona,
-                    "Error en middleware de logging",
-                    correlationId);
-                
-                _logger.LogError(ex, LogMessageTemplate, logMessage);
+                // No loguear nada adicional aquí - el ExceptionHandlingMiddleware se encarga del log de error.
+                // Esto evita logs redundantes que no aportan información nueva.
                 throw;
             }
 #pragma warning restore S2139
-        }
-
-        private static Guid EnsureCorrelationId(HttpContext context)
-        {
-            if (!context.Items.ContainsKey(LoggingHelper.CorrelationIdKey))
-            {
-                context.Items[LoggingHelper.CorrelationIdKey] = Guid.NewGuid();
-            }
-
-            return context.Items.TryGetValue(LoggingHelper.CorrelationIdKey, out var storedId) && storedId is Guid guidValue
-                ? guidValue
-                : Guid.NewGuid();
         }
 
         private (string? codigoPersona, bool entradaLoggedByFilter) EnsureEntradaLogged(HttpContext context, Guid correlationId)
@@ -113,6 +99,8 @@ namespace WebApiAdmisiones.Security
 
             if (!entradaLoggedByFilter)
             {
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
                 var logEntrada = LoggingHelper.FormatEntrada(
                     context,
                     nameof(ModelBindingErrorLoggingMiddleware),
@@ -120,6 +108,7 @@ namespace WebApiAdmisiones.Security
                     "Request procesado por middleware (no llegó al filtro)",
                     correlationId);
                 _logger.LogInformation(LogMessageTemplate, logEntrada);
+                }
                 context.Items[LoggingHelper.EntradaLoggedKey] = true;
             }
 
@@ -153,13 +142,9 @@ namespace WebApiAdmisiones.Security
             memStream.Seek(0, SeekOrigin.Begin);
 
             if (_environment.IsProductionLike())
-            {
                 await HandleBadRequestProductionLikeAsync(responseBody, memStream, context, originalBody);
-            }
             else
-            {
                 await HandleBadRequestDevelopmentAsync(responseBody, memStream, context, originalBody);
-            }
 
             return true;
         }
@@ -285,12 +270,13 @@ namespace WebApiAdmisiones.Security
             }
             catch (Exception ex)
             {
-                var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(null);
+                var correlationId = LoggingHelper.EnsureCorrelationId(null);
                 var logMessage = LoggingHelper.FormatError(
                     null,
                     nameof(ModelBindingErrorLoggingMiddleware),
-                    codigoPersona,
-                    "No se pudo parsear el cuerpo de error 400. Se devolverá sin envolver.");
+                    null,
+                    "No se pudo parsear el cuerpo de error 400. Se devolverá sin envolver.",
+                    correlationId);
                 
                 _logger.LogWarning(ex, "{LogMessage}", logMessage);
                 return new ParsedBadRequest { IsOperationResultFormat = false, IsProblemDetails = false };

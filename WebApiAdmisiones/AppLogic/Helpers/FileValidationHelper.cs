@@ -7,12 +7,12 @@ using Utilities;
 namespace AppLogic.Helpers
 {
     /// <summary>
-    /// Helper para validaciÃ³n de archivos subidos por usuarios.
-    /// Implementa mÃºltiples capas de seguridad:
-    /// - ValidaciÃ³n de extensiÃ³n mediante whitelist estricta
-    /// - ValidaciÃ³n de contenido mediante magic bytes
-    /// - ValidaciÃ³n de tamaÃ±o de archivo
-    /// - SanitizaciÃ³n de nombres de archivo
+    /// Helper para validación de archivos subidos por usuarios.
+    /// Implementa múltiples capas de seguridad:
+    /// - Validación de extensión mediante whitelist estricta
+    /// - Validación de contenido mediante magic bytes
+    /// - Validación de tamaño de archivo
+    /// - Sanitización de nombres de archivo
     /// </summary>
     public static class FileValidationHelper
     {
@@ -34,7 +34,7 @@ namespace AppLogic.Helpers
             "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
         };
 
-        // Extensiones permitidas para validaciÃ³n de contenido (PDF, JPG, JPEG)
+        // Extensiones permitidas para validación de contenido (PDF, JPG, JPEG)
         private static readonly string[] DefaultContentValidationExtensions = { ".pdf", ".jpg" };
 
         // Magic bytes para diferentes tipos de archivos
@@ -77,52 +77,80 @@ namespace AppLogic.Helpers
             { ".docx", new List<byte[]> 
                 { 
                     new byte[] { 0x50, 0x4B, 0x03, 0x04 }, // ZIP
-                    new byte[] { 0x50, 0x4B, 0x05, 0x06 }, // ZIP vacÃ­o
+                    new byte[] { 0x50, 0x4B, 0x05, 0x06 }, // ZIP vacío
                     new byte[] { 0x50, 0x4B, 0x07, 0x08 }  // ZIP spanned
                 } 
+            },
+            { ".xls", new List<byte[]>
+                {
+                    new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }
+                }
+            },
+            { ".xlsx", new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 },
+                    new byte[] { 0x50, 0x4B, 0x05, 0x06 },
+                    new byte[] { 0x50, 0x4B, 0x07, 0x08 }
+                }
+            },
+            { ".ppt", new List<byte[]>
+                {
+                    new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }
+                }
+            },
+            { ".pptx", new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 },
+                    new byte[] { 0x50, 0x4B, 0x05, 0x06 },
+                    new byte[] { 0x50, 0x4B, 0x07, 0x08 }
+                }
             }
         };
 
-        // TamaÃ±os mÃ¡ximos por tipo de archivo (en bytes)
+        // Tamaños máximos por tipo de archivo (en bytes)
         private static readonly Dictionary<string, long> MaxFileSizes = new()
         {
             { ".pdf", 10 * 1024 * 1024 },    // 10 MB para PDFs
-            { ".jpg", 5 * 1024 * 1024 },     // 5 MB para imÃ¡genes
-            { ".jpeg", 5 * 1024 * 1024 },    // 5 MB para imÃ¡genes
-            { ".png", 5 * 1024 * 1024 },     // 5 MB para imÃ¡genes
+            { ".jpg", 5 * 1024 * 1024 },     // 5 MB para imágenes
+            { ".jpeg", 5 * 1024 * 1024 },    // 5 MB para imágenes
+            { ".png", 5 * 1024 * 1024 },     // 5 MB para imágenes
             { ".doc", 10 * 1024 * 1024 },    // 10 MB para documentos
-            { ".docx", 10 * 1024 * 1024 }    // 10 MB para documentos
+            { ".docx", 10 * 1024 * 1024 },   // 10 MB para documentos
+            { ".xls", 10 * 1024 * 1024 },    // 10 MB para planillas
+            { ".xlsx", 10 * 1024 * 1024 },   // 10 MB para planillas
+            { ".ppt", 10 * 1024 * 1024 },    // 10 MB para presentaciones
+            { ".pptx", 10 * 1024 * 1024 }    // 10 MB para presentaciones
         };
 
         /// <summary>
-        /// Valida un archivo basÃ¡ndose en extensiÃ³n, magic bytes y tamaÃ±o.
+        /// Valida un archivo basándose en extensión, magic bytes y tamaño.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="fileName">Nombre del archivo incluyendo extensiÃ³n.</param>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
         /// <param name="allowedExtensions">Lista de extensiones permitidas (whitelist). Debe incluir el punto, ej: ".pdf"</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult indicando si el archivo es vÃ¡lido.</returns>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el archivo es válido.</returns>
         public static OperationResult<bool> ValidateFile(
             byte[] fileContent, 
             string fileName, 
             List<string> allowedExtensions,
             string originMethod)
         {
-            // ValidaciÃ³n 1: Verificar que el contenido no estÃ© vacÃ­o
+            // Validación 1: Verificar que el contenido no esté vacío
             var contentValidation = ValidateFileContent(fileContent, originMethod);
             if (!contentValidation.Success)
             {
                 return contentValidation;
             }
 
-            // ValidaciÃ³n 2: Verificar que el nombre del archivo sea vÃ¡lido
+            // Validación 2: Verificar que el nombre del archivo sea válido
             var fileNameValidation = ValidateFileNameNotEmpty(fileName, originMethod);
             if (!fileNameValidation.Success)
             {
                 return fileNameValidation;
             }
 
-            // Obtener y validar la extensiÃ³n del archivo
+            // Obtener y validar la extensión del archivo
             var extensionResult = GetAndValidateExtension(fileName, allowedExtensions, originMethod);
             if (!extensionResult.Success)
             {
@@ -135,24 +163,24 @@ namespace AppLogic.Helpers
 
             var extension = extensionResult.Data;
 
-            // ValidaciÃ³n adicional: Verificar que la extensiÃ³n no sea nula (defensa en profundidad)
+            // Validación adicional: Verificar que la extensión no sea nula (defensa en profundidad)
             if (string.IsNullOrWhiteSpace(extension))
             {
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_08",
                     originMethod,
-                    "Error interno: la extensiÃ³n del archivo no pudo ser determinada.",
+                    "Error interno: la extensión del archivo no pudo ser determinada.",
                     500);
             }
 
-            // ValidaciÃ³n 4: Verificar magic bytes (segunda capa de seguridad - validaciÃ³n de contenido)
+            // Validación 4: Verificar magic bytes (segunda capa de seguridad - validación de contenido)
             var magicBytesValidation = ValidateMagicBytes(fileContent, extension, originMethod);
             if (!magicBytesValidation.Success)
             {
                 return magicBytesValidation;
             }
 
-            // ValidaciÃ³n 5: Verificar tamaÃ±o mÃ¡ximo del archivo
+            // Validación 5: Verificar tamaño máximo del archivo
             var sizeValidation = ValidateFileSize(fileContent, extension, originMethod);
             if (!sizeValidation.Success)
             {
@@ -164,7 +192,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Valida que el contenido del archivo no estÃ© vacÃ­o.
+        /// Valida que el contenido del archivo no esté vacío.
         /// </summary>
         private static OperationResult<bool> ValidateFileContent(byte[] fileContent, string originMethod)
         {
@@ -173,7 +201,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_01",
                     originMethod,
-                    "El archivo estÃ¡ vacÃ­o o no se pudo leer.",
+                    "El archivo está vacío o no se pudo leer.",
                     400);
             }
 
@@ -181,7 +209,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Valida que el nombre del archivo no estÃ© vacÃ­o.
+        /// Valida que el nombre del archivo no esté vacío.
         /// </summary>
         private static OperationResult<bool> ValidateFileNameNotEmpty(string fileName, string originMethod)
         {
@@ -190,7 +218,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_02",
                     originMethod,
-                    "El nombre del archivo es invÃ¡lido.",
+                    "El nombre del archivo es inválido.",
                     400);
             }
 
@@ -198,7 +226,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Obtiene y valida la extensiÃ³n del archivo contra la whitelist.
+        /// Obtiene y valida la extensión del archivo contra la whitelist.
         /// </summary>
         private static OperationResult<string> GetAndValidateExtension(
             string fileName,
@@ -211,17 +239,17 @@ namespace AppLogic.Helpers
                 return OperationResult<string>.IsFailed(
                     "FILE_VAL_03",
                     originMethod,
-                    "El archivo no tiene extensiÃ³n.",
+                    "El archivo no tiene extensión.",
                     400);
             }
 
-            // ValidaciÃ³n 3: Verificar extensiÃ³n contra whitelist (primera capa de seguridad)
+            // Validación 3: Verificar extensión contra whitelist (primera capa de seguridad)
             if (!allowedExtensions.Contains(extension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_VAL_04",
                     originMethod,
-                    $"La extensiÃ³n '{extension}' no estÃ¡ permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
+                    $"La extensión '{extension}' no está permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
                     400);
             }
 
@@ -229,7 +257,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Valida que el contenido del archivo coincida con los magic bytes esperados para la extensiÃ³n.
+        /// Valida que el contenido del archivo coincida con los magic bytes esperados para la extensión.
         /// </summary>
         private static OperationResult<bool> ValidateMagicBytes(
             byte[] fileContent,
@@ -241,7 +269,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_05",
                     originMethod,
-                    $"No hay configuraciÃ³n de validaciÃ³n para la extensiÃ³n '{extension}'.",
+                    $"No hay configuración de validación para la extensión '{extension}'.",
                     500);
             }
 
@@ -252,7 +280,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_06",
                     originMethod,
-                    $"El contenido del archivo no corresponde a un archivo '{extension}' vÃ¡lido. Posible intento de suplantaciÃ³n de tipo de archivo.",
+                    $"El contenido del archivo no corresponde a un archivo '{extension}' válido. Posible intento de suplantación de tipo de archivo.",
                     400);
             }
 
@@ -260,7 +288,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Verifica si el contenido del archivo coincide con alguno de los magic bytes vÃ¡lidos.
+        /// Verifica si el contenido del archivo coincide con alguno de los magic bytes válidos.
         /// </summary>
         private static bool CheckMagicBytesMatch(byte[] fileContent, List<byte[]> validMagicBytes)
         {
@@ -268,7 +296,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Compara el contenido del archivo con una secuencia especÃ­fica de magic bytes.
+        /// Compara el contenido del archivo con una secuencia específica de magic bytes.
         /// </summary>
         private static bool IsMagicByteMatch(byte[] fileContent, byte[] magicByte)
         {
@@ -289,7 +317,7 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Valida que el tamaÃ±o del archivo no exceda el mÃ¡ximo permitido para su extensiÃ³n.
+        /// Valida que el tamaño del archivo no exceda el máximo permitido para su extensión.
         /// </summary>
         private static OperationResult<bool> ValidateFileSize(
             byte[] fileContent,
@@ -303,7 +331,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed(
                     "FILE_VAL_07",
                     originMethod,
-                    $"El archivo excede el tamaÃ±o mÃ¡ximo permitido. TamaÃ±o actual: {currentSizeMB:F2} MB, mÃ¡ximo: {maxSizeMB:F2} MB",
+                    $"El archivo excede el tamaño máximo permitido. Tamaño actual: {currentSizeMB:F2} MB, máximo: {maxSizeMB:F2} MB",
                     400);
             }
 
@@ -311,13 +339,13 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Valida especÃ­ficamente un archivo PDF.
-        /// MÃ©todo de conveniencia que llama a ValidateFile con la whitelist de PDF.
+        /// Valida específicamente un archivo PDF.
+        /// Método de conveniencia que llama a ValidateFile con la whitelist de PDF.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo PDF en bytes.</param>
-        /// <param name="fileName">Nombre del archivo incluyendo extensiÃ³n.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult indicando si el PDF es vÃ¡lido.</returns>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el PDF es válido.</returns>
         public static OperationResult<bool> ValidatePdfFile(
             byte[] fileContent,
             string fileName,
@@ -331,9 +359,9 @@ namespace AppLogic.Helpers
         /// Valida archivos de imagen (JPEG, PNG).
         /// </summary>
         /// <param name="fileContent">Contenido del archivo de imagen en bytes.</param>
-        /// <param name="fileName">Nombre del archivo incluyendo extensiÃ³n.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult indicando si la imagen es vÃ¡lida.</returns>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si la imagen es válida.</returns>
         public static OperationResult<bool> ValidateImageFile(
             byte[] fileContent,
             string fileName,
@@ -344,12 +372,28 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
+        /// Valida archivos adjuntos de declaración jurada (PDF o imágenes).
+        /// </summary>
+        /// <param name="fileContent">Contenido del archivo adjunto en bytes.</param>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el adjunto es válido.</returns>
+        public static OperationResult<bool> ValidateDeclaracionJuradaAttachment(
+            byte[] fileContent,
+            string fileName,
+            string originMethod)
+        {
+            var allowedExtensions = new List<string> { ".pdf", ".jpg", ".jpeg", ".png" };
+            return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
+        }
+
+        /// <summary>
         /// Valida archivos de documentos (PDF, DOC, DOCX).
         /// </summary>
         /// <param name="fileContent">Contenido del archivo de documento en bytes.</param>
-        /// <param name="fileName">Nombre del archivo incluyendo extensiÃ³n.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult indicando si el documento es vÃ¡lido.</returns>
+        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el documento es válido.</returns>
         public static OperationResult<bool> ValidateDocumentFile(
             byte[] fileContent,
             string fileName,
@@ -361,69 +405,69 @@ namespace AppLogic.Helpers
 
         /// <summary>
         /// Valida el contenido de un archivo (magic bytes) sin validar el nombre.
-        /// Ãštil cuando solo se tiene el contenido del archivo y se necesita verificar que sea de un tipo especÃ­fico.
+        /// Útil cuando solo se tiene el contenido del archivo y se necesita verificar que sea de un tipo específico.
         /// Valida que el contenido coincida con PDF, JPG o JPEG.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult indicando si el contenido del archivo es vÃ¡lido y quÃ© tipo de archivo es.</returns>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult indicando si el contenido del archivo es válido y qué tipo de archivo es.</returns>
         public static OperationResult<string> ValidateFileContentOnly(
             byte[] fileContent,
             string originMethod)
         {
-            // ValidaciÃ³n 1: Verificar que el contenido no estÃ© vacÃ­o
+            // Validación 1: Verificar que el contenido no esté vacío
             if (fileContent == null || fileContent.Length == 0)
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_CONTENT_01",
                     originMethod,
-                    "El archivo estÃ¡ vacÃ­o o no se pudo leer.",
+                    "El archivo está vacío o no se pudo leer.",
                     400);
             }
 
-            // ValidaciÃ³n 2: Verificar que tenga suficientes bytes para validar magic bytes
+            // Validación 2: Verificar que tenga suficientes bytes para validar magic bytes
             if (fileContent.Length < 4)
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_CONTENT_02",
                     originMethod,
-                    "El archivo es demasiado pequeÃ±o para ser vÃ¡lido.",
+                    "El archivo es demasiado pequeño para ser válido.",
                     400);
             }
 
-            // ValidaciÃ³n 3: Detectar tipo de archivo por magic bytes
+            // Validación 3: Detectar tipo de archivo por magic bytes
             var detectedType = DetectFileTypeByMagicBytes(fileContent, DefaultContentValidationExtensions);
-            
+
             if (detectedType != null)
             {
                 return OperationResult<string>.Ok(detectedType, originMethod);
             }
 
-            // Si no coincide con ningÃºn magic byte conocido
+            // Si no coincide con ningún magic byte conocido
             return OperationResult<string>.IsFailed(
                 "FILE_CONTENT_03",
                 originMethod,
-                "El archivo no es un PDF, JPG o JPEG vÃ¡lido. El tipo de archivo no estÃ¡ permitido.",
+                "El archivo no es un PDF, JPG o JPEG válido. El tipo de archivo no está permitido.",
                 400);
         }
 
         /// <summary>
-        /// Detecta el tipo de archivo basÃ¡ndose en sus magic bytes.
+        /// Detecta el tipo de archivo basándose en sus magic bytes.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo en bytes.</param>
         /// <param name="extensionsToCheck">Lista de extensiones a verificar.</param>
-        /// <returns>La extensiÃ³n detectada o null si no coincide con ninguna.</returns>
+        /// <returns>La extensión detectada o null si no coincide con ninguna.</returns>
         private static string? DetectFileTypeByMagicBytes(byte[] fileContent, string[] extensionsToCheck)
         {
             return extensionsToCheck.FirstOrDefault(extension => TryMatchExtension(fileContent, extension));
         }
 
         /// <summary>
-        /// Intenta hacer match del contenido del archivo con los magic bytes de una extensiÃ³n especÃ­fica.
+        /// Intenta hacer match del contenido del archivo con los magic bytes de una extensión específica.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="extension">ExtensiÃ³n a verificar (ej: ".pdf", ".jpg").</param>
-        /// <returns>True si el contenido coincide con algÃºn magic byte de la extensiÃ³n.</returns>
+        /// <param name="extension">Extensión a verificar (ej: ".pdf", ".jpg").</param>
+        /// <returns>True si el contenido coincide con algún magic byte de la extensión.</returns>
         private static bool TryMatchExtension(byte[] fileContent, string extension)
         {
             if (!MagicBytes.TryGetValue(extension, out var magicBytesList))
@@ -436,11 +480,11 @@ namespace AppLogic.Helpers
 
         /// <summary>
         /// Valida el contenido de un archivo (magic bytes) para formatos PDF, JPG o JPEG sin validar el nombre.
-        /// MÃ©todo de conveniencia que valida el contenido y devuelve bool.
+        /// Método de conveniencia que valida el contenido y devuelve bool.
         /// </summary>
         /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult con bool indicando si el archivo es vÃ¡lido.</returns>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult con bool indicando si el archivo es válido.</returns>
         public static OperationResult<bool> ValidatePdfOrImageContent(
             byte[] fileContent,
             string originMethod)
@@ -459,63 +503,63 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Sanitiza el nombre de un archivo removiendo caracteres peligrosos y validando contra mÃºltiples extensiones.
-        /// Previene ataques como 'archivo.php.pdf' detectando mÃºltiples puntos que podrÃ­an indicar extensiones maliciosas ocultas.
+        /// Sanitiza el nombre de un archivo removiendo caracteres peligrosos y validando contra múltiples extensiones.
+        /// Previene ataques como 'archivo.php.pdf' detectando múltiples puntos que podrían indicar extensiones maliciosas ocultas.
         /// </summary>
         /// <param name="fileName">Nombre del archivo original.</param>
         /// <param name="allowedExtensions">Lista de extensiones permitidas (con punto, ej: ".pdf").</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult con el nombre de archivo sanitizado o error si la validaciÃ³n falla.</returns>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult con el nombre de archivo sanitizado o error si la validación falla.</returns>
         public static OperationResult<string> SanitizeFileName(
             string fileName,
             List<string> allowedExtensions,
             string originMethod)
         {
-            // Validar que el nombre no sea nulo o vacÃ­o
+            // Validar que el nombre no sea nulo o vacío
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_01",
                     originMethod,
-                    "El nombre del archivo no puede estar vacÃ­o.",
+                    "El nombre del archivo no puede estar vacío.",
                     400);
             }
 
             // Trim espacios al inicio y final
             fileName = fileName.Trim();
 
-            // Validar longitud mÃ¡xima (255 caracteres es el lÃ­mite comÃºn)
+            // Validar longitud máxima (255 caracteres es el límite común)
             if (fileName.Length > 255)
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_02",
                     originMethod,
-                    "El nombre del archivo es demasiado largo. MÃ¡ximo 255 caracteres.",
+                    "El nombre del archivo es demasiado largo. Máximo 255 caracteres.",
                     400);
             }
 
-            // Obtener extensiÃ³n actual
+            // Obtener extensión actual
             var extension = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(extension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_03",
                     originMethod,
-                    "El archivo debe tener una extensiÃ³n vÃ¡lida.",
+                    "El archivo debe tener una extensión válida.",
                     400);
             }
 
-            // Validar que la extensiÃ³n estÃ© en la whitelist
+            // Validar que la extensión esté en la whitelist
             if (!allowedExtensions.Contains(extension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_04",
                     originMethod,
-                    $"La extensiÃ³n '{extension}' no estÃ¡ permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
+                    $"La extensión '{extension}' no está permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
                     400);
             }
 
-            // Obtener nombre sin extensiÃ³n
+            // Obtener nombre sin extensión
             var fileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(fileName);
 
             // Validar y sanitizar el nombre del archivo
@@ -523,67 +567,67 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Sanitiza el nombre de un archivo cuando el nombre y la extensiÃ³n vienen por separado.
+        /// Sanitiza el nombre de un archivo cuando el nombre y la extensión vienen por separado.
         /// Previene ataques detectando extensiones peligrosas ocultas en el nombre del archivo.
         /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo SIN extensiÃ³n.</param>
-        /// <param name="extension">ExtensiÃ³n del archivo (con o sin punto inicial, ej: ".pdf" o "pdf").</param>
+        /// <param name="fileNameWithoutExtension">Nombre del archivo SIN extensión.</param>
+        /// <param name="extension">Extensión del archivo (con o sin punto inicial, ej: ".pdf" o "pdf").</param>
         /// <param name="allowedExtensions">Lista de extensiones permitidas (con punto, ej: ".pdf").</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
-        /// <returns>OperationResult con el nombre de archivo sanitizado (nombre + extensiÃ³n) o error si la validaciÃ³n falla.</returns>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult con el nombre de archivo sanitizado (nombre + extensión) o error si la validación falla.</returns>
         public static OperationResult<string> SanitizeFileName(
             string fileNameWithoutExtension,
             string extension,
             List<string> allowedExtensions,
             string originMethod)
         {
-            // Validar que el nombre no sea nulo o vacÃ­o
+            // Validar que el nombre no sea nulo o vacío
             if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_01",
                     originMethod,
-                    "El nombre del archivo no puede estar vacÃ­o.",
+                    "El nombre del archivo no puede estar vacío.",
                     400);
             }
 
-            // Validar que la extensiÃ³n no sea nula o vacÃ­a
+            // Validar que la extensión no sea nula o vacía
             if (string.IsNullOrWhiteSpace(extension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_03",
                     originMethod,
-                    "La extensiÃ³n del archivo no puede estar vacÃ­a.",
+                    "La extensión del archivo no puede estar vacía.",
                     400);
             }
 
-            // Normalizar la extensiÃ³n: asegurar que tenga punto inicial y estÃ© en minÃºsculas
+            // Normalizar la extensión: asegurar que tenga punto inicial y esté en minúsculas
             if (!extension.StartsWith('.'))
             {
                 extension = "." + extension;
             }
             extension = extension.ToLowerInvariant();
 
-            // Validar que la extensiÃ³n estÃ© en la whitelist
+            // Validar que la extensión esté en la whitelist
             if (!allowedExtensions.Contains(extension))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_04",
                     originMethod,
-                    $"La extensiÃ³n '{extension}' no estÃ¡ permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
+                    $"La extensión '{extension}' no está permitida. Solo se permiten: {string.Join(", ", allowedExtensions)}",
                     400);
             }
 
             // Trim espacios al inicio y final del nombre
             fileNameWithoutExtension = fileNameWithoutExtension.Trim();
 
-            // Validar longitud mÃ¡xima del nombre completo (255 caracteres es el lÃ­mite comÃºn)
+            // Validar longitud máxima del nombre completo (255 caracteres es el límite común)
             if (fileNameWithoutExtension.Length + extension.Length > 255)
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_02",
                     originMethod,
-                    "El nombre del archivo es demasiado largo. MÃ¡ximo 255 caracteres en total.",
+                    "El nombre del archivo es demasiado largo. Máximo 255 caracteres en total.",
                     400);
             }
 
@@ -592,19 +636,19 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Procesa la sanitizaciÃ³n del nombre de archivo detectando extensiones peligrosas,
+        /// Procesa la sanitización del nombre de archivo detectando extensiones peligrosas,
         /// removiendo caracteres no permitidos y validando contra nombres reservados.
         /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo sin extensiÃ³n</param>
-        /// <param name="extension">ExtensiÃ³n del archivo (con punto inicial y en minÃºsculas)</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n</param>
-        /// <returns>OperationResult con el nombre sanitizado o error si la validaciÃ³n falla</returns>
+        /// <param name="fileNameWithoutExtension">Nombre del archivo sin extensión</param>
+        /// <param name="extension">Extensión del archivo (con punto inicial y en minúsculas)</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación</param>
+        /// <returns>OperationResult con el nombre sanitizado o error si la validación falla</returns>
         private static OperationResult<string> ProcessFileNameSanitization(
             string fileNameWithoutExtension,
             string extension,
             string originMethod)
         {
-            // SEGURIDAD CRÃTICA: Detectar extensiones peligrosas ocultas en el nombre
+            // SEGURIDAD CRÍTICA: Detectar extensiones peligrosas ocultas en el nombre
             var dangerousExtensionCheck = CheckForDangerousExtensions(fileNameWithoutExtension, originMethod);
             if (!dangerousExtensionCheck.Success)
             {
@@ -614,13 +658,13 @@ namespace AppLogic.Helpers
             // Sanitizar el nombre removiendo caracteres no permitidos
             var sanitizedName = SanitizeFileNameCharacters(fileNameWithoutExtension);
 
-            // Validar que despuÃ©s de la sanitizaciÃ³n quede algo
+            // Validar que después de la sanitización quede algo
             if (string.IsNullOrWhiteSpace(sanitizedName))
             {
                 return OperationResult<string>.IsFailed(
                     "FILE_SAN_06",
                     originMethod,
-                    "El nombre del archivo no contiene caracteres vÃ¡lidos despuÃ©s de la sanitizaciÃ³n.",
+                    "El nombre del archivo no contiene caracteres válidos después de la sanitización.",
                     400);
             }
 
@@ -631,7 +675,7 @@ namespace AppLogic.Helpers
                 return reservedNameCheck;
             }
 
-            // Construir el nombre final sanitizado con la extensiÃ³n
+            // Construir el nombre final sanitizado con la extensión
             var sanitizedFileName = $"{sanitizedName}{extension}";
 
             return OperationResult<string>.Ok(sanitizedFileName, originMethod);
@@ -641,9 +685,9 @@ namespace AppLogic.Helpers
         /// Detecta si el nombre del archivo contiene extensiones potencialmente peligrosas ocultas.
         /// Ejemplo: "archivo.php" en "archivo.php.pdf"
         /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo sin la extensiÃ³n final</param>
-        /// <param name="originMethod">MÃ©todo que invoca la validaciÃ³n</param>
-        /// <returns>OperationResult indicando si se detectÃ³ una extensiÃ³n peligrosa</returns>
+        /// <param name="fileNameWithoutExtension">Nombre del archivo sin la extensión final</param>
+        /// <param name="originMethod">Método que invoca la validación</param>
+        /// <returns>OperationResult indicando si se detectó una extensión peligrosa</returns>
         private static OperationResult<string> CheckForDangerousExtensions(
             string fileNameWithoutExtension,
             string originMethod)
@@ -651,7 +695,7 @@ namespace AppLogic.Helpers
             var dotsInFileName = fileNameWithoutExtension.Count(c => c == '.');
             if (dotsInFileName > 0)
             {
-                // Verificar si alguno de los segmentos entre puntos parece una extensiÃ³n de archivo ejecutable o script
+                // Verificar si alguno de los segmentos entre puntos parece una extensión de archivo ejecutable o script
                 var segments = fileNameWithoutExtension.Split('.');
                 var dangerousExtensions = new[] {
                     "exe", "bat", "cmd", "com", "pif", "scr", "vbs", "js", "jar",
@@ -661,13 +705,13 @@ namespace AppLogic.Helpers
 
                 var dangerousSegment = segments.FirstOrDefault(segment => 
                     dangerousExtensions.Contains(segment.ToLowerInvariant()));
-                
+
                 if (dangerousSegment != null)
                 {
                     return OperationResult<string>.IsFailed(
                         "FILE_SAN_05",
                         originMethod,
-                        $"El nombre del archivo contiene una extensiÃ³n potencialmente peligrosa: '{dangerousSegment}'. " +
+                        $"El nombre del archivo contiene una extensión potencialmente peligrosa: '{dangerousSegment}'. " +
                         $"No se permiten extensiones que puedan ocultar archivos ejecutables o scripts.",
                         400);
                 }
@@ -678,9 +722,9 @@ namespace AppLogic.Helpers
 
         /// <summary>
         /// Sanitiza el nombre del archivo removiendo caracteres no permitidos,
-        /// puntos adicionales, espacios mÃºltiples y guiones bajos consecutivos.
+        /// puntos adicionales, espacios múltiples y guiones bajos consecutivos.
         /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo sin extensiÃ³n</param>
+        /// <param name="fileNameWithoutExtension">Nombre del archivo sin extensión</param>
         /// <returns>Nombre sanitizado</returns>
         private static string SanitizeFileNameCharacters(string fileNameWithoutExtension)
         {
@@ -695,10 +739,10 @@ namespace AppLogic.Helpers
             // Remover puntos adicionales del nombre (convertirlos en guiones bajos)
             sanitizedName = sanitizedName.Replace(".", "_");
 
-            // Remover espacios mÃºltiples y reemplazar espacios por guiones bajos
+            // Remover espacios múltiples y reemplazar espacios por guiones bajos
             sanitizedName = Regex.Replace(sanitizedName, @"\s+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
-            // Remover guiones bajos mÃºltiples consecutivos
+            // Remover guiones bajos múltiples consecutivos
             sanitizedName = Regex.Replace(sanitizedName, @"_{2,}", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
             // Remover guiones bajos al inicio y final
@@ -711,8 +755,8 @@ namespace AppLogic.Helpers
         /// Verifica si el nombre del archivo corresponde a un nombre reservado del sistema Windows.
         /// </summary>
         /// <param name="sanitizedName">Nombre sanitizado a validar</param>
-        /// <param name="originMethod">MÃ©todo que invoca la validaciÃ³n</param>
-        /// <returns>OperationResult indicando si el nombre es vÃ¡lido</returns>
+        /// <param name="originMethod">Método que invoca la validación</param>
+        /// <returns>OperationResult indicando si el nombre es válido</returns>
         private static OperationResult<string> CheckForReservedNames(
             string sanitizedName,
             string originMethod)
@@ -732,10 +776,10 @@ namespace AppLogic.Helpers
 
         /// <summary>
         /// Sanitiza el nombre de un archivo PDF.
-        /// MÃ©todo de conveniencia para archivos PDF.
+        /// Método de conveniencia para archivos PDF.
         /// </summary>
         /// <param name="fileName">Nombre del archivo original.</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
         /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
         public static OperationResult<string> SanitizePdfFileName(string fileName, string originMethod)
         {
@@ -743,12 +787,12 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
-        /// Sanitiza el nombre de un archivo PDF cuando el nombre y la extensiÃ³n vienen por separado.
-        /// MÃ©todo de conveniencia para archivos PDF.
+        /// Sanitiza el nombre de un archivo PDF cuando el nombre y la extensión vienen por separado.
+        /// Método de conveniencia para archivos PDF.
         /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo SIN extensiÃ³n.</param>
-        /// <param name="extension">ExtensiÃ³n del archivo (con o sin punto inicial).</param>
-        /// <param name="originMethod">Nombre del mÃ©todo que invoca esta validaciÃ³n.</param>
+        /// <param name="fileNameWithoutExtension">Nombre del archivo SIN extensión.</param>
+        /// <param name="extension">Extensión del archivo (con o sin punto inicial).</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
         /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
         public static OperationResult<string> SanitizePdfFileName(
             string fileNameWithoutExtension, 
@@ -756,6 +800,17 @@ namespace AppLogic.Helpers
             string originMethod)
         {
             return SanitizeFileName(fileNameWithoutExtension, extension, new List<string> { ".pdf" }, originMethod);
+        }
+
+        /// <summary>
+        /// Sanitiza el nombre de un archivo adjunto de declaración jurada.
+        /// </summary>
+        /// <param name="fileName">Nombre del archivo original.</param>
+        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
+        /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
+        public static OperationResult<string> SanitizeDeclaracionJuradaAttachmentName(string fileName, string originMethod)
+        {
+            return SanitizeFileName(fileName, new List<string> { ".pdf", ".jpg", ".jpeg", ".png" }, originMethod);
         }
     }
 }

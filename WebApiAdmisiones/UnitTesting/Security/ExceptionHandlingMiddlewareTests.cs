@@ -202,6 +202,193 @@ namespace UnitTesting.Security
             Assert.NotNull(logger.LastLoggedState);
         }
 
+        [Fact]
+        public async Task Invoke_WhenDbErrorAlreadyLogged_LogsSummaryOnly()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+            
+            // Simular que EfCoreLoggingInterceptor ya logueó el error
+            context.Items[LoggingHelper.DbErrorLoggedKey] = "SQL Error: Connection failed";
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InvalidOperationException("DB connection error"),
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+            Assert.Contains("INTERNAL_ERROR", responseBody);
+            Assert.True(logger.ErrorLogged);
+        }
+
+        [Fact]
+        public async Task Invoke_WithInnerException_LogsFullExceptionChain()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+            
+            var innerException = new InvalidOperationException("Inner error");
+            var outerException = new ApplicationException("Outer error", innerException);
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw outerException,
+                logger,
+                new FakeEnvironment(isDevelopment: true)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+            Assert.True(logger.ErrorLogged);
+            // En desarrollo, debería incluir el mensaje de la excepción externa
+            Assert.Contains("Outer error", responseBody);
+        }
+
+        [Fact]
+        public async Task Invoke_SetsCorrelationId_InHttpContext()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InvalidOperationException("Test"),
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+
+            // Assert
+            Assert.True(context.Items.ContainsKey(LoggingHelper.CorrelationIdKey));
+            Assert.IsType<Guid>(context.Items[LoggingHelper.CorrelationIdKey]);
+        }
+
+        [Fact]
+        public async Task Invoke_PreservesExistingCorrelationId()
+        {
+            // Arrange
+            var context = CreateContext();
+            var existingCorrelationId = Guid.NewGuid();
+            context.Items[LoggingHelper.CorrelationIdKey] = existingCorrelationId;
+            
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InvalidOperationException("Test"),
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+
+            // Assert
+            Assert.Equal(existingCorrelationId, context.Items[LoggingHelper.CorrelationIdKey]);
+        }
+
+        [Fact]
+        public async Task Invoke_WhenInputSanitizationExceptionInProduction_ExcludesExceptionDetails()
+        {
+            // Arrange
+            var context = CreateContext();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InputSanitizationException("Sensitive sanitization error"),
+                new FakeLogger<ExceptionHandlingMiddleware>(),
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
+            Assert.Contains("SANITIZATION_ERROR", responseBody);
+            // En producción, no debería contener detalles sensibles
+            Assert.DoesNotContain("Sensitive sanitization error", responseBody);
+        }
+
+        [Fact]
+        public async Task Invoke_WhenNoException_DoesNotLogError()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    return Task.CompletedTask;
+                },
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+
+            // Assert
+            Assert.False(logger.ErrorLogged);
+            Assert.False(logger.WarningLogged);
+        }
+
+        [Fact]
+        public async Task Invoke_SetsJsonContentType_OnException()
+        {
+            // Arrange
+            var context = CreateContext();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InvalidOperationException("Test"),
+                new FakeLogger<ExceptionHandlingMiddleware>(),
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+
+        // Assert
+            Assert.Equal("application/json; charset=utf-8", context.Response.ContentType);
+        }
+
+        [Fact]
+        public async Task Invoke_ReturnsValidJsonResponse_OnException()
+        {
+            // Arrange
+            var context = CreateContext();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new InvalidOperationException("Test"),
+                new FakeLogger<ExceptionHandlingMiddleware>(),
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            var jsonDoc = JsonDocument.Parse(responseBody);
+            Assert.NotNull(jsonDoc);
+            Assert.True(jsonDoc.RootElement.TryGetProperty("success", out _) || 
+                        jsonDoc.RootElement.TryGetProperty("Success", out _));
+        }
+
         // Fake logger que registra si se logueó
         private class FakeLogger<T> : ILogger<T>
         {

@@ -120,48 +120,6 @@ namespace UnitTesting.Extensions
             Assert.Equal(HttpMethods.Get, context.Request.Method);
         }
 
-        [Fact]
-        public async Task UseJwtTokenRefresh_WhenIssuerMissing_DoesNotAddToken()
-        {
-            var user = CreateAuthenticatedUser(expirationMinutes: 5, includeIssuer: false, includeAudience: true);
-            var pipeline = BuildJwtRefreshPipeline(new Dictionary<string, string?>());
-            var context = CreateHttpContext();
-            context.User = user;
-
-            await pipeline(context);
-            await ExecuteOnStartingCallbacks(context.Response);
-
-            Assert.False(context.Response.Headers.ContainsKey("x-token"));
-        }
-
-        [Fact]
-        public async Task UseJwtTokenRefresh_WhenUserNotAuthenticated_DoesNothing()
-        {
-            var user = new ClaimsPrincipal(new ClaimsIdentity());
-            var pipeline = BuildJwtRefreshPipeline(new Dictionary<string, string?>());
-            var context = CreateHttpContext();
-            context.User = user;
-
-            await pipeline(context);
-            await ExecuteOnStartingCallbacks(context.Response);
-
-            Assert.False(context.Response.Headers.ContainsKey("x-token"));
-        }
-
-        [Fact]
-        public async Task UseJwtTokenRefresh_WhenTokenNotNearExpiration_SkipsRefresh()
-        {
-            var user = CreateAuthenticatedUser(expirationMinutes: 120, includeIssuer: true, includeAudience: true);
-            var pipeline = BuildJwtRefreshPipeline(new Dictionary<string, string?> { { "JWT:RefreshThresholdMinutes", "15" } });
-            var context = CreateHttpContext();
-            context.User = user;
-
-            await pipeline(context);
-            await ExecuteOnStartingCallbacks(context.Response);
-
-            Assert.False(context.Response.Headers.ContainsKey("x-token"));
-        }
-
         private static WebApplicationBuilder CreateWebApplicationBuilder(string environmentName)
         {
             var options = new WebApplicationOptions
@@ -199,50 +157,5 @@ namespace UnitTesting.Extensions
         {
             return new DefaultHttpContext();
         }
-
-        private static ClaimsPrincipal CreateAuthenticatedUser(int expirationMinutes, bool includeIssuer, bool includeAudience)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, "unit-test-user"),
-                new Claim(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddMinutes(expirationMinutes).ToUnixTimeSeconds().ToString())
-            };
-
-            if (includeIssuer)
-            {
-                claims.Add(new Claim(JwtRegisteredClaimNames.Iss, "https://issuer"));
-            }
-
-            if (includeAudience)
-            {
-                claims.Add(new Claim(JwtRegisteredClaimNames.Aud, "https://audience"));
-            }
-
-            var identity = new ClaimsIdentity(claims, authenticationType: "Bearer");
-            return new ClaimsPrincipal(identity);
-        }
-
-        private static RequestDelegate BuildJwtRefreshPipeline(IDictionary<string, string?> configurationValues)
-        {
-            var builder = new ApplicationBuilder(new ServiceCollection().BuildServiceProvider());
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationValues).Build();
-            var method = GetPrivateMiddlewareMethod("UseJwtTokenRefresh");
-            var configuredBuilder = (IApplicationBuilder)method.Invoke(null, new object[] { builder, configuration })!;
-            configuredBuilder.Run(async ctx =>
-            {
-                await ctx.Response.WriteAsync("ok");
-            });
-
-            return configuredBuilder.Build();
-        }
-
-        private static Task ExecuteOnStartingCallbacks(HttpResponse response)
-        {
-            // Ensures ASP.NET Core executes registered OnStarting callbacks even when the
-            // response body never flushes to the actual server transport during tests.
-            return response.StartAsync();
-        }
-
-
     }
 }

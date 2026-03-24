@@ -1,4 +1,5 @@
 using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using Utilities;
 
 namespace AppLogic.Interfaces
@@ -30,6 +31,30 @@ namespace AppLogic.Interfaces
         /// Devuelve las universidades disponibles. Valida que el país indicado exista.
         /// </summary>
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades(long codigoPais);
+
+        OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona);
+
+        OperationResult<DtoDeclaracionJuradaWebDevart> ObtenerFormularioDeclaracionJuradaWebDetalle(long codigoPersona, long idInscriptoPrueba);
+
+        OperationResult<bool> GuardarFormularioDeclaracionJuradaWeb(long codigoPersona,DtoDeclaracionJuradaWebDevart declaracionModificada,bool confirmar);
+
+        OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName);
+
+        OperationResult<ArchivoDescargaDto> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);
+
+        OperationResult<bool> EliminarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);
+
+        OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName);
+
+        OperationResult<ArchivoDescargaDto> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
+
+        OperationResult<bool> EliminarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
+
+        OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName);
+
+        OperationResult<ArchivoDescargaDto> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
+
+        OperationResult<bool> EliminarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
 
         #endregion
     }

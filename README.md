@@ -29,6 +29,9 @@ La solución `WebApiAdmisiones.sln` está organizada en capas y proyectos indepe
 │   │   └─ ModGenericBase        (repositorio genérico, UoW base, entidades comunes)
 │   └─ Utilities                 (constantes, encriptado, OperationResult, validadores)
 │
+├─ AppLogic
+│   └─ Servicios de aplicación (Casos de uso) y Helpers (DTOs y converters)
+│
 ├─ BusinessLogic
 │   ├─ DevartEFCore
 │   │   ├─ DevartEntities        (entidades generadas por Devart Entity Developer)

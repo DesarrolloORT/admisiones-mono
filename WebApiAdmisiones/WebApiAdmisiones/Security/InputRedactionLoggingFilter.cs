@@ -28,14 +28,17 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
             ? guidValue
             : Guid.NewGuid();
         
-        // Marcar que se logueÃ³ la entrada (para evitar duplicados en middleware)
+        // Marcar que se logueó la entrada (para evitar duplicados en middleware)
         httpContext.Items[LoggingHelper.EntradaLoggedKey] = true;
 
         // Evitar overhead en GET/HEAD sin argumentos relevantes
         if ((method == HttpMethods.Get || method == HttpMethods.Head) && context.ActionArguments.Count == 0)
         {
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
             var logMessage = LoggingHelper.FormatEntrada(httpContext, origin, codigoPersona, null, correlationId);
             _logger.LogInformation("{LogMessage}", logMessage);
+            }
             await next();
             return;
         }
@@ -44,9 +47,11 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
         foreach (var kv in context.ActionArguments)
             redactedArgs[kv.Key] = ResponseRedactionHelper.Redact(kv.Value);
 
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
         var logMessageWithData = LoggingHelper.FormatEntrada(httpContext, origin, codigoPersona, redactedArgs, correlationId);
         _logger.LogInformation("{LogMessage}", logMessageWithData);
-
+        }
         await next();
     }
 }
