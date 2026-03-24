@@ -333,32 +333,99 @@ namespace AppLogic.Services
             }
 
             using var uow = _uowFactory.Create();
-            var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
-
-            if (declaracion is null)
+            var declaracionResult = ObtenerDeclaracionAutorizada(
+                uow,
+                codigoPersona,
+                idDeclaracionJuradaWeb,
+                nameof(SubirArchivoRevalidaDJ),
+                "FDB_SAR");
+            if (!declaracionResult.Success || declaracionResult.Data is null)
             {
                 return OperationResult<bool>.IsFailed(
-                    "FDB_SAR_01",
+                    declaracionResult.ErrorCode,
                     nameof(SubirArchivoRevalidaDJ),
-                    "No se encontró la declaración jurada indicada.",
-                    404);
+                    declaracionResult.Message,
+                    declaracionResult.HttpCode);
             }
 
-            if (declaracion.CodigoPersona != codigoPersona)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_SAR_02",
-                    nameof(SubirArchivoRevalidaDJ),
-                    "La declaración jurada indicada no pertenece a la persona autenticada.",
-                    403);
-            }
-
+            var declaracion = declaracionResult.Data;
             declaracion.NombrePdfRevalidasDj = Path.GetFileNameWithoutExtension(archivoValidado.Data);
             declaracion.ExtensionPdfRevalidasDj = Path.GetExtension(archivoValidado.Data);
             declaracion.PdfFormRevalidasDj = fileContent;
             uow.Save();
 
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoRevalidaDJ));
+        }
+
+        public OperationResult<ArchivoDescargaDto> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb)
+        {
+            using var uow = _uowFactory.Create();
+            var declaracionResult = ObtenerDeclaracionAutorizada(
+                uow,
+                codigoPersona,
+                idDeclaracionJuradaWeb,
+                nameof(DescargarArchivoRevalidaDJ),
+                "FDB_DAR");
+            if (!declaracionResult.Success || declaracionResult.Data is null)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    declaracionResult.ErrorCode,
+                    nameof(DescargarArchivoRevalidaDJ),
+                    declaracionResult.Message,
+                    declaracionResult.HttpCode);
+            }
+
+            var declaracion = declaracionResult.Data;
+            if (declaracion.PdfFormRevalidasDj is null || declaracion.PdfFormRevalidasDj.Length == 0)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    "FDB_DAR_03",
+                    nameof(DescargarArchivoRevalidaDJ),
+                    "La declaración jurada indicada no tiene archivo de reválida adjunto.",
+                    404);
+            }
+
+            var extension = NormalizarExtension(declaracion.ExtensionPdfRevalidasDj);
+            var nombreArchivo = ConstruirNombreArchivo(
+                declaracion.NombrePdfRevalidasDj,
+                extension,
+                $"revalida_{idDeclaracionJuradaWeb}");
+
+            return OperationResult<ArchivoDescargaDto>.Ok(
+                new ArchivoDescargaDto
+                {
+                    Archivo = declaracion.PdfFormRevalidasDj,
+                    NombreArchivo = nombreArchivo,
+                    ContentType = ObtenerContentType(extension)
+                },
+                nameof(DescargarArchivoRevalidaDJ));
+        }
+
+        public OperationResult<bool> EliminarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb)
+        {
+            using var uow = _uowFactory.Create();
+            var declaracionResult = ObtenerDeclaracionAutorizada(
+                uow,
+                codigoPersona,
+                idDeclaracionJuradaWeb,
+                nameof(EliminarArchivoRevalidaDJ),
+                "FDB_EAR");
+            if (!declaracionResult.Success || declaracionResult.Data is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    declaracionResult.ErrorCode,
+                    nameof(EliminarArchivoRevalidaDJ),
+                    declaracionResult.Message,
+                    declaracionResult.HttpCode);
+            }
+
+            var declaracion = declaracionResult.Data;
+            declaracion.NombrePdfRevalidasDj = string.Empty;
+            declaracion.ExtensionPdfRevalidasDj = string.Empty;
+            declaracion.PdfFormRevalidasDj = null;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(EliminarArchivoRevalidaDJ));
         }
 
         #endregion DECLARACIÓN JURADA
@@ -491,6 +558,35 @@ namespace AppLogic.Services
             }
 
             return OperationResult<BusinessLogic.Entities.EgresoMensualNfDj>.Ok(egreso, methodName);
+        }
+
+        private static OperationResult<BusinessLogic.Entities.DeclaracionJuradaWeb> ObtenerDeclaracionAutorizada(
+            IUnitOfWork uow,
+            long codigoPersona,
+            long idDeclaracionJuradaWeb,
+            string methodName,
+            string errorPrefix)
+        {
+            var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
+            if (declaracion is null)
+            {
+                return OperationResult<BusinessLogic.Entities.DeclaracionJuradaWeb>.IsFailed(
+                    $"{errorPrefix}_01",
+                    methodName,
+                    "No se encontró la declaración jurada indicada.",
+                    404);
+            }
+
+            if (declaracion.CodigoPersona != codigoPersona)
+            {
+                return OperationResult<BusinessLogic.Entities.DeclaracionJuradaWeb>.IsFailed(
+                    $"{errorPrefix}_02",
+                    methodName,
+                    "La declaración jurada indicada no pertenece a la persona autenticada.",
+                    403);
+            }
+
+            return OperationResult<BusinessLogic.Entities.DeclaracionJuradaWeb>.Ok(declaracion, methodName);
         }
 
         private static string ConstruirNombreArchivo(string? nombreBase, string extension, string fallback)

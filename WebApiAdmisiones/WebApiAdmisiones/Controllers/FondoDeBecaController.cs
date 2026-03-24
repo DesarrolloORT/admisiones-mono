@@ -276,6 +276,47 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Descarga el archivo de reválida asociado a una declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idDeclaracionJuradaWeb">ID de la declaración jurada.</param>
+        /// <returns>Archivo adjunto con su nombre original.</returns>
+        /// <response code="200">Archivo obtenido correctamente.</response>
+        /// <response code="403">La declaración jurada no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró la declaración jurada o no tiene archivo adjunto.</response>
+        [HttpGet("DescargarArchivoRevalidaDJ")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        public IActionResult DescargarArchivoRevalidaDJ([FromQuery] long idDeclaracionJuradaWeb)
+        {
+            var result = fondoDeBecaServices.DescargarArchivoRevalidaDJ(_currentUser.GetUserId(), idDeclaracionJuradaWeb);
+            if (!result.Success)
+            {
+                return ValidateResponse(result);
+            }
+
+            return File(result.Data.Archivo, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+
+        /// <summary>
+        /// Elimina el archivo de reválida asociado a una declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idDeclaracionJuradaWeb">ID de la declaración jurada.</param>
+        /// <returns>true si la eliminación fue exitosa.</returns>
+        /// <response code="200">Archivo eliminado correctamente.</response>
+        /// <response code="403">La declaración jurada no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró la declaración jurada indicada.</response>
+        [HttpDelete("EliminarArchivoRevalidaDJ")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult EliminarArchivoRevalidaDJ([FromQuery] long idDeclaracionJuradaWeb)
+        {
+            var result = fondoDeBecaServices.EliminarArchivoRevalidaDJ(_currentUser.GetUserId(), idDeclaracionJuradaWeb);
+            return ValidateResponse(result);
+        }
+
         #endregion
     }
 }

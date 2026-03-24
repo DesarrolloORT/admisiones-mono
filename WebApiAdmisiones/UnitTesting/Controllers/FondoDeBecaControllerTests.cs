@@ -103,5 +103,51 @@ namespace UnitTesting.Controllers
             var objectResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, objectResult.StatusCode);
         }
+
+        [Fact]
+        public void DescargarArchivoRevalidaDJ_ReturnsFile()
+        {
+            var serviceMock = new Mock<IFondoDeBecaServices>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<FondoDeBecaController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+
+            serviceMock.Setup(s => s.DescargarArchivoRevalidaDJ(1, 55))
+                .Returns(OperationResult<ArchivoDescargaDto>.Ok(
+                    new ArchivoDescargaDto
+                    {
+                        Archivo = [1, 2, 3],
+                        NombreArchivo = "revalida.pdf",
+                        ContentType = "application/pdf"
+                    },
+                    nameof(IFondoDeBecaServices.DescargarArchivoRevalidaDJ)));
+
+            var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.DescargarArchivoRevalidaDJ(55);
+
+            var fileResult = Assert.IsType<FileContentResult>(response);
+            Assert.Equal("application/pdf", fileResult.ContentType);
+            Assert.Equal("revalida.pdf", fileResult.FileDownloadName);
+        }
+
+        [Fact]
+        public void EliminarArchivoRevalidaDJ_ReturnsOk()
+        {
+            var serviceMock = new Mock<IFondoDeBecaServices>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<FondoDeBecaController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+
+            serviceMock.Setup(s => s.EliminarArchivoRevalidaDJ(1, 55))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IFondoDeBecaServices.EliminarArchivoRevalidaDJ)));
+
+            var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.EliminarArchivoRevalidaDJ(55);
+
+            var objectResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, objectResult.StatusCode);
+        }
     }
 }

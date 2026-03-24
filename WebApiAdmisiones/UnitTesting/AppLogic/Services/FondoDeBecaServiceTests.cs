@@ -956,6 +956,100 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Verify(u => u.Save(), Times.Once);
         }
 
+        [Fact]
+        public void DescargarArchivoRevalidaDJ_HappyPath_ReturnsArchivoConNombreYContentType()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 1,
+                NombrePdfRevalidasDj = "revalida",
+                ExtensionPdfRevalidasDj = ".pdf",
+                PdfFormRevalidasDj = [1, 2, 3]
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.DescargarArchivoRevalidaDJ(1, 55);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal("revalida.pdf", result.Data.NombreArchivo);
+            Assert.Equal("application/pdf", result.Data.ContentType);
+            Assert.Equal([1, 2, 3], result.Data.Archivo);
+        }
+
+        [Fact]
+        public void DescargarArchivoRevalidaDJ_SinArchivo_ReturnsNotFound()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 1,
+                NombrePdfRevalidasDj = "revalida",
+                ExtensionPdfRevalidasDj = ".pdf",
+                PdfFormRevalidasDj = null
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.DescargarArchivoRevalidaDJ(1, 55);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAR_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void EliminarArchivoRevalidaDJ_HappyPath_LimpiaCamposYGuarda()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 1,
+                NombrePdfRevalidasDj = "revalida",
+                ExtensionPdfRevalidasDj = ".pdf",
+                PdfFormRevalidasDj = [1, 2, 3]
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.EliminarArchivoRevalidaDJ(1, 55);
+
+            Assert.True(result.Success);
+            Assert.Equal(string.Empty, declaracion.NombrePdfRevalidasDj);
+            Assert.Equal(string.Empty, declaracion.ExtensionPdfRevalidasDj);
+            Assert.Null(declaracion.PdfFormRevalidasDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void EliminarArchivoRevalidaDJ_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 55,
+                CodigoPersona = 999
+            };
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.EliminarArchivoRevalidaDJ(1, 55);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_EAR_02", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
         #endregion UNIVERSIDADES
     }
 }
