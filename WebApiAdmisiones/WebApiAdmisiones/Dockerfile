@@ -8,7 +8,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # 1) Copio únicamente lo necesario:
-#    - toda la carpeta Empleos (donde está WebApiEmpleos.sln y el sub-proyecto WebApiEmpleos)
+#    - toda la carpeta WebApiAdmisiones (donde está WebApiAdmisiones.sln y el sub-proyecto WebApiAdmisiones)
 #    - toda la carpeta Core (tus librerías compartidas)
 COPY Core/DbConnectionContext        Core/DbConnectionContext
 COPY Core/LdapService        Core/LdapService
@@ -30,9 +30,9 @@ COPY Core/Modules/ModGenericBase/ModBusinessLogic Core/Modules/ModGenericBase/Mo
 COPY Core/Modules/ModGenericBase/ModDataAccess Core/Modules/ModGenericBase/ModDataAccess
 
 
-# 2) Restore de la solución que vive en Empleos
-WORKDIR /src/Empleos
-RUN dotnet restore WebApiEmpleos.sln
+# 2) Restore de la solución que vive en WebApiAdmisiones
+WORKDIR /src/WebApiAdmisiones
+RUN dotnet restore WebApiAdmisiones.sln
 
 # 3) Publicar directamente el proyecto de la API
 WORKDIR /src/WebApiAdmisiones/WebApiAdmisiones

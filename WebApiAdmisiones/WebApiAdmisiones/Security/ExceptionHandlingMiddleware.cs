@@ -161,7 +161,7 @@ namespace WebApiAdmisiones.Security
             var relevantLines = ex.StackTrace
                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                 .Where(line => line.Contains("AppLogic") || 
-                               line.Contains("WebApiEmpleos") || 
+                               line.Contains("WebApiAdmisiones") || 
                                line.Contains("DataAccess"))
                 .Take(5);
 

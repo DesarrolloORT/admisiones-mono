@@ -13,7 +13,7 @@ namespace BusinessLogic.IServices
         /// Guarda un nuevo refresh token en la base de datos, revocando los tokens activos anteriores.
         /// </summary>
         /// <param name="codigoPersona">Código de la persona.</param>
-        /// <param name="sistema">Sistema que genera el token (ej: "EMPLEOSWEB").</param>
+        /// <param name="sistema">Sistema que genera el token (ej: "ADMISIONES").</param>
         /// <param name="tokenHash">Hash del refresh token.</param>
         /// <param name="expiresAt">Fecha y hora de expiración del token.</param>
         /// <returns>Task que representa la operación asíncrona.</returns>
