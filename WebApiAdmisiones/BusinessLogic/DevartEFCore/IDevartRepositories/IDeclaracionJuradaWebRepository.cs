@@ -20,5 +20,7 @@ namespace BusinessLogic.IDevartRepositories
         ICollection<DeclaracionJuradaWeb> GetFormulariosAdmisionesVigentes(long codigoPersona);
 
         DeclaracionJuradaWeb? GetFormularioAdmisiones(long codigoPersona, long idInscriptoPrueba);
+
+        DeclaracionJuradaWeb? GetFormularioAdmisionesCompleto(long codigoPersona, long idInscriptoPrueba);
     }
 }

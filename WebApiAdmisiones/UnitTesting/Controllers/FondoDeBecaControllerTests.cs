@@ -1,10 +1,12 @@
 using AppLogic.DTOs;
+using AppLogic.DevartDTOs;
 using AppLogic.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
+using WebApiAdmisiones.Models;
 using WebApiAdmisiones.Security;
 using Xunit;
 
@@ -145,6 +147,36 @@ namespace UnitTesting.Controllers
             var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             var response = controller.EliminarArchivoRevalidaDJ(55);
+
+            var objectResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, objectResult.StatusCode);
+        }
+
+        [Fact]
+        public void PostFormularioDeclaracionJuradaWeb_ReturnsOk()
+        {
+            var serviceMock = new Mock<IFondoDeBecaServices>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<FondoDeBecaController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+
+            var request = new DtoDeclaracionJuradaWebDevart
+            {
+                IdDeclaracionjuradaWeb = 1,
+                CodigoPersona = 1,
+                IdProducto = 10,
+                IdTipoDescuento = 1,
+                IdInscriptoPrueba = 100,
+                TienevehiculoNfDj = "NO",
+                TienecasaveraneoNfDj = "NO"
+            };
+
+            serviceMock.Setup(s => s.GuardarFormularioDeclaracionJuradaWeb(1, request, true))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IFondoDeBecaServices.GuardarFormularioDeclaracionJuradaWeb)));
+
+            var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.PostFormularioDeclaracionJuradaWeb(request, true);
 
             var objectResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, objectResult.StatusCode);

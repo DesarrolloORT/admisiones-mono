@@ -36,6 +36,8 @@ namespace AppLogic.Interfaces
 
         OperationResult<DtoDeclaracionJuradaWebDevart> ObtenerFormularioDeclaracionJuradaWebDetalle(long codigoPersona, long idInscriptoPrueba);
 
+        OperationResult<bool> GuardarFormularioDeclaracionJuradaWeb(long codigoPersona,DtoDeclaracionJuradaWebDevart declaracionModificada,bool confirmar);
+
         OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName);
 
         OperationResult<ArchivoDescargaDto> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);

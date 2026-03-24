@@ -65,5 +65,22 @@ namespace DataAccess.DevartRepositories
                 .OrderByDescending(d => d.IdDeclaracionjuradaWeb)
                 .FirstOrDefault();
         }
+
+        public virtual DeclaracionJuradaWeb? GetFormularioAdmisionesCompleto(long codigoPersona, long idInscriptoPrueba)
+        {
+            return objectSet
+                .Include(d => d.Persona)
+                .Include(d => d.Producto)
+                .Include(d => d.TipoDescuento)
+                .Include(d => d.EgresoMensualNfDjs)
+                    .ThenInclude(e => e.TipoEgresoDj)
+                .Include(d => d.IntegranteNfDjs)
+                    .ThenInclude(i => i.TipoParentesco)
+                .Include(d => d.IntegranteNfDjs)
+                    .ThenInclude(i => i.IngresoMensualNfDjs)
+                .Where(d => d.CodigoPersona == codigoPersona && d.IdInscriptoPrueba == idInscriptoPrueba)
+                .OrderByDescending(d => d.IdDeclaracionjuradaWeb)
+                .FirstOrDefault();
+        }
     }
 }

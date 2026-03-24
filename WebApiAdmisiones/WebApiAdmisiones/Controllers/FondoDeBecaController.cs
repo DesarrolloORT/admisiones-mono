@@ -114,6 +114,42 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Guarda o confirma un formulario de declaración jurada web del usuario autenticado.
+        /// </summary>
+        /// <param name="request">Declaración modificada enviada por el cliente.</param>
+        /// <param name="confirmar">Indica si además se debe confirmar la declaración.</param>
+        /// <returns>true si la operación fue exitosa.</returns>
+        /// <response code="200">Formulario guardado o confirmado correctamente.</response>
+        /// <response code="400">Request inválido o validaciones de negocio no superadas.</response>
+        /// <response code="404">No se encontró la declaración jurada o la inscripción asociada.</response>
+        /// <response code="409">La declaración ya fue confirmada y no admite cambios.</response>
+        [HttpPost("FormularioDeclaracionJuradaWeb")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult PostFormularioDeclaracionJuradaWeb(
+            [FromBody] DtoDeclaracionJuradaWebDevart declaracionModificada,
+            [FromQuery] bool confirmar = false)
+        {
+            if (declaracionModificada is null)
+            {
+                return ValidateResponse(OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_00",
+                    nameof(PostFormularioDeclaracionJuradaWeb),
+                    "Se requiere la declaración modificada.",
+                    400));
+            }
+
+            var result = fondoDeBecaServices.GuardarFormularioDeclaracionJuradaWeb(
+                _currentUser.GetUserId(),
+                declaracionModificada,
+                confirmar);
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Sube el archivo asociado a un ingreso mensual de la declaración jurada del usuario autenticado.
         /// </summary>
         /// <param name="request">JSON con el ID del ingreso mensual, nombre del archivo y bytes del adjunto.</param>

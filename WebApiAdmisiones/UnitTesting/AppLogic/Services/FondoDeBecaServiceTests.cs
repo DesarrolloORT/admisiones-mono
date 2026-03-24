@@ -9,6 +9,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using Utilities;
 using BusinessLogic.IDevartRepositories;
+using ConnectionContext;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -16,14 +17,16 @@ namespace UnitTesting.AppLogic.Services
     {
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
+        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly FondoDeBecaServices _service;
 
         public FondoDeBecaServiceTests()
         {
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
+            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new FondoDeBecaServices(_uowFactoryMock.Object);
+            _service = new FondoDeBecaServices(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
         }
 
         #region TIPOS DECLARACIÓN JURADA
@@ -302,7 +305,7 @@ namespace UnitTesting.AppLogic.Services
             };
 
             var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
-            djRepo.Setup(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
             _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
 
             var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
@@ -329,7 +332,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(result.Data);
             Assert.Equal("Bachillerato A", result.Data.NombreBachillerato);
             Assert.NotNull(result.Data.ObjTipoVivienda);
-            djRepo.Verify(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba), Times.Once);
+            djRepo.Verify(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba), Times.Once);
         }
 
         [Fact]
@@ -340,7 +343,7 @@ namespace UnitTesting.AppLogic.Services
             long idInscriptoPrueba = 999;
 
             var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
-            djRepo.Setup(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba))
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba))
                 .Returns((DeclaracionJuradaWeb)null);
             _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
 
@@ -351,7 +354,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("FDB_FDJ_02", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
-            djRepo.Verify(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba), Times.Once);
+            djRepo.Verify(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba), Times.Once);
         }
 
         [Fact]
@@ -386,7 +389,7 @@ namespace UnitTesting.AppLogic.Services
             };
 
             var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
-            djRepo.Setup(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
             _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
 
             var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
@@ -446,7 +449,7 @@ namespace UnitTesting.AppLogic.Services
             };
 
             var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
-            djRepo.Setup(r => r.GetFormularioAdmisiones(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
             _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
 
             var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
@@ -472,6 +475,245 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Null(result.Data.ObjTipoVivienda);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_HappyPath_GuardaBorrador()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var declaracion = CrearDeclaracionBase();
+            var modificada = CrearDtoBase();
+            modificada.ObservacionesNfDj = "Actualizado";
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                IdPrueba = 50,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns(new Prueba { IdPrueba = 50, IdTipoBeca = 1, FechaEntregaDjPrueba = DateTime.Today.AddDays(1) });
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tipoViviendaRepo = new Mock<BusinessLogic.IDevartRepositories.ITipoViviendaRepository>();
+            _uowMock.Setup(u => u.TipoViviendas).Returns(tipoViviendaRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, modificada, false);
+
+            Assert.True(result.Success);
+            Assert.Equal("Actualizado", declaracion.ObservacionesNfDj);
+            Assert.Equal("GUARDADO_WEB_SIN_CONFIRMAR", declaracion.Subestado);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_SinCambiosEnModificacion_NoGuarda()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var declaracion = CrearDeclaracionBase();
+            var modificada = CrearDtoBase();
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                IdPrueba = 50,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns(new Prueba { IdPrueba = 50, IdTipoBeca = 1, FechaEntregaDjPrueba = DateTime.Today.AddDays(1) });
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tipoViviendaRepo = new Mock<BusinessLogic.IDevartRepositories.ITipoViviendaRepository>();
+            _uowMock.Setup(u => u.TipoViviendas).Returns(tipoViviendaRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, modificada, false);
+
+            Assert.True(result.Success);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExiste_CreaDeclaracion()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var modificada = CrearDtoBase();
+            modificada.IdDeclaracionjuradaWeb = 0;
+            modificada.ObservacionesNfDj = "Nueva";
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            DeclaracionJuradaWeb? declaracionAgregada = null;
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            djRepo.Setup(r => r.Add(It.IsAny<DeclaracionJuradaWeb>()))
+                .Callback<DeclaracionJuradaWeb>(d => declaracionAgregada = d);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_DECLARACION_JURADA_WEB))
+                .Returns(999);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                IdPrueba = 50,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns(new Prueba { IdPrueba = 50, IdTipoBeca = 1, FechaEntregaDjPrueba = DateTime.Today.AddDays(1) });
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var integranteRepo = new Mock<IIntegranteNfDjRepository>();
+            _uowMock.Setup(u => u.IntegranteNfDjs).Returns(integranteRepo.Object);
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, modificada, false);
+
+            Assert.True(result.Success);
+            Assert.NotNull(declaracionAgregada);
+            Assert.Equal(999, declaracionAgregada!.IdDeclaracionjuradaWeb);
+            Assert.Equal(codigoPersona, declaracionAgregada.CodigoPersona);
+            Assert.Equal(10, declaracionAgregada.IdProducto);
+            Assert.Equal(1, declaracionAgregada.IdTipoDescuento);
+            Assert.Equal("Nueva", declaracionAgregada.ObservacionesNfDj);
+            Assert.Equal("GUARDADO_WEB_SIN_CONFIRMAR", declaracionAgregada.Subestado);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExisteYConfirma_CreaYConfirma()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var modificada = CrearDtoBase();
+            modificada.IdDeclaracionjuradaWeb = 0;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            DeclaracionJuradaWeb? declaracionAgregada = null;
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            djRepo.Setup(r => r.Add(It.IsAny<DeclaracionJuradaWeb>()))
+                .Callback<DeclaracionJuradaWeb>(d => declaracionAgregada = d);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_DECLARACION_JURADA_WEB))
+                .Returns(999);
+
+            var inscriptoPrueba = new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                IdPrueba = 50,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10
+            };
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(inscriptoPrueba);
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns(new Prueba { IdPrueba = 50, IdTipoBeca = 1, FechaEntregaDjPrueba = DateTime.Today.AddDays(1) });
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var integranteRepo = new Mock<IIntegranteNfDjRepository>();
+            _uowMock.Setup(u => u.IntegranteNfDjs).Returns(integranteRepo.Object);
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, modificada, true);
+
+            Assert.True(result.Success);
+            Assert.NotNull(declaracionAgregada);
+            Assert.Equal("CONFIRMADO_WEB", declaracionAgregada!.Subestado);
+            Assert.NotNull(declaracionAgregada.ConfirmacionDecjurada);
+            Assert.Equal("E", inscriptoPrueba.EstadoInscriptoPrueba);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_ConfirmarSinArchivos_ReturnsBadRequest()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var declaracion = CrearDeclaracionBase();
+            var modificada = CrearDtoBase();
+            modificada.IntegranteNfDjs[0].IngresoMensualNfDjs[0].ArchivoIngresoNfDj = null;
+            modificada.IntegranteNfDjs[0].IngresoMensualNfDjs[0].NombreArchivoIngreso = null;
+            modificada.IntegranteNfDjs[0].IngresoMensualNfDjs[0].ExtensionArchivoIngreso = null;
+
+            declaracion.IntegranteNfDjs[0].IngresoMensualNfDjs[0].ArchivoIngresoNfDj = null;
+            declaracion.IntegranteNfDjs[0].IngresoMensualNfDjs[0].NombreArchivoIngreso = null;
+            declaracion.IntegranteNfDjs[0].IngresoMensualNfDjs[0].ExtensionArchivoIngreso = null;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns(declaracion);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                IdPrueba = 50,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns(new Prueba { IdPrueba = 50, IdTipoBeca = 1, FechaEntregaDjPrueba = DateTime.Today.AddDays(1) });
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tipoViviendaRepo = new Mock<BusinessLogic.IDevartRepositories.ITipoViviendaRepository>();
+            _uowMock.Setup(u => u.TipoViviendas).Returns(tipoViviendaRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, modificada, true);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_14", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
         }
 
         [Fact]
@@ -1048,6 +1290,108 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("FDB_EAR_02", result.ErrorCode);
             Assert.Equal(403, result.HttpCode);
             _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        private static DeclaracionJuradaWeb CrearDeclaracionBase()
+        {
+            return new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 1,
+                CodigoPersona = 1,
+                IdProducto = 10,
+                IdTipoDescuento = 1,
+                IdInscriptoPrueba = 100,
+                TienevehiculoNfDj = "NO",
+                TienecasaveraneoNfDj = "NO",
+                ObservacionesNfDj = "Original",
+                IntegranteNfDjs =
+                [
+                    new IntegranteNfDj
+                    {
+                        IdIntegranteNfDj = 200,
+                        IdDeclaracionjuradaWeb = 1,
+                        IdTipoParentesco = 2,
+                        NombreIntegranteNfDj = "Padre",
+                        IngresoMensualNfDjs =
+                        [
+                            new IngresoMensualNfDj
+                            {
+                                IdIngresoMensualNfDj = 300,
+                                IdIntegranteNfDj = 200,
+                                NominalIngresoNfDj = 1500,
+                                DescuentoslegalesIngresoNf = 200,
+                                LiquidoIngresoNfDj = 1300,
+                                IdIngresoFront = "ING-1",
+                                ArchivoIngresoNfDj = [1, 2, 3],
+                                NombreArchivoIngreso = "ingreso",
+                                ExtensionArchivoIngreso = ".pdf"
+                            }
+                        ]
+                    }
+                ],
+                EgresoMensualNfDjs =
+                [
+                    new EgresoMensualNfDj
+                    {
+                        IdEgresoMensualNfDj = 400,
+                        IdDeclaracionjuradaWeb = 1,
+                        IdTipoEgresoDj = 3,
+                        MontoEgresoMensualNfDj = 700,
+                        IdEgresoFront = "EGR-1"
+                    }
+                ]
+            };
+        }
+
+        private static DtoDeclaracionJuradaWebDevart CrearDtoBase()
+        {
+            return new DtoDeclaracionJuradaWebDevart
+            {
+                IdDeclaracionjuradaWeb = 1,
+                CodigoPersona = 1,
+                IdProducto = 10,
+                IdTipoDescuento = 1,
+                IdInscriptoPrueba = 100,
+                TienevehiculoNfDj = "NO",
+                TienecasaveraneoNfDj = "NO",
+                ObservacionesNfDj = "Original",
+                IntegranteNfDjs =
+                [
+                    new DtoIntegranteNfDjDevart
+                    {
+                        IdIntegranteNfDj = 200,
+                        IdDeclaracionjuradaWeb = 1,
+                        IdTipoParentesco = 2,
+                        NombreIntegranteNfDj = "Padre",
+                        IngresoMensualNfDjs =
+                        [
+                            new DtoIngresoMensualNfDjDevart
+                            {
+                                IdIngresoMensualNfDj = 300,
+                                IdIntegranteNfDj = 200,
+                                NominalIngresoNfDj = 1500,
+                                DescuentoslegalesIngresoNf = 200,
+                                LiquidoIngresoNfDj = 1300,
+                                IdIngresoFront = "ING-1",
+                                ArchivoIngresoNfDj = [1, 2, 3],
+                                NombreArchivoIngreso = "ingreso",
+                                ExtensionArchivoIngreso = ".pdf"
+                            }
+                        ]
+                    }
+                ],
+                EgresoMensualNfDjs =
+                [
+                    new DtoEgresoMensualNfDjDevart
+                    {
+                        IdEgresoMensualNfDj = 400,
+                        IdDeclaracionjuradaWeb = 1,
+                        IdTipoEgresoDj = 3,
+                        MontoEgresoMensualNfDj = 700,
+                        IdEgresoFront = "EGR-1"
+                    }
+                ]
+            };
         }
 
         #endregion UNIVERSIDADES
