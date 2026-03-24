@@ -784,6 +784,132 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void DescargarArchivoEgreso_HappyPath_ReturnsArchivoConNombreYContentType()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99,
+                NombreArchivoEgreso = "egreso",
+                ExtensionArchivoEgreso = ".jpg",
+                ArchivoEgresoMensualNfDj = [1, 2, 3]
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 1
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.DescargarArchivoEgreso(1, 10);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal("egreso.jpg", result.Data.NombreArchivo);
+            Assert.Equal("image/jpeg", result.Data.ContentType);
+            Assert.Equal([1, 2, 3], result.Data.Archivo);
+        }
+
+        [Fact]
+        public void DescargarArchivoEgreso_SinArchivo_ReturnsNotFound()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99,
+                NombreArchivoEgreso = "egreso",
+                ExtensionArchivoEgreso = ".jpg",
+                ArchivoEgresoMensualNfDj = null
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 1
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.DescargarArchivoEgreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAE_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void EliminarArchivoEgreso_HappyPath_LimpiaCamposYGuarda()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99,
+                NombreArchivoEgreso = "egreso",
+                ExtensionArchivoEgreso = ".jpg",
+                ArchivoEgresoMensualNfDj = [1, 2, 3]
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 1
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.EliminarArchivoEgreso(1, 10);
+
+            Assert.True(result.Success);
+            Assert.Equal(string.Empty, egreso.NombreArchivoEgreso);
+            Assert.Equal(string.Empty, egreso.ExtensionArchivoEgreso);
+            Assert.Null(egreso.ArchivoEgresoMensualNfDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void EliminarArchivoEgreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var egreso = new EgresoMensualNfDj
+            {
+                IdEgresoMensualNfDj = 10,
+                IdDeclaracionjuradaWeb = 99
+            };
+
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns(egreso);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(99)).Returns(new DeclaracionJuradaWeb
+            {
+                IdDeclaracionjuradaWeb = 99,
+                CodigoPersona = 999
+            });
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.EliminarArchivoEgreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_EAE_02", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
         public void SubirArchivoRevalidaDJ_CuandoNoPerteneceALaPersona_ReturnsForbidden()
         {
             var declaracion = new DeclaracionJuradaWeb

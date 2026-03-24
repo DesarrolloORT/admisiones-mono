@@ -241,25 +241,17 @@ namespace AppLogic.Services
             }
 
             using var uow = _uowFactory.Create();
-            var egreso = uow.EgresoMensualNfDjs.GetByKey(idEgresoMensualNF);
-
-            if (egreso is null)
+            var egresoResult = ObtenerEgresoAutorizado(uow, codigoPersona, idEgresoMensualNF, nameof(SubirArchivoEgreso), "FDB_SAE");
+            if (!egresoResult.Success || egresoResult.Data is null)
             {
                 return OperationResult<bool>.IsFailed(
-                    "FDB_SAE_01",
+                    egresoResult.ErrorCode,
                     nameof(SubirArchivoEgreso),
-                    "No se encontró el egreso mensual indicado.",
-                    404);
+                    egresoResult.Message,
+                    egresoResult.HttpCode);
             }
 
-            if (!PerteneceAPersona(uow, egreso.IdDeclaracionjuradaWeb, codigoPersona))
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_SAE_02",
-                    nameof(SubirArchivoEgreso),
-                    "El egreso mensual indicado no pertenece a la persona autenticada.",
-                    403);
-            }
+            var egreso = egresoResult.Data;
 
             egreso.NombreArchivoEgreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;
             egreso.ExtensionArchivoEgreso = Path.GetExtension(archivoValidado.Data) ?? string.Empty;
@@ -267,6 +259,65 @@ namespace AppLogic.Services
             uow.Save();
 
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoEgreso));
+        }
+
+        public OperationResult<ArchivoDescargaDto> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF)
+        {
+            using var uow = _uowFactory.Create();
+            var egresoResult = ObtenerEgresoAutorizado(uow, codigoPersona, idEgresoMensualNF, nameof(DescargarArchivoEgreso), "FDB_DAE");
+            if (!egresoResult.Success || egresoResult.Data is null)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    egresoResult.ErrorCode,
+                    nameof(DescargarArchivoEgreso),
+                    egresoResult.Message,
+                    egresoResult.HttpCode);
+            }
+
+            var egreso = egresoResult.Data;
+            var archivo = egreso.ArchivoEgresoMensualNfDj;
+            if (archivo is null || archivo.Length == 0)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    "FDB_DAE_03",
+                    nameof(DescargarArchivoEgreso),
+                    "El egreso mensual indicado no tiene archivo adjunto.",
+                    404);
+            }
+
+            var extension = NormalizarExtension(egreso.ExtensionArchivoEgreso);
+            var nombreArchivo = ConstruirNombreArchivo(egreso.NombreArchivoEgreso, extension, $"egreso_{idEgresoMensualNF}");
+
+            return OperationResult<ArchivoDescargaDto>.Ok(
+                new ArchivoDescargaDto
+                {
+                    Archivo = archivo,
+                    NombreArchivo = nombreArchivo,
+                    ContentType = ObtenerContentType(extension)
+                },
+                nameof(DescargarArchivoEgreso));
+        }
+
+        public OperationResult<bool> EliminarArchivoEgreso(long codigoPersona, long idEgresoMensualNF)
+        {
+            using var uow = _uowFactory.Create();
+            var egresoResult = ObtenerEgresoAutorizado(uow, codigoPersona, idEgresoMensualNF, nameof(EliminarArchivoEgreso), "FDB_EAE");
+            if (!egresoResult.Success || egresoResult.Data is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    egresoResult.ErrorCode,
+                    nameof(EliminarArchivoEgreso),
+                    egresoResult.Message,
+                    egresoResult.HttpCode);
+            }
+
+            var egreso = egresoResult.Data;
+            egreso.NombreArchivoEgreso = string.Empty;
+            egreso.ExtensionArchivoEgreso = string.Empty;
+            egreso.ArchivoEgresoMensualNfDj = null;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(EliminarArchivoEgreso));
         }
 
         public OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName)
@@ -411,6 +462,35 @@ namespace AppLogic.Services
             }
 
             return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.Ok(ingreso, methodName);
+        }
+
+        private static OperationResult<BusinessLogic.Entities.EgresoMensualNfDj> ObtenerEgresoAutorizado(
+            IUnitOfWork uow,
+            long codigoPersona,
+            long idEgresoMensualNF,
+            string methodName,
+            string errorPrefix)
+        {
+            var egreso = uow.EgresoMensualNfDjs.GetByKey(idEgresoMensualNF);
+            if (egreso is null)
+            {
+                return OperationResult<BusinessLogic.Entities.EgresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_01",
+                    methodName,
+                    "No se encontró el egreso mensual indicado.",
+                    404);
+            }
+
+            if (!PerteneceAPersona(uow, egreso.IdDeclaracionjuradaWeb, codigoPersona))
+            {
+                return OperationResult<BusinessLogic.Entities.EgresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_02",
+                    methodName,
+                    "El egreso mensual indicado no pertenece a la persona autenticada.",
+                    403);
+            }
+
+            return OperationResult<BusinessLogic.Entities.EgresoMensualNfDj>.Ok(egreso, methodName);
         }
 
         private static string ConstruirNombreArchivo(string? nombreBase, string extension, string fallback)

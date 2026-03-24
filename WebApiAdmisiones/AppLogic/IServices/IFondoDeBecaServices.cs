@@ -44,6 +44,10 @@ namespace AppLogic.Interfaces
 
         OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName);
 
+        OperationResult<ArchivoDescargaDto> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
+
+        OperationResult<bool> EliminarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
+
         OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName);
 
         #endregion

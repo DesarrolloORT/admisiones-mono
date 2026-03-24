@@ -209,6 +209,47 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Descarga el archivo asociado a un egreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idEgresoMensualNF">ID del egreso mensual.</param>
+        /// <returns>Archivo adjunto del egreso mensual.</returns>
+        /// <response code="200">Archivo descargado correctamente.</response>
+        /// <response code="403">El egreso mensual no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró el egreso mensual o no tiene archivo adjunto.</response>
+        [HttpGet("DescargarArchivoEgreso")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        public IActionResult DescargarArchivoEgreso([FromQuery] long idEgresoMensualNF)
+        {
+            var result = fondoDeBecaServices.DescargarArchivoEgreso(_currentUser.GetUserId(), idEgresoMensualNF);
+            if (!result.Success || result.Data is null)
+            {
+                return ValidateResponse(result);
+            }
+
+            return File(result.Data.Archivo, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+
+        /// <summary>
+        /// Elimina el archivo asociado a un egreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idEgresoMensualNF">ID del egreso mensual.</param>
+        /// <returns>true si el archivo se eliminó correctamente.</returns>
+        /// <response code="200">Archivo eliminado correctamente.</response>
+        /// <response code="403">El egreso mensual no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró el egreso mensual indicado.</response>
+        [HttpDelete("EliminarArchivoEgreso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult EliminarArchivoEgreso([FromQuery] long idEgresoMensualNF)
+        {
+            var result = fondoDeBecaServices.EliminarArchivoEgreso(_currentUser.GetUserId(), idEgresoMensualNF);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Sube el archivo de reválida asociado a una declaración jurada del usuario autenticado.
         /// </summary>
         /// <param name="request">JSON con el ID de la declaración jurada, nombre del archivo y bytes del adjunto.</param>

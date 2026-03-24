@@ -57,5 +57,51 @@ namespace UnitTesting.Controllers
             var objectResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, objectResult.StatusCode);
         }
+
+        [Fact]
+        public void DescargarArchivoEgreso_ReturnsFile()
+        {
+            var serviceMock = new Mock<IFondoDeBecaServices>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<FondoDeBecaController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+
+            serviceMock.Setup(s => s.DescargarArchivoEgreso(1, 10))
+                .Returns(OperationResult<ArchivoDescargaDto>.Ok(
+                    new ArchivoDescargaDto
+                    {
+                        Archivo = [1, 2, 3],
+                        NombreArchivo = "egreso.jpg",
+                        ContentType = "image/jpeg"
+                    },
+                    nameof(IFondoDeBecaServices.DescargarArchivoEgreso)));
+
+            var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.DescargarArchivoEgreso(10);
+
+            var fileResult = Assert.IsType<FileContentResult>(response);
+            Assert.Equal("image/jpeg", fileResult.ContentType);
+            Assert.Equal("egreso.jpg", fileResult.FileDownloadName);
+        }
+
+        [Fact]
+        public void EliminarArchivoEgreso_ReturnsOk()
+        {
+            var serviceMock = new Mock<IFondoDeBecaServices>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<FondoDeBecaController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+
+            serviceMock.Setup(s => s.EliminarArchivoEgreso(1, 10))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IFondoDeBecaServices.EliminarArchivoEgreso)));
+
+            var controller = new FondoDeBecaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.EliminarArchivoEgreso(10);
+
+            var objectResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, objectResult.StatusCode);
+        }
     }
 }
