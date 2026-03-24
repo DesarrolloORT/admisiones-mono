@@ -595,6 +595,132 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void DescargarArchivoIngreso_HappyPath_ReturnsArchivoConNombreYContentType()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                NombreArchivoIngreso = "ingreso",
+                ExtensionArchivoIngreso = ".pdf",
+                ArchivoIngresoNfDj = [1, 2, 3],
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 1
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.DescargarArchivoIngreso(1, 10);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal("ingreso.pdf", result.Data.NombreArchivo);
+            Assert.Equal("application/pdf", result.Data.ContentType);
+            Assert.Equal([1, 2, 3], result.Data.Archivo);
+        }
+
+        [Fact]
+        public void DescargarArchivoIngreso_SinArchivo_ReturnsNotFound()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                NombreArchivoIngreso = "ingreso",
+                ExtensionArchivoIngreso = ".pdf",
+                ArchivoIngresoNfDj = null,
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 1
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.DescargarArchivoIngreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAI_05", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void EliminarArchivoIngreso_HappyPath_LimpiaCamposYGuarda()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                NombreArchivoIngreso = "ingreso",
+                ExtensionArchivoIngreso = ".pdf",
+                ArchivoIngresoNfDj = [1, 2, 3],
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 1
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.EliminarArchivoIngreso(1, 10);
+
+            Assert.True(result.Success);
+            Assert.Equal(string.Empty, ingreso.NombreArchivoIngreso);
+            Assert.Equal(string.Empty, ingreso.ExtensionArchivoIngreso);
+            Assert.Null(ingreso.ArchivoIngresoNfDj);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void EliminarArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 999
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.EliminarArchivoIngreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_EAI_04", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
         public void SubirArchivoEgreso_CuandoNoPerteneceALaPersona_ReturnsForbidden()
         {
             var egreso = new EgresoMensualNfDj

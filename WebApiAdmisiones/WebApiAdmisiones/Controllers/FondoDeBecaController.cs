@@ -65,9 +65,9 @@ namespace WebApiAdmisiones.Controllers
         #region UNIVERSIDADES
 
         /// <summary>
-        /// Devuelve las universidades disponibles para el paí­s indicado.
+        /// Devuelve las universidades disponibles para el país indicado.
         /// </summary>
-        /// <param name="codigoPais">Código del paí­s. Por defecto devuelve Uruguay (1).</param>
+        /// <param name="codigoPais">Código del país. Por defecto devuelve Uruguay (1).</param>
         /// <returns>Colección de universidades para el país indicado.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
@@ -141,6 +141,47 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Descarga el archivo asociado a un ingreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idIngresoMensualNF">ID del ingreso mensual.</param>
+        /// <returns>Archivo adjunto del ingreso mensual.</returns>
+        /// <response code="200">Archivo descargado correctamente.</response>
+        /// <response code="403">El ingreso mensual no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró el ingreso mensual o no tiene archivo adjunto.</response>
+        [HttpGet("DescargarArchivoIngreso")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
+        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        public IActionResult DescargarArchivoIngreso([FromQuery] long idIngresoMensualNF)
+        {
+            var result = fondoDeBecaServices.DescargarArchivoIngreso(_currentUser.GetUserId(), idIngresoMensualNF);
+            if (!result.Success || result.Data is null)
+            {
+                return ValidateResponse(result);
+            }
+
+            return File(result.Data.Archivo, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+
+        /// <summary>
+        /// Elimina el archivo asociado a un ingreso mensual de la declaración jurada del usuario autenticado.
+        /// </summary>
+        /// <param name="idIngresoMensualNF">ID del ingreso mensual.</param>
+        /// <returns>true si el archivo se eliminó correctamente.</returns>
+        /// <response code="200">Archivo eliminado correctamente.</response>
+        /// <response code="403">El ingreso mensual no pertenece al usuario autenticado.</response>
+        /// <response code="404">No se encontró el ingreso mensual indicado.</response>
+        [HttpDelete("EliminarArchivoIngreso")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 403)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult EliminarArchivoIngreso([FromQuery] long idIngresoMensualNF)
+        {
+            var result = fondoDeBecaServices.EliminarArchivoIngreso(_currentUser.GetUserId(), idIngresoMensualNF);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Sube el archivo asociado a un egreso mensual de la declaración jurada del usuario autenticado.
         /// </summary>
         /// <param name="request">JSON con el ID del egreso mensual, nombre del archivo y bytes del adjunto.</param>
@@ -175,7 +216,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró la declaración jurada indicada.</response>
-        /// <response code="403">La declaracion jurada no pertenece al usuario autenticado.</response>
+        /// <response code="403">La declaración jurada no pertenece al usuario autenticado.</response>
         [HttpPost("SubirArchivoRevalidaDJ")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -194,6 +235,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        #endregion DECLARACIÓN JURADA
+        #endregion
     }
 }

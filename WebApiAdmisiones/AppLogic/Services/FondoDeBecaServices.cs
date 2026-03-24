@@ -149,45 +149,17 @@ namespace AppLogic.Services
             }
 
             using var uow = _uowFactory.Create();
-            var ingreso = uow.IngresoMensualNfDjs.GetWithIntegranteYDeclaracion(idIngresoMensualNF);
-
-            if (ingreso is null)
+            var ingresoResult = ObtenerIngresoAutorizado(uow, codigoPersona, idIngresoMensualNF, nameof(SubirArchivoIngreso), "FDB_SAI");
+            if (!ingresoResult.Success || ingresoResult.Data is null)
             {
                 return OperationResult<bool>.IsFailed(
-                    "FDB_SAI_01",
+                    ingresoResult.ErrorCode,
                     nameof(SubirArchivoIngreso),
-                    "No se encontró el ingreso mensual indicado.",
-                    404);
+                    ingresoResult.Message,
+                    ingresoResult.HttpCode);
             }
 
-            var integrante = ingreso.IntegranteNfDj;
-            if (integrante is null)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_SAI_02",
-                    nameof(SubirArchivoIngreso),
-                    "No se encontró el integrante asociado al ingreso mensual indicado.",
-                    404);
-            }
-
-            var declaracion = integrante.DeclaracionJuradaWeb;
-            if (declaracion is null)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_SAI_03",
-                    nameof(SubirArchivoIngreso),
-                    "No se encontró la declaración jurada asociada al ingreso mensual indicado.",
-                    404);
-            }
-
-            if (declaracion.CodigoPersona != codigoPersona)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_SAI_04",
-                    nameof(SubirArchivoIngreso),
-                    "El ingreso mensual indicado no pertenece a la persona autenticada.",
-                    403);
-            }
+            var ingreso = ingresoResult.Data;
 
             ingreso.NombreArchivoIngreso = Path.GetFileNameWithoutExtension(archivoValidado.Data) ?? string.Empty;
             ingreso.ExtensionArchivoIngreso = Path.GetExtension(archivoValidado.Data) ?? string.Empty;
@@ -195,6 +167,65 @@ namespace AppLogic.Services
             uow.Save();
 
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoIngreso));
+        }
+
+        public OperationResult<ArchivoDescargaDto> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF)
+        {
+            using var uow = _uowFactory.Create();
+            var ingresoResult = ObtenerIngresoAutorizado(uow, codigoPersona, idIngresoMensualNF, nameof(DescargarArchivoIngreso), "FDB_DAI");
+            if (!ingresoResult.Success || ingresoResult.Data is null)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    ingresoResult.ErrorCode,
+                    nameof(DescargarArchivoIngreso),
+                    ingresoResult.Message,
+                    ingresoResult.HttpCode);
+            }
+
+            var ingreso = ingresoResult.Data;
+            var archivo = ingreso.ArchivoIngresoNfDj;
+            if (archivo is null || archivo.Length == 0)
+            {
+                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                    "FDB_DAI_05",
+                    nameof(DescargarArchivoIngreso),
+                    "El ingreso mensual indicado no tiene archivo adjunto.",
+                    404);
+            }
+
+            var extension = NormalizarExtension(ingreso.ExtensionArchivoIngreso);
+            var nombreArchivo = ConstruirNombreArchivo(ingreso.NombreArchivoIngreso, extension, $"ingreso_{idIngresoMensualNF}");
+
+            return OperationResult<ArchivoDescargaDto>.Ok(
+                new ArchivoDescargaDto
+                {
+                    Archivo = archivo,
+                    NombreArchivo = nombreArchivo,
+                    ContentType = ObtenerContentType(extension)
+                },
+                nameof(DescargarArchivoIngreso));
+        }
+
+        public OperationResult<bool> EliminarArchivoIngreso(long codigoPersona, long idIngresoMensualNF)
+        {
+            using var uow = _uowFactory.Create();
+            var ingresoResult = ObtenerIngresoAutorizado(uow, codigoPersona, idIngresoMensualNF, nameof(EliminarArchivoIngreso), "FDB_EAI");
+            if (!ingresoResult.Success || ingresoResult.Data is null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    ingresoResult.ErrorCode,
+                    nameof(EliminarArchivoIngreso),
+                    ingresoResult.Message,
+                    ingresoResult.HttpCode);
+            }
+
+            var ingreso = ingresoResult.Data;
+            ingreso.NombreArchivoIngreso = string.Empty;
+            ingreso.ExtensionArchivoIngreso = string.Empty;
+            ingreso.ArchivoIngresoNfDj = null;
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, nameof(EliminarArchivoIngreso));
         }
 
         public OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName)
@@ -332,6 +363,88 @@ namespace AppLogic.Services
             var declaracion = uow.DeclaracionJuradaWebs.GetByKey(idDeclaracionJuradaWeb);
             return declaracion?.CodigoPersona == codigoPersona;
         }
+
+        private static OperationResult<BusinessLogic.Entities.IngresoMensualNfDj> ObtenerIngresoAutorizado(
+            IUnitOfWork uow,
+            long codigoPersona,
+            long idIngresoMensualNF,
+            string methodName,
+            string errorPrefix)
+        {
+            var ingreso = uow.IngresoMensualNfDjs.GetWithIntegranteYDeclaracion(idIngresoMensualNF);
+            if (ingreso is null)
+            {
+                return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_01",
+                    methodName,
+                    "No se encontró el ingreso mensual indicado.",
+                    404);
+            }
+
+            var integrante = ingreso.IntegranteNfDj;
+            if (integrante is null)
+            {
+                return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_02",
+                    methodName,
+                    "No se encontró el integrante asociado al ingreso mensual indicado.",
+                    404);
+            }
+
+            var declaracion = integrante.DeclaracionJuradaWeb;
+            if (declaracion is null)
+            {
+                return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_03",
+                    methodName,
+                    "No se encontró la declaración jurada asociada al ingreso mensual indicado.",
+                    404);
+            }
+
+            if (declaracion.CodigoPersona != codigoPersona)
+            {
+                return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.IsFailed(
+                    $"{errorPrefix}_04",
+                    methodName,
+                    "El ingreso mensual indicado no pertenece a la persona autenticada.",
+                    403);
+            }
+
+            return OperationResult<BusinessLogic.Entities.IngresoMensualNfDj>.Ok(ingreso, methodName);
+        }
+
+        private static string ConstruirNombreArchivo(string? nombreBase, string extension, string fallback)
+        {
+            var nombre = string.IsNullOrWhiteSpace(nombreBase) ? fallback : nombreBase.Trim();
+            return $"{nombre}{extension}";
+        }
+
+        private static string NormalizarExtension(string? extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return string.Empty;
+            }
+
+            var ext = extension.Trim();
+            return ext.StartsWith('.') ? ext : $".{ext}";
+        }
+
+        private static string ObtenerContentType(string extension) => extension.ToLowerInvariant() switch
+        {
+            ".pdf" => "application/pdf",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".html" => "text/html",
+            _ => "application/octet-stream"
+        };
 
         #endregion METODOS PRIVADOS
 
