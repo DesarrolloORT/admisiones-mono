@@ -1,113 +1,147 @@
-# API Admisiones – WebApi .NET 10
+# API Admisiones
 
-## Descripción
-API REST para el proceso de admisiones de ORT Uruguay. Expone servicios de consulta y gestión de pre-inscripciones, productos, procesos, becas, reglamentos y datos personales, consumida por el portal de autoservicio estudiantil.
+API REST de admisiones de ORT Uruguay construida sobre `.NET 10`. La solucion expone endpoints para autenticacion, catalogos, persona, inscripciones, preinscripcion, becas y fondo de beca.
 
-# Arquitectura Web API en .NET 10 con Entity Framework (EF Core + Devart)
-🚀 API RESTful diseñada para gestionar el flujo completo de admisiones: desde la consulta de productos y procesos habilitados hasta el registro de pre-inscripciones, encuestas iniciales y validación de becas. Integra EF Core con el proveedor Devart para Oracle.
+## Estructura del repositorio
 
-## Características Tecnológicas
-
-- 🚀 **.NET 10**: Plataforma de última generación con máximo rendimiento.
-- 🛠️ **EF Core + Devart Oracle**: ORM con proveedor Devart para base de datos Oracle, modelo generado con Entity Developer.
-- 🌐 **API RESTful**: Endpoints documentados con Swagger y autenticación JWT Bearer.
-- 🧩 **Arquitectura Limpia**: Separación estricta en capas (Core, AppLogic, BusinessLogic, DataAccess, WebApiAdmisiones).
-- 🔒 **Seguridad**: JWT Bearer, Kestrel hardening, User Secrets y variables de entorno para credenciales.
-- 🐳 **Docker**: Despliegue en contenedor Linux con configuración lista para CI/CD.
-- 🧪 **Pruebas**: xUnit + Moq con proyecto `UnitTesting` incluido en la solución.
-
-## Arquitectura de la Solución
-
-La solución `WebApiAdmisiones.sln` está organizada en capas y proyectos independientes:
-
-```graphql
-├─ Core                          (submódulo git – reutilizable entre proyectos)
-│   ├─ DbConnectionContext       (contexto de conexión con Bearer token provider)
-│   ├─ MailORT                   (servicio de envío de correo)
-│   ├─ Modules
-│   │   ├─ ModBandeja            (módulo de bandeja de tareas)
-│   │   └─ ModGenericBase        (repositorio genérico, UoW base, entidades comunes)
-│   └─ Utilities                 (constantes, encriptado, OperationResult, validadores)
-│
-├─ AppLogic
-│   └─ Servicios de aplicación (Casos de uso) y Helpers (DTOs y converters)
-│
-├─ BusinessLogic
-│   ├─ DevartEFCore
-│   │   ├─ DevartEntities        (entidades generadas por Devart Entity Developer)
-│   │   └─ IDevartRepositories   (interfaces de repositorios y IUnitOfWork)
-│   └─ IGenericRepository        (interfaz base IRepository<T>)
-│
-├─ DataAccess
-│   ├─ DevartContext             (ModelContext – DbContext generado por Devart)
-│   └─ DevartRepositories        (implementaciones de repositorios + EntityFrameworkUnitOfWork)
-│
-├─ AppLogic
-│   ├─ DevartDTOs
-│   │   ├─ DevartDTO             (DTOs generados por Devart)
-│   │   └─ DevartConverters      (converters entidad ↔ DTO generados por Devart)
-│   ├─ IServices                 (interfaces de servicios de aplicación)
-│   ├─ Services                  (implementaciones de servicios de aplicación)
-│   ├─ Helpers                   (helpers de negocio)
-│   └─ Utilities                 (utilidades de capa AppLogic)
-│
-├─ WebApiAdmisiones
-│   ├─ Controllers               (endpoints REST)
-│   ├─ Extensions                (extensiones de DI, Serilog, OpenTelemetry, Kestrel)
-│   ├─ Security                  (JWT, CurrentUser)
-│   └─ Program.cs                (punto de entrada, pipeline HTTP)
-│
-└─ UnitTesting
-    └─ Pruebas de integración y unitarias (xUnit, Moq)
+```text
+api-admisiones/
+|-- Core/                          Submodulo compartido
+|-- WebApiAdmisiones/
+|   |-- AppLogic/                 Servicios, DTOs, helpers y contratos
+|   |-- BusinessLogic/            Entidades e interfaces de repositorios
+|   |-- DataAccess/               Contextos y repositorios Devart/Oracle
+|   |-- UnitTesting/              Suite xUnit + Moq + cobertura
+|   `-- WebApiAdmisiones/         Proyecto web, controllers y pipeline HTTP
+`-- .github/workflows/            CI, SonarQube y build de imagen
 ```
 
-## Endpoints migrados
+## Stack principal
 
-| Controller | Endpoint | Descripción |
-|---|---|---|
-| `Auth` | `POST /Auth/Login` | Autenticación, devuelve JWT |
-| `General` | `GET /General/Paises` | Listado de países |
-| `General` | `GET /General/TipoDocumentos` | Tipos de documento |
-| `General` | `GET /General/ProcesosHabilitadosPorProducto` | Procesos vigentes por producto |
-| `General` | `GET /General/UltimaInscripcion` | Última inscripción del usuario |
-| `General` | `GET /General/Persona` | Datos personales del usuario |
-| `General` | `GET /General/DatosPreInscripcion` | Encuesta inicial / pre-inscripción |
-| `General` | `GET /General/Turnos` | Turnos disponibles para un proceso |
-| `General` | `GET /General/Bachilleratos` / `AnioBachiller` | Datos bachillerato |
-| `General` | `GET /General/Instituciones` / `Universidades` | Instituciones educativas |
-| `General` | `GET /General/FondosDeBecaPorNivel` | Becas disponibles |
-| `General` | `GET /General/AceptacionReglamentoEstudiantil` | Estado de aceptación de reglamento |
-| `General` | `GET /General/ProductoInteresPersona` | Productos de interés del usuario |
-| `FondoDeBeca` | — | Gestión de fondos de beca |
-| `ProcesoComienzo` | — | Gestión de procesos y comienzos |
+- `.NET 10`
+- `ASP.NET Core Web API`
+- `Entity Framework Core` con proveedor `Devart` para Oracle
+- `JWT Bearer` + cookies HttpOnly para refresh token
+- `Swagger / Swashbuckle`
+- `Serilog`, `OpenTelemetry` y `prometheus-net`
+- `xUnit`, `Moq` y `coverlet.collector`
 
-## Clonar el repositorio (con submódulos)
+## Controllers principales
+
+- `LoginController`
+- `CatalogosController`
+- `InscripcionesController`
+- `PreinscripcionController`
+- `PersonaController`
+- `BecasController`
+- `FondoDeBecaController`
+
+## Requisitos
+
+- `.NET SDK 10`
+- acceso al repositorio con submodulos
+- acceso a Oracle segun el ambiente que se quiera usar
+- variables de entorno para autenticacion y conexion
+
+## Clonado
 
 ```bash
 git clone --recurse-submodules git@github.com:DesarrolloORT/api-admisiones.git
+cd api-admisiones
 ```
 
-Si los submódulos no se cargaron al clonar:
+Si el repo ya fue clonado sin submodulos:
 
 ```bash
-cd api-admisiones
 git submodule update --init --recursive
 ```
 
-## Restaurar y compilar
+## Restore y build
+
+Desde la raiz del repo:
 
 ```bash
-cd WebApiAdmisiones
-dotnet restore WebApiAdmisiones.sln
-dotnet build WebApiAdmisiones.sln -c Debug
+dotnet restore WebApiAdmisiones/WebApiAdmisiones.sln
+dotnet build WebApiAdmisiones/WebApiAdmisiones.sln -c Debug
 ```
 
-## Configuración local
+## Configuracion local
 
-La cadena de conexión y el JWT secret se manejan con **User Secrets**. Para configurar localmente:
+La API toma la conexion Oracle desde variable de entorno:
+
+```powershell
+$env:OracleConnectionStringAdmisiones="Data Source=...;User Id=...;Password=..."
+```
+
+Para autenticacion y emision de tokens, hoy se usan estas variables:
+
+```powershell
+$env:JWT_SECRET_KEY="secret"
+$env:JWT_EXPIRE_MINUTES_ADMISIONES="60"
+$env:JWT_REFRESH_EXPIRE_ADMISIONES="1440"
+$env:JWT_ISSUER_TOKEN_ADMISIONES="https://webapiadmisiones.ort.edu.uy"
+$env:JWT_AUDIENCE_TOKEN_ADMISIONES="https://webapiadmisiones.ort.edu.uy"
+```
+
+Tambien hay configuracion por ambiente en:
+
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.json`
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.Development.json`
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.LocalHost.json`
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.Testing.json`
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.Preproduction.json`
+- `WebApiAdmisiones/WebApiAdmisiones/appsettings.Production.json`
+
+La logica de ambientes productivos esta documentada en [ENVIRONMENT_CONFIGURATION.md](C:/GIT/api-admisiones/WebApiAdmisiones/WebApiAdmisiones/Extensions/ENVIRONMENT_CONFIGURATION.md).
+
+## Ejecutar la API
+
+Perfil HTTP local:
 
 ```bash
-cd WebApiAdmisiones/WebApiAdmisiones
-dotnet user-secrets set "ConnectionStrings:OracleConnection" "Data Source=...;User Id=...;Password=..."
-dotnet user-secrets set "Jwt:Key" "tu-clave-secreta"
+dotnet run --project WebApiAdmisiones/WebApiAdmisiones/WebApiAdmisiones.csproj --launch-profile http
 ```
+
+Perfil HTTPS de desarrollo:
+
+```bash
+dotnet run --project WebApiAdmisiones/WebApiAdmisiones/WebApiAdmisiones.csproj --launch-profile https
+```
+
+URLs por defecto:
+
+- `http://localhost:8080/swagger`
+- `https://localhost:7150/swagger`
+
+Swagger queda habilitado en `Development` y `Testing`. Los ambientes `Preproduction` y `Production` se comportan como ambientes productivos.
+
+## Tests
+
+Ejecutar toda la suite:
+
+```bash
+dotnet test WebApiAdmisiones/UnitTesting/UnitTesting.csproj
+```
+
+Ejecutar con cobertura:
+
+```bash
+dotnet test WebApiAdmisiones/UnitTesting/UnitTesting.csproj --settings WebApiAdmisiones/UnitTesting/tests.runsettings --collect:"XPlat Code Coverage"
+```
+
+La configuracion de cobertura genera reportes `cobertura` y `opencover` dentro de `WebApiAdmisiones/UnitTesting/TestResults/`.
+
+## CI y calidad
+
+Workflows principales:
+
+- `.github/workflows/ci-sonarqube-tests.yml`: tests y analisis de SonarQube
+- `.github/workflows/cd-quality-gate-docker-publish.yml`: pipeline de calidad y publicacion
+- `.github/workflows/wd-docker-image-builder.yml`: build manual de imagen
+- `.github/workflows/auto-release.yml`: automatizacion de release
+
+## Notas
+
+- `Core/` es un submodulo y forma parte obligatoria del build.
+- La suite de `UnitTesting` cubre controllers, services, extensiones, seguridad y utilidades.
+- El proyecto web vive en `WebApiAdmisiones/WebApiAdmisiones/`.
