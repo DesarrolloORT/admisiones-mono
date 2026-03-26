@@ -1010,6 +1010,85 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal([1, 2, 3], result.Data.Archivo);
         }
 
+        [Theory]
+        [InlineData(".jpg", "image/jpeg")]
+        [InlineData(".jpeg", "image/jpeg")]
+        [InlineData(".png", "image/png")]
+        [InlineData(".doc", "application/msword")]
+        [InlineData(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")]
+        [InlineData(".xls", "application/vnd.ms-excel")]
+        [InlineData(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+        [InlineData(".ppt", "application/vnd.ms-powerpoint")]
+        [InlineData(".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation")]
+        [InlineData(".html", "text/html")]
+        [InlineData(".bin", "application/octet-stream")]
+        [InlineData("jpg", "image/jpeg")]
+        public void DescargarArchivoIngreso_CubreContentTypes(string extension, string expectedContentType)
+        {
+            var ingreso = new IngresoMensualNfDj
+            {
+                IdIngresoMensualNfDj = 10,
+                NombreArchivoIngreso = "ingreso",
+                ExtensionArchivoIngreso = extension,
+                ArchivoIngresoNfDj = [1, 2, 3],
+                IntegranteNfDj = new IntegranteNfDj
+                {
+                    IdIntegranteNfDj = 20,
+                    DeclaracionJuradaWeb = new DeclaracionJuradaWeb
+                    {
+                        IdDeclaracionjuradaWeb = 30,
+                        CodigoPersona = 1
+                    }
+                }
+            };
+
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns(ingreso);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.DescargarArchivoIngreso(1, 10);
+
+            Assert.True(result.Success);
+            Assert.Equal(expectedContentType, result.Data!.ContentType);
+        }
+
+        [Fact]
+        public void DescargarArchivoIngreso_CuandoNoExisteIngreso_ReturnsNotFound()
+        {
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns((IngresoMensualNfDj)null);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var result = _service.DescargarArchivoIngreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAI_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoIngreso_CuandoNoExisteIngreso_ReturnsNotFound()
+        {
+            var ingresoRepo = new Mock<IIngresoMensualNfDjRepository>();
+            ingresoRepo.Setup(r => r.GetWithIntegranteYDeclaracion(10)).Returns((IngresoMensualNfDj)null);
+            _uowMock.Setup(u => u.IngresoMensualNfDjs).Returns(ingresoRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoIngreso(1, 10, pdfContent, "ingreso.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAI_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoIngreso_ArchivoInvalido_ReturnsFailed()
+        {
+            var result = _service.SubirArchivoIngreso(1, 10, [], "ingreso.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+        }
+
         [Fact]
         public void DescargarArchivoIngreso_SinArchivo_ReturnsNotFound()
         {
@@ -1200,6 +1279,43 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void DescargarArchivoEgreso_CuandoNoExisteEgreso_ReturnsNotFound()
+        {
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns((EgresoMensualNfDj)null);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var result = _service.DescargarArchivoEgreso(1, 10);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAE_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoEgreso_CuandoNoExisteEgreso_ReturnsNotFound()
+        {
+            var egresoRepo = new Mock<IEgresoMensualNfDjRepository>();
+            egresoRepo.Setup(r => r.GetByKey(10)).Returns((EgresoMensualNfDj)null);
+            _uowMock.Setup(u => u.EgresoMensualNfDjs).Returns(egresoRepo.Object);
+
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirArchivoEgreso(1, 10, jpegContent, "egreso.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAE_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoEgreso_ArchivoInvalido_ReturnsFailed()
+        {
+            var result = _service.SubirArchivoEgreso(1, 10, [], "egreso.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
         public void DescargarArchivoEgreso_SinArchivo_ReturnsNotFound()
         {
             var egreso = new EgresoMensualNfDj
@@ -1362,6 +1478,43 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("revalida.pdf", result.Data.NombreArchivo);
             Assert.Equal("application/pdf", result.Data.ContentType);
             Assert.Equal([1, 2, 3], result.Data.Archivo);
+        }
+
+        [Fact]
+        public void DescargarArchivoRevalidaDJ_CuandoNoExisteDeclaracion_ReturnsNotFound()
+        {
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var result = _service.DescargarArchivoRevalidaDJ(1, 55);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_DAR_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoRevalidaDJ_CuandoNoExisteDeclaracion_ReturnsNotFound()
+        {
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetByKey(55)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _service.SubirArchivoRevalidaDJ(1, 55, pdfContent, "revalida.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_SAR_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void SubirArchivoRevalidaDJ_ArchivoInvalido_ReturnsFailed()
+        {
+            var result = _service.SubirArchivoRevalidaDJ(1, 55, [], "revalida.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]

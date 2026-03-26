@@ -75,6 +75,26 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerUltimaInscripcionActiva_ConOfertaNula_UsaValoresPorDefecto()
+        {
+            var repo = new Mock<IInscriptoRepository>();
+            repo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns(new Inscripto
+            {
+                IdInscripto = 9,
+                Oferta = null
+            });
+            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
+
+            var result = _service.ObtenerUltimaInscripcionActiva(123);
+
+            Assert.True(result.Success);
+            Assert.Equal(0, result.Data.IdProducto);
+            Assert.Equal(0, result.Data.IdComienzo);
+            Assert.Null(result.Data.NombreProducto);
+            Assert.Null(result.Data.NombreComienzo);
+        }
+
+        [Fact]
         public void ObtenerProductosVigentesConInteres_ReturnsMappedItems()
         {
             var productoRepo = new Mock<IProductoRepository>();
@@ -147,6 +167,31 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerProductosVigentesConInteres_SinProceso_MapeaProcesoCero()
+        {
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetProductosVigentesConInteres(123)).Returns(
+            [
+                new Producto
+                {
+                    IdProducto = 10,
+                    NombreProducto = "Producto A",
+                    NombreExtensoProducto = "Producto Extenso A",
+                    IdNivelProducto = 2,
+                    ProcesoProductos = new List<ProcesoProducto>()
+                }
+            ]);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var result = _service.ObtenerProductosVigentesConInteres(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(0, item.IdProceso);
+            Assert.Null(item.NombreProceso);
+        }
+
+        [Fact]
         public void ObtenerInscripcionesPendientes_AttachesRelatedInscripcion()
         {
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
@@ -184,6 +229,68 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             var item = Assert.Single(result.Data!);
             Assert.Equal(100m, item.IdInstanciaWorkflow);
+            Assert.NotNull(item.InstWorkflowInscripcion);
+            Assert.Equal(50m, item.InstWorkflowInscripcion.IdProducto);
+        }
+
+        [Fact]
+        public void ObtenerInscripcionesPendientes_SinRelacion_DejaInscripcionNula()
+        {
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
+            [
+                new InstanciaWorkflow
+                {
+                    IdInstanciaWorkflow = 100,
+                    IdProceso = 30,
+                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
+                }
+            ]);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
+
+            var result = _service.ObtenerInscripcionesPendientes(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Null(item.InstWorkflowInscripcion);
+        }
+
+        [Fact]
+        public void ObtenerInscripcionesCanceladas_AttachesRelatedInscripcion()
+        {
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(
+            [
+                new InstanciaWorkflow
+                {
+                    IdInstanciaWorkflow = 100,
+                    IdProceso = 30,
+                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
+                }
+            ]);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instWorkflowInscripcionRepo
+                .Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>()))
+                .Returns(
+                [
+                    new InstWorkflowInscripcion
+                    {
+                        IdInstanciaWorkflow = 100,
+                        IdProducto = 50
+                    }
+                ]);
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
+
+            var result = _service.ObtenerInscripcionesCanceladas(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
             Assert.NotNull(item.InstWorkflowInscripcion);
             Assert.Equal(50m, item.InstWorkflowInscripcion.IdProducto);
         }
@@ -245,6 +352,30 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(new DateTime(2026, 1, 10), item.FechaInscripcion);
             Assert.Equal("Febrero", item.NombreComienzo);
             Assert.Equal("Manana", item.NombreTurno);
+        }
+
+        [Fact]
+        public void ObtenerInscripcionesRealizadas_ConOfertaNula_UsaValoresPorDefecto()
+        {
+            var repo = new Mock<IInscriptoRepository>();
+            repo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
+            [
+                new Inscripto
+                {
+                    FechaInscr = null,
+                    Oferta = null
+                }
+            ]);
+            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
+
+            var result = _service.ObtenerInscripcionesRealizadas(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(0, item.IdProducto);
+            Assert.Null(item.NombreProducto);
+            Assert.Null(item.NombreComienzo);
+            Assert.Null(item.NombreTurno);
         }
 
         [Fact]
