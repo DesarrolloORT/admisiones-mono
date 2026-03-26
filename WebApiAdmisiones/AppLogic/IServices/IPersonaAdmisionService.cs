@@ -2,7 +2,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.Requests;
 using Utilities;
 
-namespace AppLogic.Interfaces
+namespace AppLogic.IServices
 {
     public interface IPersonaAdmisionService
     {

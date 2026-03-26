@@ -32,7 +32,7 @@ namespace AppLogic.Interfaces
         /// </summary>
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades(long codigoPais);
 
-        OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona);
+        OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona);
 
         OperationResult<DtoDeclaracionJuradaWebDevart> ObtenerFormularioDeclaracionJuradaWebDetalle(long codigoPersona, long idInscriptoPrueba);
 
@@ -40,19 +40,19 @@ namespace AppLogic.Interfaces
 
         OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName);
 
-        OperationResult<ArchivoDescargaDto> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);
+        OperationResult<DtoArchivoDescarga> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);
 
         OperationResult<bool> EliminarArchivoIngreso(long codigoPersona, long idIngresoMensualNF);
 
         OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName);
 
-        OperationResult<ArchivoDescargaDto> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
+        OperationResult<DtoArchivoDescarga> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
 
         OperationResult<bool> EliminarArchivoEgreso(long codigoPersona, long idEgresoMensualNF);
 
         OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName);
 
-        OperationResult<ArchivoDescargaDto> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
+        OperationResult<DtoArchivoDescarga> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
 
         OperationResult<bool> EliminarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
 

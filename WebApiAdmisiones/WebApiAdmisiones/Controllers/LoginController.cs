@@ -28,10 +28,10 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Credenciales inválidas.</response>
         [AllowAnonymous]
         [HttpPost("Login")]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
@@ -75,16 +75,16 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Refresh token inválido, expirado o no encontrado.</response>
         /// <response code="404">Usuario no encontrado en la base de datos.</response>
         [HttpPost("RefreshToken")]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DTOAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         public async Task<IActionResult> RefreshToken()
         {
             // 1. Leer refresh token de la cookie (HTTP concern).
             var refreshToken = CookieAuthenticationHelper.GetRefreshTokenFromCookie(HttpContext);
 
             // 2. Obtener código de persona del token actual (HTTP concern).
-            var codigoPersonaClaim = ((System.Security.Claims.ClaimsIdentity)User.Identity).Name;
+            var codigoPersonaClaim = User.Identity?.Name;
 
             // 3. Delegar toda la lógica de negocio al servicio.
             var result = await loginService.RefrescarTokensAsync(refreshToken, codigoPersonaClaim);

@@ -9,12 +9,12 @@ using Utilities;
 
 namespace AppLogic.Services
 {
-    public class FondoDeBecaServices : IFondoDeBecaServices
+    public class FondoDeBecaService : IFondoDeBecaServices
     {
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
 
-        public FondoDeBecaServices(IUnitOfWorkFactory uowFactory, IDbConnectionContext dbConnectionContext)
+        public FondoDeBecaService(IUnitOfWorkFactory uowFactory, IDbConnectionContext dbConnectionContext)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
@@ -80,7 +80,7 @@ namespace AppLogic.Services
 
         #region DECLARACIÓN JURADA
 
-        public OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona)
+        public OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
 
@@ -90,16 +90,16 @@ namespace AppLogic.Services
                 .Select(declaracion => declaracion.ToAdmisionesDto(ObtenerPrueba(uow, (long)declaracion.IdInscriptoPrueba)))
                 .ToList();
 
-            if (!declaraciones.Any())
+            if (declaraciones.Count == 0)
             {
-                return OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>>.IsFailed(
+                return OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>>.IsFailed(
                     "FDB_FDJ_01",
                     nameof(ObtenerFormulariosDeclaracionJuradaWeb),
                     "No se encontraron formularios de declaración jurada web vigentes para la persona.",
                     404);
             }
 
-            return OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>>.Ok(
+            return OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>>.Ok(
                 declaraciones,
                 nameof(ObtenerFormulariosDeclaracionJuradaWeb));
         }
@@ -350,13 +350,13 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoIngreso));
         }
 
-        public OperationResult<ArchivoDescargaDto> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF)
+        public OperationResult<DtoArchivoDescarga> DescargarArchivoIngreso(long codigoPersona, long idIngresoMensualNF)
         {
             using var uow = _uowFactory.Create();
             var ingresoResult = ObtenerIngresoAutorizado(uow, codigoPersona, idIngresoMensualNF, nameof(DescargarArchivoIngreso), "FDB_DAI");
             if (!ingresoResult.Success || ingresoResult.Data is null)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     ingresoResult.ErrorCode,
                     nameof(DescargarArchivoIngreso),
                     ingresoResult.Message,
@@ -367,7 +367,7 @@ namespace AppLogic.Services
             var archivo = ingreso.ArchivoIngresoNfDj;
             if (archivo is null || archivo.Length == 0)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     "FDB_DAI_05",
                     nameof(DescargarArchivoIngreso),
                     "El ingreso mensual indicado no tiene archivo adjunto.",
@@ -377,8 +377,8 @@ namespace AppLogic.Services
             var extension = NormalizarExtension(ingreso.ExtensionArchivoIngreso);
             var nombreArchivo = ConstruirNombreArchivo(ingreso.NombreArchivoIngreso, extension, $"ingreso_{idIngresoMensualNF}");
 
-            return OperationResult<ArchivoDescargaDto>.Ok(
-                new ArchivoDescargaDto
+            return OperationResult<DtoArchivoDescarga>.Ok(
+                new DtoArchivoDescarga
                 {
                     Archivo = archivo,
                     NombreArchivo = nombreArchivo,
@@ -442,13 +442,13 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoEgreso));
         }
 
-        public OperationResult<ArchivoDescargaDto> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF)
+        public OperationResult<DtoArchivoDescarga> DescargarArchivoEgreso(long codigoPersona, long idEgresoMensualNF)
         {
             using var uow = _uowFactory.Create();
             var egresoResult = ObtenerEgresoAutorizado(uow, codigoPersona, idEgresoMensualNF, nameof(DescargarArchivoEgreso), "FDB_DAE");
             if (!egresoResult.Success || egresoResult.Data is null)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     egresoResult.ErrorCode,
                     nameof(DescargarArchivoEgreso),
                     egresoResult.Message,
@@ -459,7 +459,7 @@ namespace AppLogic.Services
             var archivo = egreso.ArchivoEgresoMensualNfDj;
             if (archivo is null || archivo.Length == 0)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     "FDB_DAE_03",
                     nameof(DescargarArchivoEgreso),
                     "El egreso mensual indicado no tiene archivo adjunto.",
@@ -469,8 +469,8 @@ namespace AppLogic.Services
             var extension = NormalizarExtension(egreso.ExtensionArchivoEgreso);
             var nombreArchivo = ConstruirNombreArchivo(egreso.NombreArchivoEgreso, extension, $"egreso_{idEgresoMensualNF}");
 
-            return OperationResult<ArchivoDescargaDto>.Ok(
-                new ArchivoDescargaDto
+            return OperationResult<DtoArchivoDescarga>.Ok(
+                new DtoArchivoDescarga
                 {
                     Archivo = archivo,
                     NombreArchivo = nombreArchivo,
@@ -538,7 +538,7 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(SubirArchivoRevalidaDJ));
         }
 
-        public OperationResult<ArchivoDescargaDto> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb)
+        public OperationResult<DtoArchivoDescarga> DescargarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb)
         {
             using var uow = _uowFactory.Create();
             var declaracionResult = ObtenerDeclaracionAutorizada(
@@ -549,7 +549,7 @@ namespace AppLogic.Services
                 "FDB_DAR");
             if (!declaracionResult.Success || declaracionResult.Data is null)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     declaracionResult.ErrorCode,
                     nameof(DescargarArchivoRevalidaDJ),
                     declaracionResult.Message,
@@ -559,7 +559,7 @@ namespace AppLogic.Services
             var declaracion = declaracionResult.Data;
             if (declaracion.PdfFormRevalidasDj is null || declaracion.PdfFormRevalidasDj.Length == 0)
             {
-                return OperationResult<ArchivoDescargaDto>.IsFailed(
+                return OperationResult<DtoArchivoDescarga>.IsFailed(
                     "FDB_DAR_03",
                     nameof(DescargarArchivoRevalidaDJ),
                     "La declaración jurada indicada no tiene archivo de reválida adjunto.",
@@ -572,8 +572,8 @@ namespace AppLogic.Services
                 extension,
                 $"revalida_{idDeclaracionJuradaWeb}");
 
-            return OperationResult<ArchivoDescargaDto>.Ok(
-                new ArchivoDescargaDto
+            return OperationResult<DtoArchivoDescarga>.Ok(
+                new DtoArchivoDescarga
                 {
                     Archivo = declaracion.PdfFormRevalidasDj,
                     NombreArchivo = nombreArchivo,
@@ -615,13 +615,16 @@ namespace AppLogic.Services
 
         private static DtoDeclaracionJuradaWebDevart MapDeclaracionBase(BusinessLogic.Entities.DeclaracionJuradaWeb entity)
         {
+            ArgumentNullException.ThrowIfNull(entity.Persona);
+            ArgumentNullException.ThrowIfNull(entity.Producto);
+            ArgumentNullException.ThrowIfNull(entity.TipoDescuento);
+
             var dto = entity.ToDto();
-            dto.Persona = entity.Persona?.ToDto();
-            dto.Producto = entity.Producto?.ToDto();
-            dto.TipoDescuento = entity.TipoDescuento?.ToDto();
+            dto.Persona = entity.Persona.ToDto();
+            dto.Producto = entity.Producto.ToDto();
+            dto.TipoDescuento = entity.TipoDescuento.ToDto();
             return dto;
         }
-
         private static DtoDeclaracionJuradaWebDevart MapDeclaracionDetalle(
             IUnitOfWork uow,
             BusinessLogic.Entities.DeclaracionJuradaWeb entity)
@@ -648,7 +651,10 @@ namespace AppLogic.Services
                 .Select(egreso =>
                 {
                     var dto = egreso.ToDto();
-                    dto.TipoEgresoDj = egreso.TipoEgresoDj?.ToDto();
+                    if (egreso.TipoEgresoDj is not null)
+                    {
+                        dto.TipoEgresoDj = egreso.TipoEgresoDj.ToDto();
+                    }
                     return dto;
                 })
                 .ToList() ?? [];
@@ -658,7 +664,10 @@ namespace AppLogic.Services
                 .Select(integrante =>
                 {
                     var dto = integrante.ToDto();
-                    dto.TipoParentesco = integrante.TipoParentesco?.ToDto();
+                    if (integrante.TipoParentesco is not null)
+                    {
+                        dto.TipoParentesco = integrante.TipoParentesco.ToDto();
+                    }
                     dto.IngresoMensualNfDjs = integrante.IngresoMensualNfDjs?
                         .OrderBy(i => i.IdIngresoMensualNfDj)
                         .Select(ingreso => ingreso.ToDto())
@@ -685,8 +694,12 @@ namespace AppLogic.Services
             }
 
             var dto = prueba.ToDto();
-            dto.TipoDescuento = prueba.TipoDescuento?.ToDto();
-            dto.Comienzo = prueba.Comienzo?.ToDto();
+            if( prueba.TipoDescuento is not null){
+                dto.TipoDescuento = prueba.TipoDescuento.ToDto();
+            }
+            if( prueba.Comienzo is not null){
+                dto.Comienzo = prueba.Comienzo?.ToDto();
+            }
             return dto;
         }
 
@@ -739,7 +752,8 @@ namespace AppLogic.Services
                         prueba.FechaEntregaDjPrueba.Value.Day,
                         hora,
                         minutos,
-                        0).AddHours(2);
+                        0,
+                        DateTimeKind.Local).AddHours(2);
 
                     if (fechaActual > limite)
                     {
@@ -834,7 +848,7 @@ namespace AppLogic.Services
                 return;
             }
 
-            var incoming = (egresosDto ?? []).ToList();
+            var incoming = (egresosDto).ToList();
             var existentes = declaracion.EgresoMensualNfDjs.ToList();
 
             foreach (var egresoExistente in existentes)
@@ -893,7 +907,7 @@ namespace AppLogic.Services
                 return;
             }
 
-            var incoming = (integrantesDto ?? []).ToList();
+            var incoming = (integrantesDto).ToList();
             var existentes = declaracion.IntegranteNfDjs.ToList();
 
             foreach (var integranteExistente in existentes)
@@ -954,7 +968,7 @@ namespace AppLogic.Services
                 return;
             }
 
-            var incoming = (ingresosDto ?? []).ToList();
+            var incoming = (ingresosDto).ToList();
             var existentes = integrante.IngresoMensualNfDjs.ToList();
 
             foreach (var ingresoExistente in existentes)
@@ -1007,91 +1021,121 @@ namespace AppLogic.Services
             BusinessLogic.Entities.DeclaracionJuradaWeb declaracion,
             string methodName)
         {
-            if (declaracion.IdTipoDescuento == 44)
+            var validacionAcademica = ValidarAntecedentesAcademicosParaConfirmacion(declaracion, methodName);
+            if (!validacionAcademica.Success)
             {
-                if (!declaracion.CodigoInstitucionBac.HasValue
-                    || !declaracion.CodigoInstitucionUniv.HasValue
-                    || string.IsNullOrWhiteSpace(declaracion.CarreraUniversitariaDj)
-                    || !declaracion.CantMateriasAprobadasDj.HasValue
-                    || !declaracion.CantMatExaReprobadosDj.HasValue
-                    || !declaracion.PromTotalCalificacionesDj.HasValue)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_07",
-                        methodName,
-                        "Se deben indicar los antecedentes académicos para confirmar la declaración jurada.",
-                        400);
-                }
-
-                if (declaracion.CodigoInstitucionUniv == 2898
-                    && string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_08",
-                        methodName,
-                        "Debe indicar la universidad.",
-                        400);
-                }
-
-                if (declaracion.CodigoInstitucionUniv != 2898
-                    && !string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_09",
-                        methodName,
-                        "Existe una inconsistencia en la información sobre la universidad indicada.",
-                        400);
-                }
+                return validacionAcademica;
             }
 
             foreach (var ingreso in declaracion.IntegranteNfDjs.SelectMany(i => i.IngresoMensualNfDjs))
             {
-                if (ingreso.NominalIngresoNfDj < 0)
+                var validacionIngreso = ValidarIngresoParaConfirmacion(ingreso, methodName);
+                if (!validacionIngreso.Success)
                 {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_10",
-                        methodName,
-                        "El ingreso debe ser mayor o igual a cero.",
-                        400);
+                    return validacionIngreso;
                 }
+            }
 
-                if (ingreso.NominalIngresoNfDj.HasValue
-                    && decimal.Truncate(ingreso.NominalIngresoNfDj.Value) != ingreso.NominalIngresoNfDj.Value)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_11",
-                        methodName,
-                        "Los ingresos nominales no pueden contener decimales.",
-                        400);
-                }
+            return OperationResult<bool>.Ok(true, methodName);
+        }
 
-                if (ingreso.NominalIngresoNfDj.HasValue && ingreso.NominalIngresoNfDj.Value > 0 && ingreso.NominalIngresoNfDj.Value < 1000)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_12",
-                        methodName,
-                        "Los ingresos nominales deben ser mayores o iguales a 1000.",
-                        400);
-                }
+        private static OperationResult<bool> ValidarAntecedentesAcademicosParaConfirmacion(
+            BusinessLogic.Entities.DeclaracionJuradaWeb declaracion,
+            string methodName)
+        {
+            if (declaracion.IdTipoDescuento != 44)
+            {
+                return OperationResult<bool>.Ok(true, methodName);
+            }
 
-                if (ingreso.DescuentoslegalesIngresoNf.HasValue
-                    && decimal.Truncate(ingreso.DescuentoslegalesIngresoNf.Value) != ingreso.DescuentoslegalesIngresoNf.Value)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_13",
-                        methodName,
-                        "Los descuentos legales no pueden contener decimales.",
-                        400);
-                }
+            if (!declaracion.CodigoInstitucionBac.HasValue
+                || !declaracion.CodigoInstitucionUniv.HasValue
+                || string.IsNullOrWhiteSpace(declaracion.CarreraUniversitariaDj)
+                || !declaracion.CantMateriasAprobadasDj.HasValue
+                || !declaracion.CantMatExaReprobadosDj.HasValue
+                || !declaracion.PromTotalCalificacionesDj.HasValue)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_07",
+                    methodName,
+                    "Se deben indicar los antecedentes académicos para confirmar la declaración jurada.",
+                    400);
+            }
 
-                if (ingreso.ArchivoIngresoNfDj is null || ingreso.ArchivoIngresoNfDj.Length == 0)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "FDB_GDJ_14",
-                        methodName,
-                        "Para confirmar la declaración jurada, todos los ingresos deben tener archivo cargado.",
-                        400);
-                }
+            if (declaracion.CodigoInstitucionUniv == 2898
+                && string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_08",
+                    methodName,
+                    "Debe indicar la universidad.",
+                    400);
+            }
+
+            if (declaracion.CodigoInstitucionUniv != 2898
+                && !string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_09",
+                    methodName,
+                    "Existe una inconsistencia en la información sobre la universidad indicada.",
+                    400);
+            }
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static OperationResult<bool> ValidarIngresoParaConfirmacion(
+            BusinessLogic.Entities.IngresoMensualNfDj ingreso,
+            string methodName)
+        {
+            if (ingreso.NominalIngresoNfDj < 0)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_10",
+                    methodName,
+                    "El ingreso debe ser mayor o igual a cero.",
+                    400);
+            }
+
+            if (ingreso.NominalIngresoNfDj.HasValue
+                && decimal.Truncate(ingreso.NominalIngresoNfDj.Value) != ingreso.NominalIngresoNfDj.Value)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_11",
+                    methodName,
+                    "Los ingresos nominales no pueden contener decimales.",
+                    400);
+            }
+
+            if (ingreso.NominalIngresoNfDj.HasValue
+                && ingreso.NominalIngresoNfDj.Value > 0
+                && ingreso.NominalIngresoNfDj.Value < 1000)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_12",
+                    methodName,
+                    "Los ingresos nominales deben ser mayores o iguales a 1000.",
+                    400);
+            }
+
+            if (ingreso.DescuentoslegalesIngresoNf.HasValue
+                && decimal.Truncate(ingreso.DescuentoslegalesIngresoNf.Value) != ingreso.DescuentoslegalesIngresoNf.Value)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_13",
+                    methodName,
+                    "Los descuentos legales no pueden contener decimales.",
+                    400);
+            }
+
+            if (ingreso.ArchivoIngresoNfDj is null || ingreso.ArchivoIngresoNfDj.Length == 0)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "FDB_GDJ_14",
+                    methodName,
+                    "Para confirmar la declaración jurada, todos los ingresos deben tener archivo cargado.",
+                    400);
             }
 
             return OperationResult<bool>.Ok(true, methodName);

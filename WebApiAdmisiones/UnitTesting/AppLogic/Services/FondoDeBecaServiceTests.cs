@@ -18,7 +18,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
-        private readonly FondoDeBecaServices _service;
+        private readonly FondoDeBecaService _service;
 
         public FondoDeBecaServiceTests()
         {
@@ -26,7 +26,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new FondoDeBecaServices(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
+            _service = new FondoDeBecaService(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
         }
 
         #region TIPOS DECLARACIÓN JURADA

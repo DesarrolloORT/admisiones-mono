@@ -1,5 +1,4 @@
 using System;
-using AppLogic.Interfaces;
 using AppLogic.Services;
 using AppLogic.Requests;
 using BusinessLogic.Entities;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using Utilities;
 using Xunit;
+using AppLogic.IServices;
 
 namespace UnitTesting.AppLogic.Services
 {

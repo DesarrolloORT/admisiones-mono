@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
@@ -96,13 +96,13 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerUniversidades));
         }
 
-        public OperationResult<IEnumerable<DTOProductoBeca>> ObtenerProductosBeca(long codigoPersona)
+        public OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
 
             // 1. Inscripciones realizadas (T_INSCRIPTO)
             var realizadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
-                .Select(i => new DTOProductoBeca
+                .Select(i => new DtoProductoBeca
                 {
                     FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
                     IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
@@ -135,7 +135,7 @@ namespace AppLogic.Services
                     var turno = iwi.IdTurno.HasValue
                         ? uow.Turnos.GetByKey((long)iwi.IdTurno.Value) : null;
 
-                    return new DTOProductoBeca
+                    return new DtoProductoBeca
                     {
                         FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
                         IdProducto = idProducto,
@@ -150,7 +150,7 @@ namespace AppLogic.Services
 
             // 3. Productos con interés activo (sin inscripción pendiente en workflow)
             var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
-                .Select(p => new DTOProductoBeca
+                .Select(p => new DtoProductoBeca
                 {
                     FechaInscripcion = DateTime.MinValue,
                     IdProducto = p.IdProducto,
@@ -167,7 +167,7 @@ namespace AppLogic.Services
                 .Select(g => g.OrderBy(b => b.FechaInscripcion).First())
                 .ToList();
 
-            return OperationResult<IEnumerable<DTOProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
+            return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
         }
 
         public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto)

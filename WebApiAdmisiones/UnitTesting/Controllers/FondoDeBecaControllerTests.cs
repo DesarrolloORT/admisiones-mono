@@ -23,8 +23,8 @@ namespace UnitTesting.Controllers
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
 
             serviceMock.Setup(s => s.DescargarArchivoIngreso(1, 10))
-                .Returns(OperationResult<ArchivoDescargaDto>.Ok(
-                    new ArchivoDescargaDto
+                .Returns(OperationResult<DtoArchivoDescarga>.Ok(
+                    new DtoArchivoDescarga
                     {
                         Archivo = [1, 2, 3],
                         NombreArchivo = "ingreso.pdf",
@@ -69,8 +69,8 @@ namespace UnitTesting.Controllers
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
 
             serviceMock.Setup(s => s.DescargarArchivoEgreso(1, 10))
-                .Returns(OperationResult<ArchivoDescargaDto>.Ok(
-                    new ArchivoDescargaDto
+                .Returns(OperationResult<DtoArchivoDescarga>.Ok(
+                    new DtoArchivoDescarga
                     {
                         Archivo = [1, 2, 3],
                         NombreArchivo = "egreso.jpg",
@@ -115,8 +115,8 @@ namespace UnitTesting.Controllers
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
 
             serviceMock.Setup(s => s.DescargarArchivoRevalidaDJ(1, 55))
-                .Returns(OperationResult<ArchivoDescargaDto>.Ok(
-                    new ArchivoDescargaDto
+                .Returns(OperationResult<DtoArchivoDescarga>.Ok(
+                    new DtoArchivoDescarga
                     {
                         Archivo = [1, 2, 3],
                         NombreArchivo = "revalida.pdf",

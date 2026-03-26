@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using AppLogic.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

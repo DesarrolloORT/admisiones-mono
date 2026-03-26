@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
@@ -16,14 +16,14 @@ namespace AppLogic.Services
             _uowFactory = uowFactory;
         }
 
-        public OperationResult<DTOUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
+        public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var inscripto = uow.Inscriptos.GetUltimaInscripcionActiva(codigoPersona);
             if (inscripto == null)
-                return OperationResult<DTOUltimaInscripcion>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
+                return OperationResult<DtoUltimaInscripcion>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
 
-            var dto = new DTOUltimaInscripcion
+            var dto = new DtoUltimaInscripcion
             {
                 IdInscripto = inscripto.IdInscripto,
                 IdProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
@@ -32,23 +32,23 @@ namespace AppLogic.Services
                 IdComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.IdComienzo ?? 0,
                 NombreComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
             };
-            return OperationResult<DTOUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
+            return OperationResult<DtoUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
         }
 
-        public OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona)
+        public OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
             var dtos = entidades.Select(MapProductoAdmisiones);
-            return OperationResult<IEnumerable<DTOProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosVigentesConInteres));
+            return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosVigentesConInteres));
         }
 
-        public OperationResult<IEnumerable<DTOProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona)
+        public OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosConInteresActivo(codigoPersona);
             var dtos = entidades.Select(MapProductoAdmisiones);
-            return OperationResult<IEnumerable<DTOProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosConInteresActivo));
+            return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosConInteresActivo));
         }
 
         public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
@@ -98,12 +98,12 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesCanceladas));
         }
 
-        public OperationResult<IEnumerable<DTOInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona)
+        public OperationResult<IEnumerable<DtoInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var inscriptos = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona);
             var dtos = inscriptos
-                .Select(i => new DTOInscripcionRealizada
+                .Select(i => new DtoInscripcionRealizada
                 {
                     FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
                     IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
@@ -114,7 +114,7 @@ namespace AppLogic.Services
                 .GroupBy(d => d.IdProducto)
                 .Select(g => g.OrderBy(d => d.FechaInscripcion).First())
                 .ToList();
-            return OperationResult<IEnumerable<DTOInscripcionRealizada>>.Ok(dtos, nameof(ObtenerInscripcionesRealizadas));
+            return OperationResult<IEnumerable<DtoInscripcionRealizada>>.Ok(dtos, nameof(ObtenerInscripcionesRealizadas));
         }
 
         public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
@@ -124,10 +124,10 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
         }
 
-        private static DTOProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)
+        private static DtoProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)
         {
             var proceso = p.ProcesoProductos?.FirstOrDefault()?.Proceso;
-            return new DTOProductoAdmisiones
+            return new DtoProductoAdmisiones
             {
                 IdProducto = p.IdProducto,
                 NombreProducto = p.NombreProducto,

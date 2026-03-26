@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

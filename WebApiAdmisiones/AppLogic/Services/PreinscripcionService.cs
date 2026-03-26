@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
@@ -53,13 +53,13 @@ namespace AppLogic.Services
             return OperationResult<DateTime>.Ok(result.Data, nameof(ObtenerFechaVencimientoAdmisiones));
         }
 
-        public OperationResult<DTODatosPreInscripcion> ObtenerDatosPreInscripcion(long codigoPersona)
+        public OperationResult<DtoDatosPreInscripcion> ObtenerDatosPreInscripcion(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuesta == null)
             {
-                return OperationResult<DTODatosPreInscripcion>.IsFailed(
+                return OperationResult<DtoDatosPreInscripcion>.IsFailed(
                     "PRE_DPI_01",
                     nameof(ObtenerDatosPreInscripcion),
                     "No se encontraron datos de preinscripción para la persona.",
@@ -72,7 +72,7 @@ namespace AppLogic.Services
                 var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
                 if (!fechaVencimientoResult.Success)
                 {
-                    return OperationResult<DTODatosPreInscripcion>.IsFailed(
+                    return OperationResult<DtoDatosPreInscripcion>.IsFailed(
                         fechaVencimientoResult.ErrorCode,
                         nameof(ObtenerDatosPreInscripcion),
                         fechaVencimientoResult.Message,
@@ -96,7 +96,7 @@ namespace AppLogic.Services
                 }
             }
 
-            var dto = new DTODatosPreInscripcion
+            var dto = new DtoDatosPreInscripcion
             {
                 IdProceso = encuesta.IdProceso ?? 0,
                 NombreProceso = encuesta.Proceso?.NombreProceso,
@@ -110,7 +110,7 @@ namespace AppLogic.Services
                 ObjOferta = oferta
             };
 
-            return OperationResult<DTODatosPreInscripcion>.Ok(dto, nameof(ObtenerDatosPreInscripcion));
+            return OperationResult<DtoDatosPreInscripcion>.Ok(dto, nameof(ObtenerDatosPreInscripcion));
         }
     }
 }

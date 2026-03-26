@@ -6,7 +6,7 @@ namespace AppLogic.DTOs
     /// DTO con la información básica de la persona autenticada.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public class DTOPersonaAuth
+    public class DtoPersonaAuth
     {
         /// <summary>
         /// Código único de la persona.

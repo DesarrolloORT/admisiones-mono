@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -27,9 +27,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("UltimaInscripcionActiva")]
-        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DTOUltimaInscripcion>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 204)]
+        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 400)]
         public IActionResult ObtenerUltimaInscripcionActiva()
         {
             var result = inscripcionesService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
@@ -44,9 +44,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("ProductosVigentesConInteres")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosVigentesConInteres()
         {
             var result = inscripcionesService.ObtenerProductosVigentesConInteres(_currentUser.GetUserId());
@@ -61,9 +61,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("ProductosConInteresActivo")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoAdmisiones>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosConInteresActivo()
         {
             var result = inscripcionesService.ObtenerProductosConInteresActivo(_currentUser.GetUserId());
@@ -126,8 +126,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("InscripcionesRealizadas")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOInscripcionRealizada>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOInscripcionRealizada>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 400)]
         public IActionResult ObtenerInscripcionesRealizadas()
         {
             var result = inscripcionesService.ObtenerInscripcionesRealizadas(_currentUser.GetUserId());

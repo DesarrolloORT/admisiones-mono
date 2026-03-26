@@ -122,7 +122,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Single(result.Data!);
-            Assert.Equal(10, new List<DTOProductoBeca>(result.Data!)[0].IdProducto);
+            Assert.Equal(10, new List<DtoProductoBeca>(result.Data!)[0].IdProducto);
         }
     }
 }

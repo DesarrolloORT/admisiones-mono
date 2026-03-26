@@ -4,6 +4,7 @@ using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using LdapService.Interfaces;
+using System.Globalization;
 using Utilities;
 
 namespace AppLogic.Services;
@@ -42,7 +43,7 @@ public class LoginService : ILoginService
     /// <param name="codigoPersona">Código de la persona a autenticar.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
-    public async Task<OperationResult<DTOAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass)
+    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass)
     {
         try
         {
@@ -51,7 +52,7 @@ public class LoginService : ILoginService
 
             if (!authResult.Success)
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     authResult.ErrorCode,
                     nameof(AutenticarUsuarioLDAPAsync),
                     authResult.Message,
@@ -65,7 +66,7 @@ public class LoginService : ILoginService
 
             if (persona == null)
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "LOGIN_LDAP_04",
                     nameof(AutenticarUsuarioLDAPAsync),
                     "Usuario autenticado pero no se encontró la persona en la base de datos.",
@@ -77,18 +78,19 @@ public class LoginService : ILoginService
             var accessToken = _tokenService.GenerateAccessToken(persona);
             var refreshToken = _tokenService.GenerateRefreshToken();
             var refreshTokenHash = _tokenService.HashToken(refreshToken);
+            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
 
             // Guardar el refresh token en la base de datos (revoca automáticamente los anteriores)
             await _refreshTokenService.SaveRefreshTokenAsync(
                 codigoPersona,
                 "ADMISIONESWEB",
                 refreshTokenHash,
-                DateTime.UtcNow.AddDays(double.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES")))); // 7 días de expiración
+                DateTime.UtcNow.AddDays(refreshExpireDays));
 
             // Crear respuesta de autenticación
-            var authResponse = new DTOAuthenticationResponse
+            var authResponse = new DtoAuthenticationResponse
             {
-                Persona = new DTOPersonaAuth
+                Persona = new DtoPersonaAuth
                 {
                     CodigoPersona = persona.CodigoPersona,
                     PrimerNombre = persona.PrimerNombre,
@@ -104,11 +106,11 @@ public class LoginService : ILoginService
                 RefreshTokenHash = refreshTokenHash
             };
 
-            return OperationResult<DTOAuthenticationResponse>.Ok(authResponse, nameof(AutenticarUsuarioLDAPAsync));
+            return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(AutenticarUsuarioLDAPAsync));
         }
         catch (Exception ex)
         {
-            return OperationResult<DTOAuthenticationResponse>.IsFailed(
+            return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "LOGIN_LDAP_99",
                 nameof(AutenticarUsuarioLDAPAsync),
                 $"Error al autenticar usuario: {ex.Message}",
@@ -124,14 +126,14 @@ public class LoginService : ILoginService
     /// <param name="refreshToken">Refresh token enviado por el cliente.</param>
     /// <param name="codigoPersonaClaim">Código de persona extraído del access token actual.</param>
     /// <returns>OperationResult con los nuevos tokens generados.</returns>
-    public async Task<OperationResult<DTOAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim)
+    public async Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim)
     {
         try
         {
             // 1. Validar que el refresh token exista
             if (string.IsNullOrEmpty(refreshToken))
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "REFRESH_TOKEN_01",
                     nameof(RefrescarTokensAsync),
                     "No se encontró refresh token en las cookies.",
@@ -142,7 +144,7 @@ public class LoginService : ILoginService
             // 2. Validar y parsear el código de persona
             if (string.IsNullOrEmpty(codigoPersonaClaim) || !long.TryParse(codigoPersonaClaim, out var codigoPersona))
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "REFRESH_TOKEN_02",
                     nameof(RefrescarTokensAsync),
                     "Token de acceso inválido o expirado.",
@@ -157,7 +159,7 @@ public class LoginService : ILoginService
 
             if (!isValid)
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "REFRESH_TOKEN_03",
                     nameof(RefrescarTokensAsync),
                     "Refresh token inválido o expirado.",
@@ -171,7 +173,7 @@ public class LoginService : ILoginService
 
             if (persona == null)
             {
-                return OperationResult<DTOAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "REFRESH_TOKEN_04",
                     nameof(RefrescarTokensAsync),
                     "Usuario no encontrado en la base de datos.",
@@ -183,15 +185,19 @@ public class LoginService : ILoginService
             var newAccessToken = _tokenService.GenerateAccessToken(persona);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
             var newRefreshTokenHash = _tokenService.HashToken(newRefreshToken);
+            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
 
             // 6. Guardar nuevo refresh token en la base de datos
             await _refreshTokenService.SaveRefreshTokenAsync(
-                codigoPersona, "ADMISIONESWEB", newRefreshTokenHash, DateTime.UtcNow.AddDays(double.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES"))));
+                codigoPersona,
+                "ADMISIONESWEB",
+                newRefreshTokenHash,
+                DateTime.UtcNow.AddDays(refreshExpireDays));
 
             // 7. Crear respuesta con los nuevos tokens
-            var authResponse = new DTOAuthenticationResponse
+            var authResponse = new DtoAuthenticationResponse
             {
-                Persona = new DTOPersonaAuth
+                Persona = new DtoPersonaAuth
                 {
                     CodigoPersona = persona.CodigoPersona,
                     PrimerNombre = persona.PrimerNombre,
@@ -207,16 +213,32 @@ public class LoginService : ILoginService
                 Message = "Tokens renovados correctamente."
             };
 
-            return OperationResult<DTOAuthenticationResponse>.Ok(authResponse, nameof(RefrescarTokensAsync));
+            return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(RefrescarTokensAsync));
         }
         catch (Exception ex)
         {
-            return OperationResult<DTOAuthenticationResponse>.IsFailed(
+            return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "REFRESH_TOKEN_99",
                 nameof(RefrescarTokensAsync),
                 $"Error al refrescar tokens: {ex.Message}",
                 500,
                 default!);
         }
+    }
+
+    private static double ObtenerDiasExpiracionRefreshToken()
+    {
+        var rawValue = Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES");
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            throw new InvalidOperationException("La variable de entorno JWT_REFRESH_EXPIRE_ADMISIONES no está configurada.");
+        }
+
+        if (!double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var days))
+        {
+            throw new InvalidOperationException("La variable de entorno JWT_REFRESH_EXPIRE_ADMISIONES tiene un valor inválido.");
+        }
+
+        return days;
     }
 }

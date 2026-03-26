@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppLogic.Requests
 {
+    [ExcludeFromCodeCoverage]
     public class ActualizarPersonaRequest
     {
         public string PrimerApellido { get; set; } = string.Empty;

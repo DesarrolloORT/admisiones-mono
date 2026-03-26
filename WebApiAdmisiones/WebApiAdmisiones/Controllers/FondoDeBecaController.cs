@@ -89,8 +89,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Consulta realizada correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("FormularioDeclaracionJuradaWeb")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTODeclaracionJuradaAdmisiones>>), 404)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>>), 404)]
         public IActionResult GetFormulariosDeclaracionJuradaWeb()
         {
             var result = fondoDeBecaServices.ObtenerFormulariosDeclaracionJuradaWeb(_currentUser.GetUserId());
@@ -186,8 +186,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="404">No se encontró el ingreso mensual o no tiene archivo adjunto.</response>
         [HttpGet("DescargarArchivoIngreso")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 403)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 404)]
         public IActionResult DescargarArchivoIngreso([FromQuery] long idIngresoMensualNF)
         {
             var result = fondoDeBecaServices.DescargarArchivoIngreso(_currentUser.GetUserId(), idIngresoMensualNF);
@@ -254,8 +254,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="404">No se encontró el egreso mensual o no tiene archivo adjunto.</response>
         [HttpGet("DescargarArchivoEgreso")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 403)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 404)]
         public IActionResult DescargarArchivoEgreso([FromQuery] long idEgresoMensualNF)
         {
             var result = fondoDeBecaServices.DescargarArchivoEgreso(_currentUser.GetUserId(), idEgresoMensualNF);
@@ -322,12 +322,12 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="404">No se encontró la declaración jurada o no tiene archivo adjunto.</response>
         [HttpGet("DescargarArchivoRevalidaDJ")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 403)]
-        [ProducesResponseType(typeof(OperationResult<ArchivoDescargaDto>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 403)]
+        [ProducesResponseType(typeof(OperationResult<DtoArchivoDescarga>), 404)]
         public IActionResult DescargarArchivoRevalidaDJ([FromQuery] long idDeclaracionJuradaWeb)
         {
             var result = fondoDeBecaServices.DescargarArchivoRevalidaDJ(_currentUser.GetUserId(), idDeclaracionJuradaWeb);
-            if (!result.Success)
+            if (!result.Success || result.Data is null)
             {
                 return ValidateResponse(result);
             }

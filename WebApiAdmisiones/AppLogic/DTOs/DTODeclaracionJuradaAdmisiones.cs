@@ -1,8 +1,10 @@
 using AppLogic.DevartDTOs;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppLogic.DTOs
 {
-    public class DTODeclaracionJuradaAdmisiones
+    [ExcludeFromCodeCoverage]
+    public class DtoDeclaracionJuradaAdmisiones
     {
         public string? SubEstado { get; set; }
         public long IdProducto { get; set; }
@@ -25,11 +27,11 @@ namespace AppLogic.DTOs
 
     public static class DeclaracionJuradaAdmisionesMapper
     {
-        public static DTODeclaracionJuradaAdmisiones ToAdmisionesDto(
+        public static DtoDeclaracionJuradaAdmisiones ToAdmisionesDto(
             this DtoDeclaracionJuradaWebDevart declaracion,
             DtoPruebaDevart? prueba)
         {
-            return new DTODeclaracionJuradaAdmisiones
+            return new DtoDeclaracionJuradaAdmisiones
             {
                 SubEstado = declaracion.Subestado,
                 IdProducto = declaracion.Producto?.IdProducto ?? declaracion.IdProducto,
