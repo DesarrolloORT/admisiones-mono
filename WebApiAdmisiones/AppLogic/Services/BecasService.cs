@@ -5,6 +5,7 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Microsoft.Extensions.Configuration;
 using Utilities;
+using AppLogic.Constants;
 
 namespace AppLogic.Services
 {
@@ -12,7 +13,6 @@ namespace AppLogic.Services
     {
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
-        private readonly long _idSistemaAdmisiones;
 
         public BecasService(
             IUnitOfWorkFactory uowFactory,
@@ -21,7 +21,6 @@ namespace AppLogic.Services
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
-            _idSistemaAdmisiones = configuration.GetValue<long>("Admisiones:IdSistemaAdmisiones");
         }
 
         public OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
@@ -84,7 +83,7 @@ namespace AppLogic.Services
                 CodigoPersona = codigoPersona,
                 IdProducto = encuesta.IdProducto.Value,
                 IdComienzo = encuesta.IdComienzo.Value,
-                IdSistema = _idSistemaAdmisiones
+                IdSistema = CommonConstants.IdSistemaAdmisiones
             };
 
             uow.AceptacionReglamentoEsts.Add(entidad);
