@@ -1,7 +1,9 @@
-﻿using AppLogic.DevartDTOs;
+using AppLogic.Constants;
+using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Interfaces;
+using AppLogic.Utilities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using System.Text.Json;
@@ -35,7 +37,7 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.TipoEgresoDjs.GetAll()
-                .Where(e => e.Activo == "SI")
+                .Where(e => e.Activo == CommonConstants.Booleanos.Si)
                 .OrderBy(e => e.Orden)
                 .ToList();
             return OperationResult<IEnumerable<DtoTipoEgresoDjDevart>>.Ok(
@@ -130,22 +132,12 @@ namespace AppLogic.Services
             DtoDeclaracionJuradaWebDevart declaracionModificada,
             bool confirmar)
         {
-            if (declaracionModificada is null)
+            var validacionEntrada = FondoDeBecaValidation.ValidarSolicitudGuardadoDeclaracion(
+                declaracionModificada,
+                nameof(GuardarFormularioDeclaracionJuradaWeb));
+            if (!validacionEntrada.Success)
             {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_00",
-                    nameof(GuardarFormularioDeclaracionJuradaWeb),
-                    "Se requiere la declaración modificada.",
-                    400);
-            }
-
-            if (declaracionModificada.IdInscriptoPrueba <= 0)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_15",
-                    nameof(GuardarFormularioDeclaracionJuradaWeb),
-                    "Se requiere una inscripción a prueba válida para guardar la declaración jurada.",
-                    400);
+                return validacionEntrada;
             }
 
             using var uow = _uowFactory.Create();
@@ -212,9 +204,9 @@ namespace AppLogic.Services
                 IdInscriptoPrueba = inscriptoPrueba.IdInscriptoPrueba,
                 FechaIngreso = fechaActual,
                 HoraIngreso = fechaActual.ToString("HH:mm:ss"),
-                UsuarioIngreso = "WEBADMISIONES",
-                TienevehiculoNfDj = declaracionModificada.TienevehiculoNfDj ?? "NO",
-                TienecasaveraneoNfDj = declaracionModificada.TienecasaveraneoNfDj ?? "NO"
+                UsuarioIngreso = FondoDeBecaConstants.Declaracion.UsuarioIngresoWebAdmisiones,
+                TienevehiculoNfDj = declaracionModificada.TienevehiculoNfDj ?? CommonConstants.Booleanos.No,
+                TienecasaveraneoNfDj = declaracionModificada.TienecasaveraneoNfDj ?? CommonConstants.Booleanos.No
             };
 
             var validacionPrueba = ValidarPlazoDeclaracion(uow, entidad, fechaActual, nameof(GuardarFormularioDeclaracionJuradaWeb));
@@ -234,7 +226,7 @@ namespace AppLogic.Services
 
             if (confirmar)
             {
-                var validacionConfirmacion = ValidarConfirmacionDeclaracion(entidad, nameof(GuardarFormularioDeclaracionJuradaWeb));
+                var validacionConfirmacion = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(entidad, nameof(GuardarFormularioDeclaracionJuradaWeb));
                 if (!validacionConfirmacion.Success)
                 {
                     return OperationResult<bool>.IsFailed(
@@ -258,7 +250,7 @@ namespace AppLogic.Services
             bool confirmar)
         {
 
-            if (entidad.Subestado is "CONFIRMADO_WEB" or "CONFIRMADO_WEB_SIN_INSCRIPCION")
+            if (entidad.Subestado is FondoDeBecaConstants.Declaracion.ConfirmadoWeb or FondoDeBecaConstants.Declaracion.ConfirmadoWebSinInscripcion)
             {
                 return OperationResult<bool>.IsFailed(
                     "FDB_GDJ_02",
@@ -291,7 +283,7 @@ namespace AppLogic.Services
 
             if (confirmar)
             {
-                var validacionConfirmacion = ValidarConfirmacionDeclaracion(entidad, nameof(GuardarFormularioDeclaracionJuradaWeb));
+                var validacionConfirmacion = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(entidad, nameof(GuardarFormularioDeclaracionJuradaWeb));
                 if (!validacionConfirmacion.Success)
                 {
                     return OperationResult<bool>.IsFailed(
@@ -319,7 +311,7 @@ namespace AppLogic.Services
 
         public OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName)
         {
-            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoIngreso));
+            var archivoValidado = FondoDeBecaValidation.ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoIngreso));
             if (!archivoValidado.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -411,7 +403,7 @@ namespace AppLogic.Services
 
         public OperationResult<bool> SubirArchivoEgreso(long codigoPersona, long idEgresoMensualNF, byte[] fileContent, string fileName)
         {
-            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoEgreso));
+            var archivoValidado = FondoDeBecaValidation.ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoEgreso));
             if (!archivoValidado.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -503,7 +495,7 @@ namespace AppLogic.Services
 
         public OperationResult<bool> SubirArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb, byte[] fileContent, string fileName)
         {
-            var archivoValidado = ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoRevalidaDJ));
+            var archivoValidado = FondoDeBecaValidation.ValidarArchivoAdjunto(fileContent, fileName, nameof(SubirArchivoRevalidaDJ));
             if (!archivoValidado.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -830,11 +822,11 @@ namespace AppLogic.Services
             if (confirmar)
             {
                 target.ConfirmacionDecjurada = fechaActual;
-                target.Subestado = "CONFIRMADO_WEB";
+                target.Subestado = FondoDeBecaConstants.Declaracion.ConfirmadoWeb;
             }
             else
             {
-                target.Subestado = "GUARDADO_WEB_SIN_CONFIRMAR";
+                target.Subestado = FondoDeBecaConstants.Declaracion.GuardadoWebSinConfirmar;
             }
         }
 
@@ -1017,130 +1009,6 @@ namespace AppLogic.Services
             }
         }
 
-        private static OperationResult<bool> ValidarConfirmacionDeclaracion(
-            BusinessLogic.Entities.DeclaracionJuradaWeb declaracion,
-            string methodName)
-        {
-            var validacionAcademica = ValidarAntecedentesAcademicosParaConfirmacion(declaracion, methodName);
-            if (!validacionAcademica.Success)
-            {
-                return validacionAcademica;
-            }
-
-            foreach (var ingreso in declaracion.IntegranteNfDjs.SelectMany(i => i.IngresoMensualNfDjs))
-            {
-                var validacionIngreso = ValidarIngresoParaConfirmacion(ingreso, methodName);
-                if (!validacionIngreso.Success)
-                {
-                    return validacionIngreso;
-                }
-            }
-
-            return OperationResult<bool>.Ok(true, methodName);
-        }
-
-        private static OperationResult<bool> ValidarAntecedentesAcademicosParaConfirmacion(
-            BusinessLogic.Entities.DeclaracionJuradaWeb declaracion,
-            string methodName)
-        {
-            if (declaracion.IdTipoDescuento != 44)
-            {
-                return OperationResult<bool>.Ok(true, methodName);
-            }
-
-            if (!declaracion.CodigoInstitucionBac.HasValue
-                || !declaracion.CodigoInstitucionUniv.HasValue
-                || string.IsNullOrWhiteSpace(declaracion.CarreraUniversitariaDj)
-                || !declaracion.CantMateriasAprobadasDj.HasValue
-                || !declaracion.CantMatExaReprobadosDj.HasValue
-                || !declaracion.PromTotalCalificacionesDj.HasValue)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_07",
-                    methodName,
-                    "Se deben indicar los antecedentes académicos para confirmar la declaración jurada.",
-                    400);
-            }
-
-            if (declaracion.CodigoInstitucionUniv == 2898
-                && string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_08",
-                    methodName,
-                    "Debe indicar la universidad.",
-                    400);
-            }
-
-            if (declaracion.CodigoInstitucionUniv != 2898
-                && !string.IsNullOrWhiteSpace(declaracion.FacultadUniversidadDj))
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_09",
-                    methodName,
-                    "Existe una inconsistencia en la información sobre la universidad indicada.",
-                    400);
-            }
-
-            return OperationResult<bool>.Ok(true, methodName);
-        }
-
-        private static OperationResult<bool> ValidarIngresoParaConfirmacion(
-            BusinessLogic.Entities.IngresoMensualNfDj ingreso,
-            string methodName)
-        {
-            if (ingreso.NominalIngresoNfDj < 0)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_10",
-                    methodName,
-                    "El ingreso debe ser mayor o igual a cero.",
-                    400);
-            }
-
-            if (ingreso.NominalIngresoNfDj.HasValue
-                && decimal.Truncate(ingreso.NominalIngresoNfDj.Value) != ingreso.NominalIngresoNfDj.Value)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_11",
-                    methodName,
-                    "Los ingresos nominales no pueden contener decimales.",
-                    400);
-            }
-
-            if (ingreso.NominalIngresoNfDj.HasValue
-                && ingreso.NominalIngresoNfDj.Value > 0
-                && ingreso.NominalIngresoNfDj.Value < 1000)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_12",
-                    methodName,
-                    "Los ingresos nominales deben ser mayores o iguales a 1000.",
-                    400);
-            }
-
-            if (ingreso.DescuentoslegalesIngresoNf.HasValue
-                && decimal.Truncate(ingreso.DescuentoslegalesIngresoNf.Value) != ingreso.DescuentoslegalesIngresoNf.Value)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_13",
-                    methodName,
-                    "Los descuentos legales no pueden contener decimales.",
-                    400);
-            }
-
-            if (ingreso.ArchivoIngresoNfDj is null || ingreso.ArchivoIngresoNfDj.Length == 0)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "FDB_GDJ_14",
-                    methodName,
-                    "Para confirmar la declaración jurada, todos los ingresos deben tener archivo cargado.",
-                    400);
-            }
-
-            return OperationResult<bool>.Ok(true, methodName);
-        }
-
         private static void ActualizarInscriptoPrueba(
             IUnitOfWork uow,
             BusinessLogic.Entities.DeclaracionJuradaWeb declaracion,
@@ -1167,7 +1035,7 @@ namespace AppLogic.Services
                 .Where(e => e.MontoEgresoMensualNfDj.HasValue)
                 .Sum(e => e.MontoEgresoMensualNfDj!.Value);
 
-            inscriptoPrueba.EstadoInscriptoPrueba = "E";
+            inscriptoPrueba.EstadoInscriptoPrueba = FondoDeBecaConstants.Declaracion.EstadoInscriptoPruebaEnviado;
             inscriptoPrueba.FechaEstadoInscriptoPrueba = fechaActual;
             inscriptoPrueba.DjFechaInscriptoPrueba = fechaActual;
             inscriptoPrueba.DjIntegranInscriptoPrueba = declaracion.IntegranteNfDjs.Count;
@@ -1180,12 +1048,12 @@ namespace AppLogic.Services
                 inscriptoPrueba.RangoInscriptoPrueba = declaracion.ModalidadPostulacionDj;
             }
 
-            if (prueba.IdTipoBeca == 44 && declaracion.CodigoInstitucionUniv.HasValue)
+            if (prueba.IdTipoBeca == FondoDeBecaConstants.Declaracion.TipoDescuentoAntecedentesAcademicos && declaracion.CodigoInstitucionUniv.HasValue)
             {
                 inscriptoPrueba.CodigoUniversidad = (long)declaracion.CodigoInstitucionUniv.Value;
             }
 
-            declaracion.WarningDeclaracionJurada = descuentosLegales < egresos ? "SI" : "NO";
+            declaracion.WarningDeclaracionJurada = descuentosLegales < egresos ? CommonConstants.Booleanos.Si : CommonConstants.Booleanos.No;
         }
 
         private static string CrearSnapshot(DtoDeclaracionJuradaWebDevart dto)
@@ -1284,21 +1152,6 @@ namespace AppLogic.Services
             };
 
             return JsonSerializer.Serialize(snapshot);
-        }
-
-        private static OperationResult<string> ValidarArchivoAdjunto(byte[] fileContent, string fileName, string methodName)
-        {
-            var validacion = FileValidationHelper.ValidateDeclaracionJuradaAttachment(fileContent, fileName, methodName);
-            if (!validacion.Success)
-            {
-                return OperationResult<string>.IsFailed(
-                    validacion.ErrorCode,
-                    methodName,
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
-
-            return FileValidationHelper.SanitizeDeclaracionJuradaAttachmentName(fileName, methodName);
         }
 
         private static bool PerteneceAPersona(IUnitOfWork uow, decimal idDeclaracionJuradaWeb, long codigoPersona)

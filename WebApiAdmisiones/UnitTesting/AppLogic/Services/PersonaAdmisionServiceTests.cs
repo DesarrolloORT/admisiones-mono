@@ -4,7 +4,6 @@ using AppLogic.Requests;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using Utilities;
 using Xunit;
@@ -18,7 +17,6 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<IGeneralService> _generalServiceMock;
-        private readonly IConfiguration _configuration;
         private readonly PersonaAdmisionService _service;
 
         public PersonaAdmisionServiceTests()
@@ -27,18 +25,11 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _generalServiceMock = new Mock<IGeneralService>();
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Admisiones:PersonaAdmision:FechaMinimaNacimiento"] = "1900-01-01",
-                    ["Admisiones:PersonaAdmision:UruguayCodigoPais"] = "1",
-                    ["Admisiones:PersonaAdmision:ExteriorInstitucionOrt"] = "2898",
-                    ["Admisiones:PersonaAdmision:TituloGenericoSextoExterior"] = "5"
-                })
-                .Build();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new PersonaAdmisionService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object, _configuration);
+            _service = new PersonaAdmisionService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object);
         }
+
+        #region Perfil
 
         [Fact]
         public void ObtenerPersona_NotFound_ReturnsFailed()
@@ -351,6 +342,67 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ActualizarPersona_UsoExclusivo_NoSobrescribeIdentidadNiFechaNacimiento()
+        {
+            var fechaOriginal = new DateTime(1999, 1, 1);
+            var persona = new Persona
+            {
+                CodigoPersona = 1,
+                TipoPersona = "WEB",
+                PrimerNombre = "Nombre Original",
+                SegundoNombre = "Segundo Original",
+                PrimerApellido = "Apellido Original",
+                SegundoApellido = "Segundo Apellido",
+                PrimerNombreMay = "NOMBRE ORIGINAL",
+                SegundoNombreMay = "SEGUNDO ORIGINAL",
+                PrimerApellidoMay = "APELLIDO ORIGINAL",
+                SegundoApellidoMay = "SEGUNDO APELLIDO",
+                FechaNacimiento = fechaOriginal,
+                FuncionarioActivoPersona = "SI",
+                UsoexclusivodbaPersona = "NO"
+            };
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetPersonaWithRelated(1)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+
+            var result = _service.ActualizarPersona(1, new ActualizarPersonaRequest
+            {
+                PrimerApellido = "nuevo apellido",
+                SegundoApellido = "segundo nuevo",
+                PrimerNombre = "nuevo nombre",
+                SegundoNombre = "otro nombre",
+                Mail = "nuevo@test.com",
+                VerificacionMail = "nuevo@test.com",
+                Direccion = "boulevard artigas 1234",
+                Sexo = "F",
+                FechaNacimiento = new DateTime(2002, 2, 2),
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("Nombre Original", persona.PrimerNombre);
+            Assert.Equal("Apellido Original", persona.PrimerApellido);
+            Assert.Equal(fechaOriginal, persona.FechaNacimiento);
+            Assert.Equal("Boulevard Artigas 1234", persona.Direccion);
+            Assert.Equal("nuevo@test.com", persona.Email);
+            Assert.Equal("1", persona.UsuarioModifFdp);
+            personaRepo.Verify(r => r.Update(persona), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        #endregion
+
+        #region Encuesta
+
+        [Fact]
         public void ObtenerEncuestaInicialAdmision_NotFound_ReturnsFailed()
         {
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
@@ -395,6 +447,22 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("PER_DPE_01", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_CiudadInvalida_ReturnsFailed()
+        {
+            ConfigurarPersonaBaseParaEncuesta();
+
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            ciudadRepo.Setup(r => r.GetByKey(1, 1, 1)).Returns((Ciudad)null);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, CrearRequestEncuesta());
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_02", result.ErrorCode);
             _uowMock.Verify(u => u.Save(), Times.Never);
         }
 
@@ -790,6 +858,152 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarDatosPersonaEncuesta_SgiSinCondicionesLaborales_ReturnsFailed()
+        {
+            ConfigurarBaseHastaProceso("SGI");
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(100)).Returns(new Empresa { CodigoEmpresa = 100, Nombre = "Instituto Ejemplo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAll()).Returns([new AnioBachiller { IdAnioBachiller = 1, CantAniosAnioBachiller = 5 }]);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var request = CrearRequestEncuesta();
+            request.TrabajaActualmente = null;
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_15", result.ErrorCode);
+            _generalServiceMock.Verify(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_ExteriorSextoAnio_UsaInstitucionOrtYTituloGenerico()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 1,
+                TipoPersona = "WEB",
+                PrimerNombre = "old",
+                PrimerApellido = "old",
+                PrimerNombreMay = "OLD",
+                PrimerApellidoMay = "OLD",
+                FuncionarioActivoPersona = "NO",
+                UsoexclusivodbaPersona = "NO",
+                Documento = "12345678",
+                TipoDocumento = "CI"
+            };
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetPersonaWithRelated(1)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            ciudadRepo.Setup(r => r.GetByKey(2, 1, 1)).Returns(new Ciudad { CodigoPais = 2, CodigoEstado = 1, CodigoCiudad = 1, Nombre = "Exterior" });
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 2 });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoRepo = new Mock<IProcesoRepository>();
+            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo.Setup(r => r.GetAllWithRelated()).Returns([new ProcesoComienzo { IdProceso = 20, IdComienzo = 30 }]);
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+
+            var tituloRepo = new Mock<ITituloRepository>();
+            tituloRepo.Setup(r => r.GetByKey(5)).Returns(new Titulo { CodigoTitulo = 5 });
+            _uowMock.Setup(u => u.Titulos).Returns(tituloRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            EncuestaIniAdmision? encuestaAgregada = null;
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            _generalServiceMock.Setup(s => s.CalcularFechaVencimientoAdmisiones(1, 20))
+                .Returns(OperationResult<DateTime>.Ok(new DateTime(2026, 7, 1), "CalcularFechaVencimientoAdmisiones"));
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION)).Returns(500);
+
+            var request = CrearRequestEncuesta();
+            request.CodigoPais = 2;
+            request.CodigoEstado = 1;
+            request.CodigoCiudad = 1;
+            request.UltimoAnioSecundaria = 2;
+            request.UltimoAnioSexto = 6;
+            request.CodigoTitulo = 999;
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, request);
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal(2898, encuestaAgregada!.CodigoInstitucionBac);
+            Assert.Equal(5, encuestaAgregada.CodigoTitulo);
+            Assert.Equal("6", encuestaAgregada.UltimoAnioSextoEncuestaIni);
+        }
+
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_SextoAnioSinTitulo_ReturnsFailed()
+        {
+            ConfigurarBaseHastaProceso();
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(100)).Returns(new Empresa { CodigoEmpresa = 100, Nombre = "Instituto Ejemplo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var request = CrearRequestEncuesta();
+            request.UltimoAnioSexto = 6;
+            request.CodigoTitulo = null;
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_38", result.ErrorCode);
+            _generalServiceMock.Verify(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_QuintoAnio_SinTituloPersisteBachilleratoSinOrientacion()
+        {
+            ConfigurarBaseHastaProceso();
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(100)).Returns(new Empresa { CodigoEmpresa = 100, Nombre = "Instituto Ejemplo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            EncuestaIniAdmision? encuestaAgregada = null;
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            _generalServiceMock.Setup(s => s.CalcularFechaVencimientoAdmisiones(1, 20))
+                .Returns(OperationResult<DateTime>.Ok(new DateTime(2026, 8, 1), "CalcularFechaVencimientoAdmisiones"));
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION)).Returns(600);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAll()).Returns([new AnioBachiller { IdAnioBachiller = 1, CantAniosAnioBachiller = 5 }]);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, CrearRequestEncuesta());
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Null(encuestaAgregada!.CodigoTitulo);
+            Assert.Equal("5", encuestaAgregada.UltimoAnioSextoEncuestaIni);
+        }
+
+        [Fact]
         public void GuardarDatosPersonaEncuesta_SinInstitucionUruguaya_ReturnsFailed()
         {
             var persona = new Persona
@@ -887,6 +1101,37 @@ namespace UnitTesting.AppLogic.Services
             _generalServiceMock.Verify(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
             _uowMock.Verify(u => u.Save(), Times.Never);
         }
+
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_AnioBachillerDelTituloInvalido_ReturnsFailed()
+        {
+            ConfigurarBaseHastaProceso();
+            var request = CrearRequestEncuesta();
+            request.UltimoAnioSexto = 6;
+            request.CodigoTitulo = 200;
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(100)).Returns(new Empresa { CodigoEmpresa = 100, Nombre = "Instituto Ejemplo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tituloRepo = new Mock<ITituloRepository>();
+            tituloRepo.Setup(r => r.GetByKey(200)).Returns(new Titulo { CodigoTitulo = 200, IdAnioBachiller = 999 });
+            _uowMock.Setup(u => u.Titulos).Returns(tituloRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetByKey(999)).Returns((AnioBachiller)null);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_11", result.ErrorCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        #endregion
+
+        #region Archivos
 
         [Fact]
         public void ObtenerDocumentoAlumno_TipoInvalido_ReturnsFailed()
@@ -1138,6 +1383,60 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirFotoAlumno_Existente_ContenidoInvalido_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var fotoExistente = new Imagen
+            {
+                IdImagen = 1,
+                CodigoPersona = 1,
+                NombreImagen = "1_3.jpg",
+                TipoImagen = "3",
+                BlobImagen = new byte[] { 1, 2, 3 }
+            };
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns(fotoExistente);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            var invalidContent = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+
+            var result = _service.SubirFotoAlumno(1, invalidContent, "foto.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            imagenRepo.Verify(r => r.Update(It.IsAny<Imagen>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_TipoInvalido_ReturnsFailed()
+        {
+            var result = _service.SubirDocumentoAlumno(1, 3, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_PersonaNoEncontrada_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns((Persona)null);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
         public void SubirDocumentoAlumno_ActualizaFechaDocumentoPersonaYAuditoria()
         {
             var fechaVencimiento = new DateTime(2030, 12, 31);
@@ -1165,6 +1464,7 @@ namespace UnitTesting.AppLogic.Services
             imagenTemporalRepo.Verify(r => r.Add(It.Is<ImagenTemporal>(i =>
                 i.IdImagenTemporal == 456 &&
                 i.CodigoPersona == 1 &&
+                i.NombreImagen == "1_1.pdf" &&
                 i.TipoImagen == "1" &&
                 i.FechaVtoDocumentoPersona == fechaVencimiento &&
                 i.BlobImagen == pdfContent)), Times.Once);
@@ -1229,6 +1529,35 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
             imagenTemporalRepo.Verify(r => r.Add(It.IsAny<ImagenTemporal>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_Existente_ExtensionInvalida_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var documentoExistente = new ImagenTemporal
+            {
+                IdImagenTemporal = 456,
+                CodigoPersona = 1,
+                NombreImagen = "1_1.pdf",
+                TipoImagen = "1"
+            };
+
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            imagenTemporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(documentoExistente);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            imagenTemporalRepo.Verify(r => r.Update(It.IsAny<ImagenTemporal>()), Times.Never);
             _uowMock.Verify(u => u.Save(), Times.Never);
         }
 
@@ -1344,5 +1673,7 @@ namespace UnitTesting.AppLogic.Services
                 OpcionesMotivosSeleccionados = [new MotivoEncuestaRequest { IdMotivo = 1, NombreMotivo = "Prestigio" }]
             };
         }
+
+        #endregion
     }
 }
