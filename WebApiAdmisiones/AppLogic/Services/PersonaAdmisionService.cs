@@ -1,6 +1,7 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices;
@@ -9,15 +10,12 @@ using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
-using Microsoft.Extensions.Configuration;
 using Utilities;
 
 namespace AppLogic.Services
 {
     public class PersonaAdmisionService : IPersonaAdmisionService
     {
-        private const string PersonaNoEncontradaMessage = "Persona no encontrada.";
-
         private sealed record DatosAcademicosEncuesta(
             long? CodigoInstitucionBac,
             string NombreInstitucion,
@@ -28,11 +26,6 @@ namespace AppLogic.Services
             long? CodigoTitulo,
             long UltimoAnioSexto);
 
-        private readonly DateTime _fechaMinimaNacimiento;
-        private readonly long _uruguayCodigoPais;
-        private readonly long _exteriorInstitucionOrt;
-        private readonly long _tituloGenericoSextoExterior;
-
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly IGeneralService _generalService;
@@ -40,18 +33,11 @@ namespace AppLogic.Services
         public PersonaAdmisionService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
-            IGeneralService generalService,
-            IConfiguration configuration)
+            IGeneralService generalService)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _generalService = generalService;
-            _fechaMinimaNacimiento = configuration.GetValue(
-                "Admisiones:PersonaAdmision:FechaMinimaNacimiento",
-                new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
-            _uruguayCodigoPais = configuration.GetValue("Admisiones:PersonaAdmision:UruguayCodigoPais", 1L);
-            _exteriorInstitucionOrt = configuration.GetValue("Admisiones:PersonaAdmision:ExteriorInstitucionOrt", 2898L);
-            _tituloGenericoSextoExterior = configuration.GetValue("Admisiones:PersonaAdmision:TituloGenericoSextoExterior", 5L);
         }
 
         public OperationResult<DtoPersonaDevart> ObtenerPersona(long codigoPersona)
@@ -59,7 +45,7 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetPersonaWithRelated(codigoPersona);
             if (persona == null)
-                return OperationResult<DtoPersonaDevart>.IsFailed("GEN_PER_01", nameof(ObtenerPersona), PersonaNoEncontradaMessage, 404);
+                return OperationResult<DtoPersonaDevart>.IsFailed("GEN_PER_01", nameof(ObtenerPersona), PersonaAdmisionConstants.PersonaNoEncontradaMessage, 404);
 
             return OperationResult<DtoPersonaDevart>.Ok(persona.ToDto(), nameof(ObtenerPersona));
         }
@@ -69,9 +55,12 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetPersonaWithRelated(codigoPersona);
             if (persona == null)
-                return OperationResult<bool>.IsFailed("PER_AP_01", nameof(ActualizarPersona), PersonaNoEncontradaMessage, 404);
+                return OperationResult<bool>.IsFailed("PER_AP_01", nameof(ActualizarPersona), PersonaAdmisionConstants.PersonaNoEncontradaMessage, 404);
 
-            var validacion = ValidarActualizarPersonaRequest(request, nameof(ActualizarPersona));
+            var validacion = PersonaAdmisionValidation.ValidarActualizarPersonaRequest(
+                request,
+                nameof(ActualizarPersona),
+                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
             if (!validacion.Success)
                 return validacion;
 
@@ -86,7 +75,7 @@ namespace AppLogic.Services
             }
 
             var esUsoExclusivo = EsUsoExclusivo(persona);
-            AplicarCambiosPersona(persona, request, esUsoExclusivo, persona.TipoPersona == "SGI");
+            AplicarCambiosPersona(persona, request, esUsoExclusivo, persona.TipoPersona == PersonaAdmisionConstants.TipoPersonaSgi);
             PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
             uow.Personas.Update(persona);
             uow.Save();
@@ -109,13 +98,13 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetPersonaWithRelated(codigoPersona);
             if (persona == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_01", nameof(GuardarDatosPersonaEncuesta), PersonaNoEncontradaMessage, 404);
+                return OperationResult<bool>.IsFailed("PER_DPE_01", nameof(GuardarDatosPersonaEncuesta), PersonaAdmisionConstants.PersonaNoEncontradaMessage, 404);
 
-            var validacion = ValidarDatosPersonaEncuestaRequest(
+            var validacion = PersonaAdmisionValidation.ValidarDatosPersonaEncuestaRequest(
                 request,
                 persona.TipoPersona,
                 nameof(GuardarDatosPersonaEncuesta),
-                _fechaMinimaNacimiento);
+                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
             if (!validacion.Success)
                 return validacion;
 
@@ -160,11 +149,11 @@ namespace AppLogic.Services
                     409);
             }
 
-            var esSgi = persona.TipoPersona == "SGI";
+            var esSgi = persona.TipoPersona == PersonaAdmisionConstants.TipoPersonaSgi;
             var esUsoExclusivo = EsUsoExclusivo(persona);
             AplicarCambiosPersona(
                 persona,
-                CrearActualizarPersonaRequestDesdeEncuesta(request),
+                PersonaAdmisionValidation.CrearActualizarPersonaRequestDesdeEncuesta(request),
                 esUsoExclusivo,
                 esSgi);
             PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
@@ -197,29 +186,152 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(GuardarDatosPersonaEncuesta));
         }
 
-        private static ActualizarPersonaRequest CrearActualizarPersonaRequestDesdeEncuesta(GuardarDatosPersonaEncuestaRequest request)
+        public OperationResult<byte[]> ObtenerFotoAlumno(long codigoPersona)
         {
-            return new ActualizarPersonaRequest
+            using var uow = _uowFactory.Create();
+            var imagen = uow.Imagens.GetFotoByPersona(codigoPersona);
+
+            if (imagen == null)
+                return OperationResult<byte[]>.IsFailed("GEN_FA_01", nameof(ObtenerFotoAlumno), "Foto no encontrada.", 404);
+
+            if (imagen.BlobImagen == null || imagen.BlobImagen.Length == 0)
+                return OperationResult<byte[]>.IsFailed("GEN_FA_02", nameof(ObtenerFotoAlumno), "La foto no contiene imagen.", 404);
+
+            return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoAlumno));
+        }
+
+        public OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo)
+        {
+            if (tipo != 1 && tipo != 2)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_01", nameof(ObtenerDocumentoAlumno), "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).", 400);
+
+            using var uow = _uowFactory.Create();
+            var imagenTemporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+
+            if (imagenTemporal == null)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_02", nameof(ObtenerDocumentoAlumno), "Documento no encontrado.", 404);
+
+            if (imagenTemporal.FechaVtoDocumentoPersona.HasValue && imagenTemporal.FechaVtoDocumentoPersona.Value < DateTime.Now)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoAlumno), "El documento se encuentra vencido.", 409);
+
+            if (imagenTemporal.BlobImagen == null || imagenTemporal.BlobImagen.Length == 0)
+                return OperationResult<byte[]>.IsFailed("GEN_DA_04", nameof(ObtenerDocumentoAlumno), "El documento no contiene imagen.", 404);
+
+            return OperationResult<byte[]>.Ok(imagenTemporal.BlobImagen, nameof(ObtenerDocumentoAlumno));
+        }
+
+        public OperationResult<bool> SubirFotoAlumno(long codigoPersona, byte[] fileContent, string fileName)
+        {
+            using var uow = _uowFactory.Create();
+
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona is null)
             {
-                PrimerApellido = request.PrimerApellido,
-                SegundoApellido = request.SegundoApellido,
-                PrimerNombre = request.PrimerNombre,
-                SegundoNombre = request.SegundoNombre,
-                Mail = request.Mail,
-                VerificacionMail = request.VerificacionMail,
-                Direccion = request.Direccion,
-                Sexo = request.Sexo,
-                FechaNacimiento = request.FechaNacimiento,
-                Telefono1 = request.Telefono1,
-                Telefono2 = request.Telefono2,
-                CodigoPais = request.CodigoPais,
-                CodigoEstado = request.CodigoEstado,
-                CodigoCiudad = request.CodigoCiudad,
-                Documento = request.Documento,
-                TipoDocumento = request.TipoDocumento,
-                TrabajaActualmente = request.TrabajaActualmente,
-                TipoJornada = request.TipoJornada
-            };
+                return OperationResult<bool>.IsFailed("GEN_SFA_01", nameof(SubirFotoAlumno), PersonaAdmisionConstants.PersonaNoEncontradaMessage, 404);
+            }
+
+            var imagenExistente = uow.Imagens.GetFotoByPersona(codigoPersona);
+
+            if (imagenExistente is null)
+            {
+                var resultadoGuardado = GuardarFotoAlumno(
+                    persona,
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
+                    fileContent,
+                    fileName);
+
+                if (!resultadoGuardado.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoGuardado.ErrorCode,
+                        nameof(SubirFotoAlumno),
+                        resultadoGuardado.Message,
+                        resultadoGuardado.HttpCode);
+                }
+
+                uow.Imagens.Add(resultadoGuardado.Data!);
+            }
+            else
+            {
+                var resultadoModificacion = ModificarFotoAlumno(imagenExistente, fileContent, fileName);
+                if (!resultadoModificacion.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoModificacion.ErrorCode,
+                        nameof(SubirFotoAlumno),
+                        resultadoModificacion.Message,
+                        resultadoModificacion.HttpCode);
+                }
+
+                uow.Imagens.Update(imagenExistente);
+            }
+
+            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirFotoAlumno));
+        }
+
+        public OperationResult<bool> SubirDocumentoAlumno(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName)
+        {
+            if (tipo != 1 && tipo != 2)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_SDA_01",
+                    nameof(SubirDocumentoAlumno),
+                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
+                    400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona is null)
+            {
+                return OperationResult<bool>.IsFailed("GEN_SDA_02", nameof(SubirDocumentoAlumno), PersonaAdmisionConstants.PersonaNoEncontradaMessage, 404);
+            }
+
+            var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+
+            if (documentoExistente is null)
+            {
+                var resultadoGuardado = GuardarDocumentoAlumno(
+                    codigoPersona,
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
+                    tipo,
+                    fecha,
+                    fileContent,
+                    fileName);
+
+                if (!resultadoGuardado.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoGuardado.ErrorCode,
+                        nameof(SubirDocumentoAlumno),
+                        resultadoGuardado.Message,
+                        resultadoGuardado.HttpCode);
+                }
+
+                uow.ImagenTemporals.Add(resultadoGuardado.Data!);
+            }
+            else
+            {
+                var resultadoModificacion = ModificarDocumentoAlumno(documentoExistente, tipo, fecha, fileContent, fileName);
+                if (!resultadoModificacion.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        resultadoModificacion.ErrorCode,
+                        nameof(SubirDocumentoAlumno),
+                        resultadoModificacion.Message,
+                        resultadoModificacion.HttpCode);
+                }
+
+                uow.ImagenTemporals.Update(documentoExistente);
+            }
+
+            persona.FechaVtoDocumentoPersona = fecha;
+            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirDocumentoAlumno));
         }
 
         private static OperationResult<bool> ValidarCiudadParaEncuesta(
@@ -299,7 +411,7 @@ namespace AppLogic.Services
             return OperationResult<long>.Ok(idComienzo.Value, methodName);
         }
 
-        private OperationResult<DatosAcademicosEncuesta> ResolverDatosAcademicosEncuesta(
+        private static OperationResult<DatosAcademicosEncuesta> ResolverDatosAcademicosEncuesta(
             IUnitOfWork uow,
             GuardarDatosPersonaEncuestaRequest request,
             string methodName)
@@ -309,7 +421,7 @@ namespace AppLogic.Services
             long? codigoTitulo = request.CodigoTitulo;
             long ultimoAnioSexto = request.UltimoAnioSexto;
 
-            if (request.UltimoAnioSecundaria == _uruguayCodigoPais)
+            if (request.UltimoAnioSecundaria == PersonaAdmisionConstants.Parametros.UruguayCodigoPais)
             {
                 if (!codigoInstitucionBac.HasValue || codigoInstitucionBac.Value <= 0)
                 {
@@ -334,10 +446,10 @@ namespace AppLogic.Services
             }
             else
             {
-                codigoInstitucionBac = _exteriorInstitucionOrt;
+                codigoInstitucionBac = PersonaAdmisionConstants.Parametros.ExteriorInstitucionOrt;
                 if (ultimoAnioSexto == 6)
                 {
-                    codigoTitulo = _tituloGenericoSextoExterior;
+                    codigoTitulo = PersonaAdmisionConstants.Parametros.TituloGenericoSextoExterior;
                 }
             }
 
@@ -481,7 +593,7 @@ namespace AppLogic.Services
                 IdProceso = request.IdProceso,
                 TipoInscripcion = "SOLO_ENCUESTA_INI",
                 NuevaversionEncuestaIni = "SI",
-                UltimoanioSecundariaEncuestaIni = request.UltimoAnioSecundaria == _uruguayCodigoPais,
+                UltimoanioSecundariaEncuestaIni = request.UltimoAnioSecundaria == PersonaAdmisionConstants.Parametros.UruguayCodigoPais,
                 TieneEducacionSuperiorEncuestaIni = ConvertirBoolASiNo(request.TieneEducacionSuperior),
                 NivelDecisionEncuestaIni = request.NivelDecision == 1,
                 AsesoramientoOrtEncuestaIni = ConvertirBoolASiNo(request.AsesoramientoOrt),
@@ -507,154 +619,6 @@ namespace AppLogic.Services
                 FechaIngreso = ahora,
                 HoraIngreso = ahora.ToString("HH:mm:ss")
             };
-        }
-
-        public OperationResult<byte[]> ObtenerDocumentoAlumno(long codigoPersona, int tipo)
-        {
-            if (tipo != 1 && tipo != 2)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_01", nameof(ObtenerDocumentoAlumno), "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).", 400);
-
-            using var uow = _uowFactory.Create();
-            var imagenTemporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
-
-            if (imagenTemporal == null)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_02", nameof(ObtenerDocumentoAlumno), "Documento no encontrado.", 404);
-
-            if (imagenTemporal.FechaVtoDocumentoPersona.HasValue && imagenTemporal.FechaVtoDocumentoPersona.Value < DateTime.Now)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoAlumno), "El documento se encuentra vencido.", 409);
-
-            if (imagenTemporal.BlobImagen == null || imagenTemporal.BlobImagen.Length == 0)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_04", nameof(ObtenerDocumentoAlumno), "El documento no contiene imagen.", 404);
-
-            return OperationResult<byte[]>.Ok(imagenTemporal.BlobImagen, nameof(ObtenerDocumentoAlumno));
-        }
-
-        public OperationResult<byte[]> ObtenerFotoAlumno(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var imagen = uow.Imagens.GetFotoByPersona(codigoPersona);
-
-            if (imagen == null)
-                return OperationResult<byte[]>.IsFailed("GEN_FA_01", nameof(ObtenerFotoAlumno), "Foto no encontrada.", 404);
-
-            if (imagen.BlobImagen == null || imagen.BlobImagen.Length == 0)
-                return OperationResult<byte[]>.IsFailed("GEN_FA_02", nameof(ObtenerFotoAlumno), "La foto no contiene imagen.", 404);
-
-            return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoAlumno));
-        }
-
-        public OperationResult<bool> SubirFotoAlumno(long codigoPersona, byte[] fileContent, string fileName)
-        {
-            using var uow = _uowFactory.Create();
-
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona is null)
-            {
-                return OperationResult<bool>.IsFailed("GEN_SFA_01", nameof(SubirFotoAlumno), PersonaNoEncontradaMessage, 404);
-            }
-
-            var imagenExistente = uow.Imagens.GetFotoByPersona(codigoPersona);
-
-            if (imagenExistente is null)
-            {
-                var resultadoGuardado = GuardarFotoAlumno(
-                    persona,
-                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
-                    fileContent,
-                    fileName);
-
-                if (!resultadoGuardado.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoGuardado.ErrorCode,
-                        nameof(SubirFotoAlumno),
-                        resultadoGuardado.Message,
-                        resultadoGuardado.HttpCode);
-                }
-
-                uow.Imagens.Add(resultadoGuardado.Data!);
-            }
-            else
-            {
-                var resultadoModificacion = ModificarFotoAlumno(imagenExistente, fileContent, fileName);
-                if (!resultadoModificacion.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoModificacion.ErrorCode,
-                        nameof(SubirFotoAlumno),
-                        resultadoModificacion.Message,
-                        resultadoModificacion.HttpCode);
-                }
-
-                uow.Imagens.Update(imagenExistente);
-            }
-
-            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
-            uow.Save();
-            return OperationResult<bool>.Ok(true, nameof(SubirFotoAlumno));
-        }
-
-        public OperationResult<bool> SubirDocumentoAlumno(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName)
-        {
-            if (tipo != 1 && tipo != 2)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "GEN_SDA_01",
-                    nameof(SubirDocumentoAlumno),
-                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
-                    400);
-            }
-
-            using var uow = _uowFactory.Create();
-
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona is null)
-            {
-                return OperationResult<bool>.IsFailed("GEN_SDA_02", nameof(SubirDocumentoAlumno), PersonaNoEncontradaMessage, 404);
-            }
-
-            var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
-
-            if (documentoExistente is null)
-            {
-                var resultadoGuardado = GuardarDocumentoAlumno(
-                    codigoPersona,
-                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
-                    tipo,
-                    fecha,
-                    fileContent,
-                    fileName);
-
-                if (!resultadoGuardado.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoGuardado.ErrorCode,
-                        nameof(SubirDocumentoAlumno),
-                        resultadoGuardado.Message,
-                        resultadoGuardado.HttpCode);
-                }
-
-                uow.ImagenTemporals.Add(resultadoGuardado.Data!);
-            }
-            else
-            {
-                var resultadoModificacion = ModificarDocumentoAlumno(documentoExistente, tipo, fecha, fileContent, fileName);
-                if (!resultadoModificacion.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoModificacion.ErrorCode,
-                        nameof(SubirDocumentoAlumno),
-                        resultadoModificacion.Message,
-                        resultadoModificacion.HttpCode);
-                }
-
-                uow.ImagenTemporals.Update(documentoExistente);
-            }
-
-            persona.FechaVtoDocumentoPersona = fecha;
-            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
-            uow.Save();
-            return OperationResult<bool>.Ok(true, nameof(SubirDocumentoAlumno));
         }
 
         private static OperationResult<Imagen> GuardarFotoAlumno(Persona persona, int idImagen, byte[] fileContent, string fileName)
@@ -786,6 +750,11 @@ namespace AppLogic.Services
             return string.IsNullOrWhiteSpace(valor) ? null : FormatearTextoCapitalizado(valor);
         }
 
+        private static string ConvertirBoolASiNo(bool valor)
+        {
+            return valor ? "SI" : "NO";
+        }
+
         private static string? ConvertirBoolASiNo(bool? valor)
         {
             if (!valor.HasValue)
@@ -793,7 +762,7 @@ namespace AppLogic.Services
                 return null;
             }
 
-            return valor.Value ? "SI" : "NO";
+            return ConvertirBoolASiNo(valor.Value);
         }
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)
@@ -801,224 +770,6 @@ namespace AppLogic.Services
             var input = $"{idProducto}/{documento?.Trim().ToUpperInvariant()}";
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
             return Convert.ToHexString(hash)[..30];
-        }
-
-        private OperationResult<bool> ValidarActualizarPersonaRequest(ActualizarPersonaRequest request, string callingMethod)
-        {
-            return ValidarActualizarPersonaRequestCore(request, callingMethod, _fechaMinimaNacimiento);
-        }
-
-        private static OperationResult<bool> ValidarActualizarPersonaRequestCore(
-            ActualizarPersonaRequest request,
-            string callingMethod,
-            DateTime fechaMinimaNacimiento)
-        {
-            if (request.FechaNacimiento <= fechaMinimaNacimiento)
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_03", callingMethod, "Fecha de nacimiento incorrecta.", 400);
-            }
-
-            if (string.IsNullOrWhiteSpace(request.PrimerApellido)
-                || string.IsNullOrWhiteSpace(request.PrimerNombre)
-                || string.IsNullOrWhiteSpace(request.Mail)
-                || string.IsNullOrWhiteSpace(request.VerificacionMail)
-                || string.IsNullOrWhiteSpace(request.Direccion))
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_04", callingMethod, "Faltan parámetros obligatorios.", 400);
-            }
-
-            if (!string.Equals(request.Mail, request.VerificacionMail, StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_05", callingMethod, "El mail y su verificación no coinciden.", 400);
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.Sexo)
-                && request.Sexo.Trim() is not ("M" or "F"))
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_06", callingMethod, "Sexo inválido.", 400);
-            }
-
-            if (request.PrimerNombre.Trim().Length <= 1)
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_07", callingMethod, "Primer nombre inválido.", 400);
-            }
-
-            if (request.PrimerApellido.Trim().Length <= 1)
-            {
-                return OperationResult<bool>.IsFailed("PER_AP_08", callingMethod, "Primer apellido inválido.", 400);
-            }
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarDatosPersonaEncuestaRequest(
-            GuardarDatosPersonaEncuestaRequest request,
-            string tipoPersona,
-            string callingMethod,
-            DateTime fechaMinimaNacimiento)
-        {
-            var personaRequest = CrearActualizarPersonaRequestDesdeEncuesta(request);
-            var validacionPersona = ValidarActualizarPersonaRequestCore(personaRequest, callingMethod, fechaMinimaNacimiento);
-            if (!validacionPersona.Success)
-                return validacionPersona;
-
-            var validacionSexo = ValidarSexoEncuesta(request, callingMethod);
-            if (!validacionSexo.Success)
-                return validacionSexo;
-
-            var validacionSgi = ValidarCondicionesSgi(request, tipoPersona, callingMethod);
-            if (!validacionSgi.Success)
-                return validacionSgi;
-
-            var validacionReglas = ValidarReglasGeneralesEncuesta(request, callingMethod);
-            if (!validacionReglas.Success)
-                return validacionReglas;
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarSexoEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            if (!string.Equals(request.Sexo?.Trim(), "M", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(request.Sexo?.Trim(), "F", StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<bool>.IsFailed("PER_DPE_14", callingMethod, "Sexo inválido.", 400);
-            }
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarCondicionesSgi(
-            GuardarDatosPersonaEncuestaRequest request,
-            string tipoPersona,
-            string callingMethod)
-        {
-            if (tipoPersona != "SGI")
-            {
-                return OperationResult<bool>.Ok(true, callingMethod);
-            }
-
-            if (string.IsNullOrWhiteSpace(request.TrabajaActualmente)
-                || request.TrabajaActualmente is not ("S" or "N"))
-            {
-                return OperationResult<bool>.IsFailed("PER_DPE_15", callingMethod, "Debe indicar si trabaja actualmente.", 400);
-            }
-
-            if (request.TrabajaActualmente == "S" && request.TipoJornada is not (1 or 2))
-            {
-                return OperationResult<bool>.IsFailed("PER_DPE_16", callingMethod, "Debe indicar el tipo de jornada.", 400);
-            }
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarReglasGeneralesEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            var validacionBase = ValidarReglasBaseEncuesta(request, callingMethod);
-            if (!validacionBase.Success)
-                return validacionBase;
-
-            var validacionDecision = ValidarReglasDecisionEncuesta(request, callingMethod);
-            if (!validacionDecision.Success)
-                return validacionDecision;
-
-            var validacionAsesoramiento = ValidarReglasAsesoramientoEncuesta(request, callingMethod);
-            if (!validacionAsesoramiento.Success)
-                return validacionAsesoramiento;
-
-            var validacionEducacion = ValidarReglasEducacionEncuesta(request, callingMethod);
-            if (!validacionEducacion.Success)
-                return validacionEducacion;
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarReglasBaseEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            if (request.UltimoAnioSexto <= 0)
-                return OperationResult<bool>.IsFailed("PER_DPE_17", callingMethod, "Debe indicar la última vez que cursó sexto.", 400);
-            if (request.InstruccionMadre < 1 || request.InstruccionMadre > 7)
-                return OperationResult<bool>.IsFailed("PER_DPE_18", callingMethod, "Error en el nivel de formación de madre o tutor indicado.", 400);
-            if (request.InstruccionPadre < 1 || request.InstruccionPadre > 7)
-                return OperationResult<bool>.IsFailed("PER_DPE_19", callingMethod, "Error en el nivel de formación de padre o tutor indicado.", 400);
-            if (request.UltimoAnioSexto < 4 || request.UltimoAnioSexto > 6)
-                return OperationResult<bool>.IsFailed("PER_DPE_25", callingMethod, "Último año de bachillerato inválido.", 400);
-            if (request.InformarEncuesta is not ("SI" or "NO"))
-                return OperationResult<bool>.IsFailed("PER_DPE_26", callingMethod, "Debe indicar si informa encuesta.", 400);
-            if (request.UltimoAnioSecundaria is not (1 or 2))
-                return OperationResult<bool>.IsFailed("PER_DPE_27", callingMethod, "Último año de secundaria inválido.", 400);
-            if (request.NivelDecision is not (1 or 2))
-                return OperationResult<bool>.IsFailed("PER_DPE_28", callingMethod, "Nivel de decisión inválido.", 400);
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarReglasDecisionEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            if (request.DecisionCarrera is not (0 or 2 or 3 or 4))
-                return OperationResult<bool>.IsFailed("PER_DPE_20", callingMethod, "Debe indicar la decisión de carrera.", 400);
-            if (request.DecisionUniversidad is not (0 or 2 or 3 or 4))
-                return OperationResult<bool>.IsFailed("PER_DPE_21", callingMethod, "Debe indicar la decisión de universidad.", 400);
-            if (request.CompartidoCon < 1 || request.CompartidoCon > 5)
-                return OperationResult<bool>.IsFailed("PER_DPE_22", callingMethod, "Debe indicar con quién compartió la decisión.", 400);
-            if (request.InfoOtrasUniversidadesAntes is not ("SI" or "NO"))
-                return OperationResult<bool>.IsFailed("PER_DPE_23", callingMethod, "Debe indicar si se informó en alguna universidad.", 400);
-            if (request.InfoOtrasUniversidadesAntes == "SI" && request.UniversidadesConsideradas.Count == 0)
-                return OperationResult<bool>.IsFailed("PER_DPE_24", callingMethod, "Debe indicar en qué otras universidades se informó.", 400);
-            if (request.OpcionesMotivosSeleccionados.Count == 0)
-                return OperationResult<bool>.IsFailed("PER_DPE_37", callingMethod, "Debe indicar los motivos de elección.", 400);
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarReglasAsesoramientoEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            if (request.AsesoramientoOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_29", callingMethod, "Debe indicar si hubo reunión de asesoramiento.", 400);
-            if (request.AsesoramientoOrt.GetValueOrDefault() && (request.ValoracionAsesoramientoOrt < 1 || request.ValoracionAsesoramientoOrt > 5))
-                return OperationResult<bool>.IsFailed("PER_DPE_30", callingMethod, "Valoración de asesoramiento inválida.", 400);
-            if (request.VistaSitioWebOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_31", callingMethod, "Debe indicar si visitó el sitio de ORT.", 400);
-            if (request.VistaSitioWebOrt.GetValueOrDefault() && (request.ValoracionSitioWeb < 1 || request.ValoracionSitioWeb > 5))
-                return OperationResult<bool>.IsFailed("PER_DPE_32", callingMethod, "Valoración del sitio web inválida.", 400);
-            if (request.VistaInstalacionesOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_33", callingMethod, "Debe indicar si visitó las instalaciones de ORT.", 400);
-            if (request.VistaInstalacionesOrt.GetValueOrDefault() && (request.ValoracionInstalacionesOrt < 1 || request.ValoracionInstalacionesOrt > 5))
-                return OperationResult<bool>.IsFailed("PER_DPE_34", callingMethod, "Valoración de instalaciones inválida.", 400);
-            if (request.PublicidadOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_35", callingMethod, "Debe indicar si recuerda alguna publicidad de ORT.", 400);
-            if (request.PublicidadOrt.GetValueOrDefault() && request.OpcionesPublicidadSeleccionadas.Count == 0)
-                return OperationResult<bool>.IsFailed("PER_DPE_36", callingMethod, "Debe indicar publicidades seleccionadas.", 400);
-
-            return OperationResult<bool>.Ok(true, callingMethod);
-        }
-
-        private static OperationResult<bool> ValidarReglasEducacionEncuesta(
-            GuardarDatosPersonaEncuestaRequest request,
-            string callingMethod)
-        {
-            if (request.UltimoAnioSexto == 6 && !request.CodigoTitulo.HasValue)
-                return OperationResult<bool>.IsFailed("PER_DPE_38", callingMethod, "Debe indicar orientación del bachillerato.", 400);
-            if (request.InstruccionMadre is 5 or 6 && request.InstruccionMadreOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_39", callingMethod, "Debe indicar si la madre o tutor obtuvo el título en ORT.", 400);
-            if (request.InstruccionPadre is 5 or 6 && request.InstruccionPadreOrt == null)
-                return OperationResult<bool>.IsFailed("PER_DPE_40", callingMethod, "Debe indicar si el padre o tutor obtuvo el título en ORT.", 400);
-            if (request.TieneEducacionSuperior == null && request.UltimoAnioSexto == 6)
-                return OperationResult<bool>.IsFailed("PER_DPE_41", callingMethod, "Debe indicar si tiene educación superior.", 400);
-            if (request.TieneEducacionSuperior.GetValueOrDefault() && request.UniversidadesEducacionSuperior.Count == 0)
-                return OperationResult<bool>.IsFailed("PER_DPE_42", callingMethod, "Debe seleccionar universidades si tiene educación superior.", 400);
-
-            return OperationResult<bool>.Ok(true, callingMethod);
         }
 
         private static bool EsUsoExclusivo(Persona persona)
@@ -1064,30 +815,11 @@ namespace AppLogic.Services
 
         private static void CargarConQuienCompartioDecision(EncuestaIniAdmision encuesta, int valor)
         {
-            encuesta.ComparPadresEncuestaIni = "NO";
-            encuesta.ComparOtrosEncuestaIni = "NO";
-            encuesta.ComparAmigoFamEncuestaIni = "NO";
-            encuesta.ComparNadieEncuestaIni = "NO";
-            encuesta.ComparAmigoPropEncuestaIni = "NO";
-
-            switch (valor)
-            {
-                case 1:
-                    encuesta.ComparPadresEncuestaIni = "SI";
-                    break;
-                case 2:
-                    encuesta.ComparAmigoFamEncuestaIni = "SI";
-                    break;
-                case 3:
-                    encuesta.ComparAmigoPropEncuestaIni = "SI";
-                    break;
-                case 4:
-                    encuesta.ComparOtrosEncuestaIni = "SI";
-                    break;
-                case 5:
-                    encuesta.ComparNadieEncuestaIni = "SI";
-                    break;
-            }
+            encuesta.ComparPadresEncuestaIni = ConvertirBoolASiNo(valor == 1);
+            encuesta.ComparOtrosEncuestaIni = ConvertirBoolASiNo(valor == 4);
+            encuesta.ComparAmigoFamEncuestaIni = ConvertirBoolASiNo(valor == 2);
+            encuesta.ComparNadieEncuestaIni = ConvertirBoolASiNo(valor == 5);
+            encuesta.ComparAmigoPropEncuestaIni = ConvertirBoolASiNo(valor == 3);
         }
 
     }
