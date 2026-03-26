@@ -1304,41 +1304,58 @@ namespace UnitTesting.AppLogic.Services
                 TienevehiculoNfDj = "NO",
                 TienecasaveraneoNfDj = "NO",
                 ObservacionesNfDj = "Original",
+
+                Persona = new Persona
+                {
+                    CodigoPersona = 1,
+                    PrimerNombre = "Test"
+                },
+                Producto = new Producto
+                {
+                    IdProducto = 10,
+                    NombreProducto = "Prod1"
+                },
+                TipoDescuento = new TipoDescuento
+                {
+                    IdTipoDescuento = 1,
+                    NombreTipoDescuento = "Beca A"
+                },
+
                 IntegranteNfDjs =
                 [
                     new IntegranteNfDj
+            {
+                IdIntegranteNfDj = 200,
+                IdDeclaracionjuradaWeb = 1,
+                IdTipoParentesco = 2,
+                NombreIntegranteNfDj = "Padre",
+                IngresoMensualNfDjs =
+                [
+                    new IngresoMensualNfDj
                     {
+                        IdIngresoMensualNfDj = 300,
                         IdIntegranteNfDj = 200,
-                        IdDeclaracionjuradaWeb = 1,
-                        IdTipoParentesco = 2,
-                        NombreIntegranteNfDj = "Padre",
-                        IngresoMensualNfDjs =
-                        [
-                            new IngresoMensualNfDj
-                            {
-                                IdIngresoMensualNfDj = 300,
-                                IdIntegranteNfDj = 200,
-                                NominalIngresoNfDj = 1500,
-                                DescuentoslegalesIngresoNf = 200,
-                                LiquidoIngresoNfDj = 1300,
-                                IdIngresoFront = "ING-1",
-                                ArchivoIngresoNfDj = [1, 2, 3],
-                                NombreArchivoIngreso = "ingreso",
-                                ExtensionArchivoIngreso = ".pdf"
-                            }
-                        ]
+                        NominalIngresoNfDj = 1500,
+                        DescuentoslegalesIngresoNf = 200,
+                        LiquidoIngresoNfDj = 1300,
+                        IdIngresoFront = "ING-1",
+                        ArchivoIngresoNfDj = [1, 2, 3],
+                        NombreArchivoIngreso = "ingreso",
+                        ExtensionArchivoIngreso = ".pdf"
                     }
+                ]
+            }
                 ],
                 EgresoMensualNfDjs =
                 [
                     new EgresoMensualNfDj
-                    {
-                        IdEgresoMensualNfDj = 400,
-                        IdDeclaracionjuradaWeb = 1,
-                        IdTipoEgresoDj = 3,
-                        MontoEgresoMensualNfDj = 700,
-                        IdEgresoFront = "EGR-1"
-                    }
+            {
+                IdEgresoMensualNfDj = 400,
+                IdDeclaracionjuradaWeb = 1,
+                IdTipoEgresoDj = 3,
+                MontoEgresoMensualNfDj = 700,
+                IdEgresoFront = "EGR-1"
+            }
                 ]
             };
         }

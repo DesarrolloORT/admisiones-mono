@@ -28,10 +28,10 @@ namespace UnitTesting.Controllers
             };
 
             serviceMock.Setup(s => s.AutenticarUsuarioLDAPAsync(1, "pwd"))
-                .ReturnsAsync(OperationResult<DTOAuthenticationResponse>.Ok(
-                    new DTOAuthenticationResponse
+                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
+                    new DtoAuthenticationResponse
                     {
-                        Persona = new DTOPersonaAuth
+                        Persona = new DtoPersonaAuth
                         {
                             CodigoPersona = 1
                         },

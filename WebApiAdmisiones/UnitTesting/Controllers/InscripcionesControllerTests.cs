@@ -22,7 +22,7 @@ namespace UnitTesting.Controllers
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerUltimaInscripcionActiva(1))
-                .Returns(OperationResult<DTOUltimaInscripcion>.Ok(new DTOUltimaInscripcion(), nameof(IInscripcionesService.ObtenerUltimaInscripcionActiva)));
+                .Returns(OperationResult<DtoUltimaInscripcion>.Ok(new DtoUltimaInscripcion(), nameof(IInscripcionesService.ObtenerUltimaInscripcionActiva)));
 
             var response = controller.ObtenerUltimaInscripcionActiva();
 

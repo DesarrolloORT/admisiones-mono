@@ -63,7 +63,7 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.ObtenerProductosConInteresActivo(123);
 
             Assert.True(result.Success);
-            var list = new List<DTOProductoAdmisiones>(result.Data!);
+            var list = new List<DtoProductoAdmisiones>(result.Data!);
             Assert.Single(list);
             Assert.Equal(10, list[0].IdProducto);
             Assert.Equal(7, list[0].IdProceso);

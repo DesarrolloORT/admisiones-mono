@@ -40,8 +40,8 @@ namespace UnitTesting.Controllers
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(99);
             serviceMock.Setup(s => s.ObtenerDatosPreInscripcion(99))
-                .Returns(OperationResult<DTODatosPreInscripcion>.Ok(
-                    new DTODatosPreInscripcion
+                .Returns(OperationResult<DtoDatosPreInscripcion>.Ok(
+                    new DtoDatosPreInscripcion
                     {
                         IdProducto = 10,
                         IdProceso = 20,
