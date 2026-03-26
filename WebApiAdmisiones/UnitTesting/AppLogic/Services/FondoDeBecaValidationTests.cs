@@ -65,28 +65,74 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ValidarConfirmacionDeclaracion_IngresoSinArchivo_ReturnsExpectedError()
         {
-            var declaracion = new DeclaracionJuradaWeb
+            var declaracion = BuildDeclaracionConIngreso(new IngresoMensualNfDj
             {
-                IdTipoDescuento = 1,
-                IntegranteNfDjs = new List<IntegranteNfDj>
-                {
-                    new()
-                    {
-                        IngresoMensualNfDjs = new List<IngresoMensualNfDj>
-                        {
-                            new()
-                            {
-                                NominalIngresoNfDj = 1000,
-                                DescuentoslegalesIngresoNf = 100
-                            }
-                        }
-                    }
-                }
-            };
+                NominalIngresoNfDj = 1000,
+                DescuentoslegalesIngresoNf = 100
+            });
 
             var result = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(declaracion, "TestMethod");
 
             AssertFailure(result, "FDB_GDJ_14");
+        }
+
+        [Fact]
+        public void ValidarConfirmacionDeclaracion_UniversidadNoOrtConFacultad_ReturnsExpectedError()
+        {
+            var declaracion = new DeclaracionJuradaWeb
+            {
+                IdTipoDescuento = FondoDeBecaConstants.Declaracion.TipoDescuentoAntecedentesAcademicos,
+                CodigoInstitucionBac = 100,
+                CodigoInstitucionUniv = 999,
+                FacultadUniversidadDj = "No corresponde",
+                CarreraUniversitariaDj = "Ingenieria",
+                CantMateriasAprobadasDj = 10,
+                CantMatExaReprobadosDj = 1,
+                PromTotalCalificacionesDj = 9
+            };
+
+            var result = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(declaracion, "TestMethod");
+
+            AssertFailure(result, "FDB_GDJ_09");
+        }
+
+        [Theory]
+        [InlineData(-1, 100, 100, "FDB_GDJ_10")]
+        [InlineData(1000.5, 100, 100, "FDB_GDJ_11")]
+        [InlineData(999, 100, 100, "FDB_GDJ_12")]
+        public void ValidarConfirmacionDeclaracion_IngresoNominalInvalido_ReturnsExpectedError(
+            decimal nominal,
+            decimal descuentos,
+            decimal liquido,
+            string expectedErrorCode)
+        {
+            var declaracion = BuildDeclaracionConIngreso(new IngresoMensualNfDj
+            {
+                NominalIngresoNfDj = nominal,
+                DescuentoslegalesIngresoNf = descuentos,
+                LiquidoIngresoNfDj = liquido,
+                ArchivoIngresoNfDj = new byte[] { 1, 2, 3 }
+            });
+
+            var result = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(declaracion, "TestMethod");
+
+            AssertFailure(result, expectedErrorCode);
+        }
+
+        [Fact]
+        public void ValidarConfirmacionDeclaracion_DescuentosDecimales_ReturnsExpectedError()
+        {
+            var declaracion = BuildDeclaracionConIngreso(new IngresoMensualNfDj
+            {
+                NominalIngresoNfDj = 1000,
+                DescuentoslegalesIngresoNf = 100.5m,
+                LiquidoIngresoNfDj = 900,
+                ArchivoIngresoNfDj = new byte[] { 1, 2, 3 }
+            });
+
+            var result = FondoDeBecaValidation.ValidarConfirmacionDeclaracion(declaracion, "TestMethod");
+
+            AssertFailure(result, "FDB_GDJ_13");
         }
 
         [Fact]
@@ -152,6 +198,21 @@ namespace UnitTesting.AppLogic.Services
         {
             Assert.False(result.Success);
             Assert.Equal(expectedErrorCode, result.ErrorCode);
+        }
+
+        private static DeclaracionJuradaWeb BuildDeclaracionConIngreso(IngresoMensualNfDj ingreso)
+        {
+            return new DeclaracionJuradaWeb
+            {
+                IdTipoDescuento = 1,
+                IntegranteNfDjs = new List<IntegranteNfDj>
+                {
+                    new()
+                    {
+                        IngresoMensualNfDjs = new List<IngresoMensualNfDj> { ingreso }
+                    }
+                }
+            };
         }
     }
 }

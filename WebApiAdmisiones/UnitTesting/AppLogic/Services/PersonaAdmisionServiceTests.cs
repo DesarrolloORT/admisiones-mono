@@ -451,6 +451,22 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarDatosPersonaEncuesta_CiudadInvalida_ReturnsFailed()
+        {
+            ConfigurarPersonaBaseParaEncuesta();
+
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            ciudadRepo.Setup(r => r.GetByKey(1, 1, 1)).Returns((Ciudad)null);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, CrearRequestEncuesta());
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_02", result.ErrorCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
         public void GuardarDatosPersonaEncuesta_ProductoInvalido_ReturnsFailed()
         {
             ConfigurarPersonaBaseParaEncuesta();
@@ -1086,6 +1102,33 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Verify(u => u.Save(), Times.Never);
         }
 
+        [Fact]
+        public void GuardarDatosPersonaEncuesta_AnioBachillerDelTituloInvalido_ReturnsFailed()
+        {
+            ConfigurarBaseHastaProceso();
+            var request = CrearRequestEncuesta();
+            request.UltimoAnioSexto = 6;
+            request.CodigoTitulo = 200;
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(100)).Returns(new Empresa { CodigoEmpresa = 100, Nombre = "Instituto Ejemplo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tituloRepo = new Mock<ITituloRepository>();
+            tituloRepo.Setup(r => r.GetByKey(200)).Returns(new Titulo { CodigoTitulo = 200, IdAnioBachiller = 999 });
+            _uowMock.Setup(u => u.Titulos).Returns(tituloRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetByKey(999)).Returns((AnioBachiller)null);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarDatosPersonaEncuesta(1, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_DPE_11", result.ErrorCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
         #endregion
 
         #region Archivos
@@ -1340,6 +1383,60 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirFotoAlumno_Existente_ContenidoInvalido_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var fotoExistente = new Imagen
+            {
+                IdImagen = 1,
+                CodigoPersona = 1,
+                NombreImagen = "1_3.jpg",
+                TipoImagen = "3",
+                BlobImagen = new byte[] { 1, 2, 3 }
+            };
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetFotoByPersona(1)).Returns(fotoExistente);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            var invalidContent = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+
+            var result = _service.SubirFotoAlumno(1, invalidContent, "foto.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            imagenRepo.Verify(r => r.Update(It.IsAny<Imagen>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_TipoInvalido_ReturnsFailed()
+        {
+            var result = _service.SubirDocumentoAlumno(1, 3, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_PersonaNoEncontrada_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns((Persona)null);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
         public void SubirDocumentoAlumno_ActualizaFechaDocumentoPersonaYAuditoria()
         {
             var fechaVencimiento = new DateTime(2030, 12, 31);
@@ -1432,6 +1529,35 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
             imagenTemporalRepo.Verify(r => r.Add(It.IsAny<ImagenTemporal>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirDocumentoAlumno_Existente_ExtensionInvalida_ReturnsFailed()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var documentoExistente = new ImagenTemporal
+            {
+                IdImagenTemporal = 456,
+                CodigoPersona = 1,
+                NombreImagen = "1_1.pdf",
+                TipoImagen = "1"
+            };
+
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            imagenTemporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(documentoExistente);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+
+            var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+
+            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            imagenTemporalRepo.Verify(r => r.Update(It.IsAny<ImagenTemporal>()), Times.Never);
             _uowMock.Verify(u => u.Save(), Times.Never);
         }
 
