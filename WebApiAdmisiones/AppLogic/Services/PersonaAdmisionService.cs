@@ -411,7 +411,7 @@ namespace AppLogic.Services
             return OperationResult<long>.Ok(idComienzo.Value, methodName);
         }
 
-        private OperationResult<DatosAcademicosEncuesta> ResolverDatosAcademicosEncuesta(
+        private static OperationResult<DatosAcademicosEncuesta> ResolverDatosAcademicosEncuesta(
             IUnitOfWork uow,
             GuardarDatosPersonaEncuestaRequest request,
             string methodName)
