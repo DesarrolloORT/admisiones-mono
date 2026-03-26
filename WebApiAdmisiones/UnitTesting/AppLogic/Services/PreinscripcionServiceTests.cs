@@ -55,6 +55,79 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerProcesosHabilitadosPorProducto_ReturnsMappedItems()
+        {
+            var procesoRepo = new Mock<IProcesoRepository>();
+            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(
+            [
+                new Proceso { IdProceso = 20, NombreProceso = "Marzo 2026" }
+            ]);
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var result = _service.ObtenerProcesosHabilitadosPorProducto(10);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProceso);
+            Assert.Equal("Marzo 2026", item.NombreProceso);
+        }
+
+        [Fact]
+        public void ObtenerTurnos_ReturnsMappedItems()
+        {
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetTurnosParaAdmisiones(10, 20)).Returns(
+            [
+                new Turno { IdTurno = 30, NombreTurno = "Nocturno" }
+            ]);
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var result = _service.ObtenerTurnos(10, 20);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(30, item.IdTurno);
+            Assert.Equal("Nocturno", item.NombreTurno);
+        }
+
+        [Fact]
+        public void ObtenerOfertasParaInscripcionConProceso_ReturnsMappedItems()
+        {
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetOfertasParaInscripcionConProceso(10, 20, 30)).Returns(
+            [
+                new Oferta
+                {
+                    IdOferta = 40,
+                    IdSupraoferta = 50,
+                    IdTurno = 30,
+                    IdLocalidad = 1,
+                    InscripcionesAbiertasOferta = "SI",
+                    AceptaCondicionalesOferta = "SI",
+                    NombreCortoOferta = "A01",
+                    MinimoCreditosOferta = 1,
+                    Supraoferta = new Supraoferta
+                    {
+                        IdSupraoferta = 50,
+                        IdComienzo = 60,
+                        IdPaquete = 70,
+                        IdMoneda = "UYU",
+                        Paquete = new Paquete { IdPaquete = 70, IdProducto = 10, GeneraPlanAnclaPaquete = "SI", MinimoCreditosPaquete = 1 }
+                    },
+                    Turno = new Turno { IdTurno = 30, NombreTurno = "Nocturno" },
+                    Localidad = new Localidad { IdLocalidad = 1, NombreLocalidad = "Montevideo" }
+                }
+            ]);
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var result = _service.ObtenerOfertasParaInscripcionConProceso(10, 20, 30);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(40, item.IdOferta);
+        }
+
+        [Fact]
         public void ObtenerDatosPreInscripcion_SinEncuesta_ReturnsNoContentFailure()
         {
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
@@ -66,6 +139,32 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("PRE_DPI_01", result.ErrorCode);
             Assert.Equal(204, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerDatosPreInscripcion_CuandoCalculoFalla_ReturnsFailure()
+        {
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(1)).Returns(new EncuestaIniAdmision
+            {
+                CodigoPersona = 1,
+                IdProducto = 10,
+                IdProceso = 20,
+                IdTurno = 30,
+                IdComienzo = 40,
+                TipoInscripcion = "ONLINE"
+            });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            _generalServiceMock
+                .Setup(s => s.CalcularFechaVencimientoAdmisiones(1, 20))
+                .Returns(OperationResult<DateTime>.IsFailed("GEN_FVA_02", "CalcularFechaVencimientoAdmisiones", "Sin vencimiento.", 400));
+
+            var result = _service.ObtenerDatosPreInscripcion(1);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_FVA_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]
@@ -136,6 +235,38 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(30, result.Data.ObjTurno!.IdTurno);
             Assert.NotNull(result.Data.ObjOferta);
             Assert.Equal(50, result.Data.ObjOferta!.IdOferta);
+        }
+
+        [Fact]
+        public void ObtenerDatosPreInscripcion_ConFechaGuardada_NoConsultaGeneralService()
+        {
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(1)).Returns(new EncuestaIniAdmision
+            {
+                CodigoPersona = 1,
+                IdProducto = 10,
+                IdProceso = 20,
+                IdTurno = 30,
+                IdComienzo = 40,
+                TipoInscripcion = "ONLINE",
+                FechaVtoAdmision = new DateTime(2026, 5, 10),
+                Producto = new Producto { IdProducto = 10, NombreExtensoProducto = "Analista en TI" },
+                Proceso = new Proceso { IdProceso = 20, NombreProceso = "Marzo 2026" },
+                Comienzo = new Comienzo { IdComienzo = 40, NombreComienzo = "Abril 2026" },
+                Turno = new Turno { IdTurno = 30, NombreTurno = "Nocturno" }
+            });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetOfertasParaInscripcionConProceso(10, 20, 30)).Returns(new List<Oferta>());
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var result = _service.ObtenerDatosPreInscripcion(1);
+
+            Assert.True(result.Success);
+            Assert.Equal(new DateTime(2026, 5, 10), result.Data.FechaVencimiento);
+            Assert.Null(result.Data.ObjOferta);
+            _generalServiceMock.Verify(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
         }
     }
 }

@@ -25,6 +25,7 @@ namespace AppLogic.DTOs
         public string? HoraEnrtegaDJPrueba { get; set; }
     }
 
+    [ExcludeFromCodeCoverage]
     public static class DeclaracionJuradaAdmisionesMapper
     {
         public static DtoDeclaracionJuradaAdmisiones ToAdmisionesDto(

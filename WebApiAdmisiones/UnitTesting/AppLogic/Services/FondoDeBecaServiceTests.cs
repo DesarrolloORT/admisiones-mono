@@ -520,6 +520,147 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_RequestNull_ReturnsBadRequest()
+        {
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(1, null!, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_00", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_IdInscriptoPruebaInvalido_ReturnsBadRequest()
+        {
+            var dto = CrearDtoBase();
+            dto.IdInscriptoPrueba = 0;
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(1, dto, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_15", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExisteYNoHayInscriptoPrueba_ReturnsNotFound()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var dto = CrearDtoBase();
+            dto.IdDeclaracionjuradaWeb = 0;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns((InscriptoPrueba)null);
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, dto, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_16", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExisteYNoPerteneceALaPersona_ReturnsForbidden()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var dto = CrearDtoBase();
+            dto.IdDeclaracionjuradaWeb = 0;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                CodigoPersona = 999,
+                IdProducto = 10,
+                IdPrueba = 50
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, dto, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_17", result.ErrorCode);
+            Assert.Equal(403, result.HttpCode);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExisteYSinProducto_ReturnsNotFound()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var dto = CrearDtoBase();
+            dto.IdDeclaracionjuradaWeb = 0;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                CodigoPersona = codigoPersona,
+                IdProducto = null,
+                IdPrueba = 50
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, dto, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_18", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void GuardarFormularioDeclaracionJuradaWeb_CuandoNoExisteYSinPrueba_ReturnsNotFound()
+        {
+            const long codigoPersona = 1;
+            const long idInscriptoPrueba = 100;
+
+            var dto = CrearDtoBase();
+            dto.IdDeclaracionjuradaWeb = 0;
+
+            var djRepo = new Mock<IDeclaracionJuradaWebRepository>();
+            djRepo.Setup(r => r.GetFormularioAdmisionesCompleto(codigoPersona, idInscriptoPrueba)).Returns((DeclaracionJuradaWeb)null);
+            _uowMock.Setup(u => u.DeclaracionJuradaWebs).Returns(djRepo.Object);
+
+            var inscriptoRepo = new Mock<BusinessLogic.IDevartRepositories.IInscriptoPruebaRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(idInscriptoPrueba)).Returns(new InscriptoPrueba
+            {
+                IdInscriptoPrueba = idInscriptoPrueba,
+                CodigoPersona = codigoPersona,
+                IdProducto = 10,
+                IdPrueba = 50
+            });
+            _uowMock.Setup(u => u.InscriptoPruebas).Returns(inscriptoRepo.Object);
+
+            var pruebaRepo = new Mock<IPruebaRepository>();
+            pruebaRepo.Setup(r => r.GetByKey(50)).Returns((Prueba)null);
+            _uowMock.Setup(u => u.Pruebas).Returns(pruebaRepo.Object);
+
+            var result = _service.GuardarFormularioDeclaracionJuradaWeb(codigoPersona, dto, false);
+
+            Assert.False(result.Success);
+            Assert.Equal("FDB_GDJ_19", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
         public void GuardarFormularioDeclaracionJuradaWeb_SinCambiosEnModificacion_NoGuarda()
         {
             const long codigoPersona = 1;

@@ -698,7 +698,7 @@ namespace AppLogic.Services
                 dto.TipoDescuento = prueba.TipoDescuento.ToDto();
             }
             if( prueba.Comienzo is not null){
-                dto.Comienzo = prueba.Comienzo?.ToDto();
+                dto.Comienzo = prueba.Comienzo.ToDto();
             }
             return dto;
         }

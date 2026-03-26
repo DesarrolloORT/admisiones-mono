@@ -87,7 +87,7 @@ namespace WebApiAdmisiones.Security
             return services;
         }
 
-        private static IEnumerable<SecurityKey> ResolveIssuerSigningKey(
+        private static SymmetricSecurityKey[] ResolveIssuerSigningKey(
             string token,
             SecurityToken securityToken,
             string kid,
