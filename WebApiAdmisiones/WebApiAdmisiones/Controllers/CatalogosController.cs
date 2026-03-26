@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -180,8 +180,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("ProductosBeca")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoBeca>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DTOProductoBeca>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 400)]
         public IActionResult ObtenerProductosBeca()
         {
             var result = catalogosService.ObtenerProductosBeca(_currentUser.GetUserId());

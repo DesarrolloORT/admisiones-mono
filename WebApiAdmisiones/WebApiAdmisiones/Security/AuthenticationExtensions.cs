@@ -60,34 +60,7 @@ namespace WebApiAdmisiones.Security
                         /// <summary>
                         /// Permite resolver la clave de firma según el emisor del token.
                         /// </summary>
-                        IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
-                        {
-                            var handler = new JwtSecurityTokenHandler();
-                            var jwtToken = handler.ReadJwtToken(token);
-                            var issuer = jwtToken?.Issuer;
-
-                            // 🔍 DEBUG: podés poner un breakpoint acá
-                            Console.WriteLine($"Token recibido - issuer: {issuer}");
-
-                            // Ejemplo de múltiples claves por issuer
-                            var keysByIssuer = new Dictionary<string, string?>
-                            {
-                                { IssuerAdmisiones, Environment.GetEnvironmentVariable("JWT_SECRET_KEY") }
-                            };
-
-                            if (issuer != null && keysByIssuer.TryGetValue(issuer, out var secret))
-                            {
-                                var keyBytes = Array.Empty<byte>();
-                                if (secret != null)
-                                {
-                                    keyBytes = Encoding.UTF8.GetBytes(secret);
-                                }
-                                return new[] { new SymmetricSecurityKey(keyBytes) };
-                            }
-
-                            // Si no encontrás la clave, devolvé vacío o tirá excepción
-                            throw new SecurityTokenInvalidIssuerException("Issuer no autorizado.");
-                        }
+                        IssuerSigningKeyResolver = ResolveIssuerSigningKey
                     };
 
                     /// <summary>
@@ -99,52 +72,90 @@ namespace WebApiAdmisiones.Security
                         /// Evento que se ejecuta cuando se recibe un mensaje con token.
                         /// Prioriza la lectura del token desde cookies HttpOnly (más seguro).
                         /// </summary>
-                        OnMessageReceived = context =>
-                        {
-                            // PRIORIDAD 1: Intentar obtener el token desde la cookie HttpOnly (RECOMENDADO)
-                            var tokenFromCookie = CookieAuthenticationHelper.GetAccessTokenFromCookie(context.HttpContext);
-
-                            if (!string.IsNullOrEmpty(tokenFromCookie))
-                            {
-                                context.Token = tokenFromCookie;
-                                Console.WriteLine($"Token extraído desde cookie HttpOnly (seguro)");
-                                return Task.CompletedTask;
-                            }
-
-                            // PRIORIDAD 2: Fallback al header Authorization (para compatibilidad con APIs externas)
-                            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-                            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                            {
-                                context.Token = authHeader.Substring("Bearer ".Length).Trim();
-                                Console.WriteLine($"Token extraído desde Authorization header (fallback)");
-                            }
-                            else
-                            {
-                                Console.WriteLine("No se encontró token en cookie ni en Authorization header");
-                            }
-
-                            return Task.CompletedTask;
-                        },
+                        OnMessageReceived = HandleOnMessageReceived,
                         /// <summary>
                         /// Evento que se ejecuta cuando el token es validado correctamente.
                         /// </summary>
-                        OnTokenValidated = context =>
-                        {
-                            Console.WriteLine("Token validado correctamente.");
-                            return Task.CompletedTask;
-                        },
+                        OnTokenValidated = HandleOnTokenValidated,
                         /// <summary>
                         /// Evento que se ejecuta cuando falla la autenticación.
                         /// </summary>
-                        OnAuthenticationFailed = context =>
-                        {
-                            Console.WriteLine($"Error de autenticación: {context.Exception.Message}");
-                            return Task.CompletedTask;
-                        }
+                        OnAuthenticationFailed = HandleOnAuthenticationFailed
                     };
                 });
 
             return services;
+        }
+
+        private static SymmetricSecurityKey[] ResolveIssuerSigningKey(
+            string token,
+            SecurityToken securityToken,
+            string kid,
+            TokenValidationParameters parameters)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            var issuer = jwtToken?.Issuer;
+
+            // 🔍 DEBUG: podés poner un breakpoint acá
+            Console.WriteLine($"Token recibido - issuer: {issuer}");
+
+            var keysByIssuer = new Dictionary<string, string?>
+            {
+                { IssuerAdmisiones, Environment.GetEnvironmentVariable("JWT_SECRET_KEY") }
+            };
+
+            if (issuer != null && keysByIssuer.TryGetValue(issuer, out var secret))
+            {
+                var keyBytes = Array.Empty<byte>();
+                if (secret != null)
+                {
+                    keyBytes = Encoding.UTF8.GetBytes(secret);
+                }
+
+                return new[] { new SymmetricSecurityKey(keyBytes) };
+            }
+
+            throw new SecurityTokenInvalidIssuerException("Issuer no autorizado.");
+        }
+
+        private static Task HandleOnMessageReceived(MessageReceivedContext context)
+        {
+            // PRIORIDAD 1: Intentar obtener el token desde la cookie HttpOnly (RECOMENDADO)
+            var tokenFromCookie = CookieAuthenticationHelper.GetAccessTokenFromCookie(context.HttpContext);
+
+            if (!string.IsNullOrEmpty(tokenFromCookie))
+            {
+                context.Token = tokenFromCookie;
+                Console.WriteLine("Token extraído desde cookie HttpOnly (seguro)");
+                return Task.CompletedTask;
+            }
+
+            // PRIORIDAD 2: Fallback al header Authorization (para compatibilidad con APIs externas)
+            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                Console.WriteLine("Token extraído desde Authorization header (fallback)");
+            }
+            else
+            {
+                Console.WriteLine("No se encontró token en cookie ni en Authorization header");
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private static Task HandleOnTokenValidated(TokenValidatedContext context)
+        {
+            Console.WriteLine("Token validado correctamente.");
+            return Task.CompletedTask;
+        }
+
+        private static Task HandleOnAuthenticationFailed(AuthenticationFailedContext context)
+        {
+            Console.WriteLine($"Error de autenticación: {context.Exception.Message}");
+            return Task.CompletedTask;
         }
     }
 }

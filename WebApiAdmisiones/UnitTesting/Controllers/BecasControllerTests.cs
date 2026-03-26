@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;

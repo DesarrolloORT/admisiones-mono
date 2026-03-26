@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AppLogic.DTOs
 {
     /// <summary>
     /// Inscripción realizada por la persona, proyección para el historial de admisiones.
     /// </summary>
-    public class DTOInscripcionRealizada
+    [ExcludeFromCodeCoverage]
+    public class DtoInscripcionRealizada
     {
         public DateTime FechaInscripcion { get; set; }
         public long IdProducto { get; set; }

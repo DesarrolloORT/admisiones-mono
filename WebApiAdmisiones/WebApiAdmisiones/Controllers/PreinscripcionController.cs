@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -100,9 +100,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="204">Sin datos de preinscripción.</response>
         /// <response code="400">Error interno del servidor.</response>
         [HttpGet("DatosPreInscripcion")]
-        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DTODatosPreInscripcion>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 204)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 400)]
         public IActionResult ObtenerDatosPreInscripcion()
         {
             var result = preinscripcionService.ObtenerDatosPreInscripcion(_currentUser.GetUserId());

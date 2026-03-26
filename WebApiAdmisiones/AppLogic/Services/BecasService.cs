@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -111,17 +111,28 @@ namespace AppLogic.Services
             var dtos = pruebas
                 .Where(p =>
                 {
-                    if (p.FechaEntregaDjPrueba?.Date == fechaActual.Date && p.HoraEntregaDjPrueba != null)
+                    if (p.FechaEntregaDjPrueba?.Date == fechaActual.Date
+                        && !string.IsNullOrWhiteSpace(p.HoraEntregaDjPrueba))
                     {
                         var partes = p.HoraEntregaDjPrueba.Split(':');
-                        if (partes.Length >= 2 && int.TryParse(partes[0], out int h) && int.TryParse(partes[1], out int m))
+                        if (partes.Length >= 2
+                            && int.TryParse(partes[0], out var h)
+                            && int.TryParse(partes[1], out var m))
                         {
-                            var limite = new DateTime(p.FechaEntregaDjPrueba.Value.Year,
-                                p.FechaEntregaDjPrueba.Value.Month,
-                                p.FechaEntregaDjPrueba.Value.Day, h, m, 0).AddHours(2);
+                            var fechaEntrega = p.FechaEntregaDjPrueba.Value;
+                            var limite = new DateTime(
+                                fechaEntrega.Year,
+                                fechaEntrega.Month,
+                                fechaEntrega.Day,
+                                h,
+                                m,
+                                0,
+                                DateTimeKind.Local).AddHours(2);
+
                             return fechaActual <= limite;
                         }
                     }
+
                     return true;
                 })
                 .Select(p => p.ToDtoWithRelated(1));

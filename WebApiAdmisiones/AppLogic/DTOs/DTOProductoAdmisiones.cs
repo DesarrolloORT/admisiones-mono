@@ -1,10 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AppLogic.DTOs
 {
     /// <summary>
     /// Datos de producto devueltos en listas de interés/vigentes para admisiones.
     /// Proyección reducida de T_PRODUCTO con los campos relevantes para el front.
     /// </summary>
-    public class DTOProductoAdmisiones
+    [ExcludeFromCodeCoverage]
+    public class DtoProductoAdmisiones
     {
         public long IdProducto { get; set; }
         public string? NombreProducto { get; set; }

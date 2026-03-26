@@ -2,7 +2,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using Utilities;
 
-namespace AppLogic.Interfaces
+namespace AppLogic.IServices
 {
     public interface ICatalogosService
     {
@@ -15,7 +15,7 @@ namespace AppLogic.Interfaces
         OperationResult<DtoAnioBachillerDevart> ObtenerAnioBachiller(long idAnioBachillerato);
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado);
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades();
-        OperationResult<IEnumerable<DTOProductoBeca>> ObtenerProductosBeca(long codigoPersona);
+        OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona);
         OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto);
     }
 }

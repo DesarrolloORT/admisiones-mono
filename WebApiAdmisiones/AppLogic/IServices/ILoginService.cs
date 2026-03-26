@@ -5,6 +5,6 @@ namespace AppLogic.IServices;
 
 public interface ILoginService
 {
-    Task<OperationResult<DTOAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass);
-    Task<OperationResult<DTOAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim);
+    Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass);
+    Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim);
 }

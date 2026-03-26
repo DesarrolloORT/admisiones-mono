@@ -1,4 +1,4 @@
-using AppLogic.Interfaces;
+using AppLogic.IServices;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 

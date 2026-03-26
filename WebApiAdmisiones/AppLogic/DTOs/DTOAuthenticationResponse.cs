@@ -8,12 +8,12 @@ namespace AppLogic.DTOs
     /// Los tokens se envían como cookies HttpOnly seguras y NO se incluyen en el body.
     /// </summary>
     [ExcludeFromCodeCoverage]
-public class DTOAuthenticationResponse
+public class DtoAuthenticationResponse
 {
         /// <summary>
         /// Información de la persona autenticada.
         /// </summary>
-        public required DTOPersonaAuth Persona { get; set; }
+        public required DtoPersonaAuth Persona { get; set; }
     
         /// <summary>
         /// Mensaje informativo sobre el login exitoso.

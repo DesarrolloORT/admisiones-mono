@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Authentication;
 
 namespace WebApiAdmisiones.Extensions
@@ -5,6 +6,7 @@ namespace WebApiAdmisiones.Extensions
     /// <summary>
     /// Métodos de extensión para configurar Kestrel.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public static class KestrelExtensions
     {
         /// <summary>

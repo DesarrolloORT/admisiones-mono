@@ -123,7 +123,7 @@ namespace WebApiAdmisiones.Security
             var parts = new List<string>
             {
                 $"Tipo: {tipo}",
-                $"Origen: {GetFormattedOrigin(context)}",
+                $"Origen: {GetFormattedOrigin()}",
                 $"Clase: {origin}",
                 $"CodigoPersona: {codigoPersona ?? Desconocido}",
                 $"Servicio: {GetServicePath(context)}",
@@ -156,7 +156,7 @@ namespace WebApiAdmisiones.Security
         /// Obtiene el nombre del sistema invocador basado en el issuer del token JWT.
         /// </summary>
         /// <returns>"Admisiones"</returns>
-        private static string GetFormattedOrigin(HttpContext? context)
+        private static string GetFormattedOrigin()
         {
             return SourceSystems.Admisiones;
         }

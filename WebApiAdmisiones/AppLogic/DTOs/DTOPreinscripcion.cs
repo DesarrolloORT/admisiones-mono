@@ -1,8 +1,10 @@
 using AppLogic.DevartDTOs;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppLogic.DTOs
 {
-    public class DTODatosPreInscripcion
+    [ExcludeFromCodeCoverage]
+    public class DtoDatosPreInscripcion
     {
         public long IdProceso { get; set; }
         public string? NombreProceso { get; set; }

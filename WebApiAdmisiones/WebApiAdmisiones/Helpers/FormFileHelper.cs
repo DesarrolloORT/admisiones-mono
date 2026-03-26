@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Http;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WebApiAdmisiones.Helpers
 {
+    [ExcludeFromCodeCoverage]
     internal static class FormFileHelper
     {
         public static async Task<(byte[] Content, string FileName)> ReadFileAsync(IFormFile? file)

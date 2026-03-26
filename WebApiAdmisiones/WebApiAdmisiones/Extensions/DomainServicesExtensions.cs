@@ -102,7 +102,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-            services.AddScoped<IFondoDeBecaServices, FondoDeBecaServices>();
+            services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
 
             // Servicio de correo.
