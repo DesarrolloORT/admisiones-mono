@@ -62,18 +62,7 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
-            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesDict = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(ids)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-            var dtos = instancias.Select(iw =>
-            {
-                var dto = iw.ToDto();
-                if (inscripcionesDict.TryGetValue(iw.IdInstanciaWorkflow, out var iwi))
-                    dto.InstWorkflowInscripcion = iwi.ToDto();
-                return dto;
-            });
+            var dtos = MapearInstanciasWorkflowConInscripcion(uow, instancias);
 
             return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesPendientes));
         }
@@ -82,18 +71,7 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var instancias = uow.InstanciaWorkflows.GetInscripcionesCanceladas(codigoPersona);
-            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesDict = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(ids)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-            var dtos = instancias.Select(iw =>
-            {
-                var dto = iw.ToDto();
-                if (inscripcionesDict.TryGetValue(iw.IdInstanciaWorkflow, out var iwi))
-                    dto.InstWorkflowInscripcion = iwi.ToDto();
-                return dto;
-            });
+            var dtos = MapearInstanciasWorkflowConInscripcion(uow, instancias);
 
             return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesCanceladas));
         }
@@ -122,6 +100,28 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
+        }
+
+        private static IEnumerable<DtoInstanciaWorkflowDevart> MapearInstanciasWorkflowConInscripcion(
+            IUnitOfWork uow,
+            IEnumerable<InstanciaWorkflow> instancias)
+        {
+            var instanciasList = instancias.ToList();
+            var ids = instanciasList.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(ids)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            return instanciasList.Select(iw =>
+            {
+                var dto = iw.ToDto();
+                if (inscripcionesPorInstanciaId.TryGetValue(iw.IdInstanciaWorkflow, out var inscripcion))
+                {
+                    dto.InstWorkflowInscripcion = inscripcion.ToDto();
+                }
+
+                return dto;
+            });
         }
 
         private static DtoProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)
