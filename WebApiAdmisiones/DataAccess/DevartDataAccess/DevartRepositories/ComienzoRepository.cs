@@ -8,9 +8,21 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class ComienzoRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.Comienzo> GetByKeys(IEnumerable<long> ids)
+        {
+            var comienzoIds = ids.Distinct().ToList();
+            if (comienzoIds.Count == 0)
+            {
+                return new List<BusinessLogic.Entities.Comienzo>();
+            }
+
+            return objectSet
+                .Where(c => comienzoIds.Contains(c.IdComienzo))
+                .ToList();
+        }
     }
 }

@@ -296,6 +296,32 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerInscripcionesCanceladas_SinRelacion_DejaInscripcionNula()
+        {
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(
+            [
+                new InstanciaWorkflow
+                {
+                    IdInstanciaWorkflow = 100,
+                    IdProceso = 30,
+                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
+                }
+            ]);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
+
+            var result = _service.ObtenerInscripcionesCanceladas(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Null(item.InstWorkflowInscripcion);
+        }
+
+        [Fact]
         public void ObtenerInscripcionesRealizadas_ReturnsDistinctItemsByProduct()
         {
             var repo = new Mock<IInscriptoRepository>();

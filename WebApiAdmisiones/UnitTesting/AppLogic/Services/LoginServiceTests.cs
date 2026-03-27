@@ -18,7 +18,6 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IPersonaRepository> _personaRepositoryMock;
-        private readonly Mock<IGenericRepository> _genericRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
         private readonly LoginService _service;
@@ -29,7 +28,6 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _personaRepositoryMock = new Mock<IPersonaRepository>();
-            _genericRepositoryMock = new Mock<IGenericRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
             _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
 
@@ -39,7 +37,6 @@ namespace UnitTesting.AppLogic.Services
             _service = new LoginService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
-                _genericRepositoryMock.Object,
                 _tokenServiceMock.Object,
                 _refreshTokenServiceMock.Object);
         }

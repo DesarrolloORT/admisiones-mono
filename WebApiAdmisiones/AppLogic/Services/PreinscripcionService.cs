@@ -1,6 +1,7 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
+using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
@@ -66,35 +67,17 @@ namespace AppLogic.Services
                     204);
             }
 
-            var fechaVencimiento = encuesta.FechaVtoAdmision;
-            if (!fechaVencimiento.HasValue && encuesta.IdProceso.HasValue)
+            var fechaVencimientoResult = ObtenerFechaVencimientoEncuesta(codigoPersona, encuesta);
+            if (!fechaVencimientoResult.Success)
             {
-                var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
-                if (!fechaVencimientoResult.Success)
-                {
-                    return OperationResult<DtoDatosPreInscripcion>.IsFailed(
-                        fechaVencimientoResult.ErrorCode,
-                        nameof(ObtenerDatosPreInscripcion),
-                        fechaVencimientoResult.Message,
-                        fechaVencimientoResult.HttpCode);
-                }
-
-                fechaVencimiento = fechaVencimientoResult.Data;
+                return OperationResult<DtoDatosPreInscripcion>.IsFailed(
+                    fechaVencimientoResult.ErrorCode,
+                    nameof(ObtenerDatosPreInscripcion),
+                    fechaVencimientoResult.Message,
+                    fechaVencimientoResult.HttpCode);
             }
 
-            DtoOfertaDevart? oferta = null;
-            if (encuesta.IdProducto.HasValue && encuesta.IdProceso.HasValue && encuesta.IdTurno.HasValue)
-            {
-                var ofertas = uow.Ofertas.GetOfertasParaInscripcionConProceso(
-                    encuesta.IdProducto.Value,
-                    encuesta.IdProceso.Value,
-                    encuesta.IdTurno.Value);
-
-                if (ofertas.Count == 1)
-                {
-                    oferta = ofertas.First().ToDtoWithRelated(1);
-                }
-            }
+            var oferta = ObtenerOfertaPreinscripcion(uow, encuesta);
 
             var dto = new DtoDatosPreInscripcion
             {
@@ -106,11 +89,53 @@ namespace AppLogic.Services
                 NombreExtensoProducto = encuesta.Producto?.NombreExtensoProducto ?? encuesta.Producto?.NombreProducto,
                 ObjTurno = encuesta.Turno?.ToDto(),
                 TipoInscripcion = encuesta.TipoInscripcion,
-                FechaVencimiento = fechaVencimiento ?? DateTime.MinValue,
+                FechaVencimiento = fechaVencimientoResult.Data,
                 ObjOferta = oferta
             };
 
             return OperationResult<DtoDatosPreInscripcion>.Ok(dto, nameof(ObtenerDatosPreInscripcion));
+        }
+
+        private OperationResult<DateTime> ObtenerFechaVencimientoEncuesta(long codigoPersona, EncuestaIniAdmision encuesta)
+        {
+            if (encuesta.FechaVtoAdmision.HasValue)
+            {
+                return OperationResult<DateTime>.Ok(encuesta.FechaVtoAdmision.Value, nameof(ObtenerDatosPreInscripcion));
+            }
+
+            if (!encuesta.IdProceso.HasValue)
+            {
+                return OperationResult<DateTime>.Ok(DateTime.MinValue, nameof(ObtenerDatosPreInscripcion));
+            }
+
+            var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
+            if (!fechaVencimientoResult.Success)
+            {
+                return OperationResult<DateTime>.IsFailed(
+                    fechaVencimientoResult.ErrorCode,
+                    nameof(ObtenerDatosPreInscripcion),
+                    fechaVencimientoResult.Message,
+                    fechaVencimientoResult.HttpCode);
+            }
+
+            return OperationResult<DateTime>.Ok(fechaVencimientoResult.Data, nameof(ObtenerDatosPreInscripcion));
+        }
+
+        private static DtoOfertaDevart? ObtenerOfertaPreinscripcion(IUnitOfWork uow, EncuestaIniAdmision encuesta)
+        {
+            if (!encuesta.IdProducto.HasValue || !encuesta.IdProceso.HasValue || !encuesta.IdTurno.HasValue)
+            {
+                return null;
+            }
+
+            var ofertas = uow.Ofertas.GetOfertasParaInscripcionConProceso(
+                encuesta.IdProducto.Value,
+                encuesta.IdProceso.Value,
+                encuesta.IdTurno.Value);
+
+            return ofertas.Count == 1
+                ? ofertas.First().ToDtoWithRelated(1)
+                : null;
         }
     }
 }
