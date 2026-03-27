@@ -12,6 +12,19 @@ namespace DataAccess.DevartRepositories
 {
     public partial class TurnoRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.Turno> GetByKeys(IEnumerable<long> ids)
+        {
+            var turnoIds = ids.Distinct().ToList();
+            if (turnoIds.Count == 0)
+            {
+                return new List<BusinessLogic.Entities.Turno>();
+            }
+
+            return objectSet
+                .Where(t => turnoIds.Contains(t.IdTurno))
+                .ToList();
+        }
+
         /// <summary>
         /// Devuelve los turnos disponibles para las ofertas asociadas al producto y proceso dados.
         /// </summary>

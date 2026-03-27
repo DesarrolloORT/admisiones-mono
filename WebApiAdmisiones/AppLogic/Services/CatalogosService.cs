@@ -115,38 +115,7 @@ namespace AppLogic.Services
                 })
                 .ToList();
 
-            // 2. Inscripciones pendientes en workflow (T_INSTANCIA_WORKFLOW)
-            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
-            var ids = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesDict = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(ids)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-            var pendientes = instancias
-                .Where(iw => inscripcionesDict.ContainsKey(iw.IdInstanciaWorkflow)
-                          && inscripcionesDict[iw.IdInstanciaWorkflow].IdProducto.HasValue)
-                .Select(iw =>
-                {
-                    var iwi = inscripcionesDict[iw.IdInstanciaWorkflow];
-                    var idProducto = (long)iwi.IdProducto!.Value;
-                    var producto = uow.Productos.GetByKey(idProducto);
-                    var comienzo = iwi.IdComienzo.HasValue
-                        ? uow.Comienzos.GetByKey((long)iwi.IdComienzo.Value) : null;
-                    var turno = iwi.IdTurno.HasValue
-                        ? uow.Turnos.GetByKey((long)iwi.IdTurno.Value) : null;
-
-                    return new DtoProductoBeca
-                    {
-                        FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
-                        IdProducto = idProducto,
-                        IdNivelProducto = producto?.IdNivelProducto ?? 0,
-                        NombreProducto = producto?.NombreExtensoProducto,
-                        NombreComienzo = comienzo?.NombreComienzo,
-                        NombreTurno = turno?.NombreTurno,
-                        IdProceso = (long)iw.IdProceso,
-                    };
-                })
-                .ToList();
+            var pendientes = ConstruirPendientesProductosBeca(uow, codigoPersona);
 
             // 3. Productos con interés activo (sin inscripción pendiente en workflow)
             var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
@@ -168,6 +137,84 @@ namespace AppLogic.Services
                 .ToList();
 
             return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
+        }
+
+        private static List<DtoProductoBeca> ConstruirPendientesProductosBeca(IUnitOfWork uow, long codigoPersona)
+        {
+            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
+            var instanciaIds = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(instanciaIds)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            var pendientesConProducto = instancias
+                .Where(iw => inscripcionesPorInstanciaId.ContainsKey(iw.IdInstanciaWorkflow)
+                    && inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto.HasValue)
+                .ToList();
+
+            var productoIds = pendientesConProducto
+                .Select(iw => (long)inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto!.Value)
+                .Distinct()
+                .ToList();
+
+            var productosPorId = uow.Productos
+                .GetByKeys(productoIds)
+                .ToDictionary(p => p.IdProducto);
+
+            var comienzoIds = pendientesConProducto
+                .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdComienzo)
+                .Where(id => id.HasValue)
+                .Select(id => (long)id!.Value)
+                .Distinct()
+                .ToList();
+
+            var comienzosPorId = uow.Comienzos
+                .GetByKeys(comienzoIds)
+                .ToDictionary(c => c.IdComienzo);
+
+            var turnoIds = pendientesConProducto
+                .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdTurno)
+                .Where(id => id.HasValue)
+                .Select(id => (long)id!.Value)
+                .Distinct()
+                .ToList();
+
+            var turnosPorId = uow.Turnos
+                .GetByKeys(turnoIds)
+                .ToDictionary(t => t.IdTurno);
+
+            return pendientesConProducto
+                .Select(iw =>
+                {
+                    var inscripcion = inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow];
+                    var idProducto = (long)inscripcion.IdProducto!.Value;
+
+                    productosPorId.TryGetValue(idProducto, out var producto);
+
+                    BusinessLogic.Entities.Comienzo? comienzo = null;
+                    if (inscripcion.IdComienzo.HasValue)
+                    {
+                        comienzosPorId.TryGetValue((long)inscripcion.IdComienzo.Value, out comienzo);
+                    }
+
+                    BusinessLogic.Entities.Turno? turno = null;
+                    if (inscripcion.IdTurno.HasValue)
+                    {
+                        turnosPorId.TryGetValue((long)inscripcion.IdTurno.Value, out turno);
+                    }
+
+                    return new DtoProductoBeca
+                    {
+                        FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
+                        IdProducto = idProducto,
+                        IdNivelProducto = producto?.IdNivelProducto ?? 0,
+                        NombreProducto = producto?.NombreExtensoProducto,
+                        NombreComienzo = comienzo?.NombreComienzo,
+                        NombreTurno = turno?.NombreTurno,
+                        IdProceso = (long)iw.IdProceso,
+                    };
+                })
+                .ToList();
         }
 
         public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto)

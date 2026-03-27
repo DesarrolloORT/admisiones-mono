@@ -363,8 +363,17 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
             productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
 
             var result = _service.ObtenerProductosBeca(123);
 
@@ -396,8 +405,17 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
             productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
 
             var result = _service.ObtenerProductosBeca(123);
 
@@ -435,7 +453,10 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(20)).Returns(new Producto { IdProducto = 20, IdNivelProducto = 4, NombreExtensoProducto = "Producto pendiente" });
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
+            [
+                new Producto { IdProducto = 20, IdNivelProducto = 4, NombreExtensoProducto = "Producto pendiente" }
+            ]);
             productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(
             [
                 new Producto
@@ -449,9 +470,11 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
             _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
 
             var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
             _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
 
             var result = _service.ObtenerProductosBeca(123);
@@ -464,6 +487,113 @@ namespace UnitTesting.AppLogic.Services
             Assert.Null(list[0].NombreTurno);
             Assert.Equal(30, list[1].IdProducto);
             Assert.Equal(0, list[1].IdProceso);
+        }
+
+        [Fact]
+        public void ObtenerProductosBeca_PendientesConIdsRepetidos_UsaCargaBatchYMantieneResultado()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>());
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
+            [
+                new InstanciaWorkflow { IdInstanciaWorkflow = 1, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 2) },
+                new InstanciaWorkflow { IdInstanciaWorkflow = 2, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 1) }
+            ]);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(
+            [
+                new InstWorkflowInscripcion { IdInstanciaWorkflow = 1, IdProducto = 20, IdComienzo = 30, IdTurno = 40 },
+                new InstWorkflowInscripcion { IdInstanciaWorkflow = 2, IdProducto = 20, IdComienzo = 30, IdTurno = 40 }
+            ]);
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 20))).Returns(
+            [
+                new Producto { IdProducto = 20, IdNivelProducto = 4, NombreExtensoProducto = "Producto pendiente" }
+            ]);
+            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 30))).Returns(
+            [
+                new Comienzo { IdComienzo = 30, NombreComienzo = "Marzo" }
+            ]);
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 40))).Returns(
+            [
+                new Turno { IdTurno = 40, NombreTurno = "Matutino" }
+            ]);
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var result = _service.ObtenerProductosBeca(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProducto);
+            Assert.Equal("Producto pendiente", item.NombreProducto);
+            Assert.Equal("Marzo", item.NombreComienzo);
+            Assert.Equal("Matutino", item.NombreTurno);
+            Assert.Equal(new DateTime(2026, 1, 1), item.FechaInscripcion);
+
+            productoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
+            productoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
+            comienzoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
+            turnoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerProductosBeca_PendientesConRelacionFaltanteMantieneDefaults()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>());
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
+            [
+                new InstanciaWorkflow { IdInstanciaWorkflow = 1, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 2) }
+            ]);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(
+            [
+                new InstWorkflowInscripcion { IdInstanciaWorkflow = 1, IdProducto = 20, IdComienzo = 30, IdTurno = 40 }
+            ]);
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
+            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var result = _service.ObtenerProductosBeca(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProducto);
+            Assert.Equal(0, item.IdNivelProducto);
+            Assert.Null(item.NombreProducto);
+            Assert.Null(item.NombreComienzo);
+            Assert.Null(item.NombreTurno);
+            Assert.Equal(5, item.IdProceso);
         }
     }
 }
