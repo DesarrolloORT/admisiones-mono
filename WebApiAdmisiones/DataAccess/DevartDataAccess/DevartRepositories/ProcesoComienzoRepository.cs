@@ -28,5 +28,20 @@ namespace DataAccess.DevartRepositories
                 .Include(pc => pc.Comienzo)
                 .ToList();
         }
+
+        public virtual long? GetComienzoActivoPorProcesoOProducto(long idProducto, long idProceso)
+        {
+            return objectSet
+                .Where(pc => pc.IdProceso == idProceso)
+                .Select(pc => (long?)pc.IdComienzo)
+                .FirstOrDefault()
+                ?? Context.Set<BusinessLogic.Entities.Supraoferta>()
+                    .Where(so =>
+                        so.Paquete.IdProducto == idProducto
+                        && so.EstadoSupraoferta == "D"
+                        && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI"))
+                    .Select(so => (long?)so.IdComienzo)
+                    .FirstOrDefault();
+        }
     }
 }

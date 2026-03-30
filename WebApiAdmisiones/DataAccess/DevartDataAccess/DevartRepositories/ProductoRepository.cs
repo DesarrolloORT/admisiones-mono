@@ -12,6 +12,19 @@ namespace DataAccess.DevartRepositories
 {
     public partial class ProductoRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetByKeys(IEnumerable<long> ids)
+        {
+            var productoIds = ids.Distinct().ToList();
+            if (productoIds.Count == 0)
+            {
+                return new List<BusinessLogic.Entities.Producto>();
+            }
+
+            return objectSet
+                .Where(p => productoIds.Contains(p.IdProducto))
+                .ToList();
+        }
+
         /// <summary>
         /// Devuelve los productos vigentes con oferta abierta en los que la persona tiene interés,
         /// sin inscripción activa y excluyendo interés grado 5 solo si la persona es fresca en ese producto

@@ -3,12 +3,14 @@
 // Code is generated on: 02/03/2026 12:08:20
 //
 //------------------------------------------------------------------------------
+using BusinessLogic.Entities;
 using System;
 using System.Collections.Generic;
 
-namespace BusinessLogic.Entities
+namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IIntereRepository
     {
+        ICollection<Intere> GetInteresesPersonaProcesosHabilitados(long codigoPersona);
     }
 }

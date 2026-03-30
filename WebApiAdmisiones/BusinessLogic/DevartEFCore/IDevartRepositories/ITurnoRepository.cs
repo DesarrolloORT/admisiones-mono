@@ -11,6 +11,7 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface ITurnoRepository
     {
+        ICollection<Turno> GetByKeys(IEnumerable<long> ids);
         ICollection<Turno> GetTurnosParaAdmisiones(long idProducto, long idProceso);
     }
 }

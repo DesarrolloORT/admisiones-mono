@@ -7,10 +7,19 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class IntereRepository
     {
+        public virtual ICollection<Intere> GetInteresesPersonaProcesosHabilitados(long codigoPersona)
+        {
+            return objectSet
+                .Where(i => i.CodigoPersona == codigoPersona && i.Proceso.HabilitadoInteresSitio == "SI")
+                .Include(i => i.Proceso)
+                .Include(i => i.InteresProductos)
+                .ToList();
+        }
     }
 }

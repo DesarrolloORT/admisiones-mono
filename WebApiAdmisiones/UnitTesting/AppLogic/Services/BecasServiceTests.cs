@@ -2,7 +2,6 @@ using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Linq;
 using Xunit;
@@ -22,13 +21,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Admisiones:IdSistemaAdmisiones"] = "25"
-                })
-                .Build();
-            _service = new BecasService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, configuration);
+            _service = new BecasService(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
         }
 
         [Fact]

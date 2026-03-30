@@ -40,5 +40,17 @@ namespace DataAccess.DevartRepositories
                     && iw.FechaCanceladoInstanciaWf != null)
                 .ToList();
         }
+
+        public virtual bool TieneInscripcionPendienteParaProducto(long codigoPersona, long idProducto)
+        {
+            return objectSet.Any(iw =>
+                (iw.IdProceso == 75 || iw.IdProceso == 82)
+                && iw.SolicitanteInstanciaWorkflow == codigoPersona
+                && iw.FechaCanceladoInstanciaWf == null
+                && iw.FechaFinalInstanciaWf == null
+                && Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>().Any(iwi =>
+                    iwi.IdInstanciaWorkflow == iw.IdInstanciaWorkflow
+                    && iwi.IdProducto == (decimal?)idProducto));
+        }
     }
 }

@@ -8,9 +8,16 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class AccionRepository
     {
+        public virtual bool ExisteAccionParaProcesoPersona(long codigoPersona, long idProceso)
+        {
+            return objectSet.Any(a =>
+                a.CodigoPersona == codigoPersona
+                && a.Actividad != null
+                && a.Actividad.IdProceso == idProceso);
+        }
     }
 }

@@ -1,7 +1,5 @@
 using AppLogic.DTOs;
 using AppLogic.IServices;
-using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using LdapService.Interfaces;
 using System.Globalization;
@@ -26,7 +24,6 @@ public class LoginService : ILoginService
     public LoginService(
         ILdap ldap,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
-        IGenericRepository genericRepository,
         ITokenService tokenService,
         IRefreshTokenService refreshTokenService)
     {

@@ -6,6 +6,7 @@ namespace AppLogic.Services
 {
     public class GeneralService : IGeneralService
     {
+        private const int CantidadDiasHabilesVencimiento = 5;
         private readonly IUnitOfWorkFactory _uowFactory;
 
         public GeneralService(IUnitOfWorkFactory uowFactory)
@@ -29,20 +30,18 @@ namespace AppLogic.Services
 
             var fechaComienzoSemestre = proceso.ComienzoSemestre1Proceso.Value;
             var fechaActual = DateTime.Now;
-            const int cantDiasHabiles = 5;
-
             DateTime fechaVencimiento;
             if (fechaActual >= fechaComienzoSemestre)
             {
-                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, 1, false);
+                fechaVencimiento = AgregarDiasHabilesAFecha(uow, fechaActual, 1, false);
             }
-            else if (fechaActual > AddDiasHabilesaFecha(uow, fechaComienzoSemestre, cantDiasHabiles, true))
+            else if (fechaActual > AgregarDiasHabilesAFecha(uow, fechaComienzoSemestre, CantidadDiasHabilesVencimiento, true))
             {
                 fechaVencimiento = fechaComienzoSemestre;
             }
             else
             {
-                fechaVencimiento = AddDiasHabilesaFecha(uow, fechaActual, cantDiasHabiles, false);
+                fechaVencimiento = AgregarDiasHabilesAFecha(uow, fechaActual, CantidadDiasHabilesVencimiento, false);
             }
 
             var declaracion = uow.DeclaracionJuradaWebs.GetFechaEntregaDjAdmisiones(codigoPersona);
@@ -54,7 +53,7 @@ namespace AppLogic.Services
             return OperationResult<DateTime>.Ok(fechaVencimiento, nameof(CalcularFechaVencimientoAdmisiones));
         }
 
-        private static DateTime AddDiasHabilesaFecha(IUnitOfWork uow, DateTime fecha, int cantDias, bool restar)
+        private static DateTime AgregarDiasHabilesAFecha(IUnitOfWork uow, DateTime fecha, int cantDias, bool restar)
         {
             int signo = restar ? -1 : 1;
             int diasContados = 0;
