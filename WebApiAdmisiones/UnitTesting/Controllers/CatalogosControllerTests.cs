@@ -29,5 +29,17 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+
+        [Fact]
+        public void CatalogosController_NoLongerExposesPaises()
+        {
+            Assert.Null(typeof(CatalogosController).GetMethod("ObtenerPaises"));
+        }
+
+        [Fact]
+        public void CatalogosController_NoLongerExposesTipoDocumentos()
+        {
+            Assert.Null(typeof(CatalogosController).GetMethod("ObtenerTipoDocumentos"));
+        }
     }
 }
