@@ -155,5 +155,39 @@ namespace DataAccess.DevartRepositories
                 .Include(p => p.NivelProducto)
                 .ToList();
         }
+
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetProductosVigentesParaRegistro()
+        {
+            var today = DateTime.Today;
+
+            var comienzoIds = Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                .Where(pc =>
+                    pc.Proceso.HabilitadoInteresSitio == "SI"
+                    && pc.Proceso.ProcesoProductos.Any(pp =>
+                        pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2))
+                .Select(pc => pc.IdComienzo)
+                .Distinct()
+                .ToList();
+
+            return objectSet
+                .Where(p =>
+                    p.VisibleAdmisionesProducto == "SI"
+                    && p.InscribibleProducto == "SI"
+                    && p.PermiteInteresadoProducto == "SI"
+                    && p.ActivoWebProducto == "SI"
+                    && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
+                    && p.Paquetes.Any(pk =>
+                        pk.SemestrePaquete != 99
+                        && pk.Supraofertas.Any(so =>
+                            comienzoIds.Contains(so.IdComienzo)
+                            && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI"))))
+                .Include(p => p.ProcesoProductos)
+                    .ThenInclude(pp => pp.Proceso)
+                .Include(p => p.NivelProducto)
+                .OrderBy(p => p.NivelProducto.OrdenListadoNivelProducto)
+                .ThenBy(p => p.NombreProducto)
+                .ToList();
+        }
     }
 }

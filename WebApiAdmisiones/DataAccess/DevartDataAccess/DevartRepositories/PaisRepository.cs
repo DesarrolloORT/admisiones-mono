@@ -13,6 +13,16 @@ namespace DataAccess.DevartRepositories
 {
     public partial class PaisRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.Pais> GetPaisesConEstadosYCiudades()
+        {
+            return objectSet
+                .Include(p => p.Estado)
+                .ThenInclude(e => e.Ciudad)
+                .OrderBy(p => p.CodigoPais == 1 ? 0 : 1)
+                .ThenBy(p => p.Nombre)
+                .ToList();
+        }
+
         public virtual ICollection<BusinessLogic.Entities.Pais> GetPaisesOrdenados()
         {
             return objectSet
