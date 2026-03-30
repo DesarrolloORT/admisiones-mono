@@ -81,5 +81,16 @@ namespace DataAccess.DevartRepositories
                            .Count(pc => pc.IdProceso == idProceso) > 0)
                 .Count() > 0;
         }
+
+        public virtual bool TieneInscripcionPreviaAProducto(long codigoPersona, long idProducto)
+        {
+            return objectSet.Any(i =>
+                i.CodigoPersona == codigoPersona
+                && (i.IdProductoReal == idProducto
+                    || (i.Oferta != null
+                        && i.Oferta.Supraoferta != null
+                        && i.Oferta.Supraoferta.Paquete != null
+                        && i.Oferta.Supraoferta.Paquete.IdProducto == idProducto)));
+        }
     }
 }

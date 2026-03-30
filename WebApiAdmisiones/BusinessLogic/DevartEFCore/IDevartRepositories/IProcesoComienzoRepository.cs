@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     {
         BusinessLogic.Entities.ProcesoComienzo GetByKeyWithRelated(long idProceso, long idComienzo);
         ICollection<BusinessLogic.Entities.ProcesoComienzo> GetAllWithRelated();
+        long? GetComienzoActivoPorProcesoOProducto(long idProducto, long idProceso);
     }
 }

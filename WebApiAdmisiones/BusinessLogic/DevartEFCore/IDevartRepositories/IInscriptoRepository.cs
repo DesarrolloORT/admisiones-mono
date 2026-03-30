@@ -14,5 +14,6 @@ namespace BusinessLogic.IDevartRepositories
         Inscripto GetUltimaInscripcionActiva(long codigoPersona);
         IEnumerable<Inscripto> GetInscripcionesRealizadas(long codigoPersona);
         bool TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
+        bool TieneInscripcionPreviaAProducto(long codigoPersona, long idProducto);
     }
 }
