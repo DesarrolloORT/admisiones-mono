@@ -35,35 +35,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        /// <summary>
-        /// Obtiene la lista de países.
-        /// </summary>
-        /// <returns>Lista de países.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("Paises")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
-        public IActionResult ObtenerPaises()
-        {
-            var result = catalogosService.ObtenerPaises();
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene el listado de tipos de documento disponibles.
-        /// </summary>
-        /// <returns>OperationResult con colección de DtoAcaTipoDocumentoDevart.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("TipoDocumentos")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
-        public IActionResult ObtenerTipoDocumentos()
-        {
-            var result = catalogosService.ObtenerTipoDocumentos();
-            return ValidateResponse(result);
-        }
 
         /// <summary>
         /// Obtiene los motivos de elección disponibles para la encuesta de admisión.

@@ -14,5 +14,6 @@ namespace BusinessLogic.IDevartRepositories
         ICollection<Producto> GetByKeys(IEnumerable<long> ids);
         ICollection<Producto> GetProductosConInteresActivo(long codigoPersona);
         ICollection<Producto> GetProductosVigentesConInteres(long codigoPersona);
+        ICollection<Producto> GetProductosVigentesParaRegistro();
     }
 }
