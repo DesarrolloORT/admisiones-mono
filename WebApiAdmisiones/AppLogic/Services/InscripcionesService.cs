@@ -199,7 +199,7 @@ namespace AppLogic.Services
                 ObservacionesInteres = InscripcionesConstants.InteresProducto.ObservacionesWeb,
                 UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString("HH:mm:ss"),
+                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                 IdLugar = InscripcionesConstants.InteresProducto.LugarInteresWeb,
                 IdGradoPureza = InscripcionesConstants.InteresProducto.GradoPurezaPuro
             };
@@ -223,7 +223,7 @@ namespace AppLogic.Services
                     FechaInteresProd = fechaActual,
                     FechaAltaInteresProd = fechaActual,
                     FechaIngreso = fechaActual,
-                    HoraIngreso = fechaActual.ToString("HH:mm:ss"),
+                    HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                     UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                     ObservacionesInteresProd = InscripcionesConstants.InteresProducto.ObservacionesWeb
                 });
@@ -299,7 +299,7 @@ namespace AppLogic.Services
                 FechaRealizadoActividad = fechaActual,
                 UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString("HH:mm:ss"),
+                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                 IdProceso = idProceso
             });
 
@@ -312,7 +312,7 @@ namespace AppLogic.Services
                 UsuarioRealizadoAccion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString("HH:mm:ss"),
+                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                 IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada
             });
         }

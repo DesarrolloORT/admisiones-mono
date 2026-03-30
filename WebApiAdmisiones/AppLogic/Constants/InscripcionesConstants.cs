@@ -6,6 +6,7 @@ namespace AppLogic.Constants
         {
             public const string UsuarioAdmisiones = "ADMISIONES";
             public const string ObservacionesWeb = "ALTA DESDE ADMISIONES WEB";
+            public const string FormatoHora = "HH:mm:ss";
             public const int FormaContactoWeb = 7;
             public const int TipoActividadMonoAccion = 1;
             public const int TipoAccionRegistroSitioAdmisiones = 109;
