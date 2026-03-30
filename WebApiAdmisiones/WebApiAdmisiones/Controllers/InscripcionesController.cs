@@ -37,6 +37,26 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Registra o actualiza el interes de la persona autenticada para un producto y proceso habilitado.
+        /// </summary>
+        /// <param name="request">Producto y proceso seleccionados.</param>
+        /// <returns>Resultado de la actualizacion del interes.</returns>
+        /// <response code="200">Interes registrado correctamente.</response>
+        /// <response code="400">Producto o proceso invalido.</response>
+        /// <response code="404">Persona no encontrada.</response>
+        /// <response code="409">La persona ya tuvo inscripcion o tiene una pendiente para ese producto.</response>
+        [HttpPost("InteresProducto")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
+        {
+            var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interés registrado y no está inscripta.
         /// </summary>
         /// <returns>Lista de productos vigentes con interés.</returns>

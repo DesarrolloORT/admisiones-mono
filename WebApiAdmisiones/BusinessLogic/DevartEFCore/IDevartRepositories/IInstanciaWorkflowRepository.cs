@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     {
         ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesPendientes(long codigoPersona);
         ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesCanceladas(long codigoPersona);
+        bool TieneInscripcionPendienteParaProducto(long codigoPersona, long idProducto);
     }
 }
