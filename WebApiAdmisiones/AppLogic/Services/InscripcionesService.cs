@@ -43,7 +43,7 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
-            var dtos = entidades.Select(MapProductoAdmisiones);
+            var dtos = entidades.Select(MapProductoAdmisiones).ToList();
             return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosVigentesConInteres));
         }
 
@@ -51,7 +51,9 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Productos.GetProductosConInteresActivo(codigoPersona);
-            var dtos = entidades.Select(MapProductoAdmisiones);
+            var dtos = entidades
+                .Select(p => MapProductoConInteresActivo(p, uow.Interes.GetProcesoPorInteresActivo(codigoPersona, p.IdProducto)))
+                .ToList();
             return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosConInteresActivo));
         }
 
@@ -59,22 +61,17 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
 
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona == null)
+            if (!uow.Personas.ExistePersona(codigoPersona))
             {
                 return OperationResult<bool>.IsFailed("GEN_IP_01", nameof(RegistrarInteresProducto), "Persona no encontrada.", 404);
             }
 
-            var producto = uow.Productos.GetByKey(request.IdProducto);
-            if (producto == null || producto.PermiteInteresadoProducto != CommonConstants.Booleanos.Si)
+            if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto))
             {
                 return OperationResult<bool>.IsFailed("GEN_IP_02", nameof(RegistrarInteresProducto), "El producto indicado es inválido.", 400);
             }
 
-            var procesoSeleccionado = uow.Procesos
-                .GetProcesosHabilitadosPorProducto(request.IdProducto)
-                .FirstOrDefault(p => p.IdProceso == request.IdProcesoSeleccionado);
-            if (procesoSeleccionado == null)
+            if (!uow.Procesos.TieneProcesoHabilitadoPorProducto(request.IdProducto, request.IdProcesoSeleccionado))
             {
                 return OperationResult<bool>.IsFailed("GEN_IP_03", nameof(RegistrarInteresProducto), "Proceso no habilitado para el producto seleccionado.", 400);
             }
@@ -107,7 +104,6 @@ namespace AppLogic.Services
                 AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
                 ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
                 RegistrarActividadInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
-
                 uow.Save();
                 uow.Commit();
 
@@ -177,12 +173,18 @@ namespace AppLogic.Services
             {
                 foreach (var interesProducto in interes.InteresProductos)
                 {
-                    interesProducto.IdGradoInteresAnt = interesProducto.IdGradoInteres;
-                    interesProducto.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
-                    interesProducto.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
-                    interesProducto.FechaModifInteresProd = fechaActual;
-                    interesProducto.IdgradoantModifInteresProd = interesProducto.IdGradoInteresAnt;
-                    uow.InteresProductos.Update(interesProducto);
+                    var interesProductoActual = uow.InteresProductos.GetByKey(interesProducto.IdInteres, interesProducto.IdProducto);
+                    if (interesProductoActual == null)
+                    {
+                        continue;
+                    }
+
+                    interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
+                    interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
+                    interesProductoActual.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
+                    interesProductoActual.FechaModifInteresProd = fechaActual;
+                    interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
+                    uow.InteresProductos.Update(interesProductoActual);
                 }
             }
         }
@@ -230,13 +232,19 @@ namespace AppLogic.Services
                 return;
             }
 
-            interesProductoExistente.IdGradoInteresAnt = interesProductoExistente.IdGradoInteres;
-            interesProductoExistente.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
-            interesProductoExistente.FechaInteresProd = fechaActual;
-            interesProductoExistente.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
-            interesProductoExistente.FechaModifInteresProd = fechaActual;
-            interesProductoExistente.IdgradoantModifInteresProd = interesProductoExistente.IdGradoInteresAnt;
-            uow.InteresProductos.Update(interesProductoExistente);
+            var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
+            if (interesProductoActual == null)
+            {
+                return;
+            }
+
+            interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
+            interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
+            interesProductoActual.FechaInteresProd = fechaActual;
+            interesProductoActual.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
+            interesProductoActual.FechaModifInteresProd = fechaActual;
+            interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
+            uow.InteresProductos.Update(interesProductoActual);
         }
 
         private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)
@@ -275,7 +283,6 @@ namespace AppLogic.Services
 
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo.Value;
-            uow.EncuestaIniAdmisions.Update(encuesta);
         }
 
         private void RegistrarActividadInteres(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
@@ -357,5 +364,14 @@ namespace AppLogic.Services
                 NombreProceso = proceso?.NombreProceso,
             };
         }
+
+        private static DtoProductoAdmisiones MapProductoConInteresActivo(BusinessLogic.Entities.Producto p, Proceso? procesoInteres)
+        {
+            var dto = MapProductoAdmisiones(p);
+            dto.IdProceso = procesoInteres?.IdProceso ?? 0;
+            dto.NombreProceso = procesoInteres?.NombreProceso;
+            return dto;
+        }
+
     }
 }

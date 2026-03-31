@@ -60,10 +60,10 @@
         <File Name="Feriado.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="PersonaAdmite.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="Actividad.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="RefreshToken.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IngresoMensualNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="EgresoMensualNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IntegranteNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="RefreshToken.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
@@ -177,14 +177,14 @@
         <File Name="IPersonaAdmiteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IActividadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IActividadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IRefreshTokenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IRefreshTokenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IIngresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IIngresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IEgresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IEgresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IIntegranteNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IIntegranteNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IRefreshTokenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IRefreshTokenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
@@ -298,14 +298,14 @@
         <File Name="PersonaAdmiteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="ActividadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="ActividadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="RefreshTokenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="RefreshTokenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="IngresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="IngresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EgresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="EgresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="IntegranteNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="IntegranteNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="RefreshTokenRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="RefreshTokenRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -361,10 +361,10 @@
         <File Name="DtoFeriadoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoPersonaAdmiteDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoActividadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoRefreshTokenDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoIngresoMensualNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEgresoMensualNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoIntegranteNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoRefreshTokenDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -420,10 +420,10 @@
         <File Name="FeriadoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="PersonaAdmiteConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="ActividadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="RefreshTokenConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="IngresoMensualNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EgresoMensualNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="IntegranteNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="RefreshTokenConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>
@@ -685,6 +685,40 @@
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ID_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_FORMA_CONTACTO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_TIPO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_TIPO_ACCION" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_SELECCION_PERSONA" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="USERNAME_ASIGNADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_GRUPO_TRABAJO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="FECHA_DESDE_ASIGNADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="FECHA_HASTA_ASIGNADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="HORA_DESDE_ASIGNADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="HORA_HASTA_ASIGNADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_ESTADO_ACCION" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="USERNAME_GENERADOR_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="FECHA_GENERADOR_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="OBSERVACIONES_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="FECHA_REALIZADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="USERNAME_REALIZADO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_EVENTO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
+      <Exclude Name="ACTIVIDAD_KEY" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="ESTADOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="FORMACONTACTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="GRUPOASIGNADO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="PROCESO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="SELECCIONPERSONA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAME_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAMEGENERA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAMERELI_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="NOMBRE_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="NOMBRE_EXTENSO_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
@@ -1061,6 +1095,7 @@
       <Exclude Name="USERNAME_COOADJ_SEG_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="EXCLUIR_CARTA_FRESCO_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="CAJA_PROFESIONAL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
+      <Exclude Name="PROG_CON_SEMINARIOS_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="PRODUCTO_DUPLICADO_7081" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="DEPARTAMENTO_PRODUCTO_INV_7507" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
@@ -1284,9 +1319,18 @@
       <Exclude Name="CODIGOTITULO_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TITULO_NOMBRE_DUPLICADO_9050" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ESTADOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="FORMACONTACTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="GRUPOASIGNADO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="SELECCIONPERSONA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAME_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAMEGENERA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="USERNAMERELI_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
       <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />

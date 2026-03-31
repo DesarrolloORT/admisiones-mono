@@ -12,6 +12,30 @@ namespace DataAccess.DevartRepositories
 {
     public partial class ProcesoRepository
     {
+        public virtual bool TieneProcesoHabilitadoPorProducto(long idProducto, long idProceso)
+        {
+            return objectSet
+                .Where(p =>
+                    p.IdProceso == idProceso
+                    && p.HabilitadoInteresSitio == "SI"
+                    && p.ProcesoProductos.Any(pp =>
+                        pp.IdProducto == idProducto
+                        && (pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2)
+                        && pp.Producto.VisibleAdmisionesProducto == "SI"
+                        && pp.Producto.InscribibleProducto == "SI"
+                        && pp.Producto.PermiteInteresadoProducto == "SI"
+                        && pp.Producto.ActivoWebProducto == "SI"
+                        && (pp.Producto.FechaCaducidadProducto == null
+                            || pp.Producto.FechaCaducidadProducto.Value.Date >= DateTime.Today))
+                    && p.ProcesoComienzos.Any(pc =>
+                        pc.Comienzo.Supraofertas.Any(so =>
+                            so.Paquete.IdProducto == idProducto
+                            && so.Paquete.SemestrePaquete != 99m
+                            && so.EstadoSupraoferta == "D"
+                            && so.Ofertas.Any(o => o.InscripcionesAbiertasOferta == "SI"))))
+                .Count() > 0;
+        }
+
         /// <summary>
         /// Devuelve los procesos habilitados para el sitio e interés para un producto dado.
         /// </summary>

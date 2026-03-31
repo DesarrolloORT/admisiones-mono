@@ -12,6 +12,15 @@ namespace DataAccess.DevartRepositories
 {
     public partial class ProductoRepository
     {
+        public virtual bool EsProductoValidoParaInteres(long idProducto)
+        {
+            return objectSet
+                .Where(p =>
+                    p.IdProducto == idProducto
+                    && p.PermiteInteresadoProducto == "SI")
+                .Count() > 0;
+        }
+
         public virtual ICollection<BusinessLogic.Entities.Producto> GetByKeys(IEnumerable<long> ids)
         {
             var productoIds = ids.Distinct().ToList();

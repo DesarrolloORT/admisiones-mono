@@ -91,6 +91,9 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? CupoRestringidoOferta { get; set; }
 
+        [StringLength(2)]
+        public string? IncompanyOferta { get; set; }
+
         #endregion
 
         #region Navigation Properties

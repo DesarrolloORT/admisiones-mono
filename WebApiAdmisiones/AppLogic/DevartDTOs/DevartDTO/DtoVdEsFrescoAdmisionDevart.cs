@@ -36,7 +36,8 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public long IdProducto { get; set; }
 
-        public long? IdComienzo { get; set; }
+        [Required()]
+        public long IdComienzo { get; set; }
 
         public DateTime? FechaInicioComienzo { get; set; }
 

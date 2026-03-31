@@ -84,13 +84,29 @@ namespace DataAccess.DevartRepositories
 
         public virtual bool TieneInscripcionPreviaAProducto(long codigoPersona, long idProducto)
         {
-            return objectSet.Any(i =>
-                i.CodigoPersona == codigoPersona
-                && (i.IdProductoReal == idProducto
-                    || (i.Oferta != null
-                        && i.Oferta.Supraoferta != null
-                        && i.Oferta.Supraoferta.Paquete != null
-                        && i.Oferta.Supraoferta.Paquete.IdProducto == idProducto)));
+            var tieneInscripcionDirecta = objectSet
+                .Count(i =>
+                    i.CodigoPersona == codigoPersona
+                    && i.IdProductoReal == idProducto) > 0;
+
+            if (tieneInscripcionDirecta)
+            {
+                return true;
+            }
+
+            return
+            (
+                from inscripto in objectSet
+                join oferta in Context.Set<BusinessLogic.Entities.Oferta>()
+                    on inscripto.IdOferta equals (long?)oferta.IdOferta
+                join supraoferta in Context.Set<BusinessLogic.Entities.Supraoferta>()
+                    on oferta.IdSupraoferta equals supraoferta.IdSupraoferta
+                join paquete in Context.Set<BusinessLogic.Entities.Paquete>()
+                    on supraoferta.IdPaquete equals paquete.IdPaquete
+                where inscripto.CodigoPersona == codigoPersona
+                      && paquete.IdProducto == idProducto
+                select inscripto.IdInscripto
+            ).Count() > 0;
         }
     }
 }

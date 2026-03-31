@@ -13,6 +13,11 @@ namespace DataAccess.DevartRepositories
 {
     public partial class PersonaRepository
     {
+        public virtual bool ExistePersona(long codigoPersona)
+        {
+            return objectSet.Count(p => p.CodigoPersona == codigoPersona) > 0;
+        }
+
         /// <summary>
         /// Devuelve la persona con sus relaciones principales cargadas.
         /// </summary>

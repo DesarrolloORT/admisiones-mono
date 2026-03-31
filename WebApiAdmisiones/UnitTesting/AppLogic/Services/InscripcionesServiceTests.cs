@@ -159,14 +159,20 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
+            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
+            intereRepo
+                .Setup(r => r.GetProcesoPorInteresActivo(123, 10))
+                .Returns(new Proceso { IdProceso = 109, NombreProceso = "Marzo 2026" });
+            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
+
             var result = _service.ObtenerProductosConInteresActivo(123);
 
             Assert.True(result.Success);
             var list = new List<DtoProductoAdmisiones>(result.Data!);
             Assert.Single(list);
             Assert.Equal(10, list[0].IdProducto);
-            Assert.Equal(7, list[0].IdProceso);
-            Assert.Equal("Proceso A", list[0].NombreProceso);
+            Assert.Equal(109, list[0].IdProceso);
+            Assert.Equal("Marzo 2026", list[0].NombreProceso);
         }
 
         [Fact]
@@ -198,15 +204,15 @@ namespace UnitTesting.AppLogic.Services
         public void RegistrarInteresProducto_CreaInteresNuevoYPersistenciaRelacionada()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona { CodigoPersona = 123 });
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, PermiteInteresadoProducto = "SI" });
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -263,10 +269,8 @@ namespace UnitTesting.AppLogic.Services
                 i.IdProducto == 10 &&
                 i.IdGradoInteres == 4m)), Times.Once);
             personaAdmiteRepo.Verify(r => r.Add(It.Is<PersonaAdmite>(p => p.CodigoPersona == 123)), Times.Once);
-            encuestaRepo.Verify(r => r.Update(It.Is<EncuestaIniAdmision>(e =>
-                e.IdEncuestaIni == 77 &&
-                e.IdProceso == 20 &&
-                e.IdComienzo == 30)), Times.Once);
+            Assert.Equal(20, encuesta.IdProceso);
+            Assert.Equal(30, encuesta.IdComienzo);
             actividadRepo.Verify(r => r.Add(It.Is<Actividad>(a => a.IdProceso == 20 && a.IdTipoAccion == 109m)), Times.Once);
             accionRepo.Verify(r => r.Add(It.Is<Accion>(a => a.CodigoPersona == 123 && a.IdActividad == 900m)), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
@@ -278,15 +282,15 @@ namespace UnitTesting.AppLogic.Services
         public void RegistrarInteresProducto_ConInteresExistente_ReseteaYActualiza()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona { CodigoPersona = 123 });
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, PermiteInteresadoProducto = "SI" });
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -314,6 +318,14 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
 
             var interesProductoRepo = new Mock<BusinessLogic.IDevartRepositories.IInteresProductoRepository>();
+            var interesProductoProducto10 = new InteresProducto { IdInteres = 700, IdProducto = 10, IdGradoInteres = 2 };
+            var interesProductoProducto11 = new InteresProducto { IdInteres = 700, IdProducto = 11, IdGradoInteres = 4 };
+            interesProductoRepo
+                .Setup(r => r.GetByKey(700, 10))
+                .Returns(interesProductoProducto10);
+            interesProductoRepo
+                .Setup(r => r.GetByKey(700, 11))
+                .Returns(interesProductoProducto11);
             _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
 
             var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
@@ -341,8 +353,10 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20 });
 
             Assert.True(result.Success);
-            Assert.Equal(4m, interesExistente.InteresProductos.First(i => i.IdProducto == 10).IdGradoInteres);
-            Assert.Equal(0m, interesExistente.InteresProductos.First(i => i.IdProducto == 11).IdGradoInteres);
+            Assert.Equal(4m, interesProductoProducto10.IdGradoInteres);
+            Assert.Equal(0m, interesProductoProducto10.IdGradoInteresAnt);
+            Assert.Equal(0m, interesProductoProducto11.IdGradoInteres);
+            Assert.Equal(4m, interesProductoProducto11.IdGradoInteresAnt);
             interesProductoRepo.Verify(r => r.Update(It.IsAny<InteresProducto>()), Times.AtLeast(2));
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
         }
@@ -351,15 +365,15 @@ namespace UnitTesting.AppLogic.Services
         public void RegistrarInteresProducto_ConAccionExistente_NoDuplicaActividadNiAccion()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona { CodigoPersona = 123 });
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, PermiteInteresadoProducto = "SI" });
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -409,15 +423,15 @@ namespace UnitTesting.AppLogic.Services
         public void RegistrarInteresProducto_ConInscripcionPrevia_DevuelveConflict()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona { CodigoPersona = 123 });
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, PermiteInteresadoProducto = "SI" });
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -435,15 +449,15 @@ namespace UnitTesting.AppLogic.Services
         public void RegistrarInteresProducto_ConPendiente_DevuelveConflict()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona { CodigoPersona = 123 });
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, PermiteInteresadoProducto = "SI" });
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns([new Proceso { IdProceso = 20 }]);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
             var inscriptoRepo = new Mock<IInscriptoRepository>();
