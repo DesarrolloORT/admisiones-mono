@@ -14,131 +14,124 @@ namespace DataAccess.DevartRepositories
     {
         /// <summary>
         /// Devuelve los fondos de beca vigentes para el nivel de producto dado.
-        /// Si idComienzo > 0 filtra por comienzo fijo; de lo contrario usa el interés de la persona.
-        /// Obtiene los IDs con SqlQuery y luego carga las entidades completas con Include.
+        /// Si no se informa comienzo, primero intenta derivarlo desde la última inscripción activa
+        /// de la persona para el mismo producto. Si no existe, usa el interés
+        /// de la persona y opcionalmente el proceso indicado.
         /// </summary>
         public virtual ICollection<BusinessLogic.Entities.Prueba> GetFondosBecaVigentes(
             long idNivelProducto, long idComienzo, long codigoPersona, long idProducto, long idProceso)
         {
-            IList<long> ids;
+            var today = DateTime.Today;
+            var comienzoEfectivo = idComienzo > 0
+                ? idComienzo
+                : GetComienzoDesdeUltimaInscripcion(codigoPersona, idProducto);
 
-            if (idComienzo > 0)
+            var permittedComienzos = GetComienzosPermitidos(comienzoEfectivo, codigoPersona, idProducto, idProceso);
+
+            var pruebasBase = objectSet
+                .Where(p =>
+                    p.HabilitadaPrueba == "SI"
+                    && p.EstadoPrueba == null
+                    && p.HabilitadoSitioadmiPrueba != null
+                    && p.HabilitadoSitioadmiPrueba.Trim() == "SI"
+                    && p.FechaLimiteGuiaPrueba.HasValue
+                    && p.FechaLimiteGuiaPrueba.Value >= today
+                    && p.TipoDescuento.TipoBecaNivelProductos.Any(bn =>
+                        bn.IdNivelProducto == idNivelProducto
+                        && bn.HabilitadoSitioOrt != null
+                        && bn.HabilitadoSitioOrt.Trim() == "SI"));
+
+            if (comienzoEfectivo > 0)
             {
-                ids = Context.Database.SqlQuery<long>($"""
-                    SELECT T_PRUEBA.ID_PRUEBA AS "Value"
-                    FROM CREADOR.T_PRUEBA
-                    INNER JOIN CREADOR.T_TIPO_BECA_NIVEL_PRODUCTO
-                        ON T_TIPO_BECA_NIVEL_PRODUCTO.ID_TIPO_BECA = T_PRUEBA.ID_TIPO_BECA
-                    INNER JOIN (
-                        SELECT ID_TIPO_BECA, ID_PRUEBA FROM CREADOR.T_PRUEBA a
-                        WHERE to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                          AND to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') = (
-                              SELECT to_char(min(FECHA_LIMITE_GUIA_PRUEBA),'yyyy-mm-dd')
-                              FROM CREADOR.T_PRUEBA b
-                              WHERE b.HABILITADA_PRUEBA = 'SI' AND b.ESTADO_PRUEBA IS NULL
-                                AND b.ID_TIPO_BECA = a.ID_TIPO_BECA
-                                AND to_char(b.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                                AND b.ID_COMIENZO = {idComienzo}
-                                AND TRIM(b.HABILITADO_SITIOADMI_PRUEBA) = 'SI')
-                          AND TRIM(a.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                    ) aux ON aux.ID_PRUEBA = T_PRUEBA.ID_PRUEBA
-                    WHERE T_PRUEBA.HABILITADA_PRUEBA = 'SI'
-                      AND TRIM(T_TIPO_BECA_NIVEL_PRODUCTO.HABILITADO_SITIO_ORT) = 'SI'
-                      AND T_PRUEBA.ESTADO_PRUEBA IS NULL
-                      AND T_TIPO_BECA_NIVEL_PRODUCTO.ID_NIVEL_PRODUCTO = {idNivelProducto}
-                      AND TRIM(T_PRUEBA.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                      AND T_PRUEBA.ID_COMIENZO = {idComienzo}
-                    """).ToList();
-            }
-            else if (idProceso > 0)
-            {
-                ids = Context.Database.SqlQuery<long>($"""
-                    SELECT T_PRUEBA.ID_PRUEBA AS "Value"
-                    FROM CREADOR.T_PRUEBA
-                    INNER JOIN CREADOR.T_TIPO_BECA_NIVEL_PRODUCTO
-                        ON T_TIPO_BECA_NIVEL_PRODUCTO.ID_TIPO_BECA = T_PRUEBA.ID_TIPO_BECA
-                    INNER JOIN (
-                        SELECT ID_TIPO_BECA, ID_PRUEBA FROM CREADOR.T_PRUEBA a
-                        WHERE to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                          AND to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') = (
-                              SELECT to_char(min(FECHA_LIMITE_GUIA_PRUEBA),'yyyy-mm-dd')
-                              FROM CREADOR.T_PRUEBA b
-                              WHERE b.HABILITADA_PRUEBA = 'SI' AND b.ESTADO_PRUEBA IS NULL
-                                AND b.ID_TIPO_BECA = a.ID_TIPO_BECA
-                                AND to_char(b.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                                AND b.ID_COMIENZO IN (
-                                    SELECT T_PROCESO_COMIENZO.ID_COMIENZO
-                                    FROM CREADOR.T_INTERES
-                                    INNER JOIN CREADOR.T_INTERES_PRODUCTO ON T_INTERES.ID_INTERES = T_INTERES_PRODUCTO.ID_INTERES
-                                    INNER JOIN CREADOR.T_PROCESO ON T_INTERES.ID_PROCESO = T_PROCESO.ID_PROCESO
-                                    INNER JOIN CREADOR.T_PROCESO_COMIENZO ON T_PROCESO_COMIENZO.ID_PROCESO = T_PROCESO.ID_PROCESO
-                                    WHERE T_INTERES.CODIGO_PERSONA = {codigoPersona}
-                                      AND T_INTERES_PRODUCTO.ID_PRODUCTO = {idProducto}
-                                      AND T_PROCESO.HABILITADO_INTERES_SITIO = 'SI'
-                                      AND T_PROCESO.ID_PROCESO = {idProceso})
-                                AND TRIM(b.HABILITADO_SITIOADMI_PRUEBA) = 'SI')
-                          AND TRIM(a.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                    ) aux ON aux.ID_PRUEBA = T_PRUEBA.ID_PRUEBA
-                    WHERE T_PRUEBA.HABILITADA_PRUEBA = 'SI'
-                      AND TRIM(T_TIPO_BECA_NIVEL_PRODUCTO.HABILITADO_SITIO_ORT) = 'SI'
-                      AND T_PRUEBA.ESTADO_PRUEBA IS NULL
-                      AND T_TIPO_BECA_NIVEL_PRODUCTO.ID_NIVEL_PRODUCTO = {idNivelProducto}
-                      AND TRIM(T_PRUEBA.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                      AND T_PRUEBA.ID_COMIENZO IN (
-                          SELECT T_PROCESO_COMIENZO.ID_COMIENZO
-                          FROM CREADOR.T_INTERES
-                          INNER JOIN CREADOR.T_INTERES_PRODUCTO ON T_INTERES.ID_INTERES = T_INTERES_PRODUCTO.ID_INTERES
-                          INNER JOIN CREADOR.T_PROCESO ON T_INTERES.ID_PROCESO = T_PROCESO.ID_PROCESO
-                          INNER JOIN CREADOR.T_PROCESO_COMIENZO ON T_PROCESO_COMIENZO.ID_PROCESO = T_PROCESO.ID_PROCESO
-                          WHERE T_INTERES.CODIGO_PERSONA = {codigoPersona}
-                            AND T_INTERES_PRODUCTO.ID_PRODUCTO = {idProducto}
-                            AND T_PROCESO.HABILITADO_INTERES_SITIO = 'SI'
-                            AND T_PROCESO.ID_PROCESO = {idProceso})
-                    """).ToList();
+                pruebasBase = pruebasBase.Where(p => p.IdComienzo == comienzoEfectivo);
             }
             else
             {
-                ids = Context.Database.SqlQuery<long>($"""
-                    SELECT T_PRUEBA.ID_PRUEBA AS "Value"
-                    FROM CREADOR.T_PRUEBA
-                    INNER JOIN CREADOR.T_TIPO_BECA_NIVEL_PRODUCTO
-                        ON T_TIPO_BECA_NIVEL_PRODUCTO.ID_TIPO_BECA = T_PRUEBA.ID_TIPO_BECA
-                    INNER JOIN (
-                        SELECT ID_TIPO_BECA, ID_PRUEBA FROM CREADOR.T_PRUEBA a
-                        WHERE to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                          AND to_char(a.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') = (
-                              SELECT to_char(min(FECHA_LIMITE_GUIA_PRUEBA),'yyyy-mm-dd')
-                              FROM CREADOR.T_PRUEBA b
-                              WHERE b.HABILITADA_PRUEBA = 'SI' AND b.ESTADO_PRUEBA IS NULL
-                                AND b.ID_TIPO_BECA = a.ID_TIPO_BECA
-                                AND to_char(b.FECHA_LIMITE_GUIA_PRUEBA,'yyyy-mm-dd') >= to_char(sysdate,'yyyy-mm-dd')
-                                AND b.ID_COMIENZO IN (
-                                    SELECT T_PROCESO_COMIENZO.ID_COMIENZO
-                                    FROM CREADOR.T_INTERES
-                                    INNER JOIN CREADOR.T_INTERES_PRODUCTO ON T_INTERES.ID_INTERES = T_INTERES_PRODUCTO.ID_INTERES
-                                    INNER JOIN CREADOR.T_PROCESO ON T_INTERES.ID_PROCESO = T_PROCESO.ID_PROCESO
-                                    INNER JOIN CREADOR.T_PROCESO_COMIENZO ON T_PROCESO_COMIENZO.ID_PROCESO = T_PROCESO.ID_PROCESO
-                                    WHERE T_INTERES.CODIGO_PERSONA = {codigoPersona}
-                                      AND T_INTERES_PRODUCTO.ID_PRODUCTO = {idProducto}
-                                      AND T_PROCESO.HABILITADO_INTERES_SITIO = 'SI')
-                                AND TRIM(b.HABILITADO_SITIOADMI_PRUEBA) = 'SI')
-                          AND TRIM(a.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                    ) aux ON aux.ID_PRUEBA = T_PRUEBA.ID_PRUEBA
-                    WHERE T_PRUEBA.HABILITADA_PRUEBA = 'SI'
-                      AND TRIM(T_TIPO_BECA_NIVEL_PRODUCTO.HABILITADO_SITIO_ORT) = 'SI'
-                      AND T_PRUEBA.ESTADO_PRUEBA IS NULL
-                      AND T_TIPO_BECA_NIVEL_PRODUCTO.ID_NIVEL_PRODUCTO = {idNivelProducto}
-                      AND TRIM(T_PRUEBA.HABILITADO_SITIOADMI_PRUEBA) = 'SI'
-                    """).ToList();
+                pruebasBase = pruebasBase.Where(p => permittedComienzos.Contains(p.IdComienzo));
             }
 
-            if (!ids.Any())
-                return new List<BusinessLogic.Entities.Prueba>();
+            var pruebasConFecha = pruebasBase
+                .Select(p => new
+                {
+                    Prueba = p,
+                    FechaLimiteDia = p.FechaLimiteGuiaPrueba!.Value.Date
+                });
 
-            return objectSet
-                .Where(p => ids.Contains(p.IdPrueba))
+            var fechasMinimasPorTipo = pruebasConFecha
+                .GroupBy(x => x.Prueba.IdTipoBeca)
+                .Select(g => new
+                {
+                    IdTipoBeca = g.Key,
+                    FechaLimiteDia = g.Min(x => x.FechaLimiteDia)
+                });
+
+            var pruebasFiltradas =
+                from prueba in pruebasConFecha
+                join fechaMinima in fechasMinimasPorTipo
+                    on new { prueba.Prueba.IdTipoBeca, prueba.FechaLimiteDia }
+                    equals new { fechaMinima.IdTipoBeca, fechaMinima.FechaLimiteDia }
+                select prueba.Prueba;
+
+            return pruebasFiltradas
                 .Include(p => p.TipoDescuento)
                 .ToList();
+        }
+
+        private IQueryable<long> GetComienzosPermitidos(
+            long idComienzo,
+            long codigoPersona,
+            long idProducto,
+            long idProceso)
+        {
+            if (idComienzo > 0)
+            {
+                return Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                    .Where(pc => pc.IdComienzo == idComienzo)
+                    .Select(pc => pc.IdComienzo);
+            }
+
+            var intereses = Context.Set<BusinessLogic.Entities.Intere>()
+                .Where(i =>
+                    i.CodigoPersona == codigoPersona
+                    && i.InteresProductos.Any(ip => ip.IdProducto == idProducto)
+                    && i.Proceso.HabilitadoInteresSitio == "SI");
+
+            if (idProceso > 0)
+            {
+                intereses = intereses.Where(i => i.IdProceso == idProceso);
+            }
+
+            return intereses
+                .SelectMany(i => i.Proceso.ProcesoComienzos.Select(pc => pc.IdComienzo))
+                .Distinct();
+        }
+
+        private long GetComienzoDesdeUltimaInscripcion(long codigoPersona, long idProducto)
+        {
+            var ultimaInscripcion = Context.Set<BusinessLogic.Entities.Inscripto>()
+                .Where(i => i.CodigoPersona == codigoPersona
+                         && i.BajaInscr == null
+                         && (i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 1
+                             || i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 2)
+                         && i.Oferta.Supraoferta.Paquete.Producto.ProcesoProductos
+                                .Count(pp => pp.Proceso.HabilitadoInteresSitio == "SI") > 0
+                         && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
+                                .Count(pc => pc.Proceso.HabilitadoInteresSitio == "SI") > 0)
+                .Select(i => new
+                {
+                    i.FechaInscr,
+                    IdProducto = i.Oferta.Supraoferta.Paquete.IdProducto,
+                    IdComienzo = i.Oferta.Supraoferta.IdComienzo
+                })
+                .OrderByDescending(i => i.FechaInscr)
+                .FirstOrDefault();
+
+            if (ultimaInscripcion?.IdProducto == idProducto)
+            {
+                return ultimaInscripcion.IdComienzo;
+            }
+
+            return 0;
         }
     }
 }

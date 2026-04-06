@@ -13,6 +13,5 @@ namespace BusinessLogic.IDevartRepositories
     {
         ICollection<Proceso> GetProcesosHabilitadosPorProducto(long idProducto);
         bool TieneProcesoHabilitadoPorProducto(long idProducto, long idProceso);
-        int GetSemestreQueCorresponde(long idProducto, long idProceso);
     }
 }
