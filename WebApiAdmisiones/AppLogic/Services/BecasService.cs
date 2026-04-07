@@ -1,6 +1,6 @@
+using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.IServices;
-using AppLogic.Constants;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -26,7 +26,13 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var entidad = uow.AceptacionReglamentoEsts.GetByPersona(codigoPersona);
             if (entidad == null)
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed("GEN_ARE_01", nameof(ObtenerAceptacionReglamentoEstudiantil), "No se encontró aceptación del reglamento para la persona.", 204);
+            {
+                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
+                    "GEN_ARE_01",
+                    nameof(ObtenerAceptacionReglamentoEstudiantil),
+                    "No se encontró aceptación del reglamento para la persona.",
+                    204);
+            }
 
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), nameof(ObtenerAceptacionReglamentoEstudiantil));
         }
@@ -98,8 +104,13 @@ namespace AppLogic.Services
 
             var producto = uow.Productos.GetByKey(idProducto);
             if (producto == null)
-                return OperationResult<IEnumerable<DtoPruebaDevart>>.IsFailed("GEN_FBV_01", nameof(ObtenerFondosDeBecaVigentes),
-                    "El producto indicado es inválido.", 400);
+            {
+                return OperationResult<IEnumerable<DtoPruebaDevart>>.IsFailed(
+                    "GEN_FBV_01",
+                    nameof(ObtenerFondosDeBecaVigentes),
+                    "El producto indicado es inválido.",
+                    400);
+            }
 
             long idNivelProducto = producto.IdNivelProducto;
             var pruebas = uow.Pruebas.GetFondosBecaVigentes(idNivelProducto, 0, codigoPersona, idProducto, idProceso);

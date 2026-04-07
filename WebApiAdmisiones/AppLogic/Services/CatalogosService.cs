@@ -27,7 +27,9 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var pais = uow.Paises.GetPaisConEstadosYCiudades(idPais);
             if (pais == null)
-                return OperationResult<DtoPaisDevart>.IsFailed("FDP_GPAC_01", nameof(ObtenerPais), "País no encontrado.", 404);
+            {
+                return OperationResult<DtoPaisDevart>.IsFailed("FDP_GPAC_01", nameof(ObtenerPais), "País no encontrado.", 204);
+            }
 
             if (pais.Estado != null)
             {
@@ -77,7 +79,9 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var anio = uow.AnioBachillers.GetWithRelated(idAnioBachillerato);
             if (anio == null)
+            {
                 return OperationResult<DtoAnioBachillerDevart>.IsFailed("GEN_ANB_01", nameof(ObtenerAnioBachiller), "Año de bachillerato no encontrado.", 204);
+            }
 
             return OperationResult<DtoAnioBachillerDevart>.Ok(anio.ToDto(), nameof(ObtenerAnioBachiller));
         }

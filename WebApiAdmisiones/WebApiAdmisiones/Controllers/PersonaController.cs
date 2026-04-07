@@ -25,12 +25,12 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Datos de la persona.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="404">No se encontró la persona autenticada.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Persona")]
         [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 404)]
         public IActionResult ObtenerPersona()
         {
             var result = personaAdmisionService.ObtenerPersona(_currentUser.GetUserId());
@@ -41,7 +41,7 @@ namespace WebApiAdmisiones.Controllers
         /// Actualiza los datos personales editables de la persona autenticada.
         /// </summary>
         /// <param name="request">Datos personales a actualizar.</param>
-        /// <returns>`true` si la actualización se realizó correctamente.</returns>
+        /// <returns><c>true</c> si la actualización se realizó correctamente.</returns>
         /// <response code="200">Datos actualizados correctamente.</response>
         /// <response code="400">Los datos enviados son inválidos.</response>
         /// <response code="404">No se encontró la persona autenticada.</response>
@@ -60,12 +60,12 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Datos de preinscripción.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("EncuestaInicialAdmision")]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 404)]
         public IActionResult ObtenerEncuestaInicialAdmision()
         {
             var result = personaAdmisionService.ObtenerEncuestaInicialAdmision(_currentUser.GetUserId());
@@ -76,7 +76,7 @@ namespace WebApiAdmisiones.Controllers
         /// Guarda los datos de la persona y registra la encuesta inicial de admisión.
         /// </summary>
         /// <param name="request">Datos de persona y encuesta a registrar.</param>
-        /// <returns>`true` si la encuesta se guardó correctamente.</returns>
+        /// <returns><c>true</c> si la encuesta se guardó correctamente.</returns>
         /// <response code="200">Encuesta guardada correctamente.</response>
         /// <response code="400">Los datos enviados son inválidos.</response>
         /// <response code="404">No se encontró la persona, el producto o el proceso indicado.</response>
@@ -105,36 +105,42 @@ namespace WebApiAdmisiones.Controllers
         {
             var result = personaAdmisionService.ObtenerFotoAlumno(_currentUser.GetUserId());
             if (!result.Success)
+            {
                 return ValidateResponse(result);
+            }
 
             if (result.Data is null)
+            {
                 return NotFound();
+            }
 
             return File(result.Data, "image/jpeg");
         }
 
         /// <summary>
-        /// Obtiene el documento de identidad (cédula) del alumno autenticado.
+        /// Obtiene el documento de identidad del alumno autenticado.
         /// </summary>
         /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>
         /// <returns>Imagen JPEG del documento.</returns>
         /// <response code="200">Imagen obtenida correctamente.</response>
-        /// <response code="204">El documento está vencido.</response>
         /// <response code="400">Tipo de documento inválido.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
         [HttpGet("DocumentoAlumno")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 204)]
         [ProducesResponseType(typeof(OperationResult<byte[]>), 400)]
         [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
         public IActionResult ObtenerDocumentoAlumno([FromQuery] int tipo)
         {
             var result = personaAdmisionService.ObtenerDocumentoAlumno(_currentUser.GetUserId(), tipo);
             if (!result.Success)
+            {
                 return ValidateResponse(result);
+            }
 
             if (result.Data is null)
+            {
                 return NotFound();
+            }
 
             return File(result.Data, "image/jpeg");
         }
@@ -143,7 +149,7 @@ namespace WebApiAdmisiones.Controllers
         /// Sube la foto del alumno autenticado.
         /// </summary>
         /// <param name="request">JSON con el nombre del archivo y los bytes de la imagen.</param>
-        /// <returns>true si la foto se guardó correctamente.</returns>
+        /// <returns><c>true</c> si la foto se guardó correctamente.</returns>
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró la persona autenticada.</response>
@@ -166,7 +172,7 @@ namespace WebApiAdmisiones.Controllers
         /// Sube un documento del alumno autenticado para el tipo y fecha de vencimiento indicados.
         /// </summary>
         /// <param name="request">JSON con tipo, fecha de vencimiento, nombre del archivo y bytes del documento.</param>
-        /// <returns>true si el documento se guardó correctamente.</returns>
+        /// <returns><c>true</c> si el documento se guardó correctamente.</returns>
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request inválido o archivo no permitido.</response>
         /// <response code="404">No se encontró la persona autenticada.</response>

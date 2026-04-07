@@ -25,7 +25,13 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var inscripto = uow.Inscriptos.GetUltimaInscripcionActiva(codigoPersona);
             if (inscripto == null)
-                return OperationResult<DtoUltimaInscripcion>.IsFailed("GEN_UI_01", nameof(ObtenerUltimaInscripcionActiva), "No se encontró inscripción para la persona.", 204);
+            {
+                return OperationResult<DtoUltimaInscripcion>.IsFailed(
+                    "GEN_UI_01",
+                    nameof(ObtenerUltimaInscripcionActiva),
+                    "No se encontró inscripción para la persona.",
+                    204);
+            }
 
             var dto = new DtoUltimaInscripcion
             {
@@ -372,6 +378,5 @@ namespace AppLogic.Services
             dto.NombreProceso = procesoInteres?.NombreProceso;
             return dto;
         }
-
     }
 }

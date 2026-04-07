@@ -25,27 +25,26 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="id">ID del país.</param>
         /// <returns>País y ciudades.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        /// <response code="404">País no encontrado.</response>
         [HttpGet("Pais")]
         [ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 404)]
         public IActionResult ObtenerPais([FromQuery] long id)
         {
             var result = catalogosService.ObtenerPais(id);
             return ValidateResponse(result);
         }
 
-
         /// <summary>
         /// Obtiene los motivos de elección disponibles para la encuesta de admisión.
         /// </summary>
         /// <returns>Lista de motivos.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("MotivosEleccion")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>>), 400)]
         public IActionResult ObtenerMotivosEleccion()
         {
@@ -58,11 +57,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de publicidades.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("PublicidadesEleccion")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>>), 400)]
         public IActionResult ObtenerPublicidadesEleccion()
         {
@@ -76,11 +73,9 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idAnioBachillerato">ID del año de bachillerato.</param>
         /// <returns>Lista de bachilleratos.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Bachilleratos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTituloDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTituloDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTituloDevart>>), 400)]
         public IActionResult ObtenerBachilleratos([FromQuery] long idAnioBachillerato)
         {
@@ -94,12 +89,12 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idAnioBachillerato">ID del año de bachillerato.</param>
         /// <returns>Datos del año de bachiller.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        /// <response code="404">Año de bachillerato no encontrado.</response>
         [HttpGet("AnioBachiller")]
         [ProducesResponseType(typeof(OperationResult<DtoAnioBachillerDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAnioBachillerDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoAnioBachillerDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAnioBachillerDevart>), 404)]
         public IActionResult ObtenerAnioBachiller([FromQuery] long idAnioBachillerato)
         {
             var result = catalogosService.ObtenerAnioBachiller(idAnioBachillerato);
@@ -113,11 +108,9 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="codigoEstado">Código del estado/departamento.</param>
         /// <returns>Lista de instituciones educativas.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Instituciones")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 400)]
         public IActionResult ObtenerInstituciones([FromQuery] long codigoPais, [FromQuery] long codigoEstado)
         {
@@ -130,11 +123,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de universidades.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Universidades")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoEmpresaDevart>>), 400)]
         public IActionResult ObtenerUniversidades()
         {
@@ -149,7 +140,7 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de productos beca.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("ProductosBeca")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 400)]
@@ -165,11 +156,9 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idProducto">ID del producto.</param>
         /// <returns>Lista de tipos de descuento (fondos de beca).</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("FondosDeBecaPorProducto")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 400)]
         public IActionResult ObtenerFondosDeBecaPorProducto([FromQuery] long idProducto)
         {

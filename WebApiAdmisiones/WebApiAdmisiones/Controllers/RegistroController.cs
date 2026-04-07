@@ -9,6 +9,9 @@ using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Controllers
 {
+    /// <summary>
+    /// Endpoints públicos del flujo de registro previo a la autenticación.
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class RegistroController(
@@ -40,7 +43,6 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [HttpGet("ProcesosHabilitadosPorProducto")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 400)]
         public IActionResult ObtenerProcesosHabilitadosPorProducto([FromQuery] long idProducto)
         {
