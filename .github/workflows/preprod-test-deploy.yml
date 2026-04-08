@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: build-artifact
-          path: dist/angular-template/browser
+          path: dist/admisiones/browser
 
   deploy:
     name: Deploy
@@ -73,3 +73,4 @@ jobs:
     with:
       result: ${{ needs.deploy.result }}
       workflow-name: ${{ github.workflow }}
+

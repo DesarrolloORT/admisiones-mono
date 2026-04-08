@@ -54,7 +54,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_RELEASE_CHANNEL_WEBHOOK_URI }}
-          notification-summary: 'angular-template: ${{ steps.release_downloader.outputs.tag_name }}'
+          notification-summary: 'admisiones: ${{ steps.release_downloader.outputs.tag_name }}'
           notification-style: good
           timezone: America/Montevideo
           verbose-logging: true
@@ -72,3 +72,4 @@ jobs:
     with:
       result: ${{ needs.deploy.result }}
       workflow-name: ${{ github.workflow }}
+
