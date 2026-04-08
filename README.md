@@ -1,206 +1,191 @@
-# Angular Template 2026
+<!-- Badges -->
 
-![Angular - v21.2.4](https://img.shields.io/badge/angular-21.2.4-c3002f) ![Angular Material - v21.2.2](https://img.shields.io/badge/@angular/material-21.2.2-fb8c00) ![Vitest](https://img.shields.io/badge/testing-vitest-6E9F18) ![SCSS](https://img.shields.io/badge/styles-scss-cc6699)
+[![Deploy to Production](https://github.com/DesarrolloORT/admisiones/actions/workflows/cd.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/cd.yml)
+[![Rollback to Latest Stable Release](https://github.com/DesarrolloORT/admisiones/actions/workflows/rollback.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/rollback.yml)
+[![Build and Attach to Release](https://github.com/DesarrolloORT/admisiones/actions/workflows/release.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/release.yml)
+[![Deploy to Preproduction Environment](https://github.com/DesarrolloORT/admisiones/actions/workflows/preprod-test-deploy.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/preprod-test-deploy.yml)
+[![Deploy to Development Environment](https://github.com/DesarrolloORT/admisiones/actions/workflows/dev-test-deploy.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/dev-test-deploy.yml)
+[![CI - version branches](https://github.com/DesarrolloORT/admisiones/actions/workflows/ci.yml/badge.svg)](https://github.com/DesarrolloORT/admisiones/actions/workflows/ci.yml)
 
-Plantilla base para proyectos Angular en Desarrollo ORT. Diseñada como **plataforma integral de desarrollo**: no solo un punto de arranque técnico, sino una base operativa, arquitectónica y contextual para desarrollar de forma consistente, rápida, mantenible y compatible con flujos de trabajo AI-assisted.
+# Admisiones
 
-Este repositorio contiene una plantilla para iniciar cualquier proyecto en Desarrollo ORT con Angular y Angular Material.
+Migracion de `admisiones_legacy` hacia una aplicacion Angular moderna, con nueva arquitectura frontend y una experiencia visual completamente renovada.
 
-Los documentos base de este repositorio describen la configuracion inicial que hereda un repositorio creado desde la plantilla. Cada proyecto nuevo debe revisarlos y adaptarlos a su contexto antes de considerarlos definitivos.
+## Indice
 
-Documentacion base:
+- [Admisiones](#admisiones)
+  - [Indice](#indice)
+  - [Objetivo del proyecto](#objetivo-del-proyecto)
+  - [Requisitos](#requisitos)
+  - [Inicio rapido](#inicio-rapido)
+  - [Configuracion de desarrollo local](#configuracion-de-desarrollo-local)
+  - [Ejecutar la aplicacion en un servidor local](#ejecutar-la-aplicacion-en-un-servidor-local)
+  - [Entorno de desarrollo](#entorno-de-desarrollo)
+  - [Prerequisitos (en caso de no usar el Dev Container)](#prerequisitos-en-caso-de-no-usar-el-dev-container)
+  - [Arquitectura del proyecto](#arquitectura-del-proyecto)
+  - [Guia de contribucion](#guia-de-contribucion)
+  - [Scripts](#scripts)
+  - [Pre-commit hook](#pre-commit-hook)
+  - [Generacion de archivos de testing](#generacion-de-archivos-de-testing)
+  - [Workflows](#workflows)
+
+---
+
+## Objetivo del proyecto
+
+Este repositorio representa la evolucion de la aplicacion legacy `admisiones_legacy` hacia una base Angular actualizada, mantenible y alineada con las practicas de Desarrollo ORT.
+
+El alcance incluye:
+
+- Migracion progresiva de funcionalidades del sistema legacy.
+- Redisenio completo de interfaz y experiencia de usuario.
+- Estandarizacion de arquitectura, testing y CI/CD sobre esta nueva base.
+
+## Requisitos
+
+| Herramienta | Version minima | Notas                                |
+| ----------- | -------------- | ------------------------------------ |
+| Node.js     | 20.x           | Recomendado usar LTS                 |
+| npm         | 10.x           | Incluido con Node.js                 |
+| Angular CLI | 21.x           | Solo para desarrollo local           |
+| Docker      | Opcional       | Requerido para entorno en contenedor |
+
+## Inicio rapido
+
+1. Clonar el repositorio.
+2. Instalar dependencias con `npm install`.
+3. Crear ambientes a partir de los templates en `src/environments/`.
+4. Ejecutar `npm run start`.
+
+Si necesitas el flujo completo con autenticacion de packages y detalle de ambientes, seguir la seccion de configuracion de desarrollo local.
+
+## Configuracion de desarrollo local
+
+1. Clonar el repositorio:
+
+   ```bash
+   git clone <URL-del-repositorio>
+   ```
+
+2. Iniciar sesion en npm:
+
+   ```bash
+   npm login --registry=https://npm.pkg.github.com
+   # El comando anterior le solicitara usuario y contrasenia.
+   # En usuario ingrese su usuario de GitHub con acceso a este repositorio.
+   # En contrasenia ingrese un Personal Access Token (PAT)
+   # con permisos de `repo`, `read:packages` y `write:packages`.
+   ```
+
+3. Instalar las dependencias:
+
+   ```bash
+   npm install
+   ```
+
+4. Configurar los archivos de ambiente:
+   Renombrar `environment.template.ts` a `environment.ts` y completar con las propiedades de entorno.
+
+> [!NOTE]
+> Crear y/o editar `environment.prod.ts`, `environment.staging.ts` y `environment.dev.ts` segun corresponda.
+
+## Ejecutar la aplicacion en un servidor local
+
+Ejecutar `npm run start` o `ng serve` para iniciar la aplicacion en modo desarrollo (por defecto en el puerto 4200). `npm run start:o` inicializara la aplicacion en el puerto 4200 y abrira el navegador. Ver [Entorno de desarrollo](#entorno-de-desarrollo) para informacion sobre la ejecucion en un servidor local dentro de un contenedor.
+
+## Entorno de desarrollo
+
+El proyecto esta configurado con `devcontainers` para tener una unica configuracion del entorno de desarrollo en VS Code y evitar el "en mi maquina funciona".
+
+Documentacion relacionada:
 
 - [docs/SETUP.md](docs/SETUP.md)
 - [docs/WORKFLOW.md](docs/WORKFLOW.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [CHANGELOG.md](CHANGELOG.md)
 
-Documentacion complementaria:
+> [!IMPORTANT]
+> Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.
 
-- [docs/EXTENSIONS.md](docs/EXTENSIONS.md)
-- [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
-- [docs/MEDIA-QUERY-TEMPLATE.md](docs/MEDIA-QUERY-TEMPLATE.md)
+## Prerequisitos (en caso de no usar el Dev Container)
 
-## Índice
+1. Instalar [Git](https://git-scm.com/downloads/win)
+2. Instalar [`nvm` para Windows](https://github.com/coreybutler/nvm-windows/releases/latest) y ejecutar `nvm install lts`.
+3. Instalar `@angular/cli` globalmente: `npm install -g @angular/cli@21`.
 
-- [Angular Template](#angular-template)
-  - [Índice](#índice)
-  - [Qué contiene](#qué-contiene)
-  - [Cómo usarlo](#cómo-usarlo)
-  - [Estructura de carpetas](#estructura-de-carpetas)
-  - [Primeros pasos](#primeros-pasos)
-  - [Entorno de desarrollo](#entorno-de-desarrollo)
-  - [Workflows](#workflows)
-  - [Testing](#testing)
-  - [NPM Scripts](#npm-scripts)
-  - [Pre-commit hook](#pre-commit-hook)
-  - [Generación de archivos de testing](#generación-de-archivos-de-testing)
-    - [Estructura de los Scripts](#estructura-de-los-scripts)
-    - [Configuración](#configuración)
-  - [Configuración de protección de ramas](#configuración-de-protección-de-ramas)
-    - [Branch ruleset: version branches - main](#branch-ruleset-version-branches---main)
-    - [Branch ruleset: main branch](#branch-ruleset-main-branch)
+## Arquitectura del proyecto
 
-## Qué contiene
+La arquitectura y convenciones del proyecto se documentan en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-- Bibliotecas:
-  - ![ng-recaptcha-2 - v15.0.3](https://img.shields.io/badge/ng--recaptcha--2-15.0.3-blue)
-  - ![moment - v2.30.1](https://img.shields.io/badge/moment-2.30.1-black)
-  - ![rxjs - v7.8.1](https://img.shields.io/badge/rxjs-7.8.1-red)
-  - ![@desarrolloort/ngx-utils - v7.8.1](https://img.shields.io/badge/ngx--utils-1.0.0-662210) -- Biblioteca de utilidades para Angular desarrollada en casa (ver [documentación](https://github.com/DesarrolloORT/angular-utils/blob/main/projects/ngx-utils/README.md))
-  - Todas las bibliotecas necesarias de Angular y Typescript
-- Swagger Codegen para generar las interfaces de los modelos de la API REST (Ver [NPM Scripts](#npm-scripts)).
-- Componente `Loader`.
-- Servicio de caché integrado para manejar las peticiones de la API REST.
-- Estructurado de carpetas.
-- Esqueleto de variables en css.
-- Configuraciones de `angular.json` en general y para ambiente de producción, pre-producción y desarrollo.
-- Configuración de workflows para CI/CD y SonarQube.
-- Script para generación de archivos de testing unitario siguiendo la estructura de carpetas recomendada. Al ejecutar `ng generate <tipo> <ruta>`, se generarán los archivos necesarios en la ruta indicada sin los archivos de test. Al ejecutar `npm run generate-tests`, se detectarán los componentes, servicios, directivas, etc. sin tests y generará los archivos de test correspondientes. Estos tests fallarán por defecto para forzar la creación de los tests y asegurar la cobertura de código. Este script también se ejecutará con un pre-commit hook.
+Estructura principal:
 
-## Cómo usarlo
+```text
+docs/
+public/
+scripts/testing/
+src/
+  app/
+    core/
+    features/
+    shared/
+  environments/
+tools/
+```
 
-1. Ir al [repositorio de la plantilla](https://github.com/DesarrolloORT/angular-template).
+Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
-2. Hacer click en el botón "Use this template" (o "Usar esta plantilla") y presionar sobre "Create a new repository (o "Crear un nuevo repositorio").
+## Guia de contribucion
 
-![Ubicación del botón para usar esta plantilla](https://i.ibb.co/z8jsWx0/1.png)
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) para reglas de flujo, calidad y convenciones de colaboracion.
 
-4. Esta acción creará un nuevo repositorio con la estructura de la plantilla. Rellene los datos correspondientes para el proyecto y cree el nuevo repositorio.
+## Scripts
 
-![Pantalla de creación de repositorio](https://i.ibb.co/qB3Nv9s/Captura.png)
+Estos son algunos de los scripts disponibles para el proyecto:
 
-7. Luego de crear el nuevo repositorio, conectar su editor de código con este repositorio mediante GitHub Desktop o ejecutando el comando `git clone <URL del repositorio>` en la carpeta de preferencia, por ejemplo: `C:\User\Documents\GitHub`.
-
-8. Una vez abierta la plantilla en el editor, hay que tener en cuenta que el código está configurado de forma genérica por lo que hay que modificar algunos valores. Presione `CTRL + SHIFT + H` para abrir la búsqueda y reemplazo del editor. En el primer campo escriba `angular-template` y en el segundo escriba el nombre del proyecto en minúsculas y si tiene un espacio entre medio, ponga un guión (`-`) en vez. Ejemplos: `sgort`, `funcionarios`, `mi-proyecto-nuevo`, etc. Luego haga un commit de ese cambio con este mensaje: `build: change app name` y puede comenzar a trabajar en el proyecto.
-
-![](https://i.ibb.co/qB1K310/tempsnip.png)
-
-## Estructura de carpetas
-
-La estructura detallada y las decisiones asociadas viven en [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
-
-Resumen rapido:
-
-- `src/`: aplicacion Angular.
-- `src/app/`: componentes, servicios, interceptores y utilidades.
-- `src/environments/`: archivos de entorno por ambiente.
-- `tests/`: tests unitarios que replican la estructura de `src/app/`.
-- `scripts/testing/`: scripts para detectar o generar tests faltantes.
-- `.github/workflows/`: automatizacion de CI/CD y soporte operativo del repositorio.
-
-## Primeros pasos
-
-La puesta en marcha detallada vive en [docs/SETUP.md](./docs/SETUP.md).
-
-Resumen minimo:
-
-1. Ejecutar `npm install`.
-2. Crear `src/environments/environment.ts`, `src/environments/environment.dev.ts`, `src/environments/environment.staging.ts` y `src/environments/environment.prod.ts` a partir de los templates.
-3. Reemplazar `angular-template` por el slug real del proyecto.
-4. Revisar y adaptar configuracion de despliegue, secretos, runners y documentacion antes del primer release del proyecto nuevo.
-
-## Entorno de desarrollo
-
-La configuracion operativa de `devcontainers`, prerequisitos y comandos de arranque esta centralizada en [docs/SETUP.md](./docs/SETUP.md). La lista de extensiones recomendadas vive en [docs/EXTENSIONS.md](./docs/EXTENSIONS.md).
-
-## Workflows
-
-La documentacion de workflow vive en [docs/WORKFLOW.md](./docs/WORKFLOW.md) e incluye el flujo base recomendado para repositorios creados desde esta plantilla.
-
-## Testing
-
-El testing unitario está configurado con Jest. Jest es una librería de testing de JavaScript que se utiliza para realizar pruebas unitarias. Además, Jest se integra perfectamente con Angular y se puede utilizar para realizar pruebas unitarias de Angular. Para ejecutar los tests unitarios, se debe ejecutar el siguiente comando en la terminal: `npm run test`.
-
-**Todos los archivos de testing deben estar ubicados en la carpeta `tests` y se debe replicar la estructura de directorios del proyecto.**
-
-## NPM Scripts
-
-Para ejecutar estos comandos, en la terminal ejecute `npm run <script>`. Ejemplo: `npm run start`.
-
-- `start`: Compila la aplicación en un servidor local, por defecto en el puerto [4200](http://localhost:4200/).
-- `start:dc`: Hace lo mismo que `start` pero expone la aplicación correctamente para el desarrollo dentro de un contenedor.
-- `start:o`: Hace lo mismo que `start` pero abre el servidor en el navegador predeterminado.
-- `build`: Compila la aplicación con las configuraciones de producción.
-- `build:staging`: Compila la aplicación con las configuraciones de preproducción.
-- `build:dev`: Compila la aplicación con las configuraciones de desarrollo.
-- `ci`: Ejecuta todas las pruebas de integración incluidas en el workflow de CI Checks.
-- `lint`: Ejecuta una prueba de linting en todo el proyecto y corrige los errores que son posibles de resolver de forma automática.
-- `lint:check`: Ejecuta una prueba de linting en todo el proyecto.
-- `test`: Ejecuta una prueba de testing en todo el proyecto una única vez.
-- `test:ci`: Ejecuta una prueba de testing en un contexto de integración continua.
-- `test:snapshot`: Ejecuta una prueba de testing en todo el proyecto y actualiza los snapshots.
-- `test:watch`: Ejecuta una prueba de testing en todo el proyecto y queda atento a cambios en archivos.
-- `test:coverage`: Ejecuta una prueba de testing en todo el proyecto una única vez y genera un reporte de cobertura. El reporte de cobertura es una métrica que nos indica que tanto código está abarcando las pruebas. Tener un porcentaje de cobertura alto no significa que todo esté funcionando correctamente, sino que estamos incluyendo la gran mayoría de líneas de código.
-- `test:full`: Combina `test:watch` y `test:coverage`. Ejecuta una prueba de testing y genera un reporte de cobertura y además queda atento a futuros cambios.
-- `test:only-changed`: Ejecuta una prueba de testing en todo el proyecto y queda atento a cambios en archivos.
-- `generate-tests`: Utiliza el script `generate-missing-tests.js` para generar los archivos de testing que faltan.
-- `check-missing-tests`: Utiliza el script `check-missing-tests.js` para listar los archivos de testing que faltan.
-- `update-models`: Utiliza Swagger Codegen para generar las interfaces de los modelos de la API REST. Para utilizar este comando es necesario proveer la URL de la API.
+- `start`: inicia el servidor local de desarrollo.
+- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
+- `start:o`: inicia el servidor local y abre el navegador.
+- `build`: compila la aplicacion para produccion.
+- `build:staging`: compila la aplicacion para preproduccion.
+- `build:dev`: compila la aplicacion para desarrollo.
+- `copy-web-config`: copia configuracion de IIS para builds `dev` y `staging`.
+- `lint`: revisa y corrige el estilo del codigo.
+- `lint:check`: valida formato y estilo sin modificar archivos.
+- `test`: ejecuta las pruebas unitarias.
+- `test:ci`: ejecuta las pruebas unitarias para CI.
+- `test:coverage`: ejecuta pruebas con reporte de cobertura.
+- `test:watch`: ejecuta pruebas en modo observacion.
+- `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
+- `ci`: ejecuta validaciones principales de CI (`lint:check`, `test`, `build`).
+- `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
+- `check-missing-tests`: lista archivos fuente sin test asociado.
+- `update-models`: actualiza modelos de API REST con Swagger Codegen.
 
 ## Pre-commit hook
 
-El hook ejecuta `node scripts/testing/check-missing-tests.js && npx lint-staged`. Las reglas asociadas y el flujo esperado viven en [CONTRIBUTING.md](./CONTRIBUTING.md) y [docs/WORKFLOW.md](./docs/WORKFLOW.md).
+Al realizar un commit, se ejecuta el hook de pre-commit para validar formato y estilo, y para ejecutar `npm run check-missing-tests`.
 
-## Generación de archivos de testing
+## Generacion de archivos de testing
 
-Este conjunto de scripts garantiza que cada archivo fuente en `src/app/` tenga su test correspondiente en `tests/`, usando Jest. Se compone de tres scripts coordinados y un módulo compartido para evitar duplicación de código.
+Este conjunto de scripts garantiza que cada archivo fuente en `src/app/` tenga su test correspondiente, usando Vitest y reglas de convencion del proyecto.
 
-### Estructura de los Scripts
+- `scripts/testing/check-missing-tests.js`
+  Lista archivos `*.ts` (excluyendo tests) en `src/app/` que no tienen test asociado.
 
-- **scripts/testing/check-missing-tests.js**
-  Lista todos los archivos `\*.ts` (excluyendo tests) en `src/app/` que no tienen test en `tests/`, aplicando reglas de exclusión definidas en la configuración.
+- `scripts/testing/generate-missing-tests.js`
+  Mueve tests ubicados erroneamente y genera placeholders para los faltantes.
 
-- **scripts/testing/generate-missing-tests.js**
-  Primero intenta mover los archivos de test que puedan estar, erróneamente, en `src/app/` a `tests/` (preservando la estructura) y luego genera archivos de test placeholder para los archivos que carecen de tests. Cada archivo generado incluye un test que falla por defecto.
+Todos los scripts utilizan `scripts/testing/utils.js` para recorrido de archivos, exclusiones y resolucion de rutas esperadas.
 
-Todos los scripts utilizan el módulo **scripts/testing/utils.js** para recorrer archivos, aplicar exclusiones y determinar las rutas esperadas.
+La configuracion vive en `test-generator.config.json`:
 
-### Configuración
+- `excludeFilePatterns`: patrones de archivo excluidos.
+- `excludePaths`: rutas parciales excluidas.
 
-El archivo `test-generator-config.json` en la raíz del proyecto define qué archivos y rutas deben excluirse del proceso. Utiliza dos propiedades:
+## Workflows
 
-- **Instrucciones persistentes**: `.github/copilot-instructions.md` — reglas base del repo para cualquier agente
-- **Prompts reutilizables**: `.github/prompts/` — tareas frecuentes prearmadas
-- **Agentes por rol**: `.github/agents/` — planner, implementer, design-system, reviewer
-- **MCP**: `.vscode/mcp.json` — Angular CLI MCP configurado
+- Integracion continua (CI): ejecucion automatizada de pruebas, lint y validaciones de calidad.
+- Despliegue continuo (CD): despliegues a desarrollo, preproduccion y produccion.
+- Otras automatizaciones: soporte de releases, rollback y operaciones asociadas.
 
-> Ver [guía de uso de IA](./docs/ai/usage.md) y [flujo con agentes](./docs/ai/agent-workflow.md).
-
----
-
-## Documentación adicional
-
-| Documento                                                           | Descripción                                    |
-| ------------------------------------------------------------------- | ---------------------------------------------- |
-| [Estructura de carpetas](./docs/architecture/folder-structure.md)   | Organización detallada del proyecto            |
-| [Patrón de feature](./docs/architecture/feature-pattern.md)         | Cómo crear una feature nueva                   |
-| [Patrón de estado](./docs/architecture/state-pattern.md)            | Manejo de estado con Signals y BehaviorSubject |
-| [Estrategia de testing](./docs/testing/testing-strategy.md)         | Tipos de tests y mínimos                       |
-| [Seguridad frontend](./docs/security/frontend-security.md)          | CSP, sanitización, Trusted Types               |
-| [Performance baseline](./docs/performance/performance-baseline.md)  | Lazy loading, defer, imágenes, budgets         |
-| [PR checklist](./docs/workflow/pull-request-checklist.md)           | Checklist para pull requests                   |
-| [Branching y worktrees](./docs/workflow/branching-and-worktrees.md) | Convenciones de ramas y worktrees              |
-| [Tokens del DS](./docs/design-system/tokens-usage.md)               | Cómo usar tokens del design system             |
-| [Mapping DS](./docs/design-system/component-mapping.md)             | Componentes diseño ↔ código                   |
-| [Uso de IA](./docs/ai/usage.md)                                     | Cómo trabajar con agentes                      |
-| [Angular 21 plan](./docs/upgrades/angular-21-plan.md)               | Roadmap de evolución técnica                   |
-| [Best practices](./docs/best-practices.md)                          | Buenas prácticas de desarrollo                 |
-| [Workflows CI/CD](./docs/workflows.md)                              | Documentación de workflows                     |
-| [Extensiones VS Code](./docs/extensions.md)                         | Extensiones recomendadas                       |
-
----
-
-## Roadmap técnico
-
-El template evoluciona de forma controlada. Los próximos pasos incluyen:
-
-- **Angular 21**: evaluación controlada mediante spike documentado (ver [plan](./docs/upgrades/angular-21-plan.md))
-- **Zoneless**: evaluación pendiente, no se adopta sin validación del ecosistema
-- **Vitest**: adoptado como runner principal de unit tests
-- **SSR / Hybrid rendering**: no habilitado por defecto, evaluación futura
-- **Figma Code Connect**: integración progresiva con el design system
-
-> Las decisiones técnicas se registran en [decisions.md](./migration/decisions.md).
+Ver documentacion detallada en [docs/WORKFLOW.md](docs/WORKFLOW.md).
 
