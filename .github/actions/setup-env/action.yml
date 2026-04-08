@@ -1,0 +1,33 @@
+name: 'Setup Environment Files'
+description: 'Generate environment.ts based on the given environment variables'
+inputs:
+  env-filename:
+    description: 'Environment filename: dev, staging, or prod'
+    required: true
+    default: dev
+  CSP_POLICY:
+    description: 'Content Security Policy'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Create environments directory
+      shell: bash
+      run: mkdir -p src/environments
+
+    - name: Generate environment file
+      shell: bash
+      run: |
+        cat <<EOF > src/environments/environment.ts
+        export const environment = {
+          production: $( [ "${{ inputs.env-filename }}" = "prod" ] && echo true || echo false ),
+          RECAPTCHA_KEY: "$RECAPTCHA_KEY",
+          CSP_POLICY: "${{ inputs.CSP_POLICY }}",
+          CACHING_ENABLED: "${{ inputs.CACHING_ENABLED }}",
+          API_URL: "$API_URL",
+        };
+        EOF
+
+    - name: Copy environment file for specific environment
+      shell: bash
+      run: cp src/environments/environment.ts src/environments/environment.${{ inputs.env-filename }}.ts

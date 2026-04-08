@@ -1,0 +1,192 @@
+name: CI - version branches
+
+on:
+  pull_request:
+    branches:
+      - v*.*.*/main
+
+concurrency:
+  # Cancel any running workflow for the same branch when new commits are pushed.
+  # We group both by ref_name (available when CI is triggered by a push to a branch/tag)
+  # and head_ref (available when CI is triggered by a PR).
+  group: '${{ github.ref_name }}-${{ github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  CI:
+    name: CI Checks
+    runs-on: ubuntu-latest
+    environment: desarrollo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Setup environment variables
+        uses: ./.github/actions/setup-env
+        with:
+          env-filename: dev
+          CSP_POLICY: ${{ vars.CSP_POLICY }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED }}
+        env:
+          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
+          API_URL: ${{ secrets.API_URL }}
+
+      - name: Run linters and formatters
+        run: npm run lint:check
+
+      - name: Run Tests
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build:dev
+
+  coverage:
+    name: Generate coverage results
+    runs-on: ubuntu-latest
+    environment: desarrollo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            ~/.cache/vitest
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Setup environment variables
+        uses: ./.github/actions/setup-env
+        with:
+          env-filename: dev
+          CSP_POLICY: ${{ vars.CSP_POLICY }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED }}
+        env:
+          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
+          API_URL: ${{ secrets.API_URL }}
+
+      - name: Generate coverage
+        run: npm run test:sonar
+
+      - name: Upload coverage files
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage
+
+  sonar-scan:
+    name: SonarQube Scan
+    runs-on: sonar-runner
+    needs: coverage
+    environment: desarrollo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Generate Environment File
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Path src/environments -Force
+          @"
+          export const environment = {
+            production: false,
+            RECAPTCHA_KEY: "${{secrets.RECAPTCHA_KEY}}",
+            CSP_POLICY: "${{vars.CSP_POLICY}}",
+            CACHING_ENABLED: "${{vars.CACHING_ENABLED}}",
+            API_URL: "${{secrets.API_URL}}"
+          };
+          "@ | Out-File -FilePath src/environments/environment.prod.ts -Encoding UTF8
+          Copy-Item -Path src/environments/environment.prod.ts -Destination src/environments/environment.ts
+
+      - name: Download coverage files
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: coverage
+
+      - name: SonarQube Scan
+        shell: powershell
+        run: |
+          C:\sonar-scanner-5.0.1.3006-windows\bin\sonar-scanner.bat `
+            -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" `
+            -D "sonar.token=${{ secrets.SONAR_TOKEN }}" `
+            -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" `
+            -D "sonar.scm.disabled=true" `
+            -D "sonar.sources=src" `
+            -D "sonar.tests=tests" `
+            -D "sonar.javascript.lcov.reportPaths=coverage/lcov.info" `
+            -D "sonar.test.inclusions=**/*.spec.ts" `
+            -D "sonar.sourceEncoding=UTF-8"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Deliver Quality Gate Result
+        uses: DesarrolloORT/sonarqube-quality-gate-action@v1
+        with:
+          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
+          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-quality-gate-error: true
+
+  notify_ci_execution:
+    name: Notify CI checks execution status
+    if: always()
+    needs: CI
+    uses: ./.github/workflows/notification.yml
+    with:
+      result: ${{ needs.CI.result }}
+      workflow-name: CI Checks
+    secrets: inherit
+
+  notify_sonar_execution:
+    name: Notify SonarQube Scan execution status
+    if: always()
+    needs: sonar-scan
+    uses: ./.github/workflows/notification.yml
+    with:
+      result: ${{ needs.sonar-scan.result }}
+      workflow-name: SonarQube Scan
+    secrets: inherit

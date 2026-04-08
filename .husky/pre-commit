@@ -1,0 +1,1 @@
+node scripts/testing/check-missing-tests.js && npx lint-staged

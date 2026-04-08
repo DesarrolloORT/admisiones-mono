@@ -1,0 +1,68 @@
+{
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=827846
+  "recommendations": [
+    // Angular specific
+    "angular.ng-template",
+    "sp90.angular-control-flow-snippets",
+    "imgildev.vscode-angular-generator",
+    "jmgomes.angular-latest-snippets",
+    "natewallace.angular2-inline",
+    "tomwhite007.rename-angular-component",
+    "ghaschel.vscode-angular-html",
+
+    // JavaScript/TypeScript
+    "mgmcdermott.vscode-language-babel",
+    "yoavbls.pretty-ts-errors",
+    "pmneo.tsimporter",
+    "wix.vscode-import-cost",
+    "tobermory.es6-string-html",
+    "meganrogge.template-string-converter",
+
+    // HTML/CSS
+    "mrmlnc.vscode-scss",
+    "pranaygp.vscode-css-peek",
+    "pucelle.vscode-css-navigation",
+    "mrmlnc.vscode-autoprefixer",
+    "zignd.html-css-class-completion",
+    "bradgashler.htmltagwrap",
+    "htmlhint.vscode-htmlhint",
+    "ecmel.vscode-html-css",
+    "vincaslt.highlight-matching-tag",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-complete-tag",
+    "formulahendry.auto-close-tag",
+
+    // Code Quality & Formatting
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "sonarsource.sonarlint-vscode",
+    "editorconfig.editorconfig",
+    "usernamehw.errorlens",
+    "shardulm94.trailing-spaces",
+
+    // IntelliSense & Productivity
+    "visualstudioexptteam.vscodeintellicode",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "steoates.autoimport",
+
+    // Testing
+    "andys8.jest-snippets",
+    "orta.vscode-jest",
+
+    // Git & GitHub
+    "me-dutour-mathieu.vscode-github-actions",
+    "github.vscode-github-actions",
+
+    // Documentation & Markdown
+    "yzhang.markdown-all-in-one",
+    "aaron-bond.better-comments",
+    "gruntfuggly.todo-tree",
+
+    // Development Environment
+    "ms-vscode-remote.remote-containers",
+    "vsls-contrib.codetour",
+    "redhat.vscode-yaml"
+  ]
+}

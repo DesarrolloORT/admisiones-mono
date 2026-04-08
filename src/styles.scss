@@ -1,0 +1,18 @@
+@use '@angular/material' as mat;
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+:root {
+  --mat-sys-primary: var(--ort-sys-primary);
+  --mat-sys-on-surface: var(--ort-sys-on-surface);
+  --mat-sys-surface: var(--ort-sys-surface);
+  --mat-sys-surface-variant: var(--ort-sys-surface-variant);
+  --mat-sys-corner-none: var(--ort-sys-shape-none);
+}
+
+html,
+body {
+  height: 100%;
+  scroll-behavior: smooth;
+}

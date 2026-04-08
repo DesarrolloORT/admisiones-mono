@@ -1,0 +1,75 @@
+name: Deploy to Preproduction Environment
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment: preprod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Setup environment variables
+        uses: ./.github/actions/setup-env
+        with:
+          env-filename: staging
+          CSP_POLICY: ${{ vars.CSP_POLICY }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED }}
+        env:
+          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
+          API_URL: ${{ secrets.API_URL }}
+
+      - name: Build
+        run: npm run build:staging
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifact
+          path: dist/angular-template/browser
+
+  deploy:
+    name: Deploy
+    runs-on: development-server #TODO: set to self-hosted runner
+    environment: preprod
+    needs: build
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: build-artifact
+
+      - name: Delete existing files from site directory
+        run: Remove-Item -Recurse -Force '${{vars.DEV_SERVER_SITE_PATH}}\*'
+
+      - name: Copy Build files into site directory
+        run: Copy-Item -Path .\* -Destination '${{vars.DEV_SERVER_SITE_PATH}}' -Recurse
+
+  notify_deploy_execution:
+    name: Notify deploy execution status
+    if: always()
+    needs: deploy
+    uses: ./.github/workflows/notification.yml
+    secrets: inherit
+    with:
+      result: ${{ needs.deploy.result }}
+      workflow-name: ${{ github.workflow }}
