@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angular-template": {
+    "admisiones": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -22,7 +22,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/angular-template",
+            "outputPath": "dist/admisiones",
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -125,10 +125,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "angular-template:build:production"
+              "buildTarget": "admisiones:build:production"
             },
             "development": {
-              "buildTarget": "angular-template:build:serving"
+              "buildTarget": "admisiones:build:serving"
             }
           },
           "defaultConfiguration": "development"
@@ -177,3 +177,4 @@
     }
   }
 }
+

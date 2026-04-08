@@ -1,5 +1,5 @@
 {
-  "name": "angular-template",
+  "name": "admisiones",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "build": "ng build",
     "build:staging": "ng build --configuration staging && npm run copy-web-config",
     "build:dev": "ng build --configuration development && npm run copy-web-config",
-    "copy-web-config": "cpy src/web.dev.config dist/angular-template/browser --rename=web.config --overwrite --flat",
+    "copy-web-config": "cpy src/web.dev.config dist/admisiones/browser --rename=web.config --overwrite --flat",
     "ci": "npm run lint:check && npm run test && npm run build",
     "lint": "prettier --write . && stylelint --fix **/*.scss && eslint --fix .",
     "lint:check": "prettier --check . && stylelint **/*.scss && eslint .",
@@ -100,3 +100,4 @@
     ]
   }
 }
+
