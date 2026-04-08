@@ -1,11 +1,12 @@
+const API_BASE = '';
+
 export const environment = {
   production: false,
+  RECAPTCHA_ENTERPRISE_KEY: '',
   CACHING_ENABLED: true,
-  //Add specific CSP for production, if needed.
   CSP_POLICY:
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://i.postimg.cc; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self';",
-  RECAPTCHA_KEY: '',
-  API_URL: '',
-  // OTRA_KEY: '',
+  API_ORT: API_BASE,
+  API_ORT_URL: `${API_BASE}/ORT/`,
+  API_ORT_SECURE_URL: `${API_BASE}/ORTSecure/`,
 };
-
