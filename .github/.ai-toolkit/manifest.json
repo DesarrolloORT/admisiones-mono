@@ -1,0 +1,260 @@
+{
+  "version": 3,
+  "generatedBy": "@desarrolloort/ai-toolkit",
+  "generatedAt": "2026-04-09T20:27:33.584Z",
+  "profiles": [
+    "base",
+    "angular",
+    "angular-advanced",
+    "testing",
+    "security",
+    "github-actions",
+    "agent-hooks",
+    "mcp-github",
+    "mcp-angular-cli",
+    "mcp-chrome-devtools",
+    "mcp-sonarqube"
+  ],
+  "files": {
+    ".github/copilot-instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/copilot-instructions.md",
+      "kind": "instructions",
+      "checksum": "7b4d9fbd9d09a6465614925fe22c4c5f6c8b8e2b59dd87caa421855b576f8b2e"
+    },
+    ".github/instructions/toolkit/documentation-strategy.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/documentation-strategy.instructions.md",
+      "kind": "instructions",
+      "checksum": "5c72a18be9809b8a08cdabc4659f74bf6c482a643792b551c6458ba9d8715d5c"
+    },
+    ".github/instructions/toolkit/documentation-writing.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/documentation-writing.instructions.md",
+      "kind": "instructions",
+      "checksum": "1ded060409ea97b941ebd90e9dfc33b8995659e636abe96285c728bee681f4c1"
+    },
+    ".github/instructions/toolkit/frontend-ui.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/frontend-ui.instructions.md",
+      "kind": "instructions",
+      "checksum": "74a1cc312b14bef5bef40045ce05257689af752d2641329a49165cb95d054e42"
+    },
+    ".github/instructions/toolkit/markdown.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/markdown.instructions.md",
+      "kind": "instructions",
+      "checksum": "b31769cfd20722fa5c778b4233d32ba7f6673555ba6178ad10278ca6b2017892"
+    },
+    ".github/instructions/toolkit/secure-code.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/secure-code.instructions.md",
+      "kind": "instructions",
+      "checksum": "bae9760ffd883dad8a1f47405e1efa5b9cae3c4b1e458ff44fe80664ec5d0024"
+    },
+    ".github/prompts/toolkit/a11y-pr-review.prompt.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/a11y-pr-review.prompt.md",
+      "kind": "prompt",
+      "checksum": "6a1245d0936d5ab6f77c52cc9fdfbaec017f108ce7c26e7c059945f5006dd7b7"
+    },
+    ".github/prompts/toolkit/create-technical-decision-record-from-change.prompt.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/create-technical-decision-record-from-change.prompt.md",
+      "kind": "prompt",
+      "checksum": "e03eabad19bb5a3f1cf051a2643854f5aac7a3fab937c56a66caf5f0730b77bd"
+    },
+    ".github/prompts/toolkit/docs-generate-readme.prompt.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/docs-generate-readme.prompt.md",
+      "kind": "prompt",
+      "checksum": "417c6f30947dcc780a4a692af281e934124580eb34862cf9132ec20ec5071a46"
+    },
+    ".github/prompts/toolkit/update-docs-from-diff.prompt.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/update-docs-from-diff.prompt.md",
+      "kind": "prompt",
+      "checksum": "0e564e05e90e20b1cfbb1fd11735574d19edac609dd2637b01b5565089980b1c"
+    },
+    ".github/skills/toolkit/audit-doc-coverage/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/audit-doc-coverage/SKILL.md",
+      "kind": "skill",
+      "checksum": "a538f20652a14a72db67b4a7c0950b9e7c0998a80e36929629d69872094800db"
+    },
+    ".github/skills/toolkit/document-component-public-api/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/document-component-public-api/SKILL.md",
+      "kind": "skill",
+      "checksum": "4468c78e3ee6051522c9f2c5a78b27623fd412bd9929635abecee680894749dd"
+    },
+    ".github/skills/toolkit/document-release-change/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/document-release-change/SKILL.md",
+      "kind": "skill",
+      "checksum": "a019b90b6d209ac3054ac7eb7991c49ab5e267454421c150b2612ed6c6908ecc"
+    },
+    ".github/skills/toolkit/document-repo-foundation/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/document-repo-foundation/SKILL.md",
+      "kind": "skill",
+      "checksum": "97406f91aa793ed7863d9a44e346e0e3875911a70845027affc2fa3682405bcd"
+    },
+    ".github/instructions/toolkit/angular-cli.instructions.md": {
+      "profile": "angular",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/angular-cli.instructions.md",
+      "kind": "instructions",
+      "checksum": "888369e000bcc193d5c05dc597760a4ad6b7ddebb2ad703ea11e26316f3817a8"
+    },
+    ".github/instructions/toolkit/angular-reactivity.instructions.md": {
+      "profile": "angular",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/angular-reactivity.instructions.md",
+      "kind": "instructions",
+      "checksum": "2f9e363a5dc9e6db79d7f06f7f0082eb92c583f7aa9ca3cce188f6d6364ed043"
+    },
+    ".github/prompts/toolkit/angular-implementation.prompt.md": {
+      "profile": "angular",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/angular-implementation.prompt.md",
+      "kind": "prompt",
+      "checksum": "54f175e2d02c2b5efd32b7addd80ab898ab5c501a429f385670e5de47600659a"
+    },
+    ".github/skills/toolkit/angular-reactivity-diagnostics/SKILL.md": {
+      "profile": "angular",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/angular-reactivity-diagnostics/SKILL.md",
+      "kind": "skill",
+      "checksum": "cac8009ad1ab5ab0aaf03633b27eb5a590539640ea374654c85cf67207bf0caa"
+    },
+    ".github/skills/toolkit/angular-reactivity-diagnostics/references/patterns.md": {
+      "profile": "angular",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/angular-reactivity-diagnostics/references/patterns.md",
+      "kind": "other",
+      "checksum": "9f899fb6d6a5fc93a2465dc4a6af92190c18f505e03c2293eeffd22eb6c85003"
+    },
+    ".github/skills/toolkit/angular-app-implementation/SKILL.md": {
+      "profile": "angular-advanced",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/angular-app-implementation/SKILL.md",
+      "kind": "skill",
+      "checksum": "d0f5d90463af9f091e05b068919a004567ebed5d3785dfcd9efc140691194a71"
+    },
+    ".github/skills/toolkit/angular-component-specs/SKILL.md": {
+      "profile": "angular-advanced",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/angular-component-specs/SKILL.md",
+      "kind": "skill",
+      "checksum": "6365a6c21438d43f3b11b43cd11688e88ae08f512162e678202f620aed9c2558"
+    },
+    ".github/prompts/toolkit/error-check-and-fix.prompt.md": {
+      "profile": "testing",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/error-check-and-fix.prompt.md",
+      "kind": "prompt",
+      "checksum": "e566149bc6dd1988dd968637884f40b0b97a1dad66c94d53c638e8a53e8736d8"
+    },
+    ".github/prompts/toolkit/unit-spec-generator.prompt.md": {
+      "profile": "testing",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/unit-spec-generator.prompt.md",
+      "kind": "prompt",
+      "checksum": "b9718fc06868fadb17f39ab95bb5c14976a440a7d444625479dcdd7a429ac1e4"
+    },
+    ".github/prompts/toolkit/frontend-owasp-asvs-review.prompt.md": {
+      "profile": "security",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/prompts/toolkit/frontend-owasp-asvs-review.prompt.md",
+      "kind": "prompt",
+      "checksum": "d2a66dd35a6c5f2c8666ad8065ac2802bb6a79747b546e89d12559f8dcb63d49"
+    },
+    ".github/skills/toolkit/frontend-owasp-asvs/SKILL.md": {
+      "profile": "security",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/frontend-owasp-asvs/SKILL.md",
+      "kind": "skill",
+      "checksum": "07c58b8d675024def7195ceecaa3ac42cf89878055c67bbf31b7bbd4e51705bb"
+    },
+    ".github/skills/toolkit/frontend-owasp-asvs/references/checklist.md": {
+      "profile": "security",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/frontend-owasp-asvs/references/checklist.md",
+      "kind": "other",
+      "checksum": "5c3563a5a7bb96692f410c10ad9f6bcd9ba0e21e99cf147a9449a83594c10fb3"
+    },
+    ".github/skills/toolkit/github-actions-cicd/SKILL.md": {
+      "profile": "github-actions",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/github-actions-cicd/SKILL.md",
+      "kind": "skill",
+      "checksum": "67c75c439a615eefb4b537b7d61b47355fbe711a2b6e7e284f1db8a19cee5217"
+    },
+    ".github/hooks/agent-hooks.json": {
+      "profile": "agent-hooks",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/hooks/agent-hooks.json",
+      "kind": "hook",
+      "checksum": "c2d7dd35c29b3b7877d1af003fa83d1014eedd9fa7c0af107d4e3bf9d32b93ad"
+    },
+    "scripts/ai-hooks/agent-hooks-shared.js": {
+      "profile": "agent-hooks",
+      "scope": "toolkit",
+      "sourceRelativePath": "scripts/ai-hooks/agent-hooks-shared.js",
+      "kind": "other",
+      "checksum": "2fb81ece780a2897cd35dbfc293221831b33bf1e1027abe480e7c47a2b01d481"
+    },
+    "scripts/ai-hooks/agent-hooks.js": {
+      "profile": "agent-hooks",
+      "scope": "toolkit",
+      "sourceRelativePath": "scripts/ai-hooks/agent-hooks.js",
+      "kind": "other",
+      "checksum": "46b36f8b1c226106c700da6bc9d8337f016d38f87088e15b7a672daf4c337ef2"
+    }
+  },
+  "mcpServers": {
+    "github": {
+      "profile": "mcp-github",
+      "scope": "toolkit",
+      "sourceRelativePath": ".vscode/mcp.json",
+      "kind": "mcp",
+      "checksum": "ed38a53909ae4c366e98ba3a585978f2916249eb033af5706b3e90eb8cb778b5"
+    },
+    "angular-cli": {
+      "profile": "mcp-angular-cli",
+      "scope": "toolkit",
+      "sourceRelativePath": ".vscode/mcp.json",
+      "kind": "mcp",
+      "checksum": "bc59721d24d31ae90988e6d083366800cdcb516d44ab236ae6b21a942122b7c4"
+    },
+    "chrome-devtools": {
+      "profile": "mcp-chrome-devtools",
+      "scope": "toolkit",
+      "sourceRelativePath": ".vscode/mcp.json",
+      "kind": "mcp",
+      "checksum": "454bf9a93e9b35a313fd1b8bafda0002674ae053bbdd55ebd5a7edaf015d41e0"
+    },
+    "sonarqube": {
+      "profile": "mcp-sonarqube",
+      "scope": "toolkit",
+      "sourceRelativePath": ".vscode/mcp.json",
+      "kind": "mcp",
+      "checksum": "ddd1e6dd19afade2ad744ff45b558e7411b50281c99d25a98a59565acfd421ba"
+    }
+  }
+}
