@@ -6,7 +6,7 @@ import {
   provideAppInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
   provideRouter,
@@ -35,10 +35,6 @@ export const appConfig: ApplicationConfig = {
     { provide: LocationStrategy, useClass: PathLocationStrategy },
     { provide: MatPaginatorIntl, useValue: PaginationUtils.createPaginatorIntl() },
     { provide: MAT_DATE_FORMATS, useValue: DateUtils.getLocalizedDateFormats() },
-    {
-      provide: DateAdapter,
-      useClass: MomentDateAdapter,
-      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
-    },
   ],
 };
+
