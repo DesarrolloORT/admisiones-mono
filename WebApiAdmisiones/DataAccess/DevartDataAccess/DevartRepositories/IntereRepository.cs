@@ -16,10 +16,58 @@ namespace DataAccess.DevartRepositories
         public virtual ICollection<Intere> GetInteresesPersonaProcesosHabilitados(long codigoPersona)
         {
             return objectSet
-                .Where(i => i.CodigoPersona == codigoPersona && i.Proceso.HabilitadoInteresSitio == "SI")
-                .Include(i => i.Proceso)
+                .AsNoTracking()
+                .Where(i =>
+                    i.CodigoPersona == codigoPersona
+                    && Context.Set<BusinessLogic.Entities.Proceso>().Any(p =>
+                        p.IdProceso == i.IdProceso
+                        && p.HabilitadoInteresSitio == "SI"))
                 .Include(i => i.InteresProductos)
                 .ToList();
+        }
+
+        public virtual Proceso GetProcesoPorInteresActivo(long codigoPersona, long idProducto)
+        {
+            var procesoPorInteres =
+            (
+                from interes in objectSet
+                join interesProducto in Context.Set<BusinessLogic.Entities.InteresProducto>()
+                    on interes.IdInteres equals interesProducto.IdInteres
+                join proceso in Context.Set<BusinessLogic.Entities.Proceso>()
+                    on interes.IdProceso equals proceso.IdProceso
+                where interes.CodigoPersona == codigoPersona
+                      && interesProducto.IdProducto == idProducto
+                      && proceso.HabilitadoInteresSitio == "SI"
+                select proceso
+            ).FirstOrDefault();
+
+            if (procesoPorInteres != null)
+            {
+                return procesoPorInteres;
+            }
+
+            return
+            (
+                from inscripto in Context.Set<BusinessLogic.Entities.Inscripto>()
+                join oferta in Context.Set<BusinessLogic.Entities.Oferta>()
+                    on inscripto.IdOferta equals (long?)oferta.IdOferta
+                join supraoferta in Context.Set<BusinessLogic.Entities.Supraoferta>()
+                    on oferta.IdSupraoferta equals supraoferta.IdSupraoferta
+                join paquete in Context.Set<BusinessLogic.Entities.Paquete>()
+                    on supraoferta.IdPaquete equals paquete.IdPaquete
+                join procesoComienzo in Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                    on supraoferta.IdComienzo equals procesoComienzo.IdComienzo
+                join procesoProducto in Context.Set<BusinessLogic.Entities.ProcesoProducto>()
+                    on paquete.IdProducto equals (long?)procesoProducto.IdProducto
+                join proceso in Context.Set<BusinessLogic.Entities.Proceso>()
+                    on procesoProducto.IdProceso equals proceso.IdProceso
+                where inscripto.BajaInscr == null
+                      && inscripto.CodigoPersona == codigoPersona
+                      && paquete.IdProducto == idProducto
+                      && procesoComienzo.IdProceso == proceso.IdProceso
+                      && proceso.HabilitadoInteresSitio == "SI"
+                select proceso
+            ).FirstOrDefault();
         }
     }
 }

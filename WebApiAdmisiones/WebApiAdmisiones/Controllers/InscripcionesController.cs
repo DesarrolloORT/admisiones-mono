@@ -20,16 +20,16 @@ namespace WebApiAdmisiones.Controllers
         #region INSCRIPCIONES
 
         /// <summary>
-        /// Obtiene la última inscripción de la persona autenticada.
+        /// Obtiene la última inscripción activa de la persona autenticada.
         /// </summary>
         /// <returns>Última inscripción del alumno.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="404">No se encontró una inscripción activa para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("UltimaInscripcionActiva")]
         [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 404)]
         public IActionResult ObtenerUltimaInscripcionActiva()
         {
             var result = inscripcionesService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
@@ -37,14 +37,14 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Registra o actualiza el interes de la persona autenticada para un producto y proceso habilitado.
+        /// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
         /// </summary>
         /// <param name="request">Producto y proceso seleccionados.</param>
-        /// <returns>Resultado de la actualizacion del interes.</returns>
-        /// <response code="200">Interes registrado correctamente.</response>
-        /// <response code="400">Producto o proceso invalido.</response>
+        /// <returns>Resultado de la actualización del interés.</returns>
+        /// <response code="200">Interés registrado correctamente.</response>
+        /// <response code="400">Producto o proceso inválido.</response>
         /// <response code="404">Persona no encontrada.</response>
-        /// <response code="409">La persona ya tuvo inscripcion o tiene una pendiente para ese producto.</response>
+        /// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
         [HttpPost("InteresProducto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -61,11 +61,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de productos vigentes con interés.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("ProductosVigentesConInteres")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosVigentesConInteres()
         {
@@ -78,11 +76,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de productos de interés.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("ProductosConInteresActivo")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
         public IActionResult ObtenerProductosConInteresActivo()
         {
@@ -96,9 +92,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe inscripción activa; false en caso contrario.</returns>
+        /// <returns><c>true</c> si existe inscripción activa; <c>false</c> en caso contrario.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("InscripcionActivaParaProceso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -113,7 +109,7 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripción.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("InscripcionesPendientes")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
@@ -128,7 +124,7 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripción.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("InscripcionesCanceladas")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
@@ -144,7 +140,7 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista de inscripciones realizadas.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("InscripcionesRealizadas")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 400)]
@@ -160,9 +156,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
         /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe la inscripción; false en caso contrario.</returns>
+        /// <returns><c>true</c> si existe la inscripción; <c>false</c> en caso contrario.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("InscripcionPorProductoProceso")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]

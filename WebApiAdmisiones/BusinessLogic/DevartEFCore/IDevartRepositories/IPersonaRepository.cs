@@ -11,6 +11,7 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IPersonaRepository
     {
+        bool ExistePersona(long codigoPersona);
         Persona GetPersonaWithRelated(long codigoPersona);
     }
 }

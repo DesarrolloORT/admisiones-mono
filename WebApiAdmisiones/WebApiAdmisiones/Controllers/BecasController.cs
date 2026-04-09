@@ -23,12 +23,12 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Datos de aceptación del reglamento.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="404">No se encontró aceptación del reglamento para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("AceptacionReglamentoEstudiantil")]
         [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
         public IActionResult ObtenerAceptacionReglamentoEstudiantil()
         {
             var result = becasService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());

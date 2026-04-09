@@ -19,17 +19,22 @@ namespace DataAccess.DevartRepositories
         /// </summary>
         public virtual bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
         {
-            return objectSet.Any(v =>
-                v.CodigoPersona == codigoPersona
-                && v.IdProducto == idProducto
-                && Context.Set<BusinessLogic.Entities.ProcesoProducto>().Any(pp =>
-                    pp.IdProducto == v.IdProducto
-                    && pp.IdProceso == idProceso
-                    && pp.Proceso.HabilitadoInteresSitio == "SI")
-                && Context.Set<BusinessLogic.Entities.ProcesoComienzo>().Any(pc =>
-                    pc.IdComienzo == v.IdComienzo
-                    && pc.IdProceso == idProceso
-                    && pc.Proceso.HabilitadoInteresSitio == "SI"));
+            return
+            (
+                from fresco in objectSet
+                join procesoProducto in Context.Set<BusinessLogic.Entities.ProcesoProducto>()
+                    on fresco.IdProducto equals procesoProducto.IdProducto
+                join procesoComienzo in Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
+                    on fresco.IdComienzo equals procesoComienzo.IdComienzo
+                join proceso in Context.Set<BusinessLogic.Entities.Proceso>()
+                    on procesoProducto.IdProceso equals proceso.IdProceso
+                where fresco.CodigoPersona == codigoPersona
+                      && fresco.IdProducto == idProducto
+                      && procesoProducto.IdProceso == idProceso
+                      && procesoComienzo.IdProceso == idProceso
+                      && proceso.HabilitadoInteresSitio == "SI"
+                select fresco.IdProducto
+            ).Count() > 0;
         }
     }
 }

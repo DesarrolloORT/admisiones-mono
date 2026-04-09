@@ -733,8 +733,8 @@
     <property name="IdCaracteristicaPaisTel2" type="Int64" p1:ValidateRequired="true" p1:Guid="688d64a6-c6bd-4ae1-aead-be7b7b1fbcf7">
       <column name="ID_CARACTERISTICA_PAIS_TEL2" default="1" not-null="True" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="250" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
-      <column name="EMAIL_ORT_PERSONA" not-null="False" length="250" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
+      <column name="EMAIL_ORT_PERSONA" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <class name="Imagen" entity-set="Imagens" table="T_IMAGEN" schema="CREADOR" p1:Guid="6b637d4e-e743-46b5-85d5-f44fc8761de7">
@@ -1213,6 +1213,9 @@
     </property>
     <property name="CajaProfesionalProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="cdc6c096-1a35-4ab8-8967-896d052bbb3e">
       <column name="CAJA_PROFESIONAL_PRODUCTO" default="'NO'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ProgConSeminariosProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="285ac3e0-a4ac-4730-89b5-2470427fc970">
+      <column name="PROG_CON_SEMINARIOS_PRODUCTO" default="'NO'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <class name="SolicitudAlta" entity-set="SolicitudAltas" table="T_SOLICITUD_ALTA" schema="CREADOR" p1:Guid="97333450-0ab7-4e6e-b56d-0414a48969fb">
@@ -1737,6 +1740,9 @@
     </property>
     <property name="CupoRestringidoOferta" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="81d3e868-8750-47ed-be12-f042a03e791a">
       <column name="CUPO_RESTRINGIDO_OFERTA" default="'NO'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="IncompanyOferta" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="08c63374-8a68-4345-905d-0875ddac8fbb">
+      <column name="INCOMPANY_OFERTA" default="'NO'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <class name="Intere" entity-set="Interes" table="T_INTERES" schema="CREADOR" p1:Guid="5841e45f-ec0d-4c03-bb92-dcbbb4339665">
@@ -3334,8 +3340,8 @@
     <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="5850d6f7-f1e9-4cdd-b0e9-f88bba38a540">
       <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="IdComienzo" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="161eb523-5238-4114-8faa-e50e1e843806">
-      <column name="ID_COMIENZO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    <property name="IdComienzo" type="Int64" p1:ValidateRequired="true" p1:Guid="161eb523-5238-4114-8faa-e50e1e843806">
+      <column name="ID_COMIENZO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
     <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="2364fa81-a9b1-4fa2-9994-87a66a6923d4">
       <column name="FECHA_INICIO_COMIENZO" not-null="False" sql-type="DATE" p1:unicode="False" />
@@ -3496,43 +3502,6 @@
       <column name="ID_PROCESO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
-  <class name="RefreshToken" entity-set="RefreshTokens" table="T_REFRESH_TOKEN" schema="CREADOR" p1:Guid="011650a5-2d6a-4045-9e9f-8f748d87fc89">
-    <composite-id>
-      <key-property name="CodigoPersona" type="Int64" p1:ValidateRequired="true" p1:Guid="0d3c0601-24f9-4879-bff9-8c41da416693">
-        <column name="CODIGO_PERSONA" not-null="True" sql-type="NUMBER" p1:unicode="False" />
-      </key-property>
-      <key-property name="Sistema" type="String" primary-key-index="1" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="42e91875-9ed9-4d94-b8ce-e4a63e88b666">
-        <column name="SISTEMA" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-      </key-property>
-    </composite-id>
-    <property name="TokenHash" type="String" p1:ValidateMaxLength="200" p1:ValidateRequired="true" p1:Guid="ffb813e2-dce8-4897-a73d-8128adb1de05">
-      <column name="TOKEN_HASH" not-null="True" length="200" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="ExpiresAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="2e3c34b2-575e-4ccd-850c-e9e623af684c">
-      <column name="EXPIRES_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="CreatedAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="9ee72a9f-cb5a-45b4-9b0d-219ac1dd5064">
-      <column name="CREATED_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="RevokedAt" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="17501676-4a59-4c10-813e-47027b052301">
-      <column name="REVOKED_AT" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="RemplaceByTokenId" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="d43ddbb8-0bc8-4fed-a3dc-83aeb7042482">
-      <column name="REMPLACE_BY_TOKEN_ID" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IsActive" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="704c8d8e-ee40-4888-b705-8741e1b86cc4">
-      <column name="IS_ACTIVE" default="'NO'" not-null="True" length="2" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="929cd9e1-a5c0-4d63-b6ab-378248052c9c">
-      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="de246e44-dfd0-410d-8d1b-d41ff06c89d4">
-      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="20629366-c9f5-49ec-bf07-43d401c50c4f">
-      <column name="USUARIO_INGRESO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-  </class>
   <class name="IngresoMensualNfDj" entity-set="IngresoMensualNfDjs" table="T_INGRESO_MENSUAL_NF_DJ" schema="CREADOR" p1:Guid="b8d7df5a-abec-4a26-9aef-ee4ebb9a8ba5">
     <id name="IdIngresoMensualNfDj" type="Decimal" p1:ValidateRequired="true" p1:Guid="4fb499cd-f2f6-43e4-9fae-cb2278f46c53">
       <column name="ID_INGRESO_MENSUAL_NF_DJ" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
@@ -3639,6 +3608,43 @@
     </property>
     <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="cbb2e9ed-868c-425f-afc2-06cb6a022dfd">
       <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="RefreshToken" entity-set="RefreshTokens" table="T_REFRESH_TOKEN" schema="CREADOR" p1:Guid="7cdf24dd-ccd6-47f4-a691-3af17016d344">
+    <composite-id>
+      <key-property name="CodigoPersona" type="Int64" p1:ValidateRequired="true" p1:Guid="9c6b033b-fb6c-44f1-8343-781ab189a595">
+        <column name="CODIGO_PERSONA" not-null="True" sql-type="NUMBER" p1:unicode="False" />
+      </key-property>
+      <key-property name="Sistema" type="String" primary-key-index="1" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="d782657d-c711-48f6-a09f-3ec7df9c4afa">
+        <column name="SISTEMA" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+      </key-property>
+    </composite-id>
+    <property name="TokenHash" type="String" p1:ValidateMaxLength="200" p1:ValidateRequired="true" p1:Guid="fbec9ccf-9284-4b3f-a443-f1f91366e6f9">
+      <column name="TOKEN_HASH" not-null="True" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ExpiresAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="71177b39-c3a1-4c6f-b1fc-7c7b78bbb665">
+      <column name="EXPIRES_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="CreatedAt" type="DateTime" p1:ValidateRequired="true" p1:Guid="3db1e117-5596-4038-a6bf-b5253f30dcee">
+      <column name="CREATED_AT" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="RevokedAt" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c14c83d5-98a5-4feb-962a-c845a24cdafc">
+      <column name="REVOKED_AT" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="RemplaceByTokenId" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="458875fb-1ece-4ad6-9308-aa2ca3ac94e9">
+      <column name="REMPLACE_BY_TOKEN_ID" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IsActive" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="935875e0-305b-4460-bf45-c0fda9d76897">
+      <column name="IS_ACTIVE" default="'NO'" not-null="True" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="27407c99-7d61-464a-a9e2-fc9b341f42df">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="1261f538-0b8e-4557-8428-a3960ccef5cf">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9852ea6a-4352-43b3-8beb-d7695d8867eb">
+      <column name="USUARIO_INGRESO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <associations>
@@ -4202,70 +4208,6 @@
         <property name="IdCaracteristicaPaisTel2" />
       </end2>
     </association>
-    <association name="Producto_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="febbe5ea-740c-47fa-a367-4f7cc1b99dee">
-      <end1 multiplicity="ZeroOrOne" name="Producto" class="EncuestaIniAdmision" relation-class="Producto" constrained="True" lazy="False" p1:Guid="05ad64ff-c928-494e-a72f-93f6e5b4d790">
-        <property name="IdProducto" />
-      </end1>
-      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Producto" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="dacd4948-da8a-4423-9bba-6ad1a3525337">
-        <property name="IdProducto" />
-      </end2>
-    </association>
-    <association name="InstanciaWorkflow_InstWorkflowInscripcion" cardinality="OneToOne" p1:Guid="cfa0adc7-9fd2-4ffd-b0da-fbff4a2944b8">
-      <end1 multiplicity="One" name="InstanciaWorkflow" class="InstWorkflowInscripcion" relation-class="InstanciaWorkflow" constrained="True" lazy="False" p1:Guid="e04fffab-065e-45b1-9a8f-9949c5a18cd7">
-        <property name="IdInstanciaWorkflow" />
-      </end1>
-      <end2 multiplicity="ZeroOrOne" name="InstWorkflowInscripcion" class="InstanciaWorkflow" relation-class="InstWorkflowInscripcion" constrained="False" lazy="False" p1:Guid="e73e13b0-a9b6-44f9-8dfc-f0616be2a189">
-        <property name="IdInstanciaWorkflow" />
-      </end2>
-    </association>
-    <association name="Comienzo_NivelProducto" cardinality="OneToMany" p1:Guid="e4db7946-cc91-430e-b190-522d0b50add8">
-      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="NivelProducto" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="6bdd56b3-dfcd-41f8-9ead-d642dcbfe0ca">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="NivelProductos" class="Comienzo" relation-class="NivelProducto" lazy="False" p1:Guid="647ad961-0be4-456d-9f34-40f6d227d108">
-        <property name="IdComienzoActivo" />
-      </end2>
-    </association>
-    <association name="Comienzo_ProcesoComienzo" cardinality="OneToMany" p1:Guid="9f023bad-58b6-4d67-8c51-d9d50e8e969a">
-      <end1 multiplicity="One" name="Comienzo" class="ProcesoComienzo" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="6185aed5-f33a-4612-aaa6-05d4cf19f087">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="ProcesoComienzos" class="Comienzo" relation-class="ProcesoComienzo" lazy="False" p1:Guid="c3b78591-8b2e-4238-8f9b-85b506061963">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
-    <association name="Comienzo_Supraoferta" cardinality="OneToMany" p1:Guid="8d69d629-d251-471c-acc8-a34ba3dd2071">
-      <end1 multiplicity="One" name="Comienzo" class="Supraoferta" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="b34602e8-44dc-4fa9-ad69-5c5d92979de9">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="Supraofertas" class="Comienzo" relation-class="Supraoferta" lazy="False" p1:Guid="6ab6e31d-c5a1-4e38-bd53-5b8bbe7a8799">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
-    <association name="Comienzo_Prueba" cardinality="OneToMany" p1:Guid="87639730-7170-41df-b096-757459518056">
-      <end1 multiplicity="One" name="Comienzo" class="Prueba" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="2dca8002-f7f0-405a-ba9c-50587a3dbb3f">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="Pruebas" class="Comienzo" relation-class="Prueba" lazy="False" p1:Guid="07d0bc1c-f7e5-4039-ab96-12d0fdd56439">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
-    <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="e0e2fc9b-0783-4c58-a2f0-b128c681f934">
-      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="779deb74-74dd-4db3-b955-4a2084bf6388">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="ba507567-9a7e-43b9-b317-2d2468ede231">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
-    <association name="Persona_PersonaAdmite" cardinality="OneToOne" p1:Guid="53272471-03ab-44ec-ac94-7f9ea5afb1c0">
-      <end1 multiplicity="One" name="Persona" class="PersonaAdmite" relation-class="Persona" constrained="True" lazy="False" p1:Guid="e9c425aa-66bf-4dba-8a51-73904feccb68">
-        <property name="CodigoPersona" />
-      </end1>
-      <end2 multiplicity="ZeroOrOne" name="PersonaAdmite" class="Persona" relation-class="PersonaAdmite" constrained="False" lazy="False" p1:Guid="be6ff4bc-abdf-4b28-94fa-ad07cf5155d2">
-        <property name="CodigoPersona" />
-      </end2>
-    </association>
     <association name="Proceso_Actividad" cardinality="OneToMany" p1:Guid="42bb0c57-d6d2-477f-a6d3-1be17a59bbf8">
       <end1 multiplicity="One" name="Proceso" class="Actividad" relation-class="Proceso" constrained="True" lazy="False" p1:Guid="878e8dde-609a-493f-a90c-3a5ddd8ff2f0">
         <property name="IdProceso" />
@@ -4280,14 +4222,6 @@
       </end1>
       <end2 multiplicity="Many" name="Accions" class="Actividad" relation-class="Accion" lazy="False" p1:Guid="3c0883c2-897f-4bf8-b0c5-b76435a9c234">
         <property name="IdActividad" />
-      </end2>
-    </association>
-    <association name="Persona_RefreshToken" cardinality="OneToMany" p1:Guid="d4d9bafb-8687-493c-b861-bc3f7fa9d4e1">
-      <end1 multiplicity="One" name="Persona" class="RefreshToken" relation-class="Persona" constrained="True" lazy="False" p1:Guid="c6e010b8-3d2a-4ec9-b200-97bcddb4acde">
-        <property name="CodigoPersona" />
-      </end1>
-      <end2 multiplicity="Many" name="RefreshTokens" class="Persona" relation-class="RefreshToken" lazy="False" p1:Guid="f06da042-12bf-4080-99cf-b4541d03bd6d">
-        <property name="CodigoPersona" />
       </end2>
     </association>
     <association name="TipoEgresoDj_EgresoMensualNfDj" cardinality="OneToMany" p1:Guid="9b0e2685-9d30-4c0d-a2b9-c1db461f77c8">
@@ -4328,6 +4262,78 @@
       </end1>
       <end2 multiplicity="Many" name="IngresoMensualNfDjs" class="IntegranteNfDj" relation-class="IngresoMensualNfDj" lazy="False" p1:Guid="3f1ae9d2-b2ca-478f-9a53-147b3627c5c5">
         <property name="IdIntegranteNfDj" />
+      </end2>
+    </association>
+    <association name="Comienzo_NivelProducto" cardinality="OneToMany" p1:Guid="48133a7d-7355-42fc-93d0-92320c888c10">
+      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="NivelProducto" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="b61533a7-18e7-4ffd-8365-458cf95cbad0">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="NivelProductos" class="Comienzo" relation-class="NivelProducto" lazy="False" p1:Guid="ccab1839-9faf-4963-8f89-5cba365aa258">
+        <property name="IdComienzoActivo" />
+      </end2>
+    </association>
+    <association name="Comienzo_ProcesoComienzo" cardinality="OneToMany" p1:Guid="cbcbe5c5-f20c-4e40-9bdd-bad594101d1b">
+      <end1 multiplicity="One" name="Comienzo" class="ProcesoComienzo" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="b9e78ce8-ed20-4318-8559-760010e6753e">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="ProcesoComienzos" class="Comienzo" relation-class="ProcesoComienzo" lazy="False" p1:Guid="8f086c2f-f35a-4d12-b783-3f931e3f9e55">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Comienzo_Supraoferta" cardinality="OneToMany" p1:Guid="124367ed-03c2-4e92-b5b4-a8d65b3377c7">
+      <end1 multiplicity="One" name="Comienzo" class="Supraoferta" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="cd045bf1-9a48-46a0-b4d6-2e0e9a8f0767">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="Supraofertas" class="Comienzo" relation-class="Supraoferta" lazy="False" p1:Guid="3f97a27c-9ddc-4058-a6ee-967c50825335">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Comienzo_Prueba" cardinality="OneToMany" p1:Guid="4b94578f-8e1a-4c74-b5bf-56ea1477cb69">
+      <end1 multiplicity="One" name="Comienzo" class="Prueba" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="351a57e2-79b6-458c-a5b1-cc64a7687cf2">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="Pruebas" class="Comienzo" relation-class="Prueba" lazy="False" p1:Guid="346f22fd-d96f-4d7f-bfb9-3362821c3ca1">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Persona_PersonaAdmite" cardinality="OneToOne" p1:Guid="71b75e2f-cde5-476a-a1b1-5bdb5aa2021e">
+      <end1 multiplicity="One" name="Persona" class="PersonaAdmite" relation-class="Persona" constrained="True" lazy="False" p1:Guid="33504227-2bef-4f6a-92ec-01e206dc4cb5">
+        <property name="CodigoPersona" />
+      </end1>
+      <end2 multiplicity="ZeroOrOne" name="PersonaAdmite" class="Persona" relation-class="PersonaAdmite" constrained="False" lazy="False" p1:Guid="b082823b-b0b8-4fe3-bc09-ab0e612d5861">
+        <property name="CodigoPersona" />
+      </end2>
+    </association>
+    <association name="Producto_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="0983ca53-1864-4a5f-bf93-df34aee98d9b">
+      <end1 multiplicity="ZeroOrOne" name="Producto" class="EncuestaIniAdmision" relation-class="Producto" constrained="True" lazy="False" p1:Guid="997bbd38-98ab-46ee-8ceb-c7f576e00a7b">
+        <property name="IdProducto" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Producto" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="b3417215-1848-4b10-b938-9025ba3141ce">
+        <property name="IdProducto" />
+      </end2>
+    </association>
+    <association name="InstanciaWorkflow_InstWorkflowInscripcion" cardinality="OneToOne" p1:Guid="cf2dd54f-216b-48fe-bf21-293e0d18d013">
+      <end1 multiplicity="One" name="InstanciaWorkflow" class="InstWorkflowInscripcion" relation-class="InstanciaWorkflow" constrained="True" lazy="False" p1:Guid="b01e4c3c-0d42-4991-9f83-251a01eadf02">
+        <property name="IdInstanciaWorkflow" />
+      </end1>
+      <end2 multiplicity="ZeroOrOne" name="InstWorkflowInscripcion" class="InstanciaWorkflow" relation-class="InstWorkflowInscripcion" constrained="False" lazy="False" p1:Guid="dbfe074e-02b9-46a2-b553-81b7aa407371">
+        <property name="IdInstanciaWorkflow" />
+      </end2>
+    </association>
+    <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="b31d1f5f-1329-45d4-8f66-d5321231c0e1">
+      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="3d497c19-12f6-4d80-9158-6f518195d13f">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="99949ab8-c52d-4b96-b374-729cc5ac5ef9">
+        <property name="IdComienzo" />
+      </end2>
+    </association>
+    <association name="Persona_RefreshToken" cardinality="OneToMany" p1:Guid="29e986e7-ac4b-4b09-9ff9-93be4480e5c1">
+      <end1 multiplicity="One" name="Persona" class="RefreshToken" relation-class="Persona" constrained="True" lazy="False" p1:Guid="ccfd0631-4431-43aa-86e7-23cfce8047c6">
+        <property name="CodigoPersona" />
+      </end1>
+      <end2 multiplicity="Many" name="RefreshTokens" class="Persona" relation-class="RefreshToken" lazy="False" p1:Guid="39fe2c48-e128-4784-a8de-450f84c016cc">
+        <property name="CodigoPersona" />
       </end2>
     </association>
   </associations>

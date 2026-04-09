@@ -603,7 +603,7 @@ namespace AppLogic.Services
 
         #endregion DECLARACIÓN JURADA
 
-        #region METODOS PRIVADOS
+        #region MÉTODOS PRIVADOS
 
         private static DtoDeclaracionJuradaWebDevart MapDeclaracionBase(BusinessLogic.Entities.DeclaracionJuradaWeb entity)
         {
@@ -1300,7 +1300,7 @@ namespace AppLogic.Services
             _ => "application/octet-stream"
         };
 
-        #endregion METODOS PRIVADOS
+        #endregion MÉTODOS PRIVADOS
 
     }
 }

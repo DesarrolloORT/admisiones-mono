@@ -6,19 +6,19 @@ using WebApiAdmisiones.Security;
 
 // ============================================================================
 // Program.cs
-// Punto de arranque de la aplicaciÃ³n (top-level statements en .NET 9).
+// Punto de arranque de la aplicación (top-level statements en .NET 9).
 // Responsabilidades clave:
-//  1. Configurar logging y telemetrÃ­a (OpenTelemetry + Serilog).
+//  1. Configurar logging y telemetría (OpenTelemetry + Serilog).
 //  2. Registrar servicios, filtros globales y dependencias de negocio.
-//  3. Configurar autenticaciÃ³n / autorizaciÃ³n JWT.
-//  4. Definir el pipeline HTTP (middleware order) para seguridad, validaciÃ³n y mÃ©tricas.
-//  5. Exponer endpoints (controllers, mÃ©tricas, swagger en desarrollo).
+//  3. Configurar autenticación / autorización JWT.
+//  4. Definir el pipeline HTTP (middleware order) para seguridad, validación y métricas.
+//  5. Exponer endpoints (controllers, métricas, swagger en desarrollo).
 // ============================================================================
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --------------------------------------------------------------------------
-// 1. Logging / TelemetrÃ­a
+// 1. Logging / Telemetría
 // --------------------------------------------------------------------------
 builder.Logging.ClearProviders();
 
@@ -31,7 +31,7 @@ builder.Host.ConfigureSerilog(builder.Configuration);
 builder.WebHost.ConfigureKestrelSecurity();
 
 // --------------------------------------------------------------------------
-// 3. Servicios de AplicaciÃ³n
+// 3. Servicios de Aplicación
 // --------------------------------------------------------------------------
 builder.Services.AddApiControllers();
 
@@ -61,11 +61,8 @@ builder.Services.AddSwaggerGen(options =>
             },
             Array.Empty<string>()
         }
+    });
 });
-});
-
-
-
 
 // --------------------------------------------------------------------------
 // 4. Servicios de Dominio
@@ -91,6 +88,6 @@ var app = builder.Build();
 // --------------------------------------------------------------------------
 app.ConfigureMiddlewarePipeline(builder.Configuration);
 
-app.Logger.LogInformation("Prueba bÃ¡sica: Â¡El sistema de logging estÃ¡ funcionando correctamente!");
+app.Logger.LogInformation("Prueba básica: el sistema de logging está funcionando correctamente.");
 
 await app.RunAsync();

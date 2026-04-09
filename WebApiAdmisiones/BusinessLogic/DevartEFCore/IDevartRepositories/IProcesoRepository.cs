@@ -12,6 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IProcesoRepository
     {
         ICollection<Proceso> GetProcesosHabilitadosPorProducto(long idProducto);
-        int GetSemestreQueCorresponde(long idProducto, long idProceso);
+        bool TieneProcesoHabilitadoPorProducto(long idProducto, long idProceso);
     }
 }

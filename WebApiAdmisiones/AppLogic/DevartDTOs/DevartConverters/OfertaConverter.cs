@@ -56,6 +56,7 @@ namespace AppLogic.DevartDTOs
             target.GrupoRpg = source.GrupoRpg;
             target.FechaNormal = source.FechaNormal;
             target.CupoRestringidoOferta = source.CupoRestringidoOferta;
+            target.IncompanyOferta = source.IncompanyOferta;
 
             // Navigation Properties
             if (level > 0) {
@@ -100,6 +101,7 @@ namespace AppLogic.DevartDTOs
             target.GrupoRpg = source.GrupoRpg;
             target.FechaNormal = source.FechaNormal;
             target.CupoRestringidoOferta = source.CupoRestringidoOferta;
+            target.IncompanyOferta = source.IncompanyOferta;
 
             // User-defined partial method
             OnEntityCreating(source, target);

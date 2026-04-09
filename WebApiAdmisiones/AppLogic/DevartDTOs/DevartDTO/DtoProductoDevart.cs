@@ -208,6 +208,9 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? CajaProfesionalProducto { get; set; }
 
+        [StringLength(2)]
+        public string? ProgConSeminariosProducto { get; set; }
+
         #endregion
 
         #region Navigation Properties

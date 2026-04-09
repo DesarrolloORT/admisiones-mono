@@ -8,6 +8,9 @@ using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Controllers
 {
+    /// <summary>
+    /// Endpoints autenticados del flujo de preinscripción del alumno.
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("[controller]")]
@@ -25,11 +28,9 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idProducto">ID del producto.</param>
         /// <returns>Lista de procesos habilitados.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("ProcesosHabilitadosPorProducto")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 400)]
         public IActionResult ObtenerProcesosHabilitadosPorProducto([FromQuery] long idProducto)
         {
@@ -44,11 +45,9 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idProceso">ID del proceso.</param>
         /// <returns>Lista de turnos disponibles.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Turnos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTurnoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTurnoDevart>>), 204)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTurnoDevart>>), 400)]
         public IActionResult ObtenerTurnos([FromQuery] long idProducto, [FromQuery] long idProceso)
         {
@@ -57,7 +56,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las ofertas disponibles para inscripción de alumno fresco,
+        /// Obtiene las ofertas disponibles para inscripción de alumno fresco
         /// dado un producto, proceso y turno.
         /// </summary>
         /// <param name="idProducto">ID del producto.</param>
@@ -65,7 +64,7 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="idTurno">ID del turno.</param>
         /// <returns>Lista de ofertas disponibles.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("OfertasParaInscripcionConProceso")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoOfertaDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoOfertaDevart>>), 400)]
@@ -97,12 +96,12 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Resumen de producto, proceso, comienzo, turno, oferta y fecha de vencimiento.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos de preinscripción.</response>
-        /// <response code="400">Error interno del servidor.</response>
+        /// <response code="404">No se encontraron datos de preinscripción.</response>
+        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("DatosPreInscripcion")]
         [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 204)]
         [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPreInscripcion>), 404)]
         public IActionResult ObtenerDatosPreInscripcion()
         {
             var result = preinscripcionService.ObtenerDatosPreInscripcion(_currentUser.GetUserId());

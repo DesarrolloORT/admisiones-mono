@@ -43,14 +43,18 @@ namespace DataAccess.DevartRepositories
 
         public virtual bool TieneInscripcionPendienteParaProducto(long codigoPersona, long idProducto)
         {
-            return objectSet.Any(iw =>
-                (iw.IdProceso == 75 || iw.IdProceso == 82)
-                && iw.SolicitanteInstanciaWorkflow == codigoPersona
-                && iw.FechaCanceladoInstanciaWf == null
-                && iw.FechaFinalInstanciaWf == null
-                && Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>().Any(iwi =>
-                    iwi.IdInstanciaWorkflow == iw.IdInstanciaWorkflow
-                    && iwi.IdProducto == (decimal?)idProducto));
+            return
+            (
+                from instancia in objectSet
+                join inscripcion in Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>()
+                    on instancia.IdInstanciaWorkflow equals inscripcion.IdInstanciaWorkflow
+                where (instancia.IdProceso == 75 || instancia.IdProceso == 82)
+                      && instancia.SolicitanteInstanciaWorkflow == codigoPersona
+                      && instancia.FechaCanceladoInstanciaWf == null
+                      && instancia.FechaFinalInstanciaWf == null
+                      && inscripcion.IdProducto == (decimal?)idProducto
+                select instancia.IdInstanciaWorkflow
+            ).Count() > 0;
         }
     }
 }

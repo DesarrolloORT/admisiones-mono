@@ -95,6 +95,7 @@ namespace AppLogic.DevartDTOs
             target.UsernameCooadjSegProducto = source.UsernameCooadjSegProducto;
             target.ExcluirCartaFrescoProducto = source.ExcluirCartaFrescoProducto;
             target.CajaProfesionalProducto = source.CajaProfesionalProducto;
+            target.ProgConSeminariosProducto = source.ProgConSeminariosProducto;
 
             // Navigation Properties
             if (level > 0) {
@@ -189,6 +190,7 @@ namespace AppLogic.DevartDTOs
             target.UsernameCooadjSegProducto = source.UsernameCooadjSegProducto;
             target.ExcluirCartaFrescoProducto = source.ExcluirCartaFrescoProducto;
             target.CajaProfesionalProducto = source.CajaProfesionalProducto;
+            target.ProgConSeminariosProducto = source.ProgConSeminariosProducto;
 
             // User-defined partial method
             OnEntityCreating(source, target);
