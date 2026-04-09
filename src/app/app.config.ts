@@ -9,10 +9,6 @@ import {
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
-  MAT_MOMENT_DATE_ADAPTER_OPTIONS,
-  MomentDateAdapter,
-} from '@angular/material-moment-adapter';
-import {
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
