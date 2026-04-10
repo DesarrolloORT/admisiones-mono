@@ -1,0 +1,148 @@
+<main aria-labelledby="sandbox-title" class="sandbox-page">
+  <section class="sandbox-card">
+    <h1 id="sandbox-title">Sandbox</h1>
+
+    <p class="description">
+      Usá este espacio para probar integraciones y flujos con la API interna luego de autenticar.
+    </p>
+
+    @if (!isAuthenticated()) {
+    <form class="form" novalidate [formGroup]="form" (ngSubmit)="onSubmit()">
+      <label class="field" for="codigo-persona">
+        <span>Código de persona</span>
+        <input formControlName="codigoPersona" id="codigo-persona" type="number" />
+      </label>
+
+      @if (form.controls.codigoPersona.touched && form.controls.codigoPersona.invalid) {
+      <p class="error" role="alert">Ingresá un código de persona.</p>
+      }
+
+      <label class="field" for="password">
+        <span>Contraseña</span>
+        <input autocomplete="current-password" formControlName="password" id="password" type="password" />
+      </label>
+
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+      <p class="error" role="alert">Ingresá una contraseña.</p>
+      }
+
+      @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button type="submit" [disabled]="form.invalid || isSubmitting()">
+        {{ isSubmitting() ? 'Autenticando...' : 'Iniciar sesión' }}
+      </button>
+    </form>
+    } @else {
+    <section aria-label="Área de trabajo" class="workspace">
+      <header class="workspace-header">
+        <h2>Área de trabajo</h2>
+        <button class="secondary" type="button" (click)="onBackToLogin()">Cambiar usuario</button>
+      </header>
+
+      <p class="success" [hidden]="!successMessage()">{{ successMessage() }}</p>
+
+      <section class="workspace-panel">
+        <h3>Reconocimiento de documento</h3>
+        <p>
+          Cargá un archivo para probar el endpoint
+          <strong>ReconocimientoDocumento/Reconocer</strong>
+          con tu sesión autenticada.
+        </p>
+
+        <section aria-label="Prueba de reconocimiento" class="recognition-layout">
+          <form class="form recognition-form" novalidate [formGroup]="recognitionForm"
+            (ngSubmit)="onRecognizeDocument()">
+            <label class="field" for="tipo-documento-esperado">
+              <span>Tipo de documento esperado</span>
+              <input formControlName="tipoDocumentoEsperado" id="tipo-documento-esperado" maxlength="100" type="text" />
+            </label>
+
+            <p class="error" role="alert" [hidden]="
+                !recognitionForm.controls.tipoDocumentoEsperado.touched
+                || !recognitionForm.controls.tipoDocumentoEsperado.invalid
+              ">
+              Ingresá un tipo de documento esperado válido.
+            </p>
+
+            <label class="field" for="tipo-mime">
+              <span>Tipo MIME</span>
+              <input formControlName="tipoMime" id="tipo-mime" maxlength="100" type="text" />
+            </label>
+
+            <p class="error" role="alert"
+              [hidden]="!recognitionForm.controls.tipoMime.touched || !recognitionForm.controls.tipoMime.invalid">
+              Ingresá un tipo MIME válido (ejemplo: application/pdf).
+            </p>
+
+            <label class="field" for="archivo-adjunto">
+              <span>Archivo adjunto</span>
+              <input aria-describedby="archivo-ayuda" id="archivo-adjunto" type="file"
+                (change)="onDocumentSelected($event)" />
+            </label>
+
+            <p class="hint" id="archivo-ayuda">
+              Tamaño máximo: 10 MB. Se intenta completar automáticamente MIME y tipo esperado usando
+              metadatos y nombre del archivo.
+            </p>
+
+            <p class="selected-file" [hidden]="!selectedFileName()">
+              Archivo seleccionado: {{ selectedFileName() }}
+            </p>
+
+            <p class="error" role="alert" [hidden]="
+                !recognitionForm.controls.archivo.touched
+                || !recognitionForm.controls.archivo.hasError('required')
+              ">
+              Seleccioná un archivo para continuar.
+            </p>
+
+            <p class="error" role="alert" [hidden]="
+                !recognitionForm.controls.archivo.touched
+                || !recognitionForm.controls.archivo.hasError('maxFileSize')
+              ">
+              El archivo supera el límite de 10 MB.
+            </p>
+
+            <p class="error" role="alert" [hidden]="!recognitionError()">{{ recognitionError() }}</p>
+
+            <button type="submit" [disabled]="recognitionForm.invalid || isRecognizing()">
+              {{ isRecognizing() ? 'Reconociendo...' : 'Probar reconocimiento' }}
+            </button>
+          </form>
+
+          <section aria-label="Resultado del reconocimiento" class="result-panel">
+            <h4>Resultado</h4>
+
+            <p class="hint" [hidden]="!!recognitionResponse()">
+              Cuando ejecutes la prueba, aquí se mostrará si requiere revisión y los campos
+              detectados.
+            </p>
+
+            <p class="review-state" [hidden]="!recognitionResponse()">
+              Requiere revisión:
+              <strong>{{ requiresReview() === null ? 'Sin dato' : requiresReview() ? 'Sí' : 'No' }}</strong>
+            </p>
+
+            <h5 [hidden]="!recognitionResponse()">Campos detectados</h5>
+
+            <p class="hint" [hidden]="!recognitionResponse() || detectedFields().length !== 0">
+              No se recibieron campos con valor en esta respuesta.
+            </p>
+
+            <dl class="fields-list" [hidden]="!recognitionResponse() || detectedFields().length === 0">
+              @for (field of detectedFields(); track field.key) {
+              <div class="field-item">
+                <dt>{{ field.label }}</dt>
+                <dd>{{ field.value }}</dd>
+              </div>
+              }
+            </dl>
+          </section>
+        </section>
+      </section>
+    </section>
+    }
+  </section>
+</main>

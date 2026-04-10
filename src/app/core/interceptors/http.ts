@@ -28,6 +28,8 @@ const DEFAULT_HEADERS = {
   castmanchecontrol: 'no-cache',
 };
 
+const LOGIN_URL_PATTERN = /\/login\/?$/i;
+
 export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const services = {
     cacheHandler: inject(CacheService),
@@ -46,10 +48,18 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   };
 
   const setHeaders = (req: HttpRequest<unknown>): HttpRequest<unknown> => {
+    if (LOGIN_URL_PATTERN.test(req.url)) {
+      return req;
+    }
+
     return req.clone({ headers: new HttpHeaders(DEFAULT_HEADERS) });
   };
 
   const processRequest = (req: HttpRequest<unknown>): HttpRequest<unknown> => {
+    if (LOGIN_URL_PATTERN.test(req.url)) {
+      return req;
+    }
+
     const { method, body, responseType } = req;
 
     if ((method === 'PUT' || method === 'POST') && body && responseType === 'json') {
@@ -90,3 +100,4 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
     })
   );
 };
+
