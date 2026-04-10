@@ -14,15 +14,17 @@ namespace DataAccess.DevartRepositories
     {
         public virtual bool ExisteAccionParaProcesoPersona(long codigoPersona, long idProceso)
         {
-            return
+            var accionId =
             (
                 from accion in objectSet
                 join actividad in Context.Set<BusinessLogic.Entities.Actividad>()
                     on accion.IdActividad equals actividad.IdActividad
                 where accion.CodigoPersona == codigoPersona
                       && actividad.IdProceso == idProceso
-                select accion.IdAccion
-            ).Count() > 0;
+                select (decimal?)accion.IdAccion
+            ).FirstOrDefault();
+
+            return accionId.HasValue;
         }
     }
 }
