@@ -301,8 +301,8 @@ namespace UnitTesting.Extensions
 
             // Assert
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(ILoginService) &&
-                sd.ImplementationType == typeof(LoginService) &&
+                sd.ServiceType == typeof(IAuthService) &&
+                sd.ImplementationType == typeof(AuthService) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
         }
@@ -573,7 +573,7 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILdap)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITokenService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IRefreshTokenService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILoginService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IAuthService)));
         }
 
         #endregion
@@ -600,7 +600,7 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ICurrentUserService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(ILoginService)));
+                sd.ServiceType == typeof(IAuthService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ICatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 

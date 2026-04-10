@@ -7,7 +7,7 @@ using Utilities;
 
 namespace AppLogic.Services;
 
-public class LoginService : ILoginService
+public class AuthService : IAuthService
 {
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
@@ -21,7 +21,7 @@ public class LoginService : ILoginService
     /// <param name="admisionesUowFactory">Factory para crear unidades de trabajo (Personas).</param>
     /// <param name="tokenService">Servicio para la generación de tokens JWT.</param>
     /// <param name="refreshTokenService">Servicio para gestionar refresh tokens en la base de datos.</param>
-    public LoginService(
+    public AuthService(
         ILdap ldap,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
         ITokenService tokenService,

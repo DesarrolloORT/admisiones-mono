@@ -20,7 +20,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IPersonaRepository> _personaRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
-        private readonly LoginService _service;
+        private readonly AuthService _service;
 
         public LoginServiceTests()
         {
@@ -34,7 +34,7 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _uowMock.Setup(u => u.Personas).Returns(_personaRepositoryMock.Object);
 
-            _service = new LoginService(
+            _service = new AuthService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,

@@ -100,7 +100,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IPreinscripcionService, PreinscripcionService>();
             services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
             services.AddScoped<IBecasService, BecasService>();
-            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();

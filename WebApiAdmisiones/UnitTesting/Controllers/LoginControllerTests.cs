@@ -14,14 +14,14 @@ namespace UnitTesting.Controllers
 {
     public class LoginControllerTests
     {
-        private static LoginController CrearController(
-            Mock<ILoginService> serviceMock,
+        private static AuthController CrearController(
+            Mock<IAuthService> serviceMock,
             ClaimsPrincipal? user = null,
             string? cookieHeader = null)
         {
-            var controller = new LoginController(
+            var controller = new AuthController(
                 serviceMock.Object,
-                new Mock<ILogger<LoginController>>().Object,
+                new Mock<ILogger<AuthController>>().Object,
                 new Mock<ICurrentUserService>().Object)
             {
                 ControllerContext = new ControllerContext
@@ -42,7 +42,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_ReturnsOk()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var controller = CrearController(serviceMock);
 
             serviceMock.Setup(s => s.AutenticarUsuarioLDAPAsync(1, "pwd"))
@@ -56,7 +56,7 @@ namespace UnitTesting.Controllers
                         AccessToken = "access-token",
                         RefreshToken = "refresh-token"
                     },
-                    nameof(ILoginService.AutenticarUsuarioLDAPAsync)));
+                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
 
             var response = await controller.Login(new LoginRequest { CodigoPersona = 1, Password = "pwd" });
 
@@ -67,13 +67,13 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_WhenAuthenticationFails_ReturnsUnauthorized()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var controller = CrearController(serviceMock);
 
             serviceMock.Setup(s => s.AutenticarUsuarioLDAPAsync(1, "pwd"))
                 .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "ERR",
-                    nameof(ILoginService.AutenticarUsuarioLDAPAsync),
+                    nameof(IAuthService.AutenticarUsuarioLDAPAsync),
                     "Credenciales invalidas",
                     401));
 
@@ -86,7 +86,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public void Logout_ReturnsOk()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var controller = CrearController(serviceMock);
 
             var response = controller.Logout();
@@ -98,7 +98,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task RefreshToken_WhenUnauthorized_ReturnsUnauthorized()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var user = new ClaimsPrincipal(new ClaimsIdentity(
             [
                 new Claim(ClaimTypes.Name, "123")
@@ -111,7 +111,7 @@ namespace UnitTesting.Controllers
             serviceMock.Setup(s => s.RefrescarTokensAsync("refresh-token", "123"))
                 .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "ERR",
-                    nameof(ILoginService.RefrescarTokensAsync),
+                    nameof(IAuthService.RefrescarTokensAsync),
                     "Refresh invalido",
                     401));
 
@@ -124,13 +124,13 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task RefreshToken_WhenNotFound_ReturnsNotFound()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var controller = CrearController(serviceMock);
 
             serviceMock.Setup(s => s.RefrescarTokensAsync(null, null))
                 .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "ERR",
-                    nameof(ILoginService.RefrescarTokensAsync),
+                    nameof(IAuthService.RefrescarTokensAsync),
                     "Usuario no encontrado",
                     404));
 
@@ -143,13 +143,13 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task RefreshToken_WhenSuccessfulWithoutData_ReturnsOk()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var controller = CrearController(serviceMock);
 
             serviceMock.Setup(s => s.RefrescarTokensAsync(null, null))
                 .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
                     null,
-                    nameof(ILoginService.RefrescarTokensAsync)));
+                    nameof(IAuthService.RefrescarTokensAsync)));
 
             var response = await controller.RefreshToken();
 
@@ -160,7 +160,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task RefreshToken_WhenSuccessfulWithData_ReturnsOk()
         {
-            var serviceMock = new Mock<ILoginService>();
+            var serviceMock = new Mock<IAuthService>();
             var user = new ClaimsPrincipal(new ClaimsIdentity(
             [
                 new Claim(ClaimTypes.Name, "123")
@@ -178,7 +178,7 @@ namespace UnitTesting.Controllers
                         AccessToken = "new-access",
                         RefreshToken = "new-refresh"
                     },
-                    nameof(ILoginService.RefrescarTokensAsync)));
+                    nameof(IAuthService.RefrescarTokensAsync)));
 
             var response = await controller.RefreshToken();
 

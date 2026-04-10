@@ -9,11 +9,11 @@ namespace WebApiAdmisiones.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class LoginController(
-        ILoginService loginService,
-        ILogger<LoginController> logger,
+    public class AuthController(
+        IAuthService loginService,
+        ILogger<AuthController> logger,
         ICurrentUserService currentUser)
-        : ApiBaseController<LoginController>(logger, currentUser)
+        : ApiBaseController<AuthController>(logger, currentUser)
     {
         #region AUTH
 

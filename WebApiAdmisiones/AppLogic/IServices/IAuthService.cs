@@ -3,7 +3,7 @@ using Utilities;
 
 namespace AppLogic.IServices;
 
-public interface ILoginService
+public interface IAuthService
 {
     Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass);
     Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim);
