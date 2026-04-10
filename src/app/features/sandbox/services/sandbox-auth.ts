@@ -13,7 +13,6 @@ export interface SandboxLoginResponse {
 }
 
 export interface SandboxDocumentRecognitionRequest {
-  tipoDocumentoEsperado: string;
   tipoMime: string;
   archivoAdjunto: {
     nombreArchivo: string;
@@ -33,8 +32,6 @@ export interface SandboxDocumentRecognitionLine {
 export interface SandboxDocumentRecognitionData {
   modeloUtilizado?: string;
   versionApi?: string;
-  tipoDocumentoEsperado?: string;
-  tipoDocumentoDetectado?: string;
   textoCompleto?: string;
   cantidadPaginas?: number;
   anguloPaginaPrincipal?: number;

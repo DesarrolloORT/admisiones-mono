@@ -200,7 +200,6 @@ export class Sandbox {
     try {
       const fileBase64 = await this.readFileAsBase64(archivo);
       const payload: SandboxDocumentRecognitionRequest = {
-        tipoDocumentoEsperado: tipoDocumentoEsperado.trim(),
         tipoMime: tipoMime.trim(),
         archivoAdjunto: {
           nombreArchivo: archivo.name,

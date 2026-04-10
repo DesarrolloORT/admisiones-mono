@@ -54,18 +54,6 @@
         <section aria-label="Prueba de reconocimiento" class="recognition-layout">
           <form class="form recognition-form" novalidate [formGroup]="recognitionForm"
             (ngSubmit)="onRecognizeDocument()">
-            <label class="field" for="tipo-documento-esperado">
-              <span>Tipo de documento esperado</span>
-              <input formControlName="tipoDocumentoEsperado" id="tipo-documento-esperado" maxlength="100" type="text" />
-            </label>
-
-            <p class="error" role="alert" [hidden]="
-                !recognitionForm.controls.tipoDocumentoEsperado.touched
-                || !recognitionForm.controls.tipoDocumentoEsperado.invalid
-              ">
-              Ingresá un tipo de documento esperado válido.
-            </p>
-
             <label class="field" for="tipo-mime">
               <span>Tipo MIME</span>
               <input formControlName="tipoMime" id="tipo-mime" maxlength="100" type="text" />
@@ -107,7 +95,7 @@
 
             <p class="error" role="alert" [hidden]="!recognitionError()">{{ recognitionError() }}</p>
 
-            <button type="submit" [disabled]="recognitionForm.invalid || isRecognizing()">
+            <button type="submit" [disabled]="isRecognizing()">
               {{ isRecognizing() ? 'Reconociendo...' : 'Probar reconocimiento' }}
             </button>
           </form>
