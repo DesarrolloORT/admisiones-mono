@@ -121,9 +121,8 @@ public class AuthService : IAuthService
     /// Valida el refresh token contra la base de datos y genera nuevos tokens.
     /// </summary>
     /// <param name="refreshToken">Refresh token enviado por el cliente.</param>
-    /// <param name="codigoPersonaClaim">Código de persona extraído del access token actual.</param>
     /// <returns>OperationResult con los nuevos tokens generados.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken, string? codigoPersonaClaim)
+    public async Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken)
     {
         try
         {
@@ -138,23 +137,12 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // 2. Validar y parsear el código de persona
-            if (string.IsNullOrEmpty(codigoPersonaClaim) || !long.TryParse(codigoPersonaClaim, out var codigoPersona))
-            {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    "REFRESH_TOKEN_02",
-                    nameof(RefrescarTokensAsync),
-                    "Token de acceso inválido o expirado.",
-                    401,
-                    default!);
-            }
-
-            // 3. Validar refresh token en la base de datos
+            // 2. Resolver código de persona desde un refresh token válido
             var refreshTokenHash = _tokenService.HashToken(refreshToken);
-            var isValid = await _refreshTokenService.ValidateRefreshTokenAsync(
-                codigoPersona, "ADMISIONESWEB", refreshTokenHash);
+            var codigoPersona = await _refreshTokenService.GetCodigoPersonaByRefreshTokenAsync(
+                "ADMISIONESWEB", refreshTokenHash);
 
-            if (!isValid)
+            if (!codigoPersona.HasValue)
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "REFRESH_TOKEN_03",
@@ -164,9 +152,9 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // 4. Obtener persona de la base de datos
+            // 3. Obtener persona de la base de datos
             using var admisionesUow = _admisionesUowFactory.Create();
-            var persona = admisionesUow.Personas.GetByKey(codigoPersona);
+            var persona = admisionesUow.Personas.GetByKey(codigoPersona.Value);
 
             if (persona == null)
             {
@@ -178,20 +166,20 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // 5. Generar nuevos tokens
+            // 4. Generar nuevos tokens
             var newAccessToken = _tokenService.GenerateAccessToken(persona);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
             var newRefreshTokenHash = _tokenService.HashToken(newRefreshToken);
             var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
 
-            // 6. Guardar nuevo refresh token en la base de datos
+            // 5. Guardar nuevo refresh token en la base de datos
             await _refreshTokenService.SaveRefreshTokenAsync(
-                codigoPersona,
+                codigoPersona.Value,
                 "ADMISIONESWEB",
                 newRefreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
-            // 7. Crear respuesta con los nuevos tokens
+            // 6. Crear respuesta con los nuevos tokens
             var authResponse = new DtoAuthenticationResponse
             {
                 Persona = new DtoPersonaAuth

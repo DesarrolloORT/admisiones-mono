@@ -38,9 +38,18 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Success && result.Data != null)
             {
+
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.CodigoPersona);
+                }
+
+                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
+                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
+
                 // Establecer los tokens como cookies HttpOnly seguras.
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, 15);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, 7);
+                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
+                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
 
                 // No retornar los tokens en el body.
                 // Los tokens ya fueron establecidos como cookies HttpOnly.
@@ -83,11 +92,27 @@ namespace WebApiAdmisiones.Controllers
             // 1. Leer refresh token de la cookie (HTTP concern).
             var refreshToken = CookieAuthenticationHelper.GetRefreshTokenFromCookie(HttpContext);
 
-            // 2. Obtener código de persona del token actual (HTTP concern).
-            var codigoPersonaClaim = User.Identity?.Name;
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                var errorResult = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    errorCode: "AUTH_RT_01",
+                    originMethod: nameof(RefreshToken),
+                    message: "Refresh token no encontrado en las cookies.",
+                    httpCode: 401);
+                CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
+                return Unauthorized(errorResult);
+            }
 
-            // 3. Delegar toda la lógica de negocio al servicio.
-            var result = await loginService.RefrescarTokensAsync(refreshToken, codigoPersonaClaim);
+
+            // 2. Delegar toda la lógica de negocio al servicio.
+            var result = await loginService.RefrescarTokensAsync(refreshToken);
+
+            if (!result.Success)
+            {
+                // Limpiar cookies si falló la renovación
+                CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
+                return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
+            }
 
             if (!result.Success)
             {
@@ -96,11 +121,14 @@ namespace WebApiAdmisiones.Controllers
                 return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
             }
 
-            // 4. Establecer cookies con los nuevos tokens (HTTP concern).
+            // 3. Establecer cookies con los nuevos tokens (HTTP concern)
             if (result.Data != null)
             {
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, 15);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, 7);
+                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
+                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
+
+                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
+                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
             }
 
             return Ok(result);

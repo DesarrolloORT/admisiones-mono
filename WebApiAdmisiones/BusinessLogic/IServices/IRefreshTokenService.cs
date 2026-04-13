@@ -22,11 +22,18 @@ namespace BusinessLogic.IServices
         /// <summary>
         /// Valida si un refresh token es válido y está activo.
         /// </summary>
-        /// <param name="codigoPersona">Código de la persona.</param>
         /// <param name="sistema">Sistema del token.</param>
         /// <param name="tokenHash">Hash del refresh token a validar.</param>
         /// <returns>True si el token es válido y activo, false en caso contrario.</returns>
-        Task<bool> ValidateRefreshTokenAsync(long codigoPersona, string sistema, string tokenHash);
+        Task<bool> ValidateRefreshTokenAsync(string sistema, string tokenHash);
+
+        /// <summary>
+        /// Obtiene el código de persona asociado a un refresh token activo y no expirado.
+        /// </summary>
+        /// <param name="sistema">Sistema del token.</param>
+        /// <param name="tokenHash">Hash del refresh token.</param>
+        /// <returns>Código de persona si existe un token válido, null en caso contrario.</returns>
+        Task<long?> GetCodigoPersonaByRefreshTokenAsync(string sistema, string tokenHash);
 
         /// <summary>
         /// Revoca un refresh token específico.
