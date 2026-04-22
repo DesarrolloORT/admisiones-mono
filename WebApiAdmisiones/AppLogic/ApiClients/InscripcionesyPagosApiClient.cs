@@ -68,12 +68,12 @@ namespace AppLogic.ApiClients
     /// Cliente tipado para la API de Inscripciones y Pagos.
     /// El ServiceAuthenticationHandler inyecta automáticamente los tokens en TODOS los métodos.
     /// </summary>
-    public class InscripcionesApiClient
+    public class InscripcionesyPagosApiClient
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<InscripcionesApiClient> _logger;
+        private readonly ILogger<InscripcionesyPagosApiClient> _logger;
 
-        public InscripcionesApiClient(HttpClient httpClient, ILogger<InscripcionesApiClient> logger)
+        public InscripcionesyPagosApiClient(HttpClient httpClient, ILogger<InscripcionesyPagosApiClient> logger)
         {
             _httpClient = httpClient;
             _logger = logger;

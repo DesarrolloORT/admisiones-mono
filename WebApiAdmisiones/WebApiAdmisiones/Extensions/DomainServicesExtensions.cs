@@ -106,6 +106,9 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
 
+            // Servicio de ejemplo para consultar inscripciones desde API interna
+            services.AddScoped<IConsultarInscripcionesService, ConsultarInscripcionesService>();
+
             // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));

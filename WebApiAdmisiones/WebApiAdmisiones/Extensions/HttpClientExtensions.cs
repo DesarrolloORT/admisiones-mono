@@ -17,7 +17,7 @@ namespace WebApiAdmisiones.Extensions
         /// Configura el cliente HTTP para la API de Inscripciones y Pagos.
         /// SIN políticas de reintento: las inscripciones deben ser operaciones atómicas (funciona o falla, sin duplicados).
         /// </summary>
-        public static IServiceCollection AddInscripcionesApiClient(
+        public static IServiceCollection AddInscripcionesyPagosApiClient(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -37,7 +37,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // 3. Configurar HttpClient tipado SIN políticas de reintento
-            services.AddHttpClient<InscripcionesApiClient>(client =>
+            services.AddHttpClient<InscripcionesyPagosApiClient>(client =>
             {
                 var baseUrl = configuration["ApiClients:InscripcionesYPagos:BaseUrl"]
                     ?? throw new InvalidOperationException(
