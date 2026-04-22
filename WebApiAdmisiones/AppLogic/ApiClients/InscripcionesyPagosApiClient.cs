@@ -10,27 +10,62 @@ namespace AppLogic.ApiClients
 {
     #region DTOs - Inscripciones
 
-    public class InscripcionRequest
+    /// <summary>
+    /// DTO para turno (usado en confirmar preinscripción).
+    /// </summary>
+    public class DTOTurno
     {
-        public long CodigoPersona { get; set; }
-        public long CodigoCarrera { get; set; }
-        public int Anio { get; set; }
-        public string? Observaciones { get; set; }
+        public long IdTurno { get; set; }
+        public string? NombreTurno { get; set; }
     }
 
-    public class InscripcionResponse
+    /// <summary>
+    /// Request para confirmar una preinscripción.
+    /// Corresponde a: POST /ConfirmarPreInscripcion
+    /// </summary>
+    public class ConfirmarPreInscripcionRequest
     {
-        public long CodigoInscripcion { get; set; }
-        public string Estado { get; set; } = string.Empty;
-        public DateTime FechaCreacion { get; set; }
-        public long CodigoPersona { get; set; }
-        public long CodigoCarrera { get; set; }
-        public int Anio { get; set; }
+        public DTOTurno Turno { get; set; } = new();
+        public string TipoInscripcion { get; set; } = string.Empty;
+        public long IdProducto { get; set; }
+        public long IdProceso { get; set; }
+        public long IdOfertaSeleccionada { get; set; }
     }
 
-    public class InscripcionesListResponse
+    /// <summary>
+    /// Response de confirmar preinscripción.
+    /// </summary>
+    public class ConfirmarPreInscripcionResponse
     {
-        public List<InscripcionResponse> Inscripciones { get; set; } = new();
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public long? IdInscripcion { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para oferta de inscripción (usado en los GET de ofertas).
+    /// </summary>
+    public class OfertaInscripcionDTO
+    {
+        public long IdOferta { get; set; }
+        public long IdProducto { get; set; }
+        public long IdTurno { get; set; }
+        public string? NombreTurno { get; set; }
+        public long? IdComienzo { get; set; }
+        public string? NombreComienzo { get; set; }
+        public long? IdProceso { get; set; }
+        public string? NombreProceso { get; set; }
+        public int? CuposDisponibles { get; set; }
+        public bool Disponible { get; set; }
+    }
+
+    /// <summary>
+    /// Response para lista de ofertas.
+    /// Corresponde a: GET /OfertasParaInscripcionAdmisiones y GET /OfertasParaInscripcionAdmisionesConProceso
+    /// </summary>
+    public class OfertasInscripcionResponse
+    {
+        public List<OfertaInscripcionDTO> Ofertas { get; set; } = new();
         public int TotalCount { get; set; }
     }
 
@@ -38,28 +73,105 @@ namespace AppLogic.ApiClients
 
     #region DTOs - Pagos
 
-    public class PagoRequest
+    /// <summary>
+    /// DTO para par clave-valor usado en carritos de pago.
+    /// Usado en: POST /Pagos/Carritos/{id}/Pagar y POST /Carritos/UltCrearFactura
+    /// </summary>
+    public class ClaveValorCarrito
     {
-        public long CodigoInscripcion { get; set; }
-        public decimal Monto { get; set; }
-        public string MetodoPago { get; set; } = string.Empty;
-        public string? Referencia { get; set; }
+        public string Clave { get; set; } = string.Empty;
+        public string Valor { get; set; } = string.Empty;
     }
 
-    public class PagoResponse
+    /// <summary>
+    /// Response de cuenta corriente.
+    /// Corresponde a: GET /api/Pagos/CtaCte
+    /// </summary>
+    public class CtaCteResponse
     {
-        public long CodigoPago { get; set; }
-        public long CodigoInscripcion { get; set; }
+        public decimal SaldoActual { get; set; }
+        public decimal SaldoVencido { get; set; }
+        public decimal SaldoAVencer { get; set; }
+        public List<MovimientoCtaCte> Movimientos { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Movimiento de cuenta corriente.
+    /// </summary>
+    public class MovimientoCtaCte
+    {
+        public DateTime Fecha { get; set; }
+        public string? Concepto { get; set; }
+        public decimal Debe { get; set; }
+        public decimal Haber { get; set; }
+        public decimal Saldo { get; set; }
+    }
+
+    /// <summary>
+    /// Response de cursos a pagar.
+    /// Corresponde a: GET /api/Pagos
+    /// </summary>
+    public class CursosPagosResponse
+    {
+        public List<CursoPago> Cursos { get; set; } = new();
+        public decimal MontoTotal { get; set; }
+    }
+
+    /// <summary>
+    /// DTO de curso para pago.
+    /// </summary>
+    public class CursoPago
+    {
+        public long IdCurso { get; set; }
+        public string? NombreCurso { get; set; }
         public decimal Monto { get; set; }
-        public string Estado { get; set; } = string.Empty;
-        public DateTime FechaPago { get; set; }
+        public string? Estado { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+    }
+
+    /// <summary>
+    /// Response de pago realizado.
+    /// Corresponde a: POST /Pagos/Carritos/{id}/Pagar
+    /// </summary>
+    public class PagoCarritoResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public long? IdTransaccion { get; set; }
         public string? NumeroComprobante { get; set; }
     }
 
-    public class PagosListResponse
+    /// <summary>
+    /// Response de creación de factura.
+    /// Corresponde a: POST /Carritos/UltCrearFactura
+    /// </summary>
+    public class CrearFacturaResponse
     {
-        public List<PagoResponse> Pagos { get; set; } = new();
-        public decimal TotalMonto { get; set; }
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public long? IdFactura { get; set; }
+        public string? NumeroFactura { get; set; }
+    }
+
+    /// <summary>
+    /// DTO de banco.
+    /// Corresponde a: GET /api/Pagos/Bancos
+    /// </summary>
+    public class BancoDTO
+    {
+        public long IdBanco { get; set; }
+        public string? NombreBanco { get; set; }
+        public string? Codigo { get; set; }
+        public bool Activo { get; set; }
+    }
+
+    /// <summary>
+    /// Response de lista de bancos.
+    /// </summary>
+    public class BancosResponse
+    {
+        public List<BancoDTO> Bancos { get; set; } = new();
+        public int TotalCount { get; set; }
     }
 
     #endregion
@@ -81,59 +193,151 @@ namespace AppLogic.ApiClients
 
         #region Inscripciones
 
-        public async Task<OperationResult<InscripcionesListResponse>> ObtenerInscripcionesAsync(long codigoPersona)
+        /// <summary>
+        /// Confirma una preinscripción en la API de Inscripciones y Pagos.
+        /// Corresponde a: POST /ConfirmarPreInscripcion
+        /// </summary>
+        /// <param name="request">Datos de la preinscripción a confirmar</param>
+        /// <returns>Resultado de la confirmación</returns>
+        public async Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcionAsync(
+            ConfirmarPreInscripcionRequest request)
         {
             try
             {
-                _logger.LogInformation("Consultando inscripciones para persona {CodigoPersona}", codigoPersona);
-                var response = await _httpClient.GetAsync($"/api/inscripciones?codigoPersona={codigoPersona}");
+                _logger.LogInformation(
+                    "Confirmando preinscripción - Producto: {IdProducto}, Proceso: {IdProceso}, Oferta: {IdOferta}",
+                    request.IdProducto,
+                    request.IdProceso,
+                    request.IdOfertaSeleccionada
+                );
+
+                var response = await _httpClient.PostAsJsonAsync("/ConfirmarPreInscripcion", request);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<InscripcionesListResponse>();
-                    return OperationResult<InscripcionesListResponse>.Ok(result!, nameof(ObtenerInscripcionesAsync));
+                    var result = await response.Content.ReadFromJsonAsync<ConfirmarPreInscripcionResponse>();
+                    return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
+                        result!,
+                        nameof(ConfirmarPreInscripcionAsync)
+                    );
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<InscripcionesListResponse>.IsFailed(
-                    "INSCRIPCIONES_GET_01",
-                    nameof(ObtenerInscripcionesAsync),
-                    $"Error al obtener inscripciones: {response.StatusCode} - {errorContent}",
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                    "CONFIRMAR_PREINSCRIPCION_01",
+                    nameof(ConfirmarPreInscripcionAsync),
+                    $"La API rechazó la confirmación: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
                 );
             }
             catch (Exception ex)
             {
-                return HandleException<InscripcionesListResponse>(ex, nameof(ObtenerInscripcionesAsync));
+                return HandleException<ConfirmarPreInscripcionResponse>(ex, nameof(ConfirmarPreInscripcionAsync));
             }
         }
 
-        public async Task<OperationResult<InscripcionResponse>> CrearInscripcionAsync(InscripcionRequest request)
+        /// <summary>
+        /// Obtiene las ofertas disponibles para inscripción en admisiones (sin proceso).
+        /// Corresponde a: GET /OfertasParaInscripcionAdmisiones
+        /// </summary>
+        /// <param name="idProducto">ID del producto</param>
+        /// <param name="idComienzo">ID del comienzo</param>
+        /// <param name="idTurno">ID del turno</param>
+        /// <returns>Lista de ofertas disponibles</returns>
+        public async Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaInscripcionAdmisionesAsync(
+            long idProducto,
+            long idComienzo,
+            long idTurno)
         {
             try
             {
-                _logger.LogInformation("Delegando creación de inscripción para persona {CodigoPersona}", request.CodigoPersona);
-                var response = await _httpClient.PostAsJsonAsync("/api/inscripciones", request);
+                _logger.LogInformation(
+                    "Obteniendo ofertas para inscripción - Producto: {IdProducto}, Comienzo: {IdComienzo}, Turno: {IdTurno}",
+                    idProducto,
+                    idComienzo,
+                    idTurno
+                );
+
+                var url = $"/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}&idTurno={idTurno}";
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<InscripcionResponse>();
-                    return OperationResult<InscripcionResponse>.Ok(result!, nameof(CrearInscripcionAsync));
+                    var result = await response.Content.ReadFromJsonAsync<OfertasInscripcionResponse>();
+                    return OperationResult<OfertasInscripcionResponse>.Ok(
+                        result!,
+                        nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
+                    );
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<InscripcionResponse>.IsFailed(
-                    "INSCRIPCIONES_POST_01",
-                    nameof(CrearInscripcionAsync),
-                    $"La API rechazó la solicitud: {response.StatusCode} - {errorContent}",
+                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                    "OFERTAS_INSCRIPCION_01",
+                    nameof(ObtenerOfertasParaInscripcionAdmisionesAsync),
+                    $"Error al obtener ofertas: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
                 );
             }
             catch (Exception ex)
             {
-                return HandleException<InscripcionResponse>(ex, nameof(CrearInscripcionAsync));
+                return HandleException<OfertasInscripcionResponse>(
+                    ex,
+                    nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
+                );
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las ofertas disponibles para inscripción en admisiones con proceso.
+        /// Corresponde a: GET /OfertasParaInscripcionAdmisionesConProceso
+        /// </summary>
+        /// <param name="idProducto">ID del producto</param>
+        /// <param name="idProceso">ID del proceso</param>
+        /// <param name="idTurno">ID del turno</param>
+        /// <returns>Lista de ofertas disponibles</returns>
+        public async Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(
+            long idProducto,
+            long idProceso,
+            long idTurno)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Obteniendo ofertas para inscripción con proceso - Producto: {IdProducto}, Proceso: {IdProceso}, Turno: {IdTurno}",
+                    idProducto,
+                    idProceso,
+                    idTurno
+                );
+
+                var url = $"/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}&idTurno={idTurno}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OfertasInscripcionResponse>();
+                    return OperationResult<OfertasInscripcionResponse>.Ok(
+                        result!,
+                        nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync)
+                    );
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                    "OFERTAS_INSCRIPCION_PROCESO_01",
+                    nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync),
+                    $"Error al obtener ofertas con proceso: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!
+                );
+            }
+            catch (Exception ex)
+            {
+                return HandleException<OfertasInscripcionResponse>(
+                    ex,
+                    nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync)
+                );
             }
         }
 
@@ -141,51 +345,110 @@ namespace AppLogic.ApiClients
 
         #region Pagos
 
-        public async Task<OperationResult<PagosListResponse>> ObtenerPagosAsync(long codigoPersona)
+        /// <summary>
+        /// Obtiene el estado de cuenta corriente.
+        /// Corresponde a: GET /api/Pagos/CtaCte
+        /// </summary>
+        /// <param name="estado">Estado a consultar (ej: "SALDO_ACTUAL_Y_...")</param>
+        /// <returns>Información de cuenta corriente</returns>
+        public async Task<OperationResult<CtaCteResponse>> ObtenerCtaCteAsync(string estado = "SALDO_ACTUAL_Y_MOVIMIENTOS")
         {
             try
             {
-                _logger.LogInformation("Consultando pagos para persona {CodigoPersona}", codigoPersona);
-                var response = await _httpClient.GetAsync($"/api/pagos?codigoPersona={codigoPersona}");
+                _logger.LogInformation("Consultando cuenta corriente con estado: {Estado}", estado);
+
+                var url = $"/api/Pagos/CtaCte?estado={Uri.EscapeDataString(estado)}";
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<PagosListResponse>();
-                    return OperationResult<PagosListResponse>.Ok(result!, nameof(ObtenerPagosAsync));
+                    var result = await response.Content.ReadFromJsonAsync<CtaCteResponse>();
+                    return OperationResult<CtaCteResponse>.Ok(result!, nameof(ObtenerCtaCteAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<PagosListResponse>.IsFailed(
-                    "PAGOS_GET_01",
-                    nameof(ObtenerPagosAsync),
-                    $"Error al obtener pagos: {response.StatusCode} - {errorContent}",
+                return OperationResult<CtaCteResponse>.IsFailed(
+                    "CTACTE_GET_01",
+                    nameof(ObtenerCtaCteAsync),
+                    $"Error al obtener cuenta corriente: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
                 );
             }
             catch (Exception ex)
             {
-                return HandleException<PagosListResponse>(ex, nameof(ObtenerPagosAsync));
+                return HandleException<CtaCteResponse>(ex, nameof(ObtenerCtaCteAsync));
             }
         }
 
-        public async Task<OperationResult<PagoResponse>> RegistrarPagoAsync(PagoRequest request)
+        /// <summary>
+        /// Obtiene la lista de cursos pendientes de pago.
+        /// Corresponde a: GET /api/Pagos
+        /// </summary>
+        /// <returns>Lista de cursos con sus montos a pagar</returns>
+        public async Task<OperationResult<CursosPagosResponse>> ObtenerCursosPagosAsync()
         {
             try
             {
-                _logger.LogInformation("Registrando pago de ${Monto} para inscripción {CodigoInscripcion}", request.Monto, request.CodigoInscripcion);
-                var response = await _httpClient.PostAsJsonAsync("/api/pagos", request);
+                _logger.LogInformation("Consultando cursos pendientes de pago");
+
+                var response = await _httpClient.GetAsync("/api/Pagos");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<PagoResponse>();
-                    return OperationResult<PagoResponse>.Ok(result!, nameof(RegistrarPagoAsync));
+                    var result = await response.Content.ReadFromJsonAsync<CursosPagosResponse>();
+                    return OperationResult<CursosPagosResponse>.Ok(result!, nameof(ObtenerCursosPagosAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<PagoResponse>.IsFailed(
-                    "PAGOS_POST_01",
-                    nameof(RegistrarPagoAsync),
+                return OperationResult<CursosPagosResponse>.IsFailed(
+                    "CURSOS_PAGOS_GET_01",
+                    nameof(ObtenerCursosPagosAsync),
+                    $"Error al obtener cursos a pagar: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!
+                );
+            }
+            catch (Exception ex)
+            {
+                return HandleException<CursosPagosResponse>(ex, nameof(ObtenerCursosPagosAsync));
+            }
+        }
+
+        /// <summary>
+        /// Procesa un pago de carrito.
+        /// Corresponde a: POST /OMTSecure/Pagos/Carritos/{id}/Pagar
+        /// </summary>
+        /// <param name="idCarrito">ID del carrito a pagar</param>
+        /// <param name="carritos">Lista de pares clave-valor con datos del carrito</param>
+        /// <param name="tipoPago">Tipo de pago (ej: "PAGO_CUENTA_CORRIENTE_...")</param>
+        /// <returns>Resultado del pago procesado</returns>
+        public async Task<OperationResult<PagoCarritoResponse>> PagarCarritoAsync(
+            long idCarrito,
+            List<ClaveValorCarrito> carritos,
+            string tipoPago = "PAGO_CUENTA_CORRIENTE")
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Procesando pago de carrito {IdCarrito} con tipo de pago: {TipoPago}",
+                    idCarrito,
+                    tipoPago
+                );
+
+                var url = $"/OMTSecure/Pagos/Carritos/{idCarrito}/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var response = await _httpClient.PostAsJsonAsync(url, carritos);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<PagoCarritoResponse>();
+                    return OperationResult<PagoCarritoResponse>.Ok(result!, nameof(PagarCarritoAsync));
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<PagoCarritoResponse>.IsFailed(
+                    "PAGAR_CARRITO_01",
+                    nameof(PagarCarritoAsync),
                     $"La API rechazó el pago: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
@@ -193,7 +456,84 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<PagoResponse>(ex, nameof(RegistrarPagoAsync));
+                return HandleException<PagoCarritoResponse>(ex, nameof(PagarCarritoAsync));
+            }
+        }
+
+        /// <summary>
+        /// Crea una factura para los carritos especificados.
+        /// Corresponde a: POST /Carritos/UltCrearFactura
+        /// </summary>
+        /// <param name="carritos">Lista de pares clave-valor con datos de los carritos</param>
+        /// <param name="tipoPago">Tipo de pago (ej: "EANRED_...")</param>
+        /// <returns>Resultado de la creación de factura</returns>
+        public async Task<OperationResult<CrearFacturaResponse>> CrearFacturaAsync(
+            List<ClaveValorCarrito> carritos,
+            string tipoPago = "EANRED")
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Creando factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
+                    carritos.Count,
+                    tipoPago
+                );
+
+                var url = $"/Carritos/UltCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var response = await _httpClient.PostAsJsonAsync(url, carritos);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<CrearFacturaResponse>();
+                    return OperationResult<CrearFacturaResponse>.Ok(result!, nameof(CrearFacturaAsync));
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<CrearFacturaResponse>.IsFailed(
+                    "CREAR_FACTURA_01",
+                    nameof(CrearFacturaAsync),
+                    $"La API rechazó la creación de factura: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!
+                );
+            }
+            catch (Exception ex)
+            {
+                return HandleException<CrearFacturaResponse>(ex, nameof(CrearFacturaAsync));
+            }
+        }
+
+        /// <summary>
+        /// Obtiene la lista de bancos disponibles.
+        /// Corresponde a: GET /api/Pagos/Bancos
+        /// </summary>
+        /// <returns>Lista de bancos activos</returns>
+        public async Task<OperationResult<BancosResponse>> ObtenerBancosAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Consultando lista de bancos disponibles");
+
+                var response = await _httpClient.GetAsync("/api/Pagos/Bancos");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<BancosResponse>();
+                    return OperationResult<BancosResponse>.Ok(result!, nameof(ObtenerBancosAsync));
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<BancosResponse>.IsFailed(
+                    "BANCOS_GET_01",
+                    nameof(ObtenerBancosAsync),
+                    $"Error al obtener bancos: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!
+                );
+            }
+            catch (Exception ex)
+            {
+                return HandleException<BancosResponse>(ex, nameof(ObtenerBancosAsync));
             }
         }
 
