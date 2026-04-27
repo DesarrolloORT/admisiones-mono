@@ -40,7 +40,7 @@ namespace AppLogic.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var secretKey = ObtenerVariableEntornoRequerida("SERVICE_TOKEN_SECRET_KEY");
+            var secretKey = ObtenerVariableEntornoRequerida("SECRET_KEY_API_INSCR_PAGOS");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

@@ -211,7 +211,7 @@ namespace AppLogic.ApiClients
                     request.IdOfertaSeleccionada
                 );
 
-                var response = await _httpClient.PostAsJsonAsync("/ConfirmarPreInscripcion", request);
+                var response = await _httpClient.PostAsJsonAsync("ORTSecure/Inscripciones/ConfirmarPreInscripcion", request);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -259,7 +259,7 @@ namespace AppLogic.ApiClients
                     idTurno
                 );
 
-                var url = $"/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}&idTurno={idTurno}";
+                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}&idTurno={idTurno}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -311,7 +311,7 @@ namespace AppLogic.ApiClients
                     idTurno
                 );
 
-                var url = $"/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}&idTurno={idTurno}";
+                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}&idTurno={idTurno}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -357,7 +357,7 @@ namespace AppLogic.ApiClients
             {
                 _logger.LogInformation("Consultando cuenta corriente con estado: {Estado}", estado);
 
-                var url = $"/api/Pagos/CtaCte?estado={Uri.EscapeDataString(estado)}";
+                var url = $"ORTSecure/Pagos/CtaCte?estado={Uri.EscapeDataString(estado)}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -392,7 +392,7 @@ namespace AppLogic.ApiClients
             {
                 _logger.LogInformation("Consultando cursos pendientes de pago");
 
-                var response = await _httpClient.GetAsync("/api/Pagos");
+                var response = await _httpClient.GetAsync("ORTSecure/Pagos/Carritos");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -436,7 +436,7 @@ namespace AppLogic.ApiClients
                     tipoPago
                 );
 
-                var url = $"/OMTSecure/Pagos/Carritos/{idCarrito}/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var url = $"/ORTSecure/Pagos/Carritos/{idCarrito}/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
 
                 if (response.IsSuccessStatusCode)
@@ -479,7 +479,7 @@ namespace AppLogic.ApiClients
                     tipoPago
                 );
 
-                var url = $"/Carritos/UltCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var url = $"ORTSecure/Pagos/Carritos/UltCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
 
                 if (response.IsSuccessStatusCode)
@@ -514,7 +514,7 @@ namespace AppLogic.ApiClients
             {
                 _logger.LogInformation("Consultando lista de bancos disponibles");
 
-                var response = await _httpClient.GetAsync("/api/Pagos/Bancos");
+                var response = await _httpClient.GetAsync("ORTSecure/Pagos/Bancos");
 
                 if (response.IsSuccessStatusCode)
                 {
