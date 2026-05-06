@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
-using Microsoft.OpenApi.Models;
 using WebApiAdmisiones.Extensions;
 using WebApiAdmisiones.Security;
 
@@ -36,32 +35,26 @@ builder.WebHost.ConfigureKestrelSecurity();
 builder.Services.AddApiControllers();
 
 // Swagger + JWT Security
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddSwaggerGen(static options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    const string schemeId = "Bearer";
+
+    options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
         Description = "Por favor ingrese el token JWT en el formato: Bearer {token}"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
+            [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>()
         }
-    });
+    );
 });
 
 // --------------------------------------------------------------------------
