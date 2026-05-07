@@ -67,17 +67,22 @@ builder.Services.AddAuthorization();
 builder.Services.AddDomainServices(builder.Configuration, builder.Environment);
 
 // --------------------------------------------------------------------------
-// 5. CORS
+// 5. Cliente HTTP para API de Inscripciones y Pagos
+// --------------------------------------------------------------------------
+builder.Services.AddInscripcionesyPagosApiClient(builder.Configuration);
+
+// --------------------------------------------------------------------------
+// 6. CORS
 // --------------------------------------------------------------------------
 builder.Services.AddCorsPolicy();
 
 // --------------------------------------------------------------------------
-// 6. Build Application
+// 7. Build Application
 // --------------------------------------------------------------------------
 var app = builder.Build();
 
 // --------------------------------------------------------------------------
-// 7. Configure HTTP Pipeline
+// 8. Configure HTTP Pipeline
 // --------------------------------------------------------------------------
 app.ConfigureMiddlewarePipeline(builder.Configuration);
 
