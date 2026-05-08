@@ -21,12 +21,22 @@ namespace WebApiAdmisiones.Controllers
         : ApiBaseController<RegistroController>(logger, currentUser)
     {
         [AllowAnonymous]
-        [HttpGet("Paises")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
-        public IActionResult ObtenerPaises()
+        [HttpPost("EvaluarDocumento")]
+        [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 400)]
+        public async Task<IActionResult> EvaluarDocumento([FromBody] RegistroEvaluarDocumentoRequest request)
         {
-            var result = registroService.ObtenerPaises();
+            var result = await registroService.EvaluarDocumentoAsync(request);
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Confirmar")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        public async Task<IActionResult> Confirmar([FromBody] RegistroConfirmarRequest request)
+        {
+            var result = await registroService.ConfirmarRegistroAsync(request);
             return ValidateResponse(result);
         }
 
@@ -41,12 +51,12 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("ProcesosHabilitadosPorProducto")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProcesoDevart>>), 400)]
-        public IActionResult ObtenerProcesosHabilitadosPorProducto([FromQuery] long idProducto)
+        [HttpGet("Comienzos")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroComienzoResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroComienzoResponse>>), 400)]
+        public IActionResult ObtenerComienzos([FromQuery] long idCarrera)
         {
-            var result = registroService.ObtenerProcesosHabilitadosPorProducto(idProducto);
+            var result = registroService.ObtenerComienzos(idCarrera);
             return ValidateResponse(result);
         }
 
@@ -61,12 +71,12 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("ProductosVigentes")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
-        public IActionResult ObtenerProductosVigentes()
+        [HttpGet("Carreras")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroCarreraResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroCarreraResponse>>), 400)]
+        public IActionResult ObtenerCarreras()
         {
-            var result = registroService.ObtenerProductosVigentes();
+            var result = registroService.ObtenerCarreras();
             return ValidateResponse(result);
         }
     }

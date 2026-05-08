@@ -18,6 +18,15 @@ namespace DataAccess.DevartRepositories
             return objectSet.Count(p => p.CodigoPersona == codigoPersona) > 0;
         }
 
+        public virtual BusinessLogic.Entities.Persona GetByDocumento(string documento)
+        {
+            var normalized = documento?.Trim() ?? string.Empty;
+
+            return objectSet
+                .Include(p => p.Ciudad)
+                .FirstOrDefault(p => p.Documento != null && p.Documento.Trim() == normalized);
+        }
+
         /// <summary>
         /// Devuelve la persona con sus relaciones principales cargadas.
         /// </summary>

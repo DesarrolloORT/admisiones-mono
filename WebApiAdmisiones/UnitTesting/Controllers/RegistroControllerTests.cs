@@ -16,19 +16,41 @@ namespace UnitTesting.Controllers
     public class RegistroControllerTests
     {
         [Fact]
-        public void ObtenerPaises_ReturnsOk()
+        public async Task EvaluarDocumento_ReturnsOk()
         {
             var serviceMock = new Mock<IRegistroService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            var request = new RegistroEvaluarDocumentoRequest { TipoDocumento = "CI", Documento = "1234567-2" };
 
-            serviceMock.Setup(s => s.ObtenerPaises())
-                .Returns(OperationResult<IEnumerable<DtoPaisDevart>>.Ok(
-                    [new DtoPaisDevart { CodigoPais = 1, Nombre = "Uruguay" }],
-                    nameof(IRegistroService.ObtenerPaises)));
+            serviceMock.Setup(s => s.EvaluarDocumentoAsync(request))
+                .ReturnsAsync(OperationResult<RegistroEvaluacionResponse>.Ok(
+                    new RegistroEvaluacionResponse { RequiereAltaPersona = true },
+                    nameof(IRegistroService.EvaluarDocumentoAsync)));
 
-            var response = controller.ObtenerPaises();
+            var response = await controller.EvaluarDocumento(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task Confirmar_ReturnsOk()
+        {
+            var serviceMock = new Mock<IRegistroService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<RegistroController>>();
+            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            var request = new RegistroConfirmarRequest { TipoDocumento = "PS", Documento = "A123", CaptchaToken = "token" };
+
+            serviceMock.Setup(s => s.ConfirmarRegistroAsync(request))
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(IRegistroService.ConfirmarRegistroAsync),
+                    "Registro realizado correctamente."));
+
+            var response = await controller.Confirmar(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
@@ -73,49 +95,50 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public void ObtenerProcesosHabilitadosPorProducto_ReturnsOk()
+        public void ObtenerComienzos_ReturnsOk()
         {
             var serviceMock = new Mock<IRegistroService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerProcesosHabilitadosPorProducto(10))
-                .Returns(OperationResult<IEnumerable<DtoProcesoDevart>>.Ok(
-                    [new DtoProcesoDevart { IdProceso = 20, NombreProceso = "Marzo" }],
-                    nameof(IRegistroService.ObtenerProcesosHabilitadosPorProducto)));
+            serviceMock.Setup(s => s.ObtenerComienzos(10))
+                .Returns(OperationResult<IEnumerable<RegistroComienzoResponse>>.Ok(
+                    [new RegistroComienzoResponse { IdProceso = 20, NombreProceso = "Marzo" }],
+                    nameof(IRegistroService.ObtenerComienzos)));
 
-            var response = controller.ObtenerProcesosHabilitadosPorProducto(10);
+            var response = controller.ObtenerComienzos(10);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
 
         [Fact]
-        public void ObtenerProductosVigentes_ReturnsOk()
+        public void ObtenerCarreras_ReturnsOk()
         {
             var serviceMock = new Mock<IRegistroService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerProductosVigentes())
-                .Returns(OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(
-                    [new DtoProductoAdmisiones { IdProducto = 10, NombreProducto = "ATI" }],
-                    nameof(IRegistroService.ObtenerProductosVigentes)));
+            serviceMock.Setup(s => s.ObtenerCarreras())
+                .Returns(OperationResult<IEnumerable<RegistroCarreraResponse>>.Ok(
+                    [new RegistroCarreraResponse { IdProducto = 10, NombreProducto = "ATI" }],
+                    nameof(IRegistroService.ObtenerCarreras)));
 
-            var response = controller.ObtenerProductosVigentes();
+            var response = controller.ObtenerCarreras();
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
 
         [Theory]
-        [InlineData(nameof(RegistroController.ObtenerPaises))]
+        [InlineData(nameof(RegistroController.EvaluarDocumento))]
+        [InlineData(nameof(RegistroController.Confirmar))]
         [InlineData(nameof(RegistroController.ObtenerTipoDocumentos))]
-        [InlineData(nameof(RegistroController.ObtenerProcesosHabilitadosPorProducto))]
+        [InlineData(nameof(RegistroController.ObtenerComienzos))]
         [InlineData(nameof(RegistroController.ObtenerPaisesEstadosCiudades))]
-        [InlineData(nameof(RegistroController.ObtenerProductosVigentes))]
+        [InlineData(nameof(RegistroController.ObtenerCarreras))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)
         {
             var method = typeof(RegistroController).GetMethod(methodName);
