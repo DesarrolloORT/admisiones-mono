@@ -2,7 +2,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Utilities
+namespace AppLogic.Helpers
 {
     /// <summary>
     /// Servicios estáticos para validación y auditoría de datos de persona

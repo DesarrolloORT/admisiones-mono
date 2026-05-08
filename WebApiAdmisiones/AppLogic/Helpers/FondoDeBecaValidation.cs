@@ -1,10 +1,9 @@
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Utilities
+namespace AppLogic.Helpers
 {
     public static class FondoDeBecaValidation
     {
