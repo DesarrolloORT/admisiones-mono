@@ -9,7 +9,7 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 ## Flujo de desarrollo diario
 
 1. Crear una rama de trabajo.
-2. Adaptar la base del proyecto y luego implementar cambios en `src/` y sus tests asociados en `tests/`.
+2. Implementar cambios en `src/` y sus tests `.spec.ts` co-localizados.
 3. Ejecutar validaciones locales:
 
    ```bash
@@ -36,6 +36,15 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
   ```
 
 - `lint-staged` aplica `eslint --cache --fix .`, `prettier --write .` y `stylelint --fix **/*.scss` segun el tipo de archivo.
+
+## Estandares de codigo
+
+- Las features deben seguir el flujo `pages/components -> services -> endpoints -> HttpClient/API`.
+- Las pages, components y stores no deben importar endpoints ni `HttpClient` directamente.
+- Los servicios son la API interna que consumen los componentes de una feature.
+- Los endpoints son la unica capa de feature que resuelve URLs y usa `environment.API_URL`.
+
+Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 
 ## GitHub Actions y despliegues
 

@@ -102,6 +102,7 @@ Documentacion relacionada:
 - [docs/SETUP.md](docs/SETUP.md)
 - [docs/WORKFLOW.md](docs/WORKFLOW.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
 
 > [!IMPORTANT]
 > Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.
@@ -130,6 +131,9 @@ src/
   environments/
 tools/
 ```
+
+Las features deben seguir el flujo `pages/components -> services -> endpoints -> HttpClient/API`.
+Ver [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md) para las reglas de capas.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
@@ -188,4 +192,3 @@ La configuracion vive en `test-generator.config.json`:
 - Otras automatizaciones: soporte de releases, rollback y operaciones asociadas.
 
 Ver documentacion detallada en [docs/WORKFLOW.md](docs/WORKFLOW.md).
-

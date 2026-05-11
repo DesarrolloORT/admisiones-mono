@@ -8,7 +8,8 @@ Guia minima para contribuir cambios a esta plantilla y para adaptar correctament
 
 - Seguir la puesta en marcha de [docs/SETUP.md](docs/SETUP.md).
 - Trabajar sobre una rama dedicada.
-- Mantener los tests en `tests/` replicando la estructura de `src/app/`.
+- Mantener los tests `.spec.ts` co-localizados junto al archivo fuente.
+- Respetar las capas de feature documentadas en [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md).
 - Si el trabajo ocurre en un repositorio derivado, ajustar estas reglas al contexto real del proyecto.
 
 ## Validaciones locales
@@ -38,7 +39,8 @@ node scripts/testing/check-missing-tests.js && npx lint-staged
 Eso implica que:
 
 - no deberian subirse cambios con formato roto;
-- no deberian agregarse archivos fuente en `src/app/` sin su cobertura minima esperada en `tests/`.
+- no deberian agregarse archivos fuente en `src/app/` sin su cobertura minima esperada;
+- no deberian agregarse accesos HTTP desde pages, components, stores o services fuera de `endpoints/`.
 
 ## Pull requests
 

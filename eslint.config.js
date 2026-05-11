@@ -77,6 +77,74 @@ export default [
       '@angular-eslint/use-injectable-provided-in': ['error'],
     },
   },
+  {
+    files: ['src/app/features/**/*.ts'],
+    ignores: ['src/app/features/**/endpoints/**/*.ts', '**/*.spec.ts'],
+
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@angular/common/http',
+              message: 'Las features solo pueden usar HttpClient desde su capa endpoints/.',
+            },
+            {
+              name: 'src/environments/environment',
+              message: 'Las features solo pueden resolver configuracion de API desde endpoints/.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['**/environments/environment'],
+              message: 'Las features solo pueden resolver configuracion de API desde endpoints/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'src/app/features/**/pages/**/*.ts',
+      'src/app/features/**/components/**/*.ts',
+      'src/app/features/**/store/**/*.ts',
+    ],
+    ignores: ['**/*.spec.ts'],
+
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@angular/common/http',
+              message:
+                'Las pages, components y stores deben usar servicios de feature, no HttpClient.',
+            },
+            {
+              name: 'src/environments/environment',
+              message: 'Las pages, components y stores no deben resolver endpoints ni API_URL.',
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                '**/endpoints/**',
+                '../endpoints/**',
+                '../../endpoints/**',
+                'src/app/features/**/endpoints/**',
+                '**/environments/environment',
+              ],
+              message:
+                'Las pages, components y stores deben depender de services/, no de endpoints/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   ...compat
     .extends(
       'plugin:@angular-eslint/template/recommended',
