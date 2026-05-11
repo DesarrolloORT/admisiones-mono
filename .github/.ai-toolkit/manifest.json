@@ -1,7 +1,7 @@
 {
   "version": 3,
   "generatedBy": "@desarrolloort/ai-toolkit",
-  "generatedAt": "2026-04-09T20:27:33.584Z",
+  "generatedAt": "2026-05-11T18:37:39.017Z",
   "profiles": [
     "base",
     "angular",
@@ -21,7 +21,14 @@
       "scope": "toolkit",
       "sourceRelativePath": ".github/copilot-instructions.md",
       "kind": "instructions",
-      "checksum": "7b4d9fbd9d09a6465614925fe22c4c5f6c8b8e2b59dd87caa421855b576f8b2e"
+      "checksum": "19db5397b8b608abbd5cee19d1cc7b7f72bda40896f0a324d5c464d57efc6671"
+    },
+    ".agents/skills/response-economy/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".agents/skills/response-economy/SKILL.md",
+      "kind": "skill",
+      "checksum": "e918f29945fdc6d0187e9c7af2e5dc73035f9a6b3a67c998dc2d200c3738ac8d"
     },
     ".github/instructions/toolkit/documentation-strategy.instructions.md": {
       "profile": "base",
@@ -50,6 +57,13 @@
       "sourceRelativePath": ".github/instructions/toolkit/markdown.instructions.md",
       "kind": "instructions",
       "checksum": "b31769cfd20722fa5c778b4233d32ba7f6673555ba6178ad10278ca6b2017892"
+    },
+    ".github/instructions/toolkit/response-economy.instructions.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/instructions/toolkit/response-economy.instructions.md",
+      "kind": "instructions",
+      "checksum": "759635bd7b92324899f5cc1e5168d8e71e68c5f0c4728f62f3349f7b45c5ad20"
     },
     ".github/instructions/toolkit/secure-code.instructions.md": {
       "profile": "base",
@@ -113,6 +127,13 @@
       "sourceRelativePath": ".github/skills/toolkit/document-repo-foundation/SKILL.md",
       "kind": "skill",
       "checksum": "97406f91aa793ed7863d9a44e346e0e3875911a70845027affc2fa3682405bcd"
+    },
+    ".github/skills/toolkit/response-economy/SKILL.md": {
+      "profile": "base",
+      "scope": "toolkit",
+      "sourceRelativePath": ".github/skills/toolkit/response-economy/SKILL.md",
+      "kind": "skill",
+      "checksum": "1a64167691cc1c2fae710b5a6e003622b9a39d5e23edba0284ac101cff28411b"
     },
     ".github/instructions/toolkit/angular-cli.instructions.md": {
       "profile": "angular",
