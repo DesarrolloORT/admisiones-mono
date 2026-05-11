@@ -37,8 +37,8 @@
     "@angular/platform-browser": "^21.2.4",
     "@angular/platform-browser-dynamic": "^21.2.4",
     "@angular/router": "^21.2.4",
-    "@desarrolloort/components": "^1.1.5",
-    "@desarrolloort/design-system": "^0.3.0",
+    "@desarrolloort/components": "^2.0.2",
+    "@desarrolloort/design-system": "^1.1.0",
     "@desarrolloort/ngx-utils": "^2.1.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "moment": "^2.30.1",
@@ -100,4 +100,3 @@
     ]
   }
 }
-
