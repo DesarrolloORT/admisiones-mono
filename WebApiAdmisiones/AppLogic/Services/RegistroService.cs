@@ -21,22 +21,19 @@ namespace AppLogic.Services
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ILdap _ldap;
-        private readonly IRecaptchaService _recaptchaService;
 
         public RegistroService(
             ICatalogosService catalogosService,
             IPreinscripcionService preinscripcionService,
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
-            ILdap ldap,
-            IRecaptchaService recaptchaService)
+            ILdap ldap)
         {
             _catalogosService = catalogosService;
             _preinscripcionService = preinscripcionService;
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _ldap = ldap;
-            _recaptchaService = recaptchaService;
         }
 
         public async Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request)
@@ -72,7 +69,7 @@ namespace AppLogic.Services
                     400);
             }
 
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
@@ -117,16 +114,6 @@ namespace AppLogic.Services
                     400);
             }
 
-            var captcha = await _recaptchaService.ValidarAsync(request.CaptchaToken);
-            if (!captcha.Success)
-            {
-                return OperationResult<object?>.IsFailed(
-                    captcha.ErrorCode,
-                    nameof(ConfirmarRegistroAsync),
-                    captcha.Message,
-                    captcha.HttpCode);
-            }
-
             var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarRegistroAsync));
             if (!documentoValidation.Success)
             {
@@ -137,16 +124,16 @@ namespace AppLogic.Services
                     documentoValidation.HttpCode);
             }
 
-            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(_uowFactory, request, nameof(ConfirmarRegistroAsync));
+            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var uow = _uowFactory.Create();
+
+            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(uow, request, nameof(ConfirmarRegistroAsync));
             if (!commonValidation.Success)
             {
                 return commonValidation;
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
-
-            using var uow = _uowFactory.Create();
             var persona = tipoDocumento == "CI"
                 ? uow.Personas.GetByDocumento(documento)
                 : null;
@@ -208,7 +195,7 @@ namespace AppLogic.Services
 
         public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
         {
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
 
             var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
 
@@ -217,7 +204,7 @@ namespace AppLogic.Services
 
         public OperationResult<IEnumerable<RegistroCarreraResponse>> ObtenerCarreras()
         {
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
 
             var entidades = uow.Productos.GetProductosVigentesParaRegistro();
             var dtos = entidades.Select(MapCarrera);

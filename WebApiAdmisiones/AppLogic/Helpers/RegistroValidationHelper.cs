@@ -39,7 +39,7 @@ namespace AppLogic.Helpers
         }
 
         public static OperationResult<object?> ValidarProductoYProceso(
-            IUnitOfWorkFactory uowFactory,
+            IUnitOfWork uow,
             RegistroConfirmarRequest request,
             string method)
         {
@@ -52,7 +52,6 @@ namespace AppLogic.Helpers
                     400);
             }
 
-            using var uow = uowFactory.Create();
             if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto))
             {
                 return OperationResult<object?>.IsFailed(

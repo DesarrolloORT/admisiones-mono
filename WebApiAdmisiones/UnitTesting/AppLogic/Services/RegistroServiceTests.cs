@@ -6,6 +6,7 @@ using AppLogic.IServices;
 using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
+using ConnectionContext;
 using LdapService.Interfaces;
 using Moq;
 using Utilities;
@@ -19,8 +20,8 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IPreinscripcionService> _preinscripcionServiceMock;
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
+        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<ILdap> _ldapMock;
-        private readonly Mock<IRecaptchaService> _recaptchaServiceMock;
         private readonly RegistroService _service;
 
         public RegistroServiceTests()
@@ -29,15 +30,15 @@ namespace UnitTesting.AppLogic.Services
             _preinscripcionServiceMock = new Mock<IPreinscripcionService>();
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
+            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _ldapMock = new Mock<ILdap>();
-            _recaptchaServiceMock = new Mock<IRecaptchaService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new RegistroService(
                 _catalogosServiceMock.Object,
                 _preinscripcionServiceMock.Object,
                 _uowFactoryMock.Object,
-                _ldapMock.Object,
-                _recaptchaServiceMock.Object);
+                _dbConnectionContextMock.Object,
+                _ldapMock.Object);
         }
 
         [Fact]
@@ -139,34 +140,21 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarRegistro_CaptchaFails_ReturnsFailure()
+        public async Task ConfirmarRegistro_InvalidDocument_ReturnsFailure()
         {
-            _recaptchaServiceMock
-                .Setup(s => s.ValidarAsync("bad-token"))
-                .ReturnsAsync(OperationResult<bool>.IsFailed(
-                    "REG_CAPTCHA_05",
-                    nameof(IRecaptchaService.ValidarAsync),
-                    "Captcha inválido.",
-                    400,
-                    false));
-
             var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
             {
                 TipoDocumento = "CI",
-                Documento = "1234567-2",
-                CaptchaToken = "bad-token"
+                Documento = "1234567-1"
             });
 
             Assert.False(result.Success);
-            Assert.Equal("REG_CAPTCHA_05", result.ErrorCode);
+            Assert.Equal("REG_DOC_03", result.ErrorCode);
         }
 
         [Fact]
         public async Task ConfirmarRegistro_InvalidProduct_ReturnsFailure()
         {
-            _recaptchaServiceMock
-                .Setup(s => s.ValidarAsync("token"))
-                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(IRecaptchaService.ValidarAsync)));
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(99)).Returns(false);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
@@ -175,7 +163,6 @@ namespace UnitTesting.AppLogic.Services
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
-                CaptchaToken = "token",
                 IdProducto = 99,
                 IdProceso = 20
             });

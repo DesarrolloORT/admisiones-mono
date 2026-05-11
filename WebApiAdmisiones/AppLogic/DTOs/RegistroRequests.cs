@@ -16,7 +16,6 @@ namespace AppLogic.DTOs
     {
         public string TipoDocumento { get; set; } = string.Empty;
         public string Documento { get; set; } = string.Empty;
-        public string CaptchaToken { get; set; } = string.Empty;
         public long IdProducto { get; set; }
         public long IdProceso { get; set; }
         public string PrimerApellido { get; set; } = string.Empty;

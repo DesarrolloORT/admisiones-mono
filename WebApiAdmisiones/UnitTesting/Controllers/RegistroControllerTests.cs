@@ -42,7 +42,7 @@ namespace UnitTesting.Controllers
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new RegistroConfirmarRequest { TipoDocumento = "PS", Documento = "A123", CaptchaToken = "token" };
+            var request = new RegistroConfirmarRequest { TipoDocumento = "PS", Documento = "A123" };
 
             serviceMock.Setup(s => s.ConfirmarRegistroAsync(request))
                 .ReturnsAsync(OperationResult<object?>.IsSuccess(
@@ -147,6 +147,17 @@ namespace UnitTesting.Controllers
             Assert.Contains(
                 method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true),
                 attribute => attribute is AllowAnonymousAttribute);
+        }
+
+        [Fact]
+        public void Confirmar_HasRequireCaptcha()
+        {
+            var method = typeof(RegistroController).GetMethod(nameof(RegistroController.Confirmar));
+
+            Assert.NotNull(method);
+            Assert.Contains(
+                method!.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true),
+                attribute => attribute is RequireCaptchaAttribute);
         }
     }
 }
