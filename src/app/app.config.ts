@@ -6,15 +6,13 @@ import {
   provideAppInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
-import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
   withRouterConfig,
 } from '@angular/router';
-import { DateUtils, PaginationUtils, UiUtils } from '@desarrolloort/ngx-utils';
+import { UiUtils } from '@desarrolloort/ngx-utils';
 
 import { routes } from './app.routes';
 import { httpInterceptor } from './core/interceptors/http';
@@ -31,10 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => UiUtils.initializeMaterialSymbols()),
     provideHttpClient(withInterceptors([httpInterceptor])),
     { provide: LOCALE_ID, useValue: 'es-UY' },
-    { provide: MAT_DATE_LOCALE, useValue: 'es-UY' },
     { provide: LocationStrategy, useClass: PathLocationStrategy },
-    { provide: MatPaginatorIntl, useValue: PaginationUtils.createPaginatorIntl() },
-    { provide: MAT_DATE_FORMATS, useValue: DateUtils.getLocalizedDateFormats() },
   ],
 };
 
