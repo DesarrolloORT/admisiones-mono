@@ -3,8 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./features/sandbox/sandbox.routes').then(m => m.routes),
+    loadChildren: () => import('./features/auth/auth.routes').then(m => m.routes),
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: 'login' },
 ];
-

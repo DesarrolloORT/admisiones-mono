@@ -3,6 +3,7 @@
  */
 export const storageKeys = {
   token: 'auth-token',
+  session: 'auth-session',
   appVersion: 'app-version',
   //* agregar aquí las claves que quieras guardar en local storage
 };

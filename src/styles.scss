@@ -4,11 +4,11 @@
 @include mat.app-background();
 
 :root {
-  --mat-sys-primary: var(--ort-sys-primary);
-  --mat-sys-on-surface: var(--ort-sys-on-surface);
-  --mat-sys-surface: var(--ort-sys-surface);
-  --mat-sys-surface-variant: var(--ort-sys-surface-variant);
-  --mat-sys-corner-none: var(--ort-sys-shape-none);
+  --mat-sys-primary: var(--ort-sys-base-surface-primary-background);
+  --mat-sys-on-surface: var(--ort-sys-base-text-color-headline);
+  --mat-sys-surface: var(--ort-sys-base-surface-background);
+  --mat-sys-surface-variant: var(--ort-sys-base-surface-background-dim);
+  --mat-sys-corner-none: var(--ort-sys-border-radius-none);
 }
 
 html,
