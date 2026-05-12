@@ -23,7 +23,7 @@
     "test:only-changed": "npm run test:ci",
     "generate-tests": "node ./scripts/testing/generate-missing-tests.js",
     "check-missing-tests": "node ./scripts/testing/check-missing-tests.js",
-    "update-models": "java -jar tools/swagger-codegen-cli-2.4.32.jar generate -Dmodels -i [REPLACE WITH SWAGGER DOCS API URL] -l typescript-angular -o api -c tools/swagger-codegen-options.json -D io.swagger.parser.util.RemoteUrl.trustAll=true --additional-properties modelPropertyNaming=original"
+    "update-models": "node ./scripts/codegen/update-models.js"
   },
   "private": true,
   "dependencies": {
@@ -100,3 +100,4 @@
     ]
   }
 }
+
