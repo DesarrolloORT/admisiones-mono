@@ -1,18 +1,8 @@
-<app-auth-form
-  [cardSize]="cardSize()"
-  [description]="pageDescription()"
-  [heroDescription]="heroDescription()"
-  [heroIcon]="heroIcon()"
-  [heroTitle]="heroTitle()"
-  [stepLabel]="stepLabel()"
-  [stepTitle]="stepTitle()"
+<app-auth-form [cardSize]="cardSize()" [description]="pageDescription()" [heroDescription]="heroDescription()"
+  [heroIcon]="heroIcon()" [heroTitle]="heroTitle()" [stepLabel]="stepLabel()" [stepTitle]="stepTitle()"
   [title]="pageTitle()">
   @if (!isPersonalStep()) {
-  <form
-    class="auth-form-body"
-    novalidate
-    [formGroup]="identityForm"
-    (ngSubmit)="continueToPersonalData()">
+  <form class="auth-form-body" novalidate [formGroup]="identityForm" (ngSubmit)="continueToPersonalData()">
     <section class="auth-form-section">
       <section aria-labelledby="document-capture-title" class="auth-capture">
         <div>
@@ -20,19 +10,10 @@
           <p>Los campos se autocompletarán</p>
         </div>
 
-        <input
-          #documentFile
-          accept="image/*,application/pdf"
-          class="auth-hidden-file"
-          id="document-file"
-          type="file"
+        <input #documentFile accept="image/*,application/pdf" class="auth-hidden-file" id="document-file" type="file"
           (change)="onDocumentSelected($event)" />
 
-        <button
-          ort-tonal-button
-          type="button"
-          [disabled]="isRecognizingDocument()"
-          (click)="documentFile.click()">
+        <button ort-tonal-button type="button" [disabled]="isRecognizingDocument()" (click)="documentFile.click()">
           <ort-icon>center_focus_weak</ort-icon>
           {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
         </button>
@@ -65,11 +46,7 @@
 
       <ort-form-field>
         <ort-label>Nro. de documento</ort-label>
-        <input
-          ortInput
-          formControlName="documentNumber"
-          id="register-document-number"
-          inputmode="numeric"
+        <input ortInput formControlName="documentNumber" id="register-document-number" inputmode="numeric"
           type="text" />
         <ort-hint>Sin puntos ni guiones.</ort-hint>
         @if (identityForm.controls.documentNumber.touched &&
@@ -98,11 +75,7 @@
     </p>
   </form>
   } @else {
-  <form
-    class="auth-form-body"
-    novalidate
-    [formGroup]="personalForm"
-    (ngSubmit)="submitPersonalData()">
+  <form class="auth-form-body" novalidate [formGroup]="personalForm" (ngSubmit)="submitPersonalData()">
     <section aria-label="Datos personales" class="auth-form-grid">
       <ort-form-field>
         <ort-label>Primer nombre</ort-label>
@@ -118,7 +91,6 @@
         <input ortInput formControlName="secondName" id="second-name" type="text" />
         @if (personalForm.controls.secondName.touched &&
         personalForm.controls.secondName.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
@@ -196,13 +168,7 @@
           <span class="auth-phone-flag"></span>
           +598
         </span>
-        <input
-          ortInput
-          autocomplete="tel"
-          formControlName="phone"
-          id="phone"
-          inputmode="tel"
-          placeholder="00 000 000"
+        <input ortInput autocomplete="tel" formControlName="phone" id="phone" inputmode="tel" placeholder="00 000 000"
           type="tel" />
         @if (personalForm.controls.phone.touched &&
         personalForm.controls.phone.hasError('required')) {
@@ -224,12 +190,7 @@
 
       <ort-form-field>
         <ort-label>Confirmar e-mail</ort-label>
-        <input
-          ortInput
-          autocomplete="email"
-          formControlName="confirmEmail"
-          id="confirm-email"
-          type="email" />
+        <input ortInput autocomplete="email" formControlName="confirmEmail" id="confirm-email" type="email" />
         @if (personalForm.controls.confirmEmail.touched &&
         personalForm.controls.confirmEmail.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>

@@ -12,13 +12,13 @@ import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { AuthForm } from '../../components/auth-form/auth-form';
-import { AuthRegisterPersonalData } from '../../models/auth.interface';
 import { AuthRequestError } from '../../models/auth-error';
-import { DocumentRecognitionFields } from '../../models/document-recognition.interface';
+import { AuthRegisterPersonalData } from '../../models/auth.interface';
 import {
   DocumentRecognitionFileError,
   DocumentRecognitionRequestError,
 } from '../../models/document-recognition-error';
+import { DocumentRecognitionFields } from '../../models/document-recognition.interface';
 import { Auth } from '../../services/auth';
 import { DocumentRecognition } from '../../services/document-recognition';
 import { RegisterDocumentStore } from '../../store/register-document.store';
@@ -296,3 +296,4 @@ export class Register {
     return 'No se pudo precargar el documento.';
   }
 }
+
