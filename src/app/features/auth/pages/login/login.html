@@ -1,0 +1,65 @@
+<app-auth-form description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="school"
+  heroTitle="Tu red profesional comienza hoy." title="Comenzá tu camino en ORT">
+  <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="onSubmit()">
+    <section class="auth-form-section">
+      <ort-form-field>
+        <ort-label>Tipo de documento</ort-label>
+        <ort-select formControlName="documentType" id="login-document-type">
+          <ort-option value="CI">Cédula de identidad</ort-option>
+          <ort-option value="PASS">Pasaporte</ort-option>
+          <ort-option value="DNI">DNI</ort-option>
+        </ort-select>
+        @if (form.controls.documentType.touched && form.controls.documentType.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Nro. de documento</ort-label>
+        <input ortInput autocomplete="username" formControlName="documentNumber" id="login-document-number"
+          inputmode="numeric" type="text" />
+        <ort-hint>Sin puntos ni guiones</ort-hint>
+        @if (form.controls.documentNumber.touched && form.controls.documentNumber.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+        @if (form.controls.documentNumber.touched && form.controls.documentNumber.hasError('pattern')) {
+        <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Contraseña</ort-label>
+        <input ortInput [attr.autocomplete]="'current-password'" formControlName="password" id="login-password"
+          [type]="passwordInputType()" />
+        <button ortSuffix ort-icon-button aria-label="Mostrar u ocultar contraseña" type="button"
+          (click)="togglePasswordVisibility()">
+          <ort-icon>{{ passwordIcon() }}</ort-icon>
+        </button>
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <a class="auth-link" href="#" (click)="$event.preventDefault()">
+        ¿Olvidaste tu usuario o contraseña?
+      </a>
+    </section>
+
+    @if (error()) {
+    <p class="auth-error" role="alert">{{ error() }}</p>
+    }
+    @if (successMessage()) {
+    <output class="auth-success">{{ successMessage() }}</output>
+    }
+
+    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Iniciando...' : 'Iniciar sesión' }}
+    </button>
+
+    <section aria-label="Opciones de cuenta" class="auth-stack">
+      <div class="auth-divider">¿Aún no tenés cuenta?</div>
+      <button ort-secondary-button routerLink="/register">Crear cuenta</button>
+    </section>
+  </form>
+</app-auth-form>

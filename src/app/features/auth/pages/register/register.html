@@ -1,0 +1,261 @@
+<app-auth-form
+  [cardSize]="cardSize()"
+  [description]="pageDescription()"
+  [heroDescription]="heroDescription()"
+  [heroIcon]="heroIcon()"
+  [heroTitle]="heroTitle()"
+  [stepLabel]="stepLabel()"
+  [stepTitle]="stepTitle()"
+  [title]="pageTitle()">
+  @if (!isPersonalStep()) {
+  <form
+    class="auth-form-body"
+    novalidate
+    [formGroup]="identityForm"
+    (ngSubmit)="continueToPersonalData()">
+    <section class="auth-form-section">
+      <section aria-labelledby="document-capture-title" class="auth-capture">
+        <div>
+          <h2 id="document-capture-title">Ahorrá tiempo escaneando tu documento</h2>
+          <p>Los campos se autocompletarán</p>
+        </div>
+
+        <input
+          #documentFile
+          accept="image/*,application/pdf"
+          class="auth-hidden-file"
+          id="document-file"
+          type="file"
+          (change)="onDocumentSelected($event)" />
+
+        <button
+          ort-tonal-button
+          type="button"
+          [disabled]="isRecognizingDocument()"
+          (click)="documentFile.click()">
+          <ort-icon>center_focus_weak</ort-icon>
+          {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
+        </button>
+
+        <p class="auth-selected-file" [hidden]="!selectedFileName()">
+          Archivo seleccionado: {{ selectedFileName() }}
+        </p>
+
+        @if (recognitionSuccessMessage()) {
+        <output class="auth-success">{{ recognitionSuccessMessage() }}</output>
+        } @if (recognitionError()) {
+        <p class="auth-error" role="alert">{{ recognitionError() }}</p>
+        }
+      </section>
+
+      <div class="auth-divider">O ingresá tus datos manualmente</div>
+
+      <ort-form-field>
+        <ort-label>Tipo de documento</ort-label>
+        <ort-select formControlName="documentType" id="register-document-type">
+          <ort-option value="CI">Cédula de identidad</ort-option>
+          <ort-option value="PASS">Pasaporte</ort-option>
+          <ort-option value="DNI">DNI</ort-option>
+        </ort-select>
+        @if (identityForm.controls.documentType.touched &&
+        identityForm.controls.documentType.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Nro. de documento</ort-label>
+        <input
+          ortInput
+          formControlName="documentNumber"
+          id="register-document-number"
+          inputmode="numeric"
+          type="text" />
+        <ort-hint>Sin puntos ni guiones.</ort-hint>
+        @if (identityForm.controls.documentNumber.touched &&
+        identityForm.controls.documentNumber.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        } @if (identityForm.controls.documentNumber.touched &&
+        identityForm.controls.documentNumber.hasError('pattern')) {
+        <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
+        }
+      </ort-form-field>
+    </section>
+
+    <p class="auth-error" role="alert" [hidden]="!identityForm.touched || !identityForm.invalid">
+      Completá los campos obligatorios para continuar.
+    </p>
+
+    @if (error()) {
+    <p class="auth-error" role="alert">{{ error() }}</p>
+    }
+
+    <button ort-primary-button type="submit" [disabled]="isRecognizingDocument()">Continuar</button>
+
+    <p class="auth-login-switch">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login">Iniciar sesión</a>
+    </p>
+  </form>
+  } @else {
+  <form
+    class="auth-form-body"
+    novalidate
+    [formGroup]="personalForm"
+    (ngSubmit)="submitPersonalData()">
+    <section aria-label="Datos personales" class="auth-form-grid">
+      <ort-form-field>
+        <ort-label>Primer nombre</ort-label>
+        <input ortInput formControlName="firstName" id="first-name" type="text" />
+        @if (personalForm.controls.firstName.touched &&
+        personalForm.controls.firstName.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Segundo nombre</ort-label>
+        <input ortInput formControlName="secondName" id="second-name" type="text" />
+        @if (personalForm.controls.secondName.touched &&
+        personalForm.controls.secondName.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Primer apellido</ort-label>
+        <input ortInput formControlName="firstLastName" id="first-last-name" type="text" />
+        @if (personalForm.controls.firstLastName.touched &&
+        personalForm.controls.firstLastName.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Segundo apellido</ort-label>
+        <input ortInput formControlName="secondLastName" id="second-last-name" type="text" />
+        @if (personalForm.controls.secondLastName.touched &&
+        personalForm.controls.secondLastName.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Fecha de nacimiento</ort-label>
+        <input ortInput formControlName="birthDate" id="birth-date" type="date" />
+        @if (personalForm.controls.birthDate.touched &&
+        personalForm.controls.birthDate.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Sexo</ort-label>
+        <ort-select formControlName="sex" id="sex">
+          <ort-option value="">Seleccioná...</ort-option>
+          <ort-option value="F">Femenino</ort-option>
+          <ort-option value="M">Masculino</ort-option>
+          <ort-option value="X">Otro</ort-option>
+        </ort-select>
+        @if (personalForm.controls.sex.touched && personalForm.controls.sex.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field class="auth-field--wide">
+        <ort-label>País de residencia</ort-label>
+        <ort-select formControlName="country" id="country">
+          <ort-option value="">Seleccioná...</ort-option>
+          <ort-option value="Uruguay">Uruguay</ort-option>
+          <ort-option value="Argentina">Argentina</ort-option>
+          <ort-option value="Brasil">Brasil</ort-option>
+          <ort-option value="Otro">Otro</ort-option>
+        </ort-select>
+        @if (personalForm.controls.country.touched &&
+        personalForm.controls.country.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field class="auth-field--wide">
+        <ort-label>Dirección</ort-label>
+        <input ortInput formControlName="address" id="address" type="text" />
+        @if (personalForm.controls.address.touched &&
+        personalForm.controls.address.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+    </section>
+
+    <section aria-labelledby="contact-title" class="auth-form-section">
+      <h2 class="auth-contact-title" id="contact-title">Datos de contacto</h2>
+
+      <ort-form-field>
+        <ort-label>Celular</ort-label>
+        <span ortTextPrefix aria-hidden="true" class="auth-phone-prefix">
+          <span class="auth-phone-flag"></span>
+          +598
+        </span>
+        <input
+          ortInput
+          autocomplete="tel"
+          formControlName="phone"
+          id="phone"
+          inputmode="tel"
+          placeholder="00 000 000"
+          type="tel" />
+        @if (personalForm.controls.phone.touched &&
+        personalForm.controls.phone.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>E-mail</ort-label>
+        <input ortInput autocomplete="email" formControlName="email" id="email" type="email" />
+        @if (personalForm.controls.email.touched &&
+        personalForm.controls.email.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        } @if (personalForm.controls.email.touched && personalForm.controls.email.hasError('email'))
+        {
+        <ort-error>Ingresá un e-mail válido</ort-error>
+        }
+      </ort-form-field>
+
+      <ort-form-field>
+        <ort-label>Confirmar e-mail</ort-label>
+        <input
+          ortInput
+          autocomplete="email"
+          formControlName="confirmEmail"
+          id="confirm-email"
+          type="email" />
+        @if (personalForm.controls.confirmEmail.touched &&
+        personalForm.controls.confirmEmail.hasError('required')) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        } @if (personalForm.controls.confirmEmail.touched &&
+        personalForm.controls.confirmEmail.hasError('email')) {
+        <ort-error>Ingresá un e-mail válido</ort-error>
+        }
+      </ort-form-field>
+    </section>
+
+    <p class="auth-error" role="alert" [hidden]="!personalForm.touched || !personalForm.invalid">
+      Completá todos los datos obligatorios para continuar.
+    </p>
+
+    @if (error()) {
+    <p class="auth-error" role="alert">{{ error() }}</p>
+    } @if (successMessage()) {
+    <output class="auth-success">{{ successMessage() }}</output>
+    }
+
+    <div class="auth-actions">
+      <button ort-secondary-button type="button" (click)="backToIdentity()">Volver</button>
+      <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Enviando...' : 'Continuar' }}
+      </button>
+    </div>
+  </form>
+  }
+</app-auth-form>

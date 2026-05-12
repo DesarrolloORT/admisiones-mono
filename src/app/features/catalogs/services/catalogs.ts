@@ -4,12 +4,12 @@ import { shareReplay } from 'rxjs/operators';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import {
+  AdvertisingChoice,
   Baccalaureate,
   BaccalaureateYear,
   Country,
   Institution,
   ReasonForChoice,
-  AdvertisingChoice,
   ScholarshipFund,
   ScholarshipProduct,
   University,
@@ -93,3 +93,4 @@ export class Catalogs {
     this.scholarshipFundsCache$ = undefined;
   }
 }
+
