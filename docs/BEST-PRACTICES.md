@@ -30,9 +30,27 @@ Cada feature vive bajo `src/app/features/<feature>/` y puede usar estas carpetas
 Cuando una feature crece, se debe dividir por subdominio antes que agregar
 archivos genericos como `utils.ts`, `helpers.ts` o `common.ts`.
 
+## Pages vs Components
+
+La distincion clave es la relacion con el router:
+
+- **`pages/`**: el router los instancia directamente. Son dueños del estado de pantalla completa (signals de error, loading, wizard steps, etc.), hacen `inject()` de servicios y coordinan toda la logica del caso de uso.
+- **`components/`**: UI reutilizable dentro de la feature, sin relacion con el router. Solo reciben datos via `input()` y emiten eventos via `output()`. No hacen `inject()` de servicios ni tienen estado de negocio.
+
+Ejemplo en `auth`:
+
+```
+Register (page)  ──inject──>  Auth (service)  ──inject──>  AuthEndpoint
+      │
+      └──> AuthForm (component)  ← solo inputs: title, heroIcon, cardSize…
+```
+
+`Register` es una page: maneja el estado del formulario multi-paso, llama a `Auth` y `DocumentRecognition`, y orquesta la navegacion entre pasos. `AuthForm` es un component: solo estructura visual que no sabe que datos va a mostrar ni que hacer con ellos.
+
 ## Responsabilidades
 
-- Los componentes deben quedarse cerca de la presentacion: inputs, outputs, formularios, eventos de usuario, mensajes visibles y bindings.
+- Las pages son dueñas del estado de la pantalla: signals de error, loading, pasos de wizard, navegacion. Hacen `inject()` de servicios y reaccionan a sus respuestas.
+- Los components deben quedarse cerca de la presentacion: inputs, outputs, formularios, eventos de usuario, mensajes visibles y bindings. No hacen `inject()` de servicios.
 - Los servicios deben coordinar endpoints, stores y transformaciones de dominio. Pueden exponer `Observable`, signals readonly o metodos imperativos segun el caso de uso.
 - Los endpoints deben ser pequenos, testeables y sin estado de UI. Solo arman request, URL, opciones HTTP y traducen errores HTTP a errores de dominio.
 - Los stores no deben saber de red. Reciben datos ya procesados y exponen estado con `signal`/`computed`.
