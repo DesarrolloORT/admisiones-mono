@@ -24,6 +24,10 @@ Frontend Angular 21 standalone con Angular Material, Vitest y GitHub Actions par
 
 Cada feature bajo `src/app/features/<feature>/` debe respetar el flujo:
 
+> **Nota:** No todas las features representan dominios de negocio. Algunas, como
+> `catalogs/`, agrupan datos transversales consumidos por múltiples features.
+> Ver [Features transversales](#features-transversales).
+
 ```text
 pages/components -> services -> endpoints -> HttpClient/API
 ```
@@ -83,9 +87,42 @@ Los archivos de `src/environments/` no se versionan. En local se crean a partir 
 - No todos los workflows incluidos deben mantenerse tal cual en todos los repositorios nuevos.
 - La arquitectura final del proyecto no tiene por que coincidir exactamente con la de esta plantilla.
 
+## Features transversales
+
+Algunas carpetas bajo `src/app/features/` no son features de negocio sino
+módulos transversales que exponen datos o utilidades a múltiples features.
+
+### `catalogs/`
+
+Agrupa endpoints de datos de referencia (países, bachilleratos, instituciones, etc.).
+Cualquier feature puede inyectar `Catalogs` (service) para obtener listas cacheadas.
+
+Estructura:
+
+```text
+features/catalogs/
+  endpoints/catalogs.endpoint.ts   ← acceso HTTP
+  services/catalogs.ts             ← cache con shareReplay, API pública
+  models/catalog.interface.ts      ← tipos de cada catálogo
+  models/catalog-error.ts          ← error de dominio
+```
+
+Uso desde otra feature:
+
+```ts
+private catalogs = inject(Catalogs);
+
+this.catalogs.getCountries().subscribe(countries => ...);
+```
+
+El service cachea cada catálogo en memoria con `shareReplay(1)`. Si necesitás
+invalidar el cache (por ejemplo después de un cambio de sesión), llamá a
+`catalogs.clearCache()`.
+
 ## Referencias relacionadas
 
 - [README.md](../README.md)
 - [docs/SETUP.md](./SETUP.md)
 - [docs/WORKFLOW.md](./WORKFLOW.md)
 - [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md)
+
