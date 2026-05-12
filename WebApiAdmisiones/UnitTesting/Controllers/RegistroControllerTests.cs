@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
@@ -51,6 +52,34 @@ namespace UnitTesting.Controllers
                     "Registro realizado correctamente."));
 
             var response = await controller.Confirmar(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task VerificarPersona_ReturnsOk()
+        {
+            var serviceMock = new Mock<IRegistroService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<RegistroController>>();
+            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            var request = new RegistroVerificarPersonaRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com"
+            };
+
+            serviceMock.Setup(s => s.VerificarPersonaAsync(request))
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(IRegistroService.VerificarPersonaAsync),
+                    "VerificaciÃ³n realizada correctamente."));
+
+            var response = await controller.VerificarPersona(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
@@ -134,6 +163,7 @@ namespace UnitTesting.Controllers
 
         [Theory]
         [InlineData(nameof(RegistroController.EvaluarDocumento))]
+        [InlineData(nameof(RegistroController.VerificarPersona))]
         [InlineData(nameof(RegistroController.Confirmar))]
         [InlineData(nameof(RegistroController.ObtenerTipoDocumentos))]
         [InlineData(nameof(RegistroController.ObtenerComienzos))]

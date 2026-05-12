@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using AppLogic.DevartDTOs;
@@ -140,6 +141,48 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task VerificarPersona_ExistingWithoutLdapAndMatchingData_ReturnsSuccess()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+
+            var result = await _service.VerificarPersonaAsync(new RegistroVerificarPersonaRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com"
+            });
+
+            Assert.True(result.Success);
+            Assert.Null(result.Data);
+        }
+
+        [Fact]
+        public async Task VerificarPersona_MismatchedData_ReturnsFailure()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+
+            var result = await _service.VerificarPersonaAsync(new RegistroVerificarPersonaRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Gomez",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_PERSONA_VERIF_02", result.ErrorCode);
+        }
+
+        [Fact]
         public async Task ConfirmarRegistro_InvalidDocument_ReturnsFailure()
         {
             var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
@@ -169,6 +212,37 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("REG_PRODUCTO_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarRegistro_ExistingWithoutLdapAndMismatchedData_ReturnsFailure()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            var productoRepo = new Mock<IProductoRepository>();
+            var procesoRepo = new Mock<IProcesoRepository>();
+
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
+
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+
+            var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                IdProducto = 10,
+                IdProceso = 20,
+                PrimerApellido = "Gomez",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_PERSONA_VERIF_02", result.ErrorCode);
         }
 
         [Fact]
@@ -240,6 +314,21 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("ATI", item.NombreProducto);
             Assert.Equal(2, item.IdNivelProducto);
             Assert.Equal("Carrera", item.NombreNivelProducto);
+        }
+
+        private static Persona CrearPersonaExistente()
+        {
+            return new Persona
+            {
+                CodigoPersona = 123,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com",
+                Documento = "1234567-2",
+                TipoDocumento = "CI",
+                CodigoVigencia = "SI"
+            };
         }
     }
 }

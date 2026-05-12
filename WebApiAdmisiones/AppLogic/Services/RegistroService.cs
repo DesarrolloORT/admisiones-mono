@@ -103,6 +103,82 @@ namespace AppLogic.Services
                 "La persona existe y requiere verificación de apellido y correo.");
         }
 
+        public async Task<OperationResult<object?>> VerificarPersonaAsync(RegistroVerificarPersonaRequest request)
+        {
+            if (request == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_REQUEST_01",
+                    nameof(VerificarPersonaAsync),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(VerificarPersonaAsync));
+            if (!documentoValidation.Success)
+            {
+                return OperationResult<object?>.IsFailed(
+                    documentoValidation.ErrorCode,
+                    nameof(VerificarPersonaAsync),
+                    documentoValidation.Message,
+                    documentoValidation.HttpCode);
+            }
+
+            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            if (tipoDocumento != "CI")
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_DOC_04",
+                    nameof(VerificarPersonaAsync),
+                    "VerificarPersona solo aplica para cedula de identidad.",
+                    400);
+            }
+
+            var uow = _uowFactory.Create();
+            var persona = uow.Personas.GetByDocumento(documento);
+            if (persona == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_PERSONA_404",
+                    nameof(VerificarPersonaAsync),
+                    "No se pudo traer la persona.",
+                    404);
+            }
+
+            var existeUsuario = await _ldap.ExisteUsuarioLDAP(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
+            if (existeUsuario)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_USUARIO_EXISTENTE",
+                    nameof(VerificarPersonaAsync),
+                    "Ya estas registrado. Para acceder, ingresa con tu numero de usuario y tu contrasena.",
+                    409);
+            }
+
+            var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(
+                persona,
+                request.TipoDocumento,
+                request.Documento,
+                request.PrimerApellido,
+                request.Mail,
+                request.VerificacionMail,
+                nameof(VerificarPersonaAsync));
+            if (!verificacion.Success)
+            {
+                return OperationResult<object?>.IsFailed(
+                    verificacion.ErrorCode,
+                    nameof(VerificarPersonaAsync),
+                    verificacion.Message,
+                    verificacion.HttpCode);
+            }
+
+            return OperationResult<object?>.IsSuccess(
+                null,
+                nameof(VerificarPersonaAsync),
+                "Verificacion realizada correctamente.");
+        }
+
         public async Task<OperationResult<object?>> ConfirmarRegistroAsync(RegistroConfirmarRequest request)
         {
             if (request == null)
@@ -158,7 +234,10 @@ namespace AppLogic.Services
                     409);
             }
 
-            var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(persona, request, nameof(ConfirmarRegistroAsync));
+            var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(
+                persona,
+                request,
+                nameof(ConfirmarRegistroAsync));
             if (!verificacion.Success)
             {
                 return verificacion;

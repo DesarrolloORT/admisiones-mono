@@ -35,6 +35,16 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
+    public class RegistroVerificarPersonaRequest
+    {
+        public string TipoDocumento { get; set; } = string.Empty;
+        public string Documento { get; set; } = string.Empty;
+        public string PrimerApellido { get; set; } = string.Empty;
+        public string Mail { get; set; } = string.Empty;
+        public string VerificacionMail { get; set; } = string.Empty;
+    }
+
+    [ExcludeFromCodeCoverage]
     public class RegistroEvaluacionResponse
     {
         /// <summary>

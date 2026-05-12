@@ -31,6 +31,17 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
+        [HttpPost("VerificarPersona")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        public async Task<IActionResult> VerificarPersona([FromBody] RegistroVerificarPersonaRequest request)
+        {
+            var result = await registroService.VerificarPersonaAsync(request);
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        //[RequireCaptcha]
         [HttpPost("Confirmar")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]

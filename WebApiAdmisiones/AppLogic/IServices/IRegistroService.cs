@@ -8,6 +8,7 @@ namespace AppLogic.IServices
     public interface IRegistroService
     {
         Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request);
+        Task<OperationResult<object?>> VerificarPersonaAsync(RegistroVerificarPersonaRequest request);
         Task<OperationResult<object?>> ConfirmarRegistroAsync(RegistroConfirmarRequest request);
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<RegistroComienzoResponse>> ObtenerComienzos(long idCarrera);

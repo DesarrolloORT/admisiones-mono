@@ -78,13 +78,32 @@ namespace AppLogic.Helpers
             RegistroConfirmarRequest request,
             string method)
         {
-            var mailValidation = ValidarMail(request, method);
+            return ValidarVerificacionPersonaExistente(
+                persona,
+                request.TipoDocumento,
+                request.Documento,
+                request.PrimerApellido,
+                request.Mail,
+                request.VerificacionMail,
+                method);
+        }
+
+        public static OperationResult<object?> ValidarVerificacionPersonaExistente(
+            Persona persona,
+            string tipoDocumento,
+            string documento,
+            string primerApellido,
+            string mail,
+            string verificacionMail,
+            string method)
+        {
+            var mailValidation = ValidarMail(mail, verificacionMail, method);
             if (!mailValidation.Success)
             {
                 return mailValidation;
             }
 
-            if (string.IsNullOrWhiteSpace(request.PrimerApellido))
+            if (string.IsNullOrWhiteSpace(primerApellido))
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_PERSONA_VERIF_01",
@@ -93,17 +112,17 @@ namespace AppLogic.Helpers
                     400);
             }
 
-            var apellidoEntrada = RegistroNormalizationHelper.NormalizarMayusculas(request.PrimerApellido);
+            var apellidoEntrada = RegistroNormalizationHelper.NormalizarMayusculas(primerApellido);
             var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
                 ? RegistroNormalizationHelper.Normalizar(persona.PrimerApellidoMay)
                 : RegistroNormalizationHelper.NormalizarMayusculas(persona.PrimerApellido);
 
-            if (RegistroNormalizationHelper.Normalizar(persona.TipoDocumento) != RegistroNormalizationHelper.Normalizar(request.TipoDocumento)
-                || RegistroNormalizationHelper.Normalizar(persona.Documento) != RegistroNormalizationHelper.Normalizar(request.Documento)
+            if (RegistroNormalizationHelper.Normalizar(persona.TipoDocumento) != RegistroNormalizationHelper.Normalizar(tipoDocumento)
+                || RegistroNormalizationHelper.Normalizar(persona.Documento) != RegistroNormalizationHelper.Normalizar(documento)
                 || apellidoPersona != apellidoEntrada
                 || !string.Equals(
                     RegistroNormalizationHelper.Normalizar(persona.Email),
-                    RegistroNormalizationHelper.Normalizar(request.Mail),
+                    RegistroNormalizationHelper.Normalizar(mail),
                     StringComparison.OrdinalIgnoreCase))
             {
                 return OperationResult<object?>.IsFailed(
@@ -196,7 +215,15 @@ namespace AppLogic.Helpers
             RegistroConfirmarRequest request,
             string method)
         {
-            if (string.IsNullOrWhiteSpace(request.Mail) || string.IsNullOrWhiteSpace(request.VerificacionMail))
+            return ValidarMail(request.Mail, request.VerificacionMail, method);
+        }
+
+        public static OperationResult<object?> ValidarMail(
+            string mail,
+            string verificacionMail,
+            string method)
+        {
+            if (string.IsNullOrWhiteSpace(mail) || string.IsNullOrWhiteSpace(verificacionMail))
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_MAIL_01",
@@ -206,8 +233,8 @@ namespace AppLogic.Helpers
             }
 
             if (!string.Equals(
-                RegistroNormalizationHelper.Normalizar(request.Mail),
-                RegistroNormalizationHelper.Normalizar(request.VerificacionMail),
+                RegistroNormalizationHelper.Normalizar(mail),
+                RegistroNormalizationHelper.Normalizar(verificacionMail),
                 StringComparison.OrdinalIgnoreCase))
             {
                 return OperationResult<object?>.IsFailed(
@@ -217,7 +244,7 @@ namespace AppLogic.Helpers
                     400);
             }
 
-            if (!Util.EsCorreoValido(request.Mail))
+            if (!Util.EsCorreoValido(mail))
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_MAIL_03",
