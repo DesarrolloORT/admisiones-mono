@@ -13,3 +13,4 @@ export class Loader {
 
   protected readonly loading = this.loaderService.isLoading;
 }
+
