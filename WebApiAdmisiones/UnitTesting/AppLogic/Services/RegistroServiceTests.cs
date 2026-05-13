@@ -215,34 +215,64 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarRegistro_ExistingWithoutLdapAndMismatchedData_ReturnsFailure()
+        public async Task ConfirmarRegistro_ExistingWithoutLdap_OnlyRequiresProductAndProcess()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             var productoRepo = new Mock<IProductoRepository>();
             var procesoRepo = new Mock<IProcesoRepository>();
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            var interesRepo = new Mock<IIntereRepository>();
+            var interesProductoRepo = new Mock<IInteresProductoRepository>();
+            var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
+            var actividadRepo = new Mock<IActividadRepository>();
+            var accionRepo = new Mock<IAccionRepository>();
 
             personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
+            inscriptoRepo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns(default(Inscripto)!);
+            interesRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns([]);
+            personaAdmiteRepo.Setup(r => r.GetByKey(123)).Returns(default(PersonaAdmite)!);
 
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            _uowMock.Setup(u => u.Interes).Returns(interesRepo.Object);
+            _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
+            _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
+            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
+            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES))
+                .Returns(1000);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_ACTIVIDAD))
+                .Returns(2000);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_ACCION))
+                .Returns(3000);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
+            _ldapMock
+                .Setup(l => l.EnviarContrasenia("123", "CI", "1234567-2", "Perez", "ADMISIONES", "REGISTRO"))
+                .ReturnsAsync(OperationResult<string>.Ok("ok", nameof(ILdap.EnviarContrasenia)));
 
             var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
                 IdProducto = 10,
-                IdProceso = 20,
-                PrimerApellido = "Gomez",
-                Mail = "ana@example.com",
-                VerificacionMail = "ana@example.com"
+                IdProceso = 20
             });
 
-            Assert.False(result.Success);
-            Assert.Equal("REG_PERSONA_VERIF_02", result.ErrorCode);
+            Assert.True(result.Success);
+            Assert.Equal("Registro realizado correctamente.", result.Message);
+            interesRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Once);
+            interesProductoRepo.Verify(r => r.Add(It.IsAny<InteresProducto>()), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 
         [Fact]

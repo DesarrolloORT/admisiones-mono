@@ -69,7 +69,7 @@ namespace AppLogic.Services
                     400);
             }
 
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
@@ -131,11 +131,11 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsFailed(
                     "REG_DOC_04",
                     nameof(VerificarPersonaAsync),
-                    "VerificarPersona solo aplica para cedula de identidad.",
+                    "VerificarPersona solo aplica para cédula de identidad.",
                     400);
             }
 
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
@@ -152,7 +152,7 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsFailed(
                     "REG_USUARIO_EXISTENTE",
                     nameof(VerificarPersonaAsync),
-                    "Ya estas registrado. Para acceder, ingresa con tu numero de usuario y tu contrasena.",
+                    "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
                     409);
             }
 
@@ -176,7 +176,7 @@ namespace AppLogic.Services
             return OperationResult<object?>.IsSuccess(
                 null,
                 nameof(VerificarPersonaAsync),
-                "Verificacion realizada correctamente.");
+                "Verificación realizada correctamente.");
         }
 
         public async Task<OperationResult<object?>> ConfirmarRegistroAsync(RegistroConfirmarRequest request)
@@ -202,7 +202,7 @@ namespace AppLogic.Services
 
             var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
             var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
 
             var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(uow, request, nameof(ConfirmarRegistroAsync));
             if (!commonValidation.Success)
@@ -232,15 +232,6 @@ namespace AppLogic.Services
                     nameof(ConfirmarRegistroAsync),
                     "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
                     409);
-            }
-
-            var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(
-                persona,
-                request,
-                nameof(ConfirmarRegistroAsync));
-            if (!verificacion.Success)
-            {
-                return verificacion;
             }
 
             return await RegistrarInteresYUsuarioAsync(uow, persona, request);
@@ -274,7 +265,7 @@ namespace AppLogic.Services
 
         public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
         {
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
 
             var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
 
@@ -283,10 +274,10 @@ namespace AppLogic.Services
 
         public OperationResult<IEnumerable<RegistroCarreraResponse>> ObtenerCarreras()
         {
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
 
             var entidades = uow.Productos.GetProductosVigentesParaRegistro();
-            var dtos = entidades.Select(MapCarrera);
+            var dtos = entidades.Select(MapCarrera).ToList();
 
             return OperationResult<IEnumerable<RegistroCarreraResponse>>.Ok(
                 dtos,
