@@ -63,7 +63,7 @@ namespace AppLogic.Services
             if (tipoDocumento != "CI")
             {
                 return OperationResult<RegistroEvaluacionResponse>.IsFailed(
-                    "REG_DOC_04",
+                    "REG_DOC_03",
                     nameof(EvaluarDocumentoAsync),
                     "EvaluarDocumento solo aplica para cédula de identidad.",
                     400);
@@ -103,23 +103,23 @@ namespace AppLogic.Services
                 "La persona existe y requiere verificación de apellido y correo.");
         }
 
-        public async Task<OperationResult<object?>> VerificarPersonaAsync(RegistroVerificarPersonaRequest request)
+        public async Task<OperationResult<object?>> VerificarIdentidadAsync(RegistroVerificarIdentidadRequest request)
         {
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_REQUEST_01",
-                    nameof(VerificarPersonaAsync),
+                    nameof(VerificarIdentidadAsync),
                     "La solicitud es obligatoria.",
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(VerificarPersonaAsync));
+            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(VerificarIdentidadAsync));
             if (!documentoValidation.Success)
             {
                 return OperationResult<object?>.IsFailed(
                     documentoValidation.ErrorCode,
-                    nameof(VerificarPersonaAsync),
+                    nameof(VerificarIdentidadAsync),
                     documentoValidation.Message,
                     documentoValidation.HttpCode);
             }
@@ -129,9 +129,9 @@ namespace AppLogic.Services
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_DOC_04",
-                    nameof(VerificarPersonaAsync),
-                    "VerificarPersona solo aplica para cédula de identidad.",
+                    "REG_DOC_03",
+                    nameof(VerificarIdentidadAsync),
+                    "VerificarIdentidad solo aplica para cédula de identidad.",
                     400);
             }
 
@@ -140,8 +140,8 @@ namespace AppLogic.Services
             if (persona == null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_PERSONA_404",
-                    nameof(VerificarPersonaAsync),
+                    "REG_PERSONA_01",
+                    nameof(VerificarIdentidadAsync),
                     "No se pudo traer la persona.",
                     404);
             }
@@ -150,91 +150,201 @@ namespace AppLogic.Services
             if (existeUsuario)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_USUARIO_EXISTENTE",
-                    nameof(VerificarPersonaAsync),
+                    "REG_USUARIO_01",
+                    nameof(VerificarIdentidadAsync),
                     "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
                     409);
             }
 
             var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(
                 persona,
-                request.TipoDocumento,
-                request.Documento,
-                request.PrimerApellido,
-                request.Mail,
-                request.VerificacionMail,
-                nameof(VerificarPersonaAsync));
+                request,
+                nameof(VerificarIdentidadAsync));
             if (!verificacion.Success)
             {
                 return OperationResult<object?>.IsFailed(
                     verificacion.ErrorCode,
-                    nameof(VerificarPersonaAsync),
+                    nameof(VerificarIdentidadAsync),
                     verificacion.Message,
                     verificacion.HttpCode);
             }
 
             return OperationResult<object?>.IsSuccess(
                 null,
-                nameof(VerificarPersonaAsync),
+                nameof(VerificarIdentidadAsync),
                 "Verificación realizada correctamente.");
         }
 
-        public async Task<OperationResult<object?>> ConfirmarRegistroAsync(RegistroConfirmarRequest request)
+        public async Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(RegistroConfirmarPersonaExistenteRequest request)
         {
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_REQUEST_01",
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarPersonaExistenteAsync),
                     "La solicitud es obligatoria.",
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarRegistroAsync));
+            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarPersonaExistenteAsync));
             if (!documentoValidation.Success)
             {
                 return OperationResult<object?>.IsFailed(
                     documentoValidation.ErrorCode,
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarPersonaExistenteAsync),
                     documentoValidation.Message,
                     documentoValidation.HttpCode);
             }
 
             var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
-            using var uow = _uowFactory.Create();
+            if (tipoDocumento != "CI")
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_DOC_03",
+                    nameof(ConfirmarPersonaExistenteAsync),
+                    "ConfirmarPersonaExistente solo aplica para cédula de identidad.",
+                    400);
+            }
 
-            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(uow, request, nameof(ConfirmarRegistroAsync));
+            using var uow = _uowFactory.Create();
+            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(
+                uow,
+                request.IdProducto,
+                request.IdProceso,
+                nameof(ConfirmarPersonaExistenteAsync));
             if (!commonValidation.Success)
             {
                 return commonValidation;
             }
 
-            var persona = tipoDocumento == "CI"
-                ? uow.Personas.GetByDocumento(documento)
-                : null;
-
-            if (tipoDocumento != "CI")
-            {
-                return await CrearSolicitudAltaAsync(uow, request);
-            }
-
+            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
-                return await CrearPersonaInteresAsync(uow, request);
+                return OperationResult<object?>.IsFailed(
+                    "REG_PERSONA_01",
+                    nameof(ConfirmarPersonaExistenteAsync),
+                    "No se pudo traer la persona.",
+                    404);
             }
 
             var existeUsuario = await _ldap.ExisteUsuarioLDAP(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_USUARIO_EXISTENTE",
-                    nameof(ConfirmarRegistroAsync),
+                    "REG_USUARIO_01",
+                    nameof(ConfirmarPersonaExistenteAsync),
                     "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
                     409);
             }
 
-            return await RegistrarInteresYUsuarioAsync(uow, persona, request);
+            return await RegistrarInteresYUsuarioAsync(
+                uow,
+                persona,
+                request.IdProducto,
+                request.IdProceso,
+                nameof(ConfirmarPersonaExistenteAsync));
+        }
+
+        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroConfirmarNuevaPersonaRequest request)
+        {
+            if (request == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_REQUEST_01",
+                    nameof(ConfirmarNuevaPersonaAsync),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarNuevaPersonaAsync));
+            if (!documentoValidation.Success)
+            {
+                return OperationResult<object?>.IsFailed(
+                    documentoValidation.ErrorCode,
+                    nameof(ConfirmarNuevaPersonaAsync),
+                    documentoValidation.Message,
+                    documentoValidation.HttpCode);
+            }
+
+            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            if (tipoDocumento != "CI")
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_DOC_03",
+                    nameof(ConfirmarNuevaPersonaAsync),
+                    "ConfirmarNuevaPersona solo aplica para cédula de identidad.",
+                    400);
+            }
+
+            using var uow = _uowFactory.Create();
+            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(
+                uow,
+                request.IdProducto,
+                request.IdProceso,
+                nameof(ConfirmarNuevaPersonaAsync));
+            if (!commonValidation.Success)
+            {
+                return commonValidation;
+            }
+
+            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var persona = uow.Personas.GetByDocumento(documento);
+            if (persona != null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_PERSONA_02",
+                    nameof(ConfirmarNuevaPersonaAsync),
+                    "La persona ya existe.",
+                    409);
+            }
+
+            return await CrearPersonaInteresAsync(uow, request);
+        }
+
+        public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroConfirmarSolicitudAltaRequest request)
+        {
+            if (request == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_REQUEST_01",
+                    nameof(ConfirmarSolicitudAltaAsync),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarSolicitudAltaAsync));
+            if (!documentoValidation.Success)
+            {
+                return OperationResult<object?>.IsFailed(
+                    documentoValidation.ErrorCode,
+                    nameof(ConfirmarSolicitudAltaAsync),
+                    documentoValidation.Message,
+                    documentoValidation.HttpCode);
+            }
+
+            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            if (tipoDocumento == "CI")
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REG_DOC_03",
+                    nameof(ConfirmarSolicitudAltaAsync),
+                    "ConfirmarSolicitudAlta solo aplica para documentos distintos a cédula de identidad.",
+                    400);
+            }
+
+            using var uow = _uowFactory.Create();
+            var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(
+                uow,
+                request.IdProducto,
+                request.IdProceso,
+                nameof(ConfirmarSolicitudAltaAsync));
+            if (!commonValidation.Success)
+            {
+                return commonValidation;
+            }
+
+            return await CrearSolicitudAltaAsync(uow, request);
         }
 
         public OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos()
@@ -298,14 +408,16 @@ namespace AppLogic.Services
         private async Task<OperationResult<object?>> RegistrarInteresYUsuarioAsync(
             IUnitOfWork uow,
             Persona persona,
-            RegistroConfirmarRequest request)
+            long idProducto,
+            long idProceso,
+            string originMethod)
         {
             var inscripcion = uow.Inscriptos.GetUltimaInscripcionActiva(persona.CodigoPersona);
             if (inscripcion != null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_INSCRIPCION_ACTIVA",
-                    nameof(ConfirmarRegistroAsync),
+                    "REG_INSCRIPCION_01",
+                    originMethod,
                     "Ya estás inscripto a un producto activo.",
                     409);
             }
@@ -313,9 +425,9 @@ namespace AppLogic.Services
             try
             {
                 uow.BeginTransaction();
-                UpsertInteres(uow, persona.CodigoPersona, request.IdProducto, request.IdProceso);
+                UpsertInteres(uow, persona.CodigoPersona, idProducto, idProceso);
                 AsegurarPersonaAdmite(uow, persona.CodigoPersona);
-                RegistrarActividadYAccion(uow, persona.CodigoPersona, request.IdProceso);
+                RegistrarActividadYAccion(uow, persona.CodigoPersona, idProceso);
 
                 var crearUsuario = await _ldap.CrearUsuarioAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
                 if (!crearUsuario.Success)
@@ -323,7 +435,7 @@ namespace AppLogic.Services
                     uow.Rollback();
                     return OperationResult<object?>.IsFailed(
                         crearUsuario.ErrorCode,
-                        nameof(ConfirmarRegistroAsync),
+                        originMethod,
                         crearUsuario.Message,
                         crearUsuario.HttpCode);
                 }
@@ -335,33 +447,24 @@ namespace AppLogic.Services
                 uow.Rollback();
                 return OperationResult<object?>.IsFailed(
                     "REG_INTERES_99",
-                    nameof(ConfirmarRegistroAsync),
+                    originMethod,
                     $"Error al registrar el interés: {ex.Message}",
                     500);
             }
 
-            return await EnviarContraseniaAsync(persona);
+            return await EnviarContraseniaAsync(persona, originMethod);
         }
 
         private async Task<OperationResult<object?>> CrearPersonaInteresAsync(
             IUnitOfWork uow,
-            RegistroConfirmarRequest request)
+            RegistroConfirmarNuevaPersonaRequest request)
         {
-            var validacion = RegistroValidationHelper.ValidarDatosPersonaCompleta(
-                request,
-                requiereDireccionYCiudad: true,
-                nameof(ConfirmarRegistroAsync));
-            if (!validacion.Success)
-            {
-                return validacion;
-            }
-
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad == null)
             {
                 return OperationResult<object?>.IsFailed(
                     "REG_CIUDAD_01",
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarNuevaPersonaAsync),
                     "No existe la ciudad indicada.",
                     400);
             }
@@ -388,7 +491,7 @@ namespace AppLogic.Services
                     uow.Rollback();
                     return OperationResult<object?>.IsFailed(
                         crearUsuario.ErrorCode,
-                        nameof(ConfirmarRegistroAsync),
+                        nameof(ConfirmarNuevaPersonaAsync),
                         crearUsuario.Message,
                         crearUsuario.HttpCode);
                 }
@@ -400,27 +503,18 @@ namespace AppLogic.Services
                 uow.Rollback();
                 return OperationResult<object?>.IsFailed(
                     "REG_PERSONA_99",
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarNuevaPersonaAsync),
                     $"Error al crear la persona: {ex.Message}",
                     500);
             }
 
-            return await EnviarContraseniaAsync(persona);
+            return await EnviarContraseniaAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
         }
 
         private async Task<OperationResult<object?>> CrearSolicitudAltaAsync(
             IUnitOfWork uow,
-            RegistroConfirmarRequest request)
+            RegistroConfirmarSolicitudAltaRequest request)
         {
-            var validacion = RegistroValidationHelper.ValidarDatosPersonaCompleta(
-                request,
-                requiereDireccionYCiudad: false,
-                nameof(ConfirmarRegistroAsync));
-            if (!validacion.Success)
-            {
-                return validacion;
-            }
-
             try
             {
                 uow.BeginTransaction();
@@ -433,7 +527,7 @@ namespace AppLogic.Services
 
                 return OperationResult<object?>.IsSuccess(
                     null,
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarSolicitudAltaAsync),
                     "La solicitud de alta quedó registrada.");
             }
             catch (Exception ex)
@@ -441,7 +535,7 @@ namespace AppLogic.Services
                 uow.Rollback();
                 return OperationResult<object?>.IsFailed(
                     "REG_SOLICITUD_99",
-                    nameof(ConfirmarRegistroAsync),
+                    nameof(ConfirmarSolicitudAltaAsync),
                     $"Error al crear la solicitud de alta: {ex.Message}",
                     500);
             }
@@ -514,7 +608,7 @@ namespace AppLogic.Services
                 now));
         }
 
-        private async Task<OperationResult<object?>> EnviarContraseniaAsync(Persona persona)
+        private async Task<OperationResult<object?>> EnviarContraseniaAsync(Persona persona, string originMethod)
         {
             var mail = await _ldap.EnviarContrasenia(
                 persona.CodigoPersona.ToString(CultureInfo.InvariantCulture),
@@ -528,13 +622,13 @@ namespace AppLogic.Services
             {
                 return OperationResult<object?>.IsSuccess(
                     null,
-                    nameof(ConfirmarRegistroAsync),
+                    originMethod,
                     "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de usuario o contraseña.");
             }
 
             return OperationResult<object?>.IsSuccess(
                 null,
-                nameof(ConfirmarRegistroAsync),
+                originMethod,
                 "Registro realizado correctamente.");
         }
 

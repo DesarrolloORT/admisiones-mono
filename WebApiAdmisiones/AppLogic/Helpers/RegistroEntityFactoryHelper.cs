@@ -9,7 +9,7 @@ namespace AppLogic.Helpers
 {
     public static class RegistroEntityFactoryHelper
     {
-        public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, RegistroConfirmarRequest request)
+        public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, RegistroConfirmarSolicitudAltaRequest request)
         {
             return new SolicitudAlta
             {
@@ -23,9 +23,9 @@ namespace AppLogic.Helpers
                 SegundoNombreSolicitudAlta = RegistroNormalizationHelper.FormatoCapital(request.SegundoNombre),
                 UsuarioSolicitudAlta = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 DireccionSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Direccion),
-                CodigoPais = request.CodigoPais > 0 ? request.CodigoPais : null,
-                CodigoEstado = request.CodigoEstado > 0 ? request.CodigoEstado : null,
-                CodigoCiudad = request.CodigoCiudad > 0 ? request.CodigoCiudad : null,
+                CodigoPais = null,
+                CodigoEstado = null,
+                CodigoCiudad = null,
                 Telefono1SolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Telefono1),
                 Telefono2SolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Telefono2),
                 EmailSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Mail),
@@ -121,7 +121,7 @@ namespace AppLogic.Helpers
             };
         }
 
-        public static Persona CrearPersona(long codigoPersona, RegistroConfirmarRequest request, Ciudad ciudad, DateTime now)
+        public static Persona CrearPersona(long codigoPersona, RegistroConfirmarNuevaPersonaRequest request, Ciudad ciudad, DateTime now)
         {
             var primerNombre = RegistroNormalizationHelper.FormatoCapital(request.PrimerNombre);
             var segundoNombre = RegistroNormalizationHelper.FormatoCapital(request.SegundoNombre);

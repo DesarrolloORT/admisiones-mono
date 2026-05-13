@@ -54,7 +54,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.EvaluarDocumentoAsync(request);
 
             Assert.False(result.Success);
-            Assert.Equal("REG_DOC_04", result.ErrorCode);
+            Assert.Equal("REG_DOC_03", result.ErrorCode);
             Assert.Equal("EvaluarDocumento solo aplica para cédula de identidad.", result.Message);
         }
 
@@ -137,18 +137,18 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.False(result.Success);
-            Assert.Equal("REG_DOC_03", result.ErrorCode);
+            Assert.Equal("REG_DOC_02", result.ErrorCode);
         }
 
         [Fact]
-        public async Task VerificarPersona_ExistingWithoutLdapAndMatchingData_ReturnsSuccess()
+        public async Task VerificarIdentidad_ExistingWithoutLdapAndMatchingData_ReturnsSuccess()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
 
-            var result = await _service.VerificarPersonaAsync(new RegistroVerificarPersonaRequest
+            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -162,14 +162,14 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task VerificarPersona_MismatchedData_ReturnsFailure()
+        public async Task VerificarIdentidad_MismatchedData_ReturnsFailure()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
 
-            var result = await _service.VerificarPersonaAsync(new RegistroVerificarPersonaRequest
+            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -179,30 +179,30 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.False(result.Success);
-            Assert.Equal("REG_PERSONA_VERIF_02", result.ErrorCode);
+            Assert.Equal("REG_PERSONA_VERIF_01", result.ErrorCode);
         }
 
         [Fact]
-        public async Task ConfirmarRegistro_InvalidDocument_ReturnsFailure()
+        public async Task ConfirmarNuevaPersona_InvalidDocument_ReturnsFailure()
         {
-            var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
+            var result = await _service.ConfirmarNuevaPersonaAsync(new RegistroConfirmarNuevaPersonaRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-1"
             });
 
             Assert.False(result.Success);
-            Assert.Equal("REG_DOC_03", result.ErrorCode);
+            Assert.Equal("REG_DOC_02", result.ErrorCode);
         }
 
         [Fact]
-        public async Task ConfirmarRegistro_InvalidProduct_ReturnsFailure()
+        public async Task ConfirmarPersonaExistente_InvalidProduct_ReturnsFailure()
         {
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(99)).Returns(false);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
+            var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -215,7 +215,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarRegistro_ExistingWithoutLdap_OnlyRequiresProductAndProcess()
+        public async Task ConfirmarPersonaExistente_ExistingWithoutLdap_OnlyRequiresProductAndProcess()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             var productoRepo = new Mock<IProductoRepository>();
@@ -260,7 +260,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(l => l.EnviarContrasenia("123", "CI", "1234567-2", "Perez", "ADMISIONES", "REGISTRO"))
                 .ReturnsAsync(OperationResult<string>.Ok("ok", nameof(ILdap.EnviarContrasenia)));
 
-            var result = await _service.ConfirmarRegistroAsync(new RegistroConfirmarRequest
+            var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",

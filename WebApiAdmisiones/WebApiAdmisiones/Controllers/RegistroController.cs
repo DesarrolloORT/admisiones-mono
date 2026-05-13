@@ -31,23 +31,45 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("VerificarPersona")]
+        [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> VerificarPersona([FromBody] RegistroVerificarPersonaRequest request)
+        public async Task<IActionResult> VerificarIdentidad([FromBody] RegistroVerificarIdentidadRequest request)
         {
-            var result = await registroService.VerificarPersonaAsync(request);
+            var result = await registroService.VerificarIdentidadAsync(request);
             return ValidateResponse(result);
         }
 
         [AllowAnonymous]
-        //[RequireCaptcha]
-        [HttpPost("Confirmar")]
+        [RequireCaptcha]
+        [HttpPost("ConfirmarPersonaExistente")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> Confirmar([FromBody] RegistroConfirmarRequest request)
+        public async Task<IActionResult> ConfirmarPersonaExistente([FromBody] RegistroConfirmarPersonaExistenteRequest request)
         {
-            var result = await registroService.ConfirmarRegistroAsync(request);
+            var result = await registroService.ConfirmarPersonaExistenteAsync(request);
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [RequireCaptcha]
+        [HttpPost("ConfirmarNuevaPersona")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] RegistroConfirmarNuevaPersonaRequest request)
+        {
+            var result = await registroService.ConfirmarNuevaPersonaAsync(request);
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [RequireCaptcha]
+        [HttpPost("ConfirmarSolicitudAlta")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] RegistroConfirmarSolicitudAltaRequest request)
+        {
+            var result = await registroService.ConfirmarSolicitudAltaAsync(request);
             return ValidateResponse(result);
         }
 
