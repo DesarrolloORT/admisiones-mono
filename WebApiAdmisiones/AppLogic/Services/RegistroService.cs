@@ -7,6 +7,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -21,19 +22,22 @@ namespace AppLogic.Services
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ILdap _ldap;
+        private readonly IServiceScopeFactory? _serviceScopeFactory;
 
         public RegistroService(
             ICatalogosService catalogosService,
             IPreinscripcionService preinscripcionService,
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
-            ILdap ldap)
+            ILdap ldap,
+            IServiceScopeFactory? serviceScopeFactory = null)
         {
             _catalogosService = catalogosService;
             _preinscripcionService = preinscripcionService;
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _ldap = ldap;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         public async Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request)
@@ -82,7 +86,7 @@ namespace AppLogic.Services
                     "La persona no existe. Se puede continuar con el alta.");
             }
 
-            var existeUsuario = await _ldap.ExisteUsuarioLDAP(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
+            var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
                 return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
@@ -146,7 +150,7 @@ namespace AppLogic.Services
                     404);
             }
 
-            var existeUsuario = await _ldap.ExisteUsuarioLDAP(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
+            var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
                 return OperationResult<object?>.IsFailed(
@@ -228,7 +232,7 @@ namespace AppLogic.Services
                     404);
             }
 
-            var existeUsuario = await _ldap.ExisteUsuarioLDAP(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
+            var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
                 return OperationResult<object?>.IsFailed(
@@ -429,7 +433,7 @@ namespace AppLogic.Services
                 AsegurarPersonaAdmite(uow, persona.CodigoPersona);
                 RegistrarActividadYAccion(uow, persona.CodigoPersona, idProceso);
 
-                var crearUsuario = await _ldap.CrearUsuarioAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
+                var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
                 if (!crearUsuario.Success)
                 {
                     uow.Rollback();
@@ -485,7 +489,7 @@ namespace AppLogic.Services
                 AsegurarPersonaAdmite(uow, persona.CodigoPersona);
                 RegistrarActividadYAccion(uow, persona.CodigoPersona, request.IdProceso);
 
-                var crearUsuario = await _ldap.CrearUsuarioAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
+                var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
                 if (!crearUsuario.Success)
                 {
                     uow.Rollback();
@@ -630,6 +634,30 @@ namespace AppLogic.Services
                 null,
                 originMethod,
                 "Registro realizado correctamente.");
+        }
+
+        private async Task<bool> ExisteUsuarioLdapAsync(string usuario)
+        {
+            if (_serviceScopeFactory == null)
+            {
+                return await _ldap.ExisteUsuarioLDAP(usuario);
+            }
+
+            using var scope = _serviceScopeFactory.CreateScope();
+            var ldap = scope.ServiceProvider.GetRequiredService<ILdap>();
+            return await ldap.ExisteUsuarioLDAP(usuario);
+        }
+
+        private async Task<OperationResult<bool>> CrearUsuarioLdapAsync(LdapService.DTOs.ParamCrearUsuarioLdap request)
+        {
+            if (_serviceScopeFactory == null)
+            {
+                return await _ldap.CrearUsuarioAsync(request);
+            }
+
+            using var scope = _serviceScopeFactory.CreateScope();
+            var ldap = scope.ServiceProvider.GetRequiredService<ILdap>();
+            return await ldap.CrearUsuarioAsync(request);
         }
 
     }
