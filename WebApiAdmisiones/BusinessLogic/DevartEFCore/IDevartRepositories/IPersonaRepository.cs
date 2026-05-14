@@ -13,6 +13,7 @@ namespace BusinessLogic.IDevartRepositories
     {
         bool ExistePersona(long codigoPersona);
         Persona GetByDocumento(string documento);
+        Persona GetByTipoDocumentoYDocumento(string tipoDocumento, string documento);
         Persona GetPersonaWithRelated(long codigoPersona);
     }
 }

@@ -183,6 +183,18 @@ namespace AppLogic.DTOs
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool RequiereAltaPersona { get; set; }
+
+        /// <summary>
+        /// No existe persona ni solicitud de alta para el documento. El front debe pedir datos para crear la solicitud.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool RequiereAltaSolicitud { get; set; }
+
+        /// <summary>
+        /// Ya existe una solicitud de alta para el documento ingresado.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool SolicitudAltaExistente { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

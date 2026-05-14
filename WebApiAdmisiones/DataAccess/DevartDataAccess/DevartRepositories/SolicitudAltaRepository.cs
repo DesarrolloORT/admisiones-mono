@@ -7,10 +7,23 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using BusinessLogic.Entities;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class SolicitudAltaRepository
     {
+        public virtual SolicitudAlta GetByTipoDocumentoYDocumento(string tipoDocumento, string documento)
+        {
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet
+                .FirstOrDefault(s =>
+                    s.TipoDocumentoSolicitudAlta != null
+                    && s.DocumentoSolicitudAlta != null
+                    && s.TipoDocumentoSolicitudAlta.Trim() == normalizedTipoDocumento
+                    && s.DocumentoSolicitudAlta.Trim() == normalizedDocumento);
+        }
     }
 }

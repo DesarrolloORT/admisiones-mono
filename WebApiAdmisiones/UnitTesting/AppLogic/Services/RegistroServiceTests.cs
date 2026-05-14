@@ -43,8 +43,15 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task EvaluarDocumento_NonCi_ReturnsFailure()
+        public async Task EvaluarDocumento_NonCiWithoutPersonaOrSolicitud_ReturnsAltaSolicitud()
         {
+            var personaRepo = new Mock<IPersonaRepository>();
+            var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
+            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
+            solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(SolicitudAlta)!);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
+
             var request = new RegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "PS",
@@ -53,16 +60,16 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.EvaluarDocumentoAsync(request);
 
-            Assert.False(result.Success);
-            Assert.Equal("REG_DOC_03", result.ErrorCode);
-            Assert.Equal("EvaluarDocumento solo aplica para cédula de identidad.", result.Message);
+            Assert.True(result.Success);
+            Assert.True(result.Data!.RequiereAltaSolicitud);
+            Assert.False(result.Data.RequiereAltaPersona);
         }
 
         [Fact]
         public async Task EvaluarDocumento_CiExistingLdapUser_ReturnsUsuarioExistente()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(new Persona
+            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(new Persona
             {
                 CodigoPersona = 123,
                 PrimerNombre = "Ana",
@@ -94,7 +101,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task EvaluarDocumento_CiWithoutPersona_ReturnsAltaPersonaPermitida()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(default(Persona)!);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
             var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
@@ -108,6 +115,38 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.RequiereAltaPersona);
             Assert.False(result.Data.UsuarioExistente);
             Assert.False(result.Data.RequiereVerificacion);
+            Assert.False(result.Data.RequiereAltaSolicitud);
+            _uowMock.Verify(u => u.SolicitudAltas, Times.Never);
+        }
+
+        [Fact]
+        public async Task EvaluarDocumento_WithoutPersonaButWithSolicitudAlta_ReturnsExistingSolicitudMessage()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
+            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
+            solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(new SolicitudAlta
+            {
+                IdSolicitudAlta = 10,
+                TipoDocumentoSolicitudAlta = "PS",
+                DocumentoSolicitudAlta = "A123",
+                PrimerApellidoSolicitudAlta = "Perez",
+                PrimerNombreSolicitudAlta = "Ana"
+            });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
+
+            var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
+            {
+                TipoDocumento = "PS",
+                Documento = "A123"
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("Ya existe una solicitud de alta para el documento indicado.", result.Message);
+            Assert.True(result.Data!.SolicitudAltaExistente);
+            Assert.False(result.Data.RequiereAltaSolicitud);
+            Assert.False(result.Data.RequiereAltaPersona);
         }
 
         [Fact]
@@ -125,6 +164,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("requiereAltaPersona", json);
             Assert.DoesNotContain("usuarioExistente", json);
             Assert.DoesNotContain("requiereVerificacion", json);
+            Assert.DoesNotContain("requiereAltaSolicitud", json);
+            Assert.DoesNotContain("solicitudAltaExistente", json);
         }
 
         [Fact]

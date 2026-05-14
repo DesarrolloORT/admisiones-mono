@@ -27,6 +27,20 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault(p => p.Documento != null && p.Documento.Trim() == normalized);
         }
 
+        public virtual BusinessLogic.Entities.Persona GetByTipoDocumentoYDocumento(string tipoDocumento, string documento)
+        {
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet
+                .Include(p => p.Ciudad)
+                .FirstOrDefault(p =>
+                    p.TipoDocumento != null
+                    && p.Documento != null
+                    && p.TipoDocumento.Trim() == normalizedTipoDocumento
+                    && p.Documento.Trim() == normalizedDocumento);
+        }
+
         /// <summary>
         /// Devuelve la persona con sus relaciones principales cargadas.
         /// </summary>

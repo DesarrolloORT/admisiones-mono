@@ -62,26 +62,35 @@ namespace AppLogic.Services
             var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
             var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
 
-            if (tipoDocumento != "CI")
-            {
-                return OperationResult<RegistroEvaluacionResponse>.IsFailed(
-                    "REG_DOC_03",
-                    nameof(EvaluarDocumentoAsync),
-                    "EvaluarDocumento solo aplica para cédula de identidad.",
-                    400);
-            }
-
             using var uow = _uowFactory.Create();
-            var persona = uow.Personas.GetByDocumento(documento);
+            var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
             if (persona == null)
             {
+                if (tipoDocumento != "CI")
+                {
+                    var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
+                    if (solicitudAlta != null)
+                    {
+                        return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
+                            new RegistroEvaluacionResponse
+                            {
+                                SolicitudAltaExistente = true
+                            },
+                            nameof(EvaluarDocumentoAsync),
+                            "Ya existe una solicitud de alta para el documento indicado.");
+                    }
+                }
+
                 return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
                     new RegistroEvaluacionResponse
                     {
-                        RequiereAltaPersona = true
+                        RequiereAltaPersona = tipoDocumento == "CI",
+                        RequiereAltaSolicitud = tipoDocumento != "CI"
                     },
                     nameof(EvaluarDocumentoAsync),
-                    "La persona no existe. Se puede continuar con el alta.");
+                    tipoDocumento == "CI"
+                        ? "La persona no existe. Se puede continuar con el alta."
+                        : "No existe persona ni solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.");
             }
 
             var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
