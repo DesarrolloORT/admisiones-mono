@@ -72,15 +72,5 @@ namespace WebApiAdmisiones.Controllers
             var result = await registroService.ConfirmarSolicitudAltaAsync(request);
             return ValidateResponse(result);
         }
-
-        [AllowAnonymous]
-        [HttpGet("PaisesEstadosCiudades")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
-        public IActionResult ObtenerPaisesEstadosCiudades()
-        {
-            var result = registroService.ObtenerPaisesEstadosCiudades();
-            return ValidateResponse(result);
-        }
     }
 }

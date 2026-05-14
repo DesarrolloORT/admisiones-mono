@@ -359,15 +359,6 @@ namespace AppLogic.Services
             return await CrearSolicitudAltaAsync(uow, request);
         }
 
-        public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
-        {
-            using var uow = _uowFactory.Create();
-
-            var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
-
-            return OperationResult<IEnumerable<DtoPaisDevart>>.Ok(paises.ToDtosWithRelated(2), nameof(ObtenerPaisesEstadosCiudades));
-        }
-
         private async Task<OperationResult<object?>> RegistrarInteresYUsuarioAsync(
             IUnitOfWork uow,
             Persona persona,

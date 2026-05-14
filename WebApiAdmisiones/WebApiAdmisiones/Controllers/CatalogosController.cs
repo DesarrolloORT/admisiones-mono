@@ -39,6 +39,16 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
+        [HttpGet("PaisesEstadosCiudades")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
+        public IActionResult ObtenerPaisesEstadosCiudades()
+        {
+            var result = catalogosService.ObtenerPaisesEstadosCiudades();
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
         [HttpGet("TiposDocumentos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]

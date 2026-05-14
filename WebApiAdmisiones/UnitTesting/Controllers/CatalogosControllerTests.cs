@@ -39,6 +39,25 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public void ObtenerPaisesEstadosCiudades_ReturnsOk()
+        {
+            var serviceMock = new Mock<ICatalogosService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<CatalogosController>>();
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            serviceMock.Setup(s => s.ObtenerPaisesEstadosCiudades())
+                .Returns(OperationResult<IEnumerable<DtoPaisDevart>>.Ok(
+                    [new DtoPaisDevart { CodigoPais = 1, Nombre = "Uruguay" }],
+                    nameof(ICatalogosService.ObtenerPaisesEstadosCiudades)));
+
+            var response = controller.ObtenerPaisesEstadosCiudades();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
         public void CatalogosController_ExposesTipoDocumentos()
         {
             Assert.NotNull(typeof(CatalogosController).GetMethod("ObtenerTipoDocumentos"));
@@ -102,6 +121,7 @@ namespace UnitTesting.Controllers
         }
 
         [Theory]
+        [InlineData(nameof(CatalogosController.ObtenerPaisesEstadosCiudades))]
         [InlineData(nameof(CatalogosController.ObtenerTipoDocumentos))]
         [InlineData(nameof(CatalogosController.ObtenerCarreras))]
         [InlineData(nameof(CatalogosController.ObtenerComienzos))]

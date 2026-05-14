@@ -127,32 +127,12 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
         }
 
-        [Fact]
-        public void ObtenerPaisesEstadosCiudades_ReturnsOk()
-        {
-            var serviceMock = new Mock<IRegistroService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<RegistroController>>();
-            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.ObtenerPaisesEstadosCiudades())
-                .Returns(OperationResult<IEnumerable<DtoPaisDevart>>.Ok(
-                    [new DtoPaisDevart { CodigoPais = 1, Nombre = "Uruguay" }],
-                    nameof(IRegistroService.ObtenerPaisesEstadosCiudades)));
-
-            var response = controller.ObtenerPaisesEstadosCiudades();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
         [Theory]
         [InlineData(nameof(RegistroController.EvaluarDocumento))]
         [InlineData(nameof(RegistroController.VerificarIdentidad))]
         [InlineData(nameof(RegistroController.ConfirmarPersonaExistente))]
         [InlineData(nameof(RegistroController.ConfirmarNuevaPersona))]
         [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta))]
-        [InlineData(nameof(RegistroController.ObtenerPaisesEstadosCiudades))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)
         {
             var method = typeof(RegistroController).GetMethod(methodName);

@@ -26,23 +26,48 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerPaises_ReturnsSortedPaises()
+        public void ObtenerPaisesEstadosCiudades_ReturnsPaisesWithRelatedData()
         {
             var paisRepo = new Mock<IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisesOrdenados()).Returns(new List<Pais>
+            paisRepo.Setup(r => r.GetPaisesConEstadosYCiudades()).Returns(new List<Pais>
             {
-                new Pais { CodigoPais = 1, Nombre = "Uruguay" },
-                new Pais { CodigoPais = 2, Nombre = "Argentina" }
+                new Pais
+                {
+                    CodigoPais = 1,
+                    Nombre = "Uruguay",
+                    Estado =
+                    [
+                        new Estado
+                        {
+                            CodigoPais = 1,
+                            CodigoEstado = 10,
+                            Nombre = "Montevideo",
+                            Ciudad =
+                            [
+                                new Ciudad
+                                {
+                                    CodigoPais = 1,
+                                    CodigoEstado = 10,
+                                    CodigoCiudad = 100,
+                                    Nombre = "Montevideo"
+                                }
+                            ]
+                        }
+                    ]
+                }
             });
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 
-            var result = _service.ObtenerPaises();
+            var result = _service.ObtenerPaisesEstadosCiudades();
 
             Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            var list = new List<DtoPaisDevart>(result.Data);
-            Assert.Equal(2, list.Count);
-            Assert.Equal(1, list[0].CodigoPais);
+            Assert.Equal(nameof(CatalogosService.ObtenerPaisesEstadosCiudades), result.Method);
+            var pais = Assert.Single(result.Data!);
+            Assert.Equal(1, pais.CodigoPais);
+            Assert.NotNull(pais.Estado);
+            Assert.Single(pais.Estado);
+            Assert.NotNull(pais.Estado[0].Ciudad);
+            Assert.Single(pais.Estado[0].Ciudad);
         }
 
         [Fact]

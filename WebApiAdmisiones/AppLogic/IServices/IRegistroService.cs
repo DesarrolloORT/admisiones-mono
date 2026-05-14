@@ -12,6 +12,5 @@ namespace AppLogic.IServices
         Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(RegistroConfirmarPersonaExistenteRequest request);
         Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroConfirmarNuevaPersonaRequest request);
         Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroConfirmarSolicitudAltaRequest request);
-        OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades();
     }
 }
