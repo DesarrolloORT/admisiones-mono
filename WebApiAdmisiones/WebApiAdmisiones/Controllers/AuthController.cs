@@ -32,7 +32,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
 
@@ -132,6 +132,24 @@ namespace WebApiAdmisiones.Controllers
             }
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Recuperar contraseña
+        /// </summary>
+        /// <param name="request">Datos de la persona a recuperar.</param>
+        /// <returns>Resultado del proceso con mensaje y codigos funcionales del servicio.</returns>
+        /// <response code="200">Recuperacion exitosa.</response>
+        /// <response code="400">Error de validacion o de negocio.</response>
+        /// <response code="500">Error interno no controlado.</response>
+        [HttpPost("RecuperarContraseña")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 500)]
+        public async Task<IActionResult> RecuperarPasswordEmpresa([FromBody] DtoRecuperarPasswordRequest request)
+        {
+            var result = await loginService.RecuperarPassword(request);
+            return ValidateResponse(result);
         }
 
         #endregion

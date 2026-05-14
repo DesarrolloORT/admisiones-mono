@@ -3,6 +3,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -49,18 +50,18 @@ namespace AppLogic.Services
                     400);
             }
 
-            var validacion = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(EvaluarDocumentoAsync));
-            if (!validacion.Success)
+            var validacion = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!validacion.IsValid)
             {
                 return OperationResult<RegistroEvaluacionResponse>.IsFailed(
-                    validacion.ErrorCode,
+                    ObtenerCodigoValidacionDocumento(validacion.Error),
                     nameof(EvaluarDocumentoAsync),
                     validacion.Message,
-                    validacion.HttpCode);
+                    400);
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(request.Documento);
 
             using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
@@ -125,18 +126,18 @@ namespace AppLogic.Services
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(VerificarIdentidadAsync));
-            if (!documentoValidation.Success)
+            var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!documentoValidation.IsValid)
             {
                 return OperationResult<object?>.IsFailed(
-                    documentoValidation.ErrorCode,
+                    ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(VerificarIdentidadAsync),
                     documentoValidation.Message,
-                    documentoValidation.HttpCode);
+                    400);
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(request.Documento);
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
@@ -197,17 +198,17 @@ namespace AppLogic.Services
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarPersonaExistenteAsync));
-            if (!documentoValidation.Success)
+            var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!documentoValidation.IsValid)
             {
                 return OperationResult<object?>.IsFailed(
-                    documentoValidation.ErrorCode,
+                    ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(ConfirmarPersonaExistenteAsync),
                     documentoValidation.Message,
-                    documentoValidation.HttpCode);
+                    400);
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
@@ -228,7 +229,7 @@ namespace AppLogic.Services
                 return commonValidation;
             }
 
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var documento = DocumentUtils.Normalizar(request.Documento);
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
@@ -268,17 +269,17 @@ namespace AppLogic.Services
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarNuevaPersonaAsync));
-            if (!documentoValidation.Success)
+            var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!documentoValidation.IsValid)
             {
                 return OperationResult<object?>.IsFailed(
-                    documentoValidation.ErrorCode,
+                    ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(ConfirmarNuevaPersonaAsync),
                     documentoValidation.Message,
-                    documentoValidation.HttpCode);
+                    400);
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
@@ -299,7 +300,7 @@ namespace AppLogic.Services
                 return commonValidation;
             }
 
-            var documento = RegistroNormalizationHelper.Normalizar(request.Documento);
+            var documento = DocumentUtils.Normalizar(request.Documento);
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona != null)
             {
@@ -324,17 +325,17 @@ namespace AppLogic.Services
                     400);
             }
 
-            var documentoValidation = RegistroValidationHelper.ValidarDocumentoBase(request.TipoDocumento, request.Documento, nameof(ConfirmarSolicitudAltaAsync));
-            if (!documentoValidation.Success)
+            var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!documentoValidation.IsValid)
             {
                 return OperationResult<object?>.IsFailed(
-                    documentoValidation.ErrorCode,
+                    ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(ConfirmarSolicitudAltaAsync),
                     documentoValidation.Message,
-                    documentoValidation.HttpCode);
+                    400);
             }
 
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento);
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             if (tipoDocumento == "CI")
             {
                 return OperationResult<object?>.IsFailed(
@@ -653,6 +654,13 @@ namespace AppLogic.Services
             using var scope = _serviceScopeFactory.CreateScope();
             var ldap = scope.ServiceProvider.GetRequiredService<ILdap>();
             return await ldap.ExisteUsuarioLDAP(usuario);
+        }
+
+        private static string ObtenerCodigoValidacionDocumento(DocumentUtils.DocumentValidationError error)
+        {
+            return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
+                ? "REG_DOC_01"
+                : "REG_DOC_02";
         }
 
         private async Task<OperationResult<bool>> CrearUsuarioLdapAsync(LdapService.DTOs.ParamCrearUsuarioLdap request)

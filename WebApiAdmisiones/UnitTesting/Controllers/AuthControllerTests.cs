@@ -42,7 +42,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthentication_ReturnsOkAndSetsCookies()
         {
             // Arrange
-            var request = new LoginRequest
+            var request = new AuthRequest
             {
                 CodigoPersona = 12345,
                 Password = "testPassword"
@@ -80,7 +80,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthenticationWithLoggingEnabled_LogsInformation()
         {
             // Arrange
-            var request = new LoginRequest
+            var request = new AuthRequest
             {
                 CodigoPersona = 12345,
                 Password = "testPassword"
@@ -130,7 +130,7 @@ namespace UnitTesting.Controllers
         public async Task Login_FailedAuthentication_ReturnsError()
         {
             // Arrange
-            var request = new LoginRequest
+            var request = new AuthRequest
             {
                 CodigoPersona = 12345,
                 Password = "wrongPassword"
@@ -158,7 +158,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessWithNullData_ReturnsResultWithoutSettingCookies()
         {
             // Arrange
-            var request = new LoginRequest
+            var request = new AuthRequest
             {
                 CodigoPersona = 12345,
                 Password = "testPassword"

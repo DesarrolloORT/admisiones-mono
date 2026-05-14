@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using AppLogic.Constants;
 using AppLogic.DTOs;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
 
@@ -14,23 +15,23 @@ namespace AppLogic.Helpers
             return new SolicitudAlta
             {
                 IdSolicitudAlta = idSolicitudAlta,
-                DocumentoSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Documento),
-                SexoSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Sexo),
+                DocumentoSolicitudAlta = DocumentUtils.Normalizar(request.Documento),
+                SexoSolicitudAlta = DocumentUtils.Normalizar(request.Sexo),
                 IdEstadoSolicitudAlta = InscripcionesConstants.InteresProducto.EstadoSolicitudPendiente,
-                PrimerApellidoSolicitudAlta = RegistroNormalizationHelper.FormatoCapital(request.PrimerApellido),
-                SegundoApellidoSolicituAlta = RegistroNormalizationHelper.FormatoCapital(request.SegundoApellido),
-                PrimerNombreSolicitudAlta = RegistroNormalizationHelper.FormatoCapital(request.PrimerNombre),
-                SegundoNombreSolicitudAlta = RegistroNormalizationHelper.FormatoCapital(request.SegundoNombre),
+                PrimerApellidoSolicitudAlta = DocumentUtils.FormatoCapital(request.PrimerApellido),
+                SegundoApellidoSolicituAlta = DocumentUtils.FormatoCapital(request.SegundoApellido),
+                PrimerNombreSolicitudAlta = DocumentUtils.FormatoCapital(request.PrimerNombre),
+                SegundoNombreSolicitudAlta = DocumentUtils.FormatoCapital(request.SegundoNombre),
                 UsuarioSolicitudAlta = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                DireccionSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Direccion),
+                DireccionSolicitudAlta = DocumentUtils.Normalizar(request.Direccion),
                 CodigoPais = null,
                 CodigoEstado = null,
                 CodigoCiudad = null,
-                Telefono1SolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Telefono1),
-                Telefono2SolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Telefono2),
-                EmailSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.Mail),
+                Telefono1SolicitudAlta = DocumentUtils.Normalizar(request.Telefono1),
+                Telefono2SolicitudAlta = DocumentUtils.Normalizar(request.Telefono2),
+                EmailSolicitudAlta = DocumentUtils.Normalizar(request.Mail),
                 FechaNacimientoSolicituAlta = request.FechaNacimiento.Date,
-                TipoDocumentoSolicitudAlta = RegistroNormalizationHelper.Normalizar(request.TipoDocumento),
+                TipoDocumentoSolicitudAlta = DocumentUtils.Normalizar(request.TipoDocumento),
                 IdProducto = request.IdProducto,
                 IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
                 IdProceso = request.IdProceso
@@ -123,10 +124,10 @@ namespace AppLogic.Helpers
 
         public static Persona CrearPersona(long codigoPersona, RegistroConfirmarNuevaPersonaRequest request, Ciudad ciudad, DateTime now)
         {
-            var primerNombre = RegistroNormalizationHelper.FormatoCapital(request.PrimerNombre);
-            var segundoNombre = RegistroNormalizationHelper.FormatoCapital(request.SegundoNombre);
-            var primerApellido = RegistroNormalizationHelper.FormatoCapital(request.PrimerApellido);
-            var segundoApellido = RegistroNormalizationHelper.FormatoCapital(request.SegundoApellido);
+            var primerNombre = DocumentUtils.FormatoCapital(request.PrimerNombre);
+            var segundoNombre = DocumentUtils.FormatoCapital(request.SegundoNombre);
+            var primerApellido = DocumentUtils.FormatoCapital(request.PrimerApellido);
+            var segundoApellido = DocumentUtils.FormatoCapital(request.SegundoApellido);
 
             return new Persona
             {
@@ -137,18 +138,18 @@ namespace AppLogic.Helpers
                 SegundoNombre = segundoNombre,
                 PrimerApellido = primerApellido,
                 SegundoApellido = segundoApellido,
-                PrimerNombreMay = RegistroNormalizationHelper.NormalizarMayusculas(primerNombre),
-                SegundoNombreMay = RegistroNormalizationHelper.NormalizarMayusculas(segundoNombre),
-                PrimerApellidoMay = RegistroNormalizationHelper.NormalizarMayusculas(primerApellido),
-                SegundoApellidoMay = RegistroNormalizationHelper.NormalizarMayusculas(segundoApellido),
+                PrimerNombreMay = DocumentUtils.NormalizarMayusculas(primerNombre),
+                SegundoNombreMay = DocumentUtils.NormalizarMayusculas(segundoNombre),
+                PrimerApellidoMay = DocumentUtils.NormalizarMayusculas(primerApellido),
+                SegundoApellidoMay = DocumentUtils.NormalizarMayusculas(segundoApellido),
                 FechaNacimiento = request.FechaNacimiento.Date,
-                Sexo = RegistroNormalizationHelper.Normalizar(request.Sexo),
-                Direccion = RegistroNormalizationHelper.Normalizar(request.Direccion),
-                Telefono1 = RegistroNormalizationHelper.Normalizar(request.Telefono1),
-                Telefono2 = RegistroNormalizationHelper.Normalizar(request.Telefono2),
-                Email = RegistroNormalizationHelper.Normalizar(request.Mail),
-                Documento = RegistroNormalizationHelper.Normalizar(request.Documento),
-                TipoDocumento = RegistroNormalizationHelper.Normalizar(request.TipoDocumento),
+                Sexo = DocumentUtils.Normalizar(request.Sexo),
+                Direccion = DocumentUtils.Normalizar(request.Direccion),
+                Telefono1 = DocumentUtils.Normalizar(request.Telefono1),
+                Telefono2 = DocumentUtils.Normalizar(request.Telefono2),
+                Email = DocumentUtils.Normalizar(request.Mail),
+                Documento = DocumentUtils.Normalizar(request.Documento),
+                TipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento),
                 CodigoPais = request.CodigoPais,
                 CodigoEstado = request.CodigoEstado,
                 CodigoCiudad = request.CodigoCiudad,

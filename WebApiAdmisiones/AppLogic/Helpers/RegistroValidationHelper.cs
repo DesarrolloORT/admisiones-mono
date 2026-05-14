@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using AppLogic.DTOs;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
@@ -9,30 +10,6 @@ namespace AppLogic.Helpers
 {
     public static class RegistroValidationHelper
     {
-        private static readonly string[] TiposDocumentoPermitidos = ["CI", "DE", "PS", "CC"];
-
-        public static OperationResult<bool> ValidarDocumentoBase(string tipoDocumentoRaw, string documentoRaw, string method)
-        {
-            var tipoDocumento = RegistroNormalizationHelper.Normalizar(tipoDocumentoRaw);
-            var documento = RegistroNormalizationHelper.Normalizar(documentoRaw);
-
-            if (!TiposDocumentoPermitidos.Contains(tipoDocumento))
-            {
-                return OperationResult<bool>.IsFailed("REG_DOC_01", method, "Tipo de documento inválido.", 400, false);
-            }
-
-            if (tipoDocumento == "CI")
-            {
-                var mensaje = Util.ValidoCI(documento);
-                if (!string.IsNullOrWhiteSpace(mensaje))
-                {
-                    return OperationResult<bool>.IsFailed("REG_DOC_02", method, mensaje, 400, false);
-                }
-            }
-
-            return OperationResult<bool>.Ok(true, method);
-        }
-
         public static OperationResult<object?> ValidarProductoYProceso(
             IUnitOfWork uow,
             long idProducto,
@@ -65,17 +42,17 @@ namespace AppLogic.Helpers
             RegistroVerificarIdentidadRequest request,
             string method)
         {
-            var apellidoEntrada = RegistroNormalizationHelper.NormalizarMayusculas(request.PrimerApellido);
+            var apellidoEntrada = DocumentUtils.NormalizarMayusculas(request.PrimerApellido);
             var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
-                ? RegistroNormalizationHelper.Normalizar(persona.PrimerApellidoMay)
-                : RegistroNormalizationHelper.NormalizarMayusculas(persona.PrimerApellido);
+                ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+                : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
 
-            if (RegistroNormalizationHelper.Normalizar(persona.TipoDocumento) != RegistroNormalizationHelper.Normalizar(request.TipoDocumento)
-                || RegistroNormalizationHelper.Normalizar(persona.Documento) != RegistroNormalizationHelper.Normalizar(request.Documento)
+            if (DocumentUtils.Normalizar(persona.TipoDocumento) != DocumentUtils.Normalizar(request.TipoDocumento)
+                || DocumentUtils.Normalizar(persona.Documento) != DocumentUtils.Normalizar(request.Documento)
                 || apellidoPersona != apellidoEntrada
                 || !string.Equals(
-                    RegistroNormalizationHelper.Normalizar(persona.Email),
-                    RegistroNormalizationHelper.Normalizar(request.Mail),
+                    DocumentUtils.Normalizar(persona.Email),
+                    DocumentUtils.Normalizar(request.Mail),
                     StringComparison.OrdinalIgnoreCase))
             {
                 return OperationResult<object?>.IsFailed(
