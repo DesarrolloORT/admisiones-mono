@@ -8,9 +8,7 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Utilities;
 
 namespace AppLogic.Services

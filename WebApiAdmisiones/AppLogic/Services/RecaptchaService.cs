@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using AppLogic.IServices;
-using Microsoft.Extensions.Configuration;
 using Utilities;
 
 namespace AppLogic.Services
@@ -10,12 +9,10 @@ namespace AppLogic.Services
     {
         private const string DefaultProjectId = "admisiones-457619";
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
 
-        public RecaptchaService(HttpClient httpClient, IConfiguration configuration)
+        public RecaptchaService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _configuration = configuration;
         }
 
         public async Task<OperationResult<bool>> ValidarAsync(string token)
@@ -30,9 +27,9 @@ namespace AppLogic.Services
                     false);
             }
 
-            var siteKey = GetSetting("Recaptcha:SiteKey", "RecaptchaSiteKey");
-            var apiKey = GetSetting("Recaptcha:ApiKey", "RecaptchaApiKey");
-            var projectId = GetSetting("Recaptcha:ProjectId", "RecaptchaProjectId") ?? DefaultProjectId;
+            var siteKey = Environment.GetEnvironmentVariable("RECAPTCHA_SITE_KEY");
+            var apiKey = Environment.GetEnvironmentVariable("RECAPTCHA_API_KEY");
+            var projectId = DefaultProjectId;
             var minimumScore = GetMinimumScore();
 
             if (string.IsNullOrWhiteSpace(siteKey) || string.IsNullOrWhiteSpace(apiKey))
@@ -106,17 +103,9 @@ namespace AppLogic.Services
             }
         }
 
-        private string? GetSetting(string configurationKey, string environmentKey)
+        private static double GetMinimumScore()
         {
-            return _configuration[configurationKey]
-                ?? Environment.GetEnvironmentVariable(environmentKey);
-        }
-
-        private double GetMinimumScore()
-        {
-            var rawValue = _configuration["Recaptcha:Score"]
-                ?? Environment.GetEnvironmentVariable("RecaptchaScore")
-                ?? "0.5";
+            var rawValue = Environment.GetEnvironmentVariable("RECAPTCHA_SCORE") ?? "0.5";
 
             return double.TryParse(rawValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var score)
                 ? score
