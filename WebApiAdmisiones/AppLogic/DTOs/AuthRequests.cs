@@ -1,3 +1,4 @@
+using AppLogic.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
@@ -45,6 +46,27 @@ namespace AppLogic.DTOs
         /// </summary>
         [Required(ErrorMessage = "El primer apellido es requerido.")]
         public string? PrimerApellido { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para el cambio de password del usuario autenticado.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoCambiarPasswordRequest
+    {
+        /// <summary>
+        /// Password actual del usuario.
+        /// </summary>
+        [Required(ErrorMessage = "La password actual es requerida.")]
+        [Redact]
+        public required string PasswordActual { get; set; }
+
+        /// <summary>
+        /// Nueva password a establecer.
+        /// </summary>
+        [Required(ErrorMessage = "La nueva password es requerida.")]
+        [Redact]
+        public required string PasswordNueva { get; set; }
     }
 
     /// <summary>

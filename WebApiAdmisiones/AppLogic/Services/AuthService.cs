@@ -287,6 +287,64 @@ public class AuthService : IAuthService
         }
     }
 
+    /// <summary>
+    /// Cambia la password del usuario autenticado en LDAP.
+    /// </summary>
+    /// <param name="codigoPersona">Codigo de persona del usuario autenticado.</param>
+    /// <param name="request">Passwords actual y nueva.</param>
+    /// <returns>Resultado del cambio de password.</returns>
+    public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)
+    {
+        try
+        {
+            if (request == null)
+            {
+                return OperationResult<object>.IsFailed(
+                    "CAM_PAS_01",
+                    nameof(CambiarPasswordAsync),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var validacionPassword = Util.ValidarPassword(request.PasswordActual, request.PasswordNueva);
+            if (!string.IsNullOrWhiteSpace(validacionPassword))
+            {
+                return OperationResult<object>.IsFailed(
+                    "CAM_PAS_02",
+                    nameof(CambiarPasswordAsync),
+                    validacionPassword,
+                    400);
+            }
+
+            var cambioPassword = await _ldap.CambiarPasswordAsync(
+                codigoPersona.ToString(CultureInfo.InvariantCulture),
+                request.PasswordActual,
+                request.PasswordNueva);
+
+            if (!cambioPassword.Success)
+            {
+                return OperationResult<object>.IsFailed(
+                    cambioPassword.ErrorCode,
+                    nameof(CambiarPasswordAsync),
+                    cambioPassword.Message,
+                    cambioPassword.HttpCode);
+            }
+
+            return OperationResult<object>.Ok(
+                "Se actualizó tu contraseña",
+                nameof(CambiarPasswordAsync));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object>.IsFailed(
+               "CAM_PAS_99",
+               nameof(CambiarPasswordAsync),
+               $"Error al cambiar contraseña: {ex.Message}",
+               500,
+               default!);
+        }
+    }
+
     private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
     {
         return error == DocumentUtils.DocumentValidationError.InvalidDocumentType

@@ -1,5 +1,6 @@
 ﻿using AppLogic.DTOs;
 using AppLogic.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -335,6 +336,74 @@ namespace UnitTesting.Controllers
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
+        public void CambiarPassword_HasAuthorizeAndRequireCaptcha()
+        {
+            // Arrange
+            var method = typeof(AuthController).GetMethod(nameof(AuthController.CambiarPassword));
+
+            // Assert
+            Assert.NotNull(method);
+            Assert.Contains(
+                method!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true),
+                attribute => attribute is AuthorizeAttribute);
+            Assert.Contains(
+                method.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true),
+                attribute => attribute is RequireCaptchaAttribute);
+        }
+
+        [Fact]
+        public async Task CambiarPassword_WithAuthenticatedUser_ReturnsOkAndCallsService()
+        {
+            // Arrange
+            long codigoPersona = 12345;
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var result = OperationResult<object>.Ok(
+                "Se actualizó tu contraseña",
+                nameof(IAuthService.CambiarPasswordAsync));
+
+            _currentUserMock.Setup(x => x.UserId).Returns(codigoPersona);
+            _authServiceMock
+                .Setup(s => s.CambiarPasswordAsync(codigoPersona, request))
+                .ReturnsAsync(result);
+
+            // Act
+            var response = await _controller.CambiarPassword(request);
+
+            // Assert
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _authServiceMock.Verify(s => s.CambiarPasswordAsync(codigoPersona, request), Times.Once);
+        }
+
+        [Fact]
+        public async Task CambiarPassword_WithoutAuthenticatedUser_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+
+            // Act
+            var response = await _controller.CambiarPassword(request);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<object>>(unauthorizedResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("CAM_PAS_03", operationResult.ErrorCode);
+            _authServiceMock.Verify(
+                s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
+                Times.Never);
         }
     }
 }
