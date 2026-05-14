@@ -146,7 +146,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         [ProducesResponseType(typeof(OperationResult<object>), 500)]
-        public async Task<IActionResult> RecuperarPasswordEmpresa([FromBody] DtoRecuperarPasswordRequest request)
+        public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)
         {
             var result = await loginService.RecuperarPassword(request);
             return ValidateResponse(result);
@@ -162,7 +162,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Usuario no autenticado.</response>
         /// <response code="500">Error interno no controlado.</response>
         [Authorize]
-        [HttpPost("CambiarPassword")]
+        [HttpPost("CambiarContraseña")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         [ProducesResponseType(typeof(OperationResult<object>), 401)]

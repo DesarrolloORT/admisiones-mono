@@ -74,42 +74,12 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("TiposDocumentos")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
-        public IActionResult ObtenerTipoDocumentos()
-        {
-            var result = registroService.ObtenerTipoDocumentos();
-            return ValidateResponse(result);
-        }
-
-        [AllowAnonymous]
-        [HttpGet("Comienzos")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroComienzoResponse>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroComienzoResponse>>), 400)]
-        public IActionResult ObtenerComienzos([FromQuery] long idCarrera)
-        {
-            var result = registroService.ObtenerComienzos(idCarrera);
-            return ValidateResponse(result);
-        }
-
-        [AllowAnonymous]
         [HttpGet("PaisesEstadosCiudades")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
         public IActionResult ObtenerPaisesEstadosCiudades()
         {
             var result = registroService.ObtenerPaisesEstadosCiudades();
-            return ValidateResponse(result);
-        }
-
-        [AllowAnonymous]
-        [HttpGet("Carreras")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroCarreraResponse>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<RegistroCarreraResponse>>), 400)]
-        public IActionResult ObtenerCarreras()
-        {
-            var result = registroService.ObtenerCarreras();
             return ValidateResponse(result);
         }
     }

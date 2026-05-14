@@ -1,6 +1,7 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
+using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
@@ -51,6 +52,20 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var entidades = uow.AcaTipoDocumentos.GetAll().ToList();
             return OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(AcaTipoDocumentoConverter.ToDtos(entidades), nameof(ObtenerTipoDocumentos));
+        }
+
+        public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
+        {
+            using var uow = _uowFactory.Create();
+            var entidades = uow.Procesos.GetProcesosHabilitadosPorProducto(idCarrera);
+            return OperationResult<IEnumerable<DtoComienzoResponse>>.Ok(entidades.Select(ComienzosMapper.ToAdmisionesDto), nameof(ObtenerComienzos));
+        }
+
+        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
+        {
+            using var uow = _uowFactory.Create();
+            var entidades = uow.Productos.GetProductosVigentesParaRegistro();
+            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(entidades.Select(CarrerasMapper.ToAdmisionesDto), nameof(ObtenerCarreras));
         }
 
         public OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion()
@@ -142,6 +157,8 @@ namespace AppLogic.Services
 
             return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
         }
+
+
 
         private static List<DtoProductoBeca> ConstruirPendientesProductosBeca(IUnitOfWork uow, long codigoPersona)
         {

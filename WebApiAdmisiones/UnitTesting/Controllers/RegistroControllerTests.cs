@@ -146,73 +146,13 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
         }
 
-        [Fact]
-        public void ObtenerTipoDocumentos_ReturnsOk()
-        {
-            var serviceMock = new Mock<IRegistroService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<RegistroController>>();
-            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.ObtenerTipoDocumentos())
-                .Returns(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(
-                    [new DtoAcaTipoDocumentoDevart { CodTipoDocumento = 1, Descripcion = "Cedula" }],
-                    nameof(IRegistroService.ObtenerTipoDocumentos)));
-
-            var response = controller.ObtenerTipoDocumentos();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
-        [Fact]
-        public void ObtenerComienzos_ReturnsOk()
-        {
-            var serviceMock = new Mock<IRegistroService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<RegistroController>>();
-            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.ObtenerComienzos(10))
-                .Returns(OperationResult<IEnumerable<RegistroComienzoResponse>>.Ok(
-                    [new RegistroComienzoResponse { IdProceso = 20, NombreProceso = "Marzo" }],
-                    nameof(IRegistroService.ObtenerComienzos)));
-
-            var response = controller.ObtenerComienzos(10);
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
-        [Fact]
-        public void ObtenerCarreras_ReturnsOk()
-        {
-            var serviceMock = new Mock<IRegistroService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<RegistroController>>();
-            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.ObtenerCarreras())
-                .Returns(OperationResult<IEnumerable<RegistroCarreraResponse>>.Ok(
-                    [new RegistroCarreraResponse { IdProducto = 10, NombreProducto = "ATI" }],
-                    nameof(IRegistroService.ObtenerCarreras)));
-
-            var response = controller.ObtenerCarreras();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
         [Theory]
         [InlineData(nameof(RegistroController.EvaluarDocumento))]
         [InlineData(nameof(RegistroController.VerificarIdentidad))]
         [InlineData(nameof(RegistroController.ConfirmarPersonaExistente))]
         [InlineData(nameof(RegistroController.ConfirmarNuevaPersona))]
         [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta))]
-        [InlineData(nameof(RegistroController.ObtenerTipoDocumentos))]
-        [InlineData(nameof(RegistroController.ObtenerComienzos))]
         [InlineData(nameof(RegistroController.ObtenerPaisesEstadosCiudades))]
-        [InlineData(nameof(RegistroController.ObtenerCarreras))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)
         {
             var method = typeof(RegistroController).GetMethod(methodName);

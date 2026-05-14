@@ -196,20 +196,4 @@ namespace AppLogic.DTOs
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool SolicitudAltaExistente { get; set; }
     }
-
-    [ExcludeFromCodeCoverage]
-    public class RegistroCarreraResponse
-    {
-        public long IdProducto { get; set; }
-        public string? NombreProducto { get; set; }
-        public long IdNivelProducto { get; set; }
-        public string? NombreNivelProducto { get; set; }
-    }
-
-    [ExcludeFromCodeCoverage]
-    public class RegistroComienzoResponse
-    {
-        public long IdProceso { get; set; }
-        public string? NombreProceso { get; set; }
-    }
 }

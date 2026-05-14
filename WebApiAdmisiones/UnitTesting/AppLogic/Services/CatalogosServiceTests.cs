@@ -127,6 +127,53 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerComienzos_ReturnsMappedItems()
+        {
+            var repo = new Mock<IProcesoRepository>();
+            repo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(
+            [
+                new Proceso { IdProceso = 20, NombreProceso = "Marzo" }
+            ]);
+            _uowMock.Setup(u => u.Procesos).Returns(repo.Object);
+
+            var result = _service.ObtenerComienzos(10);
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerComienzos), result.Method);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProceso);
+            Assert.Equal("Marzo", item.NombreProceso);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_ReturnsMappedItems()
+        {
+            var repo = new Mock<IProductoRepository>();
+            repo.Setup(r => r.GetProductosVigentesParaRegistro()).Returns(
+            [
+                new Producto
+                {
+                    IdProducto = 10,
+                    NombreProducto = "ATI",
+                    NombreExtensoProducto = "Analista en TI",
+                    IdNivelProducto = 2,
+                    NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
+                }
+            ]);
+            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+
+            var result = _service.ObtenerCarreras();
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(10, item.IdProducto);
+            Assert.Equal("ATI", item.NombreProducto);
+            Assert.Equal(2, item.IdNivelProducto);
+            Assert.Equal("Carrera", item.NombreNivelProducto);
+        }
+
+        [Fact]
         public void ObtenerMotivosEleccion_ReturnsMappedItems()
         {
             var repo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();

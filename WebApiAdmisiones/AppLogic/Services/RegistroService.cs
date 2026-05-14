@@ -359,32 +359,6 @@ namespace AppLogic.Services
             return await CrearSolicitudAltaAsync(uow, request);
         }
 
-        public OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos()
-        {
-            return _catalogosService.ObtenerTipoDocumentos();
-        }
-
-        public OperationResult<IEnumerable<RegistroComienzoResponse>> ObtenerComienzos(long idCarrera)
-        {
-            var result = _preinscripcionService.ObtenerProcesosHabilitadosPorProducto(idCarrera);
-            if (!result.Success)
-            {
-                return OperationResult<IEnumerable<RegistroComienzoResponse>>.IsFailed(
-                    result.ErrorCode,
-                    nameof(ObtenerComienzos),
-                    result.Message,
-                    result.HttpCode);
-            }
-
-            var comienzos = result.Data?.Select(proceso => new RegistroComienzoResponse
-            {
-                IdProceso = proceso.IdProceso,
-                NombreProceso = proceso.NombreProceso
-            });
-
-            return OperationResult<IEnumerable<RegistroComienzoResponse>>.Ok(comienzos, nameof(ObtenerComienzos));
-        }
-
         public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
         {
             using var uow = _uowFactory.Create();
@@ -392,29 +366,6 @@ namespace AppLogic.Services
             var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
 
             return OperationResult<IEnumerable<DtoPaisDevart>>.Ok(paises.ToDtosWithRelated(2), nameof(ObtenerPaisesEstadosCiudades));
-        }
-
-        public OperationResult<IEnumerable<RegistroCarreraResponse>> ObtenerCarreras()
-        {
-            using var uow = _uowFactory.Create();
-
-            var entidades = uow.Productos.GetProductosVigentesParaRegistro();
-            var dtos = entidades.Select(MapCarrera).ToList();
-
-            return OperationResult<IEnumerable<RegistroCarreraResponse>>.Ok(
-                dtos,
-                nameof(ObtenerCarreras));
-        }
-
-        private static RegistroCarreraResponse MapCarrera(Producto producto)
-        {
-            return new RegistroCarreraResponse
-            {
-                IdProducto = producto.IdProducto,
-                NombreProducto = producto.NombreProducto,
-                IdNivelProducto = producto.IdNivelProducto,
-                NombreNivelProducto = producto.NivelProducto?.NombreNivelProducto
-            };
         }
 
         private async Task<OperationResult<object?>> RegistrarInteresYUsuarioAsync(

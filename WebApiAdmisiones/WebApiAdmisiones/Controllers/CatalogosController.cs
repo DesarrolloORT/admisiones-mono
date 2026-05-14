@@ -1,6 +1,7 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
+using AppLogic.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -34,6 +35,36 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerPais([FromQuery] long id)
         {
             var result = catalogosService.ObtenerPais(id);
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("TiposDocumentos")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
+        public IActionResult ObtenerTipoDocumentos()
+        {
+            var result = catalogosService.ObtenerTipoDocumentos();
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("Carreras")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 400)]
+        public IActionResult ObtenerCarreras()
+        {
+            var result = catalogosService.ObtenerCarreras();
+            return ValidateResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("Comienzos")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoComienzoResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoComienzoResponse>>), 400)]
+        public IActionResult ObtenerComienzos([FromQuery] long idCarrera)
+        {
+            var result = catalogosService.ObtenerComienzos(idCarrera);
             return ValidateResponse(result);
         }
 
