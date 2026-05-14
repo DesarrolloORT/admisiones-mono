@@ -64,34 +64,39 @@ namespace AppLogic.Services
             var documento = DocumentUtils.Normalizar(request.Documento);
 
             using var uow = _uowFactory.Create();
-            var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
-            if (persona == null)
+            if (tipoDocumento != "CI")
             {
-                if (tipoDocumento != "CI")
+                var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
+                if (solicitudAlta != null)
                 {
-                    var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
-                    if (solicitudAlta != null)
-                    {
-                        return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                            new RegistroEvaluacionResponse
-                            {
-                                SolicitudAltaExistente = true
-                            },
-                            nameof(EvaluarDocumentoAsync),
-                            "Ya existe una solicitud de alta para el documento indicado.");
-                    }
+                    return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
+                        new RegistroEvaluacionResponse
+                        {
+                            SolicitudAltaExistente = true
+                        },
+                        nameof(EvaluarDocumentoAsync),
+                        "Ya existe una solicitud de alta para el documento indicado.");
                 }
 
                 return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
                     new RegistroEvaluacionResponse
                     {
-                        RequiereAltaPersona = tipoDocumento == "CI",
-                        RequiereAltaSolicitud = tipoDocumento != "CI"
+                        RequiereAltaSolicitud = true
                     },
                     nameof(EvaluarDocumentoAsync),
-                    tipoDocumento == "CI"
-                        ? "La persona no existe. Se puede continuar con el alta."
-                        : "No existe persona ni solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.");
+                    "No existe solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.");
+            }
+
+            var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
+            if (persona == null)
+            {
+                return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
+                    new RegistroEvaluacionResponse
+                    {
+                        RequiereAltaPersona = true
+                    },
+                    nameof(EvaluarDocumentoAsync),
+                    "La persona no existe. Se puede continuar con el alta.");
             }
 
             var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));

@@ -185,7 +185,7 @@ namespace AppLogic.DTOs
         public bool RequiereAltaPersona { get; set; }
 
         /// <summary>
-        /// No existe persona ni solicitud de alta para el documento. El front debe pedir datos para crear la solicitud.
+        /// No existe solicitud de alta para el documento. El front debe pedir datos para crear la solicitud.
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool RequiereAltaSolicitud { get; set; }

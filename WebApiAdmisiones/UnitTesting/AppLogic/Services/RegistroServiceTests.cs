@@ -45,11 +45,8 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EvaluarDocumento_NonCiWithoutPersonaOrSolicitud_ReturnsAltaSolicitud()
         {
-            var personaRepo = new Mock<IPersonaRepository>();
             var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
-            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
             solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(SolicitudAlta)!);
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
             var request = new RegistroEvaluarDocumentoRequest
@@ -61,8 +58,10 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.EvaluarDocumentoAsync(request);
 
             Assert.True(result.Success);
+            Assert.Equal("No existe solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.", result.Message);
             Assert.True(result.Data!.RequiereAltaSolicitud);
             Assert.False(result.Data.RequiereAltaPersona);
+            _uowMock.Verify(u => u.Personas, Times.Never);
         }
 
         [Fact]
@@ -122,9 +121,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EvaluarDocumento_WithoutPersonaButWithSolicitudAlta_ReturnsExistingSolicitudMessage()
         {
-            var personaRepo = new Mock<IPersonaRepository>();
             var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
-            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
             solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(new SolicitudAlta
             {
                 IdSolicitudAlta = 10,
@@ -133,7 +130,6 @@ namespace UnitTesting.AppLogic.Services
                 PrimerApellidoSolicitudAlta = "Perez",
                 PrimerNombreSolicitudAlta = "Ana"
             });
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
             var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
@@ -147,6 +143,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.SolicitudAltaExistente);
             Assert.False(result.Data.RequiereAltaSolicitud);
             Assert.False(result.Data.RequiereAltaPersona);
+            _uowMock.Verify(u => u.Personas, Times.Never);
         }
 
         [Fact]
