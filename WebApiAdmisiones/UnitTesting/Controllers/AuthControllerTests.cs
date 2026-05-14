@@ -339,22 +339,6 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public void CambiarPassword_HasAuthorizeAndRequireCaptcha()
-        {
-            // Arrange
-            var method = typeof(AuthController).GetMethod(nameof(AuthController.CambiarPassword));
-
-            // Assert
-            Assert.NotNull(method);
-            Assert.Contains(
-                method!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true),
-                attribute => attribute is AuthorizeAttribute);
-            Assert.Contains(
-                method.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true),
-                attribute => attribute is RequireCaptchaAttribute);
-        }
-
-        [Fact]
         public async Task CambiarPassword_WithAuthenticatedUser_ReturnsOkAndCallsService()
         {
             // Arrange

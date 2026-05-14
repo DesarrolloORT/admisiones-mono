@@ -41,7 +41,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        //[RequireCaptcha]
+        [RequireCaptcha]
         [HttpPost("ConfirmarPersonaExistente")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -52,7 +52,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        //[RequireCaptcha]
+        [RequireCaptcha]
         [HttpPost("ConfirmarNuevaPersona")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -63,7 +63,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         [AllowAnonymous]
-        //[RequireCaptcha]
+        [RequireCaptcha]
         [HttpPost("ConfirmarSolicitudAlta")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
