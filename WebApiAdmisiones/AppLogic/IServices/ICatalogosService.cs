@@ -7,8 +7,10 @@ namespace AppLogic.IServices
     public interface ICatalogosService
     {
         OperationResult<DtoPaisDevart> ObtenerPais(long idPais);
-        OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaises();
+        OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
+        OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
+        OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();
         OperationResult<IEnumerable<DtoTituloDevart>> ObtenerBachilleratos(long idAnioBachillerato);

@@ -45,11 +45,8 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EvaluarDocumento_NonCiWithoutPersonaOrSolicitud_ReturnsAltaSolicitud()
         {
-            var personaRepo = new Mock<IPersonaRepository>();
             var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
-            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
             solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(SolicitudAlta)!);
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
             var request = new RegistroEvaluarDocumentoRequest
@@ -61,8 +58,10 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.EvaluarDocumentoAsync(request);
 
             Assert.True(result.Success);
+            Assert.Equal("No existe solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.", result.Message);
             Assert.True(result.Data!.RequiereAltaSolicitud);
             Assert.False(result.Data.RequiereAltaPersona);
+            _uowMock.Verify(u => u.Personas, Times.Never);
         }
 
         [Fact]
@@ -122,9 +121,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EvaluarDocumento_WithoutPersonaButWithSolicitudAlta_ReturnsExistingSolicitudMessage()
         {
-            var personaRepo = new Mock<IPersonaRepository>();
             var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
-            personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(Persona)!);
             solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(new SolicitudAlta
             {
                 IdSolicitudAlta = 10,
@@ -133,7 +130,6 @@ namespace UnitTesting.AppLogic.Services
                 PrimerApellidoSolicitudAlta = "Perez",
                 PrimerNombreSolicitudAlta = "Ana"
             });
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
             var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
@@ -147,6 +143,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.SolicitudAltaExistente);
             Assert.False(result.Data.RequiereAltaSolicitud);
             Assert.False(result.Data.RequiereAltaPersona);
+            _uowMock.Verify(u => u.Personas, Times.Never);
         }
 
         [Fact]
@@ -314,77 +311,6 @@ namespace UnitTesting.AppLogic.Services
             interesRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Once);
             interesProductoRepo.Verify(r => r.Add(It.IsAny<InteresProducto>()), Times.Once);
             _uowMock.Verify(u => u.Commit(), Times.Once);
-        }
-
-        [Fact]
-        public void ObtenerTipoDocumentos_DelegatesToCatalogosService()
-        {
-            var expected = OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(
-                [new DtoAcaTipoDocumentoDevart { CodTipoDocumento = 1, Descripcion = "Cedula" }],
-                nameof(IRegistroService.ObtenerTipoDocumentos));
-            _catalogosServiceMock.Setup(s => s.ObtenerTipoDocumentos()).Returns(expected);
-
-            var result = _service.ObtenerTipoDocumentos();
-
-            Assert.Same(expected, result);
-        }
-
-        [Fact]
-        public void ObtenerComienzos_ReturnsReducedDto()
-        {
-            var procesos = OperationResult<IEnumerable<DtoProcesoDevart>>.Ok(
-                [new DtoProcesoDevart { IdProceso = 20, NombreProceso = "Marzo" }],
-                nameof(IPreinscripcionService.ObtenerProcesosHabilitadosPorProducto));
-            _preinscripcionServiceMock
-                .Setup(s => s.ObtenerProcesosHabilitadosPorProducto(10))
-                .Returns(procesos);
-
-            var result = _service.ObtenerComienzos(10);
-
-            Assert.True(result.Success);
-            Assert.Equal(nameof(IRegistroService.ObtenerComienzos), result.Method);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(20, item.IdProceso);
-            Assert.Equal("Marzo", item.NombreProceso);
-        }
-
-        [Fact]
-        public void ObtenerCarreras_ReturnsMappedItems()
-        {
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetProductosVigentesParaRegistro()).Returns(
-            [
-                new Producto
-                {
-                    IdProducto = 10,
-                    NombreProducto = "ATI",
-                    NombreExtensoProducto = "Analista en TI",
-                    IdNivelProducto = 2,
-                    AliasProducto = "ATI",
-                    InscribibleProducto = "SI",
-                    IntermedioProducto = "NO",
-                    VisibleAdmisionesProducto = "SI",
-                    NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" },
-                    ProcesoProductos =
-                    [
-                        new ProcesoProducto
-                        {
-                            IdProceso = 20,
-                            Proceso = new Proceso { IdProceso = 20, NombreProceso = "Marzo" }
-                        }
-                    ]
-                }
-            ]);
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var result = _service.ObtenerCarreras();
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(10, item.IdProducto);
-            Assert.Equal("ATI", item.NombreProducto);
-            Assert.Equal(2, item.IdNivelProducto);
-            Assert.Equal("Carrera", item.NombreNivelProducto);
         }
 
         private static Persona CrearPersonaExistente()

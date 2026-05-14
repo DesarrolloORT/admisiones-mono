@@ -64,34 +64,39 @@ namespace AppLogic.Services
             var documento = DocumentUtils.Normalizar(request.Documento);
 
             using var uow = _uowFactory.Create();
-            var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
-            if (persona == null)
+            if (tipoDocumento != "CI")
             {
-                if (tipoDocumento != "CI")
+                var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
+                if (solicitudAlta != null)
                 {
-                    var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
-                    if (solicitudAlta != null)
-                    {
-                        return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                            new RegistroEvaluacionResponse
-                            {
-                                SolicitudAltaExistente = true
-                            },
-                            nameof(EvaluarDocumentoAsync),
-                            "Ya existe una solicitud de alta para el documento indicado.");
-                    }
+                    return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
+                        new RegistroEvaluacionResponse
+                        {
+                            SolicitudAltaExistente = true
+                        },
+                        nameof(EvaluarDocumentoAsync),
+                        "Ya existe una solicitud de alta para el documento indicado.");
                 }
 
                 return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
                     new RegistroEvaluacionResponse
                     {
-                        RequiereAltaPersona = tipoDocumento == "CI",
-                        RequiereAltaSolicitud = tipoDocumento != "CI"
+                        RequiereAltaSolicitud = true
                     },
                     nameof(EvaluarDocumentoAsync),
-                    tipoDocumento == "CI"
-                        ? "La persona no existe. Se puede continuar con el alta."
-                        : "No existe persona ni solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.");
+                    "No existe solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.");
+            }
+
+            var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
+            if (persona == null)
+            {
+                return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
+                    new RegistroEvaluacionResponse
+                    {
+                        RequiereAltaPersona = true
+                    },
+                    nameof(EvaluarDocumentoAsync),
+                    "La persona no existe. Se puede continuar con el alta.");
             }
 
             var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
@@ -357,64 +362,6 @@ namespace AppLogic.Services
             }
 
             return await CrearSolicitudAltaAsync(uow, request);
-        }
-
-        public OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos()
-        {
-            return _catalogosService.ObtenerTipoDocumentos();
-        }
-
-        public OperationResult<IEnumerable<RegistroComienzoResponse>> ObtenerComienzos(long idCarrera)
-        {
-            var result = _preinscripcionService.ObtenerProcesosHabilitadosPorProducto(idCarrera);
-            if (!result.Success)
-            {
-                return OperationResult<IEnumerable<RegistroComienzoResponse>>.IsFailed(
-                    result.ErrorCode,
-                    nameof(ObtenerComienzos),
-                    result.Message,
-                    result.HttpCode);
-            }
-
-            var comienzos = result.Data?.Select(proceso => new RegistroComienzoResponse
-            {
-                IdProceso = proceso.IdProceso,
-                NombreProceso = proceso.NombreProceso
-            });
-
-            return OperationResult<IEnumerable<RegistroComienzoResponse>>.Ok(comienzos, nameof(ObtenerComienzos));
-        }
-
-        public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
-        {
-            using var uow = _uowFactory.Create();
-
-            var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
-
-            return OperationResult<IEnumerable<DtoPaisDevart>>.Ok(paises.ToDtosWithRelated(2), nameof(ObtenerPaisesEstadosCiudades));
-        }
-
-        public OperationResult<IEnumerable<RegistroCarreraResponse>> ObtenerCarreras()
-        {
-            using var uow = _uowFactory.Create();
-
-            var entidades = uow.Productos.GetProductosVigentesParaRegistro();
-            var dtos = entidades.Select(MapCarrera).ToList();
-
-            return OperationResult<IEnumerable<RegistroCarreraResponse>>.Ok(
-                dtos,
-                nameof(ObtenerCarreras));
-        }
-
-        private static RegistroCarreraResponse MapCarrera(Producto producto)
-        {
-            return new RegistroCarreraResponse
-            {
-                IdProducto = producto.IdProducto,
-                NombreProducto = producto.NombreProducto,
-                IdNivelProducto = producto.IdNivelProducto,
-                NombreNivelProducto = producto.NivelProducto?.NombreNivelProducto
-            };
         }
 
         private async Task<OperationResult<object?>> RegistrarInteresYUsuarioAsync(

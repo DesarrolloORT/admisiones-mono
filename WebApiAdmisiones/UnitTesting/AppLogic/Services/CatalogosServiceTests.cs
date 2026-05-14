@@ -26,23 +26,48 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerPaises_ReturnsSortedPaises()
+        public void ObtenerPaisesEstadosCiudades_ReturnsPaisesWithRelatedData()
         {
             var paisRepo = new Mock<IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisesOrdenados()).Returns(new List<Pais>
+            paisRepo.Setup(r => r.GetPaisesConEstadosYCiudades()).Returns(new List<Pais>
             {
-                new Pais { CodigoPais = 1, Nombre = "Uruguay" },
-                new Pais { CodigoPais = 2, Nombre = "Argentina" }
+                new Pais
+                {
+                    CodigoPais = 1,
+                    Nombre = "Uruguay",
+                    Estado =
+                    [
+                        new Estado
+                        {
+                            CodigoPais = 1,
+                            CodigoEstado = 10,
+                            Nombre = "Montevideo",
+                            Ciudad =
+                            [
+                                new Ciudad
+                                {
+                                    CodigoPais = 1,
+                                    CodigoEstado = 10,
+                                    CodigoCiudad = 100,
+                                    Nombre = "Montevideo"
+                                }
+                            ]
+                        }
+                    ]
+                }
             });
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 
-            var result = _service.ObtenerPaises();
+            var result = _service.ObtenerPaisesEstadosCiudades();
 
             Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            var list = new List<DtoPaisDevart>(result.Data);
-            Assert.Equal(2, list.Count);
-            Assert.Equal(1, list[0].CodigoPais);
+            Assert.Equal(nameof(CatalogosService.ObtenerPaisesEstadosCiudades), result.Method);
+            var pais = Assert.Single(result.Data!);
+            Assert.Equal(1, pais.CodigoPais);
+            Assert.NotNull(pais.Estado);
+            Assert.Single(pais.Estado);
+            Assert.NotNull(pais.Estado[0].Ciudad);
+            Assert.Single(pais.Estado[0].Ciudad);
         }
 
         [Fact]
@@ -124,6 +149,53 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(2, list.Count);
             Assert.Equal((decimal)1, list[0].CodTipoDocumento);
             Assert.Equal("Cedula", list[0].Descripcion);
+        }
+
+        [Fact]
+        public void ObtenerComienzos_ReturnsMappedItems()
+        {
+            var repo = new Mock<IProcesoRepository>();
+            repo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(
+            [
+                new Proceso { IdProceso = 20, NombreProceso = "Marzo" }
+            ]);
+            _uowMock.Setup(u => u.Procesos).Returns(repo.Object);
+
+            var result = _service.ObtenerComienzos(10);
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerComienzos), result.Method);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProceso);
+            Assert.Equal("Marzo", item.NombreProceso);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_ReturnsMappedItems()
+        {
+            var repo = new Mock<IProductoRepository>();
+            repo.Setup(r => r.GetProductosVigentesParaRegistro()).Returns(
+            [
+                new Producto
+                {
+                    IdProducto = 10,
+                    NombreProducto = "ATI",
+                    NombreExtensoProducto = "Analista en TI",
+                    IdNivelProducto = 2,
+                    NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
+                }
+            ]);
+            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+
+            var result = _service.ObtenerCarreras();
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(10, item.IdProducto);
+            Assert.Equal("ATI", item.NombreProducto);
+            Assert.Equal(2, item.IdNivelProducto);
+            Assert.Equal("Carrera", item.NombreNivelProducto);
         }
 
         [Fact]

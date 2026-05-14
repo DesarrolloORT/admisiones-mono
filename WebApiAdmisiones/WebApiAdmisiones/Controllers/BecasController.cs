@@ -25,15 +25,15 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="404">No se encontró aceptación del reglamento para la persona.</response>
         /// <response code="400">Solicitud inválida.</response>
-        [HttpGet("AceptacionReglamentoEstudiantil")]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
-        public IActionResult ObtenerAceptacionReglamentoEstudiantil()
-        {
-            var result = becasService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
+        //[HttpGet("AceptacionReglamentoEstudiantil")]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
+        //public IActionResult ObtenerAceptacionReglamentoEstudiantil()
+        //{
+        //    var result = becasService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
+        //    return ValidateResponse(result);
+        //}
 
         /// <summary>
         /// Registra la aceptación del reglamento estudiantil para la persona autenticada.
@@ -44,34 +44,34 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">La encuesta no contiene producto o comienzo válidos.</response>
         /// <response code="404">No se encontró la persona o la encuesta inicial de admisión.</response>
         /// <response code="409">Ya existe una aceptación registrada para la persona, producto y comienzo.</response>
-        [HttpPost("AceptacionReglamentoEstudiantil")]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 409)]
-        public IActionResult RegistrarAceptacionReglamentoEstudiantil()
-        {
-            var result = becasService.RegistrarAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
+        //[HttpPost("AceptacionReglamentoEstudiantil")]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
+        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 409)]
+        //public IActionResult RegistrarAceptacionReglamentoEstudiantil()
+        //{
+        //    var result = becasService.RegistrarAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
+        //    return ValidateResponse(result);
+        //}
 
-        /// <summary>
-        /// Obtiene los fondos de beca vigentes para el alumno autenticado,
-        /// dado un producto y proceso.
-        /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>Lista de pruebas de beca vigentes.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Producto inválido.</response>
-        [HttpGet("FondosDeBecaVigentes")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 400)]
-        public IActionResult ObtenerFondosDeBecaVigentes([FromQuery] long idProducto, [FromQuery] long idProceso)
-        {
-            var result = becasService.ObtenerFondosDeBecaVigentes(idProducto, idProceso, _currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
+        ///// <summary>
+        ///// Obtiene los fondos de beca vigentes para el alumno autenticado,
+        ///// dado un producto y proceso.
+        ///// </summary>
+        ///// <param name="idProducto">ID del producto.</param>
+        ///// <param name="idProceso">ID del proceso.</param>
+        ///// <returns>Lista de pruebas de beca vigentes.</returns>
+        ///// <response code="200">Datos obtenidos correctamente.</response>
+        ///// <response code="400">Producto inválido.</response>
+        //[HttpGet("FondosDeBecaVigentes")]
+        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 200)]
+        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPruebaDevart>>), 400)]
+        //public IActionResult ObtenerFondosDeBecaVigentes([FromQuery] long idProducto, [FromQuery] long idProceso)
+        //{
+        //    var result = becasService.ObtenerFondosDeBecaVigentes(idProducto, idProceso, _currentUser.GetUserId());
+        //    return ValidateResponse(result);
+        //}
 
         #endregion
     }
