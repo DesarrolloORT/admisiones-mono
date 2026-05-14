@@ -7,12 +7,21 @@ namespace AppLogic.Constants
             public const string UsuarioAdmisiones = "ADMISIONES";
             public const string ObservacionesWeb = "ALTA DESDE ADMISIONES WEB";
             public const string FormatoHora = "HH:mm:ss";
+            public const string TipoPersonaSgi = "SGI";
+            public const string CodigoVigenciaActiva = "SI";
+            public const int EstadoSolicitudPendiente = 1;
+            public const int CodigoFuenteDatosAdmisiones = 170;
             public const int FormaContactoWeb = 7;
+            public const int TipoInteresComun = 2;
             public const int TipoActividadMonoAccion = 1;
             public const int TipoAccionRegistroSitioAdmisiones = 109;
             public const int EstadoAccionRealizada = 2;
+            public const int ResultadoAccionRealizada = 1;
             public const int LugarInteresWeb = 8;
             public const int GradoPurezaPuro = 0;
+            public const int GradoInteresDesinteresado = 0;
+            public const int GradoInteresRegistro = 4;
+            public const int MotivoDesinteresEleccionAdmisiones = 17;
         }
     }
 }

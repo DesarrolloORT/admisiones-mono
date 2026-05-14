@@ -29,6 +29,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddSingleton<IJsonSchemaRegistry, InMemoryJsonSchemaRegistry>();
             services.AddScoped<JsonSchemaValidationFilter>();
             services.AddScoped<InputRedactionLoggingFilter>();
+            services.AddScoped<RequireCaptchaFilter>();
 
             return services;
         }

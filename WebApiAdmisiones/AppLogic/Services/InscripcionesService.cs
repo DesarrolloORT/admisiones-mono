@@ -110,7 +110,6 @@ namespace AppLogic.Services
                 AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
                 ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
                 RegistrarActividadInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
-                uow.Save();
                 uow.Commit();
 
                 return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));

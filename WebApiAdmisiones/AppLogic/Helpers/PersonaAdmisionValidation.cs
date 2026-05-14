@@ -2,7 +2,7 @@ using AppLogic.Constants;
 using AppLogic.Requests;
 using Utilities;
 
-namespace AppLogic.Utilities
+namespace AppLogic.Helpers
 {
     public static class PersonaAdmisionValidation
     {

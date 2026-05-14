@@ -6,7 +6,6 @@ using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices;
 using AppLogic.Requests;
-using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

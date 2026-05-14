@@ -3,7 +3,6 @@ using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Interfaces;
-using AppLogic.Utilities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using System.Text.Json;

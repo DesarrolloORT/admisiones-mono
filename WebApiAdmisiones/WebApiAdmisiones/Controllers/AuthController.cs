@@ -32,7 +32,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
 
@@ -132,6 +132,56 @@ namespace WebApiAdmisiones.Controllers
             }
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Recuperar contraseña
+        /// </summary>
+        /// <param name="request">Datos de la persona a recuperar.</param>
+        /// <returns>Resultado del proceso con mensaje y codigos funcionales del servicio.</returns>
+        /// <response code="200">Recuperacion exitosa.</response>
+        /// <response code="400">Error de validacion o de negocio.</response>
+        /// <response code="500">Error interno no controlado.</response>
+        [HttpPost("RecuperarContraseña")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 500)]
+        public async Task<IActionResult> RecuperarPasswordEmpresa([FromBody] DtoRecuperarPasswordRequest request)
+        {
+            var result = await loginService.RecuperarPassword(request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Cambia la contraseña del usuario autenticado.
+        /// </summary>
+        /// <param name="request">Password actual y nueva password.</param>
+        /// <returns>Resultado del cambio de contraseña.</returns>
+        /// <response code="200">Contraseña actualizada correctamente.</response>
+        /// <response code="400">Error de validacion o de negocio.</response>
+        /// <response code="401">Usuario no autenticado.</response>
+        /// <response code="500">Error interno no controlado.</response>
+        [Authorize]
+        [HttpPost("CambiarPassword")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 401)]
+        [ProducesResponseType(typeof(OperationResult<object>), 500)]
+        public async Task<IActionResult> CambiarPassword([FromBody] DtoCambiarPasswordRequest request)
+        {
+            if (!_currentUser.UserId.HasValue)
+            {
+                var errorResult = OperationResult<object>.IsFailed(
+                    errorCode: "CAM_PAS_03",
+                    originMethod: nameof(CambiarPassword),
+                    message: "Usuario no autenticado.",
+                    httpCode: 401);
+
+                return ValidateResponse(errorResult);
+            }
+
+            var result = await loginService.CambiarPasswordAsync(_currentUser.UserId.Value, request);
+            return ValidateResponse(result);
         }
 
         #endregion

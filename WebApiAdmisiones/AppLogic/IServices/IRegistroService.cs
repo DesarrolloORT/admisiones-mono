@@ -7,10 +7,14 @@ namespace AppLogic.IServices
 {
     public interface IRegistroService
     {
-        OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaises();
+        Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request);
+        Task<OperationResult<object?>> VerificarIdentidadAsync(RegistroVerificarIdentidadRequest request);
+        Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(RegistroConfirmarPersonaExistenteRequest request);
+        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroConfirmarNuevaPersonaRequest request);
+        Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroConfirmarSolicitudAltaRequest request);
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
-        OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
+        OperationResult<IEnumerable<RegistroComienzoResponse>> ObtenerComienzos(long idCarrera);
         OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades();
-        OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosVigentes();
+        OperationResult<IEnumerable<RegistroCarreraResponse>> ObtenerCarreras();
     }
 }

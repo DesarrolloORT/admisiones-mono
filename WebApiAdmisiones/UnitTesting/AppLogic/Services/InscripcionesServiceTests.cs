@@ -274,7 +274,7 @@ namespace UnitTesting.AppLogic.Services
             actividadRepo.Verify(r => r.Add(It.Is<Actividad>(a => a.IdProceso == 20 && a.IdTipoAccion == 109m)), Times.Once);
             accionRepo.Verify(r => r.Add(It.Is<Accion>(a => a.CodigoPersona == 123 && a.IdActividad == 900m)), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
-            _uowMock.Verify(u => u.Save(), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 

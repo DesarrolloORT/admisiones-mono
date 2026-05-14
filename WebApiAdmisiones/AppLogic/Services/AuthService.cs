@@ -1,5 +1,7 @@
 using AppLogic.DTOs;
+using AppLogic.Helpers;
 using AppLogic.IServices;
+using AppLogic.Utilities;
 using BusinessLogic.IServices;
 using LdapService.Interfaces;
 using System.Globalization;
@@ -209,6 +211,145 @@ public class AuthService : IAuthService
                 500,
                 default!);
         }
+    }
+
+    /// <summary>
+    /// Gestiona la recuperación de password para usuarios
+    /// </summary>
+    /// <param name="request">Datos necesarios para identificar a la persona.</param>
+    /// <returns>Resultado codificado del proceso de recuperación.</returns>
+    public async Task<OperationResult<object>> RecuperarPassword(DtoRecuperarPasswordRequest request)
+    {
+        try
+        {
+            if (request == null)
+            {
+                return OperationResult<object>.IsFailed(
+                    "REC_PAS_01",
+                    nameof(RecuperarPassword),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var validacion = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
+            if (!validacion.IsValid)
+            {
+                return OperationResult<object>.IsFailed(
+                    ObtenerCodigoValidacionDocumentoRecuperarPassword(validacion.Error),
+                    nameof(RecuperarPassword),
+                    validacion.Message,
+                    400);
+            }
+
+            using var uow = _admisionesUowFactory.Create();
+            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(request.Documento);
+            var persona = uow.Personas.GetByDocumento(documento);
+
+            if (persona == null)
+            {
+                return OperationResult<object>.IsFailed(
+                    "REC_PAS_04",
+                    nameof(RecuperarPassword),
+                    $"No se encontró persona con el numero de documento {documento}",
+                    404);
+            }
+
+            var envioContrasenia = await _ldap.EnviarContrasenia(
+                string.Empty,
+                tipoDocumento,
+                documento,
+                request.PrimerApellido!.Trim(),
+                "ADMISIONES",
+                "SOLICITUD_DE_CONTRASEÑA");
+
+            if (!envioContrasenia.Success)
+            {
+                return OperationResult<object>.IsFailed(
+                    "REC_PAS_05",
+                    nameof(RecuperarPassword),
+                    envioContrasenia.Message,
+                    envioContrasenia.HttpCode);
+            }
+
+            return OperationResult<object>.Ok(
+                envioContrasenia.Data ?? string.Empty,
+                nameof(RecuperarPassword));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object>.IsFailed(
+               "REC_PAS_99",
+               nameof(RecuperarPassword),
+               $"Error al recuperar contraseña: {ex.Message}",
+               500,
+               default!);
+        }
+    }
+
+    /// <summary>
+    /// Cambia la password del usuario autenticado en LDAP.
+    /// </summary>
+    /// <param name="codigoPersona">Codigo de persona del usuario autenticado.</param>
+    /// <param name="request">Passwords actual y nueva.</param>
+    /// <returns>Resultado del cambio de password.</returns>
+    public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)
+    {
+        try
+        {
+            if (request == null)
+            {
+                return OperationResult<object>.IsFailed(
+                    "CAM_PAS_01",
+                    nameof(CambiarPasswordAsync),
+                    "La solicitud es obligatoria.",
+                    400);
+            }
+
+            var validacionPassword = Util.ValidarPassword(request.PasswordActual, request.PasswordNueva);
+            if (!string.IsNullOrWhiteSpace(validacionPassword))
+            {
+                return OperationResult<object>.IsFailed(
+                    "CAM_PAS_02",
+                    nameof(CambiarPasswordAsync),
+                    validacionPassword,
+                    400);
+            }
+
+            var cambioPassword = await _ldap.CambiarPasswordAsync(
+                codigoPersona.ToString(CultureInfo.InvariantCulture),
+                request.PasswordActual,
+                request.PasswordNueva);
+
+            if (!cambioPassword.Success)
+            {
+                return OperationResult<object>.IsFailed(
+                    cambioPassword.ErrorCode,
+                    nameof(CambiarPasswordAsync),
+                    cambioPassword.Message,
+                    cambioPassword.HttpCode);
+            }
+
+            return OperationResult<object>.Ok(
+                "Se actualizó tu contraseña",
+                nameof(CambiarPasswordAsync));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object>.IsFailed(
+               "CAM_PAS_99",
+               nameof(CambiarPasswordAsync),
+               $"Error al cambiar contraseña: {ex.Message}",
+               500,
+               default!);
+        }
+    }
+
+    private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
+    {
+        return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
+            ? "REC_PAS_02"
+            : "REC_PAS_03";
     }
 
     private static double ObtenerDiasExpiracionRefreshToken()

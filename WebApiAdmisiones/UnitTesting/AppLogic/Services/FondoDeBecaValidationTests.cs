@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.Utilities;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using Utilities;
 using Xunit;

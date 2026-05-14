@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using AppLogic.Constants;
+using AppLogic.Helpers;
 using AppLogic.Requests;
-using AppLogic.Utilities;
 using Utilities;
 using Xunit;
 
