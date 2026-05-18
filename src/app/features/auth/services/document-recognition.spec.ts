@@ -1,26 +1,24 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
-import { postRegistroAnalizarAdjuntoEndpoint } from 'src/app/shared/api/endpoints/generated/registro.endpoints';
 import { vi } from 'vitest';
 
+import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import { DocumentRecognitionRequestError } from '../models/document-recognition-error';
 import { DocumentRecognition } from './document-recognition';
 
 describe('DocumentRecognition', () => {
   let service: DocumentRecognition;
-  let apiMock: {
-    request: ReturnType<typeof vi.fn>;
+  let endpointMock: {
+    recognizeDocument: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
-    apiMock = {
-      request: vi.fn().mockReturnValue(of({ success: true })),
+    endpointMock = {
+      recognizeDocument: vi.fn().mockReturnValue(of({ success: true })),
     };
 
     TestBed.configureTestingModule({
-      providers: [DocumentRecognition, { provide: ApiHttpClient, useValue: apiMock }],
+      providers: [DocumentRecognition, { provide: AuthEndpoint, useValue: endpointMock }],
     });
 
     service = TestBed.inject(DocumentRecognition);
@@ -43,14 +41,13 @@ describe('DocumentRecognition', () => {
       expect(response.success).toBe(true);
     });
 
-    expect(apiMock.request).toHaveBeenCalledWith(postRegistroAnalizarAdjuntoEndpoint, {
-      body: payload,
-      withCredentials: true,
-    });
+    expect(endpointMock.recognizeDocument).toHaveBeenCalledWith(payload);
   });
 
-  it('should map http errors to domain errors', () => {
-    apiMock.request.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 500 })));
+  it('should propagate errors from the endpoint adapter', () => {
+    endpointMock.recognizeDocument.mockReturnValueOnce(
+      throwError(() => new DocumentRecognitionRequestError(500))
+    );
 
     service
       .recognizeDocument({

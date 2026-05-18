@@ -1,29 +1,29 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
+import {
+  getCatalogosPaisesEstadosCiudadesEndpoint,
+  getCatalogosTiposDocumentosEndpoint,
+} from 'src/app/shared/api/endpoints/generated/catalogos.endpoints';
 import { vi } from 'vitest';
 
-import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import { Catalogs } from './catalogs';
 
 describe('Catalogs', () => {
   let service: Catalogs;
-  let endpointMock: Record<string, ReturnType<typeof vi.fn>>;
+  let apiMock: {
+    list: ReturnType<typeof vi.fn>;
+    clearCache: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
-    endpointMock = {
-      getCountries: vi.fn().mockReturnValue(of([{ id: 1, label: 'Uruguay' }])),
-      getReasonsForChoice: vi.fn().mockReturnValue(of([{ id: 1, label: 'Recomendación' }])),
-      getAdvertisingChoices: vi.fn().mockReturnValue(of([{ id: 1, label: 'Redes sociales' }])),
-      getBaccalaureates: vi.fn().mockReturnValue(of([{ id: 1, label: 'Científico' }])),
-      getBaccalaureateYears: vi.fn().mockReturnValue(of([{ id: 1, label: '2024', year: 2024 }])),
-      getInstitutions: vi.fn().mockReturnValue(of([{ id: 1, label: 'Liceo 1' }])),
-      getUniversities: vi.fn().mockReturnValue(of([{ id: 1, label: 'ORT Uruguay' }])),
-      getScholarshipProducts: vi.fn().mockReturnValue(of([{ id: 1, label: 'Beca Excelencia' }])),
-      getScholarshipFunds: vi.fn().mockReturnValue(of([{ id: 1, label: 'Fondo ORT' }])),
+    apiMock = {
+      list: vi.fn(),
+      clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
-      providers: [Catalogs, { provide: CatalogsEndpoint, useValue: endpointMock }],
+      providers: [Catalogs, { provide: ApiHttpClient, useValue: apiMock }],
     });
 
     service = TestBed.inject(Catalogs);
@@ -33,83 +33,46 @@ describe('Catalogs', () => {
     vi.restoreAllMocks();
   });
 
-  it('should delegate getCountries to endpoint', () => {
+  it('should fetch and map document types with the generated endpoint', () => {
+    apiMock.list.mockReturnValue(of([{ id: 1, label: 'Cédula', code: 'CI' }]));
+
+    service.getDocumentTypes().subscribe(data => {
+      expect(data).toEqual([{ id: 1, label: 'Cédula', code: 'CI' }]);
+    });
+
+    expect(apiMock.list).toHaveBeenCalledWith(
+      getCatalogosTiposDocumentosEndpoint,
+      expect.any(Function)
+    );
+    expect(
+      apiMock.list.mock.calls[0][1]({
+        codTipoDocumento: 1,
+        descripcion: 'Cédula',
+        descrTd: 'CI',
+      })
+    ).toEqual({ id: 1, label: 'Cédula', code: 'CI' });
+  });
+
+  it('should fetch and map countries with the generated endpoint', () => {
+    apiMock.list.mockReturnValue(of([{ id: 1, label: 'Uruguay' }]));
+
     service.getCountries().subscribe(data => {
       expect(data).toEqual([{ id: 1, label: 'Uruguay' }]);
     });
-    expect(endpointMock['getCountries']).toHaveBeenCalled();
-  });
 
-  it('should cache getCountries result', () => {
-    service.getCountries().subscribe();
-    service.getCountries().subscribe();
-    service.getCountries().subscribe();
-
-    expect(endpointMock['getCountries']).toHaveBeenCalledTimes(1);
-  });
-
-  it('should delegate getReasonsForChoice to endpoint', () => {
-    service.getReasonsForChoice().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Recomendación' }]);
+    expect(apiMock.list).toHaveBeenCalledWith(
+      getCatalogosPaisesEstadosCiudadesEndpoint,
+      expect.any(Function)
+    );
+    expect(apiMock.list.mock.calls[0][1]({ codigoPais: 1, nombre: 'Uruguay' })).toEqual({
+      id: 1,
+      label: 'Uruguay',
     });
-    expect(endpointMock['getReasonsForChoice']).toHaveBeenCalled();
   });
 
-  it('should delegate getAdvertisingChoices to endpoint', () => {
-    service.getAdvertisingChoices().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Redes sociales' }]);
-    });
-    expect(endpointMock['getAdvertisingChoices']).toHaveBeenCalled();
-  });
-
-  it('should delegate getBaccalaureates to endpoint', () => {
-    service.getBaccalaureates().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Científico' }]);
-    });
-    expect(endpointMock['getBaccalaureates']).toHaveBeenCalled();
-  });
-
-  it('should delegate getBaccalaureateYears to endpoint', () => {
-    service.getBaccalaureateYears().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: '2024', year: 2024 }]);
-    });
-    expect(endpointMock['getBaccalaureateYears']).toHaveBeenCalled();
-  });
-
-  it('should delegate getInstitutions to endpoint', () => {
-    service.getInstitutions().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Liceo 1' }]);
-    });
-    expect(endpointMock['getInstitutions']).toHaveBeenCalled();
-  });
-
-  it('should delegate getUniversities to endpoint', () => {
-    service.getUniversities().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'ORT Uruguay' }]);
-    });
-    expect(endpointMock['getUniversities']).toHaveBeenCalled();
-  });
-
-  it('should delegate getScholarshipProducts to endpoint', () => {
-    service.getScholarshipProducts().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Beca Excelencia' }]);
-    });
-    expect(endpointMock['getScholarshipProducts']).toHaveBeenCalled();
-  });
-
-  it('should delegate getScholarshipFunds to endpoint', () => {
-    service.getScholarshipFunds().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Fondo ORT' }]);
-    });
-    expect(endpointMock['getScholarshipFunds']).toHaveBeenCalled();
-  });
-
-  it('should clear all caches', () => {
-    service.getCountries().subscribe();
+  it('should clear the shared api cache', () => {
     service.clearCache();
-    service.getCountries().subscribe();
 
-    expect(endpointMock['getCountries']).toHaveBeenCalledTimes(2);
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 });
-

@@ -1,17 +1,12 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
-import { postRegistroAnalizarAdjuntoEndpoint } from 'src/app/shared/api/endpoints/generated/registro.endpoints';
+import { Observable } from 'rxjs';
 
+import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import {
   DocumentRecognitionRequest,
   DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
-import {
-  DocumentRecognitionFileError,
-  DocumentRecognitionRequestError,
-} from '../models/document-recognition-error';
+import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 
 @Injectable({
   providedIn: 'root',
@@ -32,19 +27,14 @@ export class DocumentRecognition {
     heic: 'image/heic',
   };
 
-  private readonly api = inject(ApiHttpClient);
+  private readonly endpoint = inject(AuthEndpoint);
 
   public readonly maxFileSizeBytes = DocumentRecognition.MAX_FILE_SIZE_BYTES;
 
   public recognizeDocument(
     payload: DocumentRecognitionRequest
   ): Observable<DocumentRecognitionResponse> {
-    return this.api
-      .request(postRegistroAnalizarAdjuntoEndpoint, {
-        body: payload,
-        withCredentials: true,
-      })
-      .pipe(catchError(error => this.toRequestError(error)));
+    return this.endpoint.recognizeDocument(payload);
   }
 
   public async createRequestFromFile(file: File): Promise<DocumentRecognitionRequest> {
@@ -112,19 +102,5 @@ export class DocumentRecognition {
     }
 
     return fileName.slice(dotIndex + 1).toLowerCase();
-  }
-
-  private toRequestError(error: unknown): Observable<never> {
-    const status = this.getErrorStatus(error);
-    return throwError(() => new DocumentRecognitionRequestError(status));
-  }
-
-  private getErrorStatus(error: unknown): number | null {
-    if (!error || typeof error !== 'object' || !('status' in error)) {
-      return null;
-    }
-
-    const { status } = error as { status: unknown };
-    return typeof status === 'number' ? status : null;
   }
 }

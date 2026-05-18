@@ -12,15 +12,39 @@ export interface CatalogItem {
   label: string;
 }
 
+export interface DocumentType extends CatalogItem {
+  code: string;
+}
+
 export interface Country extends CatalogItem {
   code?: string;
 }
 
-export interface ReasonForChoice extends CatalogItem {}
+export interface LocationCity {
+  codigoPais: number;
+  codigoEstado: number;
+  codigoCiudad: number;
+  nombre: string;
+}
 
-export interface AdvertisingChoice extends CatalogItem {}
+export interface LocationState {
+  codigoPais: number;
+  codigoEstado: number;
+  nombre: string;
+  ciudad?: LocationCity[] | null;
+}
 
-export interface Baccalaureate extends CatalogItem {}
+export interface LocationCountry {
+  codigoPais: number;
+  nombre: string;
+  estado?: LocationState[] | null;
+}
+
+export type ReasonForChoice = CatalogItem;
+
+export type AdvertisingChoice = CatalogItem;
+
+export type Baccalaureate = CatalogItem;
 
 export interface BaccalaureateYear extends CatalogItem {
   year: number;
@@ -34,9 +58,8 @@ export interface University extends CatalogItem {
   country?: string;
 }
 
-export interface ScholarshipProduct extends CatalogItem {}
+export type ScholarshipProduct = CatalogItem;
 
 export interface ScholarshipFund extends CatalogItem {
   productId: number | string;
 }
-
