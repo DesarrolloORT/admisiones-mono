@@ -103,6 +103,7 @@ Documentacion relacionada:
 - [docs/WORKFLOW.md](docs/WORKFLOW.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
+- [docs/codegen/update-endpoints.md](docs/codegen/update-endpoints.md)
 
 > [!IMPORTANT]
 > Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.
@@ -132,8 +133,18 @@ src/
 tools/
 ```
 
-Las features deben seguir el flujo `pages/components -> services -> endpoints -> HttpClient/API`.
+Las features deben seguir el flujo
+`pages/components -> services -> ApiHttpClient -> endpoints generados -> API`.
 Ver [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md) para las reglas de capas.
+
+Los contratos tecnicos de la API se generan desde Swagger. Cuando cambia el
+backend, ejecutar `npm run update-api` para regenerar modelos en
+`src/app/shared/api-models/` y endpoints en
+`src/app/shared/api/endpoints/generated/`.
+
+`ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
+defecto los `GET` sin parámetros. Los servicios de feature solo pasan
+parámetros, request body y mapean el retorno cuando corresponde.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
@@ -163,6 +174,9 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
+- `update-endpoints`: actualiza constantes tipadas de endpoints desde Swagger.
+- `update-api`: ejecuta `update-models` y `update-endpoints`.
+- `check-api-contracts`: regenera contratos de API y falla si quedan diferencias en Git.
 
 ## Pre-commit hook
 
