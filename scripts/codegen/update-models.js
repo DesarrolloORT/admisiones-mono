@@ -1,11 +1,9 @@
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { dirname, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const ENV_DIR = resolve(ROOT, 'src/environments');
+import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
@@ -41,67 +39,24 @@ Options:
 }
 
 // ---------------------------------------------------------------------------
-// Environment file URL extraction
-// ---------------------------------------------------------------------------
-
-function extractApiOrigin(filePath) {
-  const content = readFileSync(filePath, 'utf-8');
-
-  // Collect top-level const/let/var string assignments
-  const vars = {};
-  for (const m of content.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*['"`]([^'"`\n]+)['"`]/g)) {
-    vars[m[1]] = m[2];
-  }
-
-  const urls = new Set();
-
-  // Plain string URLs
-  for (const m of content.matchAll(/['"`](https?:\/\/[^'"`\s${}]+)['"`]/g)) {
-    urls.add(m[1]);
-  }
-
-  // Template literals with ${VAR} prefix
-  for (const m of content.matchAll(/`\$\{(\w+)\}([^`]*)`/g)) {
-    if (vars[m[1]]) urls.add(vars[m[1]] + m[2]);
-  }
-
-  // Deduplicate by origin
-  const origins = [...urls].reduce((set, u) => {
-    try {
-      set.add(new URL(u).origin);
-    } catch {
-      /* skip invalid */
-    }
-    return set;
-  }, new Set());
-
-  return [...origins];
-}
-
-// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-const envFilePath = resolve(ENV_DIR, flags.env);
 const output = flags.output;
 
-if (!existsSync(envFilePath)) {
-  console.error(`✗ Environment file not found: src/environments/${flags.env}`);
+let swaggerSource;
+try {
+  swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
+} catch (error) {
+  console.error(`✗ ${error.message}`);
   process.exit(1);
 }
 
-const origins = extractApiOrigin(envFilePath);
-if (origins.length === 0) {
-  console.error('✗ No API URLs found in the environment file.');
-  process.exit(1);
-}
-
-const swaggerUrl = `${origins[0]}${flags['swagger-path']}`;
-const outputRel = relative(ROOT, resolve(ROOT, output));
+const outputRel = toProjectPath(output);
 
 console.log(`  env       : src/environments/${flags.env}`);
-console.log(`  origin    : ${origins[0]}`);
-console.log(`  swagger   : ${swaggerUrl}`);
+console.log(`  origin    : ${swaggerSource.origin}`);
+console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
 console.log(`  output    : ${outputRel}/\n`);
 
 // Clean previous generation to avoid stale models
@@ -113,7 +68,7 @@ mkdirSync(resolve(ROOT, output), { recursive: true });
 const cmd = [
   'npx --yes @openapitools/openapi-generator-cli generate',
   '--global-property models',
-  `-i "${swaggerUrl}"`,
+  `-i "${swaggerSource.swaggerUrl}"`,
   '-g typescript-angular',
   `-o ${output}`,
   '--additional-properties modelPropertyNaming=original',
@@ -135,4 +90,3 @@ try {
 } catch (error) {
   process.exit(error.status || 1);
 }
-
