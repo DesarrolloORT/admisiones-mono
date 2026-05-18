@@ -99,8 +99,13 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 ```typescript
 // endpoints/auth.endpoint.ts — UNICO archivo que conoce generated
 
-export interface LoginPayload { codigoPersona: number; password: string; }
-export interface LoginResult  { documento: string; }
+export interface LoginPayload {
+  codigoPersona: number;
+  password: string;
+}
+export interface LoginResult {
+  documento: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthEndpoint {
@@ -126,13 +131,13 @@ export class Auth {
 
 ### Que pasa cuando cambia el backend
 
-| Cambio en backend                        | Impacto en frontend                          |
-|------------------------------------------|----------------------------------------------|
-| Rename de URL (`/Auth/Login` → `/v2/...`)| Solo regenerar endpoints. Cero cambios.      |
-| Rename de campo en response              | Ajustar mapper en el adapter. Cero en services. |
-| Nuevo campo obligatorio en request       | Agregar al adapter payload. Ajustar services. |
-| Endpoint eliminado                       | `check-api-contracts` detecta. Borrar adapter method + service. |
-| Endpoint nuevo                           | Agregar method en adapter con tipos estables. |
+| Cambio en backend                         | Impacto en frontend                                             |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                         |
+| Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.                 |
+| Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.                   |
+| Endpoint eliminado                        | `check-api-contracts` detecta. Borrar adapter method + service. |
+| Endpoint nuevo                            | Agregar method en adapter con tipos estables.                   |
 
 ## Tipos generados vs tipos de feature
 
