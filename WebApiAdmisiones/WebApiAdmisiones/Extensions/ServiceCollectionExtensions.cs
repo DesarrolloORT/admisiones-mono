@@ -1,5 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using AppLogic.DTOs;
+using AzureService.DTOs;
+using Prometheus;
 using Sanitization.Code;
+using Utilities;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Extensions
@@ -9,6 +15,11 @@ namespace WebApiAdmisiones.Extensions
     /// </summary>
     public static class ServiceCollectionExtensions
     {
+        private const string ReconocimientoDocumentoRateLimitPolicy = "ReconocimientoDocumento";
+        private static readonly Counter ReconocimientoDocumentoRateLimitRejections = Metrics.CreateCounter(
+            "reconocimiento_documento_rate_limit_rejections_total",
+            "Cantidad de solicitudes de reconocimiento de documento rechazadas por rate limit.");
+
         /// <summary>
         /// Configura los controladores MVC con filtros globales de seguridad y validación.
         /// </summary>
@@ -60,8 +71,59 @@ namespace WebApiAdmisiones.Extensions
                           .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                           //.WithHeaders("authorization", "content-type", "x-request-id", "x-token")
                           .AllowAnyHeader()
-                          .DisallowCredentials();
+                          .AllowCredentials();
                 });
+            });
+
+            return services;
+        }
+
+        public static IServiceCollection AddReconocimientoDocumentoRateLimiting(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var configuredLimit = configuration.GetValue<int?>("ReconocimientoDocumento:RateLimitPerMinute");
+            var permitLimit = configuredLimit is > 0 ? configuredLimit.Value : 5;
+
+            services.AddRateLimiter(options =>
+            {
+                options.AddPolicy(ReconocimientoDocumentoRateLimitPolicy, httpContext =>
+                {
+                    var userKey = httpContext.User?.Identity?.IsAuthenticated == true
+                        ? httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+                          httpContext.User.FindFirst("sub")?.Value ??
+                          httpContext.User.Identity?.Name
+                        : null;
+
+                    var partitionKey = !string.IsNullOrWhiteSpace(userKey)
+                        ? $"user:{userKey}"
+                        : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey,
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = permitLimit,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0,
+                            AutoReplenishment = true
+                        });
+                });
+
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    ReconocimientoDocumentoRateLimitRejections.Inc();
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+                    var result = OperationResult<ReconocimientoDocumentoResponse>.IsFailed(
+                        "REC_DOC_15",
+                        ReconocimientoDocumentoRateLimitPolicy,
+                        "Se superó el límite de solicitudes de reconocimiento de documentos. Intentá nuevamente en unos minutos.",
+                        429,
+                        default!);
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
+                };
             });
 
             return services;
