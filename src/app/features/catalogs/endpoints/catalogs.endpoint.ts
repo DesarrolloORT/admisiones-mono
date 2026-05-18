@@ -1,105 +1,77 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
-
-import { CatalogRequestError, CatalogType } from '../models/catalog-error';
+import { catchError, map } from 'rxjs/operators';
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
 import {
-  AdvertisingChoice,
-  Baccalaureate,
-  BaccalaureateYear,
-  Country,
-  Institution,
-  ReasonForChoice,
-  ScholarshipFund,
-  ScholarshipProduct,
-  University,
-} from '../models/catalog.interface';
+  getCatalogosPaisesEstadosCiudadesEndpoint,
+  getCatalogosTiposDocumentosEndpoint,
+} from 'src/app/shared/api/endpoints/generated/catalogos.endpoints';
+
+import { Country, DocumentType } from '../models/catalog.interface';
+import { CatalogRequestError, CatalogType } from '../models/catalog-error';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CatalogsEndpoint {
-  private readonly http = inject(HttpClient);
+  private readonly api = inject(ApiHttpClient);
 
-  private readonly baseUrl = this.resolveUrl('/Catalogos');
-
-  public readonly countryUrl = `${this.baseUrl}/Pais`;
-  public readonly reasonsUrl = `${this.baseUrl}/MotivosEleccion`;
-  public readonly advertisingUrl = `${this.baseUrl}/PublicidadesEleccion`;
-  public readonly baccalaureateUrl = `${this.baseUrl}/Bachilleratos`;
-  public readonly baccalaureateYearUrl = `${this.baseUrl}/AnioBachiller`;
-  public readonly institutionUrl = `${this.baseUrl}/Instituciones`;
-  public readonly universityUrl = `${this.baseUrl}/Universidades`;
-  public readonly scholarshipProductUrl = `${this.baseUrl}/ProductosBeca`;
-  public readonly scholarshipFundUrl = `${this.baseUrl}/FondosDeBecaPorProducto`;
+  public getDocumentTypes(): Observable<DocumentType[]> {
+    return this.api.request(getCatalogosTiposDocumentosEndpoint).pipe(
+      map(result =>
+        this.fromData(result, item => ({
+          id: item.codTipoDocumento,
+          label: item.descripcion ?? '',
+          code: item.descrTd ?? '',
+        }))
+      ),
+      catchError(err => this.toRequestError('documentType', err))
+    );
+  }
 
   public getCountries(): Observable<Country[]> {
-    return this.http
-      .get<Country[]>(this.countryUrl)
-      .pipe(catchError(err => this.toRequestError('country', err)));
+    return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
+      map(result =>
+        this.fromData(result, item => ({
+          id: item.codigoPais,
+          label: item.nombre,
+        }))
+      ),
+      catchError(err => this.toRequestError('country', err))
+    );
   }
 
-  public getReasonsForChoice(): Observable<ReasonForChoice[]> {
-    return this.http
-      .get<ReasonForChoice[]>(this.reasonsUrl)
-      .pipe(catchError(err => this.toRequestError('reasonForChoice', err)));
-  }
+  private fromData<TItem, TResult>(
+    result: { data?: TItem | TItem[] | null },
+    mapper: (item: TItem) => TResult
+  ): TResult[] {
+    const data = result.data;
 
-  public getAdvertisingChoices(): Observable<AdvertisingChoice[]> {
-    return this.http
-      .get<AdvertisingChoice[]>(this.advertisingUrl)
-      .pipe(catchError(err => this.toRequestError('advertisingChoice', err)));
-  }
+    if (!data) {
+      return [];
+    }
 
-  public getBaccalaureates(): Observable<Baccalaureate[]> {
-    return this.http
-      .get<Baccalaureate[]>(this.baccalaureateUrl)
-      .pipe(catchError(err => this.toRequestError('baccalaureate', err)));
-  }
-
-  public getBaccalaureateYears(): Observable<BaccalaureateYear[]> {
-    return this.http
-      .get<BaccalaureateYear[]>(this.baccalaureateYearUrl)
-      .pipe(catchError(err => this.toRequestError('baccalaureateYear', err)));
-  }
-
-  public getInstitutions(): Observable<Institution[]> {
-    return this.http
-      .get<Institution[]>(this.institutionUrl)
-      .pipe(catchError(err => this.toRequestError('institution', err)));
-  }
-
-  public getUniversities(): Observable<University[]> {
-    return this.http
-      .get<University[]>(this.universityUrl)
-      .pipe(catchError(err => this.toRequestError('university', err)));
-  }
-
-  public getScholarshipProducts(): Observable<ScholarshipProduct[]> {
-    return this.http
-      .get<ScholarshipProduct[]>(this.scholarshipProductUrl)
-      .pipe(catchError(err => this.toRequestError('scholarshipProduct', err)));
-  }
-
-  public getScholarshipFunds(): Observable<ScholarshipFund[]> {
-    return this.http
-      .get<ScholarshipFund[]>(this.scholarshipFundUrl)
-      .pipe(catchError(err => this.toRequestError('scholarshipFund', err)));
+    return (Array.isArray(data) ? data : [data]).map(mapper);
   }
 
   private toRequestError(catalog: CatalogType, error: unknown): Observable<never> {
     const status = error instanceof HttpErrorResponse ? error.status : null;
-    return throwError(() => new CatalogRequestError(catalog, status));
+    return throwError(() => new CatalogRequestError(catalog, status, this.getErrorMessage(error)));
   }
 
-  private resolveUrl(path: string): string {
-    try {
-      return new URL(path, environment.API_URL).toString();
-    } catch {
-      return path;
+  private getErrorMessage(error: unknown): string | null {
+    if (error instanceof HttpErrorResponse) {
+      const payload = error.error;
+
+      if (payload && typeof payload === 'object' && 'message' in payload) {
+        const message = payload.message;
+        return typeof message === 'string' ? message : null;
+      }
+
+      return typeof payload === 'string' ? payload : error.message;
     }
+
+    return error instanceof Error ? error.message : null;
   }
 }
-
