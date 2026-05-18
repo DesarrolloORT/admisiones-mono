@@ -1,13 +1,13 @@
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
+import { AuthRequestError } from '../models/auth-error';
 import {
   AuthLoginRequest,
-  AuthLoginResponse,
   AuthRegisterRequest,
   AuthRegisterResponse,
   AuthSession,
@@ -25,14 +25,38 @@ export class Auth {
   public readonly isAuthenticated = computed(() => this.sessionState() !== null);
 
   public login(payload: AuthLoginRequest): Observable<AuthSession> {
-    return this.endpoint.login(payload).pipe(
-      map(response => this.toSession(response, payload)),
+    const codigoPersona = Number(payload.documentNumber);
+
+    if (!Number.isFinite(codigoPersona)) {
+      return throwError(() => new AuthRequestError('login', null));
+    }
+
+    return this.endpoint.login({ codigoPersona, password: payload.password }).pipe(
+      map(result => this.toSession(result.documento, payload)),
       tap(session => this.storeSession(session))
     );
   }
 
   public register(payload: AuthRegisterRequest): Observable<AuthRegisterResponse> {
-    return this.endpoint.register(payload);
+    const { identity, personal } = payload;
+
+    return this.endpoint.register({
+      tipoDocumento: identity.documentType,
+      documento: identity.documentNumber,
+      primerNombre: personal.primerNombre,
+      segundoNombre: personal.segundoNombre || null,
+      primerApellido: personal.primerApellido,
+      segundoApellido: personal.segundoApellido || null,
+      fechaNacimiento: personal.fechaNacimiento,
+      sexo: personal.sexo,
+      direccion: personal.direccion,
+      telefono1: personal.telefono1,
+      mail: personal.mail,
+      verificacionMail: personal.verificacionMail,
+      codigoPais: personal.codigoPais ?? undefined,
+      codigoEstado: personal.codigoEstado ?? undefined,
+      codigoCiudad: personal.codigoCiudad ?? undefined,
+    });
   }
 
   public logout(): void {
@@ -41,17 +65,12 @@ export class Auth {
     this.storage?.removeItem(storageKeys.session);
   }
 
-  private toSession(response: AuthLoginResponse, payload: AuthLoginRequest): AuthSession {
+  private toSession(documento: string, payload: AuthLoginRequest): AuthSession {
     return {
-      token:
-        response.token ??
-        response.accessToken ??
-        response.data?.token ??
-        response.data?.accessToken ??
-        null,
+      token: null,
       documentType: payload.documentType,
-      documentNumber: payload.documentNumber,
-      expiresAt: response.expiresAt ?? response.data?.expiresAt ?? null,
+      documentNumber: documento || payload.documentNumber,
+      expiresAt: null,
     };
   }
 
@@ -93,3 +112,4 @@ export class Auth {
     return this.document.defaultView?.localStorage ?? null;
   }
 }
+

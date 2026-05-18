@@ -16,7 +16,7 @@ describe('Auth', () => {
   beforeEach(() => {
     window.localStorage.clear();
     endpointMock = {
-      login: vi.fn().mockReturnValue(of({ token: 'token-123', expiresAt: '2026-05-11T18:00:00Z' })),
+      login: vi.fn().mockReturnValue(of({ documento: '12345678' })),
       register: vi.fn().mockReturnValue(of({ success: true })),
     };
 
@@ -40,17 +40,16 @@ describe('Auth', () => {
         password: 'secret',
       })
       .subscribe(session => {
-        expect(session.token).toBe('token-123');
+        expect(session.documentNumber).toBe('12345678');
         expect(auth.isAuthenticated()).toBe(true);
       });
 
     expect(endpointMock.login).toHaveBeenCalledWith({
-      documentType: 'CI',
-      documentNumber: '12345678',
+      codigoPersona: 12345678,
       password: 'secret',
     });
 
-    expect(window.localStorage.getItem(storageKeys.token)).toBe('token-123');
+    expect(window.localStorage.getItem(storageKeys.token)).toBeNull();
     expect(window.localStorage.getItem(storageKeys.session)).toContain('12345678');
   });
 
@@ -61,17 +60,19 @@ describe('Auth', () => {
         documentNumber: '12345678',
       },
       personal: {
-        firstName: 'Ana',
-        secondName: 'Maria',
-        firstLastName: 'Silva',
-        secondLastName: 'Pereira',
-        birthDate: '2000-01-01',
-        sex: 'F',
-        country: 'Uruguay',
-        address: 'Mercedes 1234',
-        phone: '099123456',
-        email: 'ana@example.com',
-        confirmEmail: 'ana@example.com',
+        primerNombre: 'Ana',
+        segundoNombre: 'Maria',
+        primerApellido: 'Silva',
+        segundoApellido: 'Pereira',
+        fechaNacimiento: '2000-01-01',
+        sexo: 'F',
+        codigoPais: 1,
+        codigoEstado: 10,
+        codigoCiudad: 100,
+        direccion: 'Mercedes 1234',
+        telefono1: '099123456',
+        mail: 'ana@example.com',
+        verificacionMail: 'ana@example.com',
       },
     };
 
@@ -79,6 +80,23 @@ describe('Auth', () => {
       expect(response.success).toBe(true);
     });
 
-    expect(endpointMock.register).toHaveBeenCalledWith(payload);
+    expect(endpointMock.register).toHaveBeenCalledWith({
+      tipoDocumento: 'CI',
+      documento: '12345678',
+      primerNombre: 'Ana',
+      segundoNombre: 'Maria',
+      primerApellido: 'Silva',
+      segundoApellido: 'Pereira',
+      fechaNacimiento: '2000-01-01',
+      sexo: 'F',
+      direccion: 'Mercedes 1234',
+      telefono1: '099123456',
+      mail: 'ana@example.com',
+      verificacionMail: 'ana@example.com',
+      codigoPais: 1,
+      codigoEstado: 10,
+      codigoCiudad: 100,
+    });
   });
 });
+
