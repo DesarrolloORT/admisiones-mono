@@ -79,7 +79,7 @@ export default [
   },
   {
     files: ['src/app/features/**/*.ts'],
-    ignores: ['src/app/features/**/endpoints/**/*.ts', '**/*.spec.ts'],
+    ignores: ['**/*.spec.ts', 'src/app/features/**/endpoints/**/*.ts'],
 
     rules: {
       'no-restricted-imports': [
@@ -88,17 +88,22 @@ export default [
           paths: [
             {
               name: '@angular/common/http',
-              message: 'Las features solo pueden usar HttpClient desde su capa endpoints/.',
+              message: 'Las features deben usar ApiHttpClient; HttpClient vive en shared/api/core.',
             },
             {
               name: 'src/environments/environment',
-              message: 'Las features solo pueden resolver configuracion de API desde endpoints/.',
+              message: 'Las features no deben resolver API_URL; usar ApiHttpClient.',
             },
           ],
           patterns: [
             {
               group: ['**/environments/environment'],
-              message: 'Las features solo pueden resolver configuracion de API desde endpoints/.',
+              message: 'Las features no deben resolver API_URL; usar ApiHttpClient.',
+            },
+            {
+              group: ['**/api/endpoints/generated/**', '**/api-models/**'],
+              message:
+                'Solo los adapters en endpoints/ pueden importar contratos generados. Los services usan el adapter de feature.',
             },
           ],
         },
@@ -185,3 +190,4 @@ export default [
   },
   eslintConfigPrettier,
 ];
+

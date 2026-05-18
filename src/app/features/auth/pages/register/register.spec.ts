@@ -53,7 +53,9 @@ describe('Register', () => {
                   codigoPais: 1,
                   codigoEstado: 10,
                   nombre: 'Montevideo',
-                  ciudad: [{ codigoPais: 1, codigoEstado: 10, codigoCiudad: 100, nombre: 'Montevideo' }],
+                  ciudad: [
+                    { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100, nombre: 'Montevideo' },
+                  ],
                 },
               ],
             },
@@ -229,3 +231,4 @@ describe('Register', () => {
     expect(component['error']()).toBe('Los e-mails ingresados no coinciden.');
   });
 });
+

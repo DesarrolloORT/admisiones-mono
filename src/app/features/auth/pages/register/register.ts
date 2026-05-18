@@ -13,8 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { Catalogs } from '../../../catalogs/services/catalogs';
-import { LocationSelect, LocationValue } from '../../components/location-select/location-select';
 import { AuthForm } from '../../components/auth-form/auth-form';
+import { LocationSelect, LocationValue } from '../../components/location-select/location-select';
 import { AuthRequestError } from '../../models/auth-error';
 import { AuthRegisterPersonalData } from '../../models/auth.interface';
 import {
