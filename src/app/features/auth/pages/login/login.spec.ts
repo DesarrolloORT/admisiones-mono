@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { Catalogs } from '../../../catalogs/services/catalogs';
 import { Auth } from '../../services/auth';
 import { Login } from './login';
 
@@ -11,6 +12,9 @@ describe('Login', () => {
   let component: Login;
   let authMock: {
     login: ReturnType<typeof vi.fn>;
+  };
+  let catalogsMock: {
+    getDocumentTypes: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -24,10 +28,23 @@ describe('Login', () => {
         })
       ),
     };
+    catalogsMock = {
+      getDocumentTypes: vi.fn().mockReturnValue(
+        of([
+          { id: 1, label: 'Cédula de identidad', code: 'CI' },
+          { id: 2, label: 'Pasaporte', code: 'PASS' },
+          { id: 3, label: 'DNI', code: 'DNI' },
+        ])
+      ),
+    };
 
     TestBed.configureTestingModule({
       imports: [Login],
-      providers: [provideRouter([]), { provide: Auth, useValue: authMock }],
+      providers: [
+        provideRouter([]),
+        { provide: Auth, useValue: authMock },
+        { provide: Catalogs, useValue: catalogsMock },
+      ],
     });
 
     fixture = TestBed.createComponent(Login);

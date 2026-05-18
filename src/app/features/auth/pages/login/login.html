@@ -6,9 +6,9 @@
       <ort-form-field>
         <ort-label>Tipo de documento</ort-label>
         <ort-select formControlName="documentType" id="login-document-type">
-          <ort-option value="CI">Cédula de identidad</ort-option>
-          <ort-option value="PASS">Pasaporte</ort-option>
-          <ort-option value="DNI">DNI</ort-option>
+          @for (docType of documentTypes$ | async; track docType.id) {
+          <ort-option [value]="docType.code">{{ docType.label }}</ort-option>
+          }
         </ort-select>
         @if (form.controls.documentType.touched && form.controls.documentType.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>

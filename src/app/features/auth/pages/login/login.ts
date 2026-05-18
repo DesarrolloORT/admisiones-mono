@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,6 +11,7 @@ import {
 } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
+import { Catalogs } from '../../../catalogs/services/catalogs';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { AuthRequestError } from '../../models/auth-error';
 import { Auth } from '../../services/auth';
@@ -23,6 +25,7 @@ interface LoginForm {
 @Component({
   selector: 'app-login',
   imports: [
+    AsyncPipe,
     AuthForm,
     OrtFormFieldModule,
     OrtInputModule,
@@ -38,7 +41,9 @@ interface LoginForm {
 })
 export class Login {
   private readonly auth = inject(Auth);
+  private readonly catalogs = inject(Catalogs);
 
+  protected readonly documentTypes$ = this.catalogs.getDocumentTypes();
   protected readonly isSubmitting = signal(false);
   protected readonly showPassword = signal(false);
   protected readonly error = signal<string | null>(null);
