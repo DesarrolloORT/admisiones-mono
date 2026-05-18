@@ -9,8 +9,10 @@
  */
 
 
-export interface LoginRequest { 
-    codigoPersona: number;
-    password: string;
+export interface RegistroCarreraResponse { 
+    idProducto?: number;
+    nombreProducto?: string | null;
+    idNivelProducto?: number;
+    nombreNivelProducto?: string | null;
 }
 

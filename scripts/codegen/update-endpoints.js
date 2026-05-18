@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import { relative, resolve } from 'node:path';
@@ -170,7 +170,9 @@ function printLlmFixPrompt(staleImports) {
       if (ref.suggestion) {
         lines.push(`  - ${stale.file}: replace "${ref.name}" with "${ref.suggestion}"`);
       } else {
-        lines.push(`  - ${stale.file}: remove import and usage of "${ref.name}" (endpoint no longer exists in the API)`);
+        lines.push(
+          `  - ${stale.file}: remove import and usage of "${ref.name}" (endpoint no longer exists in the API)`
+        );
       }
     }
   }
@@ -224,9 +226,7 @@ function extractExportedNames(outputDir) {
 
   let files;
   try {
-    files = readdirSync(outputDir).filter(
-      f => f.endsWith('.endpoints.ts') && f !== 'index.ts'
-    );
+    files = readdirSync(outputDir).filter(f => f.endsWith('.endpoints.ts') && f !== 'index.ts');
   } catch {
     return names;
   }
@@ -256,9 +256,7 @@ function extractNamesFromGeneration(generation) {
 
 function findMovedEndpoint(name, newNames, previousNames) {
   const previousFile = previousNames.get(name);
-  const baseName = name
-    .replace(/Endpoint$/, '')
-    .replace(/^(get|post|put|patch|delete)/, '');
+  const baseName = name.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
 
   for (const [newName, newFile] of newNames) {
     if (newFile === previousFile) continue;
@@ -327,7 +325,10 @@ function detectStaleImports(outputDir) {
     const missing = [];
 
     for (const match of content.matchAll(importRegex)) {
-      const names = match[1].split(',').map(n => n.trim()).filter(Boolean);
+      const names = match[1]
+        .split(',')
+        .map(n => n.trim())
+        .filter(Boolean);
       for (const name of names) {
         if (!allExports.has(name)) {
           const suggestion = suggestReplacement(name, allExports);
@@ -376,9 +377,7 @@ function findTsFilesImportingGenerated(srcDir, outputDir) {
 }
 
 function suggestReplacement(name, allExports) {
-  const baseName = name
-    .replace(/Endpoint$/, '')
-    .replace(/^(get|post|put|patch|delete)/, '');
+  const baseName = name.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
 
   if (baseName.length < 4) return null;
 
@@ -572,8 +571,16 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
   );
   const requestType = createRequestType(operation, method, localContext, 2);
   const responseType = createResponseType(operation, localContext, 2);
+  const endpointDocComment = buildEndpointDocComment(
+    operation,
+    method,
+    path,
+    operationId,
+    parameters,
+    context.swagger
+  );
 
-  const code = `export const ${constantName} = defineEndpoint<{
+  const code = `${endpointDocComment}export const ${constantName} = defineEndpoint<{
   pathParams: ${pathParamsType};
   queryParams: ${queryParamsType};
   request: ${requestType};
@@ -924,6 +931,107 @@ function getTagName(operation) {
   return tag?.trim() || 'general';
 }
 
+function buildEndpointDocComment(operation, method, path, operationId, parameters, swagger) {
+  const lines = [];
+
+  const summary = sanitizeDocText(operation.summary);
+  const description = sanitizeDocText(operation.description);
+
+  if (summary) {
+    lines.push(summary);
+  }
+
+  if (description) {
+    for (const line of description.split('\n')) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) {
+        lines.push('');
+        continue;
+      }
+      if (summary && trimmedLine === summary) {
+        continue;
+      }
+      lines.push(trimmedLine);
+    }
+  }
+
+  const requestBody = resolveMaybeRef(swagger, operation.requestBody);
+  const requestDescription = sanitizeDocText(requestBody?.description);
+  if (requestDescription) {
+    if (lines.length > 0 && lines.at(-1) !== '') {
+      lines.push('');
+    }
+    lines.push(`Request: ${requestDescription}`);
+  }
+
+  const parameterLines = (parameters ?? [])
+    .map(parameter => {
+      const parameterDescription = sanitizeDocText(parameter.description);
+      if (!parameterDescription) {
+        return '';
+      }
+      return `Param (${parameter.in}) ${parameter.name}: ${parameterDescription}`;
+    })
+    .filter(Boolean);
+
+  if (parameterLines.length > 0) {
+    if (lines.length > 0 && lines.at(-1) !== '') {
+      lines.push('');
+    }
+    lines.push(...parameterLines);
+  }
+
+  const responseLines = Object.keys(operation.responses ?? {})
+    .sort((a, b) => a.localeCompare(b))
+    .map(code => {
+      const response = resolveMaybeRef(swagger, operation.responses[code]);
+      const responseDescription = sanitizeDocText(response?.description);
+      if (!responseDescription) {
+        return '';
+      }
+      return `Response ${code}: ${responseDescription}`;
+    })
+    .filter(Boolean);
+
+  if (responseLines.length > 0) {
+    if (lines.length > 0 && lines.at(-1) !== '') {
+      lines.push('');
+    }
+    lines.push(...responseLines);
+  }
+
+  if (lines.length > 0 && lines.at(-1) !== '') {
+    lines.push('');
+  }
+
+  const metadataLines = [`Backend: ${method.toUpperCase()} ${path}`, `OperationId: ${operationId}`];
+
+  if (operation.deprecated === true) {
+    metadataLines.push('@deprecated Deprecated in Swagger contract.');
+  }
+
+  lines.push(...metadataLines);
+
+  const commentBody = lines
+    .map(line => {
+      if (!line) {
+        return ' *';
+      }
+      return ` * ${line}`;
+    })
+    .join('\n');
+
+  return `/**\n${commentBody}\n */\n`;
+}
+
+function sanitizeDocText(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.replaceAll('\r\n', '\n').replaceAll('\r', '\n').replaceAll('*/', '* /').trim();
+}
+
 function warnForHeaderParameters(parameters, context) {
   const headerParameters = parameters.filter(parameter => parameter.in === 'header');
   if (headerParameters.length === 0) {
@@ -1078,3 +1186,4 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
+
