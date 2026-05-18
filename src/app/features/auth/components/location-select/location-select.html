@@ -1,0 +1,36 @@
+<ort-form-field>
+  <ort-label>País</ort-label>
+  <ort-select id="location-country" [formControl]="countryControl" (selectionChange)="onCountryChange()"
+    (blur)="onBlur()">
+    <ort-option value="">Seleccioná...</ort-option>
+    @for (country of countries(); track country.codigoPais) {
+    <ort-option [value]="country.codigoPais.toString()">{{ country.nombre }}</ort-option>
+    }
+  </ort-select>
+</ort-form-field>
+
+@if (showStates()) {
+<ort-form-field>
+  <ort-label>Departamento / Estado</ort-label>
+  <ort-select id="location-state" [formControl]="stateControl" (selectionChange)="onStateChange()"
+    (blur)="onBlur()">
+    <ort-option value="">Seleccioná...</ort-option>
+    @for (state of states(); track state.codigoEstado) {
+    <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
+    }
+  </ort-select>
+</ort-form-field>
+}
+
+@if (showCities()) {
+<ort-form-field>
+  <ort-label>Ciudad</ort-label>
+  <ort-select id="location-city" [formControl]="cityControl" (selectionChange)="onCityChange()"
+    (blur)="onBlur()">
+    <ort-option value="">Seleccioná...</ort-option>
+    @for (city of cities(); track city.codigoCiudad) {
+    <ort-option [value]="city.codigoCiudad.toString()">{{ city.nombre }}</ort-option>
+    }
+  </ort-select>
+</ort-form-field>
+}
