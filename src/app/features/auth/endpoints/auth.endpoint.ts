@@ -2,20 +2,20 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import type { AuthRequest } from 'src/app/shared/api-models/model/authRequest';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
 import { postAuthLoginEndpoint } from 'src/app/shared/api/endpoints/generated/auth.endpoints';
 import {
   postRegistroAnalizarAdjuntoEndpoint,
   postRegistroConfirmarNuevaPersonaEndpoint,
 } from 'src/app/shared/api/endpoints/generated/registro.endpoints';
-import type { AuthRequest } from 'src/app/shared/api-models/model/authRequest';
 
+import { AuthRequestError, AuthRequestOperation } from '../models/auth-error';
+import { DocumentRecognitionRequestError } from '../models/document-recognition-error';
 import type {
   DocumentRecognitionRequest,
   DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
-import { AuthRequestError, AuthRequestOperation } from '../models/auth-error';
-import { DocumentRecognitionRequestError } from '../models/document-recognition-error';
 
 // ---------------------------------------------------------------------------
 // Stable public types — these are the contract that the rest of the feature
@@ -90,12 +90,10 @@ export class AuthEndpoint {
       password: payload.password,
     };
 
-    return this.api
-      .data(postAuthLoginEndpoint, { body, withCredentials: true })
-      .pipe(
-        map(response => ({ documento: response.persona?.documento ?? '' })),
-        catchError(error => this.toAuthError('login', error))
-      );
+    return this.api.data(postAuthLoginEndpoint, { body, withCredentials: true }).pipe(
+      map(response => ({ documento: response.persona?.documento ?? '' })),
+      catchError(error => this.toAuthError('login', error))
+    );
   }
 
   /**
@@ -147,3 +145,4 @@ export class AuthEndpoint {
     return error instanceof HttpErrorResponse ? error.status : null;
   }
 }
+

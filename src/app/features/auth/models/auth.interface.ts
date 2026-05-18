@@ -1,21 +1,13 @@
+import type { RegisterResult } from '../endpoints/auth.endpoint';
+
+// Frontend input for login form/use case. Mapped to LoginPayload in Auth service.
 export interface AuthLoginRequest {
   documentType: string;
   documentNumber: string;
   password: string;
 }
 
-export interface AuthLoginResponse {
-  token?: string;
-  accessToken?: string;
-  expiresAt?: string;
-  data?: {
-    token?: string;
-    accessToken?: string;
-    expiresAt?: string;
-  };
-  [key: string]: unknown;
-}
-
+// Frontend session model used by local state and storage.
 export interface AuthSession {
   token: string | null;
   documentType: string;
@@ -29,17 +21,19 @@ export interface AuthIdentityData {
 }
 
 export interface AuthRegisterPersonalData {
-  firstName: string;
-  secondName: string;
-  firstLastName: string;
-  secondLastName: string;
-  birthDate: string;
-  sex: string;
-  country: string;
-  address: string;
-  phone: string;
-  email: string;
-  confirmEmail: string;
+  primerNombre: string;
+  segundoNombre: string;
+  primerApellido: string;
+  segundoApellido: string;
+  fechaNacimiento: string;
+  sexo: string;
+  codigoPais: number | null;
+  codigoEstado: number | null;
+  codigoCiudad: number | null;
+  direccion: string;
+  telefono1: string;
+  mail: string;
+  verificacionMail: string;
 }
 
 export interface AuthRegisterRequest {
@@ -47,8 +41,5 @@ export interface AuthRegisterRequest {
   personal: AuthRegisterPersonalData;
 }
 
-export interface AuthRegisterResponse {
-  success?: boolean;
-  message?: string;
-  [key: string]: unknown;
-}
+// Stable type from endpoint adapter (not a backend DTO).
+export type AuthRegisterResponse = RegisterResult;
