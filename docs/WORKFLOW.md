@@ -39,10 +39,11 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 
 ## Estandares de codigo
 
-- Las features deben seguir el flujo `pages/components -> services -> endpoints -> HttpClient/API`.
+- Las features deben seguir el flujo `pages/components -> services -> ApiHttpClient -> endpoints generados -> API`.
 - Las pages, components y stores no deben importar endpoints ni `HttpClient` directamente.
 - Los servicios son la API interna que consumen los componentes de una feature.
-- Los endpoints son la unica capa de feature que resuelve URLs y usa `environment.API_URL`.
+- `ApiHttpClient` es la unica capa que resuelve URLs y usa `environment.API_URL`.
+- `ApiHttpClient` cachea por defecto los `GET` sin parámetros; los servicios no deben duplicar ese cache con `shareReplay`.
 
 Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 

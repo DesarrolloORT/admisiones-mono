@@ -15,8 +15,9 @@ Frontend Angular 21 standalone con Angular Material, Vitest y GitHub Actions par
 - `src/app/app.routes.ts`: definicion central de rutas.
 - `src/app/core/`: servicios, interceptores y constantes transversales.
 - `src/app/features/`: funcionalidades de producto separadas por dominio.
-- `src/app/shared/`: UI y utilidades reutilizables sin dependencia de features.
+- `src/app/shared/`: UI, utilidades reutilizables, modelos API generados y core HTTP.
 - `src/environments/`: configuracion por ambiente.
+- `scripts/codegen/`: generacion de contratos desde Swagger.
 - `scripts/testing/`: scripts para detectar o generar tests faltantes.
 - `.github/workflows/`: automatizacion de CI, despliegues, releases y etiquetado.
 
@@ -29,7 +30,7 @@ Cada feature bajo `src/app/features/<feature>/` debe respetar el flujo:
 > Ver [Features transversales](#features-transversales).
 
 ```text
-pages/components -> services -> endpoints -> HttpClient/API
+pages/components -> services -> ApiHttpClient -> endpoints generados -> API
 ```
 
 Capas esperadas:
@@ -37,12 +38,61 @@ Capas esperadas:
 - `pages/`: componentes de ruta, formularios, navegacion y estado visual.
 - `components/`: UI reutilizable de la feature.
 - `services/`: casos de uso y orquestacion consumidos por pages/components.
-- `endpoints/`: acceso HTTP, URLs, `environment.API_URL` y traduccion de errores HTTP.
+- `endpoints/`: adaptadores HTTP opcionales para casos especiales. En flujos
+  simples, el service de feature consume `ApiHttpClient` y endpoints generados
+  directamente.
 - `store/`: estado local con `signal` y `computed`.
 - `models/`: contratos, DTOs y errores de dominio.
 
 Las pages, components y stores no deben importar endpoints ni `HttpClient`
 directamente. Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
+
+## Contratos API generados
+
+El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
+frontend versiona dos salidas generadas:
+
+- `src/app/shared/api-models/`: modelos TypeScript generados por
+  `npm run update-models`.
+- `src/app/shared/api/endpoints/generated/`: constantes de endpoint generadas
+  por `npm run update-endpoints`.
+
+El comando recomendado para actualizar ambos contratos es:
+
+```bash
+npm run update-api
+```
+
+Los endpoints generados solo describen `operationId`, metodo, path, parametros,
+request y response. No contienen logica funcional ni reemplazan los servicios de
+feature. La ejecucion centralizada vive en
+`src/app/shared/api/core/api-http-client.service.ts`, que usa
+`environment.API_URL`, `HttpClient` y `buildApiPath`. Para los `OperationResult`
+del backend, los servicios deben preferir `api.data(...)` o `api.list(...)` y no
+leer `.data` a mano en cada llamada.
+
+Acoplamiento esperado:
+
+```text
+Swagger backend
+  -> npm run update-api
+  -> modelos y endpoints generados
+  -> servicios de aplicacion
+  -> pages, components, stores
+```
+
+Reglas:
+
+- no editar manualmente archivos generados;
+- no importar endpoints generados desde pages, components o stores;
+- mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
+- usar `npm run check-api-contracts` cuando se quiera validar drift contra Swagger.
+
+`ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
+`queryParams`. Esto cubre catálogos y datos de referencia sin agregar
+`shareReplay` en cada service. Los `GET` con parámetros no se cachean
+automáticamente porque normalmente dependen del filtro recibido. Para invalidar
+el cache compartido, llamar a `api.clearCache()` desde el service que corresponda.
 
 ## Decisiones tecnicas vigentes
 
@@ -95,16 +145,16 @@ módulos transversales que exponen datos o utilidades a múltiples features.
 ### `catalogs/`
 
 Agrupa endpoints de datos de referencia (países, bachilleratos, instituciones, etc.).
-Cualquier feature puede inyectar `Catalogs` (service) para obtener listas cacheadas.
+Cualquier feature puede inyectar `Catalogs` (service) para obtener listas de
+catálogos. El cache lo aplica `ApiHttpClient` automáticamente porque estos
+endpoints son `GET` sin parámetros.
 
 Estructura:
 
 ```text
 features/catalogs/
-  endpoints/catalogs.endpoint.ts   ← acceso HTTP
-  services/catalogs.ts             ← cache con shareReplay, API pública
+  services/catalogs.ts             ← ApiHttpClient, endpoints generados, mapeos y API pública
   models/catalog.interface.ts      ← tipos de cada catálogo
-  models/catalog-error.ts          ← error de dominio
 ```
 
 Uso desde otra feature:
@@ -115,9 +165,8 @@ private catalogs = inject(Catalogs);
 this.catalogs.getCountries().subscribe(countries => ...);
 ```
 
-El service cachea cada catálogo en memoria con `shareReplay(1)`. Si necesitás
-invalidar el cache (por ejemplo después de un cambio de sesión), llamá a
-`catalogs.clearCache()`.
+Si necesitás invalidar el cache compartido (por ejemplo después de un cambio de
+sesión), llamá a `catalogs.clearCache()`.
 
 ## Referencias relacionadas
 
@@ -125,4 +174,3 @@ invalidar el cache (por ejemplo después de un cambio de sesión), llamá a
 - [docs/SETUP.md](./SETUP.md)
 - [docs/WORKFLOW.md](./WORKFLOW.md)
 - [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md)
-

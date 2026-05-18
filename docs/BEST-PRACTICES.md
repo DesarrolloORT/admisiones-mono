@@ -10,7 +10,7 @@ orquestacion de casos de uso y acceso HTTP.
 El flujo obligatorio dentro de una feature es:
 
 ```text
-pages/components -> services -> endpoints -> HttpClient/API
+pages/components -> services -> ApiHttpClient -> endpoints generados -> API
 ```
 
 Ninguna `page`, `component` o `store` debe llamar endpoints ni importar
@@ -23,9 +23,39 @@ Cada feature vive bajo `src/app/features/<feature>/` y puede usar estas carpetas
 - `pages/`: componentes de ruta. Manejan UI, formularios, navegacion y estado visual.
 - `components/`: UI reutilizable dentro de la feature. No contiene llamadas HTTP ni conoce endpoints.
 - `services/`: casos de uso y orquestacion. Es la API que consumen pages y components.
-- `endpoints/`: unica capa de la feature que puede importar `HttpClient`, `HttpErrorResponse`, `environment.API_URL` y construir URLs.
+- `endpoints/`: adaptadores HTTP opcionales para casos especiales. En el caso
+  simple, el service de feature debe llamar `ApiHttpClient` con endpoints
+  generados directamente.
 - `store/`: estado local con `signal` y `computed`. No contiene HTTP ni endpoints.
-- `models/`: DTOs y contratos generados automaticamente desde la API del backend via `swagger_gen`. No se deben agregar ni modificar archivos en esta carpeta manualmente; el contenido es sobreescrito en cada regeneracion.
+- `models/`: tipos de dominio propios de la feature. No duplicar ahi DTOs que ya
+  existan en `src/app/shared/api-models/`.
+
+## Tipos generados vs tipos de feature
+
+Para evitar confusion, usar esta regla simple:
+
+- `src/app/shared/api-models/model/`: contrato tecnico generado desde Swagger.
+  Representa DTOs del backend y puede cambiar cuando se regenera con
+  `npm run update-models`.
+- `src/app/shared/api/endpoints/generated/`: firmas tecnicas de endpoints
+  (method, path, request, response) generadas por `npm run update-endpoints`.
+- `src/app/features/<feature>/models/`: tipos propios de frontend y dominio de
+  la feature. Se usan para formularios, estado local, view models y contratos
+  internos entre page/component/service.
+
+Regla de decision:
+
+- Si el tipo describe el request/response real del backend, usar generado.
+- Si el tipo describe como la UI trabaja los datos, crear tipo de feature.
+- Si el naming del backend no es ideal para UI, mapear en el service y no
+  propagar el DTO generado a toda la feature.
+
+Ejemplo en `auth`:
+
+- `AuthRequest` y `DtoAuthenticationResponse` vienen del contrato generado.
+- `AuthLoginRequest` y `AuthSession` son tipos de feature para formulario y
+  estado de sesion.
+- El service `Auth` transforma entre ambos modelos.
 
 Cuando una feature crece, se debe dividir por subdominio antes que agregar
 archivos genericos como `utils.ts`, `helpers.ts` o `common.ts`.
@@ -52,9 +82,45 @@ Register (page)  ──inject──>  Auth (service)  ──inject──>  AuthE
 - Las pages son dueñas del estado de la pantalla: signals de error, loading, pasos de wizard, navegacion. Hacen `inject()` de servicios y reaccionan a sus respuestas.
 - Los components deben quedarse cerca de la presentacion: inputs, outputs, formularios, eventos de usuario, mensajes visibles y bindings. No hacen `inject()` de servicios.
 - Los servicios deben coordinar endpoints, stores y transformaciones de dominio. Pueden exponer `Observable`, signals readonly o metodos imperativos segun el caso de uso.
-- Los endpoints deben ser pequenos, testeables y sin estado de UI. Solo arman request, URL, opciones HTTP y traducen errores HTTP a errores de dominio.
+- Los servicios deben ser la capa normal para usar la API. Para endpoints que
+  devuelven `OperationResult`, usar `api.data(endpoint, options)` o
+  `api.list(endpoint, mapper?, options?)` en vez de repetir `result.data` en cada
+  llamada.
+- `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
+  `queryParams`. No agregar `shareReplay` manual en servicios para catálogos o
+  datos de referencia simples. Si un caso necesita invalidar datos cacheados,
+  exponer un método funcional que delegue en `api.clearCache()`.
+- Crear un archivo en `endpoints/` solo cuando haya un caso especial real:
+  descarga de archivos, adaptación compleja, credenciales particulares o error
+  de dominio específico.
 - Los stores no deben saber de red. Reciben datos ya procesados y exponen estado con `signal`/`computed`.
-- Los modelos son autogenerados; no introducir tipos manuales en `models/`. Si se necesitan tipos de dominio propios, ubicarlos en `services/` o en un archivo dedicado fuera de `models/`.
+- Los modelos tecnicos generados viven en `src/app/shared/api-models/`; no se
+  editan manualmente. Si se necesitan tipos de dominio propios, ubicarlos dentro
+  de la feature y mapearlos desde/hacia el contrato generado.
+
+## Codegen de API
+
+Cuando cambia el contrato publicado por Swagger:
+
+```bash
+npm run update-api
+```
+
+Esto ejecuta:
+
+- `npm run update-models`: regenera modelos en `src/app/shared/api-models/`.
+- `npm run update-endpoints`: regenera constantes en
+  `src/app/shared/api/endpoints/generated/`.
+
+Para detectar drift en CI o antes de un PR:
+
+```bash
+npm run check-api-contracts
+```
+
+Si el generador muestra warnings por schemas ambiguos, la correccion debe hacerse
+en el backend Swagger. El frontend no debe corregir manualmente rutas, request
+bodies ni response types generados.
 
 ## Angular 21 y zoneless
 
@@ -82,8 +148,8 @@ pero la ubicacion preferida es junto al source.
 
 `eslint.config.js` bloquea imports prohibidos en features:
 
-- `@angular/common/http` y `src/environments/environment` fuera de `features/**/endpoints/`;
-- imports de `endpoints/` desde `pages/`, `components/` y `store/`.
+- `@angular/common/http` y `src/environments/environment` dentro de features;
+- imports de endpoints generados o manuales desde `pages/`, `components/` y `store/`.
 
 Si una excepcion parece necesaria, primero revisar si corresponde crear o ampliar
 un service de feature.
