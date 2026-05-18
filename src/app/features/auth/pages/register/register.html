@@ -34,9 +34,9 @@
       <ort-form-field>
         <ort-label>Tipo de documento</ort-label>
         <ort-select formControlName="documentType" id="register-document-type">
-          <ort-option value="CI">Cédula de identidad</ort-option>
-          <ort-option value="PASS">Pasaporte</ort-option>
-          <ort-option value="DNI">DNI</ort-option>
+          @for (docType of documentTypes$ | async; track docType.id) {
+          <ort-option [value]="docType.code">{{ docType.label }}</ort-option>
+          }
         </ort-select>
         @if (identityForm.controls.documentType.touched &&
         identityForm.controls.documentType.hasError('required')) {
@@ -79,81 +79,68 @@
     <section aria-label="Datos personales" class="auth-form-grid">
       <ort-form-field>
         <ort-label>Primer nombre</ort-label>
-        <input ortInput formControlName="firstName" id="first-name" type="text" />
-        @if (personalForm.controls.firstName.touched &&
-        personalForm.controls.firstName.hasError('required')) {
+        <input ortInput formControlName="primerNombre" id="first-name" type="text" />
+        @if (personalForm.controls.primerNombre.touched &&
+        personalForm.controls.primerNombre.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Segundo nombre</ort-label>
-        <input ortInput formControlName="secondName" id="second-name" type="text" />
-        @if (personalForm.controls.secondName.touched &&
-        personalForm.controls.secondName.hasError('required')) {
+        <input ortInput formControlName="segundoNombre" id="second-name" type="text" />
+        @if (personalForm.controls.segundoNombre.touched &&
+        personalForm.controls.segundoNombre.hasError('required')) {
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Primer apellido</ort-label>
-        <input ortInput formControlName="firstLastName" id="first-last-name" type="text" />
-        @if (personalForm.controls.firstLastName.touched &&
-        personalForm.controls.firstLastName.hasError('required')) {
+        <input ortInput formControlName="primerApellido" id="first-last-name" type="text" />
+        @if (personalForm.controls.primerApellido.touched &&
+        personalForm.controls.primerApellido.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Segundo apellido</ort-label>
-        <input ortInput formControlName="secondLastName" id="second-last-name" type="text" />
-        @if (personalForm.controls.secondLastName.touched &&
-        personalForm.controls.secondLastName.hasError('required')) {
+        <input ortInput formControlName="segundoApellido" id="second-last-name" type="text" />
+        @if (personalForm.controls.segundoApellido.touched &&
+        personalForm.controls.segundoApellido.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Fecha de nacimiento</ort-label>
-        <input ortInput formControlName="birthDate" id="birth-date" type="date" />
-        @if (personalForm.controls.birthDate.touched &&
-        personalForm.controls.birthDate.hasError('required')) {
+        <input ortInput formControlName="fechaNacimiento" id="birth-date" type="date" />
+        @if (personalForm.controls.fechaNacimiento.touched &&
+        personalForm.controls.fechaNacimiento.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Sexo</ort-label>
-        <ort-select formControlName="sex" id="sex">
+        <ort-select formControlName="sexo" id="sex">
           <ort-option value="">Seleccioná...</ort-option>
           <ort-option value="F">Femenino</ort-option>
           <ort-option value="M">Masculino</ort-option>
           <ort-option value="X">Otro</ort-option>
         </ort-select>
-        @if (personalForm.controls.sex.touched && personalForm.controls.sex.hasError('required')) {
+        @if (personalForm.controls.sexo.touched && personalForm.controls.sexo.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
-      <ort-form-field class="auth-field--wide">
-        <ort-label>País de residencia</ort-label>
-        <ort-select formControlName="country" id="country">
-          <ort-option value="">Seleccioná...</ort-option>
-          <ort-option value="Uruguay">Uruguay</ort-option>
-          <ort-option value="Argentina">Argentina</ort-option>
-          <ort-option value="Brasil">Brasil</ort-option>
-          <ort-option value="Otro">Otro</ort-option>
-        </ort-select>
-        @if (personalForm.controls.country.touched &&
-        personalForm.controls.country.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
+      <app-location-select class="auth-field--wide" formControlName="location"></app-location-select>
 
       <ort-form-field class="auth-field--wide">
         <ort-label>Dirección</ort-label>
-        <input ortInput formControlName="address" id="address" type="text" />
-        @if (personalForm.controls.address.touched &&
-        personalForm.controls.address.hasError('required')) {
+        <input ortInput formControlName="direccion" id="address" type="text" />
+        @if (personalForm.controls.direccion.touched &&
+        personalForm.controls.direccion.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
@@ -168,21 +155,21 @@
           <span class="auth-phone-flag"></span>
           +598
         </span>
-        <input ortInput autocomplete="tel" formControlName="phone" id="phone" inputmode="tel" placeholder="00 000 000"
+        <input ortInput autocomplete="tel" formControlName="telefono1" id="phone" inputmode="tel" placeholder="00 000 000"
           type="tel" />
-        @if (personalForm.controls.phone.touched &&
-        personalForm.controls.phone.hasError('required')) {
+        @if (personalForm.controls.telefono1.touched &&
+        personalForm.controls.telefono1.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>E-mail</ort-label>
-        <input ortInput autocomplete="email" formControlName="email" id="email" type="email" />
-        @if (personalForm.controls.email.touched &&
-        personalForm.controls.email.hasError('required')) {
+        <input ortInput autocomplete="email" formControlName="mail" id="email" type="email" />
+        @if (personalForm.controls.mail.touched &&
+        personalForm.controls.mail.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
-        } @if (personalForm.controls.email.touched && personalForm.controls.email.hasError('email'))
+        } @if (personalForm.controls.mail.touched && personalForm.controls.mail.hasError('email'))
         {
         <ort-error>Ingresá un e-mail válido</ort-error>
         }
@@ -190,12 +177,12 @@
 
       <ort-form-field>
         <ort-label>Confirmar e-mail</ort-label>
-        <input ortInput autocomplete="email" formControlName="confirmEmail" id="confirm-email" type="email" />
-        @if (personalForm.controls.confirmEmail.touched &&
-        personalForm.controls.confirmEmail.hasError('required')) {
+        <input ortInput autocomplete="email" formControlName="verificacionMail" id="confirm-email" type="email" />
+        @if (personalForm.controls.verificacionMail.touched &&
+        personalForm.controls.verificacionMail.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
-        } @if (personalForm.controls.confirmEmail.touched &&
-        personalForm.controls.confirmEmail.hasError('email')) {
+        } @if (personalForm.controls.verificacionMail.touched &&
+        personalForm.controls.verificacionMail.hasError('email')) {
         <ort-error>Ingresá un e-mail válido</ort-error>
         }
       </ort-form-field>

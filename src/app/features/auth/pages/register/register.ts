@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,6 +12,8 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
+import { Catalogs } from '../../../catalogs/services/catalogs';
+import { LocationSelect, LocationValue } from '../../components/location-select/location-select';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { AuthRequestError } from '../../models/auth-error';
 import { AuthRegisterPersonalData } from '../../models/auth.interface';
@@ -31,23 +34,25 @@ interface IdentityForm {
 }
 
 interface PersonalForm {
-  firstName: FormControl<string>;
-  secondName: FormControl<string>;
-  firstLastName: FormControl<string>;
-  secondLastName: FormControl<string>;
-  birthDate: FormControl<string>;
-  sex: FormControl<string>;
-  country: FormControl<string>;
-  address: FormControl<string>;
-  phone: FormControl<string>;
-  email: FormControl<string>;
-  confirmEmail: FormControl<string>;
+  primerNombre: FormControl<string>;
+  segundoNombre: FormControl<string>;
+  primerApellido: FormControl<string>;
+  segundoApellido: FormControl<string>;
+  fechaNacimiento: FormControl<string>;
+  sexo: FormControl<string>;
+  location: FormControl<LocationValue>;
+  direccion: FormControl<string>;
+  telefono1: FormControl<string>;
+  mail: FormControl<string>;
+  verificacionMail: FormControl<string>;
 }
 
 @Component({
   selector: 'app-register',
   imports: [
+    AsyncPipe,
     AuthForm,
+    LocationSelect,
     OrtFormFieldModule,
     OrtInputModule,
     OrtSelectModule,
@@ -62,9 +67,11 @@ interface PersonalForm {
 })
 export class Register {
   private readonly auth = inject(Auth);
+  private readonly catalogs = inject(Catalogs);
   private readonly documentRecognition = inject(DocumentRecognition);
   private readonly registerDocumentStore = inject(RegisterDocumentStore);
 
+  protected readonly documentTypes$ = this.catalogs.getDocumentTypes();
   protected readonly step = signal<RegisterStep>('identity');
   protected readonly selectedFileName = this.registerDocumentStore.selectedFileName;
   protected readonly isSubmitting = signal(false);
@@ -110,20 +117,23 @@ export class Register {
   });
 
   protected readonly personalForm = new FormGroup<PersonalForm>({
-    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    secondName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    firstLastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    secondLastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    birthDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    sex: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    country: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    phone: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    email: new FormControl('', {
+    primerNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    segundoNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    segundoApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    fechaNacimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    location: new FormControl<LocationValue>(
+      { codigoPais: null, codigoEstado: null, codigoCiudad: null },
+      { nonNullable: true, validators: [Validators.required] }
+    ),
+    direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    telefono1: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    mail: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
     }),
-    confirmEmail: new FormControl('', {
+    verificacionMail: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
     }),
@@ -186,12 +196,12 @@ export class Register {
     this.auth
       .register({
         identity: this.identityForm.getRawValue(),
-        personal: this.personalForm.getRawValue() satisfies AuthRegisterPersonalData,
+        personal: this.buildPersonalData(),
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: response => {
-          this.successMessage.set(response.message ?? 'Registro enviado correctamente.');
+        next: () => {
+          this.successMessage.set('Registro enviado correctamente.');
         },
         error: error => {
           this.error.set(this.getErrorMessage(error));
@@ -200,8 +210,18 @@ export class Register {
   }
 
   private emailsMatch(): boolean {
-    const { email, confirmEmail } = this.personalForm.getRawValue();
-    return email.trim().toLowerCase() === confirmEmail.trim().toLowerCase();
+    const { mail, verificacionMail } = this.personalForm.getRawValue();
+    return mail.trim().toLowerCase() === verificacionMail.trim().toLowerCase();
+  }
+
+  private buildPersonalData(): AuthRegisterPersonalData {
+    const { location, ...rest } = this.personalForm.getRawValue();
+    return {
+      ...rest,
+      codigoPais: location.codigoPais,
+      codigoEstado: location.codigoEstado,
+      codigoCiudad: location.codigoCiudad,
+    };
   }
 
   private async preloadDocumentData(file: File): Promise<void> {
@@ -231,13 +251,12 @@ export class Register {
       documentNumber: this.getStringValue(fields.numeroDocumento),
     };
     const personal = {
-      firstName: this.getStringValue(fields.primerNombre),
-      secondName: this.getStringValue(fields.segundoNombre),
-      firstLastName: this.getStringValue(fields.primerApellido),
-      secondLastName: this.getStringValue(fields.segundoApellido),
-      birthDate: this.getStringValue(fields.fechaNacimiento),
-      sex: this.getStringValue(fields.sexo),
-      country: this.getStringValue(fields.nacionalidad),
+      primerNombre: this.getStringValue(fields.primerNombre),
+      segundoNombre: this.getStringValue(fields.segundoNombre),
+      primerApellido: this.getStringValue(fields.primerApellido),
+      segundoApellido: this.getStringValue(fields.segundoApellido),
+      fechaNacimiento: this.getStringValue(fields.fechaNacimiento),
+      sexo: this.getStringValue(fields.sexo),
     };
 
     this.identityForm.patchValue(this.withoutEmptyValues(identity));

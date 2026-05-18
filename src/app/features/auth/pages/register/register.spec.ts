@@ -3,6 +3,9 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
+
+import { Catalogs } from '../../../catalogs/services/catalogs';
 import { Auth } from '../../services/auth';
 import { DocumentRecognition } from '../../services/document-recognition';
 import { Register } from './register';
@@ -13,6 +16,12 @@ describe('Register', () => {
   let authMock: {
     register: ReturnType<typeof vi.fn>;
   };
+  let catalogsMock: {
+    getDocumentTypes: ReturnType<typeof vi.fn>;
+  };
+  let apiHttpClientMock: {
+    request: ReturnType<typeof vi.fn>;
+  };
   let documentRecognitionMock: {
     createRequestFromFile: ReturnType<typeof vi.fn>;
     recognizeDocument: ReturnType<typeof vi.fn>;
@@ -20,7 +29,37 @@ describe('Register', () => {
 
   beforeEach(() => {
     authMock = {
-      register: vi.fn().mockReturnValue(of({ success: true, message: 'Registro enviado.' })),
+      register: vi.fn().mockReturnValue(of({ success: true })),
+    };
+    catalogsMock = {
+      getDocumentTypes: vi.fn().mockReturnValue(
+        of([
+          { id: 1, label: 'Cédula de identidad', code: 'CI' },
+          { id: 2, label: 'Pasaporte', code: 'PASS' },
+          { id: 3, label: 'DNI', code: 'DNI' },
+        ])
+      ),
+    };
+    apiHttpClientMock = {
+      request: vi.fn().mockReturnValue(
+        of({
+          success: true,
+          data: [
+            {
+              codigoPais: 1,
+              nombre: 'Uruguay',
+              estado: [
+                {
+                  codigoPais: 1,
+                  codigoEstado: 10,
+                  nombre: 'Montevideo',
+                  ciudad: [{ codigoPais: 1, codigoEstado: 10, codigoCiudad: 100, nombre: 'Montevideo' }],
+                },
+              ],
+            },
+          ],
+        })
+      ),
     };
     documentRecognitionMock = {
       createRequestFromFile: vi.fn().mockResolvedValue({
@@ -61,6 +100,8 @@ describe('Register', () => {
       providers: [
         provideRouter([]),
         { provide: Auth, useValue: authMock },
+        { provide: ApiHttpClient, useValue: apiHttpClientMock },
+        { provide: Catalogs, useValue: catalogsMock },
         { provide: DocumentRecognition, useValue: documentRecognitionMock },
       ],
     });
@@ -115,8 +156,8 @@ describe('Register', () => {
       documentType: 'CI',
       documentNumber: '12345678',
     });
-    expect(component['personalForm'].controls.firstName.value).toBe('Ana');
-    expect(component['personalForm'].controls.firstLastName.value).toBe('Silva');
+    expect(component['personalForm'].controls.primerNombre.value).toBe('Ana');
+    expect(component['personalForm'].controls.primerApellido.value).toBe('Silva');
     expect(component['recognitionSuccessMessage']()).toBe(
       'Datos precargados. Revisalos antes de continuar.'
     );
@@ -128,17 +169,17 @@ describe('Register', () => {
       documentNumber: '12345678',
     });
     component['personalForm'].setValue({
-      firstName: 'Ana',
-      secondName: 'Maria',
-      firstLastName: 'Silva',
-      secondLastName: 'Pereira',
-      birthDate: '2000-01-01',
-      sex: 'F',
-      country: 'Uruguay',
-      address: 'Mercedes 1234',
-      phone: '099123456',
-      email: 'ana@example.com',
-      confirmEmail: 'ana@example.com',
+      primerNombre: 'Ana',
+      segundoNombre: 'Maria',
+      primerApellido: 'Silva',
+      segundoApellido: 'Pereira',
+      fechaNacimiento: '2000-01-01',
+      sexo: 'F',
+      location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
+      direccion: 'Mercedes 1234',
+      telefono1: '099123456',
+      mail: 'ana@example.com',
+      verificacionMail: 'ana@example.com',
     });
 
     component['submitPersonalData']();
@@ -149,35 +190,37 @@ describe('Register', () => {
         documentNumber: '12345678',
       },
       personal: {
-        firstName: 'Ana',
-        secondName: 'Maria',
-        firstLastName: 'Silva',
-        secondLastName: 'Pereira',
-        birthDate: '2000-01-01',
-        sex: 'F',
-        country: 'Uruguay',
-        address: 'Mercedes 1234',
-        phone: '099123456',
-        email: 'ana@example.com',
-        confirmEmail: 'ana@example.com',
+        primerNombre: 'Ana',
+        segundoNombre: 'Maria',
+        primerApellido: 'Silva',
+        segundoApellido: 'Pereira',
+        fechaNacimiento: '2000-01-01',
+        sexo: 'F',
+        codigoPais: 1,
+        codigoEstado: 10,
+        codigoCiudad: 100,
+        direccion: 'Mercedes 1234',
+        telefono1: '099123456',
+        mail: 'ana@example.com',
+        verificacionMail: 'ana@example.com',
       },
     });
-    expect(component['successMessage']()).toBe('Registro enviado.');
+    expect(component['successMessage']()).toBe('Registro enviado correctamente.');
   });
 
   it('should reject mismatched emails before submitting', () => {
     component['personalForm'].setValue({
-      firstName: 'Ana',
-      secondName: 'Maria',
-      firstLastName: 'Silva',
-      secondLastName: 'Pereira',
-      birthDate: '2000-01-01',
-      sex: 'F',
-      country: 'Uruguay',
-      address: 'Mercedes 1234',
-      phone: '099123456',
-      email: 'ana@example.com',
-      confirmEmail: 'otra@example.com',
+      primerNombre: 'Ana',
+      segundoNombre: 'Maria',
+      primerApellido: 'Silva',
+      segundoApellido: 'Pereira',
+      fechaNacimiento: '2000-01-01',
+      sexo: 'F',
+      location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
+      direccion: 'Mercedes 1234',
+      telefono1: '099123456',
+      mail: 'ana@example.com',
+      verificacionMail: 'otra@example.com',
     });
 
     component['submitPersonalData']();
