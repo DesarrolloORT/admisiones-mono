@@ -10,7 +10,7 @@ orquestacion de casos de uso y acceso HTTP.
 El flujo obligatorio dentro de una feature es:
 
 ```text
-pages/components -> services -> ApiHttpClient -> endpoints generados -> API
+pages/components -> services -> endpoint adapter -> ApiHttpClient -> generated -> API
 ```
 
 Ninguna `page`, `component` o `store` debe llamar endpoints ni importar
@@ -23,12 +23,116 @@ Cada feature vive bajo `src/app/features/<feature>/` y puede usar estas carpetas
 - `pages/`: componentes de ruta. Manejan UI, formularios, navegacion y estado visual.
 - `components/`: UI reutilizable dentro de la feature. No contiene llamadas HTTP ni conoce endpoints.
 - `services/`: casos de uso y orquestacion. Es la API que consumen pages y components.
-- `endpoints/`: adaptadores HTTP opcionales para casos especiales. En el caso
-  simple, el service de feature debe llamar `ApiHttpClient` con endpoints
-  generados directamente.
+- `endpoints/`: **adapters HTTP**. Es la unica capa que importa endpoints
+  generados y DTOs de backend. Expone una interfaz publica estable con tipos
+  propios de frontend. Si el backend cambia URL, método o shape de respuesta,
+  solo este archivo se modifica.
 - `store/`: estado local con `signal` y `computed`. No contiene HTTP ni endpoints.
 - `models/`: tipos de dominio propios de la feature. No duplicar ahi DTOs que ya
   existan en `src/app/shared/api-models/`.
+
+## Endpoint adapters: contrato estable de API
+
+### Problema que resuelven
+
+Los endpoints generados (`src/app/shared/api/endpoints/generated/`) cambian
+cada vez que se ejecuta `npm run update-api`. Si los services importan generated
+directo, un rename de URL o de DTO en backend obliga a tocar toda la feature.
+
+### Solucion
+
+Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
+**unica puerta de entrada a la API**. Este adapter:
+
+1. Importa endpoints generados y DTOs de backend (capa inestable).
+2. Expone metodos publicos con tipos propios de frontend (capa estable).
+3. Mapea request/response entre ambos mundos.
+
+### Que es estable (no cambia con update-api)
+
+- Los metodos publicos del adapter (`login()`, `register()`, etc.).
+- Los tipos de entrada y salida exportados desde el adapter
+  (`LoginPayload`, `LoginResult`, `RegisterPayload`, `RegisterResult`).
+- La firma que consumen los services de la feature.
+
+### Que cambia por detras (transparente para el resto de la app)
+
+- La URL real del endpoint (definida en generated).
+- El nombre de la constante generada (`postAuthLoginEndpoint`, etc.).
+- El shape del DTO de request/response del backend.
+- El mapeo interno entre DTO y tipo estable.
+
+### Flujo visual
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ESTABLE (no cambia con update-api)                                     │
+│                                                                         │
+│  Page/Component  ──>  Service  ──>  EndpointAdapter.login(payload)      │
+│                                         │                               │
+│  Tipos:  LoginPayload, LoginResult      │  <── contrato publico         │
+└─────────────────────────────────────────│───────────────────────────────┘
+                                          │
+┌─────────────────────────────────────────│───────────────────────────────┐
+│  INESTABLE (cambia con update-api)      ▼                               │
+│                                                                         │
+│  ApiHttpClient.data(postAuthLoginEndpoint, { body })                    │
+│       │                                                                 │
+│       ▼                                                                 │
+│  POST /Auth/Login  →  AuthRequest  →  DtoAuthenticationResponse         │
+│                                                                         │
+│  Tipos:  AuthRequest, DtoAuthenticationResponse (generados)             │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Reglas
+
+- Solo `endpoints/*.endpoint.ts` importa de `generated/` y `api-models/`.
+- Services, pages, components y stores nunca importan generated directo.
+- Si cambia un endpoint en Swagger y se regenera, solo el adapter necesita
+  ajuste. El resto de la feature compila sin cambios.
+- Cada adapter expone tipos propios simples (no reexporta DTOs del backend).
+- Los errores de HTTP se transforman en errores de dominio dentro del adapter.
+
+### Ejemplo: auth
+
+```typescript
+// endpoints/auth.endpoint.ts — UNICO archivo que conoce generated
+
+export interface LoginPayload { codigoPersona: number; password: string; }
+export interface LoginResult  { documento: string; }
+
+@Injectable({ providedIn: 'root' })
+export class AuthEndpoint {
+  login(payload: LoginPayload): Observable<LoginResult> {
+    // Internamente usa postAuthLoginEndpoint (generado)
+    // Mapea DtoAuthenticationResponse → LoginResult
+  }
+}
+```
+
+```typescript
+// services/auth.ts — NO conoce generated, solo el adapter
+
+@Injectable({ providedIn: 'root' })
+export class Auth {
+  private readonly endpoint = inject(AuthEndpoint);
+
+  login(payload: AuthLoginRequest): Observable<AuthSession> {
+    return this.endpoint.login({ ... }).pipe(map(...));
+  }
+}
+```
+
+### Que pasa cuando cambia el backend
+
+| Cambio en backend                        | Impacto en frontend                          |
+|------------------------------------------|----------------------------------------------|
+| Rename de URL (`/Auth/Login` → `/v2/...`)| Solo regenerar endpoints. Cero cambios.      |
+| Rename de campo en response              | Ajustar mapper en el adapter. Cero en services. |
+| Nuevo campo obligatorio en request       | Agregar al adapter payload. Ajustar services. |
+| Endpoint eliminado                       | `check-api-contracts` detecta. Borrar adapter method + service. |
+| Endpoint nuevo                           | Agregar method en adapter con tipos estables. |
 
 ## Tipos generados vs tipos de feature
 
@@ -86,13 +190,10 @@ Register (page)  ──inject──>  Auth (service)  ──inject──>  AuthE
   devuelven `OperationResult`, usar `api.data(endpoint, options)` o
   `api.list(endpoint, mapper?, options?)` en vez de repetir `result.data` en cada
   llamada.
-- `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
-  `queryParams`. No agregar `shareReplay` manual en servicios para catálogos o
-  datos de referencia simples. Si un caso necesita invalidar datos cacheados,
-  exponer un método funcional que delegue en `api.clearCache()`.
-- Crear un archivo en `endpoints/` solo cuando haya un caso especial real:
-  descarga de archivos, adaptación compleja, credenciales particulares o error
-  de dominio específico.
+- Cada feature debe tener un adapter en `endpoints/` que encapsule los imports
+  de generated y DTOs. Los services llaman al adapter, no a `ApiHttpClient`
+  directo. Si la feature es trivial (un solo GET), el adapter puede ser inline
+  en el service como excepcion documentada.
 - Los stores no deben saber de red. Reciben datos ya procesados y exponen estado con `signal`/`computed`.
 - Los modelos tecnicos generados viven en `src/app/shared/api-models/`; no se
   editan manualmente. Si se necesitan tipos de dominio propios, ubicarlos dentro
