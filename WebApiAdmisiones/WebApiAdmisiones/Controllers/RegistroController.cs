@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using 
-
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Utilities;
 using WebApiAdmisiones.Security;
 using AzureService.DTOs;
+using AzureService.Interfaces;
+using WebApiAdmisiones.Models;
+using Utilities;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -19,6 +19,7 @@ namespace WebApiAdmisiones.Controllers
     [Route("[controller]")]
     public class RegistroController(
         IRegistroService registroService,
+        IReconocimientoDocumento reconocimientoDocumentoService,
         ILogger<RegistroController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<RegistroController>(logger, currentUser)
@@ -68,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
             }
 
             var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
-            var fileName = FileValidationHelper.ResolveFileName(request.ArchivoAdjunto.NombreArchivo, request.TipoMime);
+            var fileName = FileValidator.ResolveFileName(request.ArchivoAdjunto.NombreArchivo, request.TipoMime);
 
             var result = await reconocimientoDocumentoService.ReconocerDocumentoAsync(
                 new ReconocimientoDocumentoRequest

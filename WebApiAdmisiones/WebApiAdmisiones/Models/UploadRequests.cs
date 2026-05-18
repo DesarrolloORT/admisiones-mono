@@ -25,6 +25,12 @@ namespace WebApiAdmisiones.Models
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    public class ReconocimientoDocumentoApiRequest
+    {
+        public string? TipoMime { get; set; }
+        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
+    }
+
     public class UploadArchivoIngresoRequest
     {
         [JsonRequired]
