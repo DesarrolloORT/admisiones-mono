@@ -7,25 +7,24 @@ export interface DocumentRecognitionRequest {
 }
 
 export interface DocumentRecognitionFields {
-  tipoDocumento?: string;
-  numeroDocumento?: string;
-  primerNombre?: string;
-  segundoNombre?: string;
-  primerApellido?: string;
-  segundoApellido?: string;
-  fechaNacimiento?: string;
-  lugarNacimiento?: string;
-  departamento?: string;
-  sexo?: string;
-  fechaVencimiento?: string;
-  nacionalidad?: string;
-  [key: string]: unknown;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
+  primerNombre?: string | null;
+  segundoNombre?: string | null;
+  primerApellido?: string | null;
+  segundoApellido?: string | null;
+  fechaNacimiento?: string | null;
+  lugarNacimiento?: string | null;
+  departamento?: string | null;
+  sexo?: string | null;
+  fechaVencimiento?: string | null;
+  nacionalidad?: string | null;
 }
 
 export interface DocumentRecognitionFile {
-  nombreArchivo?: string;
-  contentType?: string;
-  archivo?: string;
+  nombreArchivo?: string | null;
+  contentType?: string | null;
+  archivo?: string | null;
 }
 
 export interface DocumentRecognitionData {
@@ -37,9 +36,8 @@ export interface DocumentRecognitionData {
 export interface DocumentRecognitionResponse {
   success?: boolean;
   httpCode?: number;
-  errorCode?: string;
-  method?: string;
-  message?: string;
+  errorCode?: string | null;
+  method?: string | null;
+  message?: string | null;
   data?: DocumentRecognitionData;
-  [key: string]: unknown;
 }

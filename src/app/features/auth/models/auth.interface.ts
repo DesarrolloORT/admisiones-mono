@@ -43,3 +43,4 @@ export interface AuthRegisterRequest {
 
 // Stable type from endpoint adapter (not a backend DTO).
 export type AuthRegisterResponse = RegisterResult;
+

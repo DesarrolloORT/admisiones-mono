@@ -2,11 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
+import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import {
   DocumentRecognitionRequest,
   DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
-import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 
 @Injectable({
   providedIn: 'root',
@@ -104,3 +104,4 @@ export class DocumentRecognition {
     return fileName.slice(dotIndex + 1).toLowerCase();
   }
 }
+
