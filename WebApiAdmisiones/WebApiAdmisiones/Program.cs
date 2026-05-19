@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using WebApiAdmisiones.Extensions;
@@ -38,6 +39,12 @@ builder.Services.AddApiControllers();
 builder.Services.AddSwaggerGen(static options =>
 {
     const string schemeId = "Bearer";
+    var xmlCommentsPath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+
+    if (File.Exists(xmlCommentsPath))
+    {
+        options.IncludeXmlComments(xmlCommentsPath);
+    }
 
     options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {

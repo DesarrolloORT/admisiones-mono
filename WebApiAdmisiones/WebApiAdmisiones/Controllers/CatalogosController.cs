@@ -38,6 +38,15 @@ namespace WebApiAdmisiones.Controllers
         //    return ValidateResponse(result);
         //}
 
+        /// <summary>
+        /// Lista paises, estados y ciudades para formularios de admision.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para poblar combos de ubicacion. Devuelve una respuesta liviana con codigos y nombres, manteniendo Uruguay primero, luego paises por nombre, y estados/ciudades ordenados alfabeticamente.
+        /// </remarks>
+        /// <returns>Paises con sus estados y ciudades disponibles.</returns>
+        /// <response code="200">Catalogo obtenido correctamente.</response>
+        /// <response code="400">Solicitud invalida.</response>
         [AllowAnonymous]
         [HttpGet("PaisesEstadosCiudades")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>), 200)]
@@ -48,6 +57,15 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Lista los tipos de documento aceptados por admisiones.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para poblar el combo de tipo de documento en registro, login o recuperacion de acceso.
+        /// </remarks>
+        /// <returns>Tipos de documento disponibles.</returns>
+        /// <response code="200">Catalogo obtenido correctamente.</response>
+        /// <response code="400">Solicitud invalida.</response>
         [AllowAnonymous]
         [HttpGet("TiposDocumentos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
@@ -58,6 +76,15 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Lista las carreras vigentes para el registro de admision.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para poblar la seleccion inicial de carrera/producto. Devuelve identificadores y nombres necesarios para que el front luego consulte comienzos.
+        /// </remarks>
+        /// <returns>Carreras vigentes disponibles para admision.</returns>
+        /// <response code="200">Catalogo obtenido correctamente.</response>
+        /// <response code="400">Solicitud invalida.</response>
         [AllowAnonymous]
         [HttpGet("Carreras")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 200)]
@@ -68,6 +95,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Lista los comienzos habilitados para una carrera.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para poblar el combo de comienzo/proceso luego de seleccionar una carrera. El parametro idCarrera debe ser el IdProducto recibido desde el endpoint de carreras.
+        /// </remarks>
+        /// <param name="idCarrera">Identificador de la carrera/producto seleccionado.</param>
+        /// <returns>Comienzos habilitados para la carrera indicada.</returns>
+        /// <response code="200">Catalogo obtenido correctamente.</response>
+        /// <response code="400">Carrera invalida o solicitud invalida.</response>
         [AllowAnonymous]
         [HttpGet("Comienzos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoComienzoResponse>>), 200)]

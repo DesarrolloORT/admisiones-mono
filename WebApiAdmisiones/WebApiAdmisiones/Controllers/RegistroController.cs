@@ -20,6 +20,16 @@ namespace WebApiAdmisiones.Controllers
         ICurrentUserService currentUser)
         : ApiBaseController<RegistroController>(logger, currentUser)
     {
+        /// <summary>
+        /// Evalua si el documento ingresado puede iniciar el registro.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para el primer paso del onboarding. El front envia tipo y numero de documento y recibe el estado funcional para decidir si continua con una persona existente, una persona nueva o una solicitud pendiente.
+        /// </remarks>
+        /// <param name="request">Tipo y numero de documento que se quiere registrar.</param>
+        /// <returns>Estado de evaluacion del documento para guiar el flujo de registro.</returns>
+        /// <response code="200">Documento evaluado correctamente.</response>
+        /// <response code="400">Datos invalidos o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [HttpPost("EvaluarDocumento")]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
@@ -30,6 +40,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Verifica la identidad de una persona existente.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para confirmar que quien continua el registro conoce los datos requeridos de la persona encontrada por documento. El front debe usarlo antes de confirmar una persona existente.
+        /// </remarks>
+        /// <param name="request">Datos de validacion de identidad asociados a la persona.</param>
+        /// <returns>Resultado de la verificacion de identidad.</returns>
+        /// <response code="200">Identidad verificada correctamente.</response>
+        /// <response code="400">Datos invalidos o verificacion rechazada.</response>
         [AllowAnonymous]
         [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
@@ -40,6 +60,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Confirma el registro de una persona ya existente.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico protegido por captcha. El front lo usa despues de evaluar documento y verificar identidad para crear o actualizar el interes/solicitud de registro de una persona existente.
+        /// </remarks>
+        /// <param name="request">Datos necesarios para confirmar la persona existente en el flujo de registro.</param>
+        /// <returns>Resultado de la confirmacion del registro.</returns>
+        /// <response code="200">Persona existente confirmada correctamente.</response>
+        /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [RequireCaptcha]
         [HttpPost("ConfirmarPersonaExistente")]
@@ -51,6 +81,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Confirma el registro de una persona nueva.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico protegido por captcha. El front lo usa cuando el documento evaluado no corresponde a una persona existente y debe enviar los datos personales, ubicacion y seleccion academica para crear la nueva persona.
+        /// </remarks>
+        /// <param name="request">Datos personales y academicos de la nueva persona.</param>
+        /// <returns>Resultado de la creacion y confirmacion de la nueva persona.</returns>
+        /// <response code="200">Persona nueva confirmada correctamente.</response>
+        /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [RequireCaptcha]
         [HttpPost("ConfirmarNuevaPersona")]
@@ -62,6 +102,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Confirma una solicitud de alta previamente generada.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico protegido por captcha. El front lo usa cuando el flujo detecta una solicitud de alta pendiente y necesita completar la confirmacion sin volver a crear la persona.
+        /// </remarks>
+        /// <param name="request">Datos de la solicitud de alta que se confirma.</param>
+        /// <returns>Resultado de la confirmacion de la solicitud.</returns>
+        /// <response code="200">Solicitud de alta confirmada correctamente.</response>
+        /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [RequireCaptcha]
         [HttpPost("ConfirmarSolicitudAlta")]

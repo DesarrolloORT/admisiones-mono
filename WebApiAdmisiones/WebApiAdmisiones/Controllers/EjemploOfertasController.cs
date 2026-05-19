@@ -31,6 +31,20 @@ namespace WebApiAdmisiones.Controllers
             _ofertasInscripcionService = ofertasInscripcionService;
         }
 
+        /// <summary>
+        /// Obtiene las ofertas de inscripcion disponibles para el alumno autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint autenticado para que el front resuelva la oferta concreta a usar despues de que el alumno selecciona producto, comienzo y turno. Usa el usuario del token; no permite consultar ofertas de otra persona.
+        /// </remarks>
+        /// <param name="idProducto">Identificador del producto/carrera seleccionado.</param>
+        /// <param name="idComienzo">Identificador del comienzo/proceso seleccionado.</param>
+        /// <param name="idTurno">Identificador del turno seleccionado.</param>
+        /// <returns>Ofertas disponibles para la combinacion enviada y el alumno autenticado.</returns>
+        /// <response code="200">Ofertas obtenidas correctamente.</response>
+        /// <response code="400">Parametros invalidos o combinacion no valida.</response>
+        /// <response code="401">Usuario no autenticado o token invalido.</response>
+        /// <response code="422">La combinacion no tiene oferta aplicable para el alumno.</response>
         [HttpGet("Ofertas")]
         [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 400)]

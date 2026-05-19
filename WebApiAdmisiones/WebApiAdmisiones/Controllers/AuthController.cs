@@ -26,6 +26,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Autenticación exitosa. Las cookies X-Access-Token y X-Refresh-Token han sido establecidas.</response>
         /// <response code="400">Error en los datos de entrada.</response>
         /// <response code="401">Credenciales inválidas.</response>
+        /// <remarks>
+        /// Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
+        /// </remarks>
         [AllowAnonymous]
         [HttpPost("Login")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
@@ -63,6 +66,9 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Resultado de la operación.</returns>
         /// <response code="200">Logout exitoso.</response>
+        /// <remarks>
+        /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
+        /// </remarks>
         [HttpPost("Logout")]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
@@ -83,6 +89,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Tokens renovados correctamente. Las cookies se actualizan automáticamente.</response>
         /// <response code="401">Refresh token inválido, expirado o no encontrado.</response>
         /// <response code="404">Usuario no encontrado en la base de datos.</response>
+        /// <remarks>
+        /// Endpoint autenticado por cookie de refresh token. El front no necesita enviar el token en el body; debe llamar este endpoint cuando expire el access token y la API actualizara las cookies si el refresh token sigue vigente.
+        /// </remarks>
         [HttpPost("RefreshToken")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
@@ -142,6 +151,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Recuperacion exitosa.</response>
         /// <response code="400">Error de validacion o de negocio.</response>
         /// <response code="500">Error interno no controlado.</response>
+        /// <remarks>
+        /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia los datos requeridos de la persona y la API ejecuta las validaciones funcionales antes de solicitar o disparar el recupero.
+        /// </remarks>
         [HttpPost("RecuperarContraseña")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -161,6 +173,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Error de validacion o de negocio.</response>
         /// <response code="401">Usuario no autenticado.</response>
         /// <response code="500">Error interno no controlado.</response>
+        /// <remarks>
+        /// Endpoint autenticado para actualizar la password del usuario actual. El codigo de persona se toma del token, por lo que el front solo debe enviar password actual y nueva password.
+        /// </remarks>
         [Authorize]
         [HttpPost("CambiarContraseña")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]

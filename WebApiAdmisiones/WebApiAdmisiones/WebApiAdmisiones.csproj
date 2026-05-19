@@ -4,6 +4,8 @@
    <Nullable>enable</Nullable>  
    <ImplicitUsings>enable</ImplicitUsings>  
    <InvariantGlobalization>true</InvariantGlobalization>  
+   <GenerateDocumentationFile>true</GenerateDocumentationFile>
+   <NoWarn>$(NoWarn);1591;1587</NoWarn>
    <UserSecretsId>8d58b2fb-9540-4aaa-af90-773ebbc44030</UserSecretsId>  
    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>  
  </PropertyGroup>  
