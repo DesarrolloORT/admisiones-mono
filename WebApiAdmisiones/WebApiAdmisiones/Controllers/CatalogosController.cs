@@ -40,8 +40,8 @@ namespace WebApiAdmisiones.Controllers
 
         [AllowAnonymous]
         [HttpGet("PaisesEstadosCiudades")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisDevart>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>), 400)]
         public IActionResult ObtenerPaisesEstadosCiudades()
         {
             var result = catalogosService.ObtenerPaisesEstadosCiudades();

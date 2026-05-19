@@ -16,13 +16,14 @@ namespace AppLogic.Services
             _uowFactory = uowFactory;
         }
 
-        public OperationResult<IEnumerable<DtoPaisDevart>> ObtenerPaisesEstadosCiudades()
+        public OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades()
         {
             using var uow = _uowFactory.Create();
 
             var paises = uow.Paises.GetPaisesConEstadosYCiudades().ToList();
+            var response = paises.Select(pais => pais.ToPaisesEstadosCiudadesDto()).ToList();
 
-            return OperationResult<IEnumerable<DtoPaisDevart>>.Ok(paises.ToDtosWithRelated(2), nameof(ObtenerPaisesEstadosCiudades));
+            return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(response, nameof(ObtenerPaisesEstadosCiudades));
         }
 
         public OperationResult<DtoPaisDevart> ObtenerPais(long idPais)
