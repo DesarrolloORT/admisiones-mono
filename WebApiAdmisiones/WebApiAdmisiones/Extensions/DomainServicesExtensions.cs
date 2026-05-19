@@ -1,6 +1,8 @@
 using AppLogic.Interfaces;
 using AppLogic.IServices;
 using AppLogic.Services;
+using AzureService.Interfaces;
+using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
@@ -101,6 +103,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddHttpClient<IRecaptchaService, RecaptchaService>();

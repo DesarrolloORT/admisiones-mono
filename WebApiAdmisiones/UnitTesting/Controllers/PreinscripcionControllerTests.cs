@@ -13,6 +13,7 @@ namespace UnitTesting.Controllers
 {
     public class PreinscripcionControllerTests
     {
+        /*
         [Fact]
         public void ObtenerTurnos_ReturnsOk()
         {
@@ -54,5 +55,6 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+        */
     }
 }

@@ -14,6 +14,7 @@ namespace UnitTesting.Controllers
 {
     public class CatalogosControllerTests
     {
+        /*
         [Fact]
         public void ObtenerPais_ReturnsOk()
         {
@@ -31,6 +32,7 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+        */
 
         [Fact]
         public void CatalogosController_NoLongerExposesPaises()
