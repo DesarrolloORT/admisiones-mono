@@ -345,6 +345,126 @@ public class AuthService : IAuthService
         }
     }
 
+    /// <summary>
+    /// Completa el alta de password inicial usando una sesion temporal de activacion.
+    /// </summary>
+    /// <param name="codigoPersona">Codigo de persona resuelto desde la sesion temporal.</param>
+    /// <param name="request">Nueva password a establecer.</param>
+    /// <returns>Respuesta de autenticacion normal con tokens para cookies.</returns>
+    public async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordInicialAsync(
+        long codigoPersona,
+        DtoCompletarPasswordInicialRequest request)
+    {
+        try
+        {
+            if (request == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_01",
+                    nameof(CompletarPasswordInicialAsync),
+                    "La solicitud es obligatoria.",
+                    400,
+                    default!);
+            }
+
+            var validacionPassword = Util.ValidarPasswordNueva(request.PasswordNueva);
+            if (!string.IsNullOrWhiteSpace(validacionPassword))
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_02",
+                    nameof(CompletarPasswordInicialAsync),
+                    validacionPassword,
+                    400,
+                    default!);
+            }
+
+            using var uow = _admisionesUowFactory.Create();
+            var persona = uow.Personas.GetByKey(codigoPersona);
+
+            if (persona == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_03",
+                    nameof(CompletarPasswordInicialAsync),
+                    "Usuario no encontrado en la base de datos.",
+                    404,
+                    default!);
+            }
+
+            if (string.IsNullOrWhiteSpace(persona.HashTokenPassword))
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_04",
+                    nameof(CompletarPasswordInicialAsync),
+                    "El link de activación ya fue utilizado o no está vigente.",
+                    401,
+                    default!);
+            }
+
+            var cambioPassword = await _ldap.ForzarCambiarPasswordAsync(
+                codigoPersona.ToString(CultureInfo.InvariantCulture),
+                request.PasswordNueva);
+
+            if (!cambioPassword.Success)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    cambioPassword.ErrorCode,
+                    nameof(CompletarPasswordInicialAsync),
+                    cambioPassword.Message,
+                    cambioPassword.HttpCode,
+                    default!);
+            }
+
+            persona.HashTokenPassword = null;
+            persona.FechaUltModifPassword = DateTime.Today;
+            persona.UsuarioUltModifPassword = "ADMISIONES";
+            uow.Personas.Update(persona);
+            uow.Save();
+
+            var accessToken = _tokenService.GenerateAccessToken(persona);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenHash = _tokenService.HashToken(refreshToken);
+            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
+
+            await _refreshTokenService.SaveRefreshTokenAsync(
+                codigoPersona,
+                "ADMISIONESWEB",
+                refreshTokenHash,
+                DateTime.UtcNow.AddDays(refreshExpireDays));
+
+            var authResponse = new DtoAuthenticationResponse
+            {
+                Persona = new DtoPersonaAuth
+                {
+                    CodigoPersona = persona.CodigoPersona,
+                    PrimerNombre = persona.PrimerNombre,
+                    SegundoNombre = persona.SegundoNombre,
+                    PrimerApellido = persona.PrimerApellido,
+                    SegundoApellido = persona.SegundoApellido,
+                    TipoPersona = persona.TipoPersona,
+                    Documento = persona.Documento
+                },
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                RefreshTokenHash = refreshTokenHash,
+                Message = "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras."
+            };
+
+            return OperationResult<DtoAuthenticationResponse>.Ok(
+                authResponse,
+                nameof(CompletarPasswordInicialAsync));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                "INI_PAS_99",
+                nameof(CompletarPasswordInicialAsync),
+                $"Error al completar password inicial: {ex.Message}",
+                500,
+                default!);
+        }
+    }
+
     private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
     {
         return error == DocumentUtils.DocumentValidationError.InvalidDocumentType

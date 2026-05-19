@@ -11,6 +11,8 @@ namespace WebApiAdmisiones.Controllers
     [Route("[controller]")]
     public class AuthController(
         IAuthService loginService,
+        IPasswordActivationService passwordActivationService,
+        IConfiguration configuration,
         ILogger<AuthController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<AuthController>(logger, currentUser)
@@ -47,12 +49,7 @@ namespace WebApiAdmisiones.Controllers
                     _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.CodigoPersona);
                 }
 
-                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
-                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
-
-                // Establecer los tokens como cookies HttpOnly seguras.
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
+                SetAuthenticationCookies(result.Data);
 
                 // No retornar los tokens en el body.
                 // Los tokens ya fueron establecidos como cookies HttpOnly.
@@ -69,6 +66,66 @@ namespace WebApiAdmisiones.Controllers
         /// <remarks>
         /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
         /// </remarks>
+        /// <summary>
+        /// Valida el link de creacion de password y establece una sesion temporal.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("ActivarLinkPassword")]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 401)]
+        public async Task<IActionResult> ActivarLinkPassword([FromBody] DtoActivarLinkPasswordRequest request)
+        {
+            var result = await passwordActivationService.ActivarLinkPasswordAsync(request.Token);
+
+            if (result.Success && result.Data?.SessionToken != null)
+            {
+                var sessionMinutes = configuration.GetValue<int?>("PasswordActivation:SessionMinutes") ?? 15;
+                CookieAuthenticationHelper.SetPasswordActivationCookie(
+                    HttpContext,
+                    result.Data.SessionToken,
+                    sessionMinutes);
+            }
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Completa la creacion de password inicial usando la sesion temporal del link.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("CompletarPasswordInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
+        public async Task<IActionResult> CompletarPasswordInicial([FromBody] DtoCompletarPasswordInicialRequest request)
+        {
+            var sessionToken = CookieAuthenticationHelper.GetPasswordActivationTokenFromCookie(HttpContext);
+            var sessionResult = passwordActivationService.ValidarSessionToken(sessionToken ?? string.Empty);
+
+            if (!sessionResult.Success)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    sessionResult.ErrorCode,
+                    nameof(CompletarPasswordInicial),
+                    sessionResult.Message,
+                    sessionResult.HttpCode,
+                    default!));
+            }
+
+            var result = await loginService.CompletarPasswordInicialAsync(sessionResult.Data, request);
+
+            if (result.Success && result.Data != null)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                SetAuthenticationCookies(result.Data);
+            }
+
+            return ValidateResponse(result);
+        }
+
         [HttpPost("Logout")]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
@@ -133,11 +190,7 @@ namespace WebApiAdmisiones.Controllers
             // 3. Establecer cookies con los nuevos tokens (HTTP concern)
             if (result.Data != null)
             {
-                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
-                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
-
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
+                SetAuthenticationCookies(result.Data);
             }
 
             return Ok(result);
@@ -197,6 +250,20 @@ namespace WebApiAdmisiones.Controllers
 
             var result = await loginService.CambiarPasswordAsync(_currentUser.UserId.Value, request);
             return ValidateResponse(result);
+        }
+
+        private void SetAuthenticationCookies(DtoAuthenticationResponse data)
+        {
+            if (string.IsNullOrWhiteSpace(data.AccessToken) || string.IsNullOrWhiteSpace(data.RefreshToken))
+            {
+                return;
+            }
+
+            var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
+            var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
+
+            CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, data.AccessToken, accessMinutes);
+            CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, data.RefreshToken, refreshDays);
         }
 
         #endregion

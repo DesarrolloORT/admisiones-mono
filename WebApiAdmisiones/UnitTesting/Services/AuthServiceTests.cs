@@ -482,5 +482,88 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("LDAP service unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
         }
+
+        [Fact]
+        public async Task CompletarPasswordInicialAsync_LdapFailure_PreservesHashToken()
+        {
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI",
+                HashTokenPassword = "hash"
+            };
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "AUTH_LDAP_52",
+                    nameof(ILdap.ForzarCambiarPasswordAsync),
+                    "El servicio LDAP no pudo forzar el cambio de password.",
+                    400,
+                    false));
+
+            var result = await _service.CompletarPasswordInicialAsync(codigoPersona, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("hash", persona.HashTokenPassword);
+            uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordInicialAsync_LdapSuccess_ClearsHashAndReturnsTokens()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI",
+                HashTokenPassword = "hash"
+            };
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+            _tokenServiceMock.Setup(t => t.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(t => t.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await _service.CompletarPasswordInicialAsync(codigoPersona, request);
+
+            Assert.True(result.Success);
+            Assert.Null(persona.HashTokenPassword);
+            Assert.Equal("access-token", result.Data!.AccessToken);
+            Assert.Equal("refresh-token", result.Data.RefreshToken);
+            uowMock.Verify(u => u.Save(), Times.Once);
+            _refreshTokenServiceMock.Verify(
+                r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
+                Times.Once);
+        }
     }
 }

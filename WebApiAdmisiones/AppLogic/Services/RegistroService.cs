@@ -16,11 +16,10 @@ namespace AppLogic.Services
 {
     public class RegistroService : IRegistroService
     {
-        private readonly ICatalogosService _catalogosService;
-        private readonly IPreinscripcionService _preinscripcionService;
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ILdap _ldap;
+        private readonly IPasswordActivationService? _passwordActivationService;
         private readonly IServiceScopeFactory? _serviceScopeFactory;
 
         public RegistroService(
@@ -29,13 +28,13 @@ namespace AppLogic.Services
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ILdap ldap,
+            IPasswordActivationService? passwordActivationService = null,
             IServiceScopeFactory? serviceScopeFactory = null)
         {
-            _catalogosService = catalogosService;
-            _preinscripcionService = preinscripcionService;
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _ldap = ldap;
+            _passwordActivationService = passwordActivationService;
             _serviceScopeFactory = serviceScopeFactory;
         }
 
@@ -411,7 +410,7 @@ namespace AppLogic.Services
                     500);
             }
 
-            return await EnviarContraseniaAsync(persona, originMethod);
+            return await EnviarMailLinkPasswordAsync(persona, originMethod);
         }
 
         private async Task<OperationResult<object?>> CrearPersonaInteresAsync(
@@ -468,7 +467,7 @@ namespace AppLogic.Services
             }
 
             // Queda pendiente cambiar el body del mail para que envie una contraseña provisional o un link para crear la contraseña, en vez de la contraseña fija actual.
-            return await EnviarContraseniaAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
+            return await EnviarMailLinkPasswordAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
         }
 
         private async Task<OperationResult<object?>> CrearSolicitudAltaAsync(
@@ -568,15 +567,17 @@ namespace AppLogic.Services
                 now));
         }
 
-        private async Task<OperationResult<object?>> EnviarContraseniaAsync(Persona persona, string originMethod)
+        private async Task<OperationResult<object?>> EnviarMailLinkPasswordAsync(Persona persona, string originMethod)
         {
-            var mail = await _ldap.EnviarContrasenia(
-                persona.CodigoPersona.ToString(CultureInfo.InvariantCulture),
-                persona.TipoDocumento ?? string.Empty,
-                persona.Documento ?? string.Empty,
-                persona.PrimerApellido,
-                "ADMISIONES",
-                "REGISTRO");
+            if (_passwordActivationService == null)
+            {
+                return OperationResult<object?>.IsSuccess(
+                    null,
+                    originMethod,
+                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de usuario o contraseña.");
+            }
+
+            var mail = await _passwordActivationService.EnviarMailLinkPasswordAsync(persona, originMethod);
 
             if (!mail.Success)
             {

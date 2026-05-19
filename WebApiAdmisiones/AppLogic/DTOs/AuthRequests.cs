@@ -70,6 +70,34 @@ namespace AppLogic.DTOs
     }
 
     /// <summary>
+    /// DTO para validar el link de creacion de password.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoActivarLinkPasswordRequest
+    {
+        /// <summary>
+        /// Token recibido por mail.
+        /// </summary>
+        [Required(ErrorMessage = "El token es requerido.")]
+        [Redact]
+        public required string Token { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para completar la password inicial usando la sesion temporal.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoCompletarPasswordInicialRequest
+    {
+        /// <summary>
+        /// Nueva password a establecer.
+        /// </summary>
+        [Required(ErrorMessage = "La nueva password es requerida.")]
+        [Redact]
+        public required string PasswordNueva { get; set; }
+    }
+
+    /// <summary>
     /// DTO con la información básica de la persona autenticada.
     /// </summary>
     [ExcludeFromCodeCoverage]

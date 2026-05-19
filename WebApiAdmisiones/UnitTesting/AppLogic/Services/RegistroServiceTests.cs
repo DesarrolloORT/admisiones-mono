@@ -23,6 +23,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<ILdap> _ldapMock;
+        private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly RegistroService _service;
 
         public RegistroServiceTests()
@@ -33,13 +34,15 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _ldapMock = new Mock<ILdap>();
+            _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new RegistroService(
                 _catalogosServiceMock.Object,
                 _preinscripcionServiceMock.Object,
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
-                _ldapMock.Object);
+                _ldapMock.Object,
+                _passwordActivationServiceMock.Object);
         }
 
         [Fact]
@@ -294,9 +297,14 @@ namespace UnitTesting.AppLogic.Services
             _ldapMock
                 .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
                 .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
-            _ldapMock
-                .Setup(l => l.EnviarContrasenia("123", "CI", "1234567-2", "Perez", "ADMISIONES", "REGISTRO"))
-                .ReturnsAsync(OperationResult<string>.Ok("ok", nameof(ILdap.EnviarContrasenia)));
+            _passwordActivationServiceMock
+                .Setup(s => s.EnviarMailLinkPasswordAsync(
+                    It.Is<Persona>(p => p.CodigoPersona == 123),
+                    nameof(IRegistroService.ConfirmarPersonaExistenteAsync)))
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(IRegistroService.ConfirmarPersonaExistenteAsync),
+                    "Registro realizado correctamente."));
 
             var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
             {
@@ -310,6 +318,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Registro realizado correctamente.", result.Message);
             interesRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Once);
             interesProductoRepo.Verify(r => r.Add(It.IsAny<InteresProducto>()), Times.Once);
+            _passwordActivationServiceMock.Verify(
+                s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), nameof(IRegistroService.ConfirmarPersonaExistenteAsync)),
+                Times.Once);
             _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 

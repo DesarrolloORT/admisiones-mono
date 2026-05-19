@@ -18,6 +18,11 @@ namespace WebApiAdmisiones.Security
         public const string RefreshTokenCookieName = "X-Refresh-Token";
 
         /// <summary>
+        /// Nombre de la cookie temporal para completar la password inicial.
+        /// </summary>
+        public const string PasswordActivationCookieName = "X-Password-Activation";
+
+        /// <summary>
         /// Establece el access token como una cookie HttpOnly segura.
         /// </summary>
         /// <param name="context">Contexto HTTP.</param>
@@ -80,6 +85,48 @@ namespace WebApiAdmisiones.Security
         }
 
         /// <summary>
+        /// Establece el token temporal de activacion como una cookie HttpOnly segura.
+        /// </summary>
+        public static void SetPasswordActivationCookie(HttpContext context, string activationToken, int expiresInMinutes = 15)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
+                Path = "/",
+                IsEssential = true
+            };
+
+            context.Response.Cookies.Append(PasswordActivationCookieName, activationToken, cookieOptions);
+        }
+
+        /// <summary>
+        /// Obtiene el token temporal de activacion desde la cookie.
+        /// </summary>
+        public static string? GetPasswordActivationTokenFromCookie(HttpContext context)
+        {
+            return context.Request.Cookies[PasswordActivationCookieName];
+        }
+
+        /// <summary>
+        /// Elimina la cookie temporal de activacion.
+        /// </summary>
+        public static void ClearPasswordActivationCookie(HttpContext context)
+        {
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/"
+            };
+
+            context.Response.Cookies.Delete(PasswordActivationCookieName, options);
+        }
+
+        /// <summary>
         /// Elimina las cookies de autenticación (logout).
         /// </summary>
         /// <param name="context">Contexto HTTP.</param>
@@ -95,6 +142,7 @@ namespace WebApiAdmisiones.Security
 
             context.Response.Cookies.Delete(AccessTokenCookieName, options);
             context.Response.Cookies.Delete(RefreshTokenCookieName, options);
+            context.Response.Cookies.Delete(PasswordActivationCookieName, options);
         }
     }
 }
