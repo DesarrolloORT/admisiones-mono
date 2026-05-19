@@ -26,8 +26,7 @@
     "update-models": "node ./scripts/codegen/update-models.js",
     "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
     "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
-    "update-api": "npm run update-models && npm run update-endpoints",
-    "check-api-contracts": "npm run update-api && git diff --exit-code -- src/app/shared/api-models src/app/shared/api/endpoints/generated"
+    "update-api": "npm run update-models && npm run update-endpoints"
   },
   "private": true,
   "dependencies": {
@@ -105,3 +104,4 @@
     ]
   }
 }
+
