@@ -21,7 +21,7 @@ namespace AppLogic.Utilities
             DocumentValidationError Error,
             string Message);
 
-        private static readonly string[] TiposDocumentoPermitidos = ["CI", "DE", "PS", "CC"];
+        private static readonly string[] TiposDocumentoPermitidos = ["DO", "DE", "PA", "CC"];
 
         public static DocumentValidationResult ValidarDocumentoBase(string? tipoDocumentoRaw, string? documentoRaw)
         {
