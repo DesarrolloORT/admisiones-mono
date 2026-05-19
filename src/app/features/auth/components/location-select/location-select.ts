@@ -169,6 +169,11 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
   private loadCountries(): void {
     this.catalogs.getCountryLocations().subscribe(countries => {
       this.countries.set(countries);
+      const code = this.selectedCountryCode();
+      if (code !== null) {
+        this.countryControl.setValue(code.toString(), { emitEvent: false });
+      }
     });
   }
 }
+

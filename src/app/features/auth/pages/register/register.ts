@@ -148,6 +148,7 @@ export class Register {
     this.recognitionError.set(null);
     this.recognitionSuccessMessage.set(null);
     this.error.set(null);
+    this.clearRecognizedFields();
 
     if (!selectedFile) {
       return;
@@ -232,7 +233,7 @@ export class Register {
       const response = await firstValueFrom(this.documentRecognition.recognizeDocument(payload));
 
       this.registerDocumentStore.setRecognitionResponse(response);
-      this.applyRecognizedFields(response.data?.campos);
+      await this.applyRecognizedFields(response.data?.campos);
       this.recognitionSuccessMessage.set('Datos precargados. Revisalos antes de continuar.');
     } catch (error) {
       this.recognitionError.set(this.getDocumentRecognitionErrorMessage(error));
@@ -241,7 +242,9 @@ export class Register {
     }
   }
 
-  private applyRecognizedFields(fields: DocumentRecognitionFields | undefined): void {
+  private async applyRecognizedFields(
+    fields: DocumentRecognitionFields | undefined
+  ): Promise<void> {
     if (!fields) {
       return;
     }
@@ -255,12 +258,46 @@ export class Register {
       segundoNombre: this.getStringValue(fields.segundoNombre),
       primerApellido: this.getStringValue(fields.primerApellido),
       segundoApellido: this.getStringValue(fields.segundoApellido),
-      fechaNacimiento: this.getStringValue(fields.fechaNacimiento),
+      fechaNacimiento: this.toDateInputValue(this.getStringValue(fields.fechaNacimiento)),
       sexo: this.getStringValue(fields.sexo),
     };
 
     this.identityForm.patchValue(this.withoutEmptyValues(identity));
     this.personalForm.patchValue(this.withoutEmptyValues(personal));
+
+    const countryCode = this.getCountryCodeFromBirthplace(fields.lugarNacimiento);
+    if (countryCode !== null) {
+      const stateCode = await this.resolveStateCodeFromBirthplace(
+        countryCode,
+        fields.lugarNacimiento
+      );
+      this.personalForm.controls.location.setValue({
+        codigoPais: countryCode,
+        codigoEstado: stateCode,
+        codigoCiudad: null,
+      });
+    }
+  }
+
+  private async resolveStateCodeFromBirthplace(
+    countryCode: number,
+    lugarNacimiento: string | null | undefined
+  ): Promise<number | null> {
+    if (!lugarNacimiento) {
+      return null;
+    }
+    const departmentName = lugarNacimiento.split('/')[0]?.trim().toUpperCase();
+    if (!departmentName) {
+      return null;
+    }
+    try {
+      const locations = await firstValueFrom(this.catalogs.getCountryLocations());
+      const country = locations.find(c => c.codigoPais === countryCode);
+      const state = country?.estado?.find(s => s.nombre.toUpperCase() === departmentName);
+      return state?.codigoEstado ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private withoutEmptyValues<T extends Record<string, string | null>>(
@@ -276,6 +313,45 @@ export class Register {
     });
 
     return result;
+  }
+
+  private clearRecognizedFields(): void {
+    this.identityForm.patchValue({ documentType: 'CI', documentNumber: '' });
+    this.personalForm.patchValue({
+      primerNombre: '',
+      segundoNombre: '',
+      primerApellido: '',
+      segundoApellido: '',
+      fechaNacimiento: '',
+      sexo: '',
+    });
+    this.personalForm.controls.location.setValue({
+      codigoPais: null,
+      codigoEstado: null,
+      codigoCiudad: null,
+    });
+  }
+
+  private getCountryCodeFromBirthplace(lugarNacimiento: string | null | undefined): number | null {
+    if (!lugarNacimiento) {
+      return null;
+    }
+    const upper = lugarNacimiento.toUpperCase();
+    if (upper.includes('ARG')) {
+      return 9;
+    }
+    if (upper.includes('URY')) {
+      return 1;
+    }
+    return null;
+  }
+
+  private toDateInputValue(value: string | null): string | null {
+    if (!value) {
+      return null;
+    }
+    const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+    return match ? match[1] : null;
   }
 
   private getStringValue(value: unknown): string | null {
