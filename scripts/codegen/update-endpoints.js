@@ -9,8 +9,8 @@ import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
   env: 'environment.ts',
-  output: 'src/app/shared/api/endpoints/generated',
-  models: 'src/app/shared/api-models/model',
+  output: 'src/app/shared/api/generated/endpoints',
+  models: 'src/app/shared/api/generated/models/model',
 };
 
 const SUPPORTED_HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
@@ -327,7 +327,12 @@ function detectStaleImports(outputDir) {
     for (const match of content.matchAll(importRegex)) {
       const names = match[1]
         .split(',')
-        .map(n => n.trim())
+        .map(n =>
+          n
+            .trim()
+            .split(/\s+as\s+/)[0]
+            .trim()
+        )
         .filter(Boolean);
       for (const name of names) {
         if (!allExports.has(name)) {
@@ -518,6 +523,10 @@ function generateEndpointFiles(swagger, options) {
       }
 
       group.endpoints.push(endpoint.code);
+
+      if (endpoint.payloadType) {
+        group.payloadTypes.push(endpoint.payloadType);
+      }
     }
   }
 
@@ -592,12 +601,15 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
 });
 `;
 
+  const payloadType = createPayloadType(operation, method, constantName, tagName, context.swagger);
+
   return {
     code,
     constantName,
     fileName,
     imports,
     tagName,
+    payloadType,
   };
 }
 
@@ -613,6 +625,7 @@ function getOrCreateGroup(groups, fileName, tagName) {
     imports: new Map(),
     typeImports: new Map(),
     endpoints: [],
+    payloadTypes: [],
   };
   groups.set(fileName, group);
   return group;
@@ -628,10 +641,15 @@ function renderEndpointFile(group) {
       .map(([name, importPath]) => `import type { ${name} } from '${importPath}';`),
   ];
 
+  const payloadSection =
+    group.payloadTypes.length > 0
+      ? `\n// ---------------------------------------------------------------------------\n// Payload types (auto-generated, adapter-safe — no direct backend DTO exposure)\n// ---------------------------------------------------------------------------\n\n${group.payloadTypes.join('\n')}`
+      : '';
+
   return `${GENERATED_HEADER}
 ${imports.join('\n')}
 
-${group.endpoints.join('\n')}`;
+${group.endpoints.join('\n')}${payloadSection}`;
 }
 
 function renderIndexFile(fileNames) {
@@ -930,6 +948,191 @@ function getTagName(operation) {
     : null;
   return tag?.trim() || 'general';
 }
+
+// ---------------------------------------------------------------------------
+// Payload type generation
+// ---------------------------------------------------------------------------
+
+function createPayloadType(operation, method, constantName, tagName, swagger) {
+  if (!METHODS_WITH_BODY.has(method)) {
+    return null;
+  }
+
+  const requestBody = resolveMaybeRef(swagger, operation.requestBody);
+  if (!requestBody) {
+    return null;
+  }
+
+  const contentItem = pickContentItem(requestBody.content);
+  if (!contentItem?.schema) {
+    return null;
+  }
+
+  const schema = contentItem.schema.$ref
+    ? resolveRef(swagger, contentItem.schema.$ref)
+    : contentItem.schema;
+
+  if (!schema || (!schema.properties && !schema.allOf)) {
+    return null;
+  }
+
+  const payloadName = derivePayloadName(constantName, tagName);
+  const body = schemaToInlineInterface(schema, swagger, 2);
+
+  return `/** Auto-generated payload for \`${constantName}\`. */\nexport interface ${payloadName} ${body}\n`;
+}
+
+function derivePayloadName(constantName, tagName) {
+  const base = constantName.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
+
+  const tagPrefix = tagName.charAt(0).toUpperCase() + tagName.slice(1).toLowerCase();
+  const normalizedBase = base.charAt(0).toUpperCase() + base.slice(1);
+
+  const withoutTag =
+    normalizedBase.startsWith(tagPrefix) && normalizedBase.length > tagPrefix.length
+      ? normalizedBase.slice(tagPrefix.length)
+      : normalizedBase;
+
+  const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
+  return `${name}Payload`;
+}
+
+function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Set()) {
+  const merged = mergeSchemaAllOf(schema, swagger);
+  const indent = ' '.repeat(indentSpaces);
+  const propIndent = ' '.repeat(indentSpaces + 2);
+  const required = new Set(Array.isArray(merged.required) ? merged.required : []);
+
+  if (!merged.properties || typeof merged.properties !== 'object') {
+    return '{}';
+  }
+
+  const lines = Object.keys(merged.properties)
+    .sort()
+    .map(name => {
+      const propSchema = merged.properties[name];
+      const optional = required.has(name) ? '' : '?';
+      const type = schemaToInlineFieldType(propSchema, swagger, indentSpaces + 2, visited);
+      return `${propIndent}${formatPropertyName(name)}${optional}: ${type};`;
+    });
+
+  return `{\n${lines.join('\n')}\n${indent}}`;
+}
+
+function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Set()) {
+  if (!schema || typeof schema !== 'object') {
+    return 'unknown';
+  }
+
+  if (schema.$ref) {
+    if (visited.has(schema.$ref)) {
+      return 'unknown'; // circular ref guard
+    }
+    visited = new Set(visited);
+    visited.add(schema.$ref);
+    const resolved = resolveRef(swagger, schema.$ref);
+    return schemaToInlineFieldType(resolved, swagger, indentSpaces, visited);
+  }
+
+  const nullable = isNullableSchema(schema);
+
+  if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
+    const merged = mergeSchemaAllOf(schema, swagger);
+    if (merged.properties) {
+      return withNullable(
+        schemaToInlineInterface(merged, swagger, indentSpaces, visited),
+        nullable
+      );
+    }
+    return withNullable(
+      schema.allOf
+        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited))
+        .join(' & '),
+      nullable
+    );
+  }
+
+  const unionSchemas =
+    Array.isArray(schema.oneOf) && schema.oneOf.length > 0 ? schema.oneOf : schema.anyOf;
+  if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
+    return withNullable(
+      unionSchemas
+        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited))
+        .join(' | '),
+      nullable
+    );
+  }
+
+  if (Array.isArray(schema.enum)) {
+    return withNullable(
+      schema.enum.map(value => JSON.stringify(value)).join(' | ') || 'unknown',
+      nullable
+    );
+  }
+
+  const type = getSchemaType(schema);
+
+  if (type === 'array') {
+    const itemType = schemaToInlineFieldType(schema.items, swagger, indentSpaces, visited);
+    return withNullable(`Array<${itemType}>`, nullable);
+  }
+
+  if (type === 'object' || schema.properties) {
+    if (schema.properties && typeof schema.properties === 'object') {
+      return withNullable(
+        schemaToInlineInterface(schema, swagger, indentSpaces, visited),
+        nullable
+      );
+    }
+    if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
+      return withNullable(
+        `Record<string, ${schemaToInlineFieldType(schema.additionalProperties, swagger, indentSpaces, visited)}>`,
+        nullable
+      );
+    }
+    return withNullable('Record<string, unknown>', nullable);
+  }
+
+  if (type === 'string') {
+    return withNullable(schema.format === 'binary' ? 'Blob' : 'string', nullable);
+  }
+  if (type === 'integer' || type === 'number') {
+    return withNullable('number', nullable);
+  }
+  if (type === 'boolean') {
+    return withNullable('boolean', nullable);
+  }
+
+  return withNullable('unknown', nullable);
+}
+
+function mergeSchemaAllOf(schema, swagger) {
+  if (!Array.isArray(schema.allOf) || schema.allOf.length === 0) {
+    return schema;
+  }
+
+  const merged = { properties: {}, required: [...(schema.required ?? [])] };
+
+  for (const subSchema of schema.allOf) {
+    const resolved = subSchema.$ref ? resolveRef(swagger, subSchema.$ref) : subSchema;
+    if (resolved.properties) {
+      Object.assign(merged.properties, resolved.properties);
+    }
+    if (Array.isArray(resolved.required)) {
+      merged.required.push(...resolved.required);
+    }
+  }
+
+  if (schema.properties) {
+    Object.assign(merged.properties, schema.properties);
+  }
+
+  return merged;
+}
+
+// ---------------------------------------------------------------------------
+// Endpoint documentation
+// ---------------------------------------------------------------------------
 
 function buildEndpointDocComment(operation, method, path, operationId, parameters, swagger) {
   const lines = [];

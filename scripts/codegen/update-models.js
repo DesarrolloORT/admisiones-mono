@@ -8,7 +8,7 @@ import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
   env: 'environment.ts',
-  output: 'src/app/shared/api-models',
+  output: 'src/app/shared/api/generated/models',
 };
 
 // ---------------------------------------------------------------------------
@@ -90,3 +90,4 @@ try {
 } catch (error) {
   process.exit(error.status || 1);
 }
+
