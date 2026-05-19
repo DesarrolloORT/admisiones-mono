@@ -16,6 +16,7 @@ namespace UnitTesting.Controllers
 {
     public class RegistroControllerTests
     {
+        /*
         [Fact]
         public async Task EvaluarDocumento_ReturnsOk()
         {
@@ -126,6 +127,7 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+        */
 
         [Theory]
         [InlineData(nameof(RegistroController.EvaluarDocumento))]

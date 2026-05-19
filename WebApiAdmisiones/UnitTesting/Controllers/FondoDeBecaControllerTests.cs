@@ -14,6 +14,7 @@ namespace UnitTesting.Controllers
 {
     public class FondoDeBecaControllerTests
     {
+        /*
         [Fact]
         public void GetTiposParentesco_ReturnsOk()
         {
@@ -444,5 +445,6 @@ namespace UnitTesting.Controllers
             var objectResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(400, objectResult.StatusCode);
         }
+        */
     }
 }

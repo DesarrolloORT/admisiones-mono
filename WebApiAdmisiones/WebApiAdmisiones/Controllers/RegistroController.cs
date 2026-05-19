@@ -4,8 +4,11 @@ using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Utilities;
 using WebApiAdmisiones.Security;
+using AzureService.DTOs;
+using AzureService.Interfaces;
+using WebApiAdmisiones.Models;
+using Utilities;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -16,6 +19,7 @@ namespace WebApiAdmisiones.Controllers
     [Route("[controller]")]
     public class RegistroController(
         IRegistroService registroService,
+        IReconocimientoDocumento reconocimientoDocumentoService,
         ILogger<RegistroController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<RegistroController>(logger, currentUser)
@@ -61,6 +65,44 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Analiza una imagen o PDF de documento usando Azure Document Intelligence, detecta si se trata
+        /// de cédula uruguaya, pasaporte o documento extranjero admitido, y devuelve los datos extraídos.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("AnalizarAdjunto")]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 422)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 500)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 502)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 504)]
+        public async Task<IActionResult> AnalizarAdjunto([FromBody] ReconocimientoDocumentoApiRequest? request)
+        {
+            if (request?.ArchivoAdjunto is null)
+            {
+                return ValidateResponse(OperationResult<ReconocimientoDocumentoResponse>.IsFailed(
+                    "REC_DOC_01",
+                    nameof(AnalizarAdjunto),
+                    "No se recibió la solicitud de reconocimiento.",
+                    400,
+                    default!));
+            }
+
+            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
+            var fileName = FileValidator.ResolveFileName(request.ArchivoAdjunto.NombreArchivo, request.TipoMime);
+
+            var result = await reconocimientoDocumentoService.ReconocerDocumentoAsync(
+                new ReconocimientoDocumentoRequest
+                {
+                    Archivo = fileContent,
+                    NombreArchivo = fileName,
+                    TipoMime = request.TipoMime
+                });
+
+            return ValidateResponse(result);
+        }
+
+        /// </summary>
         /// Confirma el registro de una persona ya existente.
         /// </summary>
         /// <remarks>

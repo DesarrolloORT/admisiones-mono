@@ -22,8 +22,8 @@ namespace WebApiAdmisiones.Extensions
                     listenOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
                 });
 
-                // Límite global de tamaño de request (protección DoS)
-                options.Limits.MaxRequestBodySize = 2 * 1024 * 1024; // 2 MB
+                // Límite global de request. Cubre archivos binarios de 2 MB enviados como base64 en JSON.
+                options.Limits.MaxRequestBodySize = 4 * 1024 * 1024; // 4 MB
             });
         }
     }

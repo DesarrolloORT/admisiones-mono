@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">  
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">  
  <PropertyGroup>  
    <TargetFramework>net10.0</TargetFramework>  
    <Nullable>enable</Nullable>  
@@ -37,6 +37,7 @@
    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.7" />
  </ItemGroup>  
  <ItemGroup>  
+   <ProjectReference Include="..\..\Core\AzureService\AzureService.csproj" />  
    <ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />  
    <ProjectReference Include="..\..\Core\MailORT\MailORT.csproj" />  
    <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />  
