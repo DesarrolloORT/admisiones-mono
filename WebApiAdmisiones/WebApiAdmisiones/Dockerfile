@@ -11,6 +11,7 @@ WORKDIR /src
 #    - toda la carpeta WebApiAdmisiones (donde está WebApiAdmisiones.sln y el sub-proyecto WebApiAdmisiones)
 #    - toda la carpeta Core (tus librerías compartidas)
 COPY Core/DbConnectionContext        Core/DbConnectionContext
+COPY Core/AzureService              Core/AzureService
 COPY Core/LdapService        Core/LdapService
 COPY Core/MailORT                   Core/MailORT
 COPY Core/Modules/ModBandeja/ModAppLogic        Core/Modules/ModBandeja/ModAppLogic
