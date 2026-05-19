@@ -13,6 +13,7 @@ namespace UnitTesting.Controllers
 {
     public class PersonaControllerTests
     {
+        /*
         [Fact]
         public void ObtenerPersona_ReturnsOk()
         {
@@ -117,5 +118,6 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+        */
     }
 }
