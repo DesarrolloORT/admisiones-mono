@@ -10,7 +10,9 @@ export function toProjectPath(path) {
 }
 
 export function extractApiOrigins(filePath) {
-  const content = readFileSync(filePath, 'utf-8');
+  const raw = readFileSync(filePath, 'utf-8');
+  // Strip single-line comments so commented-out URLs are not picked up.
+  const content = raw.replace(/^\s*\/\/.*$/gm, '');
 
   const vars = {};
   for (const match of content.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*['"`]([^'"`\n]+)['"`]/g)) {
