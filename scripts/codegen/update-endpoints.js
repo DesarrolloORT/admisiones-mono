@@ -233,7 +233,7 @@ function extractExportedNames(outputDir) {
 
   for (const file of files) {
     const content = readFileSync(resolve(outputDir, file), 'utf-8');
-    for (const match of content.matchAll(/export\s+const\s+(\w+)/g)) {
+    for (const match of content.matchAll(/export\s+(?:const|interface|type)\s+(\w+)/g)) {
       names.set(match[1], file);
     }
   }
@@ -246,7 +246,7 @@ function extractNamesFromGeneration(generation) {
 
   for (const file of generation.files) {
     if (file.name === 'index.ts') continue;
-    for (const match of file.content.matchAll(/export\s+const\s+(\w+)/g)) {
+    for (const match of file.content.matchAll(/export\s+(?:const|interface|type)\s+(\w+)/g)) {
       names.set(match[1], file.name);
     }
   }
@@ -527,6 +527,10 @@ function generateEndpointFiles(swagger, options) {
       if (endpoint.payloadType) {
         group.payloadTypes.push(endpoint.payloadType);
       }
+
+      if (endpoint.responseExportType) {
+        group.responseTypes.push(endpoint.responseExportType);
+      }
     }
   }
 
@@ -602,6 +606,7 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
 `;
 
   const payloadType = createPayloadType(operation, method, constantName, tagName, context.swagger);
+  const responseExportType = createExportedResponseType(operation, constantName, tagName, context.swagger);
 
   return {
     code,
@@ -610,6 +615,7 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
     imports,
     tagName,
     payloadType,
+    responseExportType,
   };
 }
 
@@ -626,6 +632,7 @@ function getOrCreateGroup(groups, fileName, tagName) {
     typeImports: new Map(),
     endpoints: [],
     payloadTypes: [],
+    responseTypes: [],
   };
   groups.set(fileName, group);
   return group;
@@ -646,10 +653,15 @@ function renderEndpointFile(group) {
       ? `\n// ---------------------------------------------------------------------------\n// Payload types (auto-generated, adapter-safe — no direct backend DTO exposure)\n// ---------------------------------------------------------------------------\n\n${group.payloadTypes.join('\n')}`
       : '';
 
+  const responseSection =
+    group.responseTypes.length > 0
+      ? `\n// ---------------------------------------------------------------------------\n// Response types (auto-generated, adapter-safe — no direct backend DTO exposure)\n// ---------------------------------------------------------------------------\n\n${group.responseTypes.join('\n')}`
+      : '';
+
   return `${GENERATED_HEADER}
 ${imports.join('\n')}
 
-${group.endpoints.join('\n')}${payloadSection}`;
+${group.endpoints.join('\n')}${payloadSection}${responseSection}`;
 }
 
 function renderIndexFile(fileNames) {
@@ -995,6 +1007,112 @@ function derivePayloadName(constantName, tagName) {
 
   const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
   return `${name}Payload`;
+}
+
+function createExportedResponseType(operation, constantName, tagName, swagger) {
+  const responses = operation.responses;
+  if (!responses || typeof responses !== 'object') {
+    return null;
+  }
+
+  const responseCode = selectMainResponseCode(responses);
+  if (!responseCode || responseCode === '204') {
+    return null;
+  }
+
+  const response = resolveMaybeRef(swagger, responses[responseCode]);
+  const contentItem = pickContentItem(response?.content);
+  if (!contentItem?.schema) {
+    return null;
+  }
+
+  const schema = contentItem.schema.$ref
+    ? resolveRef(swagger, contentItem.schema.$ref)
+    : contentItem.schema;
+
+  if (!schema || (!schema.properties && !schema.allOf)) {
+    return null;
+  }
+
+  const responseName = deriveResponseName(constantName, tagName);
+  const body = schemaToInlineInterface(schema, swagger, 2);
+
+  let output = `/** Auto-generated response for \`${constantName}\`. */\nexport interface ${responseName} ${body}\n`;
+
+  // If response has a `data` array property, also emit a named Item type
+  const merged = mergeSchemaAllOf(schema, swagger);
+  const dataProperty = merged.properties?.data;
+  if (dataProperty) {
+    const dataPropSchema = dataProperty.$ref
+      ? resolveRef(swagger, dataProperty.$ref)
+      : dataProperty;
+    const dataType = getSchemaType(dataPropSchema);
+
+    if (dataType === 'array' && dataPropSchema.items) {
+      const itemSchema = dataPropSchema.items.$ref
+        ? resolveRef(swagger, dataPropSchema.items.$ref)
+        : dataPropSchema.items;
+
+      if (itemSchema && (itemSchema.properties || itemSchema.allOf)) {
+        const itemName = responseName.replace(/Response$/, 'Item');
+        const itemBody = schemaToInlineInterface(itemSchema, swagger, 2);
+        output += `\n/** Data item of \`${responseName}\`. */\nexport interface ${itemName} ${itemBody}\n`;
+
+        // Emit nested array sub-items (one level deep)
+        const itemMerged = mergeSchemaAllOf(itemSchema, swagger);
+        if (itemMerged.properties) {
+          for (const [propName, propSchema] of Object.entries(itemMerged.properties)) {
+            const resolved = propSchema.$ref ? resolveRef(swagger, propSchema.$ref) : propSchema;
+            if (getSchemaType(resolved) === 'array' && resolved.items) {
+              const subItemSchema = resolved.items.$ref
+                ? resolveRef(swagger, resolved.items.$ref)
+                : resolved.items;
+              if (subItemSchema && (subItemSchema.properties || subItemSchema.allOf)) {
+                const subItemName = `${itemName}${propName.charAt(0).toUpperCase()}${propName.slice(1)}`;
+                const subItemBody = schemaToInlineInterface(subItemSchema, swagger, 2);
+                output += `\n/** Nested \`${propName}\` item within \`${itemName}\`. */\nexport interface ${subItemName} ${subItemBody}\n`;
+
+                // One more nesting level for deeply nested arrays (e.g. estado → ciudad)
+                const subMerged = mergeSchemaAllOf(subItemSchema, swagger);
+                if (subMerged.properties) {
+                  for (const [subPropName, subPropSchema] of Object.entries(subMerged.properties)) {
+                    const subResolved = subPropSchema.$ref ? resolveRef(swagger, subPropSchema.$ref) : subPropSchema;
+                    if (getSchemaType(subResolved) === 'array' && subResolved.items) {
+                      const deepSchema = subResolved.items.$ref
+                        ? resolveRef(swagger, subResolved.items.$ref)
+                        : subResolved.items;
+                      if (deepSchema && (deepSchema.properties || deepSchema.allOf)) {
+                        const deepName = `${subItemName}${subPropName.charAt(0).toUpperCase()}${subPropName.slice(1)}`;
+                        const deepBody = schemaToInlineInterface(deepSchema, swagger, 2);
+                        output += `\n/** Nested \`${subPropName}\` item within \`${subItemName}\`. */\nexport interface ${deepName} ${deepBody}\n`;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return output;
+}
+
+function deriveResponseName(constantName, tagName) {
+  const base = constantName.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
+
+  const tagPrefix = tagName.charAt(0).toUpperCase() + tagName.slice(1).toLowerCase();
+  const normalizedBase = base.charAt(0).toUpperCase() + base.slice(1);
+
+  const withoutTag =
+    normalizedBase.startsWith(tagPrefix) && normalizedBase.length > tagPrefix.length
+      ? normalizedBase.slice(tagPrefix.length)
+      : normalizedBase;
+
+  const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
+  return `${name}Response`;
 }
 
 function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Set()) {
