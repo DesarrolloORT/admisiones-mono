@@ -1,29 +1,30 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
-import {
-  getCatalogosPaisesEstadosCiudadesEndpoint,
-  getCatalogosTiposDocumentosEndpoint,
-} from 'src/app/shared/api/endpoints/generated/catalogos.endpoints';
 import { vi } from 'vitest';
+
+import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 
 import { Catalogs } from './catalogs';
 
 describe('Catalogs', () => {
   let service: Catalogs;
-  let apiMock: {
-    list: ReturnType<typeof vi.fn>;
+  let endpointMock: {
+    getDocumentTypes: ReturnType<typeof vi.fn>;
+    getCountries: ReturnType<typeof vi.fn>;
+    getCountryLocations: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
-    apiMock = {
-      list: vi.fn(),
+    endpointMock = {
+      getDocumentTypes: vi.fn(),
+      getCountries: vi.fn(),
+      getCountryLocations: vi.fn(),
       clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
-      providers: [Catalogs, { provide: ApiHttpClient, useValue: apiMock }],
+      providers: [Catalogs, { provide: CatalogsEndpoint, useValue: endpointMock }],
     });
 
     service = TestBed.inject(Catalogs);
@@ -33,46 +34,32 @@ describe('Catalogs', () => {
     vi.restoreAllMocks();
   });
 
-  it('should fetch and map document types with the generated endpoint', () => {
-    apiMock.list.mockReturnValue(of([{ id: 1, label: 'Cédula', code: 'CI' }]));
+  it('should delegate getDocumentTypes to the endpoint', () => {
+    const result = [{ id: 1, label: 'Cédula', code: 'CI' }];
+    endpointMock.getDocumentTypes.mockReturnValue(of(result));
 
     service.getDocumentTypes().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Cédula', code: 'CI' }]);
+      expect(data).toEqual(result);
     });
 
-    expect(apiMock.list).toHaveBeenCalledWith(
-      getCatalogosTiposDocumentosEndpoint,
-      expect.any(Function)
-    );
-    expect(
-      apiMock.list.mock.calls[0][1]({
-        codTipoDocumento: 1,
-        descripcion: 'Cédula',
-        descrTd: 'CI',
-      })
-    ).toEqual({ id: 1, label: 'Cédula', code: 'CI' });
+    expect(endpointMock.getDocumentTypes).toHaveBeenCalledOnce();
   });
 
-  it('should fetch and map countries with the generated endpoint', () => {
-    apiMock.list.mockReturnValue(of([{ id: 1, label: 'Uruguay' }]));
+  it('should delegate getCountries to the endpoint', () => {
+    const result = [{ id: 1, label: 'Uruguay' }];
+    endpointMock.getCountries.mockReturnValue(of(result));
 
     service.getCountries().subscribe(data => {
-      expect(data).toEqual([{ id: 1, label: 'Uruguay' }]);
+      expect(data).toEqual(result);
     });
 
-    expect(apiMock.list).toHaveBeenCalledWith(
-      getCatalogosPaisesEstadosCiudadesEndpoint,
-      expect.any(Function)
-    );
-    expect(apiMock.list.mock.calls[0][1]({ codigoPais: 1, nombre: 'Uruguay' })).toEqual({
-      id: 1,
-      label: 'Uruguay',
-    });
+    expect(endpointMock.getCountries).toHaveBeenCalledOnce();
   });
 
-  it('should clear the shared api cache', () => {
+  it('should delegate clearCache to the endpoint', () => {
     service.clearCache();
 
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+    expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });
+

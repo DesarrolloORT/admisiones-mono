@@ -1,40 +1,29 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
-import {
-  getCatalogosPaisesEstadosCiudadesEndpoint,
-  getCatalogosTiposDocumentosEndpoint,
-} from 'src/app/shared/api/endpoints/generated/catalogos.endpoints';
 
+import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import { Country, DocumentType, LocationCountry } from '../models/catalog.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Catalogs {
-  private readonly api = inject(ApiHttpClient);
+  private readonly endpoint = inject(CatalogsEndpoint);
 
   public getDocumentTypes(): Observable<DocumentType[]> {
-    return this.api.list(getCatalogosTiposDocumentosEndpoint, item => ({
-      id: item.codTipoDocumento,
-      label: item.descripcion ?? '',
-      code: item.descrTd ?? '',
-    }));
+    return this.endpoint.getDocumentTypes();
   }
 
   public getCountries(): Observable<Country[]> {
-    return this.api.list(getCatalogosPaisesEstadosCiudadesEndpoint, item => ({
-      id: item.codigoPais,
-      label: item.nombre,
-    }));
+    return this.endpoint.getCountries();
   }
 
   public getCountryLocations(): Observable<LocationCountry[]> {
-    return this.api.list(getCatalogosPaisesEstadosCiudadesEndpoint);
+    return this.endpoint.getCountryLocations();
   }
 
   public clearCache(): void {
-    this.api.clearCache();
+    this.endpoint.clearCache();
   }
 }
 
