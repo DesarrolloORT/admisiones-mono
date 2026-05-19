@@ -10,6 +10,7 @@
 
 
 export interface DtoComienzoResponse { 
-    idComienzo?: number;
-    nombreComienzo?: string | null;
+    idProceso?: number;
+    nombreProceso?: string | null;
 }
+

@@ -18,3 +18,4 @@ export interface DtoCarreraResponseIEnumerableOperationResult {
     message?: string | null;
     data: Array<DtoCarreraResponse> | null;
 }
+

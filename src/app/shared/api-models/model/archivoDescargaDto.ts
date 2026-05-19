@@ -9,10 +9,9 @@
  */
 
 
-export interface RegistroCarreraResponse { 
-    idProducto?: number;
-    nombreProducto?: string | null;
-    idNivelProducto?: number;
-    nombreNivelProducto?: string | null;
+export interface ArchivoDescargaDto { 
+    archivo?: string | null;
+    nombreArchivo?: string | null;
+    contentType?: string | null;
 }
 

@@ -7,14 +7,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ArchivoDescargaDto } from './archivoDescargaDto';
 import { CamposDocumentoReconocidoDto } from './camposDocumentoReconocidoDto';
-import { DtoArchivoDescarga } from './dtoArchivoDescarga';
 
 
 export interface ReconocimientoDocumentoResponse { 
     requiereRevision?: boolean;
     campos?: CamposDocumentoReconocidoDto;
-    caraPersona?: DtoArchivoDescarga;
+    caraPersona?: ArchivoDescargaDto;
     advertencias?: Array<string> | null;
 }
 

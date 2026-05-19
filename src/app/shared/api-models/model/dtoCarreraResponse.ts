@@ -10,6 +10,9 @@
 
 
 export interface DtoCarreraResponse { 
-    idCarrera?: number;
-    nombreCarrera?: string | null;
+    idProducto?: number;
+    nombreProducto?: string | null;
+    idNivelProducto?: number;
+    nombreNivelProducto?: string | null;
 }
+

@@ -18,3 +18,4 @@ export interface DtoComienzoResponseIEnumerableOperationResult {
     message?: string | null;
     data: Array<DtoComienzoResponse> | null;
 }
+
