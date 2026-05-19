@@ -2,13 +2,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import type { AuthRequest } from 'src/app/shared/api-models/model/authRequest';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
-import { postAuthLoginEndpoint } from 'src/app/shared/api/endpoints/generated/auth.endpoints';
 import {
+  LoginPayload as GeneratedLoginPayload,
+  postAuthLoginEndpoint,
+} from 'src/app/shared/api/generated/endpoints/auth.endpoints';
+import {
+  ConfirmarNuevaPersonaPayload,
   postRegistroAnalizarAdjuntoEndpoint,
   postRegistroConfirmarNuevaPersonaEndpoint,
-} from 'src/app/shared/api/endpoints/generated/registro.endpoints';
+} from 'src/app/shared/api/generated/endpoints/registro.endpoints';
 
 import { AuthRequestError, AuthRequestOperation } from '../models/auth-error';
 import { DocumentRecognitionRequestError } from '../models/document-recognition-error';
@@ -23,7 +26,7 @@ import type {
 // endpoints or models. Only this file knows about generated constants and DTOs.
 // ---------------------------------------------------------------------------
 
-/** Input for login. Maps internally to generated `AuthRequest`. */
+/** Input for login. Maps internally to generated `LoginPayload`. */
 export interface LoginPayload {
   codigoPersona: number;
   password: string;
@@ -34,24 +37,13 @@ export interface LoginResult {
   documento: string;
 }
 
-/** Input for user registration. Maps 1:1 to backend body but typed locally. */
-export interface RegisterPayload {
-  tipoDocumento: string;
-  documento: string;
-  primerNombre: string;
-  segundoNombre: string | null;
-  primerApellido: string;
-  segundoApellido: string | null;
-  fechaNacimiento: string;
-  sexo: string;
-  direccion: string;
-  telefono1: string;
-  mail: string;
-  verificacionMail: string;
-  codigoPais?: number;
-  codigoEstado?: number;
-  codigoCiudad?: number;
-}
+/**
+ * Input for user registration.
+ * Uses the auto-generated `ConfirmarNuevaPersonaPayload` — if the backend adds
+ * or removes fields, `npm run update-api` regenerates this type and TypeScript
+ * surfaces the change without manual sync.
+ */
+export type RegisterPayload = ConfirmarNuevaPersonaPayload;
 
 /** Stable output of registration. Hides `ObjectOperationResult` from backend. */
 export interface RegisterResult {
@@ -70,7 +62,7 @@ export interface RegisterResult {
  *
  * @stable Public methods and their input/output types.
  * @unstable Internal usage of `postAuthLoginEndpoint`, `postRegistroConfirmarNuevaPersonaEndpoint`,
- *           `postRegistroAnalizarAdjuntoEndpoint` and `AuthRequest` DTO.
+ *           `postRegistroAnalizarAdjuntoEndpoint` and generated payload types.
  */
 @Injectable({
   providedIn: 'root',
@@ -85,7 +77,7 @@ export class AuthEndpoint {
    * Response mapped from `DtoAuthenticationResponse` → `LoginResult`.
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
-    const body: AuthRequest = {
+    const body: GeneratedLoginPayload = {
       codigoPersona: payload.codigoPersona,
       password: payload.password,
     };
@@ -100,6 +92,8 @@ export class AuthEndpoint {
    * Register a new person.
    *
    * Behind the scenes: POST /Registro/ConfirmarNuevaPersona using generated endpoint.
+   * `RegisterPayload` is a direct alias of `ConfirmarNuevaPersonaPayload` so
+   * no field mapping is needed — the body is passed through as-is.
    * Response mapped from `ObjectOperationResult` → `RegisterResult`.
    */
   public register(payload: RegisterPayload): Observable<RegisterResult> {
