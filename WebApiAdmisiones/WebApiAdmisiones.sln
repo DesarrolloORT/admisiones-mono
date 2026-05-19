@@ -51,9 +51,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utilities", "..\Core\Utilit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiAdmisiones", "WebApiAdmisiones\WebApiAdmisiones.csproj", "{64DA78D5-47A1-4E49-9446-31F001E62F28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LdapService", "..\Core\LdapService\LdapService.csproj", "{9D9F97F6-220D-681F-9E2C-FA4073A1C706}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LdapService", "..\Core\LdapService\LdapService.csproj", "{9D9F97F6-220D-681F-9E2C-FA4073A1C706}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureService", "..\Core\AzureService\AzureService.csproj", "{E44BDFA8-047A-7594-36DD-F31D09482456}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureService", "..\Core\AzureService\AzureService.csproj", "{E44BDFA8-047A-7594-36DD-F31D09482456}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
