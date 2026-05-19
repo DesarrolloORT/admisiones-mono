@@ -33,7 +33,7 @@ namespace AppLogic.Utilities
                 return new DocumentValidationResult(false, DocumentValidationError.InvalidDocumentType, "Tipo de documento inválido.");
             }
 
-            if (tipoDocumento == "CI")
+            if (tipoDocumento == "DO")
             {
                 var mensaje = Util.ValidoCI(documento);
                 if (!string.IsNullOrWhiteSpace(mensaje))
