@@ -49,8 +49,8 @@ namespace UnitTesting.Controllers
             var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerPaisesEstadosCiudades())
-                .Returns(OperationResult<IEnumerable<DtoPaisDevart>>.Ok(
-                    [new DtoPaisDevart { CodigoPais = 1, Nombre = "Uruguay" }],
+                .Returns(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(
+                    [new DtoPaisEstadoCiudadResponse { CodigoPais = 1, Nombre = "Uruguay" }],
                     nameof(ICatalogosService.ObtenerPaisesEstadosCiudades)));
 
             var response = controller.ObtenerPaisesEstadosCiudades();

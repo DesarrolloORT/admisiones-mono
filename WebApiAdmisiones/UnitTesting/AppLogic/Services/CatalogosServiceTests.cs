@@ -26,7 +26,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerPaisesEstadosCiudades_ReturnsPaisesWithRelatedData()
+        public void ObtenerPaisesEstadosCiudades_ReturnsSlimPaisesEstadosCiudades()
         {
             var paisRepo = new Mock<IPaisRepository>();
             paisRepo.Setup(r => r.GetPaisesConEstadosYCiudades()).Returns(new List<Pais>
@@ -64,10 +64,23 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(nameof(CatalogosService.ObtenerPaisesEstadosCiudades), result.Method);
             var pais = Assert.Single(result.Data!);
             Assert.Equal(1, pais.CodigoPais);
+            Assert.Equal("Uruguay", pais.Nombre);
             Assert.NotNull(pais.Estado);
-            Assert.Single(pais.Estado);
+            var estado = Assert.Single(pais.Estado);
+            Assert.Equal(1, estado.CodigoPais);
+            Assert.Equal(10, estado.CodigoEstado);
+            Assert.Equal("Montevideo", estado.Nombre);
             Assert.NotNull(pais.Estado[0].Ciudad);
-            Assert.Single(pais.Estado[0].Ciudad);
+            var ciudad = Assert.Single(pais.Estado[0].Ciudad);
+            Assert.Equal(1, ciudad.CodigoPais);
+            Assert.Equal(10, ciudad.CodigoEstado);
+            Assert.Equal(100, ciudad.CodigoCiudad);
+            Assert.Equal("Montevideo", ciudad.Nombre);
+            Assert.Null(typeof(DtoPaisEstadoCiudadResponse).GetProperty("DgiPais"));
+            Assert.Null(typeof(DtoEstadoCiudadResponse).GetProperty("Pai"));
+            Assert.Null(typeof(DtoEstadoCiudadResponse).GetProperty("SolicitudAltas"));
+            Assert.Null(typeof(DtoCiudadResponse).GetProperty("Empresas"));
+            Assert.Null(typeof(DtoCiudadResponse).GetProperty("Personas"));
         }
 
         [Fact]
