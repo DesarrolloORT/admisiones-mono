@@ -9,8 +9,14 @@ import {
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
   ConfirmarNuevaPersonaPayload,
+  ConfirmarPersonaExistentePayload,
+  EvaluarDocumentoPayload,
   postRegistroAnalizarAdjuntoEndpoint,
   postRegistroConfirmarNuevaPersonaEndpoint,
+  postRegistroConfirmarPersonaExistenteEndpoint,
+  postRegistroEvaluarDocumentoEndpoint,
+  postRegistroVerificarIdentidadEndpoint,
+  VerificarIdentidadPayload,
 } from 'src/app/shared/api/generated/endpoints/registro.endpoints';
 
 import { AuthRequestError, AuthRequestOperation } from '../models/auth-error';
@@ -45,9 +51,35 @@ export interface LoginResult {
  */
 export type RegisterPayload = ConfirmarNuevaPersonaPayload;
 
+/**
+ * Input for confirming an existing person with academic interest.
+ * Uses the auto-generated `ConfirmarPersonaExistentePayload`.
+ */
+export type ConfirmExistingPersonPayload = ConfirmarPersonaExistentePayload;
+
+/** Input for identity verification. */
+export type VerifyIdentityPayload = VerificarIdentidadPayload;
+
+/** Stable output of identity verification. */
+export interface VerifyIdentityResult {
+  success: boolean;
+}
+
 /** Stable output of registration. Hides `ObjectOperationResult` from backend. */
 export interface RegisterResult {
   success: boolean;
+}
+
+/** Input for document evaluation before registration. */
+export type EvaluateDocumentPayload = EvaluarDocumentoPayload;
+
+/** Stable output of document evaluation. */
+export interface EvaluateDocumentResult {
+  requiereAltaPersona: boolean;
+  requiereAltaSolicitud: boolean;
+  requiereVerificacion: boolean;
+  solicitudAltaExistente: boolean;
+  usuarioExistente: boolean;
 }
 
 /**
@@ -109,6 +141,30 @@ export class AuthEndpoint {
   }
 
   /**
+   * Evaluate whether a document can start registration.
+   *
+   * Behind the scenes: POST /Registro/EvaluarDocumento using generated endpoint.
+   * Response mapped from `RegistroEvaluacionResponseOperationResult` → `EvaluateDocumentResult`.
+   */
+  public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
+    return this.api
+      .request(postRegistroEvaluarDocumentoEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(
+        map(result => ({
+          requiereAltaPersona: result.data?.requiereAltaPersona ?? false,
+          requiereAltaSolicitud: result.data?.requiereAltaSolicitud ?? false,
+          requiereVerificacion: result.data?.requiereVerificacion ?? false,
+          solicitudAltaExistente: result.data?.solicitudAltaExistente ?? false,
+          usuarioExistente: result.data?.usuarioExistente ?? false,
+        })),
+        catchError(error => this.toAuthError('evaluateDocument', error))
+      );
+  }
+
+  /**
    * Analyze an uploaded document image via OCR.
    *
    * Behind the scenes: POST /Registro/AnalizarAdjunto using generated endpoint.
@@ -123,6 +179,42 @@ export class AuthEndpoint {
         withCredentials: true,
       })
       .pipe(catchError(error => this.toDocRecognitionError(error)));
+  }
+
+  /**
+   * Verify the identity of a person before confirming academic interest.
+   *
+   * Behind the scenes: POST /Registro/VerificarIdentidad using generated endpoint.
+   * Response mapped from `ObjectOperationResult` → `VerifyIdentityResult`.
+   */
+  public verifyIdentity(payload: VerifyIdentityPayload): Observable<VerifyIdentityResult> {
+    return this.api
+      .request(postRegistroVerificarIdentidadEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(
+        map(result => ({ success: result.success ?? false })),
+        catchError(error => this.toAuthError('verifyIdentity', error))
+      );
+  }
+
+  /**
+   * Confirm an existing person with academic interest.
+   *
+   * Behind the scenes: POST /Registro/ConfirmarPersonaExistente using generated endpoint.
+   * Response mapped from `ObjectOperationResult` → `RegisterResult`.
+   */
+  public confirmExistingPerson(payload: ConfirmExistingPersonPayload): Observable<RegisterResult> {
+    return this.api
+      .request(postRegistroConfirmarPersonaExistenteEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(
+        map(result => ({ success: result.success ?? false })),
+        catchError(error => this.toAuthError('register', error))
+      );
   }
 
   private toAuthError(operation: AuthRequestOperation, error: unknown): Observable<never> {
