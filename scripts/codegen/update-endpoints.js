@@ -606,7 +606,12 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
 `;
 
   const payloadType = createPayloadType(operation, method, constantName, tagName, context.swagger);
-  const responseExportType = createExportedResponseType(operation, constantName, tagName, context.swagger);
+  const responseExportType = createExportedResponseType(
+    operation,
+    constantName,
+    tagName,
+    context.swagger
+  );
 
   return {
     code,
@@ -1076,7 +1081,9 @@ function createExportedResponseType(operation, constantName, tagName, swagger) {
                 const subMerged = mergeSchemaAllOf(subItemSchema, swagger);
                 if (subMerged.properties) {
                   for (const [subPropName, subPropSchema] of Object.entries(subMerged.properties)) {
-                    const subResolved = subPropSchema.$ref ? resolveRef(swagger, subPropSchema.$ref) : subPropSchema;
+                    const subResolved = subPropSchema.$ref
+                      ? resolveRef(swagger, subPropSchema.$ref)
+                      : subPropSchema;
                     if (getSchemaType(subResolved) === 'array' && subResolved.items) {
                       const deepSchema = subResolved.items.$ref
                         ? resolveRef(swagger, subResolved.items.$ref)
