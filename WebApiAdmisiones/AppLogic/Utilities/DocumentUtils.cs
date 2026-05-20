@@ -21,7 +21,7 @@ namespace AppLogic.Utilities
             DocumentValidationError Error,
             string Message);
 
-        private static readonly string[] TiposDocumentoPermitidos = ["DO", "DE", "PA", "CC"];
+        private static readonly string[] TiposDocumentoPermitidos = ["CI", "DE", "PS", "CC"];
 
         public static DocumentValidationResult ValidarDocumentoBase(string? tipoDocumentoRaw, string? documentoRaw)
         {
@@ -33,7 +33,7 @@ namespace AppLogic.Utilities
                 return new DocumentValidationResult(false, DocumentValidationError.InvalidDocumentType, "Tipo de documento inválido.");
             }
 
-            if (tipoDocumento == "DO")
+            if (tipoDocumento == "CI")
             {
                 var mensaje = Util.ValidoCI(documento);
                 if (!string.IsNullOrWhiteSpace(mensaje))
