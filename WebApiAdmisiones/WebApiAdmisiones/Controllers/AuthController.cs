@@ -27,7 +27,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Error en los datos de entrada.</response>
         /// <response code="401">Credenciales inválidas.</response>
         /// <remarks>
-        /// Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
+        /// Endpoint publico para iniciar sesion. El front debe enviar tipoDocumento, documento y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
         /// </remarks>
         [AllowAnonymous]
         [HttpPost("Login")]

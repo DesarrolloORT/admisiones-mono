@@ -39,7 +39,8 @@ public class AuthService : IAuthService
     /// Autentica un usuario contra el servicio LDAP delegando al proyecto Autenticacion
     /// y, si es exitoso, obtiene la Persona desde la base de datos y genera los tokens de autenticación.
     /// </summary>
-    /// <param name="codigoPersona">Código de la persona a autenticar.</param>
+    /// <param name="tipoDocumento">Tipo de documento del usuario.</param>
+    /// <param name="documento">Número de documento del usuario.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
     public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass)
