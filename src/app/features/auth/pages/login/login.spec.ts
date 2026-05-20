@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
@@ -16,6 +16,7 @@ describe('Login', () => {
   let catalogsMock: {
     getDocumentTypes: ReturnType<typeof vi.fn>;
   };
+  let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     authMock = {
@@ -47,6 +48,7 @@ describe('Login', () => {
       ],
     });
 
+    navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -60,25 +62,29 @@ describe('Login', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should submit document credentials', () => {
-    component['form'].setValue({
+  it('should submit document credentials and redirect to home', () => {
+    const facade = component['facade'];
+
+    facade.form.setValue({
       documentType: 'CI',
       documentNumber: '12345678',
       password: 'secret',
     });
 
-    component['onSubmit']();
+    facade.submit();
 
     expect(authMock.login).toHaveBeenCalledWith({
       documentType: 'CI',
       documentNumber: '12345678',
       password: 'secret',
     });
-    expect(component['successMessage']()).toBe('Sesión iniciada correctamente.');
+    expect(facade.successMessage()).toBe('Sesión iniciada correctamente.');
+    expect(facade.form.controls.password.value).toBe('');
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/home');
   });
 
   it('should not submit when form is invalid', () => {
-    component['onSubmit']();
+    component['facade'].submit();
 
     expect(authMock.login).not.toHaveBeenCalled();
   });

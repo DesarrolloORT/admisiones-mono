@@ -1,29 +1,41 @@
 <app-auth-form description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
   heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="school"
   heroTitle="Tu red profesional comienza hoy." title="Comenzá tu camino en ORT">
-  <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="onSubmit()">
+  <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
     <section class="auth-form-section">
       <ort-form-field>
         <ort-label>Tipo de documento</ort-label>
         <ort-select formControlName="documentType" id="login-document-type">
-          @for (docType of documentTypes$ | async; track docType.id) {
-          <ort-option [value]="docType.code">{{ docType.label }}</ort-option>
-          }
+          <ort-option value="CI">Cédula </ort-option>
+          <ort-option value="PS">Pasaporte</ort-option>
+          <ort-option value="DE">Documento extranjero</ort-option>
         </ort-select>
-        @if (form.controls.documentType.touched && form.controls.documentType.hasError('required')) {
+        @if ( facade.form.controls.documentType.touched &&
+        facade.form.controls.documentType.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Nro. de documento</ort-label>
+        @if (facade.isCedulaInput()) {
+        <input ortCedulaInput autocomplete="username" formControlName="documentNumber" id="login-document-number"
+          type="text" [formatOutput]="true" />
+        } @else {
         <input ortInput autocomplete="username" formControlName="documentNumber" id="login-document-number"
-          inputmode="numeric" type="text" />
-        <ort-hint>Sin puntos ni guiones</ort-hint>
-        @if (form.controls.documentNumber.touched && form.controls.documentNumber.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
+          type="text" />
         }
-        @if (form.controls.documentNumber.touched && form.controls.documentNumber.hasError('pattern')) {
+        @if (!facade.isCedulaInput()) {
+        <ort-hint>Sin puntos ni guiones</ort-hint>
+        }
+        @if ( facade.form.controls.documentNumber.touched &&
+        facade.form.controls.documentNumber.hasError('required') ) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        } @if ( facade.form.controls.documentNumber.touched &&
+        facade.form.controls.documentNumber.hasError('cedula') ) {
+        <ort-error>Ingresá un número de cédula válido</ort-error>
+        } @if ( !facade.isCedulaInput() && facade.form.controls.documentNumber.touched &&
+        facade.form.controls.documentNumber.hasError('pattern') ) {
         <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
         }
       </ort-form-field>
@@ -31,12 +43,13 @@
       <ort-form-field>
         <ort-label>Contraseña</ort-label>
         <input ortInput [attr.autocomplete]="'current-password'" formControlName="password" id="login-password"
-          [type]="passwordInputType()" />
+          [type]="facade.passwordInputType()" />
         <button ortSuffix ort-icon-button aria-label="Mostrar u ocultar contraseña" type="button"
-          (click)="togglePasswordVisibility()">
-          <ort-icon>{{ passwordIcon() }}</ort-icon>
+          (click)="facade.togglePasswordVisibility()">
+          <ort-icon>{{ facade.passwordIcon() }}</ort-icon>
         </button>
-        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        @if ( facade.form.controls.password.touched &&
+        facade.form.controls.password.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
@@ -46,15 +59,14 @@
       </a>
     </section>
 
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    }
-    @if (successMessage()) {
-    <output class="auth-success">{{ successMessage() }}</output>
+    @if (facade.error()) {
+    <p class="auth-error" role="alert">{{ facade.error() }}</p>
+    } @if (facade.successMessage()) {
+    <output class="auth-success">{{ facade.successMessage() }}</output>
     }
 
-    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Iniciando...' : 'Iniciar sesión' }}
+    <button ort-primary-button type="submit" [disabled]="facade.isSubmitting()">
+      {{ facade.isSubmitting() ? 'Iniciando...' : 'Iniciar sesión' }}
     </button>
 
     <section aria-label="Opciones de cuenta" class="auth-stack">

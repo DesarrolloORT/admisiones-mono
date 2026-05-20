@@ -1,4 +1,4 @@
-export type AuthRequestOperation = 'login' | 'register';
+export type AuthRequestOperation = 'login' | 'register' | 'evaluateDocument' | 'verifyIdentity';
 
 export class AuthRequestError extends Error {
   public constructor(
