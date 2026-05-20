@@ -12,6 +12,7 @@ export interface AuthSession {
   token: string | null;
   documentType: string;
   documentNumber: string;
+  primerNombre: string;
   expiresAt: string | null;
 }
 
