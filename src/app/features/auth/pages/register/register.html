@@ -1,46 +1,24 @@
-<app-auth-form
-  [cardSize]="facade.stepViewModel().cardSize"
-  [description]="facade.stepViewModel().description"
-  [heroDescription]="facade.stepViewModel().heroDescription"
-  [heroIcon]="facade.stepViewModel().heroIcon"
-  [heroTitle]="facade.stepViewModel().heroTitle"
-  [stepLabel]="facade.stepViewModel().stepLabel"
-  [stepTitle]="facade.stepViewModel().stepTitle"
-  [title]="facade.stepViewModel().title">
+<app-auth-form [cardSize]="facade.stepViewModel().cardSize" [description]="facade.stepViewModel().description"
+  [heroDescription]="facade.stepViewModel().heroDescription" [heroIcon]="facade.stepViewModel().heroIcon"
+  [heroTitle]="facade.stepViewModel().heroTitle" [stepLabel]="facade.stepViewModel().stepLabel"
+  [stepTitle]="facade.stepViewModel().stepTitle" [title]="facade.stepViewModel().title">
   @if (facade.step() === 'identity') {
-  <app-register-identity-step
-    [documentTypes]="facade.documentTypes$"
-    [error]="facade.error()"
-    [form]="facade.identityForm"
-    [isCedulaInput]="facade.isCedulaInput()"
-    [isRecognizingDocument]="facade.isRecognizingDocument()"
-    [isSubmitting]="facade.isSubmitting()"
-    [recognitionError]="facade.recognitionError()"
-    [recognitionSuccessMessage]="facade.recognitionSuccessMessage()"
-    [selectedFileName]="facade.selectedFileName()"
-    (continueStep)="facade.continueToPersonalData()"
+  <app-register-identity-step [documentTypes]="facade.documentTypes$" [error]="facade.error()"
+    [form]="facade.identityForm" [isCedulaInput]="facade.isCedulaInput()"
+    [isRecognizingDocument]="facade.isRecognizingDocument()" [isSubmitting]="facade.isSubmitting()"
+    [recognitionError]="facade.recognitionError()" [recognitionSuccessMessage]="facade.recognitionSuccessMessage()"
+    [selectedFileName]="facade.selectedFileName()" (continueStep)="facade.continueToPersonalData()"
     (documentSelected)="facade.onDocumentSelected($event)" />
   } @else if (facade.step() === 'personal') {
-  <app-register-personal-step
-    [error]="facade.error()"
-    [form]="facade.personalForm"
-    [isSubmitting]="facade.isSubmitting()"
-    [isVerificationOnly]="facade.requiresVerification()"
-    [successMessage]="facade.successMessage()"
-    (back)="facade.backToIdentity()"
+  <app-register-personal-step [error]="facade.error()" [form]="facade.personalForm"
+    [isSubmitting]="facade.isSubmitting()" [isVerificationOnly]="facade.requiresVerification()"
+    [successMessage]="facade.successMessage()" (back)="facade.backToIdentity()"
     (submitStep)="facade.submitPersonalData()" />
   } @else {
-  <app-register-career-step
-    [academicLevels]="facade.academicLevels()"
-    [comienzos]="facade.comienzos()"
-    [error]="facade.error()"
-    [filteredCareers]="facade.filteredCareers()"
-    [form]="facade.careerForm"
-    [isSubmitting]="facade.isSubmitting()"
-    [successMessage]="facade.successMessage()"
-    (back)="facade.backToPersonal()"
-    (carreraChange)="facade.onCarreraChange()"
-    (propuestaChange)="facade.onPropuestaChange()"
+  <app-register-career-step [academicLevels]="facade.academicLevels()" [comienzos]="facade.comienzos()"
+    [error]="facade.error()" [filteredCareers]="facade.filteredCareers()" [form]="facade.careerForm"
+    [isSubmitting]="facade.isSubmitting()" [successMessage]="facade.successMessage()" (back)="facade.backToPersonal()"
+    (carreraChange)="facade.onCarreraChange()" (propuestaChange)="facade.onPropuestaChange()"
     (submitStep)="facade.submitCareerData()" />
   }
 </app-auth-form>

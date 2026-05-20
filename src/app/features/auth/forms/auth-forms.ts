@@ -114,3 +114,4 @@ export function emailsMatch(form: FormGroup<PersonalForm>): boolean {
   const { mail, verificacionMail } = form.getRawValue();
   return mail.trim().toLowerCase() === verificacionMail.trim().toLowerCase();
 }
+

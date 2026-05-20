@@ -17,3 +17,4 @@ import { RegisterFlowFacade } from '../../facades/register-flow.facade';
 export class Register {
   protected readonly facade = inject(RegisterFlowFacade);
 }
+

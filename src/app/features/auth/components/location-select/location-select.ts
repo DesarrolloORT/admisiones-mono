@@ -17,12 +17,7 @@ import { OrtFormFieldModule, OrtSelectModule } from '@desarrolloort/components';
 
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../../catalogs/services/catalogs';
-
-export interface LocationValue {
-  codigoPais: number | null;
-  codigoEstado: number | null;
-  codigoCiudad: number | null;
-}
+import { LocationValue } from '../../models/location-value';
 
 @Component({
   selector: 'app-location-select',
@@ -176,4 +171,3 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
     });
   }
 }
-

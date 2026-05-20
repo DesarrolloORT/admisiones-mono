@@ -33,3 +33,4 @@ export class RegisterPersonalStep {
   public readonly back = output<void>();
   public readonly submitStep = output<void>();
 }
+
