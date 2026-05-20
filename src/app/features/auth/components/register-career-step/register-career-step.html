@@ -1,0 +1,72 @@
+<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="submitStep.emit()">
+  <section class="auth-form-section">
+    <fieldset class="auth-radio-group">
+      <legend class="auth-radio-group-label">
+        Propuesta académica
+        <span aria-hidden="true">*</span>
+      </legend>
+      @for (level of academicLevels(); track level.id) {
+      <label
+        class="auth-radio-card"
+        [class.auth-radio-card--selected]="
+            form().controls.propuestaAcademica.value === level.id
+          ">
+        <input
+          class="auth-radio-card-input"
+          formControlName="propuestaAcademica"
+          name="propuestaAcademica"
+          type="radio"
+          [value]="level.id"
+          (change)="propuestaChange.emit()" />
+        <ort-icon class="auth-radio-card-icon">school</ort-icon>
+        <span class="auth-radio-card-label">{{ level.nombre }}</span>
+      </label>
+      } @if ( form().controls.propuestaAcademica.touched &&
+      form().controls.propuestaAcademica.hasError('required') ) {
+      <p class="auth-error" role="alert">Seleccioná una propuesta académica</p>
+      }
+    </fieldset>
+
+    <ort-form-field>
+      <ort-label>Carrera</ort-label>
+      <ort-select
+        formControlName="carrera"
+        id="career-select"
+        (selectionChange)="carreraChange.emit()">
+        <ort-option [value]="null" disabled>Seleccioná...</ort-option>
+        @for (career of filteredCareers(); track career.idProducto) {
+        <ort-option [value]="career.idProducto">{{ career.nombreProducto }}</ort-option>
+        }
+      </ort-select>
+      @if (form().controls.carrera.touched && form().controls.carrera.hasError('required')) {
+      <ort-error>Este campo es obligatorio</ort-error>
+      }
+    </ort-form-field>
+
+    <ort-form-field>
+      <ort-label>Comienzo</ort-label>
+      <ort-select formControlName="comienzo" id="start-select">
+        <ort-option [value]="null" disabled>Seleccioná...</ort-option>
+        @for (com of comienzos(); track com.idProceso) {
+        <ort-option [value]="com.idProceso">{{ com.nombreProceso }}</ort-option>
+        }
+      </ort-select>
+      @if (form().controls.comienzo.touched && form().controls.comienzo.hasError('required')) {
+      <ort-error>Este campo es obligatorio</ort-error>
+      }
+    </ort-form-field>
+  </section>
+
+  @if (error()) {
+  <p class="auth-error" role="alert">{{ error() }}</p>
+  } @if (successMessage()) {
+  <output class="auth-success">{{ successMessage() }}</output>
+  }
+
+  <div class="auth-actions">
+    <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
+    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
+    </button>
+  </div>
+</form>

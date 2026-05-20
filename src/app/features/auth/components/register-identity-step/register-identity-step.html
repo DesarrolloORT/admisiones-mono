@@ -1,0 +1,83 @@
+<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="continueStep.emit()">
+  <section class="auth-form-section">
+    <section aria-labelledby="document-capture-title" class="auth-capture">
+      <div>
+        <h2 id="document-capture-title">Ahorrá tiempo escaneando tu documento</h2>
+        <p>Los campos se autocompletarán</p>
+      </div>
+
+      <input #documentFile accept="image/*,application/pdf" class="auth-hidden-file" id="document-file" type="file"
+        (change)="documentSelected.emit($event)" />
+
+      <button ort-tonal-button type="button" [disabled]="isRecognizingDocument()" (click)="documentFile.click()">
+        <ort-icon>center_focus_weak</ort-icon>
+        {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
+      </button>
+
+      <p class="auth-selected-file" [hidden]="!selectedFileName()">
+        Archivo seleccionado: {{ selectedFileName() }}
+      </p>
+
+      @if (recognitionSuccessMessage()) {
+      <output class="auth-success">{{ recognitionSuccessMessage() }}</output>
+      } @if (recognitionError()) {
+      <p class="auth-error" role="alert">{{ recognitionError() }}</p>
+      }
+    </section>
+
+    <div class="auth-divider">O ingresá tus datos manualmente</div>
+
+    <ort-form-field>
+      <ort-label>Tipo de documento</ort-label>
+      <ort-select formControlName="documentType" id="register-document-type">
+        <ort-option value="CI">Cédula </ort-option>
+        <ort-option value="PS">Pasaporte</ort-option>
+        <ort-option value="DE">Documento extranjero</ort-option>
+      </ort-select>
+      @if ( form().controls.documentType.touched &&
+      form().controls.documentType.hasError('required') ) {
+      <ort-error>Este campo es obligatorio</ort-error>
+      }
+    </ort-form-field>
+
+    <ort-form-field>
+      <ort-label>Nro. de documento</ort-label>
+      @if (isCedulaInput()) {
+      <input ortCedulaInput formControlName="documentNumber" id="register-document-number" type="text"
+        [formatOutput]="true" />
+      } @else {
+      <input ortInput formControlName="documentNumber" id="register-document-number" inputmode="numeric" type="text" />
+      }
+      @if (!isCedulaInput()) {
+      <ort-hint>Sin puntos ni espacios.</ort-hint>
+      }
+      @if ( form().controls.documentNumber.touched &&
+      form().controls.documentNumber.hasError('required') ) {
+      <ort-error>Este campo es obligatorio</ort-error>
+      } @if ( form().controls.documentNumber.touched &&
+      form().controls.documentNumber.hasError('cedula') ) {
+      <ort-error>Ingresá un número de cédula válido</ort-error>
+      } @if ( !isCedulaInput() && form().controls.documentNumber.touched &&
+      form().controls.documentNumber.hasError('pattern') ) {
+      <ort-error>Ingresá solo caracteres alfanuméricos o guiones</ort-error>
+      }
+    </ort-form-field>
+  </section>
+
+  <p class="auth-error" role="alert" [hidden]="!form().touched || !form().invalid">
+    Completá los campos obligatorios para continuar.
+  </p>
+
+  @if (error()) {
+  <p class="auth-error" role="alert">{{ error() }}</p>
+  }
+
+  <button ort-primary-button type="submit" [disabled]="isRecognizingDocument() || isSubmitting()">
+    {{ isSubmitting() ? 'Verificando...' : 'Continuar' }}
+  </button>
+
+  <p class="auth-login-switch">
+    ¿Ya tienes cuenta?
+    <a routerLink="/login">Iniciar sesión</a>
+  </p>
+</form>

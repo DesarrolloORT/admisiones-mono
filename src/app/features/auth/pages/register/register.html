@@ -1,209 +1,46 @@
-<app-auth-form [cardSize]="cardSize()" [description]="pageDescription()" [heroDescription]="heroDescription()"
-  [heroIcon]="heroIcon()" [heroTitle]="heroTitle()" [stepLabel]="stepLabel()" [stepTitle]="stepTitle()"
-  [title]="pageTitle()">
-  @if (!isPersonalStep()) {
-  <form class="auth-form-body" novalidate [formGroup]="identityForm" (ngSubmit)="continueToPersonalData()">
-    <section class="auth-form-section">
-      <section aria-labelledby="document-capture-title" class="auth-capture">
-        <div>
-          <h2 id="document-capture-title">Ahorrá tiempo escaneando tu documento</h2>
-          <p>Los campos se autocompletarán</p>
-        </div>
-
-        <input #documentFile accept="image/*,application/pdf" class="auth-hidden-file" id="document-file" type="file"
-          (change)="onDocumentSelected($event)" />
-
-        <button ort-tonal-button type="button" [disabled]="isRecognizingDocument()" (click)="documentFile.click()">
-          <ort-icon>center_focus_weak</ort-icon>
-          {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
-        </button>
-
-        <p class="auth-selected-file" [hidden]="!selectedFileName()">
-          Archivo seleccionado: {{ selectedFileName() }}
-        </p>
-
-        @if (recognitionSuccessMessage()) {
-        <output class="auth-success">{{ recognitionSuccessMessage() }}</output>
-        } @if (recognitionError()) {
-        <p class="auth-error" role="alert">{{ recognitionError() }}</p>
-        }
-      </section>
-
-      <div class="auth-divider">O ingresá tus datos manualmente</div>
-
-      <ort-form-field>
-        <ort-label>Tipo de documento</ort-label>
-        <ort-select formControlName="documentType" id="register-document-type">
-          @for (docType of documentTypes$ | async; track docType.id) {
-          <ort-option [value]="docType.code">{{ docType.label }}</ort-option>
-          }
-        </ort-select>
-        @if (identityForm.controls.documentType.touched &&
-        identityForm.controls.documentType.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Nro. de documento</ort-label>
-        <input ortInput formControlName="documentNumber" id="register-document-number" inputmode="numeric"
-          type="text" />
-        <ort-hint>Sin puntos ni guiones.</ort-hint>
-        @if (identityForm.controls.documentNumber.touched &&
-        identityForm.controls.documentNumber.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        } @if (identityForm.controls.documentNumber.touched &&
-        identityForm.controls.documentNumber.hasError('pattern')) {
-        <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
-        }
-      </ort-form-field>
-    </section>
-
-    <p class="auth-error" role="alert" [hidden]="!identityForm.touched || !identityForm.invalid">
-      Completá los campos obligatorios para continuar.
-    </p>
-
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    }
-
-    <button ort-primary-button type="submit" [disabled]="isRecognizingDocument()">Continuar</button>
-
-    <p class="auth-login-switch">
-      ¿Ya tienes cuenta?
-      <a routerLink="/login">Iniciar sesión</a>
-    </p>
-  </form>
+<app-auth-form
+  [cardSize]="facade.stepViewModel().cardSize"
+  [description]="facade.stepViewModel().description"
+  [heroDescription]="facade.stepViewModel().heroDescription"
+  [heroIcon]="facade.stepViewModel().heroIcon"
+  [heroTitle]="facade.stepViewModel().heroTitle"
+  [stepLabel]="facade.stepViewModel().stepLabel"
+  [stepTitle]="facade.stepViewModel().stepTitle"
+  [title]="facade.stepViewModel().title">
+  @if (facade.step() === 'identity') {
+  <app-register-identity-step
+    [documentTypes]="facade.documentTypes$"
+    [error]="facade.error()"
+    [form]="facade.identityForm"
+    [isCedulaInput]="facade.isCedulaInput()"
+    [isRecognizingDocument]="facade.isRecognizingDocument()"
+    [isSubmitting]="facade.isSubmitting()"
+    [recognitionError]="facade.recognitionError()"
+    [recognitionSuccessMessage]="facade.recognitionSuccessMessage()"
+    [selectedFileName]="facade.selectedFileName()"
+    (continueStep)="facade.continueToPersonalData()"
+    (documentSelected)="facade.onDocumentSelected($event)" />
+  } @else if (facade.step() === 'personal') {
+  <app-register-personal-step
+    [error]="facade.error()"
+    [form]="facade.personalForm"
+    [isSubmitting]="facade.isSubmitting()"
+    [isVerificationOnly]="facade.requiresVerification()"
+    [successMessage]="facade.successMessage()"
+    (back)="facade.backToIdentity()"
+    (submitStep)="facade.submitPersonalData()" />
   } @else {
-  <form class="auth-form-body" novalidate [formGroup]="personalForm" (ngSubmit)="submitPersonalData()">
-    <section aria-label="Datos personales" class="auth-form-grid">
-      <ort-form-field>
-        <ort-label>Primer nombre</ort-label>
-        <input ortInput formControlName="primerNombre" id="first-name" type="text" />
-        @if (personalForm.controls.primerNombre.touched &&
-        personalForm.controls.primerNombre.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Segundo nombre</ort-label>
-        <input ortInput formControlName="segundoNombre" id="second-name" type="text" />
-        @if (personalForm.controls.segundoNombre.touched &&
-        personalForm.controls.segundoNombre.hasError('required')) {
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Primer apellido</ort-label>
-        <input ortInput formControlName="primerApellido" id="first-last-name" type="text" />
-        @if (personalForm.controls.primerApellido.touched &&
-        personalForm.controls.primerApellido.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Segundo apellido</ort-label>
-        <input ortInput formControlName="segundoApellido" id="second-last-name" type="text" />
-        @if (personalForm.controls.segundoApellido.touched &&
-        personalForm.controls.segundoApellido.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Fecha de nacimiento</ort-label>
-        <input ortInput formControlName="fechaNacimiento" id="birth-date" type="date" />
-        @if (personalForm.controls.fechaNacimiento.touched &&
-        personalForm.controls.fechaNacimiento.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Sexo</ort-label>
-        <ort-select formControlName="sexo" id="sex">
-          <ort-option value="">Seleccioná...</ort-option>
-          <ort-option value="F">Femenino</ort-option>
-          <ort-option value="M">Masculino</ort-option>
-          <ort-option value="X">Otro</ort-option>
-        </ort-select>
-        @if (personalForm.controls.sexo.touched && personalForm.controls.sexo.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <app-location-select class="auth-field--wide" formControlName="location"></app-location-select>
-
-      <ort-form-field class="auth-field--wide">
-        <ort-label>Dirección</ort-label>
-        <input ortInput formControlName="direccion" id="address" type="text" />
-        @if (personalForm.controls.direccion.touched &&
-        personalForm.controls.direccion.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-    </section>
-
-    <section aria-labelledby="contact-title" class="auth-form-section">
-      <h2 class="auth-contact-title" id="contact-title">Datos de contacto</h2>
-
-      <ort-form-field>
-        <ort-label>Celular</ort-label>
-        <span ortTextPrefix aria-hidden="true" class="auth-phone-prefix">
-          <span class="auth-phone-flag"></span>
-          +598
-        </span>
-        <input ortInput autocomplete="tel" formControlName="telefono1" id="phone" inputmode="tel" placeholder="00 000 000"
-          type="tel" />
-        @if (personalForm.controls.telefono1.touched &&
-        personalForm.controls.telefono1.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>E-mail</ort-label>
-        <input ortInput autocomplete="email" formControlName="mail" id="email" type="email" />
-        @if (personalForm.controls.mail.touched &&
-        personalForm.controls.mail.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        } @if (personalForm.controls.mail.touched && personalForm.controls.mail.hasError('email'))
-        {
-        <ort-error>Ingresá un e-mail válido</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field>
-        <ort-label>Confirmar e-mail</ort-label>
-        <input ortInput autocomplete="email" formControlName="verificacionMail" id="confirm-email" type="email" />
-        @if (personalForm.controls.verificacionMail.touched &&
-        personalForm.controls.verificacionMail.hasError('required')) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        } @if (personalForm.controls.verificacionMail.touched &&
-        personalForm.controls.verificacionMail.hasError('email')) {
-        <ort-error>Ingresá un e-mail válido</ort-error>
-        }
-      </ort-form-field>
-    </section>
-
-    <p class="auth-error" role="alert" [hidden]="!personalForm.touched || !personalForm.invalid">
-      Completá todos los datos obligatorios para continuar.
-    </p>
-
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    } @if (successMessage()) {
-    <output class="auth-success">{{ successMessage() }}</output>
-    }
-
-    <div class="auth-actions">
-      <button ort-secondary-button type="button" (click)="backToIdentity()">Volver</button>
-      <button ort-primary-button type="submit" [disabled]="isSubmitting()">
-        {{ isSubmitting() ? 'Enviando...' : 'Continuar' }}
-      </button>
-    </div>
-  </form>
+  <app-register-career-step
+    [academicLevels]="facade.academicLevels()"
+    [comienzos]="facade.comienzos()"
+    [error]="facade.error()"
+    [filteredCareers]="facade.filteredCareers()"
+    [form]="facade.careerForm"
+    [isSubmitting]="facade.isSubmitting()"
+    [successMessage]="facade.successMessage()"
+    (back)="facade.backToPersonal()"
+    (carreraChange)="facade.onCarreraChange()"
+    (propuestaChange)="facade.onPropuestaChange()"
+    (submitStep)="facade.submitCareerData()" />
   }
 </app-auth-form>

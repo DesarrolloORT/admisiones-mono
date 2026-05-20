@@ -1,0 +1,78 @@
+/* stylelint-disable declaration-property-unit-allowed-list -- Auth step controls follow Figma px measurements and ORT token fallbacks. */
+:host {
+  display: block;
+}
+
+.auth-radio-group {
+  display: grid;
+  gap: 12px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.auth-radio-group-label {
+  margin-block-end: 4px;
+  color: var(--auth-body, inherit);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.auth-radio-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--auth-border-soft, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--auth-primary, #661020);
+  }
+
+  &--selected {
+    border-color: var(--auth-primary, #661020);
+    background: var(--ort-sys-base-surface-background, #fafafa);
+  }
+}
+
+.auth-radio-card-input {
+  position: relative;
+  flex-shrink: 0;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--auth-border-soft, #e0e0e0);
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:checked {
+    border-color: var(--auth-primary, #661020);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: var(--auth-primary, #661020);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--auth-primary, #661020);
+    outline-offset: 2px;
+  }
+}
+
+.auth-radio-card-icon {
+  color: var(--auth-primary, #661020);
+  font-size: 24px;
+}
+
+.auth-radio-card-label {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+}
