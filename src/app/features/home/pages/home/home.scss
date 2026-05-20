@@ -1,0 +1,310 @@
+/* stylelint-disable declaration-property-unit-allowed-list -- Home follows Figma px measurements and ORT token fallbacks. */
+:host {
+  display: block;
+}
+
+.home-shell {
+  --home-primary: var(--ort-sys-base-surface-primary-background);
+  --home-surface: var(--ort-sys-base-surface-background);
+  --home-page: var(--ort-sys-base-surface-background-page);
+  --home-heading: var(--ort-sys-base-text-color-headline);
+  --home-body: var(--ort-sys-base-text-color-body);
+  --home-display: var(--ort-sys-font-family-display);
+  --home-border: var(--ort-sys-base-border-primary-color);
+  --home-tonal: var(--ort-sys-button-tonal-background);
+  --home-shadow: 0 0 8px rgb(13 13 28 / 8%);
+
+  min-height: 100dvh;
+  background: var(--home-page);
+  color: var(--home-heading);
+  font-family: var(--ort-sys-font-family-open-sans, 'Open Sans', sans-serif);
+}
+
+.home-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--home-primary);
+}
+
+.home-header__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: min(100%, 1440px);
+  height: 80px;
+  margin: 0 auto;
+  padding: 8px 48px;
+}
+
+.home-header__logo {
+  object-fit: contain;
+  width: 67px;
+  height: 30px;
+}
+
+.home-header__spacer {
+  display: none;
+}
+
+.home-profile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.home-avatar,
+.home-action-card__chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--ort-sys-avatar-border-radius);
+  background: var(--ort-sys-avatar-background);
+  color: var(--home-primary);
+  cursor: pointer;
+
+  ort-icon {
+    font-size: 24px;
+  }
+}
+
+.home-profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 2;
+  display: grid;
+  width: 233px;
+  min-width: 112px;
+  max-width: 327px;
+  padding-block: var(--ort-sys-menu-item-padding-block);
+  border-radius: var(--ort-sys-menu-border-radius);
+  background: var(--ort-sys-menu-background);
+  box-shadow:
+    0 0 12px rgb(13 13 28 / 12%),
+    0 0 8px rgb(13 13 28 / 12%);
+}
+
+.home-profile-menu__item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--ort-sys-menu-item-gap);
+  align-items: center;
+  min-height: 48px;
+  padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
+  border: 0;
+  border-bottom: 1px solid var(--ort-sys-base-border-subtle-color, #e3e8ef);
+  background: transparent;
+  color: var(--ort-sys-menu-item-color);
+  font: inherit;
+  font-size: var(--ort-sys-menu-item-font-size);
+  line-height: var(--ort-sys-menu-item-line-height);
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  ort-icon {
+    color: var(--ort-sys-base-icon-color-subtle, #697586);
+    font-size: 24px;
+  }
+}
+
+.home-main {
+  display: grid;
+  gap: var(--ort-sys-spacing-48);
+  width: min(884px, calc(100% - 96px));
+  margin: 0 auto;
+  padding-block: var(--ort-sys-spacing-64);
+}
+
+.home-welcome {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+}
+
+.home-welcome h1,
+.home-action-card h2 {
+  margin: 0;
+  font-weight: 700;
+  font-family: var(--home-display);
+  letter-spacing: 0;
+}
+
+.home-welcome h1 {
+  font-size: var(--ort-sys-heading-level4-text-size);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.home-welcome p,
+.home-action-card p {
+  margin: 0;
+  color: var(--home-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ort-sys-spacing-36);
+}
+
+.home-action-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  border-radius: var(--ort-sys-border-radius-12);
+  background: var(--home-surface);
+  box-shadow: var(--home-shadow);
+}
+
+.home-action-card h2 {
+  grid-area: title;
+  font-size: var(--ort-sys-heading-level5-text-size);
+  line-height: var(--ort-sys-heading-level5-line-height);
+}
+
+.home-action-card p {
+  grid-area: description;
+}
+
+.home-action-card__content {
+  display: grid;
+  grid-template-areas:
+    'icon title action'
+    '. description action';
+  grid-template-columns: 32px minmax(0, 1fr) 40px;
+  gap: 4px var(--ort-sys-spacing-16);
+  align-items: center;
+  padding: var(--ort-sys-spacing-24);
+}
+
+.home-action-card__icon {
+  grid-area: icon;
+  color: var(--home-body);
+  font-size: 32px;
+}
+
+.home-action-card__chevron {
+  grid-area: action;
+  background: var(--home-tonal);
+}
+
+.home-action-card--image {
+  min-height: 480px;
+}
+
+.home-action-card__image {
+  position: absolute;
+  inset: 0 0 auto;
+  object-fit: cover;
+  width: 100%;
+  height: 330px;
+}
+
+.home-action-card--image .home-action-card__content {
+  position: absolute;
+  inset: 0;
+  grid-template:
+    'icon'
+    'title'
+    'description'
+    'button' / 1fr;
+  gap: var(--ort-sys-spacing-8);
+  align-content: end;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0%) 0%, var(--home-surface) 57%);
+}
+
+.home-action-card__primary,
+.home-action-card__mobile-cta {
+  grid-area: button;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.home-action-card__mobile-cta {
+  display: none;
+}
+
+@media (width <= 760px) {
+  .home-header__content {
+    height: 111px;
+    padding: 47px 16px 0;
+  }
+
+  .home-header__spacer {
+    display: block;
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-header__logo {
+    flex: 0 0 auto;
+  }
+
+  .home-profile-menu {
+    top: calc(100% + 4px);
+  }
+
+  .home-main {
+    gap: 24px;
+    width: 100%;
+    padding: 24px 16px;
+  }
+
+  .home-welcome {
+    gap: var(--ort-sys-spacing-4);
+  }
+
+  .home-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .home-action-card,
+  .home-action-card--image {
+    min-height: unset;
+  }
+
+  .home-action-card__image {
+    display: none;
+  }
+
+  .home-action-card__content,
+  .home-action-card--image .home-action-card__content {
+    position: relative;
+    inset: auto;
+    grid-template:
+      'icon'
+      'title'
+      'description'
+      'button' / 1fr;
+    gap: 8px;
+    align-content: start;
+    min-height: 238px;
+    padding: 24px 16px;
+    background: transparent;
+  }
+
+  .home-action-card h2 {
+    font-size: var(--ort-sys-heading-level6-text-size);
+    line-height: var(--ort-sys-heading-level6-line-height);
+  }
+
+  .home-action-card__primary,
+  .home-action-card__mobile-cta {
+    display: block;
+    margin-top: 8px;
+  }
+
+  .home-action-card__chevron {
+    display: none;
+  }
+}

@@ -75,3 +75,4 @@ export type ScholarshipProduct = CatalogItem;
 export interface ScholarshipFund extends CatalogItem {
   productId: number | string;
 }
+

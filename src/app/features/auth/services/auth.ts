@@ -30,14 +30,16 @@ export class Auth {
   public readonly isAuthenticated = computed(() => this.sessionState() !== null);
 
   public login(payload: AuthLoginRequest): Observable<AuthSession> {
-    return this.endpoint.login({
-      tipoDocumento: payload.documentType,
-      documento: payload.documentNumber,
-      password: payload.password,
-    }).pipe(
-      map(result => this.toSession(result, payload)),
-      tap(session => this.storeSession(session))
-    );
+    return this.endpoint
+      .login({
+        tipoDocumento: payload.documentType,
+        documento: payload.documentNumber,
+        password: payload.password,
+      })
+      .pipe(
+        map(result => this.toSession(result, payload)),
+        tap(session => this.storeSession(session))
+      );
   }
 
   public register(payload: AuthRegisterRequest): Observable<AuthRegisterResponse> {
@@ -87,7 +89,10 @@ export class Auth {
     this.storage?.removeItem(storageKeys.session);
   }
 
-  private toSession(result: { documento: string; primerNombre: string }, payload: AuthLoginRequest): AuthSession {
+  private toSession(
+    result: { documento: string; primerNombre: string },
+    payload: AuthLoginRequest
+  ): AuthSession {
     return {
       token: null,
       documentType: payload.documentType,
