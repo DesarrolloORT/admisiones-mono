@@ -489,7 +489,12 @@ public class AuthService : IAuthService
                 default!);
         }
     }
-
+    private static string ObtenerCodigoValidacionDocumentoLogin(DocumentUtils.DocumentValidationError error)
+    {
+        return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
+            ? "LOGIN_LDAP_02"
+            : "LOGIN_LDAP_03";
+    }
     private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
     {
         return error == DocumentUtils.DocumentValidationError.InvalidDocumentType

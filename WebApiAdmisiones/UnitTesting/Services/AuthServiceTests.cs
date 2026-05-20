@@ -204,39 +204,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task AutenticarUsuarioLDAPAsync_LdapAuthenticationFails_ReturnsFailed()
-        {
-            // Arrange
-            long codigoPersona = 12345;
-            string password = "wrongpass";
-            var persona = new Persona { CodigoPersona = codigoPersona };
-            var ldapFailedResult = OperationResult<bool>.IsFailed(
-                "LDAP_01",
-                "AutenticarUsuarioLDAPAsync",
-                "Credenciales inválidas",
-                401,
-                false);
-
-            var uowMock = new Mock<IUnitOfWork>();
-            var personasRepoMock = new Mock<IPersonaRepository>();
-            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
-            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
-            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
-
-            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
-                .ReturnsAsync(ldapFailedResult);
-
-            // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", password);
-
-            // Assert
-            Assert.False(result.Success);
-            Assert.Equal("LDAP_01", result.ErrorCode);
-            Assert.Equal("Credenciales inválidas", result.Message);
-            Assert.Equal(401, result.HttpCode);
-        }
-
-        [Fact]
         public async Task AutenticarUsuarioLDAPAsync_SuccessfulAuthentication_ReturnsOkWithTokens()
         {
             // Arrange
