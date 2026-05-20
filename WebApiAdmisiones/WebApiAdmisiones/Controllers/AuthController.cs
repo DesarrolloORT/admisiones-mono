@@ -251,17 +251,16 @@ namespace WebApiAdmisiones.Controllers
         /// Recuperar contraseña
         /// </summary>
         /// <param name="request">Datos de la persona a recuperar.</param>
-        /// <returns>Resultado del proceso con mensaje y codigos funcionales del servicio.</returns>
-        /// <response code="200">Recuperacion exitosa.</response>
-        /// <response code="400">Error de validacion o de negocio.</response>
-        /// <response code="500">Error interno no controlado.</response>
+        /// <returns>Mensaje generico del proceso de recupero.</returns>
+        /// <response code="200">Solicitud recibida. Si los datos coinciden, se envia un mail con link de recupero.</response>
+        /// <response code="400">El request o el formato del documento es invalido.</response>
         /// <remarks>
-        /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia los datos requeridos de la persona y la API ejecuta las validaciones funcionales antes de solicitar o disparar el recupero.
+        /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia tipo de documento, documento y primer apellido.
+        /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        [ProducesResponseType(typeof(OperationResult<object>), 500)]
         public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)
         {
             var result = await loginService.RecuperarPassword(request);

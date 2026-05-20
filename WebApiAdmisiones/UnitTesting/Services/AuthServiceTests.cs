@@ -17,6 +17,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
+        private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly AuthService _service;
 
         public AuthServiceTests()
@@ -25,12 +26,14 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _tokenServiceMock = new Mock<ITokenService>();
             _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
+            _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
 
             _service = new AuthService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
-                _refreshTokenServiceMock.Object);
+                _refreshTokenServiceMock.Object,
+                _passwordActivationServiceMock.Object);
         }
 
         [Fact]
@@ -41,10 +44,118 @@ namespace UnitTesting.AppLogic.Services
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
-                _refreshTokenServiceMock.Object);
+                _refreshTokenServiceMock.Object,
+                _passwordActivationServiceMock.Object);
 
             // Assert
             Assert.NotNull(service);
+        }
+
+        [Fact]
+        public async Task RecuperarPassword_DatosValidos_EnviaLinkYDevuelveMensajeGenerico()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez"
+            };
+
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)))
+                .ReturnsAsync(OperationResult<object?>.Ok(null, nameof(AuthService.RecuperarPassword)));
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)),
+                Times.Once);
+            _ldapMock.Verify(
+                x => x.EnviarContrasenia(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task RecuperarPassword_PersonaNoExiste_DevuelveMensajeGenericoSinEnviarMail()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns((Persona)null!);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task RecuperarPassword_ApellidoNoCoincide_DevuelveMensajeGenericoSinEnviarMail()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Gomez"
+            };
+
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
         }
 
         [Fact]

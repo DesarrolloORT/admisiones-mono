@@ -18,6 +18,7 @@ namespace AppLogic.Services;
 public class PasswordActivationService : IPasswordActivationService
 {
     private const string ActivationPurpose = "password-activation";
+    private const string RecoveryPurpose = "password-recovery";
     private const string SessionPurpose = "password-activation-session";
     private const string Issuer = "WebApiAdmisiones.PasswordActivation";
     private const string Audience = "AdmisionesWeb.PasswordActivation";
@@ -77,7 +78,7 @@ public class PasswordActivationService : IPasswordActivationService
             uow.Save();
 
             var link = ConstruirLink(token);
-            var body = ConstruirBodyMail(persona, link);
+            var body = ConstruirBodyMailActivacion(persona, link);
             var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
 
             await _envioMail.EnviarMail(
@@ -102,6 +103,71 @@ public class PasswordActivationService : IPasswordActivationService
         }
     }
 
+    public async Task<OperationResult<object?>> EnviarMailRecuperacionPasswordAsync(Persona persona, string originMethod)
+    {
+        try
+        {
+            if (persona == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REC_LINK_01",
+                    originMethod,
+                    "La persona es obligatoria para generar el link de recuperación.",
+                    400);
+            }
+
+            if (string.IsNullOrWhiteSpace(persona.Email))
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REC_LINK_02",
+                    originMethod,
+                    "La persona no tiene un email configurado.",
+                    400);
+            }
+
+            var token = GenerarToken(persona.CodigoPersona, RecoveryPurpose, ObtenerHorasExpiracion());
+            var hash = HashToken(token);
+
+            var uow = _uowFactory.Create();
+            var personaDb = uow.Personas.GetByKey(persona.CodigoPersona);
+            if (personaDb == null)
+            {
+                return OperationResult<object?>.IsFailed(
+                    "REC_LINK_03",
+                    originMethod,
+                    "No se encontró la persona para guardar el token de recuperación.",
+                    404);
+            }
+
+            personaDb.HashTokenPassword = hash;
+            uow.Save();
+
+            var link = ConstruirLink(token, "recovery");
+            var body = ConstruirBodyMailRecuperacion(persona, link);
+            var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
+
+            await _envioMail.EnviarMail(
+                from,
+                new List<string> { persona.Email.Trim() },
+                "Recuperá tu contraseña de Admisiones",
+                body,
+                sistema: SistemaMail);
+
+            return OperationResult<object?>.IsSuccess(
+                null,
+                originMethod,
+                "Si los datos ingresados son correctos, recibirás un mail con instrucciones para recuperar tu contraseña.");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object?>.IsFailed(
+                "REC_LINK_99",
+                originMethod,
+                $"Error al enviar link de recuperación de contraseña: {ex.Message}",
+                500);
+        }
+    }
+
     public Task<OperationResult<DtoPasswordActivationSession>> ActivarLinkPasswordAsync(string token)
     {
         try
@@ -118,7 +184,7 @@ public class PasswordActivationService : IPasswordActivationService
 
             var principal = ValidarJwt(token);
             var purpose = principal.FindFirst("purpose")?.Value;
-            if (!string.Equals(purpose, ActivationPurpose, StringComparison.Ordinal))
+            if (!EsPurposeLinkPasswordValido(purpose))
             {
                 return Task.FromResult(OperationResult<DtoPasswordActivationSession>.IsFailed(
                     "ACT_LINK_02",
@@ -310,7 +376,13 @@ public class PasswordActivationService : IPasswordActivationService
             : null;
     }
 
-    private string ConstruirLink(string token)
+    private static bool EsPurposeLinkPasswordValido(string? purpose)
+    {
+        return string.Equals(purpose, ActivationPurpose, StringComparison.Ordinal)
+            || string.Equals(purpose, RecoveryPurpose, StringComparison.Ordinal);
+    }
+
+    private string ConstruirLink(string token, string? flow = null)
     {
         var baseUrl = _configuration["AdmisionesFrontend:CrearPasswordUrl"];
         if (string.IsNullOrWhiteSpace(baseUrl))
@@ -319,10 +391,16 @@ public class PasswordActivationService : IPasswordActivationService
         }
 
         var separator = baseUrl.Contains('?', StringComparison.Ordinal) ? "&" : "?";
-        return $"{baseUrl}{separator}token={Uri.EscapeDataString(token)}";
+        var link = $"{baseUrl}{separator}token={Uri.EscapeDataString(token)}";
+        if (!string.IsNullOrWhiteSpace(flow))
+        {
+            link = $"{link}&flow={Uri.EscapeDataString(flow)}";
+        }
+
+        return link;
     }
 
-    private static string ConstruirBodyMail(Persona persona, string link)
+    private static string ConstruirBodyMailActivacion(Persona persona, string link)
     {
         var nombre = HtmlEncoder.Default.Encode(persona.PrimerNombre?.Trim() ?? "usuario");
         var safeLink = HtmlEncoder.Default.Encode(link);
@@ -335,6 +413,25 @@ public class PasswordActivationService : IPasswordActivationService
                 <p>Para crear tu contraseña e ingresar al sitio, abrí el siguiente link:</p>
                 <p><a href="{safeLink}">Crear contraseña</a></p>
                 <p>Por seguridad, el link vence en el plazo indicado por el sistema y puede usarse una sola vez.</p>
+            </body>
+            </html>
+            """;
+    }
+
+    private static string ConstruirBodyMailRecuperacion(Persona persona, string link)
+    {
+        var nombre = HtmlEncoder.Default.Encode(persona.PrimerNombre?.Trim() ?? "usuario");
+        var safeLink = HtmlEncoder.Default.Encode(link);
+
+        return $"""
+            <html>
+            <body>
+                <p>Hola {nombre},</p>
+                <p>Recibimos una solicitud para recuperar tu contraseña de Admisiones.</p>
+                <p>Para crear una nueva contraseñaa e ingresar al sitio, abrá­ el siguiente link:</p>
+                <p><a href="{safeLink}">Recuperar contraseña</a></p>
+                <p>Por seguridad, el link vence en el plazo indicado por el sistema y puede usarse una sola vez.</p>
+                <p>Si no solicitaste este cambio, podés ignorar este mensaje.</p>
             </body>
             </html>
             """;

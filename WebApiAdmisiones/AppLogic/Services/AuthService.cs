@@ -11,10 +11,14 @@ namespace AppLogic.Services;
 
 public class AuthService : IAuthService
 {
+    private const string MensajeGenericoRecuperoPassword =
+        "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
+
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IPasswordActivationService _passwordActivationService;
 
     /// <summary>
     /// Constructor del servicio LDAP.
@@ -27,12 +31,14 @@ public class AuthService : IAuthService
         ILdap ldap,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
         ITokenService tokenService,
-        IRefreshTokenService refreshTokenService)
+        IRefreshTokenService refreshTokenService,
+        IPasswordActivationService passwordActivationService)
     {
         _ldap = ldap;
         _admisionesUowFactory = admisionesUowFactory;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
+        _passwordActivationService = passwordActivationService;
     }
 
     /// <summary>
@@ -241,50 +247,53 @@ public class AuthService : IAuthService
                     400);
             }
 
-            using var uow = _admisionesUowFactory.Create();
+            var uow = _admisionesUowFactory.Create();
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             var documento = DocumentUtils.Normalizar(request.Documento);
             var persona = uow.Personas.GetByDocumento(documento);
 
-            if (persona == null)
+            if (persona == null || !CoincidePersonaRecupero(persona, tipoDocumento, documento, request.PrimerApellido))
             {
-                return OperationResult<object>.IsFailed(
-                    "REC_PAS_04",
-                    nameof(RecuperarPassword),
-                    $"No se encontró persona con el numero de documento {documento}",
-                    404);
+                return OperationResult<object>.Ok(
+                    MensajeGenericoRecuperoPassword,
+                    nameof(RecuperarPassword));
             }
 
-            var envioContrasenia = await _ldap.EnviarContrasenia(
-                string.Empty,
-                tipoDocumento,
-                documento,
-                request.PrimerApellido!.Trim(),
-                "ADMISIONES",
-                "SOLICITUD_DE_CONTRASEÑA");
-
-            if (!envioContrasenia.Success)
-            {
-                return OperationResult<object>.IsFailed(
-                    "REC_PAS_05",
-                    nameof(RecuperarPassword),
-                    envioContrasenia.Message,
-                    envioContrasenia.HttpCode);
-            }
+            await _passwordActivationService.EnviarMailRecuperacionPasswordAsync(
+                persona,
+                nameof(RecuperarPassword));
 
             return OperationResult<object>.Ok(
-                envioContrasenia.Data ?? string.Empty,
+                MensajeGenericoRecuperoPassword,
                 nameof(RecuperarPassword));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return OperationResult<object>.IsFailed(
-               "REC_PAS_99",
-               nameof(RecuperarPassword),
-               $"Error al recuperar contraseña: {ex.Message}",
-               500,
-               default!);
+            return OperationResult<object>.Ok(
+               MensajeGenericoRecuperoPassword,
+               nameof(RecuperarPassword));
         }
+    }
+
+    private static bool CoincidePersonaRecupero(
+        BusinessLogic.Entities.Persona persona,
+        string tipoDocumento,
+        string documento,
+        string? primerApellido)
+    {
+        if (string.IsNullOrWhiteSpace(primerApellido))
+        {
+            return false;
+        }
+
+        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
+        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
+            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
+
+        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
+            && DocumentUtils.Normalizar(persona.Documento) == documento
+            && apellidoPersona == apellidoEntrada;
     }
 
     /// <summary>
