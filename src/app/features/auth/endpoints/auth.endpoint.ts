@@ -34,13 +34,15 @@ import type {
 
 /** Input for login. Maps internally to generated `LoginPayload`. */
 export interface LoginPayload {
-  codigoPersona: number;
+  tipoDocumento: string;
+  documento: string;
   password: string;
 }
 
 /** Stable output of login. Hides backend DTO shape (`DtoAuthenticationResponse`). */
 export interface LoginResult {
   documento: string;
+  primerNombre: string;
 }
 
 /**
@@ -110,12 +112,16 @@ export class AuthEndpoint {
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
     const body: GeneratedLoginPayload = {
-      codigoPersona: payload.codigoPersona,
+      tipoDocumento: payload.tipoDocumento,
+      documento: payload.documento,
       password: payload.password,
     };
 
     return this.api.data(postAuthLoginEndpoint, { body, withCredentials: true }).pipe(
-      map(response => ({ documento: response.persona?.documento ?? '' })),
+      map(response => ({
+        documento: response.persona?.documento ?? '',
+        primerNombre: response.persona?.primerNombre ?? '',
+      })),
       catchError(error => this.toAuthError('login', error))
     );
   }
