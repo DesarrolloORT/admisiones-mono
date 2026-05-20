@@ -43,3 +43,4 @@ export class RegisterIdentityStep {
   public readonly documentSelected = output<Event>();
   public readonly continueStep = output<void>();
 }
+
