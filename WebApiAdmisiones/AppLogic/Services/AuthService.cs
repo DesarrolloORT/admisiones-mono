@@ -45,15 +45,45 @@ public class AuthService : IAuthService
     /// Autentica un usuario contra el servicio LDAP delegando al proyecto Autenticacion
     /// y, si es exitoso, obtiene la Persona desde la base de datos y genera los tokens de autenticación.
     /// </summary>
-    /// <param name="codigoPersona">Código de la persona a autenticar.</param>
+    /// <param name="tipoDocumento">Tipo de documento del usuario.</param>
+    /// <param name="documento">Número de documento del usuario.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass)
+    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass)
     {
         try
         {
+            // Validar el tipo de documento y documento
+            var validacion = DocumentUtils.ValidarDocumentoBase(tipoDocumento, documento);
+            if (!validacion.IsValid)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    ObtenerCodigoValidacionDocumentoLogin(validacion.Error),
+                    nameof(AutenticarUsuarioLDAPAsync),
+                    validacion.Message,
+                    400,
+                    default!);
+            }
+
+            var tipoDocumentoNorm = DocumentUtils.Normalizar(tipoDocumento);
+            var documentoNorm = DocumentUtils.Normalizar(documento);
+
+            // Obtener la Persona desde la base de datos por tipo documento y documento
+            using var admisionesUow = _admisionesUowFactory.Create();
+            var persona = admisionesUow.Personas.GetByTipoDocumentoYDocumento(tipoDocumentoNorm, documentoNorm);
+
+            if (persona == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "LOGIN_LDAP_04",
+                    nameof(AutenticarUsuarioLDAPAsync),
+                    "No se encontró la persona en la base de datos.",
+                    404,
+                    default!);
+            }
+
             // Delegar la autenticación LDAP al servicio de Core/Autenticacion
-            var authResult = await _ldap.AutenticarUsuarioLDAPAsync(codigoPersona, pass);
+            var authResult = await _ldap.AutenticarUsuarioLDAPAsync(persona.CodigoPersona, pass);
 
             if (!authResult.Success)
             {
@@ -65,20 +95,6 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // Login exitoso: obtener la Persona desde la base de datos
-            using var admisionesUow = _admisionesUowFactory.Create();
-            var persona = admisionesUow.Personas.GetByKey(codigoPersona);
-
-            if (persona == null)
-            {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    "LOGIN_LDAP_04",
-                    nameof(AutenticarUsuarioLDAPAsync),
-                    "Usuario autenticado pero no se encontró la persona en la base de datos.",
-                    404,
-                    default!);
-            }
-
             // Generar tokens de autenticación
             var accessToken = _tokenService.GenerateAccessToken(persona);
             var refreshToken = _tokenService.GenerateRefreshToken();
@@ -87,7 +103,7 @@ public class AuthService : IAuthService
 
             // Guardar el refresh token en la base de datos (revoca automáticamente los anteriores)
             await _refreshTokenService.SaveRefreshTokenAsync(
-                codigoPersona,
+                persona.CodigoPersona,
                 "ADMISIONESWEB",
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));

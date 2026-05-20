@@ -29,7 +29,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Error en los datos de entrada.</response>
         /// <response code="401">Credenciales inválidas.</response>
         /// <remarks>
-        /// Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
+        /// Endpoint publico para iniciar sesion. El front debe enviar tipoDocumento, documento y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
         /// </remarks>
         [AllowAnonymous]
         [HttpPost("Login")]
@@ -39,14 +39,14 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
-            var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
+            var result = await loginService.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password);
 
             if (result.Success && result.Data != null)
             {
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.CodigoPersona);
+                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.Documento);
                 }
 
                 SetAuthenticationCookies(result.Data);
