@@ -226,7 +226,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ConfirmarNuevaPersona_InvalidDocument_ReturnsFailure()
         {
-            var result = await _service.ConfirmarNuevaPersonaAsync(new RegistroConfirmarNuevaPersonaRequest
+            var result = await _service.ConfirmarNuevaPersonaAsync(new RegistroPersonaRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-1"

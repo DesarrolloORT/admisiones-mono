@@ -262,7 +262,7 @@ namespace AppLogic.Services
                 nameof(ConfirmarPersonaExistenteAsync));
         }
 
-        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroConfirmarNuevaPersonaRequest request)
+        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroPersonaRequest request)
         {
             if (request == null)
             {
@@ -318,7 +318,7 @@ namespace AppLogic.Services
             return await CrearPersonaInteresAsync(uow, request);
         }
 
-        public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroConfirmarSolicitudAltaRequest request)
+        public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroPersonaRequest request)
         {
             if (request == null)
             {
@@ -415,7 +415,7 @@ namespace AppLogic.Services
 
         private async Task<OperationResult<object?>> CrearPersonaInteresAsync(
             IUnitOfWork uow,
-            RegistroConfirmarNuevaPersonaRequest request)
+            RegistroPersonaRequest request)
         {
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad == null)
@@ -472,7 +472,7 @@ namespace AppLogic.Services
 
         private async Task<OperationResult<object?>> CrearSolicitudAltaAsync(
             IUnitOfWork uow,
-            RegistroConfirmarSolicitudAltaRequest request)
+            RegistroPersonaRequest request)
         {
             try
             {

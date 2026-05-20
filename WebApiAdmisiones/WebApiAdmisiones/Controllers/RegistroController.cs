@@ -138,7 +138,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("ConfirmarNuevaPersona")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] RegistroConfirmarNuevaPersonaRequest request)
+        public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] RegistroPersonaRequest request)
         {
             var result = await registroService.ConfirmarNuevaPersonaAsync(request);
             return ValidateResponse(result);
@@ -159,7 +159,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("ConfirmarSolicitudAlta")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] RegistroConfirmarSolicitudAltaRequest request)
+        public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] RegistroPersonaRequest request)
         {
             var result = await registroService.ConfirmarSolicitudAltaAsync(request);
             return ValidateResponse(result);
