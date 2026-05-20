@@ -8,3 +8,4 @@ export class AuthRequestError extends Error {
     super(operation);
   }
 }
+
