@@ -360,7 +360,7 @@ public class AuthService : IAuthService
     /// <param name="codigoPersona">Codigo de persona resuelto desde la sesion temporal.</param>
     /// <param name="request">Nueva password a establecer.</param>
     /// <returns>Respuesta de autenticacion normal con tokens para cookies.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordInicialAsync(
+    public async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordAsync(
         long codigoPersona,
         DtoCompletarPasswordInicialRequest request)
     {
@@ -370,7 +370,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_01",
-                    nameof(CompletarPasswordInicialAsync),
+                    nameof(CompletarPasswordAsync),
                     "La solicitud es obligatoria.",
                     400,
                     default!);
@@ -381,7 +381,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_02",
-                    nameof(CompletarPasswordInicialAsync),
+                    nameof(CompletarPasswordAsync),
                     validacionPassword,
                     400,
                     default!);
@@ -394,7 +394,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_03",
-                    nameof(CompletarPasswordInicialAsync),
+                    nameof(CompletarPasswordAsync),
                     "Usuario no encontrado en la base de datos.",
                     404,
                     default!);
@@ -404,7 +404,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_04",
-                    nameof(CompletarPasswordInicialAsync),
+                    nameof(CompletarPasswordAsync),
                     "El link de activación ya fue utilizado o no está vigente.",
                     401,
                     default!);
@@ -418,7 +418,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     cambioPassword.ErrorCode,
-                    nameof(CompletarPasswordInicialAsync),
+                    nameof(CompletarPasswordAsync),
                     cambioPassword.Message,
                     cambioPassword.HttpCode,
                     default!);
@@ -461,13 +461,13 @@ public class AuthService : IAuthService
 
             return OperationResult<DtoAuthenticationResponse>.Ok(
                 authResponse,
-                nameof(CompletarPasswordInicialAsync));
+                nameof(CompletarPasswordAsync));
         }
         catch (Exception ex)
         {
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "INI_PAS_99",
-                nameof(CompletarPasswordInicialAsync),
+                nameof(CompletarPasswordAsync),
                 $"Error al completar password inicial: {ex.Message}",
                 500,
                 default!);

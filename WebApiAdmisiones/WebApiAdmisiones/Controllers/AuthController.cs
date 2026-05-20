@@ -59,7 +59,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Valida el link de creacion de password inicial y crea una sesion temporal.
+        /// Valida el link de creacion y recuperación de password y crea una sesion temporal.
         /// </summary>
         /// <param name="request">Token de activacion recibido por mail.</param>
         /// <returns>Resultado de validacion del link. El token temporal no se devuelve en el body; se emite como cookie HttpOnly.</returns>
@@ -109,7 +109,7 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Completa la creacion de password inicial usando la cookie temporal del link.
+        /// Completa la creacion y recuperación de password usando la cookie temporal del link.
         /// </summary>
         /// <param name="request">Nueva password elegida por el usuario.</param>
         /// <returns>Resultado de autenticacion normal. Los tokens de sesion se emiten como cookies HttpOnly.</returns>
@@ -136,13 +136,13 @@ namespace WebApiAdmisiones.Controllers
         ///     }
         /// </remarks>
         [AllowAnonymous]
-        [HttpPost("CompletarPasswordInicial")]
+        [HttpPost("CompletarPassword")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 500)]
-        public async Task<IActionResult> CompletarPasswordInicial([FromBody] DtoCompletarPasswordInicialRequest request)
+        public async Task<IActionResult> CompletarPassword([FromBody] DtoCompletarPasswordInicialRequest request)
         {
             var sessionToken = CookieAuthenticationHelper.GetPasswordActivationTokenFromCookie(HttpContext);
             var sessionResult = passwordActivationService.ValidarSessionToken(sessionToken ?? string.Empty);
@@ -152,7 +152,7 @@ namespace WebApiAdmisiones.Controllers
                 CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
                 return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     sessionResult.ErrorCode,
-                    nameof(CompletarPasswordInicial),
+                    nameof(CompletarPassword),
                     sessionResult.Message,
                     sessionResult.HttpCode,
                     default!));

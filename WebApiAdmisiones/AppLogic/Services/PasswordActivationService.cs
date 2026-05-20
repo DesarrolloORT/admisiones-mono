@@ -328,7 +328,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
     }
 
-    private string GenerarToken(long codigoPersona, string purpose, TimeSpan duration)
+    private static string GenerarToken(long codigoPersona, string purpose, TimeSpan duration)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
