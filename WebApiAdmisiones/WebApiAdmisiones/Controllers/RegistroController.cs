@@ -113,7 +113,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Persona existente confirmada correctamente.</response>
         /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        //[RequireCaptcha]
         [HttpPost("ConfirmarPersonaExistente")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -134,7 +134,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Persona nueva confirmada correctamente.</response>
         /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        //[RequireCaptcha]
         [HttpPost("ConfirmarNuevaPersona")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -155,7 +155,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Solicitud de alta confirmada correctamente.</response>
         /// <response code="400">Datos invalidos, captcha invalido o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        //[RequireCaptcha]
         [HttpPost("ConfirmarSolicitudAlta")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
