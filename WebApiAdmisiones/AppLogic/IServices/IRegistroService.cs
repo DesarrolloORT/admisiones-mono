@@ -10,7 +10,7 @@ namespace AppLogic.IServices
         Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request);
         Task<OperationResult<object?>> VerificarIdentidadAsync(RegistroVerificarIdentidadRequest request);
         Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(RegistroConfirmarPersonaExistenteRequest request);
-        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroConfirmarNuevaPersonaRequest request);
-        Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroConfirmarSolicitudAltaRequest request);
+        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroPersonaRequest request);
+        Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroPersonaRequest request);
     }
 }

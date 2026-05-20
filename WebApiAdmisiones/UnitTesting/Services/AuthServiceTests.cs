@@ -17,6 +17,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
+        private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly AuthService _service;
 
         public AuthServiceTests()
@@ -25,12 +26,14 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _tokenServiceMock = new Mock<ITokenService>();
             _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
+            _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
 
             _service = new AuthService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
-                _refreshTokenServiceMock.Object);
+                _refreshTokenServiceMock.Object,
+                _passwordActivationServiceMock.Object);
         }
 
         [Fact]
@@ -41,14 +44,122 @@ namespace UnitTesting.AppLogic.Services
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
-                _refreshTokenServiceMock.Object);
+                _refreshTokenServiceMock.Object,
+                _passwordActivationServiceMock.Object);
 
             // Assert
             Assert.NotNull(service);
         }
 
         [Fact]
-        public async Task AutenticarUsuarioLDAPAsync_InvalidDocumentType_ReturnsFailed()
+        public async Task RecuperarPassword_DatosValidos_EnviaLinkYDevuelveMensajeGenerico()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez"
+            };
+
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)))
+                .ReturnsAsync(OperationResult<object?>.Ok(null, nameof(AuthService.RecuperarPassword)));
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)),
+                Times.Once);
+            _ldapMock.Verify(
+                x => x.EnviarContrasenia(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task RecuperarPassword_PersonaNoExiste_DevuelveMensajeGenericoSinEnviarMail()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns((Persona)null!);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task RecuperarPassword_ApellidoNoCoincide_DevuelveMensajeGenericoSinEnviarMail()
+        {
+            var request = new DtoRecuperarPasswordRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Gomez"
+            };
+
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            var result = await _service.RecuperarPassword(request);
+
+            Assert.True(result.Success);
+            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            _passwordActivationServiceMock.Verify(
+                x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_LdapAuthenticationFails_ReturnsFailed()
         {
             // Act
             var result = await _service.AutenticarUsuarioLDAPAsync("XX", "1234567-2", "validpass");
@@ -500,6 +611,89 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("Error al cambiar contraseña", result.Message);
             Assert.Contains("LDAP service unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordAsync_LdapFailure_PreservesHashToken()
+        {
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI",
+                HashTokenPassword = "hash"
+            };
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "AUTH_LDAP_52",
+                    nameof(ILdap.ForzarCambiarPasswordAsync),
+                    "El servicio LDAP no pudo forzar el cambio de password.",
+                    400,
+                    false));
+
+            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
+
+            Assert.False(result.Success);
+            Assert.Equal("hash", persona.HashTokenPassword);
+            uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordAsync_LdapSuccess_ClearsHashAndReturnsTokens()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI",
+                HashTokenPassword = "hash"
+            };
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+            _tokenServiceMock.Setup(t => t.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(t => t.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
+
+            Assert.True(result.Success);
+            Assert.Null(persona.HashTokenPassword);
+            Assert.Equal("access-token", result.Data!.AccessToken);
+            Assert.Equal("refresh-token", result.Data.RefreshToken);
+            uowMock.Verify(u => u.Save(), Times.Once);
+            _refreshTokenServiceMock.Verify(
+                r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
+                Times.Once);
         }
     }
 }

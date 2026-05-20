@@ -207,6 +207,7 @@ namespace AppLogic.DevartDTOs
             target.IdCaracteristicaPaisTel1 = source.IdCaracteristicaPaisTel1;
             target.IdCaracteristicaPaisTel2 = source.IdCaracteristicaPaisTel2;
             target.EmailOrtPersona = source.EmailOrtPersona;
+            target.HashTokenPassword = source.HashTokenPassword;
 
             // Navigation Properties
             if (level > 0) {
@@ -418,6 +419,7 @@ namespace AppLogic.DevartDTOs
             target.IdCaracteristicaPaisTel1 = source.IdCaracteristicaPaisTel1;
             target.IdCaracteristicaPaisTel2 = source.IdCaracteristicaPaisTel2;
             target.EmailOrtPersona = source.EmailOrtPersona;
+            target.HashTokenPassword = source.HashTokenPassword;
 
             // User-defined partial method
             OnEntityCreating(source, target);

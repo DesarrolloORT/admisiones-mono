@@ -71,7 +71,7 @@ namespace WebApiAdmisiones.Extensions
                           .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                           //.WithHeaders("authorization", "content-type", "x-request-id", "x-token")
                           .AllowAnyHeader()
-                          .DisallowCredentials();
+                          .AllowCredentials();
                 });
             });
 

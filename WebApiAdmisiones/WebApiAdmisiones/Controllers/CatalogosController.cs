@@ -66,15 +66,15 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Tipos de documento disponibles.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
         /// <response code="400">Solicitud invalida.</response>
-        [AllowAnonymous]
-        [HttpGet("TiposDocumentos")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
-        public IActionResult ObtenerTipoDocumentos()
-        {
-            var result = catalogosService.ObtenerTipoDocumentos();
-            return ValidateResponse(result);
-        }
+        //[AllowAnonymous]
+        //[HttpGet("TiposDocumentos")]
+        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
+        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
+        //public IActionResult ObtenerTipoDocumentos()
+        //{
+        //    var result = catalogosService.ObtenerTipoDocumentos();
+        //    return ValidateResponse(result);
+        //}
 
         /// <summary>
         /// Lista las carreras vigentes para el registro de admision.

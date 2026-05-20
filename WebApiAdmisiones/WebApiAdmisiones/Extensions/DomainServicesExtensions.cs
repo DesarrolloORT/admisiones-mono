@@ -103,6 +103,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPasswordActivationService, PasswordActivationService>();
             services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();

@@ -59,30 +59,30 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
         }
 
-        [Fact]
-        public void CatalogosController_ExposesTipoDocumentos()
-        {
-            Assert.NotNull(typeof(CatalogosController).GetMethod("ObtenerTipoDocumentos"));
-        }
+        //[Fact]
+        //public void CatalogosController_ExposesTipoDocumentos()
+        //{
+        //    Assert.NotNull(typeof(CatalogosController).GetMethod("ObtenerTipoDocumentos"));
+        //}
 
-        [Fact]
-        public void ObtenerTipoDocumentos_ReturnsOk()
-        {
-            var serviceMock = new Mock<ICatalogosService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<CatalogosController>>();
-            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+        //[Fact]
+        //public void ObtenerTipoDocumentos_ReturnsOk()
+        //{
+        //    var serviceMock = new Mock<ICatalogosService>();
+        //    var currentUserMock = new Mock<ICurrentUserService>();
+        //    var loggerMock = new Mock<ILogger<CatalogosController>>();
+        //    var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerTipoDocumentos())
-                .Returns(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(
-                    [new DtoAcaTipoDocumentoDevart { CodTipoDocumento = 1, Descripcion = "Cedula" }],
-                    nameof(ICatalogosService.ObtenerTipoDocumentos)));
+        //    serviceMock.Setup(s => s.ObtenerTipoDocumentos())
+        //        .Returns(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(
+        //            [new DtoAcaTipoDocumentoDevart { CodTipoDocumento = 1, Descripcion = "Cedula" }],
+        //            nameof(ICatalogosService.ObtenerTipoDocumentos)));
 
-            var response = controller.ObtenerTipoDocumentos();
+        //    var response = controller.ObtenerTipoDocumentos();
 
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
+        //    var okResult = Assert.IsType<ObjectResult>(response);
+        //    Assert.Equal(200, okResult.StatusCode);
+        //}
 
         [Fact]
         public void ObtenerComienzos_ReturnsOk()
@@ -124,7 +124,7 @@ namespace UnitTesting.Controllers
 
         [Theory]
         [InlineData(nameof(CatalogosController.ObtenerPaisesEstadosCiudades))]
-        [InlineData(nameof(CatalogosController.ObtenerTipoDocumentos))]
+        //[InlineData(nameof(CatalogosController.ObtenerTipoDocumentos))]
         [InlineData(nameof(CatalogosController.ObtenerCarreras))]
         [InlineData(nameof(CatalogosController.ObtenerComienzos))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)

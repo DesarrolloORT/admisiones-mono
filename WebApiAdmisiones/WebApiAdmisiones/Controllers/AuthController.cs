@@ -11,6 +11,8 @@ namespace WebApiAdmisiones.Controllers
     [Route("[controller]")]
     public class AuthController(
         IAuthService loginService,
+        IPasswordActivationService passwordActivationService,
+        IConfiguration configuration,
         ILogger<AuthController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<AuthController>(logger, currentUser)
@@ -47,15 +49,121 @@ namespace WebApiAdmisiones.Controllers
                     _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.Documento);
                 }
 
-                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
-                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
-
-                // Establecer los tokens como cookies HttpOnly seguras.
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
+                SetAuthenticationCookies(result.Data);
 
                 // No retornar los tokens en el body.
                 // Los tokens ya fueron establecidos como cookies HttpOnly.
+            }
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Valida el link de creacion y recuperación de password y crea una sesion temporal.
+        /// </summary>
+        /// <param name="request">Token de activacion recibido por mail.</param>
+        /// <returns>Resultado de validacion del link. El token temporal no se devuelve en el body; se emite como cookie HttpOnly.</returns>
+        /// <response code="200">Link valido. La cookie temporal X-Password-Activation fue establecida.</response>
+        /// <response code="400">El token no fue enviado o el request es invalido.</response>
+        /// <response code="401">El token expiro, fue manipulado, ya fue usado o no coincide con el hash guardado en la persona.</response>
+        /// <response code="500">Error interno al validar el link.</response>
+        /// <remarks>
+        /// Endpoint publico usado por el frontend cuando el usuario abre el link recibido por mail.
+        /// 
+        /// Este endpoint no autentica al usuario para consumir servicios normales. Solo emite una cookie temporal
+        /// llamada X-Password-Activation, con duracion configurada por PasswordActivation:SessionMinutes.
+        /// 
+        /// Flujo esperado:
+        /// 1. El frontend recibe el token desde la URL del mail.
+        /// 2. Llama a este endpoint enviando el token en el body.
+        /// 3. Si el token es valido, la API setea X-Password-Activation.
+        /// 4. El frontend muestra el formulario para crear la password inicial.
+        /// 
+        /// Ejemplo de request:
+        /// 
+        ///     POST /Auth/ActivarLinkPassword
+        ///     {
+        ///       "token": "eyJhbGciOiJIUzI1NiIs..."
+        ///     }
+        /// </remarks>
+        [AllowAnonymous]
+        [HttpPost("ActivarLinkPassword")]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 500)]
+        public async Task<IActionResult> ActivarLinkPassword([FromBody] DtoActivarLinkPasswordRequest request)
+        {
+            var result = await passwordActivationService.ActivarLinkPasswordAsync(request.Token);
+
+            if (result.Success && result.Data?.SessionToken != null)
+            {
+                var sessionMinutes = configuration.GetValue<int?>("PasswordActivation:SessionMinutes") ?? 15;
+                CookieAuthenticationHelper.SetPasswordActivationCookie(
+                    HttpContext,
+                    result.Data.SessionToken,
+                    sessionMinutes);
+            }
+
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Completa la creacion y recuperación de password usando la cookie temporal del link.
+        /// </summary>
+        /// <param name="request">Nueva password elegida por el usuario.</param>
+        /// <returns>Resultado de autenticacion normal. Los tokens de sesion se emiten como cookies HttpOnly.</returns>
+        /// <response code="200">Password creada correctamente. Se elimina X-Password-Activation y se establecen X-Access-Token y X-Refresh-Token.</response>
+        /// <response code="400">La nueva password no cumple las reglas de validacion.</response>
+        /// <response code="401">No existe cookie temporal, expiro o no corresponde al flujo de activacion.</response>
+        /// <response code="404">No se encontro la persona asociada a la sesion temporal.</response>
+        /// <response code="500">Error interno al completar la password inicial o al cambiarla en LDAP.</response>
+        /// <remarks>
+        /// Endpoint publico pero no anonimo funcionalmente: no usa Authorize porque no debe aceptar el JWT normal.
+        /// Valida explicitamente la cookie temporal X-Password-Activation generada por Auth/ActivarLinkPassword.
+        /// 
+        /// Esta cookie solo sirve para este endpoint. No permite consumir otros servicios de la API.
+        /// 
+        /// Si LDAP falla, el hash del link se conserva para permitir reintentar mientras el link siga vigente.
+        /// Si LDAP responde correctamente, la API limpia el hash guardado, elimina la cookie temporal y emite
+        /// las cookies normales X-Access-Token y X-Refresh-Token.
+        /// 
+        /// Ejemplo de request:
+        /// 
+        ///     POST /Auth/CompletarPasswordInicial
+        ///     {
+        ///       "passwordNueva": "NuevaPassword1!"
+        ///     }
+        /// </remarks>
+        [AllowAnonymous]
+        [HttpPost("CompletarPassword")]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 500)]
+        public async Task<IActionResult> CompletarPassword([FromBody] DtoCompletarPasswordInicialRequest request)
+        {
+            var sessionToken = CookieAuthenticationHelper.GetPasswordActivationTokenFromCookie(HttpContext);
+            var sessionResult = passwordActivationService.ValidarSessionToken(sessionToken ?? string.Empty);
+
+            if (!sessionResult.Success)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    sessionResult.ErrorCode,
+                    nameof(CompletarPassword),
+                    sessionResult.Message,
+                    sessionResult.HttpCode,
+                    default!));
+            }
+
+            var result = await loginService.CompletarPasswordAsync(sessionResult.Data, request);
+
+            if (result.Success && result.Data != null)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                SetAuthenticationCookies(result.Data);
             }
 
             return ValidateResponse(result);
@@ -133,11 +241,7 @@ namespace WebApiAdmisiones.Controllers
             // 3. Establecer cookies con los nuevos tokens (HTTP concern)
             if (result.Data != null)
             {
-                var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
-                var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
-
-                CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, result.Data.AccessToken!, accessMinutes);
-                CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, result.Data.RefreshToken!, refreshDays);
+                SetAuthenticationCookies(result.Data);
             }
 
             return Ok(result);
@@ -147,17 +251,16 @@ namespace WebApiAdmisiones.Controllers
         /// Recuperar contraseña
         /// </summary>
         /// <param name="request">Datos de la persona a recuperar.</param>
-        /// <returns>Resultado del proceso con mensaje y codigos funcionales del servicio.</returns>
-        /// <response code="200">Recuperacion exitosa.</response>
-        /// <response code="400">Error de validacion o de negocio.</response>
-        /// <response code="500">Error interno no controlado.</response>
+        /// <returns>Mensaje generico del proceso de recupero.</returns>
+        /// <response code="200">Solicitud recibida. Si los datos coinciden, se envia un mail con link de recupero.</response>
+        /// <response code="400">El request o el formato del documento es invalido.</response>
         /// <remarks>
-        /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia los datos requeridos de la persona y la API ejecuta las validaciones funcionales antes de solicitar o disparar el recupero.
+        /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia tipo de documento, documento y primer apellido.
+        /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        [ProducesResponseType(typeof(OperationResult<object>), 500)]
         public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)
         {
             var result = await loginService.RecuperarPassword(request);
@@ -197,6 +300,20 @@ namespace WebApiAdmisiones.Controllers
 
             var result = await loginService.CambiarPasswordAsync(_currentUser.UserId.Value, request);
             return ValidateResponse(result);
+        }
+
+        private void SetAuthenticationCookies(DtoAuthenticationResponse data)
+        {
+            if (string.IsNullOrWhiteSpace(data.AccessToken) || string.IsNullOrWhiteSpace(data.RefreshToken))
+            {
+                return;
+            }
+
+            var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
+            var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
+
+            CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, data.AccessToken, accessMinutes);
+            CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, data.RefreshToken, refreshDays);
         }
 
         #endregion

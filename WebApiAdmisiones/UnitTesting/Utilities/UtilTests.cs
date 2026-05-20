@@ -58,6 +58,17 @@ namespace UnitTesting.Utilities
             Assert.Equal(esperado, resultado);
         }
 
+        [Theory]
+        [InlineData("NuevaPassword1!")]
+        [InlineData("")]
+        [InlineData("short1A!")]
+        [InlineData("Password123456")]
+        public void ValidarPasswordNueva_ValidaPasswordInicial(string nuevo)
+        {
+            var resultado = Util.ValidarPasswordNueva(nuevo);
+            Assert.Equal(Util.ValidarPassword("ActualPassword1!", nuevo), resultado);
+        }
+
         [Fact]
         public void ConvertirTextoHTML_ReemplazaSaltosYTabulaciones()
         {

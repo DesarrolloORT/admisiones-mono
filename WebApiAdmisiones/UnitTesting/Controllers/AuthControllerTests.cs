@@ -3,6 +3,7 @@ using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
@@ -15,20 +16,31 @@ namespace UnitTesting.Controllers
     public class AuthControllerTests
     {
         private readonly Mock<IAuthService> _authServiceMock;
+        private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<ILogger<AuthController>> _loggerMock;
         private readonly Mock<ICurrentUserService> _currentUserMock;
+        private readonly IConfiguration _configuration;
         private readonly AuthController _controller;
         private readonly DefaultHttpContext _httpContext;
 
         public AuthControllerTests()
         {
             _authServiceMock = new Mock<IAuthService>();
+            _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _loggerMock = new Mock<ILogger<AuthController>>();
             _currentUserMock = new Mock<ICurrentUserService>();
             _httpContext = new DefaultHttpContext();
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["PasswordActivation:SessionMinutes"] = "15"
+                })
+                .Build();
 
             _controller = new AuthController(
                 _authServiceMock.Object,
+                _passwordActivationServiceMock.Object,
+                _configuration,
                 _loggerMock.Object,
                 _currentUserMock.Object)
             {
@@ -37,6 +49,54 @@ namespace UnitTesting.Controllers
                     HttpContext = _httpContext
                 }
             };
+        }
+
+        [Fact]
+        public async Task ActivarLinkPassword_WithValidToken_ReturnsOkAndSetsTemporaryCookie()
+        {
+            var request = new DtoActivarLinkPasswordRequest { Token = "activation-token" };
+            var serviceResult = OperationResult<DtoPasswordActivationSession>.Ok(
+                new DtoPasswordActivationSession
+                {
+                    CodigoPersona = 12345,
+                    SessionToken = "session-token"
+                },
+                nameof(IPasswordActivationService.ActivarLinkPasswordAsync));
+
+            _passwordActivationServiceMock
+                .Setup(s => s.ActivarLinkPasswordAsync(request.Token))
+                .ReturnsAsync(serviceResult);
+
+            var response = await _controller.ActivarLinkPassword(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task CompletarPassword_WithoutTemporaryCookie_ReturnsUnauthorized()
+        {
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken(string.Empty))
+                .Returns(OperationResult<long>.IsFailed(
+                    "ACT_SES_01",
+                    nameof(IPasswordActivationService.ValidarSessionToken),
+                    "Sesión temporal no encontrada.",
+                    401,
+                    default));
+
+            var response = await _controller.CompletarPassword(request);
+
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+            _authServiceMock.Verify(
+                s => s.CompletarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCompletarPasswordInicialRequest>()),
+                Times.Never);
         }
 
         [Fact]

@@ -733,8 +733,11 @@
     <property name="IdCaracteristicaPaisTel2" type="Int64" p1:ValidateRequired="true" p1:Guid="688d64a6-c6bd-4ae1-aead-be7b7b1fbcf7">
       <column name="ID_CARACTERISTICA_PAIS_TEL2" default="1" not-null="True" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
-      <column name="EMAIL_ORT_PERSONA" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="EmailOrtPersona" type="String" p1:nullable="True" p1:ValidateMaxLength="250" p1:ValidateRequired="false" p1:Guid="0c6cc981-222c-4224-b462-58ba692361af">
+      <column name="EMAIL_ORT_PERSONA" not-null="False" length="250" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="HashTokenPassword" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="24483d71-1658-4c6b-a6fe-82bddfde4736">
+      <column name="HASH_TOKEN_PASSWORD" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
   <class name="Imagen" entity-set="Imagens" table="T_IMAGEN" schema="CREADOR" p1:Guid="6b637d4e-e743-46b5-85d5-f44fc8761de7">
