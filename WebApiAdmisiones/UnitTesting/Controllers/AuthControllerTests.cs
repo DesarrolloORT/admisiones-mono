@@ -45,7 +45,8 @@ namespace UnitTesting.Controllers
             // Arrange
             var request = new AuthRequest
             {
-                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "4773331-2",
                 Password = "testPassword"
             };
 
@@ -66,7 +67,7 @@ namespace UnitTesting.Controllers
                 nameof(IAuthService.AutenticarUsuarioLDAPAsync));
 
             _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password))
+                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
                 .ReturnsAsync(result);
 
             // Act
@@ -83,7 +84,8 @@ namespace UnitTesting.Controllers
             // Arrange
             var request = new AuthRequest
             {
-                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "4773331-2",
                 Password = "testPassword"
             };
 
@@ -104,7 +106,7 @@ namespace UnitTesting.Controllers
                 nameof(IAuthService.AutenticarUsuarioLDAPAsync));
 
             _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password))
+                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
                 .ReturnsAsync(result);
 
             _loggerMock
@@ -133,7 +135,8 @@ namespace UnitTesting.Controllers
             // Arrange
             var request = new AuthRequest
             {
-                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "4773331-2",
                 Password = "wrongPassword"
             };
 
@@ -144,7 +147,7 @@ namespace UnitTesting.Controllers
                 httpCode: 401);
 
             _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password))
+                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
                 .ReturnsAsync(result);
 
             // Act
@@ -161,7 +164,8 @@ namespace UnitTesting.Controllers
             // Arrange
             var request = new AuthRequest
             {
-                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "4773331-2",
                 Password = "testPassword"
             };
 
@@ -170,7 +174,7 @@ namespace UnitTesting.Controllers
                 nameof(IAuthService.AutenticarUsuarioLDAPAsync));
 
             _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password))
+                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
                 .ReturnsAsync(result);
 
             // Act

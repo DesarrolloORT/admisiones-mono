@@ -48,12 +48,57 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_InvalidDocumentType_ReturnsFailed()
+        {
+            // Act
+            var result = await _service.AutenticarUsuarioLDAPAsync("XX", "1234567-2", "validpass");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_InvalidDocument_ReturnsFailed()
+        {
+            // Act
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "invalido", "validpass");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_03", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_PersonaNotFoundInDatabase_ReturnsFailed()
+        {
+            // Arrange
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns((Persona)null!);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            // Act
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_04", result.ErrorCode);
+            Assert.Equal("No se encontró la persona en la base de datos.", result.Message);
+            Assert.Equal(404, result.HttpCode);
+            _ldapMock.Verify(x => x.AutenticarUsuarioLDAPAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
         public async Task AutenticarUsuarioLDAPAsync_LdapAuthenticationFails_ReturnsFailed()
         {
             // Arrange
-            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
             long codigoPersona = 12345;
             string password = "wrongpass";
+            var persona = new Persona { CodigoPersona = codigoPersona };
             var ldapFailedResult = OperationResult<bool>.IsFailed(
                 "LDAP_01",
                 "AutenticarUsuarioLDAPAsync",
@@ -61,45 +106,23 @@ namespace UnitTesting.AppLogic.Services
                 401,
                 false);
 
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
             _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
                 .ReturnsAsync(ldapFailedResult);
 
             // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync(codigoPersona, password);
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", password);
 
             // Assert
             Assert.False(result.Success);
             Assert.Equal("LDAP_01", result.ErrorCode);
             Assert.Equal("Credenciales inválidas", result.Message);
             Assert.Equal(401, result.HttpCode);
-        }
-
-        [Fact]
-        public async Task AutenticarUsuarioLDAPAsync_PersonaNotFoundInDatabase_ReturnsFailed()
-        {
-            // Arrange
-            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
-            long codigoPersona = 12345;
-            string password = "validpass";
-            var ldapSuccessResult = OperationResult<bool>.Ok(true, "AutenticarUsuarioLDAPAsync");
-
-            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
-                .ReturnsAsync(ldapSuccessResult);
-
-            var uowMock = new Mock<IUnitOfWork>();
-            var personasRepoMock = new Mock<IPersonaRepository>();
-            personasRepoMock.Setup(x => x.GetByKey(codigoPersona)).Returns((Persona)null!);
-            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
-            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
-
-            // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync(codigoPersona, password);
-
-            // Assert
-            Assert.False(result.Success);
-            Assert.Equal("LOGIN_LDAP_04", result.ErrorCode);
-            Assert.Equal("Usuario autenticado pero no se encontró la persona en la base de datos.", result.Message);
-            Assert.Equal(404, result.HttpCode);
         }
 
         [Fact]
@@ -119,17 +142,17 @@ namespace UnitTesting.AppLogic.Services
                 PrimerApellido = "Pérez",
                 SegundoApellido = "Gómez",
                 TipoPersona = "E",
-                Documento = "12345678"
+                Documento = "1234567-2"
             };
-
-            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
-                .ReturnsAsync(ldapSuccessResult);
 
             var uowMock = new Mock<IUnitOfWork>();
             var personasRepoMock = new Mock<IPersonaRepository>();
-            personasRepoMock.Setup(x => x.GetByKey(codigoPersona)).Returns(persona);
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
             uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
             _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
+                .ReturnsAsync(ldapSuccessResult);
 
             _tokenServiceMock.Setup(x => x.GenerateAccessToken(persona)).Returns("access_token_123");
             _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh_token_456");
@@ -143,7 +166,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync(codigoPersona, password);
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", password);
 
             // Assert
             Assert.True(result.Success);
@@ -158,7 +181,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Pérez", result.Data.Persona.PrimerApellido);
             Assert.Equal("Gómez", result.Data.Persona.SegundoApellido);
             Assert.Equal("E", result.Data.Persona.TipoPersona);
-            Assert.Equal("12345678", result.Data.Persona.Documento);
+            Assert.Equal("1234567-2", result.Data.Persona.Documento);
 
             _refreshTokenServiceMock.Verify(x => x.SaveRefreshTokenAsync(
                 codigoPersona,
@@ -172,21 +195,17 @@ namespace UnitTesting.AppLogic.Services
         public async Task AutenticarUsuarioLDAPAsync_ExceptionThrown_ReturnsFailedWithErrorCode()
         {
             // Arrange
-            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
-            long codigoPersona = 12345;
-            string password = "validpass";
-
-            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
-                .ThrowsAsync(new InvalidOperationException("LDAP service unavailable"));
+            _uowFactoryMock.Setup(x => x.Create())
+                .Throws(new InvalidOperationException("Database unavailable"));
 
             // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync(codigoPersona, password);
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
 
             // Assert
             Assert.False(result.Success);
             Assert.Equal("LOGIN_LDAP_99", result.ErrorCode);
             Assert.Contains("Error al autenticar usuario", result.Message);
-            Assert.Contains("LDAP service unavailable", result.Message);
+            Assert.Contains("Database unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
         }
 

@@ -11,10 +11,16 @@ namespace AppLogic.DTOs
     public class AuthRequest
     {
         /// <summary>
-        /// Código de la persona que intenta autenticarse.
+        /// Tipo de documento de la persona que intenta autenticarse.
         /// </summary>
-        [Required(ErrorMessage = "El código de persona es requerido.")]
-        public long CodigoPersona { get; set; }
+        [Required(ErrorMessage = "El tipo de documento es requerido.")]
+        public string? TipoDocumento { get; set; }
+
+        /// <summary>
+        /// Número de documento de la persona que intenta autenticarse.
+        /// </summary>
+        [Required(ErrorMessage = "El número de documento es requerido.")]
+        public string? Documento { get; set; }
 
         /// <summary>
         /// Contraseña del usuario.

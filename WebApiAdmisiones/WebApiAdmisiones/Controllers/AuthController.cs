@@ -37,14 +37,14 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
-            var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);
+            var result = await loginService.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password);
 
             if (result.Success && result.Data != null)
             {
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.CodigoPersona);
+                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.Documento);
                 }
 
                 var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
