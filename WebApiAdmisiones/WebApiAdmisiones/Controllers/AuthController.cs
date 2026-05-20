@@ -59,21 +59,39 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Cierra la sesión del usuario eliminando las cookies de autenticación.
+        /// Valida el link de creacion de password inicial y crea una sesion temporal.
         /// </summary>
-        /// <returns>Resultado de la operación.</returns>
-        /// <response code="200">Logout exitoso.</response>
+        /// <param name="request">Token de activacion recibido por mail.</param>
+        /// <returns>Resultado de validacion del link. El token temporal no se devuelve en el body; se emite como cookie HttpOnly.</returns>
+        /// <response code="200">Link valido. La cookie temporal X-Password-Activation fue establecida.</response>
+        /// <response code="400">El token no fue enviado o el request es invalido.</response>
+        /// <response code="401">El token expiro, fue manipulado, ya fue usado o no coincide con el hash guardado en la persona.</response>
+        /// <response code="500">Error interno al validar el link.</response>
         /// <remarks>
-        /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
+        /// Endpoint publico usado por el frontend cuando el usuario abre el link recibido por mail.
+        /// 
+        /// Este endpoint no autentica al usuario para consumir servicios normales. Solo emite una cookie temporal
+        /// llamada X-Password-Activation, con duracion configurada por PasswordActivation:SessionMinutes.
+        /// 
+        /// Flujo esperado:
+        /// 1. El frontend recibe el token desde la URL del mail.
+        /// 2. Llama a este endpoint enviando el token en el body.
+        /// 3. Si el token es valido, la API setea X-Password-Activation.
+        /// 4. El frontend muestra el formulario para crear la password inicial.
+        /// 
+        /// Ejemplo de request:
+        /// 
+        ///     POST /Auth/ActivarLinkPassword
+        ///     {
+        ///       "token": "eyJhbGciOiJIUzI1NiIs..."
+        ///     }
         /// </remarks>
-        /// <summary>
-        /// Valida el link de creacion de password y establece una sesion temporal.
-        /// </summary>
         [AllowAnonymous]
         [HttpPost("ActivarLinkPassword")]
         [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 500)]
         public async Task<IActionResult> ActivarLinkPassword([FromBody] DtoActivarLinkPasswordRequest request)
         {
             var result = await passwordActivationService.ActivarLinkPasswordAsync(request.Token);
@@ -91,14 +109,39 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Completa la creacion de password inicial usando la sesion temporal del link.
+        /// Completa la creacion de password inicial usando la cookie temporal del link.
         /// </summary>
+        /// <param name="request">Nueva password elegida por el usuario.</param>
+        /// <returns>Resultado de autenticacion normal. Los tokens de sesion se emiten como cookies HttpOnly.</returns>
+        /// <response code="200">Password creada correctamente. Se elimina X-Password-Activation y se establecen X-Access-Token y X-Refresh-Token.</response>
+        /// <response code="400">La nueva password no cumple las reglas de validacion.</response>
+        /// <response code="401">No existe cookie temporal, expiro o no corresponde al flujo de activacion.</response>
+        /// <response code="404">No se encontro la persona asociada a la sesion temporal.</response>
+        /// <response code="500">Error interno al completar la password inicial o al cambiarla en LDAP.</response>
+        /// <remarks>
+        /// Endpoint publico pero no anonimo funcionalmente: no usa Authorize porque no debe aceptar el JWT normal.
+        /// Valida explicitamente la cookie temporal X-Password-Activation generada por Auth/ActivarLinkPassword.
+        /// 
+        /// Esta cookie solo sirve para este endpoint. No permite consumir otros servicios de la API.
+        /// 
+        /// Si LDAP falla, el hash del link se conserva para permitir reintentar mientras el link siga vigente.
+        /// Si LDAP responde correctamente, la API limpia el hash guardado, elimina la cookie temporal y emite
+        /// las cookies normales X-Access-Token y X-Refresh-Token.
+        /// 
+        /// Ejemplo de request:
+        /// 
+        ///     POST /Auth/CompletarPasswordInicial
+        ///     {
+        ///       "passwordNueva": "NuevaPassword1!"
+        ///     }
+        /// </remarks>
         [AllowAnonymous]
         [HttpPost("CompletarPasswordInicial")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 500)]
         public async Task<IActionResult> CompletarPasswordInicial([FromBody] DtoCompletarPasswordInicialRequest request)
         {
             var sessionToken = CookieAuthenticationHelper.GetPasswordActivationTokenFromCookie(HttpContext);
@@ -126,6 +169,14 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Cierra la sesión del usuario eliminando las cookies de autenticación.
+        /// </summary>
+        /// <returns>Resultado de la operación.</returns>
+        /// <response code="200">Logout exitoso.</response>
+        /// <remarks>
+        /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
+        /// </remarks>
         [HttpPost("Logout")]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]

@@ -222,7 +222,7 @@ namespace AppLogic.Services
                     400);
             }
 
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
             var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(
                 uow,
                 request.IdProducto,
@@ -293,7 +293,7 @@ namespace AppLogic.Services
                     400);
             }
 
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
             var commonValidation = RegistroValidationHelper.ValidarProductoYProceso(
                 uow,
                 request.IdProducto,
@@ -577,7 +577,17 @@ namespace AppLogic.Services
                     "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de usuario o contraseña.");
             }
 
-            var mail = await _passwordActivationService.EnviarMailLinkPasswordAsync(persona, originMethod);
+            OperationResult<object?> mail;
+            if (_serviceScopeFactory != null)
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var passwordActivationService = scope.ServiceProvider.GetRequiredService<IPasswordActivationService>();
+                mail = await passwordActivationService.EnviarMailLinkPasswordAsync(persona, originMethod);
+            }
+            else
+            {
+                mail = await _passwordActivationService.EnviarMailLinkPasswordAsync(persona, originMethod);
+            }
 
             if (!mail.Success)
             {

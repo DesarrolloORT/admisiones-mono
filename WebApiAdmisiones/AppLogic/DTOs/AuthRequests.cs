@@ -76,7 +76,7 @@ namespace AppLogic.DTOs
     public class DtoActivarLinkPasswordRequest
     {
         /// <summary>
-        /// Token recibido por mail.
+        /// JWT de activacion recibido por mail.
         /// </summary>
         [Required(ErrorMessage = "El token es requerido.")]
         [Redact]

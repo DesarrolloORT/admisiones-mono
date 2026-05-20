@@ -62,22 +62,19 @@ public class PasswordActivationService : IPasswordActivationService
             var token = GenerarToken(persona.CodigoPersona, ActivationPurpose, ObtenerHorasExpiracion());
             var hash = HashToken(token);
 
-            using (var uow = _uowFactory.Create())
+            var uow = _uowFactory.Create();
+            var personaDb = uow.Personas.GetByKey(persona.CodigoPersona);
+            if (personaDb == null)
             {
-                var personaDb = uow.Personas.GetByKey(persona.CodigoPersona);
-                if (personaDb == null)
-                {
-                    return OperationResult<object?>.IsFailed(
+                return OperationResult<object?>.IsFailed(
                         "ACT_PAS_03",
                         originMethod,
                         "No se encontró la persona para guardar el token de activación.",
-                        404);
-                }
-
-                personaDb.HashTokenPassword = hash;
-                uow.Personas.Update(personaDb);
-                uow.Save();
+                    404);
             }
+
+            personaDb.HashTokenPassword = hash;
+            uow.Save();
 
             var link = ConstruirLink(token);
             var body = ConstruirBodyMail(persona, link);
@@ -142,7 +139,7 @@ public class PasswordActivationService : IPasswordActivationService
                     default!));
             }
 
-            using var uow = _uowFactory.Create();
+            var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona.Value);
             var tokenHash = HashToken(token);
             if (persona == null ||
@@ -343,19 +340,18 @@ public class PasswordActivationService : IPasswordActivationService
             """;
     }
 
-    private string ObtenerSecretKey()
+    private static string ObtenerSecretKey()
     {
-        var secret = _configuration["PasswordActivation:SecretKey"]
-            ?? Environment.GetEnvironmentVariable("PASSWORD_ACTIVATION_SECRET_KEY");
+        var secret = Environment.GetEnvironmentVariable("PASSWORD_ACTIVATION_SECRET_KEY");
 
         if (string.IsNullOrWhiteSpace(secret))
         {
-            throw new InvalidOperationException("Falta configurar PasswordActivation:SecretKey o PASSWORD_ACTIVATION_SECRET_KEY.");
+            throw new InvalidOperationException("Falta configurar PASSWORD_ACTIVATION_SECRET_KEY.");
         }
 
         if (Encoding.UTF8.GetByteCount(secret) < 32)
         {
-            throw new InvalidOperationException("PasswordActivation:SecretKey debe tener al menos 32 bytes.");
+            throw new InvalidOperationException("PASSWORD_ACTIVATION_SECRET_KEY debe tener al menos 32 bytes.");
         }
 
         return secret;
