@@ -40,6 +40,18 @@ export interface LocationCountry {
   estado?: LocationState[] | null;
 }
 
+export interface Career {
+  idProducto: number;
+  idNivelProducto: number;
+  nombreProducto: string;
+  nombreNivelProducto: string;
+}
+
+export interface Comienzo {
+  idProceso: number;
+  nombreProceso: string;
+}
+
 export type ReasonForChoice = CatalogItem;
 
 export type AdvertisingChoice = CatalogItem;
