@@ -74,7 +74,7 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task CompletarPasswordInicial_WithoutTemporaryCookie_ReturnsUnauthorized()
+        public async Task CompletarPassword_WithoutTemporaryCookie_ReturnsUnauthorized()
         {
             var request = new DtoCompletarPasswordInicialRequest
             {
@@ -90,12 +90,12 @@ namespace UnitTesting.Controllers
                     401,
                     default));
 
-            var response = await _controller.CompletarPasswordInicial(request);
+            var response = await _controller.CompletarPassword(request);
 
             var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
             _authServiceMock.Verify(
-                s => s.CompletarPasswordInicialAsync(It.IsAny<long>(), It.IsAny<DtoCompletarPasswordInicialRequest>()),
+                s => s.CompletarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCompletarPasswordInicialRequest>()),
                 Times.Never);
         }
 

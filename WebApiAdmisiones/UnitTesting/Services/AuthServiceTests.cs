@@ -595,7 +595,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordInicialAsync_LdapFailure_PreservesHashToken()
+        public async Task CompletarPasswordAsync_LdapFailure_PreservesHashToken()
         {
             var codigoPersona = 12345L;
             var persona = new Persona
@@ -625,7 +625,7 @@ namespace UnitTesting.AppLogic.Services
                     400,
                     false));
 
-            var result = await _service.CompletarPasswordInicialAsync(codigoPersona, request);
+            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
 
             Assert.False(result.Success);
             Assert.Equal("hash", persona.HashTokenPassword);
@@ -633,7 +633,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordInicialAsync_LdapSuccess_ClearsHashAndReturnsTokens()
+        public async Task CompletarPasswordAsync_LdapSuccess_ClearsHashAndReturnsTokens()
         {
             using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
             var codigoPersona = 12345L;
@@ -665,7 +665,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
                 .Returns(Task.CompletedTask);
 
-            var result = await _service.CompletarPasswordInicialAsync(codigoPersona, request);
+            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
 
             Assert.True(result.Success);
             Assert.Null(persona.HashTokenPassword);

@@ -158,7 +158,7 @@ namespace WebApiAdmisiones.Controllers
                     default!));
             }
 
-            var result = await loginService.CompletarPasswordInicialAsync(sessionResult.Data, request);
+            var result = await loginService.CompletarPasswordAsync(sessionResult.Data, request);
 
             if (result.Success && result.Data != null)
             {
