@@ -1,11 +1,16 @@
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
+import type {
+  ConfirmExistingPersonPayload,
+  EvaluateDocumentResult,
+  VerifyIdentityPayload,
+  VerifyIdentityResult,
+} from '../endpoints/auth.endpoint';
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
-import { AuthRequestError } from '../models/auth-error';
 import {
   AuthLoginRequest,
   AuthRegisterRequest,
@@ -25,14 +30,12 @@ export class Auth {
   public readonly isAuthenticated = computed(() => this.sessionState() !== null);
 
   public login(payload: AuthLoginRequest): Observable<AuthSession> {
-    const codigoPersona = Number(payload.documentNumber);
-
-    if (!Number.isFinite(codigoPersona)) {
-      return throwError(() => new AuthRequestError('login', null));
-    }
-
-    return this.endpoint.login({ codigoPersona, password: payload.password }).pipe(
-      map(result => this.toSession(result.documento, payload)),
+    return this.endpoint.login({
+      tipoDocumento: payload.documentType,
+      documento: payload.documentNumber,
+      password: payload.password,
+    }).pipe(
+      map(result => this.toSession(result, payload)),
       tap(session => this.storeSession(session))
     );
   }
@@ -59,17 +62,37 @@ export class Auth {
     });
   }
 
+  public evaluateDocument(
+    tipoDocumento: string,
+    documento: string
+  ): Observable<EvaluateDocumentResult> {
+    return this.endpoint.evaluateDocument({ tipoDocumento, documento });
+  }
+
+  public confirmExistingPerson(
+    payload: ConfirmExistingPersonPayload
+  ): Observable<AuthRegisterResponse> {
+    return this.endpoint
+      .confirmExistingPerson(payload)
+      .pipe(map(result => ({ success: result.success })));
+  }
+
+  public verifyIdentity(payload: VerifyIdentityPayload): Observable<VerifyIdentityResult> {
+    return this.endpoint.verifyIdentity(payload);
+  }
+
   public logout(): void {
     this.sessionState.set(null);
     this.storage?.removeItem(storageKeys.token);
     this.storage?.removeItem(storageKeys.session);
   }
 
-  private toSession(documento: string, payload: AuthLoginRequest): AuthSession {
+  private toSession(result: { documento: string; primerNombre: string }, payload: AuthLoginRequest): AuthSession {
     return {
       token: null,
       documentType: payload.documentType,
-      documentNumber: documento || payload.documentNumber,
+      documentNumber: result.documento || payload.documentNumber,
+      primerNombre: result.primerNombre,
       expiresAt: null,
     };
   }
@@ -101,6 +124,7 @@ export class Auth {
         token: typeof parsed.token === 'string' ? parsed.token : null,
         documentType: parsed.documentType,
         documentNumber: parsed.documentNumber,
+        primerNombre: typeof parsed.primerNombre === 'string' ? parsed.primerNombre : '',
         expiresAt: typeof parsed.expiresAt === 'string' ? parsed.expiresAt : null,
       };
     } catch {
