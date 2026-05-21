@@ -43,8 +43,7 @@
     <ort-form-field>
       <ort-label>Nro. de documento</ort-label>
       @if (isCedulaInput()) {
-      <input ortCedulaInput formControlName="documentNumber" id="register-document-number" type="text"
-        [formatOutput]="true" />
+      <input ortCedulaInput formControlName="documentNumber" id="register-document-number" type="text" />
       } @else {
       <input ortInput formControlName="documentNumber" id="register-document-number" inputmode="numeric" type="text" />
       }

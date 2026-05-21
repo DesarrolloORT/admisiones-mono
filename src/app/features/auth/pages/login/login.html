@@ -20,7 +20,7 @@
         <ort-label>Nro. de documento</ort-label>
         @if (facade.isCedulaInput()) {
         <input ortCedulaInput autocomplete="username" formControlName="documentNumber" id="login-document-number"
-          type="text" [formatOutput]="true" />
+          type="text" />
         } @else {
         <input ortInput autocomplete="username" formControlName="documentNumber" id="login-document-number"
           type="text" />

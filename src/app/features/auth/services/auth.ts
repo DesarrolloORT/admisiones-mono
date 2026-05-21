@@ -33,7 +33,7 @@ export class Auth {
     return this.endpoint
       .login({
         tipoDocumento: payload.documentType,
-        documento: payload.documentNumber,
+        documento: this.formatDocumentForBackend(payload.documentType, payload.documentNumber),
         password: payload.password,
       })
       .pipe(
@@ -47,7 +47,7 @@ export class Auth {
 
     return this.endpoint.register({
       tipoDocumento: identity.documentType,
-      documento: identity.documentNumber,
+      documento: this.formatDocumentForBackend(identity.documentType, identity.documentNumber),
       primerNombre: personal.primerNombre,
       segundoNombre: personal.segundoNombre || null,
       primerApellido: personal.primerApellido,
@@ -68,25 +68,48 @@ export class Auth {
     tipoDocumento: string,
     documento: string
   ): Observable<EvaluateDocumentResult> {
-    return this.endpoint.evaluateDocument({ tipoDocumento, documento });
+    return this.endpoint.evaluateDocument({
+      tipoDocumento,
+      documento: this.formatDocumentForBackend(tipoDocumento, documento),
+    });
   }
 
   public confirmExistingPerson(
     payload: ConfirmExistingPersonPayload
   ): Observable<AuthRegisterResponse> {
+    const formatted = {
+      ...payload,
+      documento: this.formatDocumentForBackend(payload.tipoDocumento, payload.documento),
+    };
+
     return this.endpoint
-      .confirmExistingPerson(payload)
+      .confirmExistingPerson(formatted)
       .pipe(map(result => ({ success: result.success })));
   }
 
   public verifyIdentity(payload: VerifyIdentityPayload): Observable<VerifyIdentityResult> {
-    return this.endpoint.verifyIdentity(payload);
+    const formatted = {
+      ...payload,
+      documento: this.formatDocumentForBackend(payload.tipoDocumento, payload.documento),
+    };
+
+    return this.endpoint.verifyIdentity(formatted);
   }
 
   public logout(): void {
     this.sessionState.set(null);
     this.storage?.removeItem(storageKeys.token);
     this.storage?.removeItem(storageKeys.session);
+  }
+
+  private formatDocumentForBackend(tipoDocumento: string, documento: string): string {
+    if (tipoDocumento !== 'CI') {
+      return documento;
+    }
+
+    const digits = documento.replace(/\D/g, '');
+
+    return `${digits.slice(0, -1)}-${digits.slice(-1)}`;
   }
 
   private toSession(

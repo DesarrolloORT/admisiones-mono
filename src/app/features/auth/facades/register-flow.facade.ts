@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
+import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { Career, Comienzo } from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import {
@@ -35,6 +36,7 @@ export class RegisterFlowFacade {
   private readonly catalogs = inject(Catalogs);
   private readonly documentRecognition = inject(DocumentRecognition);
   private readonly registerDocumentStore = inject(RegisterDocumentStore);
+  private readonly snackbar = inject(SnackbarHandler);
 
   public readonly documentTypes$ = this.catalogs.getDocumentTypes();
   public readonly identityForm = createIdentityForm();
@@ -115,7 +117,7 @@ export class RegisterFlowFacade {
 
   public async continueToPersonalData(): Promise<void> {
     if (this.isRecognizingDocument()) {
-      this.error.set('Esperá a que termine la precarga del documento.');
+      this.showError('Esperá a que termine la precarga del documento.');
       return;
     }
 
@@ -133,19 +135,19 @@ export class RegisterFlowFacade {
       const result = await firstValueFrom(this.auth.evaluateDocument(documentType, documentNumber));
 
       if (result.usuarioExistente) {
-        this.error.set('Ya existe un usuario registrado con este documento.');
+        this.showError('Ya existe un usuario registrado con este documento.');
         return;
       }
 
       if (result.solicitudAltaExistente) {
-        this.error.set('Ya existe una solicitud de alta pendiente para este documento.');
+        this.showError('Ya existe una solicitud de alta pendiente para este documento.');
         return;
       }
 
       this.requiresVerification.set(result.requiereVerificacion);
       this.step.set('personal');
     } catch (error) {
-      this.error.set(this.getErrorMessage(error));
+      this.showError(this.getErrorMessage(error));
     } finally {
       this.isSubmitting.set(false);
     }
@@ -175,7 +177,7 @@ export class RegisterFlowFacade {
     }
 
     if (!emailsMatch(this.personalForm)) {
-      this.error.set('Los e-mails ingresados no coinciden.');
+      this.showError('Los e-mails ingresados no coinciden.');
       return;
     }
 
@@ -201,7 +203,7 @@ export class RegisterFlowFacade {
           this.step.set('career');
         },
         error: error => {
-          this.error.set(this.getErrorMessage(error));
+          this.showError(this.getErrorMessage(error));
         },
       });
   }
@@ -218,7 +220,7 @@ export class RegisterFlowFacade {
     }
 
     if (!emailsMatch(this.personalForm)) {
-      this.error.set('Los e-mails ingresados no coinciden.');
+      this.showError('Los e-mails ingresados no coinciden.');
       return;
     }
 
@@ -243,11 +245,11 @@ export class RegisterFlowFacade {
             this.loadCareers();
             this.step.set('career');
           } else {
-            this.error.set('No se pudo verificar la identidad.');
+            this.showError('No se pudo verificar la identidad.');
           }
         },
         error: error => {
-          this.error.set(this.getErrorMessage(error));
+          this.showError(this.getErrorMessage(error));
         },
       });
   }
@@ -293,12 +295,12 @@ export class RegisterFlowFacade {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.successMessage.set(
+          this.showSuccess(
             'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
           );
         },
         error: error => {
-          this.error.set(this.getErrorMessage(error));
+          this.showError(this.getErrorMessage(error));
         },
       });
   }
@@ -315,14 +317,14 @@ export class RegisterFlowFacade {
   private loadCareers(): void {
     this.catalogs.getCareers().subscribe({
       next: careers => this.careers.set(careers),
-      error: () => this.error.set('No se pudieron cargar las carreras.'),
+      error: () => this.showError('No se pudieron cargar las carreras.'),
     });
   }
 
   private loadComienzos(idCarrera: number): void {
     this.catalogs.getComienzos(idCarrera).subscribe({
       next: comienzos => this.comienzos.set(comienzos),
-      error: () => this.error.set('No se pudieron cargar los comienzos.'),
+      error: () => this.showError('No se pudieron cargar los comienzos.'),
     });
   }
 
@@ -335,9 +337,9 @@ export class RegisterFlowFacade {
 
       this.registerDocumentStore.setRecognitionResponse(response);
       await this.applyRecognizedFields(response.data?.campos);
-      this.recognitionSuccessMessage.set('Datos precargados. Revisalos antes de continuar.');
+      this.showRecognitionSuccess('Datos precargados. Revisalos antes de continuar.');
     } catch (error) {
-      this.recognitionError.set(this.getDocumentRecognitionErrorMessage(error));
+      this.showRecognitionError(this.getDocumentRecognitionErrorMessage(error));
     } finally {
       this.isRecognizingDocument.set(false);
     }
@@ -405,6 +407,26 @@ export class RegisterFlowFacade {
     return 'No se pudo completar el registro.';
   }
 
+  private showError(message: string): void {
+    this.error.set(message);
+    this.snackbar.error(message);
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.snackbar.success(message);
+  }
+
+  private showRecognitionError(message: string): void {
+    this.recognitionError.set(message);
+    this.snackbar.error(message);
+  }
+
+  private showRecognitionSuccess(message: string): void {
+    this.recognitionSuccessMessage.set(message);
+    this.snackbar.success(message);
+  }
+
   private getDocumentRecognitionErrorMessage(error: unknown): string {
     if (error instanceof DocumentRecognitionFileError) {
       if (error.code === 'maxFileSize') {
@@ -425,4 +447,3 @@ export class RegisterFlowFacade {
     return 'No se pudo precargar el documento.';
   }
 }
-

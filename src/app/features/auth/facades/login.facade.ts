@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
+import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import {
   CEDULA_DOCUMENT_NUMBER_VALIDATORS,
@@ -19,6 +20,7 @@ export class LoginFacade {
   private readonly auth = inject(Auth);
   private readonly catalogs = inject(Catalogs);
   private readonly router = inject(Router);
+  private readonly snackbar = inject(SnackbarHandler);
 
   public readonly documentTypes$ = this.catalogs.getDocumentTypes();
   public readonly form = createLoginForm();
@@ -73,14 +75,22 @@ export class LoginFacade {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.successMessage.set('Sesión iniciada correctamente.');
+          const message = 'Sesión iniciada correctamente.';
+
+          this.successMessage.set(message);
+          this.snackbar.success(message);
           this.form.controls.password.reset('');
           void this.router.navigateByUrl('/home');
         },
         error: error => {
-          this.error.set(this.getErrorMessage(error));
+          this.showError(this.getErrorMessage(error));
         },
       });
+  }
+
+  private showError(message: string): void {
+    this.error.set(message);
+    this.snackbar.error(message);
   }
 
   private getErrorMessage(error: unknown): string {
@@ -91,4 +101,3 @@ export class LoginFacade {
     return 'No se pudo iniciar sesión.';
   }
 }
-
