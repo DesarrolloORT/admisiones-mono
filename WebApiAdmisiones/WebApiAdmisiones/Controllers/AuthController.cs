@@ -2,6 +2,7 @@ using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security;
 
@@ -26,15 +27,23 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Autenticación exitosa. Las cookies X-Access-Token y X-Refresh-Token han sido establecidas.</response>
         /// <response code="400">Error en los datos de entrada.</response>
         /// <response code="401">Credenciales inválidas.</response>
+        /// <response code="429">Demasiados intentos de login. Protección contra fuerza bruta activa.</response>
         /// <remarks>
         /// Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
+        /// 
+        /// Protección contra fuerza bruta:
+        /// - Máximo 5 intentos cada 15 minutos por IP
+        /// - Algoritmo: Sliding Window (más estricto que ventana fija)
+        /// - Bloqueo automático al superar el límite con HTTP 429
         /// </remarks>
         [AllowAnonymous]
+        [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var result = await loginService.AutenticarUsuarioLDAPAsync(request.CodigoPersona, request.Password);

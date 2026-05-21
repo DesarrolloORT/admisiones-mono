@@ -4,6 +4,7 @@ using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WebApiAdmisiones.Security;
 using AzureService.DTOs;
 using AzureService.Interfaces;
@@ -68,11 +69,16 @@ namespace WebApiAdmisiones.Controllers
         /// Analiza una imagen o PDF de documento usando Azure Document Intelligence, detecta si se trata
         /// de cédula uruguaya, pasaporte o documento extranjero admitido, y devuelve los datos extraídos.
         /// </summary>
+        /// <remarks>
+        /// Este endpoint está protegido por rate limiting: máximo 5 solicitudes por minuto por usuario/IP.
+        /// </remarks>
         [AllowAnonymous]
+        [EnableRateLimiting("ReconocimientoDocumento")]
         [HttpPost("AnalizarAdjunto")]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 422)]
+        [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 429)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 500)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 502)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 504)]

@@ -52,7 +52,7 @@ namespace WebApiAdmisiones.Extensions
 
             // Autenticación y Autorización
             app.UseAuthentication();
-            //app.UseRateLimiter();
+            app.UseRateLimiter();  // Rate limiting por endpoint (ver atributo [EnableRateLimiting])
             app.UseAuthorization();
 
             // Model binding error handling

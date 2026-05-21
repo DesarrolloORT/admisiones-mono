@@ -84,12 +84,18 @@ builder.Services.AddInscripcionesyPagosApiClient(builder.Configuration);
 builder.Services.AddCorsPolicy();
 
 // --------------------------------------------------------------------------
-// 7. Build Application
+// 7. Rate Limiting (solo para endpoints específicos)
+// --------------------------------------------------------------------------
+builder.Services.AddReconocimientoDocumentoRateLimiting(builder.Configuration);
+builder.Services.AddLoginRateLimiting(builder.Configuration);
+
+// --------------------------------------------------------------------------
+// 8. Build Application
 // --------------------------------------------------------------------------
 var app = builder.Build();
 
 // --------------------------------------------------------------------------
-// 8. Configure HTTP Pipeline
+// 9. Configure HTTP Pipeline
 // --------------------------------------------------------------------------
 app.ConfigureMiddlewarePipeline(builder.Configuration);
 
