@@ -304,7 +304,7 @@ namespace UnitTesting.AppLogic.Services
                 .ReturnsAsync(OperationResult<object?>.IsSuccess(
                     null,
                     nameof(IRegistroService.ConfirmarPersonaExistenteAsync),
-                    "Registro realizado correctamente."));
+                    "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."));
 
             var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
             {
@@ -315,7 +315,7 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Equal("Registro realizado correctamente.", result.Message);
+            Assert.Equal("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña.", result.Message);
             interesRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Once);
             interesProductoRepo.Verify(r => r.Add(It.IsAny<InteresProducto>()), Times.Once);
             _passwordActivationServiceMock.Verify(

@@ -574,7 +574,7 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsSuccess(
                     null,
                     originMethod,
-                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de usuario o contraseña.");
+                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña.");
             }
 
             OperationResult<object?> mail;
@@ -594,13 +594,13 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsSuccess(
                     null,
                     originMethod,
-                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de usuario o contraseña.");
+                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña.");
             }
 
             return OperationResult<object?>.IsSuccess(
                 null,
                 originMethod,
-                "Registro realizado correctamente.");
+                "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña.");
         }
 
         private async Task<bool> ExisteUsuarioLdapAsync(string usuario)
