@@ -12,6 +12,38 @@ namespace UnitTesting.Controllers
 {
     public class InscripcionesControllerTests
     {
+        [Fact]
+        public void ObtenerMisInscripciones_ReturnsOkAndUsesCurrentUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            currentUserMock.Setup(c => c.UserId).Returns(1);
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            serviceMock.Setup(s => s.ObtenerMisInscripciones(1))
+                .Returns(OperationResult<IEnumerable<DtoInscripcionHome>>.Ok(
+                [
+                    new DtoInscripcionHome
+                    {
+                        Estado = "Confirmada",
+                        IdProducto = 10,
+                        NombreProducto = "Analista en Tecnologias de la Informacion",
+                        IdComienzo = 20,
+                        NombreComienzo = "Marzo",
+                        IdTurno = 30,
+                        NombreTurno = "Nocturno"
+                    }
+                ], nameof(IInscripcionesService.ObtenerMisInscripciones)));
+
+            var response = controller.ObtenerMisInscripciones();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ObtenerMisInscripciones(1), Times.Once);
+        }
+
         /*
         [Fact]
         public void ObtenerUltimaInscripcionActiva_ReturnsOk()

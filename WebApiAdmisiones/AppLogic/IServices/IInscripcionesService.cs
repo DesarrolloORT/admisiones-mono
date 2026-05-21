@@ -11,9 +11,7 @@ namespace AppLogic.IServices
         OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona);
         OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request);
         OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
-        OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona);
-        OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona);
-        OperationResult<IEnumerable<DtoInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona);
+        OperationResult<IEnumerable<DtoInscripcionHome>> ObtenerMisInscripciones(long codigoPersona);
         OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
     }
 }
