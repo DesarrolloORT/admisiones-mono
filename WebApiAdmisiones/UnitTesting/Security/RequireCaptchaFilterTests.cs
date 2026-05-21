@@ -1,4 +1,5 @@
 using AppLogic.IServices;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -21,7 +22,7 @@ namespace UnitTesting.Security
                 .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(IRecaptchaService.ValidarAsync)));
 
             var context = CreateContext("token");
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object);
+            var filter = CreateFilter(recaptchaMock, "Production");
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -32,6 +33,7 @@ namespace UnitTesting.Security
 
             Assert.True(nextCalled);
             Assert.Null(context.Result);
+            recaptchaMock.Verify(s => s.ValidarAsync("token"), Times.Once);
         }
 
         [Fact]
@@ -48,7 +50,7 @@ namespace UnitTesting.Security
                     false));
 
             var context = CreateContext(token: null);
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object);
+            var filter = CreateFilter(recaptchaMock, "Production");
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -63,6 +65,28 @@ namespace UnitTesting.Security
             var operationResult = Assert.IsType<OperationResult<object>>(result.Value);
             Assert.False(operationResult.Success);
             Assert.Equal("REG_CAPTCHA_01", operationResult.ErrorCode);
+            recaptchaMock.Verify(s => s.ValidarAsync(string.Empty), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("LocalHost")]
+        [InlineData("Development")]
+        public async Task OnActionExecutionAsync_DevelopmentLikeEnvironment_SkipsCaptcha(string environmentName)
+        {
+            var recaptchaMock = new Mock<IRecaptchaService>();
+            var context = CreateContext(token: null);
+            var filter = CreateFilter(recaptchaMock, environmentName);
+            var nextCalled = false;
+
+            await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(CreateExecutedContext(context));
+            });
+
+            Assert.True(nextCalled);
+            Assert.Null(context.Result);
+            recaptchaMock.Verify(s => s.ValidarAsync(It.IsAny<string>()), Times.Never);
         }
 
         private static ActionExecutingContext CreateContext(string? token)
@@ -83,6 +107,16 @@ namespace UnitTesting.Security
                 new List<IFilterMetadata>(),
                 new Dictionary<string, object?>(),
                 controller: new object());
+        }
+
+        private static RequireCaptchaFilter CreateFilter(Mock<IRecaptchaService> recaptchaMock, string environmentName)
+        {
+            var environmentMock = new Mock<IWebHostEnvironment>();
+            environmentMock
+                .Setup(e => e.EnvironmentName)
+                .Returns(environmentName);
+
+            return new RequireCaptchaFilter(recaptchaMock.Object, environmentMock.Object);
         }
 
         private static ActionExecutedContext CreateExecutedContext(ActionExecutingContext context)

@@ -141,6 +141,7 @@ namespace UnitTesting.Extensions
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer();
             builder.Services.AddAuthorization();
+            builder.Services.AddRateLimiter(_ => { });
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
