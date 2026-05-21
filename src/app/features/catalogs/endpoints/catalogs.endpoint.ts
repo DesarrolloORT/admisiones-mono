@@ -7,7 +7,6 @@ import {
   getCatalogosCarrerasEndpoint,
   getCatalogosComienzosEndpoint,
   getCatalogosPaisesEstadosCiudadesEndpoint,
-  getCatalogosTiposDocumentosEndpoint,
   PaisesEstadosCiudadesItem,
   PaisesEstadosCiudadesItemEstado,
   PaisesEstadosCiudadesItemEstadoCiudad,
@@ -18,7 +17,6 @@ import {
   Career,
   Comienzo,
   Country,
-  DocumentType,
   LocationCity,
   LocationCountry,
   LocationState,
@@ -30,18 +28,8 @@ import {
 export class CatalogsEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getDocumentTypes(): Observable<DocumentType[]> {
-    return this.api.request(getCatalogosTiposDocumentosEndpoint).pipe(
-      map(result =>
-        this.fromData(result, item => ({
-          id: item.codTipoDocumento,
-          label: item.descripcion ?? '',
-          code: item.descrTd ?? '',
-        }))
-      ),
-      catchError(err => this.toRequestError('documentType', err))
-    );
-  }
+  // TODO: getCatalogosTiposDocumentosEndpoint fue removido del API.
+  // Reimplementar getDocumentTypes() cuando haya un endpoint de reemplazo.
 
   public getCountries(): Observable<Country[]> {
     return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
