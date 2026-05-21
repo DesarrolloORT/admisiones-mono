@@ -107,4 +107,3 @@ if (existsSync(modelSubdir)) {
   rmSync(modelSubdir, { recursive: true });
   console.log('✓ Flattened model/ into models/.');
 }
-
