@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
 import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
@@ -89,5 +89,22 @@ try {
   console.log('\n✓ Models updated successfully.');
 } catch (error) {
   process.exit(error.status || 1);
+}
+
+// ---------------------------------------------------------------------------
+// Flatten: move files from model/ subdirectory up to the output directory
+// ---------------------------------------------------------------------------
+
+const modelSubdir = resolve(ROOT, output, 'model');
+
+if (existsSync(modelSubdir)) {
+  const outputDir = resolve(ROOT, output);
+
+  for (const file of readdirSync(modelSubdir)) {
+    renameSync(join(modelSubdir, file), join(outputDir, file));
+  }
+
+  rmSync(modelSubdir, { recursive: true });
+  console.log('✓ Flattened model/ into models/.');
 }
 

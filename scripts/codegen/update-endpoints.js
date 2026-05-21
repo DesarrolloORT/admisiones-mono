@@ -10,7 +10,7 @@ const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
   env: 'environment.ts',
   output: 'src/app/shared/api/generated/endpoints',
-  models: 'src/app/shared/api/generated/models/model',
+  models: 'src/app/shared/api/generated/models',
 };
 
 const SUPPORTED_HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
