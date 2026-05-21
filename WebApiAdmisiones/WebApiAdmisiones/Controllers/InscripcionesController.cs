@@ -19,6 +19,21 @@ namespace WebApiAdmisiones.Controllers
     {
         #region INSCRIPCIONES
 
+        /// <summary>
+        /// Obtiene las inscripciones confirmadas, pendientes y canceladas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista resumida de inscripciones para el home.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("MisInscripciones")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionHome>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionHome>>), 400)]
+        public IActionResult ObtenerMisInscripciones()
+        {
+            var result = inscripcionesService.ObtenerMisInscripciones(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
         ///// <summary>
         ///// Obtiene la última inscripción activa de la persona autenticada.
         ///// </summary>
@@ -101,52 +116,6 @@ namespace WebApiAdmisiones.Controllers
         //public IActionResult TieneInscripcionActivaParaProceso([FromQuery] long idProducto, [FromQuery] long idProceso)
         //{
         //    var result = inscripcionesService.TieneInscripcionActivaParaProceso(_currentUser.GetUserId(), idProducto, idProceso);
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Obtiene las inscripciones en curso (workflow sin finalizar ni cancelar) de la persona autenticada.
-        ///// </summary>
-        ///// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripción.</returns>
-        ///// <response code="200">Datos obtenidos correctamente.</response>
-        ///// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("InscripcionesPendientes")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
-        //public IActionResult ObtenerInscripcionesPendientes()
-        //{
-        //    var result = inscripcionesService.ObtenerInscripcionesPendientes(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Obtiene las inscripciones canceladas de la persona autenticada.
-        ///// </summary>
-        ///// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripción.</returns>
-        ///// <response code="200">Datos obtenidos correctamente.</response>
-        ///// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("InscripcionesCanceladas")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
-        //public IActionResult ObtenerInscripcionesCanceladas()
-        //{
-        //    var result = inscripcionesService.ObtenerInscripcionesCanceladas(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Obtiene el historial de inscripciones realizadas por la persona autenticada,
-        ///// en productos de nivel 1 o 2 con proceso habilitado. Una entrada por producto (la más antigua).
-        ///// </summary>
-        ///// <returns>Lista de inscripciones realizadas.</returns>
-        ///// <response code="200">Datos obtenidos correctamente.</response>
-        ///// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("InscripcionesRealizadas")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 400)]
-        //public IActionResult ObtenerInscripcionesRealizadas()
-        //{
-        //    var result = inscripcionesService.ObtenerInscripcionesRealizadas(_currentUser.GetUserId());
         //    return ValidateResponse(result);
         //}
 

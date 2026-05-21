@@ -11,6 +11,10 @@ namespace AppLogic.Services
 {
     public class InscripcionesService : IInscripcionesService
     {
+        private const string EstadoConfirmada = "Confirmada";
+        private const string EstadoPendiente = "Pendiente";
+        private const string EstadoCancelada = "Cancelada";
+
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
 
@@ -128,41 +132,27 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
         }
 
-        public OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesPendientes(long codigoPersona)
+        public OperationResult<IEnumerable<DtoInscripcionHome>> ObtenerMisInscripciones(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
-            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
-            var dtos = MapearInstanciasWorkflowConInscripcion(uow, instancias);
 
-            return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesPendientes));
-        }
+            var confirmadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
+                .Select(MapInscripcionConfirmada);
+            var pendientes = ConstruirInscripcionesWorkflow(
+                uow,
+                uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona),
+                EstadoPendiente);
+            var canceladas = ConstruirInscripcionesWorkflow(
+                uow,
+                uow.InstanciaWorkflows.GetInscripcionesCanceladas(codigoPersona),
+                EstadoCancelada);
 
-        public OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>> ObtenerInscripcionesCanceladas(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var instancias = uow.InstanciaWorkflows.GetInscripcionesCanceladas(codigoPersona);
-            var dtos = MapearInstanciasWorkflowConInscripcion(uow, instancias);
-
-            return OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>.Ok(dtos, nameof(ObtenerInscripcionesCanceladas));
-        }
-
-        public OperationResult<IEnumerable<DtoInscripcionRealizada>> ObtenerInscripcionesRealizadas(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var inscriptos = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona);
-            var dtos = inscriptos
-                .Select(i => new DtoInscripcionRealizada
-                {
-                    FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
-                    IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
-                    NombreProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
-                    NombreComienzo = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-                    NombreTurno = i.Oferta?.Turno?.NombreTurno,
-                })
-                .GroupBy(d => d.IdProducto)
-                .Select(g => g.OrderBy(d => d.FechaInscripcion).First())
+            var dtos = confirmadas
+                .Concat(pendientes)
+                .Concat(canceladas)
                 .ToList();
-            return OperationResult<IEnumerable<DtoInscripcionRealizada>>.Ok(dtos, nameof(ObtenerInscripcionesRealizadas));
+
+            return OperationResult<IEnumerable<DtoInscripcionHome>>.Ok(dtos, nameof(ObtenerMisInscripciones));
         }
 
         public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
@@ -348,6 +338,94 @@ namespace AppLogic.Services
                 }
 
                 return dto;
+            });
+        }
+
+        private static DtoInscripcionHome MapInscripcionConfirmada(Inscripto inscripto)
+        {
+            return new DtoInscripcionHome
+            {
+                Estado = EstadoConfirmada,
+                IdProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
+                NombreProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
+                IdComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.IdComienzo ?? 0,
+                NombreComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+                IdTurno = inscripto.Oferta?.Turno?.IdTurno ?? 0,
+                NombreTurno = inscripto.Oferta?.Turno?.NombreTurno
+            };
+        }
+
+        private static IEnumerable<DtoInscripcionHome> ConstruirInscripcionesWorkflow(
+            IUnitOfWork uow,
+            IEnumerable<InstanciaWorkflow> instancias,
+            string estado)
+        {
+            var instanciasList = instancias.ToList();
+            if (instanciasList.Count == 0)
+            {
+                return [];
+            }
+
+            var instanciaIds = instanciasList.Select(iw => iw.IdInstanciaWorkflow).ToList();
+            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
+                .GetByInstanciaIds(instanciaIds)
+                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+
+            var productoIds = inscripcionesPorInstanciaId.Values
+                .Where(iwi => iwi.IdProducto.HasValue)
+                .Select(iwi => (long)iwi.IdProducto!.Value)
+                .Distinct()
+                .ToList();
+            var productosPorId = uow.Productos
+                .GetByKeys(productoIds)
+                .ToDictionary(p => p.IdProducto);
+
+            var comienzoIds = inscripcionesPorInstanciaId.Values
+                .Where(iwi => iwi.IdComienzo.HasValue)
+                .Select(iwi => (long)iwi.IdComienzo!.Value)
+                .Distinct()
+                .ToList();
+            var comienzosPorId = uow.Comienzos
+                .GetByKeys(comienzoIds)
+                .ToDictionary(c => c.IdComienzo);
+
+            var turnoIds = inscripcionesPorInstanciaId.Values
+                .Where(iwi => iwi.IdTurno.HasValue)
+                .Select(iwi => (long)iwi.IdTurno!.Value)
+                .Distinct()
+                .ToList();
+            var turnosPorId = uow.Turnos
+                .GetByKeys(turnoIds)
+                .ToDictionary(t => t.IdTurno);
+
+            return instanciasList.Select(iw =>
+            {
+                inscripcionesPorInstanciaId.TryGetValue(iw.IdInstanciaWorkflow, out var inscripcion);
+
+                var idProducto = inscripcion?.IdProducto.HasValue == true
+                    ? (long)inscripcion.IdProducto.Value
+                    : 0;
+                var idComienzo = inscripcion?.IdComienzo.HasValue == true
+                    ? (long)inscripcion.IdComienzo.Value
+                    : 0;
+                var idTurno = inscripcion?.IdTurno.HasValue == true
+                    ? (long)inscripcion.IdTurno.Value
+                    : 0;
+
+                productosPorId.TryGetValue(idProducto, out var producto);
+                comienzosPorId.TryGetValue(idComienzo, out var comienzo);
+                turnosPorId.TryGetValue(idTurno, out var turno);
+
+                return new DtoInscripcionHome
+                {
+                    Estado = estado,
+                    IdProducto = idProducto,
+                    NombreProducto = producto?.NombreExtensoProducto,
+                    IdComienzo = idComienzo,
+                    NombreComienzo = comienzo?.NombreComienzo,
+                    IdTurno = idTurno,
+                    NombreTurno = turno?.NombreTurno
+                };
             });
         }
 

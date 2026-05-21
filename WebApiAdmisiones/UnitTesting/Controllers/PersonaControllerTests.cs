@@ -1,6 +1,7 @@
-using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using AppLogic.IServices;
 using AppLogic.Requests;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,111 +14,112 @@ namespace UnitTesting.Controllers
 {
     public class PersonaControllerTests
     {
-        /*
-        [Fact]
-        public void ObtenerPersona_ReturnsOk()
+        private readonly Mock<IPersonaService> _personaServiceMock;
+        private readonly Mock<ICurrentUserService> _currentUserMock;
+        private readonly PersonaController _controller;
+
+        public PersonaControllerTests()
         {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
+            _personaServiceMock = new Mock<IPersonaService>();
+            _currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerPersona(1))
-                .Returns(OperationResult<DtoPersonaDevart>.Ok(new DtoPersonaDevart(), nameof(IPersonaAdmisionService.ObtenerPersona)));
-
-            var response = controller.ObtenerPersona();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
+            _controller = new PersonaController(
+                _personaServiceMock.Object,
+                loggerMock.Object,
+                _currentUserMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Fact]
-        public void ActualizarPersona_ReturnsOk()
+        public void ObtenerDatosPersona_UsesAuthenticatedUserAndReturnsOk()
         {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerDatosPersona(123))
+                .Returns(OperationResult<DtoDatosPersona>.Ok(new DtoDatosPersona(), nameof(IPersonaService.ObtenerDatosPersona)));
 
-            serviceMock.Setup(s => s.ActualizarPersona(1, It.IsAny<ActualizarPersonaRequest>()))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaAdmisionService.ActualizarPersona)));
+            var response = _controller.ObtenerDatosPersona();
 
-            var response = controller.ActualizarPersona(new ActualizarPersonaRequest
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ObtenerDatosPersona(123), Times.Once);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var request = new ActualizarDatosPersonaRequest
             {
-                PrimerApellido = "Perez",
-                PrimerNombre = "Ana",
-                Mail = "ana@test.com",
-                VerificacionMail = "ana@test.com",
-                Direccion = "18 de julio 1234",
-                Sexo = "F",
-                FechaNacimiento = new DateTime(2000, 1, 1),
                 CodigoPais = 1,
-                CodigoEstado = 1,
-                CodigoCiudad = 1
-            });
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
-        [Fact]
-        public void GuardarDatosPersonaEncuesta_ReturnsOk()
-        {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.GuardarDatosPersonaEncuesta(1, It.IsAny<GuardarDatosPersonaEncuestaRequest>()))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaAdmisionService.GuardarDatosPersonaEncuesta)));
-
-            var response = controller.GuardarDatosPersonaEncuesta(new GuardarDatosPersonaEncuestaRequest
-            {
-                PrimerApellido = "Perez",
-                PrimerNombre = "Ana",
-                Mail = "ana@test.com",
-                VerificacionMail = "ana@test.com",
+                CodigoEstado = 2,
+                CodigoCiudad = 3,
                 Direccion = "18 de julio 1234",
-                Sexo = "F",
-                FechaNacimiento = new DateTime(2000, 1, 1),
                 Telefono1 = "24001234",
-                CodigoPais = 1,
-                CodigoEstado = 1,
-                CodigoCiudad = 1,
-                Documento = "12345678",
-                TipoDocumento = "CI",
-                IdProducto = 10,
-                IdProceso = 20,
-                UltimoAnioSexto = 5,
-                VecesSexto = 0,
-                InstruccionPadre = 3,
-                InstruccionMadre = 3,
-                DecisionCarrera = 2,
-                DecisionUniversidad = 2,
-                InfoOtrasUniversidadesAntes = "NO",
-                CompartidoCon = 1,
-                CodigoInstitucionBac = 100,
-                InformarEncuesta = "SI",
-                UltimoAnioSecundaria = 1,
-                TieneEducacionSuperior = false,
-                NivelDecision = 1,
-                AsesoramientoOrt = true,
-                ValoracionAsesoramientoOrt = 4,
-                VistaSitioWebOrt = true,
-                ValoracionSitioWeb = 4,
-                VistaInstalacionesOrt = true,
-                ValoracionInstalacionesOrt = 4,
-                PublicidadOrt = true,
-                OpcionesPublicidadSeleccionadas = [new PublicidadEncuestaRequest { IdPublicidad = 1, NombrePublicidad = "Web" }],
-                OpcionesMotivosSeleccionados = [new MotivoEncuestaRequest { IdMotivo = 1, NombreMotivo = "Prestigio" }]
-            });
+                Mail = "ana@test.com",
+                VerificacionMail = "ana@test.com"
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ActualizarDatosPersona(123, request))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaService.ActualizarDatosPersona)));
+
+            var response = _controller.ActualizarDatosPersona(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ActualizarDatosPersona(123, request), Times.Once);
         }
-        */
+
+        [Fact]
+        public async Task CambiarPassword_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var result = OperationResult<object>.Ok(
+                "Se actualizó tu contraseña",
+                nameof(IPersonaService.CambiarPasswordAsync));
+
+            _currentUserMock.Setup(c => c.UserId).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.CambiarPasswordAsync(123, request))
+                .ReturnsAsync(result);
+
+            var response = await _controller.CambiarPassword(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.CambiarPasswordAsync(123, request), Times.Once);
+        }
+
+        [Fact]
+        public async Task CambiarPassword_WithoutAuthenticatedUser_ReturnsUnauthorized()
+        {
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+
+            var response = await _controller.CambiarPassword(request);
+
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<object>>(unauthorizedResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("CAM_PAS_03", operationResult.ErrorCode);
+            _personaServiceMock.Verify(
+                s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
+                Times.Never);
+        }
     }
 }
