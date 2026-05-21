@@ -476,216 +476,197 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerInscripcionesPendientes_AttachesRelatedInscripcion()
+        public void ObtenerMisInscripciones_ReturnsConfirmadasPendientesYCanceladas()
         {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
+            [
+                new Inscripto
+                {
+                    Oferta = new Oferta
+                    {
+                        Turno = new Turno { IdTurno = 3, NombreTurno = "Nocturno" },
+                        Supraoferta = new Supraoferta
+                        {
+                            Comienzo = new Comienzo { IdComienzo = 4, NombreComienzo = "Marzo" },
+                            Paquete = new Paquete
+                            {
+                                Producto = new Producto
+                                {
+                                    IdProducto = 5,
+                                    NombreExtensoProducto = "Analista en Tecnologias de la Informacion"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
             [
-                new InstanciaWorkflow
-                {
-                    IdInstanciaWorkflow = 100,
-                    IdProceso = 30,
-                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
-                }
+                new InstanciaWorkflow { IdInstanciaWorkflow = 100 }
+            ]);
+            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(
+            [
+                new InstanciaWorkflow { IdInstanciaWorkflow = 200 }
             ]);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
 
             var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
             instWorkflowInscripcionRepo
-                .Setup(r => r.GetByInstanciaIds(It.Is<IEnumerable<decimal>>(ids => ids.Count() == 1 && ids.First() == 100m)))
+                .Setup(r => r.GetByInstanciaIds(It.Is<IEnumerable<decimal>>(ids => ids.Contains(100m))))
                 .Returns(
                 [
                     new InstWorkflowInscripcion
                     {
                         IdInstanciaWorkflow = 100,
                         IdProducto = 50,
-                        IdTurno = 2,
-                        IdComienzo = 3,
-                        UsuarioIngreso = "USR",
-                        FechaIngreso = DateTime.Today,
-                        HoraIngreso = "10:00:00"
+                        IdComienzo = 60,
+                        IdTurno = 70
+                    }
+                ]);
+            instWorkflowInscripcionRepo
+                .Setup(r => r.GetByInstanciaIds(It.Is<IEnumerable<decimal>>(ids => ids.Contains(200m))))
+                .Returns(
+                [
+                    new InstWorkflowInscripcion
+                    {
+                        IdInstanciaWorkflow = 200,
+                        IdProducto = 51,
+                        IdComienzo = 61,
+                        IdTurno = 71
                     }
                 ]);
             _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
 
-            var result = _service.ObtenerInscripcionesPendientes(123);
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
+            [
+                new Producto { IdProducto = 50, NombreExtensoProducto = "Licenciatura en Sistemas" },
+                new Producto { IdProducto = 51, NombreExtensoProducto = "Analista Programador" }
+            ]);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
+            [
+                new Comienzo { IdComienzo = 60, NombreComienzo = "Agosto" },
+                new Comienzo { IdComienzo = 61, NombreComienzo = "Octubre" }
+            ]);
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
+            [
+                new Turno { IdTurno = 70, NombreTurno = "Matutino" },
+                new Turno { IdTurno = 71, NombreTurno = "Vespertino" }
+            ]);
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var result = _service.ObtenerMisInscripciones(123);
 
             Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(100m, item.IdInstanciaWorkflow);
-            Assert.NotNull(item.InstWorkflowInscripcion);
-            Assert.Equal(50m, item.InstWorkflowInscripcion.IdProducto);
+            var items = result.Data!.ToList();
+            Assert.Equal(3, items.Count);
+
+            Assert.Equal("Confirmada", items[0].Estado);
+            Assert.Equal(5, items[0].IdProducto);
+            Assert.Equal("Analista en Tecnologias de la Informacion", items[0].NombreProducto);
+            Assert.Equal(4, items[0].IdComienzo);
+            Assert.Equal("Marzo", items[0].NombreComienzo);
+            Assert.Equal(3, items[0].IdTurno);
+            Assert.Equal("Nocturno", items[0].NombreTurno);
+
+            Assert.Equal("Pendiente", items[1].Estado);
+            Assert.Equal(50, items[1].IdProducto);
+            Assert.Equal("Licenciatura en Sistemas", items[1].NombreProducto);
+            Assert.Equal(60, items[1].IdComienzo);
+            Assert.Equal("Agosto", items[1].NombreComienzo);
+            Assert.Equal(70, items[1].IdTurno);
+            Assert.Equal("Matutino", items[1].NombreTurno);
+
+            Assert.Equal("Cancelada", items[2].Estado);
+            Assert.Equal(51, items[2].IdProducto);
+            Assert.Equal("Analista Programador", items[2].NombreProducto);
+            Assert.Equal(61, items[2].IdComienzo);
+            Assert.Equal("Octubre", items[2].NombreComienzo);
+            Assert.Equal(71, items[2].IdTurno);
+            Assert.Equal("Vespertino", items[2].NombreTurno);
         }
 
         [Fact]
-        public void ObtenerInscripcionesPendientes_SinRelacion_DejaInscripcionNula()
+        public void ObtenerMisInscripciones_ConDatosFaltantes_UsaValoresPorDefecto()
         {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
+            [
+                new Inscripto { Oferta = null }
+            ]);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
             [
-                new InstanciaWorkflow
-                {
-                    IdInstanciaWorkflow = 100,
-                    IdProceso = 30,
-                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
-                }
+                new InstanciaWorkflow { IdInstanciaWorkflow = 100 }
             ]);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var result = _service.ObtenerInscripcionesPendientes(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Null(item.InstWorkflowInscripcion);
-        }
-
-        [Fact]
-        public void ObtenerInscripcionesCanceladas_AttachesRelatedInscripcion()
-        {
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(
-            [
-                new InstanciaWorkflow
-                {
-                    IdInstanciaWorkflow = 100,
-                    IdProceso = 30,
-                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
-                }
-            ]);
+            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(new List<InstanciaWorkflow>());
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
 
             var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
             instWorkflowInscripcionRepo
                 .Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>()))
-                .Returns(
-                [
-                    new InstWorkflowInscripcion
-                    {
-                        IdInstanciaWorkflow = 100,
-                        IdProducto = 50
-                    }
-                ]);
+                .Returns(new List<InstWorkflowInscripcion>());
             _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
 
-            var result = _service.ObtenerInscripcionesCanceladas(123);
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var comienzoRepo = new Mock<IComienzoRepository>();
+            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
+            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var result = _service.ObtenerMisInscripciones(123);
 
             Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.NotNull(item.InstWorkflowInscripcion);
-            Assert.Equal(50m, item.InstWorkflowInscripcion.IdProducto);
+            var items = result.Data!.ToList();
+            Assert.Equal(2, items.Count);
+            Assert.All(items, item =>
+            {
+                Assert.Equal(0, item.IdProducto);
+                Assert.Null(item.NombreProducto);
+                Assert.Equal(0, item.IdComienzo);
+                Assert.Null(item.NombreComienzo);
+                Assert.Equal(0, item.IdTurno);
+                Assert.Null(item.NombreTurno);
+            });
         }
 
         [Fact]
-        public void ObtenerInscripcionesCanceladas_SinRelacion_DejaInscripcionNula()
+        public void DtoInscripcionHome_ExponeSoloCamposRequeridos()
         {
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesCanceladas(123)).Returns(
+            var propiedades = typeof(DtoInscripcionHome)
+                .GetProperties()
+                .Select(p => p.Name)
+                .OrderBy(name => name)
+                .ToList();
+
+            Assert.Equal(
             [
-                new InstanciaWorkflow
-                {
-                    IdInstanciaWorkflow = 100,
-                    IdProceso = 30,
-                    FechaInicialInstanciaWf = new DateTime(2026, 1, 10)
-                }
-            ]);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var result = _service.ObtenerInscripcionesCanceladas(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Null(item.InstWorkflowInscripcion);
-        }
-
-        [Fact]
-        public void ObtenerInscripcionesRealizadas_ReturnsDistinctItemsByProduct()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
-            [
-                new Inscripto
-                {
-                    FechaInscr = new DateTime(2026, 2, 1),
-                    Oferta = new Oferta
-                    {
-                        Turno = new Turno { NombreTurno = "Nocturno" },
-                        Supraoferta = new Supraoferta
-                        {
-                            Comienzo = new Comienzo { NombreComienzo = "Marzo" },
-                            Paquete = new Paquete
-                            {
-                                Producto = new Producto
-                                {
-                                    IdProducto = 10,
-                                    NombreExtensoProducto = "Producto A"
-                                }
-                            }
-                        }
-                    }
-                },
-                new Inscripto
-                {
-                    FechaInscr = new DateTime(2026, 1, 10),
-                    Oferta = new Oferta
-                    {
-                        Turno = new Turno { NombreTurno = "Manana" },
-                        Supraoferta = new Supraoferta
-                        {
-                            Comienzo = new Comienzo { NombreComienzo = "Febrero" },
-                            Paquete = new Paquete
-                            {
-                                Producto = new Producto
-                                {
-                                    IdProducto = 10,
-                                    NombreExtensoProducto = "Producto A"
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.ObtenerInscripcionesRealizadas(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(10, item.IdProducto);
-            Assert.Equal(new DateTime(2026, 1, 10), item.FechaInscripcion);
-            Assert.Equal("Febrero", item.NombreComienzo);
-            Assert.Equal("Manana", item.NombreTurno);
-        }
-
-        [Fact]
-        public void ObtenerInscripcionesRealizadas_ConOfertaNula_UsaValoresPorDefecto()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
-            [
-                new Inscripto
-                {
-                    FechaInscr = null,
-                    Oferta = null
-                }
-            ]);
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.ObtenerInscripcionesRealizadas(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(0, item.IdProducto);
-            Assert.Null(item.NombreProducto);
-            Assert.Null(item.NombreComienzo);
-            Assert.Null(item.NombreTurno);
+                nameof(DtoInscripcionHome.Estado),
+                nameof(DtoInscripcionHome.IdComienzo),
+                nameof(DtoInscripcionHome.IdProducto),
+                nameof(DtoInscripcionHome.IdTurno),
+                nameof(DtoInscripcionHome.NombreComienzo),
+                nameof(DtoInscripcionHome.NombreProducto),
+                nameof(DtoInscripcionHome.NombreTurno)
+            ], propiedades);
         }
 
         [Fact]

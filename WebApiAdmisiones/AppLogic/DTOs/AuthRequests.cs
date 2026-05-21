@@ -11,10 +11,16 @@ namespace AppLogic.DTOs
     public class AuthRequest
     {
         /// <summary>
-        /// Código de la persona que intenta autenticarse.
+        /// Tipo de documento de la persona que intenta autenticarse.
         /// </summary>
-        [Required(ErrorMessage = "El código de persona es requerido.")]
-        public long CodigoPersona { get; set; }
+        [Required(ErrorMessage = "El tipo de documento es requerido.")]
+        public string? TipoDocumento { get; set; }
+
+        /// <summary>
+        /// Número de documento de la persona que intenta autenticarse.
+        /// </summary>
+        [Required(ErrorMessage = "El número de documento es requerido.")]
+        public string? Documento { get; set; }
 
         /// <summary>
         /// Contraseña del usuario.
@@ -61,6 +67,34 @@ namespace AppLogic.DTOs
         [Redact]
         public required string PasswordActual { get; set; }
 
+        /// <summary>
+        /// Nueva password a establecer.
+        /// </summary>
+        [Required(ErrorMessage = "La nueva password es requerida.")]
+        [Redact]
+        public required string PasswordNueva { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para validar el link de creacion de password.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoActivarLinkPasswordRequest
+    {
+        /// <summary>
+        /// JWT de activacion recibido por mail.
+        /// </summary>
+        [Required(ErrorMessage = "El token es requerido.")]
+        [Redact]
+        public required string Token { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para completar la password inicial usando la sesion temporal.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoCompletarPasswordInicialRequest
+    {
         /// <summary>
         /// Nueva password a establecer.
         /// </summary>

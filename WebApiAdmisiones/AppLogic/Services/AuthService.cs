@@ -11,10 +11,14 @@ namespace AppLogic.Services;
 
 public class AuthService : IAuthService
 {
+    private const string MensajeGenericoRecuperoPassword =
+        "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
+
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IPasswordActivationService _passwordActivationService;
 
     /// <summary>
     /// Constructor del servicio LDAP.
@@ -27,27 +31,59 @@ public class AuthService : IAuthService
         ILdap ldap,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
         ITokenService tokenService,
-        IRefreshTokenService refreshTokenService)
+        IRefreshTokenService refreshTokenService,
+        IPasswordActivationService passwordActivationService)
     {
         _ldap = ldap;
         _admisionesUowFactory = admisionesUowFactory;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
+        _passwordActivationService = passwordActivationService;
     }
 
     /// <summary>
     /// Autentica un usuario contra el servicio LDAP delegando al proyecto Autenticacion
     /// y, si es exitoso, obtiene la Persona desde la base de datos y genera los tokens de autenticación.
     /// </summary>
-    /// <param name="codigoPersona">Código de la persona a autenticar.</param>
+    /// <param name="tipoDocumento">Tipo de documento del usuario.</param>
+    /// <param name="documento">Número de documento del usuario.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(long codigoPersona, string pass)
+    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass)
     {
         try
         {
+            // Validar el tipo de documento y documento
+            var validacion = DocumentUtils.ValidarDocumentoBase(tipoDocumento, documento);
+            if (!validacion.IsValid)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    ObtenerCodigoValidacionDocumentoLogin(validacion.Error),
+                    nameof(AutenticarUsuarioLDAPAsync),
+                    validacion.Message,
+                    400,
+                    default!);
+            }
+
+            var tipoDocumentoNorm = DocumentUtils.Normalizar(tipoDocumento);
+            var documentoNorm = DocumentUtils.Normalizar(documento);
+
+            // Obtener la Persona desde la base de datos por tipo documento y documento
+            using var admisionesUow = _admisionesUowFactory.Create();
+            var persona = admisionesUow.Personas.GetByTipoDocumentoYDocumento(tipoDocumentoNorm, documentoNorm);
+
+            if (persona == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "LOGIN_LDAP_04",
+                    nameof(AutenticarUsuarioLDAPAsync),
+                    "No se encontró la persona en la base de datos.",
+                    404,
+                    default!);
+            }
+
             // Delegar la autenticación LDAP al servicio de Core/Autenticacion
-            var authResult = await _ldap.AutenticarUsuarioLDAPAsync(codigoPersona, pass);
+            var authResult = await _ldap.AutenticarUsuarioLDAPAsync(persona.CodigoPersona, pass);
 
             if (!authResult.Success)
             {
@@ -59,20 +95,6 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // Login exitoso: obtener la Persona desde la base de datos
-            using var admisionesUow = _admisionesUowFactory.Create();
-            var persona = admisionesUow.Personas.GetByKey(codigoPersona);
-
-            if (persona == null)
-            {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    "LOGIN_LDAP_04",
-                    nameof(AutenticarUsuarioLDAPAsync),
-                    "Usuario autenticado pero no se encontró la persona en la base de datos.",
-                    404,
-                    default!);
-            }
-
             // Generar tokens de autenticación
             var accessToken = _tokenService.GenerateAccessToken(persona);
             var refreshToken = _tokenService.GenerateRefreshToken();
@@ -81,7 +103,7 @@ public class AuthService : IAuthService
 
             // Guardar el refresh token en la base de datos (revoca automáticamente los anteriores)
             await _refreshTokenService.SaveRefreshTokenAsync(
-                codigoPersona,
+                persona.CodigoPersona,
                 "ADMISIONESWEB",
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
@@ -241,110 +263,181 @@ public class AuthService : IAuthService
                     400);
             }
 
-            using var uow = _admisionesUowFactory.Create();
+            var uow = _admisionesUowFactory.Create();
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             var documento = DocumentUtils.Normalizar(request.Documento);
             var persona = uow.Personas.GetByDocumento(documento);
 
-            if (persona == null)
+            if (persona == null || !CoincidePersonaRecupero(persona, tipoDocumento, documento, request.PrimerApellido))
             {
-                return OperationResult<object>.IsFailed(
-                    "REC_PAS_04",
-                    nameof(RecuperarPassword),
-                    $"No se encontró persona con el numero de documento {documento}",
-                    404);
+                return OperationResult<object>.Ok(
+                    MensajeGenericoRecuperoPassword,
+                    nameof(RecuperarPassword));
             }
 
-            var envioContrasenia = await _ldap.EnviarContrasenia(
-                string.Empty,
-                tipoDocumento,
-                documento,
-                request.PrimerApellido!.Trim(),
-                "ADMISIONES",
-                "SOLICITUD_DE_CONTRASEÑA");
-
-            if (!envioContrasenia.Success)
-            {
-                return OperationResult<object>.IsFailed(
-                    "REC_PAS_05",
-                    nameof(RecuperarPassword),
-                    envioContrasenia.Message,
-                    envioContrasenia.HttpCode);
-            }
+            await _passwordActivationService.EnviarMailRecuperacionPasswordAsync(
+                persona,
+                nameof(RecuperarPassword));
 
             return OperationResult<object>.Ok(
-                envioContrasenia.Data ?? string.Empty,
+                MensajeGenericoRecuperoPassword,
                 nameof(RecuperarPassword));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return OperationResult<object>.IsFailed(
-               "REC_PAS_99",
-               nameof(RecuperarPassword),
-               $"Error al recuperar contraseña: {ex.Message}",
-               500,
-               default!);
+            return OperationResult<object>.Ok(
+               MensajeGenericoRecuperoPassword,
+               nameof(RecuperarPassword));
         }
     }
 
+    private static bool CoincidePersonaRecupero(
+        BusinessLogic.Entities.Persona persona,
+        string tipoDocumento,
+        string documento,
+        string? primerApellido)
+    {
+        if (string.IsNullOrWhiteSpace(primerApellido))
+        {
+            return false;
+        }
+
+        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
+        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
+            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
+
+        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
+            && DocumentUtils.Normalizar(persona.Documento) == documento
+            && apellidoPersona == apellidoEntrada;
+    }
+
+
     /// <summary>
-    /// Cambia la password del usuario autenticado en LDAP.
+    /// Completa el alta de password inicial usando una sesion temporal de activacion.
     /// </summary>
-    /// <param name="codigoPersona">Codigo de persona del usuario autenticado.</param>
-    /// <param name="request">Passwords actual y nueva.</param>
-    /// <returns>Resultado del cambio de password.</returns>
-    public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)
+    /// <param name="codigoPersona">Codigo de persona resuelto desde la sesion temporal.</param>
+    /// <param name="request">Nueva password a establecer.</param>
+    /// <returns>Respuesta de autenticacion normal con tokens para cookies.</returns>
+    public async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordAsync(
+        long codigoPersona,
+        DtoCompletarPasswordInicialRequest request)
     {
         try
         {
             if (request == null)
             {
-                return OperationResult<object>.IsFailed(
-                    "CAM_PAS_01",
-                    nameof(CambiarPasswordAsync),
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_01",
+                    nameof(CompletarPasswordAsync),
                     "La solicitud es obligatoria.",
-                    400);
+                    400,
+                    default!);
             }
 
-            var validacionPassword = Util.ValidarPassword(request.PasswordActual, request.PasswordNueva);
+            var validacionPassword = Util.ValidarPasswordNueva(request.PasswordNueva);
             if (!string.IsNullOrWhiteSpace(validacionPassword))
             {
-                return OperationResult<object>.IsFailed(
-                    "CAM_PAS_02",
-                    nameof(CambiarPasswordAsync),
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_02",
+                    nameof(CompletarPasswordAsync),
                     validacionPassword,
-                    400);
+                    400,
+                    default!);
             }
 
-            var cambioPassword = await _ldap.CambiarPasswordAsync(
+            using var uow = _admisionesUowFactory.Create();
+            var persona = uow.Personas.GetByKey(codigoPersona);
+
+            if (persona == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_03",
+                    nameof(CompletarPasswordAsync),
+                    "Usuario no encontrado en la base de datos.",
+                    404,
+                    default!);
+            }
+
+            if (string.IsNullOrWhiteSpace(persona.HashTokenPassword))
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "INI_PAS_04",
+                    nameof(CompletarPasswordAsync),
+                    "El link de activación ya fue utilizado o no está vigente.",
+                    401,
+                    default!);
+            }
+
+            var cambioPassword = await _ldap.ForzarCambiarPasswordAsync(
                 codigoPersona.ToString(CultureInfo.InvariantCulture),
-                request.PasswordActual,
                 request.PasswordNueva);
 
             if (!cambioPassword.Success)
             {
-                return OperationResult<object>.IsFailed(
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     cambioPassword.ErrorCode,
-                    nameof(CambiarPasswordAsync),
+                    nameof(CompletarPasswordAsync),
                     cambioPassword.Message,
-                    cambioPassword.HttpCode);
+                    cambioPassword.HttpCode,
+                    default!);
             }
 
-            return OperationResult<object>.Ok(
-                "Se actualizó tu contraseña",
-                nameof(CambiarPasswordAsync));
+            persona.HashTokenPassword = null;
+            persona.FechaUltModifPassword = DateTime.Today;
+            persona.UsuarioUltModifPassword = "ADMISIONES";
+            uow.Personas.Update(persona);
+            uow.Save();
+
+            var accessToken = _tokenService.GenerateAccessToken(persona);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenHash = _tokenService.HashToken(refreshToken);
+            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
+
+            await _refreshTokenService.SaveRefreshTokenAsync(
+                codigoPersona,
+                "ADMISIONESWEB",
+                refreshTokenHash,
+                DateTime.UtcNow.AddDays(refreshExpireDays));
+
+            var authResponse = new DtoAuthenticationResponse
+            {
+                Persona = new DtoPersonaAuth
+                {
+                    CodigoPersona = persona.CodigoPersona,
+                    PrimerNombre = persona.PrimerNombre,
+                    SegundoNombre = persona.SegundoNombre,
+                    PrimerApellido = persona.PrimerApellido,
+                    SegundoApellido = persona.SegundoApellido,
+                    TipoPersona = persona.TipoPersona,
+                    Documento = persona.Documento
+                },
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                RefreshTokenHash = refreshTokenHash,
+                Message = "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras."
+            };
+
+            return OperationResult<DtoAuthenticationResponse>.Ok(
+                authResponse,
+                nameof(CompletarPasswordAsync));
         }
         catch (Exception ex)
         {
-            return OperationResult<object>.IsFailed(
-               "CAM_PAS_99",
-               nameof(CambiarPasswordAsync),
-               $"Error al cambiar contraseña: {ex.Message}",
-               500,
-               default!);
+            return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                "INI_PAS_99",
+                nameof(CompletarPasswordAsync),
+                $"Error al completar password inicial: {ex.Message}",
+                500,
+                default!);
         }
     }
-
+    private static string ObtenerCodigoValidacionDocumentoLogin(DocumentUtils.DocumentValidationError error)
+    {
+        return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
+            ? "LOGIN_LDAP_02"
+            : "LOGIN_LDAP_03";
+    }
     private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
     {
         return error == DocumentUtils.DocumentValidationError.InvalidDocumentType

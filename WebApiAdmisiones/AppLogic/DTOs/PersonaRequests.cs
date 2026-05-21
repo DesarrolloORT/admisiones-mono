@@ -7,24 +7,36 @@ namespace AppLogic.Requests
     [ExcludeFromCodeCoverage]
     public class ActualizarPersonaRequest
     {
-        public string PrimerApellido { get; set; } = string.Empty;
-        public string SegundoApellido { get; set; } = string.Empty;
+        public string TipoDocumento { get; set; } = string.Empty;
+        public string Documento { get; set; } = string.Empty;
         public string PrimerNombre { get; set; } = string.Empty;
         public string SegundoNombre { get; set; } = string.Empty;
-        public string Mail { get; set; } = string.Empty;
-        public string VerificacionMail { get; set; } = string.Empty;
-        public string Direccion { get; set; } = string.Empty;
-        public string Sexo { get; set; } = string.Empty;
+        public string PrimerApellido { get; set; } = string.Empty;
+        public string SegundoApellido { get; set; } = string.Empty;
         public DateTime FechaNacimiento { get; set; }
-        public string Telefono1 { get; set; } = string.Empty;
-        public string Telefono2 { get; set; } = string.Empty;
+        public string Sexo { get; set; } = string.Empty;
         public long CodigoPais { get; set; }
         public long CodigoEstado { get; set; }
         public long CodigoCiudad { get; set; }
-        public string Documento { get; set; } = string.Empty;
-        public string TipoDocumento { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string Telefono1 { get; set; } = string.Empty;
+        public string Telefono2 { get; set; } = string.Empty;
+        public string Mail { get; set; } = string.Empty;
+        public string VerificacionMail { get; set; } = string.Empty;
         public string TrabajaActualmente { get; set; } = string.Empty;
         public long TipoJornada { get; set; }
+    }
+
+    [ExcludeFromCodeCoverage]
+    public class ActualizarDatosPersonaRequest
+    {
+        public long CodigoPais { get; set; }
+        public long CodigoEstado { get; set; }
+        public long CodigoCiudad { get; set; }
+        public string Direccion { get; set; } = string.Empty;
+        public string Telefono1 { get; set; } = string.Empty;
+        public string Mail { get; set; } = string.Empty;
+        public string VerificacionMail { get; set; } = string.Empty;
     }
 
     public class EmpresaEncuestaRequest
