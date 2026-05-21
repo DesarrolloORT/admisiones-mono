@@ -25,13 +25,6 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoProcesoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerProcesosHabilitadosPorProducto));
         }
 
-        public OperationResult<IEnumerable<DtoTurnoDevart>> ObtenerTurnos(long idProducto, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Turnos.GetTurnosParaAdmisiones(idProducto, idProceso);
-            return OperationResult<IEnumerable<DtoTurnoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerTurnos));
-        }
-
         public OperationResult<IEnumerable<DtoOfertaDevart>> ObtenerOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno)
         {
             using var uow = _uowFactory.Create();

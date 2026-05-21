@@ -1,10 +1,9 @@
-using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
 using AppLogic.IServices;
 using AppLogic.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Models;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Controllers
@@ -13,12 +12,76 @@ namespace WebApiAdmisiones.Controllers
     [ApiController]
     [Route("[controller]")]
     public class PersonaController(
-        IPersonaAdmisionService personaAdmisionService,
+        IPersonaService personaService,
         ILogger<PersonaController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<PersonaController>(logger, currentUser)
     {
         #region PERSONA
+
+        /// <summary>
+        /// Obtiene los datos de la persona autenticada.
+        /// </summary>
+        /// <returns>Datos de la persona.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="404">No se encontró la persona autenticada.</response>
+        [HttpGet("DatosPersona")]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPersona>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPersona>), 404)]
+        public IActionResult ObtenerDatosPersona()
+        {
+            var result = personaService.ObtenerDatosPersona(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Actualiza los datos editables de la persona autenticada.
+        /// </summary>
+        /// <param name="request">Datos editables de la persona.</param>
+        /// <returns><c>true</c> si la actualización se realizó correctamente.</returns>
+        /// <response code="200">Datos actualizados correctamente.</response>
+        /// <response code="400">Los datos enviados son inválidos.</response>
+        /// <response code="404">No se encontró la persona autenticada.</response>
+        [HttpPut("DatosPersona")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult ActualizarDatosPersona([FromBody] ActualizarDatosPersonaRequest request)
+        {
+            var result = personaService.ActualizarDatosPersona(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Cambia la contraseña del usuario autenticado.
+        /// </summary>
+        /// <param name="request">Password actual y nueva password.</param>
+        /// <returns>Resultado del cambio de contraseña.</returns>
+        /// <response code="200">Contraseña actualizada correctamente.</response>
+        /// <response code="400">Error de validación o de negocio.</response>
+        /// <response code="401">Usuario no autenticado.</response>
+        /// <response code="500">Error interno no controlado.</response>
+        [HttpPost("CambiarContraseña")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 401)]
+        [ProducesResponseType(typeof(OperationResult<object>), 500)]
+        public async Task<IActionResult> CambiarPassword([FromBody] DtoCambiarPasswordRequest request)
+        {
+            if (!_currentUser.UserId.HasValue)
+            {
+                var errorResult = OperationResult<object>.IsFailed(
+                    errorCode: "CAM_PAS_03",
+                    originMethod: nameof(CambiarPassword),
+                    message: "Usuario no autenticado.",
+                    httpCode: 401);
+
+                return ValidateResponse(errorResult);
+            }
+
+            var result = await personaService.CambiarPasswordAsync(_currentUser.UserId.Value, request);
+            return ValidateResponse(result);
+        }
 
         ///// <summary>
         ///// Obtiene los datos de la persona autenticada.

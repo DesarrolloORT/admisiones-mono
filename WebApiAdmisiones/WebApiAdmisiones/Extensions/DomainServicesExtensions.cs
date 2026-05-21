@@ -101,6 +101,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IInscripcionesService, InscripcionesService>();
             services.AddScoped<IPreinscripcionService, PreinscripcionService>();
             services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
+            services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPasswordActivationService, PasswordActivationService>();

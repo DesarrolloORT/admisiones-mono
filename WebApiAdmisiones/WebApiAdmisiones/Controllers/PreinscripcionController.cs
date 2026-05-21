@@ -39,23 +39,6 @@ namespace WebApiAdmisiones.Controllers
         //}
 
         ///// <summary>
-        ///// Obtiene los turnos disponibles para un producto y proceso de admisión.
-        ///// </summary>
-        ///// <param name="idProducto">ID del producto.</param>
-        ///// <param name="idProceso">ID del proceso.</param>
-        ///// <returns>Lista de turnos disponibles.</returns>
-        ///// <response code="200">Datos obtenidos correctamente.</response>
-        ///// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("Turnos")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTurnoDevart>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTurnoDevart>>), 400)]
-        //public IActionResult ObtenerTurnos([FromQuery] long idProducto, [FromQuery] long idProceso)
-        //{
-        //    var result = preinscripcionService.ObtenerTurnos(idProducto, idProceso);
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
         ///// Obtiene las ofertas disponibles para inscripción de alumno fresco
         ///// dado un producto, proceso y turno.
         ///// </summary>

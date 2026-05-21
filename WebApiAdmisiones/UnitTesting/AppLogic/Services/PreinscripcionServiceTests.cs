@@ -73,24 +73,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerTurnos_ReturnsMappedItems()
-        {
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetTurnosParaAdmisiones(10, 20)).Returns(
-            [
-                new Turno { IdTurno = 30, NombreTurno = "Nocturno" }
-            ]);
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerTurnos(10, 20);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(30, item.IdTurno);
-            Assert.Equal("Nocturno", item.NombreTurno);
-        }
-
-        [Fact]
         public void ObtenerOfertasParaInscripcionConProceso_ReturnsMappedItems()
         {
             var ofertaRepo = new Mock<IOfertaRepository>();
