@@ -270,24 +270,29 @@ public class AuthService : IAuthService
 
             if (persona == null || !CoincidePersonaRecupero(persona, tipoDocumento, documento, request.PrimerApellido))
             {
-                return OperationResult<object>.Ok(
-                    MensajeGenericoRecuperoPassword,
-                    nameof(RecuperarPassword));
+                return OperationResult<object>.IsSuccess(
+                    null,
+                    nameof(RecuperarPassword),
+                    MensajeGenericoRecuperoPassword);
             }
 
-            await _passwordActivationService.EnviarMailRecuperacionPasswordAsync(
+            var envioMail = await _passwordActivationService.EnviarMailRecuperacionPasswordAsync(
                 persona,
                 nameof(RecuperarPassword));
 
-            return OperationResult<object>.Ok(
-                MensajeGenericoRecuperoPassword,
-                nameof(RecuperarPassword));
+            return OperationResult<object>.IsSuccess(
+                null,
+                nameof(RecuperarPassword),
+                envioMail.Success && !string.IsNullOrWhiteSpace(envioMail.Message)
+                    ? envioMail.Message
+                    : MensajeGenericoRecuperoPassword);
         }
         catch (Exception)
         {
-            return OperationResult<object>.Ok(
-               MensajeGenericoRecuperoPassword,
-               nameof(RecuperarPassword));
+            return OperationResult<object>.IsSuccess(
+               null,
+               nameof(RecuperarPassword),
+               MensajeGenericoRecuperoPassword);
         }
     }
 

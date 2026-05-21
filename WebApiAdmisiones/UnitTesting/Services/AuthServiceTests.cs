@@ -78,12 +78,16 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
             _passwordActivationServiceMock
                 .Setup(x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)))
-                .ReturnsAsync(OperationResult<object?>.Ok(null, nameof(AuthService.RecuperarPassword)));
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(AuthService.RecuperarPassword),
+                    "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña."));
 
             var result = await _service.RecuperarPassword(request);
 
             Assert.True(result.Success);
-            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            Assert.Null(result.Data);
+            Assert.Contains("Si los datos ingresados son correctos", result.Message);
             _passwordActivationServiceMock.Verify(
                 x => x.EnviarMailRecuperacionPasswordAsync(persona, nameof(AuthService.RecuperarPassword)),
                 Times.Once);
@@ -117,7 +121,8 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.RecuperarPassword(request);
 
             Assert.True(result.Success);
-            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            Assert.Null(result.Data);
+            Assert.Contains("Si los datos ingresados son correctos", result.Message);
             _passwordActivationServiceMock.Verify(
                 x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
                 Times.Never);
@@ -152,7 +157,8 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.RecuperarPassword(request);
 
             Assert.True(result.Success);
-            Assert.Contains("Si los datos ingresados son correctos", result.Data?.ToString());
+            Assert.Null(result.Data);
+            Assert.Contains("Si los datos ingresados son correctos", result.Message);
             _passwordActivationServiceMock.Verify(
                 x => x.EnviarMailRecuperacionPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
                 Times.Never);

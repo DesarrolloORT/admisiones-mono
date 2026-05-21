@@ -304,7 +304,7 @@ namespace UnitTesting.AppLogic.Services
                 .ReturnsAsync(OperationResult<object?>.IsSuccess(
                     null,
                     nameof(IRegistroService.ConfirmarPersonaExistenteAsync),
-                    "Registro realizado correctamente."));
+                    "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."));
 
             var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
             {
