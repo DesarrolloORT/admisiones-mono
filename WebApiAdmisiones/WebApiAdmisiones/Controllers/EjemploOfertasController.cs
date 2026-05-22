@@ -70,14 +70,17 @@ namespace WebApiAdmisiones.Controllers
                 return Unauthorized(errorResult);
             }
 
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Usuario {UsuarioId} solicitó sus propias ofertas - " +
                 "Producto: {IdProducto}, Comienzo: {IdComienzo}, Turno: {IdTurno}",
                 codigoPersonaActual.Value,
                 idProducto,
                 idComienzo,
                 idTurno
-            );
+                );
+            }
 
             // Reutilizar la misma lógica usando el código del usuario actual
             var resultado = await _ofertasInscripcionService.ObtenerOfertasParaPersonaAsync(

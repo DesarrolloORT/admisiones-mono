@@ -335,7 +335,7 @@ public class PasswordActivationService : IPasswordActivationService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private ClaimsPrincipal ValidarJwt(string token)
+    private static ClaimsPrincipal ValidarJwt(string token)
     {
         var validationParameters = new TokenValidationParameters
         {

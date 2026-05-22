@@ -1,5 +1,4 @@
 using AppLogic.DTOs;
-using AppLogic.Helpers;
 using AppLogic.IServices;
 using AppLogic.Utilities;
 using BusinessLogic.IServices;
@@ -11,8 +10,9 @@ namespace AppLogic.Services;
 
 public class AuthService : IAuthService
 {
-    private const string MensajeGenericoRecuperoPassword =
+    private const string MensajeGenericoRecupero =
         "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
+    private const string SISTEMA = "ADMISIONESWEB";
 
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
@@ -104,7 +104,7 @@ public class AuthService : IAuthService
             // Guardar el refresh token en la base de datos (revoca automáticamente los anteriores)
             await _refreshTokenService.SaveRefreshTokenAsync(
                 persona.CodigoPersona,
-                "ADMISIONESWEB",
+                SISTEMA,
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
@@ -164,7 +164,7 @@ public class AuthService : IAuthService
             // 2. Resolver código de persona desde un refresh token válido
             var refreshTokenHash = _tokenService.HashToken(refreshToken);
             var codigoPersona = await _refreshTokenService.GetCodigoPersonaByRefreshTokenAsync(
-                "ADMISIONESWEB", refreshTokenHash);
+                SISTEMA, refreshTokenHash);
 
             if (!codigoPersona.HasValue)
             {
@@ -199,7 +199,7 @@ public class AuthService : IAuthService
             // 5. Guardar nuevo refresh token en la base de datos
             await _refreshTokenService.SaveRefreshTokenAsync(
                 codigoPersona.Value,
-                "ADMISIONESWEB",
+                SISTEMA,
                 newRefreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
@@ -273,7 +273,7 @@ public class AuthService : IAuthService
                 return OperationResult<object>.IsSuccess(
                     null,
                     nameof(RecuperarPassword),
-                    MensajeGenericoRecuperoPassword);
+                    MensajeGenericoRecupero);
             }
 
             var envioMail = await _passwordActivationService.EnviarMailRecuperacionPasswordAsync(
@@ -285,14 +285,14 @@ public class AuthService : IAuthService
                 nameof(RecuperarPassword),
                 envioMail.Success && !string.IsNullOrWhiteSpace(envioMail.Message)
                     ? envioMail.Message
-                    : MensajeGenericoRecuperoPassword);
+                    : MensajeGenericoRecupero);
         }
         catch (Exception)
         {
             return OperationResult<object>.IsSuccess(
                null,
                nameof(RecuperarPassword),
-               MensajeGenericoRecuperoPassword);
+               MensajeGenericoRecupero);
         }
     }
 
@@ -401,7 +401,7 @@ public class AuthService : IAuthService
 
             await _refreshTokenService.SaveRefreshTokenAsync(
                 codigoPersona,
-                "ADMISIONESWEB",
+                SISTEMA,
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 

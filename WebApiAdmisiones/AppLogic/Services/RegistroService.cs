@@ -16,6 +16,10 @@ namespace AppLogic.Services
 {
     public class RegistroService : IRegistroService
     {
+        private const string requestErrorCode = "REG_REQUEST_01";
+        private const string requestErrorMessage = "La solicitud es obligatoria.";
+        private const string documentTypeErrorCode = "REG_DOC_03";
+
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ILdap _ldap;
@@ -43,9 +47,9 @@ namespace AppLogic.Services
             if (request == null)
             {
                 return OperationResult<RegistroEvaluacionResponse>.IsFailed(
-                    "REG_REQUEST_01",
+                    requestErrorCode,
                     nameof(EvaluarDocumentoAsync),
-                    "La solicitud es obligatoria.",
+                    requestErrorMessage,
                     400);
             }
 
@@ -124,9 +128,9 @@ namespace AppLogic.Services
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_REQUEST_01",
+                    requestErrorCode,
                     nameof(VerificarIdentidadAsync),
-                    "La solicitud es obligatoria.",
+                    requestErrorMessage,
                     400);
             }
 
@@ -145,7 +149,7 @@ namespace AppLogic.Services
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_DOC_03",
+                    documentTypeErrorCode,
                     nameof(VerificarIdentidadAsync),
                     "VerificarIdentidad solo aplica para cédula de identidad.",
                     400);
@@ -196,9 +200,9 @@ namespace AppLogic.Services
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_REQUEST_01",
+                    requestErrorCode,
                     nameof(ConfirmarPersonaExistenteAsync),
-                    "La solicitud es obligatoria.",
+                    requestErrorMessage,
                     400);
             }
 
@@ -216,7 +220,7 @@ namespace AppLogic.Services
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_DOC_03",
+                    documentTypeErrorCode,
                     nameof(ConfirmarPersonaExistenteAsync),
                     "ConfirmarPersonaExistente solo aplica para cédula de identidad.",
                     400);
@@ -267,9 +271,9 @@ namespace AppLogic.Services
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_REQUEST_01",
+                    requestErrorCode,
                     nameof(ConfirmarNuevaPersonaAsync),
-                    "La solicitud es obligatoria.",
+                    requestErrorMessage,
                     400);
             }
 
@@ -287,7 +291,7 @@ namespace AppLogic.Services
             if (tipoDocumento != "CI")
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_DOC_03",
+                    documentTypeErrorCode,
                     nameof(ConfirmarNuevaPersonaAsync),
                     "ConfirmarNuevaPersona solo aplica para cédula de identidad.",
                     400);
@@ -323,9 +327,9 @@ namespace AppLogic.Services
             if (request == null)
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_REQUEST_01",
+                    requestErrorCode,
                     nameof(ConfirmarSolicitudAltaAsync),
-                    "La solicitud es obligatoria.",
+                    requestErrorMessage,
                     400);
             }
 
@@ -343,7 +347,7 @@ namespace AppLogic.Services
             if (tipoDocumento == "CI")
             {
                 return OperationResult<object?>.IsFailed(
-                    "REG_DOC_03",
+                    documentTypeErrorCode,
                     nameof(ConfirmarSolicitudAltaAsync),
                     "ConfirmarSolicitudAlta solo aplica para documentos distintos a cédula de identidad.",
                     400);

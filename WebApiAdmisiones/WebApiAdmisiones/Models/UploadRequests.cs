@@ -1,19 +1,24 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+
 
 namespace WebApiAdmisiones.Models
 {
+    [ExcludeFromCodeCoverage]
     public class ArchivoPayload
     {
         public string? NombreArchivo { get; set; }
         public byte[]? Archivo { get; set; }
     }
 
+    [ExcludeFromCodeCoverage]
     public class SubirFotoAlumnoRequest
     {
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    [ExcludeFromCodeCoverage]
     public class UploadDocumentoAlumnoRequest
     {
         [JsonRequired]
@@ -25,12 +30,14 @@ namespace WebApiAdmisiones.Models
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    [ExcludeFromCodeCoverage]
     public class ReconocimientoDocumentoApiRequest
     {
         public string? TipoMime { get; set; }
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    [ExcludeFromCodeCoverage]
     public class UploadArchivoIngresoRequest
     {
         [JsonRequired]
@@ -39,6 +46,7 @@ namespace WebApiAdmisiones.Models
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    [ExcludeFromCodeCoverage]
     public class UploadArchivoEgresoRequest
     {
         [JsonRequired]
@@ -47,6 +55,7 @@ namespace WebApiAdmisiones.Models
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
+    [ExcludeFromCodeCoverage]
     public class UploadArchivoRevalidaDjRequest
     {
         [JsonRequired]

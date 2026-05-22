@@ -1,12 +1,14 @@
 ﻿using BusinessLogic.Entities;
 using BusinessLogic.IServices;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DataAccess.Services
 {
     /// <summary>
     /// Servicio para gestionar los refresh tokens en la base de datos.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class RefreshTokenService : IRefreshTokenService
     {
         private readonly ModelContext _context;

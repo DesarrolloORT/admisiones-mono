@@ -45,13 +45,16 @@ namespace AppLogic.Services
             long idComienzo,
             long idTurno)
         {
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Iniciando consulta de ofertas para persona {CodigoPersona}, Producto: {IdProducto}, Comienzo: {IdComienzo}, Turno: {IdTurno}",
                 codigoPersona,
                 idProducto,
                 idComienzo,
                 idTurno
-            );
+                );
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // PASO 1: Validar que la persona existe en BD local
@@ -71,12 +74,15 @@ namespace AppLogic.Services
                 );
             }
 
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Persona encontrada: {PrimerNombre} {PrimerApellido} (Documento: {Documento})",
                 persona.PrimerNombre,
                 persona.PrimerApellido,
                 persona.Documento
-            );
+                );
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // PASO 2: Verificar que la persona tiene código de vigencia
@@ -96,11 +102,14 @@ namespace AppLogic.Services
                 );
             }
 
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Persona {CodigoPersona} tiene código de vigencia: {CodigoVigencia}",
                 codigoPersona,
                 persona.CodigoVigencia
-            );
+                );
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // PASO 3: Validaciones adicionales de negocio (opcional)
@@ -114,10 +123,13 @@ namespace AppLogic.Services
             var personaAdmite = uow.PersonaAdmites.GetByKey(codigoPersona);
             if (personaAdmite != null)
             {
-                _logger.LogInformation(
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
                     "Persona tiene registro en PersonaAdmite - Estado: {EstadoAdmite}",
                     personaAdmite.EstadoAdmite
-                );
+                    );
+                }
             }
 
             // ═══════════════════════════════════════════════════════════════
@@ -126,9 +138,12 @@ namespace AppLogic.Services
             // El ServiceAuthenticationHandler inyecta automáticamente:
             // - Authorization: Bearer {token del usuario actual desde cookie}
             // - X-Service-Token: {token firmado que identifica a api-admisiones}
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Llamando a API interna para obtener ofertas disponibles"
-            );
+                );
+            }
 
             var resultadoApi = await _inscripcionesyPagosApiClient
                 .ObtenerOfertasParaInscripcionAdmisionesAsync(
@@ -152,10 +167,13 @@ namespace AppLogic.Services
             // ═══════════════════════════════════════════════════════════════
             var ofertas = resultadoApi.Data!;
 
-            _logger.LogInformation(
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
                 "Ofertas obtenidas exitosamente. Total: {TotalOfertas} ofertas disponibles",
                 ofertas.TotalCount
-            );
+                );
+            }
 
             // Aquí podrías enriquecer las ofertas con datos adicionales de tu BD local
             // Por ejemplo: agregar información de cupos, horarios específicos, etc.

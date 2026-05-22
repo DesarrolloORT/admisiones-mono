@@ -13,7 +13,7 @@ namespace AppLogic.ApiClients
     /// <summary>
     /// DTO para turno (usado en confirmar preinscripción).
     /// </summary>
-    public class DTOTurno
+    public class DtoTurno
     {
         public long IdTurno { get; set; }
         public string? NombreTurno { get; set; }
@@ -25,7 +25,7 @@ namespace AppLogic.ApiClients
     /// </summary>
     public class ConfirmarPreInscripcionRequest
     {
-        public DTOTurno Turno { get; set; } = new();
+        public DtoTurno Turno { get; set; } = new();
         public string TipoInscripcion { get; set; } = string.Empty;
         public long IdProducto { get; set; }
         public long IdProceso { get; set; }
@@ -45,7 +45,7 @@ namespace AppLogic.ApiClients
     /// <summary>
     /// DTO para oferta de inscripción (usado en los GET de ofertas).
     /// </summary>
-    public class OfertaInscripcionDTO
+    public class OfertaInscripcionDto
     {
         public long IdOferta { get; set; }
         public long IdProducto { get; set; }
@@ -65,7 +65,7 @@ namespace AppLogic.ApiClients
     /// </summary>
     public class OfertasInscripcionResponse
     {
-        public List<OfertaInscripcionDTO> Ofertas { get; set; } = new();
+        public List<OfertaInscripcionDto> Ofertas { get; set; } = new();
         public int TotalCount { get; set; }
     }
 
@@ -157,7 +157,7 @@ namespace AppLogic.ApiClients
     /// DTO de banco.
     /// Corresponde a: GET /api/Pagos/Bancos
     /// </summary>
-    public class BancoDTO
+    public class BancoDto
     {
         public long IdBanco { get; set; }
         public string? NombreBanco { get; set; }
@@ -170,7 +170,7 @@ namespace AppLogic.ApiClients
     /// </summary>
     public class BancosResponse
     {
-        public List<BancoDTO> Bancos { get; set; } = new();
+        public List<BancoDto> Bancos { get; set; } = new();
         public int TotalCount { get; set; }
     }
 
@@ -204,12 +204,15 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation(
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
                     "Confirmando preinscripción - Producto: {IdProducto}, Proceso: {IdProceso}, Oferta: {IdOferta}",
                     request.IdProducto,
                     request.IdProceso,
                     request.IdOfertaSeleccionada
-                );
+                    );
+                }
 
                 var response = await _httpClient.PostAsJsonAsync("ORTSecure/Inscripciones/ConfirmarPreInscripcion", request);
 
@@ -252,13 +255,15 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation(
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
                     "Obteniendo ofertas para inscripción - Producto: {IdProducto}, Comienzo: {IdComienzo}, Turno: {IdTurno}",
                     idProducto,
                     idComienzo,
                     idTurno
-                );
-
+                    );
+                }
                 var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}&idTurno={idTurno}";
                 var response = await _httpClient.GetAsync(url);
 
@@ -304,13 +309,15 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation(
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
                     "Obteniendo ofertas para inscripción con proceso - Producto: {IdProducto}, Proceso: {IdProceso}, Turno: {IdTurno}",
                     idProducto,
                     idProceso,
                     idTurno
-                );
-
+                    );
+                }
                 var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}&idTurno={idTurno}";
                 var response = await _httpClient.GetAsync(url);
 
@@ -355,8 +362,10 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation("Consultando cuenta corriente con estado: {Estado}", estado);
-
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Consultando cuenta corriente con estado: {Estado}", estado);
+                }
                 var url = $"ORTSecure/Pagos/CtaCte?estado={Uri.EscapeDataString(estado)}";
                 var response = await _httpClient.GetAsync(url);
 
@@ -390,8 +399,10 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation("Consultando cursos pendientes de pago");
-
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Consultando cursos pendientes de pago");
+                }
                 var response = await _httpClient.GetAsync("ORTSecure/Pagos/Carritos");
 
                 if (response.IsSuccessStatusCode)
@@ -430,12 +441,14 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation(
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
                     "Procesando pago de carrito {IdCarrito} con tipo de pago: {TipoPago}",
                     idCarrito,
                     tipoPago
-                );
-
+                    );
+                }
                 var url = $"/ORTSecure/Pagos/Carritos/{idCarrito}/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
 
@@ -473,11 +486,14 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation(
-                    "Creando factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
-                    carritos.Count,
-                    tipoPago
-                );
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "Creando factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
+                        carritos.Count,
+                        tipoPago
+                    );
+                }
 
                 var url = $"ORTSecure/Pagos/Carritos/UltCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
@@ -512,7 +528,10 @@ namespace AppLogic.ApiClients
         {
             try
             {
-                _logger.LogInformation("Consultando lista de bancos disponibles");
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Consultando lista de bancos disponibles");
+                }
 
                 var response = await _httpClient.GetAsync("ORTSecure/Pagos/Bancos");
 

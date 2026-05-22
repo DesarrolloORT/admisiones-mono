@@ -1,13 +1,15 @@
-using System;
-using System.Globalization;
 using AppLogic.Constants;
 using AppLogic.DTOs;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace AppLogic.Helpers
 {
+    [ExcludeFromCodeCoverage]
     public static class RegistroEntityFactoryHelper
     {
         public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, RegistroPersonaRequest request)

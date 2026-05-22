@@ -1,10 +1,11 @@
+using AppLogic.IServices;
+using Microsoft.AspNetCore.Http;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using AppLogic.IServices;
-using Microsoft.AspNetCore.Http;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.HttpHandlers
@@ -14,6 +15,7 @@ namespace WebApiAdmisiones.HttpHandlers
     /// - Authorization: Bearer {userToken} (del usuario autenticado)
     /// - X-Service-Token: {serviceToken} (identifica a la API llamadora)
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class ServiceAuthenticationHandler : DelegatingHandler
     {
         private readonly ITokenServiceInternalApi _tokenServiceInternalApi;

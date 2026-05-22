@@ -108,7 +108,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        /// </summary>
         /// Confirma el registro de una persona ya existente.
         /// </summary>
         /// <remarks>

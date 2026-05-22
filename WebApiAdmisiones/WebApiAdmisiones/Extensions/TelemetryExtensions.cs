@@ -2,12 +2,14 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WebApiAdmisiones.Extensions
 {
     /// <summary>
     /// Métodos de extensión para configurar telemetría (OpenTelemetry y Serilog).
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public static class TelemetryExtensions
     {
         /// <summary>

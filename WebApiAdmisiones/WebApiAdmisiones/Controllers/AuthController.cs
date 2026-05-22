@@ -48,6 +48,16 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.TipoDocumento) || string.IsNullOrWhiteSpace(request.Documento))
+            {
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "LOGIN_LDAP_01",
+                    nameof(Login),
+                    "El tipo de documento y el documento son requeridos.",
+                    400,
+                    default!));
+            }
+
             var result = await loginService.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password);
 
             if (result.Success && result.Data != null)

@@ -1,9 +1,10 @@
-using System;
 using AppLogic.ApiClients;
 using AppLogic.IServices;
 using AppLogic.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using WebApiAdmisiones.HttpHandlers;
 
 namespace WebApiAdmisiones.Extensions
@@ -11,6 +12,7 @@ namespace WebApiAdmisiones.Extensions
     /// <summary>
     /// Extensiones para configurar HttpClients con autenticación de servicio.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public static class HttpClientExtensions
     {
         /// <summary>
