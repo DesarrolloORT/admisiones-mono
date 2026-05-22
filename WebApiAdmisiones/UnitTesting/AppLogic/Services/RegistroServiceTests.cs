@@ -224,6 +224,23 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task VerificarIdentidad_WithNonCiDocument_ReturnsFailure()
+        {
+            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            {
+                TipoDocumento = "PS",
+                Documento = "A123",
+                PrimerApellido = "Perez",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_DOC_03", result.ErrorCode);
+            _uowMock.Verify(u => u.Personas, Times.Never);
+        }
+
+        [Fact]
         public async Task ConfirmarNuevaPersona_InvalidDocument_ReturnsFailure()
         {
             var result = await _service.ConfirmarNuevaPersonaAsync(new RegistroPersonaRequest
@@ -234,6 +251,20 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("REG_DOC_02", result.ErrorCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarSolicitudAlta_WithCiDocument_ReturnsFailure()
+        {
+            var result = await _service.ConfirmarSolicitudAltaAsync(new RegistroPersonaRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_DOC_03", result.ErrorCode);
+            _uowMock.Verify(u => u.Productos, Times.Never);
         }
 
         [Fact]

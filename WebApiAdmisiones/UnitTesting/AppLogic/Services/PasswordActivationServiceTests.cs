@@ -48,6 +48,38 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task EnviarMailLinkPasswordAsync_WithNullPersona_ReturnsBadRequest()
+        {
+            var service = new PasswordActivationService(
+                Mock.Of<IUnitOfWorkFactory>(),
+                CrearConfiguracion(),
+                new TestableEnvioMail());
+
+            var result = await service.EnviarMailLinkPasswordAsync(null!, "Test");
+
+            Assert.False(result.Success);
+            Assert.Equal("ACT_PAS_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task EnviarMailLinkPasswordAsync_WithPersonaWithoutEmail_ReturnsBadRequest()
+        {
+            var persona = CrearPersona();
+            persona.Email = " ";
+            var service = new PasswordActivationService(
+                Mock.Of<IUnitOfWorkFactory>(),
+                CrearConfiguracion(),
+                new TestableEnvioMail());
+
+            var result = await service.EnviarMailLinkPasswordAsync(persona, "Test");
+
+            Assert.False(result.Success);
+            Assert.Equal("ACT_PAS_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
         public async Task EnviarMailRecuperacionPasswordAsync_StoresHashAndSendsRecoveryMail()
         {
             var persona = CrearPersona();
@@ -157,6 +189,63 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ActivarLinkPasswordAsync(token + "x");
 
             Assert.False(result.Success);
+            Assert.Equal(401, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ActivarLinkPasswordAsync_WithEmptyToken_ReturnsBadRequest()
+        {
+            var service = new PasswordActivationService(
+                Mock.Of<IUnitOfWorkFactory>(),
+                CrearConfiguracion(),
+                new TestableEnvioMail());
+
+            var result = await service.ActivarLinkPasswordAsync(" ");
+
+            Assert.False(result.Success);
+            Assert.Equal("ACT_LINK_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ValidarSessionToken_WithSessionToken_ReturnsCodigoPersona()
+        {
+            var persona = CrearPersona();
+            var personaRepoMock = new Mock<IPersonaRepository>();
+            var uowMock = new Mock<IUnitOfWork>();
+            var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
+            var mail = new TestableEnvioMail();
+
+            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
+            uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+
+            var service = new PasswordActivationService(
+                uowFactoryMock.Object,
+                CrearConfiguracion(),
+                mail);
+
+            await service.EnviarMailLinkPasswordAsync(persona, "Test");
+            var activation = await service.ActivarLinkPasswordAsync(ExtraerToken(mail.Body));
+
+            var result = service.ValidarSessionToken(activation.Data!.SessionToken!);
+
+            Assert.True(result.Success);
+            Assert.Equal(persona.CodigoPersona, result.Data);
+        }
+
+        [Fact]
+        public void ValidarSessionToken_WithEmptyToken_ReturnsUnauthorized()
+        {
+            var service = new PasswordActivationService(
+                Mock.Of<IUnitOfWorkFactory>(),
+                CrearConfiguracion(),
+                new TestableEnvioMail());
+
+            var result = service.ValidarSessionToken(" ");
+
+            Assert.False(result.Success);
+            Assert.Equal("ACT_SES_01", result.ErrorCode);
             Assert.Equal(401, result.HttpCode);
         }
 

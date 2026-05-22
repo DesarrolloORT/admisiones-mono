@@ -210,6 +210,37 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_WhenLdapRejectsCredentials_ReturnsLdapFailure()
+        {
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                Documento = "1234567-2",
+                TipoDocumento = "CI"
+            };
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            _ldapMock
+                .Setup(x => x.AutenticarUsuarioLDAPAsync(12345, "wrongpass"))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "LDAP_401",
+                    nameof(ILdap.AutenticarUsuarioLDAPAsync),
+                    "Credenciales inválidas.",
+                    401,
+                    false));
+
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "wrongpass");
+
+            Assert.False(result.Success);
+            Assert.Equal("LDAP_401", result.ErrorCode);
+            Assert.Equal(401, result.HttpCode);
+            _tokenServiceMock.Verify(t => t.GenerateAccessToken(It.IsAny<Persona>()), Times.Never);
+        }
+
+        [Fact]
         public async Task AutenticarUsuarioLDAPAsync_SuccessfulAuthentication_ReturnsOkWithTokens()
         {
             // Arrange
@@ -501,6 +532,28 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("hash", persona.HashTokenPassword);
             uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordAsync_WhenPersonaDoesNotExist_ReturnsNotFound()
+        {
+            var codigoPersona = 12345L;
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns((Persona)null!);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+
+            var result = await _service.CompletarPasswordAsync(
+                codigoPersona,
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.False(result.Success);
+            Assert.Equal("INI_PAS_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            _ldapMock.Verify(
+                l => l.ForzarCambiarPasswordAsync(It.IsAny<string>(), It.IsAny<string>()),
+                Times.Never);
         }
 
         [Fact]
