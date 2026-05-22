@@ -50,13 +50,13 @@ namespace AppLogic.DTOs
         [MinLength(2)]
         public string PrimerApellido { get; set; } = string.Empty;
 
-        public string SegundoApellido { get; set; } = string.Empty;
+        public string? SegundoApellido { get; set; }
 
         [Required]
         [MinLength(2)]
         public string PrimerNombre { get; set; } = string.Empty;
 
-        public string SegundoNombre { get; set; } = string.Empty;
+        public string? SegundoNombre { get; set; }
 
         [Range(typeof(DateTime), "1900-01-02", "9999-12-31")]
         public DateTime FechaNacimiento { get; set; }
@@ -70,8 +70,6 @@ namespace AppLogic.DTOs
 
         [Required]
         public string Telefono1 { get; set; } = string.Empty;
-
-        public string Telefono2 { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
