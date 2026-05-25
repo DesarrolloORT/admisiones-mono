@@ -3,13 +3,11 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
-
 import { Catalogs } from './catalogs';
 
 describe('Catalogs', () => {
   let service: Catalogs;
   let endpointMock: {
-    getDocumentTypes: ReturnType<typeof vi.fn>;
     getCountries: ReturnType<typeof vi.fn>;
     getCountryLocations: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
@@ -17,7 +15,6 @@ describe('Catalogs', () => {
 
   beforeEach(() => {
     endpointMock = {
-      getDocumentTypes: vi.fn(),
       getCountries: vi.fn(),
       getCountryLocations: vi.fn(),
       clearCache: vi.fn(),
@@ -34,15 +31,14 @@ describe('Catalogs', () => {
     vi.restoreAllMocks();
   });
 
-  it('should delegate getDocumentTypes to the endpoint', () => {
-    const result = [{ id: 1, label: 'Cédula', code: 'CI' }];
-    endpointMock.getDocumentTypes.mockReturnValue(of(result));
-
+  it('should return static document types', () => {
     service.getDocumentTypes().subscribe(data => {
-      expect(data).toEqual(result);
+      expect(data).toEqual([
+        { id: 1, label: 'Cédula', code: 'CI' },
+        { id: 2, label: 'Pasaporte', code: 'PS' },
+        { id: 3, label: 'Documento extranjero', code: 'DE' },
+      ]);
     });
-
-    expect(endpointMock.getDocumentTypes).toHaveBeenCalledOnce();
   });
 
   it('should delegate getCountries to the endpoint', () => {
@@ -62,4 +58,3 @@ describe('Catalogs', () => {
     expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });
-

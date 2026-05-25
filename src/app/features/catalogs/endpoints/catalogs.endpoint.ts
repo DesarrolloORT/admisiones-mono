@@ -1,8 +1,7 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getCatalogosCarrerasEndpoint,
   getCatalogosComienzosEndpoint,
@@ -12,7 +11,6 @@ import {
   PaisesEstadosCiudadesItemEstadoCiudad,
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
 
-import { CatalogRequestError, CatalogType } from '../models/catalog-error';
 import {
   Career,
   Comienzo,
@@ -33,46 +31,42 @@ export class CatalogsEndpoint {
 
   public getCountries(): Observable<Country[]> {
     return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
-      map(result =>
-        this.fromData(result, item => ({
+      map(data =>
+        this.fromData(data, item => ({
           id: item.codigoPais ?? 0,
           label: item.nombre ?? '',
         }))
-      ),
-      catchError(err => this.toRequestError('country', err))
+      )
     );
   }
 
   public getCountryLocations(): Observable<LocationCountry[]> {
-    return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
-      map(result => this.fromData(result, item => this.toLocationCountry(item))),
-      catchError(err => this.toRequestError('country', err))
-    );
+    return this.api
+      .request(getCatalogosPaisesEstadosCiudadesEndpoint)
+      .pipe(map(data => this.fromData(data, item => this.toLocationCountry(item))));
   }
 
   public getCareers(): Observable<Career[]> {
     return this.api.request(getCatalogosCarrerasEndpoint).pipe(
-      map(result =>
-        this.fromData(result, item => ({
+      map(data =>
+        this.fromData(data, item => ({
           idProducto: item.idProducto ?? 0,
           idNivelProducto: item.idNivelProducto ?? 0,
           nombreProducto: item.nombreProducto ?? '',
           nombreNivelProducto: item.nombreNivelProducto ?? '',
         }))
-      ),
-      catchError(err => this.toRequestError('career', err))
+      )
     );
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
     return this.api.request(getCatalogosComienzosEndpoint, { queryParams: { idCarrera } }).pipe(
-      map(result =>
-        this.fromData(result, item => ({
+      map(data =>
+        this.fromData(data, item => ({
           idProceso: item.idProceso ?? 0,
           nombreProceso: item.nombreProceso ?? '',
         }))
-      ),
-      catchError(err => this.toRequestError('comienzo', err))
+      )
     );
   }
 
@@ -107,36 +101,13 @@ export class CatalogsEndpoint {
   }
 
   private fromData<TItem, TResult>(
-    result: { data?: TItem | TItem[] | null },
+    data: TItem | TItem[] | null | undefined,
     mapper: (item: TItem) => TResult
   ): TResult[] {
-    const data = result.data;
-
     if (!data) {
       return [];
     }
 
     return (Array.isArray(data) ? data : [data]).map(mapper);
   }
-
-  private toRequestError(catalog: CatalogType, error: unknown): Observable<never> {
-    const status = error instanceof HttpErrorResponse ? error.status : null;
-    return throwError(() => new CatalogRequestError(catalog, status, this.getErrorMessage(error)));
-  }
-
-  private getErrorMessage(error: unknown): string | null {
-    if (error instanceof HttpErrorResponse) {
-      const payload = error.error;
-
-      if (payload && typeof payload === 'object' && 'message' in payload) {
-        const message = payload.message;
-        return typeof message === 'string' ? message : null;
-      }
-
-      return typeof payload === 'string' ? payload : error.message;
-    }
-
-    return error instanceof Error ? error.message : null;
-  }
 }
-
