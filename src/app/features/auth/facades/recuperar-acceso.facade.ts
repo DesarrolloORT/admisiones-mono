@@ -4,38 +4,28 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
-import { Catalogs } from '../../catalogs/services/catalogs';
-import { createLoginForm, syncDocumentNumberValidators } from '../forms/auth-forms';
-import { cleanDocumentNumber, isCedulaDocumentType } from '../models/document-number';
-import { AuthSessionService } from '../services/auth-session';
+import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
+import { createRecoverAccessForm, syncDocumentNumberValidators } from '../forms/auth-forms';
+import { formatDocumentForBackend, isCedulaDocumentType } from '../models/document-number';
+import { PasswordActivationService } from '../services/password-activation';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class LoginFacade {
-  private readonly authSession = inject(AuthSessionService);
-  private readonly catalogs = inject(Catalogs);
+@Injectable()
+export class RecoverAccessFacade {
+  private readonly passwordService = inject(PasswordActivationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly snackbar = inject(SnackbarHandler);
 
-  public readonly documentTypes$ = this.catalogs.getDocumentTypes();
-  public readonly form = createLoginForm();
+  public readonly form = createRecoverAccessForm();
   public readonly isSubmitting = signal(false);
-  public readonly showPassword = signal(false);
   public readonly error = signal<string | null>(null);
   public readonly successMessage = signal<string | null>(null);
-  public readonly passwordInputType = computed(() => (this.showPassword() ? 'text' : 'password'));
-  public readonly passwordIcon = computed(() =>
-    this.showPassword() ? 'visibility_off' : 'visibility'
-  );
 
   private readonly _documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
 
   public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
-
-  public readonly prefilled = signal(false);
 
   constructor() {
     effect(() => {
@@ -56,17 +46,11 @@ export class LoginFacade {
     if (doc) {
       this.form.controls.documentNumber.setValue(doc);
     }
-
-    if (tipoDoc && doc) {
-      this.prefilled.set(true);
-    }
-  }
-
-  public togglePasswordVisibility(): void {
-    this.showPassword.update(value => !value);
   }
 
   public submit(): void {
+    syncDocumentNumberValidators(this.form.controls.documentNumber, this._documentTypeValue());
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -76,28 +60,35 @@ export class LoginFacade {
     this.successMessage.set(null);
     this.isSubmitting.set(true);
 
-    const { documentType, documentNumber, password } = this.form.getRawValue();
+    const { documentType, documentNumber, primerApellido } = this.form.getRawValue();
 
-    this.authSession
-      .login({
-        documentType,
-        documentNumber: cleanDocumentNumber(documentType, documentNumber),
-        password,
+    this.passwordService
+      .recoverPassword({
+        tipoDocumento: documentType,
+        documento: formatDocumentForBackend(documentType, documentNumber),
+        primerApellido,
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.form.controls.password.reset('');
-          void this.router.navigateByUrl('/inicio');
+          const message =
+            'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
+          this.successMessage.set(message);
+          this.snackbar.success(message);
         },
         error: error => {
-          this.setError(this.getApiErrorMessage(error, 'No se pudo iniciar sesión.'));
+          const message = this.getApiErrorMessage(
+            error,
+            'No se pudo procesar la solicitud. Intentá nuevamente.'
+          );
+          this.error.set(message);
+          this.snackbar.error(message);
         },
       });
   }
 
-  private setError(message: string): void {
-    this.error.set(message);
+  public goToLogin(): void {
+    void this.router.navigate(['/login']);
   }
 
   private getApiErrorMessage(error: unknown, fallback: string): string {

@@ -8,6 +8,7 @@ import {
   postAuthCompletarPasswordEndpoint,
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
+  postAuthRecuperarContrasenaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
   postRegistroAnalizarAdjuntoEndpoint,
@@ -116,6 +117,13 @@ export interface ActivatePasswordLinkPayload {
 /** Input for completing the password activation flow. */
 export interface CompletePasswordPayload {
   passwordNueva: string;
+}
+
+/** Input for initiating password recovery. */
+export interface RecoverPasswordPayload {
+  tipoDocumento: string;
+  documento: string;
+  primerApellido: string;
 }
 
 /**
@@ -288,6 +296,21 @@ export class AuthEndpoint {
         withCredentials: true,
       })
       .pipe(map(() => ({ success: true })));
+  }
+
+  /**
+   * Initiate password recovery. Sends an email with a secure link if data matches.
+   *
+   * Behind the scenes: POST /Auth/RecuperarContraseña using generated endpoint.
+   * Response is intentionally generic to avoid revealing whether the person exists.
+   */
+  public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
+    return this.api
+      .request(postAuthRecuperarContrasenaEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(map(() => undefined));
   }
 
   /**

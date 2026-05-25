@@ -78,7 +78,7 @@ describe('LoginFacade', () => {
       password: 'secret',
     });
     expect(facade.form.controls.password.value).toBe('');
-    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/home');
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/inicio');
   });
 
   it('should mark the form as touched when invalid', () => {
