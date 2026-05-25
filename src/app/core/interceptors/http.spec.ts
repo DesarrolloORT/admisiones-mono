@@ -13,7 +13,6 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
 import { firstValueFrom, of, throwError } from 'rxjs';
 
-import { ErrorHandling } from '../services/error-handling';
 import { CACHING_ENABLED, httpInterceptor } from './http';
 
 type CacheServiceMock = {
@@ -24,14 +23,10 @@ type LoaderServiceMock = {
   show: ReturnType<typeof vi.fn>;
   hide: ReturnType<typeof vi.fn>;
 };
-type ErrorHandlingMock = {
-  handleErrorInUI: ReturnType<typeof vi.fn>;
-};
 
 describe('httpInterceptor', () => {
   let mockCacheService: CacheServiceMock;
   let mockLoader: LoaderServiceMock;
-  let mockErrorHandler: ErrorHandlingMock;
   let injector: Injector;
 
   beforeEach(() => {
@@ -43,9 +38,6 @@ describe('httpInterceptor', () => {
       show: vi.fn(),
       hide: vi.fn(),
     };
-    mockErrorHandler = {
-      handleErrorInUI: vi.fn(),
-    };
 
     // Stub out CacheUtils
     vi.spyOn(CacheUtils, 'createCacheKey').mockReturnValue('cache-key');
@@ -55,7 +47,6 @@ describe('httpInterceptor', () => {
       providers: [
         { provide: CacheService, useValue: mockCacheService as unknown as CacheService },
         { provide: LoaderService, useValue: mockLoader as unknown as LoaderService },
-        { provide: ErrorHandling, useValue: mockErrorHandler as unknown as ErrorHandling },
       ],
     });
   });
@@ -148,7 +139,7 @@ describe('httpInterceptor', () => {
     expect(mockCacheService.set).toHaveBeenCalledWith('cache-key', resp, 300000);
   });
 
-  it('on error calls handleErrorInUI, hides loader, and rethrows', async () => {
+  it('on error hides loader and rethrows', async () => {
     mockCacheService.get.mockReturnValue(undefined);
     const httpErr = new HttpErrorResponse({ status: 500, statusText: 'Server Error' });
     const next = vi.fn().mockReturnValue(throwError(() => httpErr));
@@ -159,7 +150,5 @@ describe('httpInterceptor', () => {
 
     await expect(firstValueFrom(invoke(req, next))).rejects.toBe(httpErr);
     expect(mockLoader.hide).toHaveBeenCalled();
-    expect(mockErrorHandler.handleErrorInUI).toHaveBeenCalledWith(httpErr);
   });
 });
-

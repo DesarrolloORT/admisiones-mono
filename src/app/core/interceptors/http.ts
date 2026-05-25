@@ -1,6 +1,5 @@
 import {
   HttpContextToken,
-  HttpErrorResponse,
   HttpEvent,
   HttpHeaders,
   HttpInterceptorFn,
@@ -9,11 +8,9 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
-import { asyncScheduler, of, throwError } from 'rxjs';
-import { catchError, finalize, observeOn, tap } from 'rxjs/operators';
+import { asyncScheduler, of } from 'rxjs';
+import { finalize, observeOn, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-
-import { ErrorHandling } from '../services/error-handling';
 
 export const CACHING_ENABLED = new HttpContextToken<boolean>(() => environment.CACHING_ENABLED);
 const IGNORED_LOADER_URLS: string[] = [
@@ -34,7 +31,6 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const services = {
     cacheHandler: inject(CacheService),
     loader: inject(LoaderService),
-    errorHandler: inject(ErrorHandling),
   };
 
   const handleLoader = (url: string): void => {
@@ -93,11 +89,6 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(request).pipe(
     finalize(() => services.loader.hide()),
-    tap(handleResponse),
-    catchError((error: HttpErrorResponse) => {
-      services.errorHandler.handleErrorInUI(error);
-      return throwError(() => error);
-    })
+    tap(handleResponse)
   );
 };
-

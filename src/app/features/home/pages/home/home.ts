@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
-import { Auth } from '../../../auth/services/auth';
+import { AuthSessionService } from '../../../auth/services/auth-session';
 import { HomeActionCard, HomeDashboard } from '../../models/home-dashboard';
 
 const HOME_DESCRIPTION = 'Aquí podés gestionar tu inscripción y postulación a becas.';
@@ -33,12 +33,12 @@ const ACTION_CARDS: HomeActionCard[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
-  private readonly auth = inject(Auth);
+  private readonly authSession = inject(AuthSessionService);
 
   protected readonly profileMenuOpen = signal(false);
 
   protected readonly dashboard = computed<HomeDashboard>(() => {
-    const session = this.auth.session();
+    const session = this.authSession.session();
 
     return {
       userName: session?.primerNombre?.trim() || '',
@@ -62,8 +62,7 @@ export class Home {
   }
 
   protected logout(): void {
-    this.auth.logout();
+    this.authSession.logout();
     this.closeProfileMenu();
   }
 }
-

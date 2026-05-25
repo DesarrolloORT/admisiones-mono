@@ -1,24 +1,22 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../catalogs/services/catalogs';
-import {
-  CEDULA_DOCUMENT_NUMBER_VALIDATORS,
-  createLoginForm,
-  NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS,
-} from '../forms/auth-forms';
-import { AuthRequestError } from '../models/auth-error';
-import { Auth } from '../services/auth';
+import { createLoginForm, syncDocumentNumberValidators } from '../forms/auth-forms';
+import { cleanDocumentNumber, isCedulaDocumentType } from '../models/document-number';
+import { AuthSessionService } from '../services/auth-session';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoginFacade {
-  private readonly auth = inject(Auth);
+  private readonly authSession = inject(AuthSessionService);
   private readonly catalogs = inject(Catalogs);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -37,17 +35,33 @@ export class LoginFacade {
     initialValue: this.form.controls.documentType.value,
   });
 
-  public readonly isCedulaInput = computed(() => this._documentTypeValue() === 'CI');
+  public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
+
+  public readonly prefilled = signal(false);
 
   constructor() {
     effect(() => {
-      const validators = this.isCedulaInput()
-        ? CEDULA_DOCUMENT_NUMBER_VALIDATORS
-        : NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS;
-
-      this.form.controls.documentNumber.setValidators(validators);
-      this.form.controls.documentNumber.updateValueAndValidity({ emitEvent: false });
+      syncDocumentNumberValidators(this.form.controls.documentNumber, this._documentTypeValue());
     });
+
+    this.prefillFromQueryParams();
+  }
+
+  private prefillFromQueryParams(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const tipoDoc = params.get('tipoDoc');
+    const doc = params.get('doc');
+
+    if (tipoDoc) {
+      this.form.controls.documentType.setValue(tipoDoc);
+    }
+    if (doc) {
+      this.form.controls.documentNumber.setValue(doc);
+    }
+
+    if (tipoDoc && doc) {
+      this.prefilled.set(true);
+    }
   }
 
   public togglePasswordVisibility(): void {
@@ -64,14 +78,14 @@ export class LoginFacade {
     this.successMessage.set(null);
     this.isSubmitting.set(true);
 
-    const { documentType, password } = this.form.getRawValue();
-    let { documentNumber } = this.form.getRawValue();
-    if (documentType === 'CI') {
-      documentNumber = documentNumber.replaceAll('.', '');
-    }
+    const { documentType, documentNumber, password } = this.form.getRawValue();
 
-    this.auth
-      .login({ documentType, documentNumber, password })
+    this.authSession
+      .login({
+        documentType,
+        documentNumber: cleanDocumentNumber(documentType, documentNumber),
+        password,
+      })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
@@ -83,21 +97,16 @@ export class LoginFacade {
           void this.router.navigateByUrl('/home');
         },
         error: error => {
-          this.showError(this.getErrorMessage(error));
+          this.setError(this.getApiErrorMessage(error, 'No se pudo iniciar sesión.'));
         },
       });
   }
 
-  private showError(message: string): void {
+  private setError(message: string): void {
     this.error.set(message);
-    this.snackbar.error(message);
   }
 
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof AuthRequestError) {
-      return `No se pudo iniciar sesión. Error ${error.status || 'de red'}.`;
-    }
-
-    return 'No se pudo iniciar sesión.';
+  private getApiErrorMessage(error: unknown, fallback: string): string {
+    return isNormalizedApiError(error) ? error.message : fallback;
   }
 }

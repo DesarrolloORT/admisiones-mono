@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { AuthRequestError } from '../models/auth-error';
-import { Auth } from '../services/auth';
+import { AuthSessionService } from '../services/auth-session';
 import { LoginFacade } from './login.facade';
 
 describe('LoginFacade', () => {
@@ -35,12 +35,24 @@ describe('LoginFacade', () => {
     TestBed.configureTestingModule({
       providers: [
         LoginFacade,
-        { provide: Auth, useValue: authMock },
+        { provide: AuthSessionService, useValue: authMock },
         {
           provide: Catalogs,
           useValue: { getDocumentTypes: vi.fn().mockReturnValue(of([])) },
         },
         { provide: Router, useValue: routerMock },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: { get: () => null },
+            },
+          },
+        },
+        {
+          provide: SnackbarHandler,
+          useValue: { success: vi.fn(), error: vi.fn(), show: vi.fn() },
+        },
       ],
     });
 
@@ -54,7 +66,7 @@ describe('LoginFacade', () => {
   it('should submit valid credentials, clear password and navigate home', () => {
     facade.form.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
       password: 'secret',
     });
 
@@ -62,7 +74,7 @@ describe('LoginFacade', () => {
 
     expect(authMock.login).toHaveBeenCalledWith({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
       password: 'secret',
     });
     expect(facade.form.controls.password.value).toBe('');
@@ -77,15 +89,24 @@ describe('LoginFacade', () => {
   });
 
   it('should expose auth errors in UI state', () => {
-    authMock.login.mockReturnValue(throwError(() => new AuthRequestError('login', 500)));
+    authMock.login.mockReturnValue(
+      throwError(() => ({
+        status: 401,
+        message: 'Credenciales inválidas.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('boom'),
+      }))
+    );
     facade.form.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
       password: 'secret',
     });
 
     facade.submit();
 
-    expect(facade.error()).toBe('No se pudo iniciar sesión. Error 500.');
+    expect(facade.error()).toBe('Credenciales inválidas.');
   });
 });
+

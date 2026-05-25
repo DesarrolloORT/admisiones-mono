@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
-import { Auth } from '../../../auth/services/auth';
+import { AuthSessionService } from '../../../auth/services/auth-session';
 import { Home } from './home';
 
 describe('Home', () => {
@@ -27,7 +27,7 @@ describe('Home', () => {
 
     TestBed.configureTestingModule({
       imports: [Home],
-      providers: [{ provide: Auth, useValue: authMock }],
+      providers: [{ provide: AuthSessionService, useValue: authMock }],
     });
 
     fixture = TestBed.createComponent(Home);
