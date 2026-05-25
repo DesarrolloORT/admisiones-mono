@@ -1,29 +1,26 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   LoginPayload as GeneratedLoginPayload,
+  postAuthActivarLinkPasswordEndpoint,
+  postAuthCompletarPasswordEndpoint,
   postAuthLoginEndpoint,
+  postAuthLogoutEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
-  ConfirmarNuevaPersonaPayload,
-  ConfirmarPersonaExistentePayload,
-  EvaluarDocumentoPayload,
   postRegistroAnalizarAdjuntoEndpoint,
   postRegistroConfirmarNuevaPersonaEndpoint,
   postRegistroConfirmarPersonaExistenteEndpoint,
+  postRegistroConfirmarSolicitudAltaEndpoint,
   postRegistroEvaluarDocumentoEndpoint,
   postRegistroVerificarIdentidadEndpoint,
-  VerificarIdentidadPayload,
 } from 'src/app/shared/api/generated/endpoints/registro.endpoints';
 
-import { AuthRequestError, AuthRequestOperation } from '../models/auth-error';
-import { DocumentRecognitionRequestError } from '../models/document-recognition-error';
 import type {
+  DocumentRecognitionData,
   DocumentRecognitionRequest,
-  DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
 
 // ---------------------------------------------------------------------------
@@ -45,22 +42,45 @@ export interface LoginResult {
   primerNombre: string;
 }
 
-/**
- * Input for user registration.
- * Uses the auto-generated `ConfirmarNuevaPersonaPayload` — if the backend adds
- * or removes fields, `npm run update-api` regenerates this type and TypeScript
- * surfaces the change without manual sync.
- */
-export type RegisterPayload = ConfirmarNuevaPersonaPayload;
+/** Input for user registration. */
+export interface RegisterPayload {
+  tipoDocumento: string;
+  documento: string;
+  primerNombre: string;
+  segundoNombre?: string | null;
+  primerApellido: string;
+  segundoApellido?: string | null;
+  fechaNacimiento?: string;
+  sexo: string;
+  codigoPais?: number;
+  codigoEstado?: number;
+  codigoCiudad?: number;
+  direccion: string;
+  telefono1: string;
+  mail: string;
+  verificacionMail: string;
+  idProducto?: number;
+  idProceso?: number;
+}
 
-/**
- * Input for confirming an existing person with academic interest.
- * Uses the auto-generated `ConfirmarPersonaExistentePayload`.
- */
-export type ConfirmExistingPersonPayload = ConfirmarPersonaExistentePayload;
+/** Input for confirming an existing person with academic interest. */
+export interface ConfirmExistingPersonPayload {
+  tipoDocumento: string;
+  documento: string;
+  idProducto?: number;
+  idProceso?: number;
+}
+
+/** Input for confirming an application request with academic interest. */
+export type ConfirmApplicationRequestPayload = RegisterPayload;
 
 /** Input for identity verification. */
-export type VerifyIdentityPayload = VerificarIdentidadPayload;
+export interface VerifyIdentityPayload {
+  tipoDocumento: string;
+  documento: string;
+  primerApellido: string;
+  mail: string;
+}
 
 /** Stable output of identity verification. */
 export interface VerifyIdentityResult {
@@ -73,7 +93,10 @@ export interface RegisterResult {
 }
 
 /** Input for document evaluation before registration. */
-export type EvaluateDocumentPayload = EvaluarDocumentoPayload;
+export interface EvaluateDocumentPayload {
+  tipoDocumento: string;
+  documento: string;
+}
 
 /** Stable output of document evaluation. */
 export interface EvaluateDocumentResult {
@@ -82,6 +105,17 @@ export interface EvaluateDocumentResult {
   requiereVerificacion: boolean;
   solicitudAltaExistente: boolean;
   usuarioExistente: boolean;
+  message: string | null;
+}
+
+/** Input for validating a password activation link. */
+export interface ActivatePasswordLinkPayload {
+  token: string;
+}
+
+/** Input for completing the password activation flow. */
+export interface CompletePasswordPayload {
+  passwordNueva: string;
 }
 
 /**
@@ -121,9 +155,36 @@ export class AuthEndpoint {
       map(response => ({
         documento: response.persona?.documento ?? '',
         primerNombre: response.persona?.primerNombre ?? '',
-      })),
-      catchError(error => this.toAuthError('login', error))
+      }))
     );
+  }
+
+  /**
+   * Validate an activation/recovery token and create the temporary password cookie.
+   *
+   * Behind the scenes: POST /Auth/ActivarLinkPassword using generated endpoint.
+   */
+  public activatePasswordLink(payload: ActivatePasswordLinkPayload): Observable<void> {
+    return this.api
+      .request(postAuthActivarLinkPasswordEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(map(() => undefined));
+  }
+
+  /**
+   * Complete password activation using the temporary cookie created by the link.
+   *
+   * Behind the scenes: POST /Auth/CompletarPassword using generated endpoint.
+   */
+  public completePassword(payload: CompletePasswordPayload): Observable<void> {
+    return this.api
+      .request(postAuthCompletarPasswordEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(map(() => undefined));
   }
 
   /**
@@ -140,10 +201,24 @@ export class AuthEndpoint {
         body: payload,
         withCredentials: true,
       })
-      .pipe(
-        map(result => ({ success: result.success ?? false })),
-        catchError(error => this.toAuthError('register', error))
-      );
+      .pipe(map(() => ({ success: true })));
+  }
+
+  /**
+   * Confirm a pending application request with academic interest.
+   *
+   * Behind the scenes: POST /Registro/ConfirmarSolicitudAlta using generated endpoint.
+   * Response mapped from `ObjectOperationResult` → `RegisterResult`.
+   */
+  public confirmApplicationRequest(
+    payload: ConfirmApplicationRequestPayload
+  ): Observable<RegisterResult> {
+    return this.api
+      .request(postRegistroConfirmarSolicitudAltaEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(map(() => ({ success: true })));
   }
 
   /**
@@ -154,19 +229,19 @@ export class AuthEndpoint {
    */
   public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
     return this.api
-      .request(postRegistroEvaluarDocumentoEndpoint, {
+      .requestWithMessage(postRegistroEvaluarDocumentoEndpoint, {
         body: payload,
         withCredentials: true,
       })
       .pipe(
-        map(result => ({
-          requiereAltaPersona: result.data?.requiereAltaPersona ?? false,
-          requiereAltaSolicitud: result.data?.requiereAltaSolicitud ?? false,
-          requiereVerificacion: result.data?.requiereVerificacion ?? false,
-          solicitudAltaExistente: result.data?.solicitudAltaExistente ?? false,
-          usuarioExistente: result.data?.usuarioExistente ?? false,
-        })),
-        catchError(error => this.toAuthError('evaluateDocument', error))
+        map(({ data, message }) => ({
+          requiereAltaPersona: data.requiereAltaPersona ?? false,
+          requiereAltaSolicitud: data.requiereAltaSolicitud ?? false,
+          requiereVerificacion: data.requiereVerificacion ?? false,
+          solicitudAltaExistente: data.solicitudAltaExistente ?? false,
+          usuarioExistente: data.usuarioExistente ?? false,
+          message,
+        }))
       );
   }
 
@@ -174,17 +249,15 @@ export class AuthEndpoint {
    * Analyze an uploaded document image via OCR.
    *
    * Behind the scenes: POST /Registro/AnalizarAdjunto using generated endpoint.
-   * Response passed through as `DocumentRecognitionResponse` (already a feature type).
+   * Response mapped from `ReconocimientoDocumentoResponseOperationResult` → `DocumentRecognitionData`.
    */
   public recognizeDocument(
     payload: DocumentRecognitionRequest
-  ): Observable<DocumentRecognitionResponse> {
-    return this.api
-      .request(postRegistroAnalizarAdjuntoEndpoint, {
-        body: payload,
-        withCredentials: true,
-      })
-      .pipe(catchError(error => this.toDocRecognitionError(error)));
+  ): Observable<DocumentRecognitionData> {
+    return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
+      body: payload,
+      withCredentials: true,
+    });
   }
 
   /**
@@ -199,10 +272,7 @@ export class AuthEndpoint {
         body: payload,
         withCredentials: true,
       })
-      .pipe(
-        map(result => ({ success: result.success ?? false })),
-        catchError(error => this.toAuthError('verifyIdentity', error))
-      );
+      .pipe(map(() => ({ success: true })));
   }
 
   /**
@@ -217,24 +287,18 @@ export class AuthEndpoint {
         body: payload,
         withCredentials: true,
       })
-      .pipe(
-        map(result => ({ success: result.success ?? false })),
-        catchError(error => this.toAuthError('register', error))
-      );
+      .pipe(map(() => ({ success: true })));
   }
 
-  private toAuthError(operation: AuthRequestOperation, error: unknown): Observable<never> {
-    const status = this.getHttpStatus(error);
-    return throwError(() => new AuthRequestError(operation, status));
-  }
-
-  private toDocRecognitionError(error: unknown): Observable<never> {
-    const status = this.getHttpStatus(error);
-    return throwError(() => new DocumentRecognitionRequestError(status));
-  }
-
-  private getHttpStatus(error: unknown): number | null {
-    return error instanceof HttpErrorResponse ? error.status : null;
+  /**
+   * Close the current session on the backend, clearing HttpOnly cookies.
+   *
+   * Behind the scenes: POST /Auth/Logout using generated endpoint.
+   */
+  public logout(): Observable<void> {
+    return this.api
+      .request(postAuthLogoutEndpoint, { withCredentials: true })
+      .pipe(map(() => undefined));
   }
 }
 
