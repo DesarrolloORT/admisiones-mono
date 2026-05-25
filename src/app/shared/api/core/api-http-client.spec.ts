@@ -1,10 +1,15 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import {
+  operationResultInterceptor,
+  ortApiErrorInterceptor,
+  provideOrtApiErrorHandling,
+} from '@desarrolloort/ngx-utils';
 import { environment } from 'src/environments/environment';
 
 import { defineEndpoint } from './api-endpoint';
-import { ApiHttpClient } from './api-http-client.service';
+import { ApiHttpClient } from './api-http-client';
 
 describe('ApiHttpClient', () => {
   let api: ApiHttpClient;
@@ -12,7 +17,11 @@ describe('ApiHttpClient', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClientTesting(),
+        ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
+      ],
     });
 
     api = TestBed.inject(ApiHttpClient);
@@ -98,7 +107,7 @@ describe('ApiHttpClient', () => {
     api.list(endpoint).subscribe(data => responses.push(data));
 
     const request = httpController.expectOne(expectedUrl);
-    request.flush({ data: ['Uruguay'] });
+    request.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
 
     api.list(endpoint).subscribe(data => responses.push(data));
 
@@ -151,13 +160,13 @@ describe('ApiHttpClient', () => {
     api.list(endpoint).subscribe(data => responses.push(data));
 
     const firstRequest = httpController.expectOne(expectedUrl);
-    firstRequest.flush({ data: ['Uruguay'] });
+    firstRequest.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
 
     api.clearCache();
     api.list(endpoint).subscribe(data => responses.push(data));
 
     const secondRequest = httpController.expectOne(expectedUrl);
-    secondRequest.flush({ data: ['Argentina'] });
+    secondRequest.flush({ success: true, httpCode: 200, data: ['Argentina'] });
 
     expect(responses).toEqual([['Uruguay'], ['Argentina']]);
   });
@@ -179,7 +188,42 @@ describe('ApiHttpClient', () => {
     });
 
     const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
-    request.flush({ data: { nombre: 'Ana' }, message: null });
+    request.flush({ success: true, httpCode: 200, data: { nombre: 'Ana' }, message: null });
+  });
+
+  it('should treat unsuccessful operation result responses as errors', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: { data: null; errorCode?: string | null; message?: string | null };
+    }>({
+      operationId: 'CrearPersona',
+      method: 'POST',
+      path: '/persona',
+    });
+
+    api.request(endpoint).subscribe({
+      error: error => {
+        expect(error).toEqual(
+          expect.objectContaining({
+            status: 409,
+            errorCode: 'USER_EXISTS',
+            message: 'Ya existe un usuario.',
+            isOperationResult: true,
+          })
+        );
+      },
+    });
+
+    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+    request.flush({
+      success: false,
+      httpCode: 409,
+      errorCode: 'USER_EXISTS',
+      message: 'Ya existe un usuario.',
+      data: null,
+    });
   });
 
   it('should map operation result data as a list', () => {
@@ -201,7 +245,7 @@ describe('ApiHttpClient', () => {
       });
 
     const request = httpController.expectOne(new URL('/personas', environment.API_URL).toString());
-    request.flush({ data: [{ id: 1, nombre: 'Ana' }] });
+    request.flush({ success: true, httpCode: 200, data: [{ id: 1, nombre: 'Ana' }] });
   });
 
   it('should treat single operation result data as a one item list', () => {
@@ -221,7 +265,7 @@ describe('ApiHttpClient', () => {
     });
 
     const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
-    request.flush({ data: { id: 1, nombre: 'Ana' } });
+    request.flush({ success: true, httpCode: 200, data: { id: 1, nombre: 'Ana' } });
   });
 
   it('should return an empty list when operation result data is null', () => {
@@ -241,6 +285,6 @@ describe('ApiHttpClient', () => {
     });
 
     const request = httpController.expectOne(new URL('/personas', environment.API_URL).toString());
-    request.flush({ data: null });
+    request.flush({ success: true, httpCode: 200, data: null });
   });
 });

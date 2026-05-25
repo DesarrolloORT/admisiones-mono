@@ -2,8 +2,8 @@ import { computed } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 
-import { Auth } from '../../features/auth/services/auth';
-import { authGuard } from './auth.guard';
+import { AuthSessionService } from '../../features/auth/services/auth-session';
+import { authGuard } from './auth';
 
 describe('authGuard', () => {
   let isAuthenticatedValue: boolean;
@@ -15,7 +15,7 @@ describe('authGuard', () => {
       providers: [
         provideRouter([]),
         {
-          provide: Auth,
+          provide: AuthSessionService,
           useValue: {
             isAuthenticated: computed(() => isAuthenticatedValue),
           },

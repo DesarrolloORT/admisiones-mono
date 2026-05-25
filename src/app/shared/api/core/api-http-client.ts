@@ -1,5 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { isOperationResult, unwrapOperationResultContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -23,6 +24,8 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   body?: EndpointRequest<TEndpoint>;
   withCredentials?: boolean;
   cache?: boolean;
+  context?: HttpContext;
+  unwrapOperationResult?: boolean;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -34,19 +37,18 @@ export class ApiHttpClient {
   public request<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     endpoint: TEndpoint,
     options: ApiRequestOptions<TEndpoint> = {}
-  ): Observable<EndpointResponse<TEndpoint>> {
+  ): Observable<EndpointData<TEndpoint>> {
     const url = this.resolveUrl(buildApiPath(endpoint.path, options.pathParams));
     const params = this.buildHttpParams(options.queryParams);
     const requestOptions = {
+      context: this.resolveContext(options),
       params,
       withCredentials: options.withCredentials,
     };
 
     if (this.shouldCache(endpoint, options, params)) {
       const cacheKey = this.getCacheKey(url, options.withCredentials);
-      const cached = this.getCache.get(cacheKey) as
-        | Observable<EndpointResponse<TEndpoint>>
-        | undefined;
+      const cached = this.getCache.get(cacheKey) as Observable<EndpointData<TEndpoint>> | undefined;
 
       if (cached) {
         return cached;
@@ -64,6 +66,25 @@ export class ApiHttpClient {
     return this.execute(endpoint, url, requestOptions, options.body);
   }
 
+  public requestWithMessage<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
+    endpoint: TEndpoint,
+    options: ApiRequestOptions<TEndpoint> = {}
+  ): Observable<{ data: EndpointData<TEndpoint>; message: string | null }> {
+    const url = this.resolveUrl(buildApiPath(endpoint.path, options.pathParams));
+    const requestOptions = {
+      context: this.resolveContext(options),
+      params: this.buildHttpParams(options.queryParams),
+      withCredentials: options.withCredentials,
+    };
+
+    return this.executeRaw(endpoint, url, requestOptions, options.body).pipe(
+      map(response => ({
+        data: this.unwrapOperationResult(response),
+        message: isOperationResult(response) ? (response.message ?? null) : null,
+      }))
+    );
+  }
+
   public clearCache(): void {
     this.getCache.clear();
   }
@@ -72,7 +93,7 @@ export class ApiHttpClient {
     endpoint: TEndpoint,
     options: ApiRequestOptions<TEndpoint> = {}
   ): Observable<EndpointData<TEndpoint>> {
-    return this.request(endpoint, options).pipe(map(response => this.unwrapData(response)));
+    return this.request(endpoint, options);
   }
 
   public list<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
@@ -105,7 +126,18 @@ export class ApiHttpClient {
   private execute<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     endpoint: TEndpoint,
     url: string,
-    requestOptions: { params?: HttpParams; withCredentials?: boolean },
+    requestOptions: { context: HttpContext; params?: HttpParams; withCredentials?: boolean },
+    body?: EndpointRequest<TEndpoint>
+  ): Observable<EndpointData<TEndpoint>> {
+    const response$ = this.executeRaw(endpoint, url, requestOptions, body);
+
+    return response$.pipe(map(response => this.unwrapOperationResult(response)));
+  }
+
+  private executeRaw<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
+    endpoint: TEndpoint,
+    url: string,
+    requestOptions: { context: HttpContext; params?: HttpParams; withCredentials?: boolean },
     body?: EndpointRequest<TEndpoint>
   ): Observable<EndpointResponse<TEndpoint>> {
     switch (endpoint.method) {
@@ -120,6 +152,18 @@ export class ApiHttpClient {
       case 'DELETE':
         return this.http.delete<EndpointResponse<TEndpoint>>(url, requestOptions);
     }
+  }
+
+  private resolveContext<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
+    options: ApiRequestOptions<TEndpoint>
+  ): HttpContext {
+    const context = options.context ?? new HttpContext();
+
+    if (options.unwrapOperationResult === false) {
+      return context;
+    }
+
+    return unwrapOperationResultContext(context);
   }
 
   private resolveUrl(path: string): string {
@@ -180,8 +224,8 @@ export class ApiHttpClient {
     return `${withCredentials ? 'credentials' : 'default'} ${url}`;
   }
 
-  private unwrapData<TResponse>(response: TResponse): ApiResponseData<TResponse> {
-    if (response && typeof response === 'object' && 'data' in response) {
+  private unwrapOperationResult<TResponse>(response: TResponse): ApiResponseData<TResponse> {
+    if (isOperationResult(response)) {
       return response.data as ApiResponseData<TResponse>;
     }
 
