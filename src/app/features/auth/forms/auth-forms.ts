@@ -1,6 +1,7 @@
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { ortCedulaValidator } from '@desarrolloort/components';
 
+import { isCedulaDocumentType } from '../models/document-number';
 import { LocationValue } from '../models/location-value';
 
 export interface LoginForm {
@@ -64,19 +65,36 @@ export function createIdentityForm(): FormGroup<IdentityForm> {
   });
 }
 
-export const NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS = [
+export const NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
   Validators.required,
   Validators.pattern(/^[0-9A-Za-z-]+$/),
 ];
 
-export const CEDULA_DOCUMENT_NUMBER_VALIDATORS = [Validators.required, ortCedulaValidator];
+export const CEDULA_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
+  Validators.required,
+  ortCedulaValidator,
+];
+
+export function getDocumentNumberValidators(documentType: string): ValidatorFn[] {
+  return isCedulaDocumentType(documentType)
+    ? CEDULA_DOCUMENT_NUMBER_VALIDATORS
+    : NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS;
+}
+
+export function syncDocumentNumberValidators(
+  control: FormControl<string>,
+  documentType: string
+): void {
+  control.setValidators(getDocumentNumberValidators(documentType));
+  control.updateValueAndValidity({ emitEvent: false });
+}
 
 export function createPersonalForm(): FormGroup<PersonalForm> {
   return new FormGroup<PersonalForm>({
     primerNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    segundoNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    segundoNombre: new FormControl('', { nonNullable: true }),
     primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    segundoApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    segundoApellido: new FormControl('', { nonNullable: true }),
     fechaNacimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     location: new FormControl<LocationValue>(
@@ -114,4 +132,3 @@ export function emailsMatch(form: FormGroup<PersonalForm>): boolean {
   const { mail, verificacionMail } = form.getRawValue();
   return mail.trim().toLowerCase() === verificacionMail.trim().toLowerCase();
 }
-
