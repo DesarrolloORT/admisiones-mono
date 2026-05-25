@@ -41,7 +41,7 @@
     </ort-form-field>
 
     <ort-form-field>
-      <ort-label>Nro. de documento</ort-label>
+      <ort-label>{{ documentNumberLabel() }}</ort-label>
       @if (isCedulaInput()) {
       <input ortCedulaInput formControlName="documentNumber" id="register-document-number" type="text" />
       } @else {
@@ -53,7 +53,7 @@
       @if ( form().controls.documentNumber.touched &&
       form().controls.documentNumber.hasError('required') ) {
       <ort-error>Este campo es obligatorio</ort-error>
-      } @if ( form().controls.documentNumber.touched &&
+      } @if ( isCedulaInput() && form().controls.documentNumber.touched &&
       form().controls.documentNumber.hasError('cedula') ) {
       <ort-error>Ingresá un número de cédula válido</ort-error>
       } @if ( !isCedulaInput() && form().controls.documentNumber.touched &&

@@ -33,6 +33,7 @@ export class RegisterIdentityStep {
   public readonly form = input.required<FormGroup<IdentityForm>>();
   public readonly documentTypes = input.required<Observable<DocumentType[]>>();
   public readonly isCedulaInput = input(false);
+  public readonly documentNumberLabel = input('Nro. de documento');
   public readonly selectedFileName = input<string | null>(null);
   public readonly isSubmitting = input(false);
   public readonly isRecognizingDocument = input(false);
