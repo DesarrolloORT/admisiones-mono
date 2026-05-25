@@ -52,3 +52,4 @@ describe('SetPassword', () => {
     expect(fixture.nativeElement.textContent).toContain('Recuperar acceso');
   });
 });
+

@@ -1,10 +1,8 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <app-auth-form
   description="Ingresá tus datos para verificar tu identidad. Te enviaremos por correo electrónico un link para actualizar tu contraseña."
-  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
-  heroIcon="lock"
-  heroTitle="Recuperá el acceso a tu cuenta."
-  title="Recuperar acceso">
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="lock"
+  heroTitle="Recuperá el acceso a tu cuenta." title="Recuperar acceso">
   <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
     <section class="auth-form-section">
       <ort-form-field>
