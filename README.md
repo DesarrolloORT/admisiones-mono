@@ -33,6 +33,8 @@ Migracion de `admisiones_legacy` hacia una aplicacion Angular moderna, con nueva
 
 ## Objetivo del proyecto
 
+> Documentacion del proyecto (SharePoint): [Proyecto Nuevo Sitio de Admisiones](https://orteduuy.sharepoint.com/:f:/r/sites/DESARROLLO/Documentos%20compartidos/2-Proyectos%20y%20Sistemas/PROYECTOS/PROYECTO%20Nuevo%20Sitio%20de%20Admisiones?csf=1&web=1&e=KeFVQs)
+
 Este repositorio representa la evolucion de la aplicacion legacy `admisiones_legacy` hacia una base Angular actualizada, mantenible y alineada con las practicas de Desarrollo ORT.
 
 El alcance incluye:
@@ -139,8 +141,8 @@ Ver [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md) para las reglas de capas.
 
 Los contratos tecnicos de la API se generan desde Swagger. Cuando cambia el
 backend, ejecutar `npm run update-api` para regenerar modelos en
-`src/app/shared/api-models/` y endpoints en
-`src/app/shared/api/endpoints/generated/`.
+`src/app/shared/api/generated/models/` y endpoints en
+`src/app/shared/api/generated/endpoints/`.
 
 `ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
 defecto los `GET` sin parámetros. Los servicios de feature solo pasan
@@ -176,7 +178,7 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
 - `update-endpoints`: actualiza constantes tipadas de endpoints desde Swagger.
 - `update-api`: ejecuta `update-models` y `update-endpoints`.
-- `check-api-contracts`: regenera contratos de API y falla si quedan diferencias en Git.
+- `check-endpoints`: regenera contratos de endpoints y falla si quedan diferencias en Git.
 
 ## Pre-commit hook
 
