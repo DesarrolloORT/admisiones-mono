@@ -105,10 +105,6 @@ namespace AppLogic.DTOs
         [Required]
         [EmailAddress]
         public string Mail { get; set; } = string.Empty;
-
-        [Required]
-        [Compare(nameof(Mail))]
-        public string VerificacionMail { get; set; } = string.Empty;
     }
 
     [ExcludeFromCodeCoverage]

@@ -78,7 +78,7 @@ namespace AppLogic.Services
                             SolicitudAltaExistente = true
                         },
                         nameof(EvaluarDocumentoAsync),
-                        "Ya existe una solicitud de alta para el documento indicado.");
+                        "El documento ingresado está en revisión.");
                 }
 
                 return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
@@ -111,7 +111,7 @@ namespace AppLogic.Services
                         UsuarioExistente = true
                     },
                     nameof(EvaluarDocumentoAsync),
-                    "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.");
+                    "La cedula ingresada ya está registrada.");
             }
 
             return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
@@ -172,7 +172,7 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsFailed(
                     "REG_USUARIO_01",
                     nameof(VerificarIdentidadAsync),
-                    "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
+                    "La cedula ingresada ya está registrada.",
                     409);
             }
 
@@ -254,7 +254,7 @@ namespace AppLogic.Services
                 return OperationResult<object?>.IsFailed(
                     "REG_USUARIO_01",
                     nameof(ConfirmarPersonaExistenteAsync),
-                    "Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.",
+                    "La cedula ingresada ya está registrada.",
                     409);
             }
 
