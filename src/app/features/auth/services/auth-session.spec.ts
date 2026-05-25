@@ -74,7 +74,7 @@ describe('AuthSessionService', () => {
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
     expect(cacheMock.clear).toHaveBeenCalled();
-    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/login');
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 
   it('should clear session locally even when backend logout fails', () => {
@@ -85,6 +85,7 @@ describe('AuthSessionService', () => {
 
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
-    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/login');
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 });
+

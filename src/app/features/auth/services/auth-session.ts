@@ -46,7 +46,7 @@ export class AuthSessionService {
           this.storage?.removeItem(storageKeys.token);
           this.storage?.removeItem(storageKeys.session);
           this.cache.clear();
-          this.router.navigateByUrl('/login');
+          this.router.navigateByUrl('/iniciar-sesion');
         })
       )
       .subscribe();
