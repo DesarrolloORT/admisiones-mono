@@ -470,7 +470,6 @@ namespace AppLogic.Services
                     500);
             }
 
-            // Queda pendiente cambiar el body del mail para que envie una contraseña provisional o un link para crear la contraseña, en vez de la contraseña fija actual.
             return await EnviarMailLinkPasswordAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
         }
 
