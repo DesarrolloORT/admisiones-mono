@@ -3,8 +3,9 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../../catalogs/services/catalogs';
-import { Auth } from '../../services/auth';
+import { AuthSessionService } from '../../services/auth-session';
 import { Login } from './login';
 
 describe('Login', () => {
@@ -43,8 +44,12 @@ describe('Login', () => {
       imports: [Login],
       providers: [
         provideRouter([]),
-        { provide: Auth, useValue: authMock },
+        { provide: AuthSessionService, useValue: authMock },
         { provide: Catalogs, useValue: catalogsMock },
+        {
+          provide: SnackbarHandler,
+          useValue: { success: vi.fn(), error: vi.fn(), show: vi.fn() },
+        },
       ],
     });
 
@@ -67,7 +72,7 @@ describe('Login', () => {
 
     facade.form.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
       password: 'secret',
     });
 
@@ -75,7 +80,7 @@ describe('Login', () => {
 
     expect(authMock.login).toHaveBeenCalledWith({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
       password: 'secret',
     });
     expect(facade.successMessage()).toBe('Sesión iniciada correctamente.');

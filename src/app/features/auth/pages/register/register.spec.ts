@@ -3,69 +3,51 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../../catalogs/services/catalogs';
 import { RegisterFlowFacade } from '../../facades/register-flow.facade';
-import { Auth } from '../../services/auth';
-import { DocumentRecognition } from '../../services/document-recognition';
+import { DocumentPrefillService } from '../../services/document-prefill';
+import { RegistrationService } from '../../services/registration';
 import { Register } from './register';
 
 describe('Register', () => {
   let fixture: ComponentFixture<Register>;
   let component: Register;
-  let authMock: {
+  let registrationMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
-    verifyIdentity: ReturnType<typeof vi.fn>;
-    confirmExistingPerson: ReturnType<typeof vi.fn>;
+    verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
+    confirmCareerInterest: ReturnType<typeof vi.fn>;
   };
   let catalogsMock: {
     getDocumentTypes: ReturnType<typeof vi.fn>;
-    getCountryLocations: ReturnType<typeof vi.fn>;
     getCareers: ReturnType<typeof vi.fn>;
     getComienzos: ReturnType<typeof vi.fn>;
   };
-  let documentRecognitionMock: {
-    createRequestFromFile: ReturnType<typeof vi.fn>;
-    recognizeDocument: ReturnType<typeof vi.fn>;
+  let documentPrefillMock: {
+    preload: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
-    authMock = {
+    registrationMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
-          requiereAltaPersona: true,
-          requiereAltaSolicitud: true,
+          requiereAltaPersona: false,
+          requiereAltaSolicitud: false,
           requiereVerificacion: true,
           solicitudAltaExistente: false,
           usuarioExistente: false,
+          message: null,
         })
       ),
-      verifyIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmExistingPerson: vi.fn().mockReturnValue(of({ success: true })),
+      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
+      confirmCareerInterest: vi.fn().mockReturnValue(of({ success: true })),
     };
     catalogsMock = {
       getDocumentTypes: vi.fn().mockReturnValue(
         of([
           { id: 1, label: 'Cédula de identidad', code: 'CI' },
-          { id: 2, label: 'Pasaporte', code: 'PASS' },
+          { id: 2, label: 'Pasaporte', code: 'PS' },
           { id: 3, label: 'DNI', code: 'DNI' },
-        ])
-      ),
-      getCountryLocations: vi.fn().mockReturnValue(
-        of([
-          {
-            codigoPais: 1,
-            nombre: 'Uruguay',
-            estado: [
-              {
-                codigoPais: 1,
-                codigoEstado: 10,
-                nombre: 'Montevideo',
-                ciudad: [
-                  { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100, nombre: 'Montevideo' },
-                ],
-              },
-            ],
-          },
         ])
       ),
       getCareers: vi.fn().mockReturnValue(
@@ -82,48 +64,44 @@ describe('Register', () => {
         .fn()
         .mockReturnValue(of([{ idProceso: 30, nombreProceso: 'Marzo 2026. 08:00 - 14:00' }])),
     };
-    documentRecognitionMock = {
-      createRequestFromFile: vi.fn().mockResolvedValue({
-        tipoMime: 'application/pdf',
-        archivoAdjunto: {
-          nombreArchivo: 'cedula.pdf',
-          archivo: 'base64-content',
+    documentPrefillMock = {
+      preload: vi.fn().mockResolvedValue({
+        patch: {
+          identity: { documentType: 'CI', documentNumber: '11111111' },
+          personal: {
+            primerNombre: 'Ana',
+            segundoNombre: 'Maria',
+            primerApellido: 'Silva',
+            segundoApellido: 'Pereira',
+            fechaNacimiento: '2000-01-01',
+            sexo: 'F',
+          },
+          countryCode: 1,
+          birthplace: 'Montevideo / URY',
+        },
+        location: {
+          codigoPais: 1,
+          codigoEstado: 10,
+          codigoCiudad: null,
         },
       }),
-      recognizeDocument: vi.fn().mockReturnValue(
-        of({
-          success: true,
-          data: {
-            requiereRevision: false,
-            campos: {
-              tipoDocumento: 'CI',
-              numeroDocumento: '12345678',
-              primerNombre: 'Ana',
-              segundoNombre: 'Maria',
-              primerApellido: 'Silva',
-              segundoApellido: 'Pereira',
-              fechaNacimiento: '2000-01-01',
-              sexo: 'F',
-              nacionalidad: 'Uruguay',
-              lugarNacimiento: 'Montevideo / URY',
-            },
-            caraPersona: {
-              nombreArchivo: 'cara.png',
-              contentType: 'image/png',
-              archivo: 'face-base64',
-            },
-          },
-        })
-      ),
     };
 
     TestBed.configureTestingModule({
       imports: [Register],
       providers: [
         provideRouter([]),
-        { provide: Auth, useValue: authMock },
+        { provide: RegistrationService, useValue: registrationMock },
         { provide: Catalogs, useValue: catalogsMock },
-        { provide: DocumentRecognition, useValue: documentRecognitionMock },
+        { provide: DocumentPrefillService, useValue: documentPrefillMock },
+        {
+          provide: SnackbarHandler,
+          useValue: {
+            show: vi.fn(),
+            success: vi.fn(),
+            error: vi.fn(),
+          },
+        },
       ],
     });
 
@@ -144,16 +122,19 @@ describe('Register', () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
     });
 
     await facade.continueToPersonalData();
 
-    expect(authMock.evaluateDocument).toHaveBeenCalledWith('CI', '12345678');
+    expect(registrationMock.evaluateDocument).toHaveBeenCalledWith({
+      documentType: 'CI',
+      documentNumber: '11111111',
+    });
     expect(facade.step()).toBe('personal');
   });
 
-  it('should send selected document to the API and preload returned fields', async () => {
+  it('should preload returned document fields', async () => {
     const facade = component['facade'];
     const file = new File(['binary-content'], 'cedula.pdf', { type: 'application/pdf' });
     const input = document.createElement('input');
@@ -167,18 +148,11 @@ describe('Register', () => {
 
     await facade.onDocumentSelected({ target: input } as unknown as Event);
 
-    expect(documentRecognitionMock.createRequestFromFile).toHaveBeenCalledWith(file);
-    expect(documentRecognitionMock.recognizeDocument).toHaveBeenCalledWith({
-      tipoMime: 'application/pdf',
-      archivoAdjunto: {
-        nombreArchivo: 'cedula.pdf',
-        archivo: 'base64-content',
-      },
-    });
+    expect(documentPrefillMock.preload).toHaveBeenCalledWith(file);
     expect(facade.selectedFileName()).toBe('cedula.pdf');
     expect(facade.identityForm.getRawValue()).toEqual({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
     });
     expect(facade.personalForm.controls.primerNombre.value).toBe('Ana');
     expect(facade.personalForm.controls.primerApellido.value).toBe('Silva');
@@ -192,44 +166,52 @@ describe('Register', () => {
     );
   });
 
-  it('should verify identity and move to career step', () => {
+  it('should verify identity and move to career step', async () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
     });
     setValidPersonalForm(facade);
 
+    await facade.continueToPersonalData();
     facade.submitPersonalData();
 
-    expect(authMock.verifyIdentity).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '12345678',
+    expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
+      identity: { documentType: 'CI', documentNumber: '11111111' },
       primerApellido: 'Silva',
       mail: 'ana@example.com',
-      verificacionMail: 'ana@example.com',
     });
     expect(catalogsMock.getCareers).toHaveBeenCalled();
     expect(facade.step()).toBe('career');
   });
 
-  it('should reject mismatched emails before submitting', () => {
-    const facade = component['facade'];
-    setValidPersonalForm(facade);
-    facade.personalForm.patchValue({ verificacionMail: 'otra@example.com' });
-
-    facade.submitPersonalData();
-
-    expect(authMock.verifyIdentity).not.toHaveBeenCalled();
-    expect(facade.error()).toBe('Los e-mails ingresados no coinciden.');
-  });
-
-  it('should confirm career data', () => {
+  it('should still call verifyIdentity even if verificacionMail differs', async () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
-      documentNumber: '12345678',
+      documentNumber: '11111111',
     });
+    setValidPersonalForm(facade);
+    facade.personalForm.patchValue({ verificacionMail: 'otra@example.com' });
+
+    await facade.continueToPersonalData();
+    facade.submitPersonalData();
+
+    expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
+      identity: { documentType: 'CI', documentNumber: '11111111' },
+      primerApellido: 'Silva',
+      mail: 'ana@example.com',
+    });
+  });
+
+  it('should confirm career data', async () => {
+    const facade = component['facade'];
+    facade.identityForm.setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+    });
+    await facade.continueToPersonalData();
     facade.careerForm.setValue({
       propuestaAcademica: 1,
       carrera: 20,
@@ -238,13 +220,15 @@ describe('Register', () => {
 
     facade.submitCareerData();
 
-    expect(authMock.confirmExistingPerson).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '12345678',
-      idProducto: 20,
-      idProceso: 30,
+    expect(registrationMock.confirmCareerInterest).toHaveBeenCalledWith({
+      flow: 'existing-person',
+      identity: { documentType: 'CI', documentNumber: '11111111' },
+      personal: null,
+      selection: { idProducto: 20, idProceso: 30 },
     });
-    expect(facade.successMessage()).toBe('Cuenta creada correctamente.');
+    expect(facade.successMessage()).toBe(
+      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
+    );
   });
 });
 
@@ -263,3 +247,4 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     verificacionMail: 'ana@example.com',
   });
 }
+

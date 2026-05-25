@@ -4,14 +4,14 @@
   [stepTitle]="facade.stepViewModel().stepTitle" [title]="facade.stepViewModel().title">
   @if (facade.step() === 'identity') {
   <app-register-identity-step [documentTypes]="facade.documentTypes$" [error]="facade.error()"
-    [form]="facade.identityForm" [isCedulaInput]="facade.isCedulaInput()"
-    [isRecognizingDocument]="facade.isRecognizingDocument()" [isSubmitting]="facade.isSubmitting()"
-    [recognitionError]="facade.recognitionError()" [recognitionSuccessMessage]="facade.recognitionSuccessMessage()"
-    [selectedFileName]="facade.selectedFileName()" (continueStep)="facade.continueToPersonalData()"
-    (documentSelected)="facade.onDocumentSelected($event)" />
+    [form]="facade.identityForm" [documentNumberLabel]="facade.documentNumberLabel()"
+    [isCedulaInput]="facade.isCedulaInput()" [isRecognizingDocument]="facade.isRecognizingDocument()"
+    [isSubmitting]="facade.isSubmitting()" [recognitionError]="facade.recognitionError()"
+    [recognitionSuccessMessage]="facade.recognitionSuccessMessage()" [selectedFileName]="facade.selectedFileName()"
+    (continueStep)="facade.continueToPersonalData()" (documentSelected)="facade.onDocumentSelected($event)" />
   } @else if (facade.step() === 'personal') {
   <app-register-personal-step [error]="facade.error()" [form]="facade.personalForm"
-    [isSubmitting]="facade.isSubmitting()" [isVerificationOnly]="facade.requiresVerification()"
+    [isSubmitting]="facade.isSubmitting()" [personalMode]="facade.personalMode()"
     [successMessage]="facade.successMessage()" (back)="facade.backToIdentity()"
     (submitStep)="facade.submitPersonalData()" />
   } @else {

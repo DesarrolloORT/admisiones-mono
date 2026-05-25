@@ -1,5 +1,12 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -33,4 +40,12 @@ import { LoginFacade } from '../../facades/login.facade';
 })
 export class Login {
   protected readonly facade = inject(LoginFacade);
+  private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
+
+  constructor() {
+    if (this.facade.prefilled()) {
+      afterNextRender(() => this.passwordInput()?.nativeElement.focus());
+    }
+  }
 }
+
