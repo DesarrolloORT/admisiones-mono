@@ -25,8 +25,13 @@ const DEFAULT_DURATION_MS = 5000;
 export class SnackbarHandler {
   private readonly ortSnackbar = inject(OrtSnackbarService);
   private currentRef: OrtSnackbarRef | null = null;
+  private readonly fontsReady = document.fonts?.ready ?? Promise.resolve();
 
   public show(config: SnackbarConfig): void {
+    void this.fontsReady.then(() => this.showImmediate(config));
+  }
+
+  private showImmediate(config: SnackbarConfig): void {
     const variant: OrtVariant = config.variant ?? 'information';
 
     this.currentRef = this.ortSnackbar.open({
@@ -69,3 +74,4 @@ export class SnackbarHandler {
     this.currentRef = null;
   }
 }
+

@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Loader > should match snapshot when loading = true 1`] = `
+<div
+  _nghost-a-c3144323453=""
+  id="root0"
+  ng-version="21.2.7"
+>
+  <div
+    _ngcontent-a-c3144323453=""
+    class="loader-overlay"
+  >
+    <div
+      _ngcontent-a-c3144323453=""
+      class="loader-backdrop"
+    >
+      <ort-spinner
+        _ngcontent-a-c3144323453=""
+        aria-label="Cargando"
+        class="ort-spinner spinner-loader ort-spinner-indeterminate"
+        data-size="md"
+        data-type="indeterminate"
+        id="ort-spinner-0"
+        role="progressbar"
+      >
+        <svg
+          aria-hidden="true"
+          class="ort-spinner-svg"
+          focusable="false"
+          height="36"
+          viewBox="0 0 36 36"
+          width="36"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <!--container-->
+          <circle
+            class="ort-spinner-fill"
+            cx="18"
+            cy="18"
+            fill="none"
+            pathLength="1"
+            r="16"
+            stroke-width="4"
+          />
+        </svg>
+      </ort-spinner>
+    </div>
+  </div>
+  <!--container-->
+</div>
+`;
