@@ -52,21 +52,24 @@
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
+
+      <a class="auth-link" routerLink="/recuperar-acceso"
+        [queryParams]="{ tipoDoc: facade.form.controls.documentType.value, doc: facade.form.controls.documentNumber.value }">
+        ¿Olvidaste tu usuario o contraseña?
+      </a>
     </section>
 
     @if (facade.error()) {
     <p class="auth-error" role="alert">{{ facade.error() }}</p>
-    } @if (facade.successMessage()) {
-    <output class="auth-success">{{ facade.successMessage() }}</output>
     }
 
     <button ort-primary-button type="submit" [disabled]="facade.isSubmitting()">
-      {{ facade.isSubmitting() ? 'Iniciando...' : 'Iniciar sesión' }}
+      {{ facade.isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
     </button>
 
     <section aria-label="Opciones de cuenta" class="auth-stack">
       <div class="auth-divider">¿Aún no tenés cuenta?</div>
-      <button ort-secondary-button routerLink="/register" type="button">Crear cuenta</button>
+      <button ort-secondary-button routerLink="/registro" type="button">Crear cuenta</button>
     </section>
   </form>
 </app-auth-form>

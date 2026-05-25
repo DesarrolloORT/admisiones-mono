@@ -85,7 +85,7 @@ describe('Login', () => {
     });
     expect(facade.successMessage()).toBe('Sesión iniciada correctamente.');
     expect(facade.form.controls.password.value).toBe('');
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/home');
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/inicio');
   });
 
   it('should not submit when form is invalid', () => {
@@ -94,3 +94,4 @@ describe('Login', () => {
     expect(authMock.login).not.toHaveBeenCalled();
   });
 });
+

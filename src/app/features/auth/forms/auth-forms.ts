@@ -35,6 +35,12 @@ export interface CareerForm {
   comienzo: FormControl<number | null>;
 }
 
+export interface RecoverAccessForm {
+  documentType: FormControl<string>;
+  documentNumber: FormControl<string>;
+  primerApellido: FormControl<string>;
+}
+
 export function createLoginForm(): FormGroup<LoginForm> {
   return new FormGroup<LoginForm>({
     documentType: new FormControl('CI', {
@@ -131,4 +137,21 @@ export function createCareerForm(): FormGroup<CareerForm> {
 export function emailsMatch(form: FormGroup<PersonalForm>): boolean {
   const { mail, verificacionMail } = form.getRawValue();
   return mail.trim().toLowerCase() === verificacionMail.trim().toLowerCase();
+}
+
+export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
+  return new FormGroup<RecoverAccessForm>({
+    documentType: new FormControl('CI', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    documentNumber: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, ortCedulaValidator],
+    }),
+    primerApellido: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
 }
