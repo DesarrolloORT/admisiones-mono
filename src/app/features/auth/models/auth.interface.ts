@@ -1,6 +1,6 @@
 import type { RegisterResult } from '../endpoints/auth.endpoint';
 
-// Frontend input for login form/use case. Mapped to LoginPayload in Auth service.
+// Frontend input for login form/use case. Mapped to LoginPayload in AuthSessionService.
 export interface AuthLoginRequest {
   documentType: string;
   documentNumber: string;
@@ -40,8 +40,9 @@ export interface AuthRegisterPersonalData {
 export interface AuthRegisterRequest {
   identity: AuthIdentityData;
   personal: AuthRegisterPersonalData;
+  idProducto?: number;
+  idProceso?: number;
 }
 
 // Stable type from endpoint adapter (not a backend DTO).
 export type AuthRegisterResponse = RegisterResult;
-
