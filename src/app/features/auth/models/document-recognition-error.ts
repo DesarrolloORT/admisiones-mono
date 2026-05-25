@@ -5,9 +5,3 @@ export class DocumentRecognitionFileError extends Error {
     super(code);
   }
 }
-
-export class DocumentRecognitionRequestError extends Error {
-  public constructor(public readonly status: number | null) {
-    super('documentRecognition');
-  }
-}

@@ -1,7 +1,4 @@
-import {
-  DocumentRecognitionFileError,
-  DocumentRecognitionRequestError,
-} from './document-recognition-error';
+import { DocumentRecognitionFileError } from './document-recognition-error';
 
 describe('DocumentRecognitionFileError', () => {
   it('should expose the file error code', () => {
@@ -9,14 +6,5 @@ describe('DocumentRecognitionFileError', () => {
 
     expect(error.code).toBe('maxFileSize');
     expect(error.message).toBe('maxFileSize');
-  });
-});
-
-describe('DocumentRecognitionRequestError', () => {
-  it('should expose the request status', () => {
-    const error = new DocumentRecognitionRequestError(500);
-
-    expect(error.status).toBe(500);
-    expect(error.message).toBe('documentRecognition');
   });
 });

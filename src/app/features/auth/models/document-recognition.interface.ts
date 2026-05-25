@@ -33,11 +33,4 @@ export interface DocumentRecognitionData {
   caraPersona?: DocumentRecognitionFile;
 }
 
-export interface DocumentRecognitionResponse {
-  success?: boolean;
-  httpCode?: number;
-  errorCode?: string | null;
-  method?: string | null;
-  message?: string | null;
-  data?: DocumentRecognitionData;
-}
+export type DocumentRecognitionResponse = DocumentRecognitionData;
