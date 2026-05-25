@@ -52,9 +52,9 @@ directamente. Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
 frontend versiona dos salidas generadas:
 
-- `src/app/shared/api-models/`: modelos TypeScript generados por
+- `src/app/shared/api/generated/models/`: modelos TypeScript generados por
   `npm run update-models`.
-- `src/app/shared/api/endpoints/generated/`: constantes de endpoint generadas
+- `src/app/shared/api/generated/endpoints/`: constantes de endpoint generadas
   por `npm run update-endpoints`.
 
 El comando recomendado para actualizar ambos contratos es:
@@ -86,7 +86,7 @@ Reglas:
 - no editar manualmente archivos generados;
 - no importar endpoints generados desde pages, components o stores;
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
-- usar `npm run check-api-contracts` cuando se quiera validar drift contra Swagger.
+- usar `npm run check-endpoints` cuando se quiera validar drift contra Swagger.
 
 `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
 `queryParams`. Esto cubre catálogos y datos de referencia sin agregar

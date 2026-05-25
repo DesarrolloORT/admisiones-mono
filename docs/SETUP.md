@@ -50,8 +50,8 @@ Los archivos `src/environments/environment.ts`, `src/environments/environment.de
    npm run update-endpoints -- --swagger-path /swagger/v2/swagger.json
    ```
 
-   Los modelos se escriben en `src/app/shared/api-models/` y los endpoints
-   tecnicos en `src/app/shared/api/endpoints/generated/`. Ninguno de esos
+   Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints
+   tecnicos en `src/app/shared/api/generated/endpoints/`. Ninguno de esos
    archivos generados debe editarse manualmente.
 
 5. Ajustar la base del repositorio nuevo:
@@ -79,11 +79,11 @@ Cuando el PR depende de cambios en Swagger, tambien conviene validar que los
 contratos versionados no quedaron desactualizados:
 
 ```bash
-npm run check-api-contracts
+npm run check-endpoints
 ```
 
 Ese comando regenera modelos y endpoints, y luego ejecuta `git diff --exit-code`
-sobre `src/app/shared/api-models` y `src/app/shared/api/endpoints/generated`.
+sobre `src/app/shared/api/generated/models` y `src/app/shared/api/generated/endpoints`.
 
 ## Dev Container
 

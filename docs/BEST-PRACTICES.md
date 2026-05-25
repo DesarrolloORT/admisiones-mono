@@ -29,13 +29,13 @@ Cada feature vive bajo `src/app/features/<feature>/` y puede usar estas carpetas
   solo este archivo se modifica.
 - `store/`: estado local con `signal` y `computed`. No contiene HTTP ni endpoints.
 - `models/`: tipos de dominio propios de la feature. No duplicar ahi DTOs que ya
-  existan en `src/app/shared/api-models/`.
+  existan en `src/app/shared/api/generated/models/`.
 
 ## Endpoint adapters: contrato estable de API
 
 ### Problema que resuelven
 
-Los endpoints generados (`src/app/shared/api/endpoints/generated/`) cambian
+Los endpoints generados (`src/app/shared/api/generated/endpoints/`) cambian
 cada vez que se ejecuta `npm run update-api`. Si los services importan generated
 directo, un rename de URL o de DTO en backend obliga a tocar toda la feature.
 
@@ -87,7 +87,7 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 
 ### Reglas
 
-- Solo `endpoints/*.endpoint.ts` importa de `generated/` y `api-models/`.
+- Solo `endpoints/*.endpoint.ts` importa de `shared/api/generated/`.
 - Services, pages, components y stores nunca importan generated directo.
 - Si cambia un endpoint en Swagger y se regenera, solo el adapter necesita
   ajuste. El resto de la feature compila sin cambios.
@@ -131,22 +131,22 @@ export class Auth {
 
 ### Que pasa cuando cambia el backend
 
-| Cambio en backend                         | Impacto en frontend                                             |
-| ----------------------------------------- | --------------------------------------------------------------- |
-| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                         |
-| Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.                 |
-| Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.                   |
-| Endpoint eliminado                        | `check-api-contracts` detecta. Borrar adapter method + service. |
-| Endpoint nuevo                            | Agregar method en adapter con tipos estables.                   |
+| Cambio en backend                         | Impacto en frontend                                         |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                     |
+| Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.             |
+| Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.               |
+| Endpoint eliminado                        | `check-endpoints` detecta. Borrar adapter method + service. |
+| Endpoint nuevo                            | Agregar method en adapter con tipos estables.               |
 
 ## Tipos generados vs tipos de feature
 
 Para evitar confusion, usar esta regla simple:
 
-- `src/app/shared/api-models/model/`: contrato tecnico generado desde Swagger.
+- `src/app/shared/api/generated/models/`: contrato tecnico generado desde Swagger.
   Representa DTOs del backend y puede cambiar cuando se regenera con
   `npm run update-models`.
-- `src/app/shared/api/endpoints/generated/`: firmas tecnicas de endpoints
+- `src/app/shared/api/generated/endpoints/`: firmas tecnicas de endpoints
   (method, path, request, response) generadas por `npm run update-endpoints`.
 - `src/app/features/<feature>/models/`: tipos propios de frontend y dominio de
   la feature. Se usan para formularios, estado local, view models y contratos
@@ -164,7 +164,8 @@ Ejemplo en `auth`:
 - `AuthRequest` y `DtoAuthenticationResponse` vienen del contrato generado.
 - `AuthLoginRequest` y `AuthSession` son tipos de feature para formulario y
   estado de sesion.
-- El service `Auth` transforma entre ambos modelos.
+- Los services de auth (`AuthSessionService`, `RegistrationService`,
+  `PasswordActivationService`) transforman entre ambos modelos.
 
 Cuando una feature crece, se debe dividir por subdominio antes que agregar
 archivos genericos como `utils.ts`, `helpers.ts` o `common.ts`.
@@ -179,12 +180,15 @@ La distincion clave es la relacion con el router:
 Ejemplo en `auth`:
 
 ```
-Register (page)  ──inject──>  Auth (service)  ──inject──>  AuthEndpoint
+Register (page)  ──inject──>  RegistrationService  ──inject──>  AuthEndpoint
       │
       └──> AuthForm (component)  ← solo inputs: title, heroIcon, cardSize…
 ```
 
-`Register` es una page: maneja el estado del formulario multi-paso, llama a `Auth` y `DocumentRecognition`, y orquesta la navegacion entre pasos. `AuthForm` es un component: solo estructura visual que no sabe que datos va a mostrar ni que hacer con ellos.
+`Register` es una page: maneja el estado del formulario multi-paso, llama a
+`RegistrationService` y `DocumentPrefillService`, y orquesta la navegacion entre
+pasos. `AuthForm` es un component: solo estructura visual que no sabe que datos
+va a mostrar ni que hacer con ellos.
 
 ## Responsabilidades
 
@@ -200,7 +204,7 @@ Register (page)  ──inject──>  Auth (service)  ──inject──>  AuthE
   directo. Si la feature es trivial (un solo GET), el adapter puede ser inline
   en el service como excepcion documentada.
 - Los stores no deben saber de red. Reciben datos ya procesados y exponen estado con `signal`/`computed`.
-- Los modelos tecnicos generados viven en `src/app/shared/api-models/`; no se
+- Los modelos tecnicos generados viven en `src/app/shared/api/generated/models/`; no se
   editan manualmente. Si se necesitan tipos de dominio propios, ubicarlos dentro
   de la feature y mapearlos desde/hacia el contrato generado.
 
@@ -214,14 +218,14 @@ npm run update-api
 
 Esto ejecuta:
 
-- `npm run update-models`: regenera modelos en `src/app/shared/api-models/`.
+- `npm run update-models`: regenera modelos en `src/app/shared/api/generated/models/`.
 - `npm run update-endpoints`: regenera constantes en
-  `src/app/shared/api/endpoints/generated/`.
+  `src/app/shared/api/generated/endpoints/`.
 
 Para detectar drift en CI o antes de un PR:
 
 ```bash
-npm run check-api-contracts
+npm run check-endpoints
 ```
 
 Si el generador muestra warnings por schemas ambiguos, la correccion debe hacerse
@@ -266,4 +270,3 @@ un service de feature.
 - [Angular HTTP best practices](https://angular.dev/guide/http/making-requests)
 - [Angular zoneless guide](https://angular.dev/guide/zoneless)
 - [Angular signals guide](https://angular.dev/guide/signals)
-
