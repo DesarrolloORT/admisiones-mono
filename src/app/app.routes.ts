@@ -4,7 +4,7 @@ import { authGuard } from './core/guards/auth';
 
 export const routes: Routes = [
   {
-    path: 'home',
+    path: 'inicio',
     canActivate: [authGuard],
     loadChildren: () => import('./features/home/home.routes').then(m => m.routes),
   },
@@ -12,5 +12,6 @@ export const routes: Routes = [
     path: '',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.routes),
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: 'iniciar-sesion' },
 ];
+

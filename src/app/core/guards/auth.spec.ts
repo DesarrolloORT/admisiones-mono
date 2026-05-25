@@ -36,6 +36,7 @@ describe('authGuard', () => {
 
     const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
 
-    expect(router.serializeUrl(result as UrlTree)).toBe('/login');
+    expect(router.serializeUrl(result as UrlTree)).toBe('/iniciar-sesion');
   });
 });
+
