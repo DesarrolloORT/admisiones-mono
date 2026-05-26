@@ -165,19 +165,19 @@ namespace AppLogic.Services
             var mail = persona.Email ?? string.Empty;
             return new DtoDatosPersona
             {
-                TipoDocumento = persona.TipoDocumento ?? string.Empty,
-                Documento = persona.Documento ?? string.Empty,
-                PrimerNombre = persona.PrimerNombre ?? string.Empty,
-                SegundoNombre = persona.SegundoNombre ?? string.Empty,
-                PrimerApellido = persona.PrimerApellido ?? string.Empty,
-                SegundoApellido = persona.SegundoApellido ?? string.Empty,
+                TipoDocumento = persona.TipoDocumento?.Trim() ?? string.Empty,
+                Documento = persona.Documento?.Trim() ?? string.Empty,
+                PrimerNombre = persona.PrimerNombre?.Trim() ?? string.Empty,
+                SegundoNombre = persona.SegundoNombre?.Trim() ?? string.Empty,
+                PrimerApellido = persona.PrimerApellido?.Trim() ?? string.Empty,
+                SegundoApellido = persona.SegundoApellido?.Trim() ?? string.Empty,
                 FechaNacimiento = persona.FechaNacimiento ?? default,
-                Sexo = persona.Sexo ?? string.Empty,
+                Sexo = persona.Sexo?.Trim() ?? string.Empty,
                 CodigoPais = persona.CodigoPais ?? 0,
                 CodigoEstado = persona.CodigoEstado ?? 0,
                 CodigoCiudad = persona.CodigoCiudad ?? 0,
-                Direccion = persona.Direccion ?? string.Empty,
-                Telefono1 = persona.Telefono1 ?? string.Empty,
+                Direccion = persona.Direccion?.Trim() ?? string.Empty,
+                Telefono1 = persona.Telefono1?.Trim() ?? string.Empty,
                 Mail = mail,
                 VerificacionMail = mail
             };

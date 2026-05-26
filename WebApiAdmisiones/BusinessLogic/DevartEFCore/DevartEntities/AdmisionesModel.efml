@@ -3650,6 +3650,245 @@
       <column name="USUARIO_INGRESO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="EncuestaIni" entity-set="EncuestaInis" table="T_ENCUESTA_INI" schema="CREADOR" p1:Guid="e6850da5-1943-4ccc-9f79-ad91ce18310d">
+    <id name="IdEncuestaIni" type="Int64" p1:ValidateRequired="true" p1:Guid="ea0242cd-3cc8-4cae-b048-8693d19dd444">
+      <column name="ID_ENCUESTA_INI" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="CodigoPersona" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="27bf9000-3bea-4d1a-80ab-7f6cc14642f8">
+      <column name="CODIGO_PERSONA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e7cc3ecc-ba91-4d75-b6cd-091b9b753af0">
+      <column name="ID_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdComienzo" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="74c5b3b4-f397-4f19-8927-0b9317046631">
+      <column name="ID_COMIENZO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaEncuestaIni" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="27bbf1db-07a4-4dd3-a80e-ad7215ccc9ed">
+      <column name="FECHA_ENCUESTA_INI" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="DesertorEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="87cd2177-8e3e-4e5e-aa91-a155975a7bbd">
+      <column name="DESERTOR_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ClaveEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="16eec692-2576-4d4a-b8ca-731ccb8e7b0a">
+      <column name="CLAVE_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AniosInstruccionEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="56941278-9882-4632-93f3-d38812bada58">
+      <column name="ANIOS_INSTRUCCION_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoInstSecEncuestaIni" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="cfbc0b4f-e0e7-49a4-8a99-b048ba0d19b0">
+      <column name="CODIGO_INST_SEC_ENCUESTA_INI" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreInstSecEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="de3a50b0-14e2-4b9d-a7a6-be62c34183d5">
+      <column name="NOMBRE_INST_SEC_ENCUESTA_INI" not-null="False" length="90" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoTitulo" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="916befaf-655d-4d08-a011-9810373eb483">
+      <column name="CODIGO_TITULO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UltimoAnioSextoEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="292c6e1e-655c-4771-98a5-ab9a7486c29a">
+      <column name="ULTIMO_ANIO_SEXTO_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="VecesSextoEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="cb6f025c-ce3d-414f-8c58-74267db4a673">
+      <column name="VECES_SEXTO_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CantidadPreviasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f0d12805-776c-49eb-8864-b69269247850">
+      <column name="CANTIDAD_PREVIAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="EstudiosTercEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9858dc5c-9cef-463e-9b4e-0c5104abbc42">
+      <column name="ESTUDIOS_TERC_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoInstTerEncuestaIni" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="4ea74ab9-4598-4404-bd71-1d52e44b6840">
+      <column name="CODIGO_INST_TER_ENCUESTA_INI" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreInstTerEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="6ec07a9d-715b-42eb-9c1c-a4e6e0920291">
+      <column name="NOMBRE_INST_TER_ENCUESTA_INI" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CarreraTerEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="31ffedc4-2828-4c7e-b61c-6a3872a1994a">
+      <column name="CARRERA_TER_ENCUESTA_INI" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UltAnioTerEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="582da81e-0340-4863-b75c-d022b614c29b">
+      <column name="ULT_ANIO_TER_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UltAnioCalTerEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="801e8f2c-f80c-4c28-99a4-7cdcb5a5a04e">
+      <column name="ULT_ANIO_CAL_TER_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AbandTerAcadEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d6176e84-6eb1-4cf9-9367-9ac7bde76be4">
+      <column name="ABAND_TER_ACAD_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AbandTerOrgEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="5e8c4ca0-fef1-4f03-81bf-29ab796b1cf7">
+      <column name="ABAND_TER_ORG_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AbandTerEconEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9f11ca92-c8f6-428f-9c4c-8caf891391e7">
+      <column name="ABAND_TER_ECON_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AbandTerOtrosEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d3c09448-b5ae-4d5f-8dc9-e77bca12f198">
+      <column name="ABAND_TER_OTROS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="TextoAbandTerEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2000" p1:ValidateRequired="false" p1:Guid="9cf464d8-085f-400a-9370-962ab22e44b1">
+      <column name="TEXTO_ABAND_TER_ENCUESTA_INI" not-null="False" length="2000" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ConocimienInglesEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="3f442017-43f1-4e6a-b3da-4aae7c38ca14">
+      <column name="CONOCIMIEN_INGLES_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InstruccionPadreEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9f60812e-2ee7-40cf-9c2d-9b0b937668f3">
+      <column name="INSTRUCCION_PADRE_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InstruccionMadreEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f15c4446-b2a8-4b54-a183-a3b38934d97b">
+      <column name="INSTRUCCION_MADRE_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DecisionCarreraEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="49e0e540-ae8e-4c69-a694-fd0aef88fbab">
+      <column name="DECISION_CARRERA_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DecisionUniverEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="b83e1887-1f1a-4009-8b74-b85803e59b47">
+      <column name="DECISION_UNIVER_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiFeriasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="0f5eab4f-a7ad-4af1-89d9-945db170aa5d">
+      <column name="UTI_FERIAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiCharlasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="3dd8c194-5391-4616-824c-0db173338704">
+      <column name="UTI_CHARLAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiActividadesEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="c68636f6-6ce6-419d-aa47-35c5816a3512">
+      <column name="UTI_ACTIVIDADES_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiTalleresEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="3bfdb8f6-8dd1-4c8e-a8cb-92d7905a78ca">
+      <column name="UTI_TALLERES_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiGuiasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="8c5fec47-2191-41b4-937a-1ba22e0a112b">
+      <column name="UTI_GUIAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UtiWebEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="77ccea15-1de0-4395-b05f-1dc183475a45">
+      <column name="UTI_WEB_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforOtrasAntesEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="faffc02c-9b95-47f8-bc4e-a3334e8fd62a">
+      <column name="INFOR_OTRAS_ANTES_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforUcudalEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="1f661a75-3418-4840-ac72-67cc761739db">
+      <column name="INFOR_UCUDAL_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforUrEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9e433567-d05f-4464-b77e-97923fb6ade8">
+      <column name="INFOR_UR_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforUmEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="ea659c34-b701-41aa-824b-9232df674518">
+      <column name="INFOR_UM_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforOtrasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d482b6c2-0865-44b2-8f90-377a18d9c4fa">
+      <column name="INFOR_OTRAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforUdeEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="69949165-ff35-4618-9445-3660bf8db903">
+      <column name="INFOR_UDE_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ComparPadresEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="ddb22d22-9a0c-4c0d-a2f6-2575646a3e3d">
+      <column name="COMPAR_PADRES_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ComparOtrosEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f067f3b5-4bf5-4cfa-b2cd-989588f2c233">
+      <column name="COMPAR_OTROS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ComparAmigoFamEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="f0da00fc-0877-4f6a-bd17-a1824a9aa48f">
+      <column name="COMPAR_AMIGO_FAM_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ComparNadieEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="ca5982e7-edd6-4185-a7d0-a899756b690f">
+      <column name="COMPAR_NADIE_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ComparAmigoPropEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="c07972c8-0097-46d4-982b-f4117d3ae334">
+      <column name="COMPAR_AMIGO_PROP_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoPrestEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="430884a7-e4ab-440d-8fb5-2e3773448a44">
+      <column name="ASPECTO_PREST_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoInfraEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="a3cc3bec-42f1-46bb-bd3f-e0e9d813575f">
+      <column name="ASPECTO_INFRA_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoAcadEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="26fd6599-a1b3-4865-bf31-e0fc95f484fa">
+      <column name="ASPECTO_ACAD_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoPrecioEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="00d21587-3f7d-4de2-8257-952a5f71dfc3">
+      <column name="ASPECTO_PRECIO_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoLabEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="97e3f97a-dd04-4e3f-8c66-a42fa6fd9599">
+      <column name="ASPECTO_LAB_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AspectoBecaEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9441af9c-02c6-4b99-8714-f767f821a2c4">
+      <column name="ASPECTO_BECA_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="AsististeCharlaEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="867f19a1-dd8a-4d11-8e0e-3ca4e37213b3">
+      <column name="ASISTISTE_CHARLA_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="OpinionCharlasEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="4c2f5891-b2d0-46a0-97eb-4408f3882806">
+      <column name="OPINION_CHARLAS_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PlantTodasParEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="c2056eac-15b3-48ab-8352-e275f43f686c">
+      <column name="PLANT_TODAS_PAR_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PlantCadaUnaEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="2f2f14a3-7f7c-43f1-b16f-5a7273e04cf4">
+      <column name="PLANT_CADA_UNA_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PlantPrivParEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="34fc5540-80f3-4c38-8df8-0547ac83fc41">
+      <column name="PLANT_PRIV_PAR_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PlantCadaDestacEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="3a3a35e5-36eb-4f61-9542-59c95ad17409">
+      <column name="PLANT_CADA_DESTAC_ENCUESTA_INI" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="68d9a4cd-049d-44c7-9a26-f3315ab67200">
+      <column name="USUARIO_INGRESO" default="USER" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="5b1c65c9-34ec-48d6-bb20-e3071e19d5d0">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="013b4951-0b47-42c5-9e42-7030e2d2cfbb">
+      <column name="HORA_INGRESO" default="TO_CHAR(SYSDATE,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ImpresoEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="453403d6-d93d-4a7d-a587-e671b6503530">
+      <column name="IMPRESO_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforOtrasLinea1Ini" type="String" p1:nullable="True" p1:ValidateMaxLength="500" p1:ValidateRequired="false" p1:Guid="49919c6d-7890-419a-afa4-244e4322f559">
+      <column name="INFOR_OTRAS_LINEA1_INI" not-null="False" length="500" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InforOtrasLinea2Ini" type="String" p1:nullable="True" p1:ValidateMaxLength="500" p1:ValidateRequired="false" p1:Guid="828ae02a-4cd9-486c-bbd4-41ca97f70fce">
+      <column name="INFOR_OTRAS_LINEA2_INI" not-null="False" length="500" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoInstitucionBac" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="cf03ccda-0f81-4a54-921c-fa23ac0a5975">
+      <column name="CODIGO_INSTITUCION_BAC" not-null="False" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NuevaversionEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="45f4a530-7a78-460e-9e76-ea687a7894e6">
+      <column name="NUEVAVERSION_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UltimoanioSecundariaEncuestaIni" type="Boolean" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0b4ab931-1894-4a83-8484-c8f956f711d9">
+      <column name="ULTIMOANIO_SECUNDARIA_ENCUESTA_INI" not-null="False" precision="1" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="TieneEducacionSuperiorEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="9c33f174-b2c8-43b7-bcf4-fbda8a4b7bae">
+      <column name="TIENE_EDUCACION_SUPERIOR_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="NivelDecisionEncuestaIni" type="Boolean" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="9fe9ccdf-6414-4ad9-9977-d7e37c5bc113">
+      <column name="NIVEL_DECISION_ENCUESTA_INI" not-null="False" precision="1" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="AsesoramientoOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="91b45a64-6e15-4b62-9298-020e48a62efd">
+      <column name="ASESORAMIENTO_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ValoracionAsesoramientoOrtEncuestaIni" type="Boolean" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="f85474c7-19f7-4997-94d7-a024dcb0ded7">
+      <column name="VALORACION_ASESORAMIENTO_ORT_ENCUESTA_INI" not-null="False" precision="1" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="VistaSitioWebOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="9394701d-745c-4fb8-8dfd-c3e66aef0025">
+      <column name="VISTA_SITIO_WEB_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ValoracionSitioWebOrtEncuestaIni" type="Boolean" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c6666447-9b5f-434f-922b-b3d5c7296949">
+      <column name="VALORACION_SITIO_WEB_ORT_ENCUESTA_INI" not-null="False" precision="1" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="VistaInstalacionesOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="b7f7f1c3-698d-4453-9a1d-66167dd00093">
+      <column name="VISTA_INSTALACIONES_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ValoracionInstalacionesOrtEncuestaIni" type="Boolean" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="f7088bf0-220d-45ab-bd50-02e505d65061">
+      <column name="VALORACION_INSTALACIONES_ORT_ENCUESTA_INI" not-null="False" precision="1" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PublicidadOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="8b4e6b06-bc6d-42f1-a342-f0a8ed017cb8">
+      <column name="PUBLICIDAD_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InstruccionMadreOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="d6c5d070-dd37-426a-9c74-103bb3b75c82">
+      <column name="INSTRUCCION_MADRE_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="InstruccionPadreOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="dfbc90e9-c38a-4f14-adad-6bab9288998a">
+      <column name="INSTRUCCION_PADRE_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -4337,6 +4576,14 @@
       </end1>
       <end2 multiplicity="Many" name="RefreshTokens" class="Persona" relation-class="RefreshToken" lazy="False" p1:Guid="39fe2c48-e128-4784-a8de-450f84c016cc">
         <property name="CodigoPersona" />
+      </end2>
+    </association>
+    <association name="Empresa_EncuestaIni" cardinality="OneToMany" p1:Guid="c6509b1b-cc7e-4059-aed9-744b6517f7fe">
+      <end1 multiplicity="ZeroOrOne" name="Empresa" class="EncuestaIni" relation-class="Empresa" constrained="True" lazy="False" p1:Guid="f3eb26f1-299d-413c-b2f7-13c6d09cc47b">
+        <property name="CodigoEmpresa" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaInis" class="Empresa" relation-class="EncuestaIni" lazy="False" p1:Guid="04ed299b-c009-4d59-91bb-4d469d08a840">
+        <property name="CodigoInstitucionBac" />
       </end2>
     </association>
   </associations>

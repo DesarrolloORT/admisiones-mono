@@ -13,5 +13,6 @@ namespace AppLogic.IServices
         OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
         OperationResult<IEnumerable<DtoInscripcionHome>> ObtenerMisInscripciones(long codigoPersona);
         OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
+        OperationResult<bool> TieneDerechoAEncuestaInicial(long codigoPersona);
     }
 }

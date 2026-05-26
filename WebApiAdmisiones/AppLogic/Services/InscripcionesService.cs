@@ -2,6 +2,7 @@ using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -160,6 +161,50 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
+        }
+
+        public OperationResult<bool> TieneDerechoAEncuestaInicial(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona == null)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_TEI_01",
+                    nameof(TieneDerechoAEncuestaInicial),
+                    "Persona no encontrada.",
+                    404);
+            }
+
+            var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
+            if (!validacionDocumento.IsValid)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_TEI_02",
+                    nameof(TieneDerechoAEncuestaInicial),
+                    validacionDocumento.Message,
+                    400);
+            }
+
+            var tipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(persona.Documento);
+
+            if (uow.VdEsFrescoAdmisions.ExistePorDocumento(tipoDocumento, documento))
+            {
+                return OperationResult<bool>.Ok(false, nameof(TieneDerechoAEncuestaInicial));
+            }
+
+            if (uow.EncuestaInis.ExistePorDocumento(tipoDocumento, documento))
+            {
+                return OperationResult<bool>.Ok(false, nameof(TieneDerechoAEncuestaInicial));
+            }
+
+            if (uow.EncuestaIniAdmisions.ExisteCompletaPorDocumento(tipoDocumento, documento))
+            {
+                return OperationResult<bool>.Ok(false, nameof(TieneDerechoAEncuestaInicial));
+            }
+
+            return OperationResult<bool>.Ok(true, nameof(TieneDerechoAEncuestaInicial));
         }
 
         private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)

@@ -154,6 +154,8 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoInscriptoPruebaDevart> InscriptoPruebas { get; set; }
 
+        public List<DtoEncuestaIniDevart> EncuestaInis { get; set; }
+
         #endregion
     }
 

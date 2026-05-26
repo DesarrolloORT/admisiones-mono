@@ -36,5 +36,17 @@ namespace DataAccess.DevartRepositories
                 select fresco.IdProducto
             ).Count() > 0;
         }
+
+        public virtual bool ExistePorDocumento(string tipoDocumento, string documento)
+        {
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet.Any(f =>
+                f.TipoDocumento != null
+                && f.Documento != null
+                && f.TipoDocumento.Trim() == normalizedTipoDocumento
+                && f.Documento.Trim() == normalizedDocumento);
+        }
     }
 }
