@@ -8,10 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import {
+  AbstractControl,
   ControlValueAccessor,
   FormControl,
+  NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
+  ValidationErrors,
+  Validator,
 } from '@angular/forms';
 import { OrtFormFieldModule, OrtSelectModule } from '@desarrolloort/components';
 
@@ -31,9 +35,14 @@ import { LocationValue } from '../../models/location-value';
       useExisting: forwardRef(() => LocationSelect),
       multi: true,
     },
+    {
+      provide: NG_VALIDATORS,
+      useExisting: forwardRef(() => LocationSelect),
+      multi: true,
+    },
   ],
 })
-export class LocationSelect implements ControlValueAccessor, OnInit {
+export class LocationSelect implements ControlValueAccessor, OnInit, Validator {
   private readonly catalogs = inject(Catalogs);
 
   protected readonly countries = signal<LocationCountry[]>([]);
@@ -73,6 +82,7 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
 
   private onChange: (value: LocationValue) => void = () => {};
   private onTouched: () => void = () => {};
+  private onValidatorChange: () => void = () => {};
 
   ngOnInit(): void {
     this.loadCountries();
@@ -104,6 +114,34 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
     this.onTouched = fn;
   }
 
+  registerOnValidatorChange(fn: () => void): void {
+    this.onValidatorChange = fn;
+  }
+
+  validate(control: AbstractControl<LocationValue | null>): ValidationErrors | null {
+    const value = control.value;
+
+    if (!value?.codigoPais) {
+      return { locationRequired: true };
+    }
+
+    const country = this.countries().find(item => item.codigoPais === value.codigoPais);
+    const states = country?.estado ?? [];
+
+    if (states.length > 0 && !value.codigoEstado) {
+      return { locationStateRequired: true };
+    }
+
+    const state = states.find(item => item.codigoEstado === value.codigoEstado);
+    const cities = state?.ciudad ?? [];
+
+    if (cities.length > 0 && !value.codigoCiudad) {
+      return { locationCityRequired: true };
+    }
+
+    return null;
+  }
+
   setDisabledState(isDisabled: boolean): void {
     this.isDisabled.set(isDisabled);
     if (isDisabled) {
@@ -131,6 +169,7 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
       this.citiesVisible.set(true);
     });
     this.emitValue();
+    this.onValidatorChange();
   }
 
   protected onStateChange(): void {
@@ -141,12 +180,14 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
     this.citiesVisible.set(false);
     setTimeout(() => this.citiesVisible.set(true));
     this.emitValue();
+    this.onValidatorChange();
   }
 
   protected onCityChange(): void {
     const code = this.cityControl.value ? Number(this.cityControl.value) : null;
     this.selectedCityCode.set(code);
     this.emitValue();
+    this.onValidatorChange();
   }
 
   protected onBlur(): void {
@@ -168,6 +209,8 @@ export class LocationSelect implements ControlValueAccessor, OnInit {
       if (code !== null) {
         this.countryControl.setValue(code.toString(), { emitEvent: false });
       }
+
+      this.onValidatorChange();
     });
   }
 }
