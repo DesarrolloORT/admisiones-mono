@@ -15,6 +15,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IPersonaRepository> _personaRepositoryMock;
+        private readonly Mock<IInscriptoRepository> _inscriptoRepositoryMock;
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepositoryMock;
         private readonly Mock<ILdap> _ldapMock;
         private readonly PersonaService _service;
@@ -24,13 +25,16 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _personaRepositoryMock = new Mock<IPersonaRepository>();
+            _inscriptoRepositoryMock = new Mock<IInscriptoRepository>();
             _ciudadRepositoryMock = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
             _ldapMock = new Mock<ILdap>();
 
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _uowMock.Setup(u => u.Personas).Returns(_personaRepositoryMock.Object);
+            _uowMock.Setup(u => u.Inscriptos).Returns(_inscriptoRepositoryMock.Object);
             _uowMock.Setup(u => u.Ciudads).Returns(_ciudadRepositoryMock.Object);
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
+            _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
             _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object);
         }
@@ -93,6 +97,56 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("24001234", result.Data.Telefono1);
             Assert.Equal("ana@test.com", result.Data.Mail);
             Assert.Equal("ana@test.com", result.Data.VerificacionMail);
+            Assert.False(result.Data.IdentidadRestringida);
+        }
+
+        [Theory]
+        [InlineData("SI", "NO", "NO", false)]
+        [InlineData("NO", "SI", "NO", false)]
+        [InlineData("NO", "NO", "SI", false)]
+        [InlineData("NO", "NO", "NO", true)]
+        public void ObtenerDatosPersona_IdentidadRestringida_MapsLegacyRule(
+            string funcionarioActivo,
+            string usoExclusivoDba,
+            string alumnoExtranjero,
+            bool tieneInscripcionActiva)
+        {
+            _personaRepositoryMock
+                .Setup(r => r.GetPersonaWithRelated(123))
+                .Returns(new Persona
+                {
+                    CodigoPersona = 123,
+                    FuncionarioActivoPersona = funcionarioActivo,
+                    UsoexclusivodbaPersona = usoExclusivoDba,
+                    AlumnoExtranjeroPersona = alumnoExtranjero
+                });
+            _inscriptoRepositoryMock
+                .Setup(r => r.TieneInscripcionActiva(123))
+                .Returns(tieneInscripcionActiva);
+
+            var result = _service.ObtenerDatosPersona(123);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data.IdentidadRestringida);
+        }
+
+        [Fact]
+        public void ObtenerDatosPersona_WithoutRestrictiveConditions_ReturnsIdentidadRestringidaFalse()
+        {
+            _personaRepositoryMock
+                .Setup(r => r.GetPersonaWithRelated(123))
+                .Returns(new Persona
+                {
+                    CodigoPersona = 123,
+                    FuncionarioActivoPersona = "NO",
+                    UsoexclusivodbaPersona = "NO",
+                    AlumnoExtranjeroPersona = "NO"
+                });
+
+            var result = _service.ObtenerDatosPersona(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data.IdentidadRestringida);
         }
 
         [Fact]
@@ -149,6 +203,151 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("nuevo@test.com", persona.Email);
             _personaRepositoryMock.Verify(r => r.Update(persona), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_IdentidadRestringidaChangingIdentity_ReturnsFailed()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                PrimerNombre = "Ana",
+                SegundoNombre = "Maria",
+                PrimerApellido = "Perez",
+                SegundoApellido = "Gomez",
+                FechaNacimiento = new DateTime(2000, 1, 2),
+                Sexo = "F"
+            };
+
+            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
+
+            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            {
+                SegundoNombre = "Laura",
+                SegundoApellido = "Lopez",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3,
+                Direccion = "18 de julio 1234",
+                Mail = "uno@test.com",
+                VerificacionMail = "uno@test.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_ADP_06", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _ciudadRepositoryMock.Verify(r => r.GetByKey(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()), Times.Never);
+            _personaRepositoryMock.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_IdentidadRestringida_AllowsNonIdentityFields()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                PrimerNombre = "Ana",
+                SegundoNombre = "Maria",
+                PrimerApellido = "Perez",
+                SegundoApellido = "Gomez",
+                FechaNacimiento = new DateTime(2000, 1, 2),
+                Sexo = "F",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3,
+                Direccion = "Vieja",
+                Telefono1 = "111",
+                Email = "viejo@test.com"
+            };
+
+            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
+            _ciudadRepositoryMock.Setup(r => r.GetByKey(4, 5, 6)).Returns(new Ciudad());
+
+            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            {
+                CodigoPais = 4,
+                CodigoEstado = 5,
+                CodigoCiudad = 6,
+                Direccion = "  nueva direccion  ",
+                Telefono1 = " 222 ",
+                Mail = "nuevo@test.com",
+                VerificacionMail = "nuevo@test.com"
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("Ana", persona.PrimerNombre);
+            Assert.Equal("Maria", persona.SegundoNombre);
+            Assert.Equal("Perez", persona.PrimerApellido);
+            Assert.Equal("Gomez", persona.SegundoApellido);
+            Assert.Equal(new DateTime(2000, 1, 2), persona.FechaNacimiento);
+            Assert.Equal("F", persona.Sexo);
+            Assert.Equal("Nueva Direccion", persona.Direccion);
+            Assert.Equal("222", persona.Telefono1);
+            Assert.Equal("nuevo@test.com", persona.Email);
+            _personaRepositoryMock.Verify(r => r.Update(persona), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_SinIdentidadRestringida_UpdatesIdentityFieldsWhenProvided()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                PrimerNombre = "Ana",
+                PrimerNombreMay = "ANA",
+                SegundoNombre = "Maria",
+                SegundoNombreMay = "MARIA",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                SegundoApellido = "Gomez",
+                SegundoApellidoMay = "GOMEZ",
+                FechaNacimiento = new DateTime(2000, 1, 2),
+                Sexo = "F"
+            };
+
+            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _ciudadRepositoryMock.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad());
+
+            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            {
+                TipoDocumento = "pa",
+                Documento = " A123 ",
+                PrimerNombre = "  laura  ",
+                SegundoNombre = "  ines  ",
+                PrimerApellido = "  gomez  ",
+                SegundoApellido = "  rodriguez  ",
+                FechaNacimiento = new DateTime(2001, 2, 3),
+                Sexo = "m",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3,
+                Direccion = "18 de julio 1234",
+                Mail = "uno@test.com",
+                VerificacionMail = "uno@test.com"
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("PA", persona.TipoDocumento);
+            Assert.Equal("A123", persona.Documento);
+            Assert.Equal("Laura", persona.PrimerNombre);
+            Assert.Equal("LAURA", persona.PrimerNombreMay);
+            Assert.Equal("Ines", persona.SegundoNombre);
+            Assert.Equal("INES", persona.SegundoNombreMay);
+            Assert.Equal("Gomez", persona.PrimerApellido);
+            Assert.Equal("GOMEZ", persona.PrimerApellidoMay);
+            Assert.Equal("Rodriguez", persona.SegundoApellido);
+            Assert.Equal("RODRIGUEZ", persona.SegundoApellidoMay);
+            Assert.Equal(new DateTime(2001, 2, 3), persona.FechaNacimiento);
+            Assert.Equal("M", persona.Sexo);
         }
 
         [Fact]

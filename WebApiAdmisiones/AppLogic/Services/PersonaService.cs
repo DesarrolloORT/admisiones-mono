@@ -28,7 +28,10 @@ namespace AppLogic.Services
                     404);
             }
 
-            return OperationResult<DtoDatosPersona>.Ok(MapearDatosPersona(persona), nameof(ObtenerDatosPersona));
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            return OperationResult<DtoDatosPersona>.Ok(
+                MapearDatosPersona(persona, identidadRestringida),
+                nameof(ObtenerDatosPersona));
         }
 
         public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request)
@@ -50,6 +53,17 @@ namespace AppLogic.Services
                 return validacion;
             }
 
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            var validacionIdentidad = PersonaIdentityHelper.ValidarCambiosIdentidad(
+                persona,
+                request,
+                identidadRestringida,
+                nameof(ActualizarDatosPersona));
+            if (!validacionIdentidad.Success)
+            {
+                return validacionIdentidad;
+            }
+
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad is null)
             {
@@ -60,6 +74,7 @@ namespace AppLogic.Services
                     400);
             }
 
+            PersonaIdentityHelper.AplicarCambiosIdentidad(persona, request, identidadRestringida);
             persona.CodigoPais = request.CodigoPais;
             persona.CodigoEstado = request.CodigoEstado;
             persona.CodigoCiudad = request.CodigoCiudad;
@@ -160,26 +175,27 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(ActualizarDatosPersona));
         }
 
-        private static DtoDatosPersona MapearDatosPersona(Persona persona)
+        private static DtoDatosPersona MapearDatosPersona(Persona persona, bool identidadRestringida)
         {
             var mail = persona.Email ?? string.Empty;
             return new DtoDatosPersona
             {
-                TipoDocumento = persona.TipoDocumento ?? string.Empty,
-                Documento = persona.Documento ?? string.Empty,
-                PrimerNombre = persona.PrimerNombre ?? string.Empty,
-                SegundoNombre = persona.SegundoNombre ?? string.Empty,
-                PrimerApellido = persona.PrimerApellido ?? string.Empty,
-                SegundoApellido = persona.SegundoApellido ?? string.Empty,
+                TipoDocumento = persona.TipoDocumento?.Trim() ?? string.Empty,
+                Documento = persona.Documento?.Trim() ?? string.Empty,
+                PrimerNombre = persona.PrimerNombre?.Trim() ?? string.Empty,
+                SegundoNombre = persona.SegundoNombre?.Trim() ?? string.Empty,
+                PrimerApellido = persona.PrimerApellido?.Trim() ?? string.Empty,
+                SegundoApellido = persona.SegundoApellido?.Trim() ?? string.Empty,
                 FechaNacimiento = persona.FechaNacimiento ?? default,
-                Sexo = persona.Sexo ?? string.Empty,
+                Sexo = persona.Sexo?.Trim() ?? string.Empty,
                 CodigoPais = persona.CodigoPais ?? 0,
                 CodigoEstado = persona.CodigoEstado ?? 0,
                 CodigoCiudad = persona.CodigoCiudad ?? 0,
-                Direccion = persona.Direccion ?? string.Empty,
-                Telefono1 = persona.Telefono1 ?? string.Empty,
+                Direccion = persona.Direccion?.Trim() ?? string.Empty,
+                Telefono1 = persona.Telefono1?.Trim() ?? string.Empty,
                 Mail = mail,
-                VerificacionMail = mail
+                VerificacionMail = mail,
+                IdentidadRestringida = identidadRestringida
             };
         }
 

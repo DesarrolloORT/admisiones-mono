@@ -694,5 +694,117 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.False(result.Data);
         }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_PersonaInexistente_ReturnsNotFound()
+        {
+            SetupPersona(null);
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_TEI_01", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_DocumentoInvalido_ReturnsBadRequest()
+        {
+            SetupPersona(new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = string.Empty,
+                Documento = "123"
+            });
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_TEI_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_ExisteEnFrescos_ReturnsFalse()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta(existeFresco: true);
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data);
+        }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_ExisteEnEncuestaIni_ReturnsFalse()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta(existeEncuestaIni: true);
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data);
+        }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_ExisteEncuestaCompleta_ReturnsFalse()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta(existeEncuestaCompleta: true);
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data);
+        }
+
+        [Fact]
+        public void TieneDerechoAEncuestaInicial_NoExisteEnNingunaFuente_ReturnsTrue()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta();
+
+            var result = _service.TieneDerechoAEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+        }
+
+        private void SetupPersonaValida()
+        {
+            SetupPersona(new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "DE",
+                Documento = "123"
+            });
+        }
+
+        private void SetupPersona(Persona? persona)
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+        }
+
+        private void SetupReposDerechoEncuesta(
+            bool existeFresco = false,
+            bool existeEncuestaIni = false,
+            bool existeEncuestaCompleta = false)
+        {
+            var frescoRepo = new Mock<IVdEsFrescoAdmisionRepository>();
+            frescoRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(existeFresco);
+            _uowMock.Setup(u => u.VdEsFrescoAdmisions).Returns(frescoRepo.Object);
+
+            var encuestaIniRepo = new Mock<IEncuestaIniRepository>();
+            encuestaIniRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(existeEncuestaIni);
+            _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.ExisteCompletaPorDocumento("DE", "123")).Returns(existeEncuestaCompleta);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+        }
     }
 }

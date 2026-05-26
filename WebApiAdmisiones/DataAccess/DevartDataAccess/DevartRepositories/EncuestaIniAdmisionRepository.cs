@@ -40,5 +40,17 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault();
         }
 
+        public virtual bool ExisteCompletaPorDocumento(string tipoDocumento, string documento)
+        {
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet.Any(e =>
+                e.TipoDocumento != null
+                && e.Documento != null
+                && e.TipoDocumento.Trim() == normalizedTipoDocumento
+                && e.Documento.Trim() == normalizedDocumento);
+        }
+
     }
 }

@@ -66,6 +66,13 @@ namespace DataAccess.DevartRepositories
                 .ToList();
         }
 
+        public virtual bool TieneInscripcionActiva(long codigoPersona)
+        {
+            return objectSet.Any(i =>
+                i.CodigoPersona == codigoPersona
+                && i.BajaInscr == null);
+        }
+
         /// <summary>
         /// Devuelve true si la persona tiene al menos una inscripción activa (sin baja)
         /// para el producto e IdProceso indicados (via ProcesoComienzo).
