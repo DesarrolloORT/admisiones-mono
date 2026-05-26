@@ -93,7 +93,7 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Equal("Ya estás registrado. Para acceder, ingresá con tu número de usuario y tu contraseña.", result.Message);
+            Assert.Equal("La cedula ingresada ya está registrada.", result.Message);
             Assert.True(result.Data!.UsuarioExistente);
             Assert.False(result.Data.RequiereVerificacion);
             Assert.False(result.Data.RequiereAltaPersona);
@@ -142,7 +142,7 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Equal("Ya existe una solicitud de alta para el documento indicado.", result.Message);
+            Assert.Equal("El documento ingresado está en revisión.", result.Message);
             Assert.True(result.Data!.SolicitudAltaExistente);
             Assert.False(result.Data.RequiereAltaSolicitud);
             Assert.False(result.Data.RequiereAltaPersona);
@@ -194,8 +194,7 @@ namespace UnitTesting.AppLogic.Services
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
                 PrimerApellido = "Perez",
-                Mail = "ana@example.com",
-                VerificacionMail = "ana@example.com"
+                Mail = "ana@example.com"
             });
 
             Assert.True(result.Success);
@@ -215,8 +214,7 @@ namespace UnitTesting.AppLogic.Services
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
                 PrimerApellido = "Gomez",
-                Mail = "ana@example.com",
-                VerificacionMail = "ana@example.com"
+                Mail = "ana@example.com"
             });
 
             Assert.False(result.Success);
@@ -231,8 +229,7 @@ namespace UnitTesting.AppLogic.Services
                 TipoDocumento = "PS",
                 Documento = "A123",
                 PrimerApellido = "Perez",
-                Mail = "ana@example.com",
-                VerificacionMail = "ana@example.com"
+                Mail = "ana@example.com"
             });
 
             Assert.False(result.Success);
