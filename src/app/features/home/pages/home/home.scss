@@ -3,115 +3,19 @@
   display: block;
 }
 
-.home-shell {
-  --home-primary: var(--ort-sys-base-surface-primary-background);
-  --home-surface: var(--ort-sys-base-surface-background);
-  --home-page: var(--ort-sys-base-surface-background-page);
-  --home-heading: var(--ort-sys-base-text-color-headline);
-  --home-body: var(--ort-sys-base-text-color-body);
-  --home-display: var(--ort-sys-font-family-display);
-  --home-border: var(--ort-sys-base-border-primary-color);
-  --home-tonal: var(--ort-sys-button-tonal-background);
-  --home-shadow: 0 0 8px rgb(13 13 28 / 8%);
-
-  min-height: 100dvh;
-  background: var(--home-page);
-  color: var(--home-heading);
-  font-family: var(--ort-sys-font-family-open-sans, 'Open Sans', sans-serif);
-}
-
-.home-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--home-primary);
-}
-
-.home-header__content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: min(100%, 1440px);
-  height: 80px;
-  margin: 0 auto;
-  padding: 8px 48px;
-}
-
-.home-header__logo {
-  object-fit: contain;
-  width: 67px;
-  height: 30px;
-}
-
-.home-header__spacer {
-  display: none;
-}
-
-.home-profile {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-}
-
-.home-avatar,
 .home-action-card__chevron {
   display: inline-grid;
+  grid-area: action;
   place-items: center;
   width: 40px;
   height: 40px;
   border: 0;
   border-radius: var(--ort-sys-avatar-border-radius);
-  background: var(--ort-sys-avatar-background);
+  background: var(--home-tonal);
   color: var(--home-primary);
   cursor: pointer;
 
   ort-icon {
-    font-size: 24px;
-  }
-}
-
-.home-profile-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 2;
-  display: grid;
-  width: 233px;
-  min-width: 112px;
-  max-width: 327px;
-  padding-block: var(--ort-sys-menu-item-padding-block);
-  border-radius: var(--ort-sys-menu-border-radius);
-  background: var(--ort-sys-menu-background);
-  box-shadow:
-    0 0 12px rgb(13 13 28 / 12%),
-    0 0 8px rgb(13 13 28 / 12%);
-}
-
-.home-profile-menu__item {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: var(--ort-sys-menu-item-gap);
-  align-items: center;
-  min-height: 48px;
-  padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
-  border: 0;
-  border-bottom: 1px solid var(--ort-sys-base-border-subtle-color, #e3e8ef);
-  background: transparent;
-  color: var(--ort-sys-menu-item-color);
-  font: inherit;
-  font-size: var(--ort-sys-menu-item-font-size);
-  line-height: var(--ort-sys-menu-item-line-height);
-  text-align: left;
-  cursor: pointer;
-
-  &:last-child {
-    border-bottom: 0;
-  }
-
-  ort-icon {
-    color: var(--ort-sys-base-icon-color-subtle, #697586);
     font-size: 24px;
   }
 }
@@ -192,11 +96,6 @@
   font-size: 32px;
 }
 
-.home-action-card__chevron {
-  grid-area: action;
-  background: var(--home-tonal);
-}
-
 .home-action-card--image {
   min-height: 480px;
 }
@@ -233,26 +132,7 @@
   display: none;
 }
 
-@media (width <= 760px) {
-  .home-header__content {
-    height: 111px;
-    padding: 47px 16px 0;
-  }
-
-  .home-header__spacer {
-    display: block;
-    width: 48px;
-    height: 48px;
-  }
-
-  .home-header__logo {
-    flex: 0 0 auto;
-  }
-
-  .home-profile-menu {
-    top: calc(100% + 4px);
-  }
-
+@media (width <=760px) {
   .home-main {
     gap: 24px;
     width: 100%;

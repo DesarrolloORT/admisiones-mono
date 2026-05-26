@@ -1,96 +1,49 @@
-<main class="home-shell">
-  <header class="home-header">
-    <div class="home-header__content">
-      <span aria-hidden="true" class="home-header__spacer"></span>
-      <img alt="ORT" class="home-header__logo" src="assets/auth/ort-logo-white.svg" />
-      <div class="home-profile">
-        <button
-          aria-haspopup="menu"
-          aria-label="Perfil"
-          class="home-avatar"
-          type="button"
-          [attr.aria-expanded]="profileMenuOpen()"
-          (click)="toggleProfileMenu()">
-          <ort-icon>person</ort-icon>
-        </button>
-
-        <div
-          aria-label="Opciones de perfil"
-          class="home-profile-menu"
-          role="menu"
-          [hidden]="!profileMenuOpen()">
-          <button
-            class="home-profile-menu__item"
-            role="menuitem"
-            type="button"
-            (click)="closeProfileMenu()">
-            <ort-icon>person</ort-icon>
-            Editar perfil
-          </button>
-          <button
-            class="home-profile-menu__item"
-            role="menuitem"
-            type="button"
-            (click)="closeProfileMenu()">
-            <ort-icon>lock</ort-icon>
-            Cambiar contraseña
-          </button>
-          <button class="home-profile-menu__item" role="menuitem" type="button" (click)="logout()">
-            <ort-icon>logout</ort-icon>
-            Cerrar sesión
-          </button>
-        </div>
-      </div>
-    </div>
+<section aria-labelledby="home-title" class="home-main">
+  <header class="home-welcome">
+    <h1 id="home-title">{{ greeting() }}</h1>
+    <p>{{ dashboard().description }}</p>
   </header>
 
-  <section aria-labelledby="home-title" class="home-main">
-    <header class="home-welcome">
-      <h1 id="home-title">{{ greeting() }}</h1>
-      <p>{{ dashboard().description }}</p>
-    </header>
+  <section aria-label="Acciones principales" class="home-actions">
+    @for (card of dashboard().actionCards; track card.id) {
+    <article
+      class="home-action-card"
+      [class.home-action-card--career]="card.id === 'career'"
+      [class.home-action-card--image]="card.imageSrc"
+      [class.home-action-card--scholarship]="card.id === 'scholarship'">
+      <img
+        class="home-action-card__image"
+        [alt]="card.title"
+        [hidden]="!card.imageSrc"
+        [src]="card.imageSrc || ''" />
+      <div class="home-action-card__content">
+        <ort-icon class="home-action-card__icon">{{ card.icon }}</ort-icon>
+        <h2>{{ card.title }}</h2>
+        <p>{{ card.description }}</p>
 
-    <section aria-label="Acciones principales" class="home-actions">
-      @for (card of dashboard().actionCards; track card.id) {
-      <article
-        class="home-action-card"
-        [class.home-action-card--career]="card.id === 'career'"
-        [class.home-action-card--image]="card.imageSrc"
-        [class.home-action-card--scholarship]="card.id === 'scholarship'">
-        <img
-          class="home-action-card__image"
-          [alt]="card.title"
-          [hidden]="!card.imageSrc"
-          [src]="card.imageSrc || ''" />
-        <div class="home-action-card__content">
-          <ort-icon class="home-action-card__icon">{{ card.icon }}</ort-icon>
-          <h2>{{ card.title }}</h2>
-          <p>{{ card.description }}</p>
-
-          <button
-            class="home-action-card__primary"
-            ort-primary-button
-            type="button"
-            [hidden]="!card.imageSrc">
-            {{ card.ctaLabel }}
-          </button>
-          <button
-            class="home-action-card__mobile-cta"
-            ort-primary-button
-            type="button"
-            [hidden]="card.imageSrc">
-            {{ card.ctaLabel }}
-          </button>
-          <button
-            class="home-action-card__chevron"
-            type="button"
-            [attr.aria-label]="card.ctaLabel"
-            [hidden]="card.imageSrc">
-            <ort-icon>chevron_right</ort-icon>
-          </button>
-        </div>
-      </article>
-      }
-    </section>
+        <button
+          class="home-action-card__primary"
+          ort-primary-button
+          type="button"
+          [hidden]="!card.imageSrc">
+          {{ card.ctaLabel }}
+        </button>
+        <button
+          class="home-action-card__mobile-cta"
+          ort-primary-button
+          type="button"
+          [hidden]="card.imageSrc">
+          {{ card.ctaLabel }}
+        </button>
+        <button
+          class="home-action-card__chevron"
+          type="button"
+          [attr.aria-label]="card.ctaLabel"
+          [hidden]="card.imageSrc">
+          <ort-icon>chevron_right</ort-icon>
+        </button>
+      </div>
+    </article>
+    }
   </section>
-</main>
+</section>

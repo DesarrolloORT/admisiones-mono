@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -35,8 +35,6 @@ const ACTION_CARDS: HomeActionCard[] = [
 export class Home {
   private readonly authSession = inject(AuthSessionService);
 
-  protected readonly profileMenuOpen = signal(false);
-
   protected readonly dashboard = computed<HomeDashboard>(() => {
     const session = this.authSession.session();
 
@@ -52,17 +50,4 @@ export class Home {
 
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });
-
-  protected toggleProfileMenu(): void {
-    this.profileMenuOpen.update(isOpen => !isOpen);
-  }
-
-  protected closeProfileMenu(): void {
-    this.profileMenuOpen.set(false);
-  }
-
-  protected logout(): void {
-    this.authSession.logout();
-    this.closeProfileMenu();
-  }
 }
