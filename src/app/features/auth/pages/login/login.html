@@ -4,7 +4,7 @@
   heroTitle="Tu red profesional comienza hoy." title="Comenzá tu camino en ORT">
   <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
     <section class="auth-form-section">
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentType.value">
         <ort-label>Tipo de documento</ort-label>
         <ort-select formControlName="documentType" id="login-document-type">
           <ort-option value="CI">Cédula</ort-option>
@@ -17,7 +17,7 @@
         }
       </ort-form-field>
 
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
         @if (facade.isCedulaInput()) {
         <input autocomplete="username" formControlName="documentNumber" id="login-document-number" ortCedulaInput
@@ -39,13 +39,13 @@
         }
       </ort-form-field>
 
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.password.value">
         <ort-label>Contraseña</ort-label>
         <input #passwordInput formControlName="password" id="login-password" ortInput
           [attr.autocomplete]="'current-password'" [type]="facade.passwordInputType()" />
-        <button aria-label="Mostrar u ocultar contraseña" ort-icon-button ortSuffix type="button"
+        <button ort-icon-button ortSuffix type="button" [attr.aria-label]="facade.passwordToggleLabel()"
           (click)="facade.togglePasswordVisibility()">
-          <ort-icon>{{ facade.passwordIcon() }}</ort-icon>
+          <ort-icon aria-hidden="true">{{ facade.passwordIcon() }}</ort-icon>
         </button>
         @if ( facade.form.controls.password.touched &&
         facade.form.controls.password.hasError('required') ) {
@@ -58,6 +58,8 @@
         ¿Olvidaste tu usuario o contraseña?
       </a>
     </section>
+
+    <ort-error-summary [errors]="facade.errorSummary()" />
 
     @if (facade.error()) {
     <p class="auth-error" role="alert">{{ facade.error() }}</p>

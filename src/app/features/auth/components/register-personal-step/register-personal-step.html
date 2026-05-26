@@ -5,9 +5,7 @@
   <app-register-personal-complete-fields [form]="form()" />
   }
 
-  <p class="auth-error" role="alert" [hidden]="!hasSubmittedInvalidFields()">
-    Completá todos los datos obligatorios para continuar.
-  </p>
+  <ort-error-summary [errors]="errorSummary()" />
 
   @if (error()) {
   <p class="auth-error" role="alert">{{ error() }}</p>

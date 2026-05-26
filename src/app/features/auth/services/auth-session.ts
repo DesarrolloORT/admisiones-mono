@@ -104,3 +104,4 @@ export class AuthSessionService {
     return this.document.defaultView?.localStorage ?? null;
   }
 }
+

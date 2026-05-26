@@ -4,12 +4,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
+import { buildFormErrorSummary } from '../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { createRecoverAccessForm, syncDocumentNumberValidators } from '../forms/auth-forms';
 import { formatDocumentForBackend, isCedulaDocumentType } from '../models/document-number';
 import { PasswordActivationService } from '../services/password-activation';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class RecoverAccessFacade {
   private readonly passwordService = inject(PasswordActivationService);
   private readonly route = inject(ActivatedRoute);
@@ -20,12 +23,37 @@ export class RecoverAccessFacade {
   public readonly isSubmitting = signal(false);
   public readonly error = signal<string | null>(null);
   public readonly successMessage = signal<string | null>(null);
+  public readonly submitted = signal(false);
 
   private readonly _documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
 
   public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
+  public readonly errorSummary = computed(() =>
+    this.submitted()
+      ? buildFormErrorSummary(this.form, [
+          {
+            controlName: 'documentType',
+            fieldId: 'recover-document-type',
+            label: 'Tipo de documento',
+          },
+          {
+            controlName: 'documentNumber',
+            fieldId: 'recover-document-number',
+            label: 'Nro. de documento',
+            messages: {
+              pattern: 'Ingresá solo caracteres alfanuméricos.',
+            },
+          },
+          {
+            controlName: 'primerApellido',
+            fieldId: 'recover-primer-apellido',
+            label: 'Primer apellido',
+          },
+        ])
+      : []
+  );
 
   constructor() {
     effect(() => {
@@ -49,6 +77,7 @@ export class RecoverAccessFacade {
   }
 
   public submit(): void {
+    this.submitted.set(true);
     syncDocumentNumberValidators(this.form.controls.documentNumber, this._documentTypeValue());
 
     if (this.form.invalid) {
@@ -95,4 +124,3 @@ export class RecoverAccessFacade {
     return isNormalizedApiError(error) ? error.message : fallback;
   }
 }
-

@@ -1,14 +1,15 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ValidationUtils } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
+import { buildFormErrorSummary } from '../../../shared/forms/form-error-summary';
+import {
+  buildOrtPasswordRequirements,
+  ORT_PASSWORD_ERROR_MESSAGES,
+  ORT_PASSWORD_VALIDATORS,
+} from '../../../shared/forms/password-validation';
 import { PasswordActivationService } from '../services/password-activation';
 
 export interface SetPasswordForm {
@@ -45,19 +46,16 @@ export class SetPasswordFacade {
     {
       password: new FormControl('', {
         nonNullable: true,
-        validators: [
-          Validators.required,
-          Validators.minLength(12),
-          Validators.maxLength(20),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$%@_.!-])/),
-        ],
+        validators: ORT_PASSWORD_VALIDATORS,
       }),
       confirmPassword: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required],
       }),
     },
-    { validators: [passwordMatchValidator] }
+    {
+      validators: [ValidationUtils.confirmPasswordValidator('password', 'confirmPassword')],
+    }
   );
 
   private readonly _isSubmitting = signal(false);
@@ -65,6 +63,7 @@ export class SetPasswordFacade {
 
   private readonly _error = signal<string | null>(null);
   public readonly error = this._error.asReadonly();
+  public readonly submitted = signal(false);
 
   private readonly _tokenError = signal<string | null>(null);
   public readonly tokenError = this._tokenError.asReadonly();
@@ -76,26 +75,50 @@ export class SetPasswordFacade {
     this._passwordVisible() ? 'text' : 'password'
   );
   public readonly passwordIcon = computed(() =>
-    this._passwordVisible() ? 'visibility' : 'visibility_off'
+    this._passwordVisible() ? 'visibility_off' : 'visibility'
+  );
+  public readonly passwordToggleLabel = computed(() =>
+    this._passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'
   );
   public readonly confirmPasswordInputType = computed(() =>
     this._confirmPasswordVisible() ? 'text' : 'password'
   );
   public readonly confirmPasswordIcon = computed(() =>
-    this._confirmPasswordVisible() ? 'visibility' : 'visibility_off'
+    this._confirmPasswordVisible() ? 'visibility_off' : 'visibility'
+  );
+  public readonly confirmPasswordToggleLabel = computed(() =>
+    this._confirmPasswordVisible()
+      ? 'Ocultar confirmación de contraseña'
+      : 'Mostrar confirmación de contraseña'
+  );
+  public readonly errorSummary = computed(() =>
+    this.submitted()
+      ? buildFormErrorSummary(this.form, [
+          {
+            controlName: 'password',
+            fieldId: 'crear-password',
+            label: 'Contraseña',
+            messages: {
+              ...ORT_PASSWORD_ERROR_MESSAGES,
+            },
+          },
+          {
+            controlName: 'confirmPassword',
+            fieldId: 'crear-password-confirm',
+            label: 'Confirmar contraseña',
+            messages: {
+              confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+            },
+          },
+        ])
+      : []
   );
 
   private readonly _password = signal('');
 
   public readonly requirements = computed<PasswordRequirement[]>(() => {
-    const value = this._password();
-    return [
-      { label: '12 caracteres', met: value.length >= 12 },
-      { label: 'Una letra mayúscula', met: /[A-Z]/.test(value) },
-      { label: 'Una letra minúscula', met: /[a-z]/.test(value) },
-      { label: 'Un número', met: /\d/.test(value) },
-      { label: 'Un caracter especial ($%@_!.-)', met: /[$%@_.!-]/.test(value) },
-    ];
+    this._password();
+    return buildOrtPasswordRequirements(this.form.controls.password);
   });
 
   constructor() {
@@ -112,6 +135,7 @@ export class SetPasswordFacade {
   }
 
   public submit(): void {
+    this.submitted.set(true);
     this.form.markAllAsTouched();
     if (this.form.invalid || this._isSubmitting()) {
       return;
@@ -140,15 +164,5 @@ export class SetPasswordFacade {
       error: () => this._tokenError.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
     });
   }
-}
-
-function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
-  const password = group.get('password')?.value;
-  const confirm = group.get('confirmPassword')?.value;
-  if (password && confirm && password !== confirm) {
-    group.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-    return { passwordMismatch: true };
-  }
-  return null;
 }
 

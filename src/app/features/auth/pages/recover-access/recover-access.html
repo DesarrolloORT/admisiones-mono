@@ -5,7 +5,7 @@
   heroTitle="Recuperá el acceso a tu cuenta." title="Recuperar acceso">
   <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
     <section class="auth-form-section">
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentType.value">
         <ort-label>Tipo de documento</ort-label>
         <ort-select formControlName="documentType" id="recover-document-type">
           <ort-option value="CI">Cédula</ort-option>
@@ -18,7 +18,7 @@
         }
       </ort-form-field>
 
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
         @if (facade.isCedulaInput()) {
         <input autocomplete="username" formControlName="documentNumber" id="recover-document-number" ortCedulaInput
@@ -40,7 +40,7 @@
         }
       </ort-form-field>
 
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.primerApellido.value">
         <ort-label>Primer apellido</ort-label>
         <input autocomplete="family-name" formControlName="primerApellido" id="recover-primer-apellido" ortInput
           type="text" />
@@ -51,10 +51,12 @@
       </ort-form-field>
     </section>
 
+    <ort-error-summary [errors]="facade.errorSummary()" />
+
     @if (facade.error()) {
     <p class="auth-error" role="alert">{{ facade.error() }}</p>
     } @if (facade.successMessage()) {
-    <output class="auth-success">{{ facade.successMessage() }}</output>
+    <output class="auth-success" role="status">{{ facade.successMessage() }}</output>
     }
 
     <button ort-primary-button type="submit" [disabled]="facade.isSubmitting()">

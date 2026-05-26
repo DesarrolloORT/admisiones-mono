@@ -12,7 +12,6 @@ import {
   createCareerForm,
   createIdentityForm,
   createPersonalForm,
-  emailsMatch,
   syncDocumentNumberValidators,
 } from '../forms/auth-forms';
 import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
@@ -205,11 +204,6 @@ export class RegisterFlowFacade {
   private submitFullPersonalData(): void {
     if (this.personalForm.invalid) {
       this.personalForm.markAllAsTouched();
-      return;
-    }
-
-    if (!emailsMatch(this.personalForm)) {
-      this.showError('Los e-mails ingresados no coinciden.');
       return;
     }
 
@@ -427,7 +421,7 @@ export class RegisterFlowFacade {
       actionLabel: 'Iniciar sesión',
       duration: 10000,
       action: () => {
-        void this.router.navigate(['/login'], {
+        void this.router.navigate(['/iniciar-sesion'], {
           queryParams: { tipoDoc: documentType, doc: documentNumber },
         });
       },
@@ -474,4 +468,3 @@ export class RegisterFlowFacade {
     return 'No se pudo leer el archivo seleccionado.';
   }
 }
-

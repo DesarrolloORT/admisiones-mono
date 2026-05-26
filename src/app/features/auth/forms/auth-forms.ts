@@ -1,5 +1,9 @@
 import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { ortCedulaValidator } from '@desarrolloort/components';
+import {
+  matchingFieldsValidator,
+  normalizeEmailValue,
+} from 'src/app/shared/forms/matching-fields.validator';
 
 import { isCedulaDocumentType } from '../models/document-number';
 import { LocationValue } from '../models/location-value';
@@ -96,28 +100,41 @@ export function syncDocumentNumberValidators(
 }
 
 export function createPersonalForm(): FormGroup<PersonalForm> {
-  return new FormGroup<PersonalForm>({
-    primerNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    segundoNombre: new FormControl('', { nonNullable: true }),
-    primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    segundoApellido: new FormControl('', { nonNullable: true }),
-    fechaNacimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    location: new FormControl<LocationValue>(
-      { codigoPais: null, codigoEstado: null, codigoCiudad: null },
-      { nonNullable: true, validators: [Validators.required] }
-    ),
-    direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    telefono1: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    mail: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    verificacionMail: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-  });
+  return new FormGroup<PersonalForm>(
+    {
+      primerNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      segundoNombre: new FormControl('', { nonNullable: true }),
+      primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      segundoApellido: new FormControl('', { nonNullable: true }),
+      fechaNacimiento: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required],
+      }),
+      sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      location: new FormControl<LocationValue>(
+        { codigoPais: null, codigoEstado: null, codigoCiudad: null },
+        { nonNullable: true }
+      ),
+      direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      telefono1: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      mail: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.email],
+      }),
+      verificacionMail: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.email],
+      }),
+    },
+    {
+      validators: [
+        matchingFieldsValidator('mail', 'verificacionMail', {
+          errorKey: 'emailMismatch',
+          normalize: normalizeEmailValue,
+        }),
+      ],
+    }
+  );
 }
 
 export function createCareerForm(): FormGroup<CareerForm> {
@@ -155,4 +172,3 @@ export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
     }),
   });
 }
-

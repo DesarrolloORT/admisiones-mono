@@ -23,6 +23,17 @@ describe('auth forms', () => {
     expect(emailsMatch(form)).toBe(true);
   });
 
+  it('should attach an email mismatch error to confirmation', () => {
+    const form = createPersonalForm();
+
+    form.patchValue({
+      mail: 'ana@example.com',
+      verificacionMail: 'otro@example.com',
+    });
+
+    expect(form.controls.verificacionMail.hasError('emailMismatch')).toBe(true);
+  });
+
   it('should expose document validators by document type', () => {
     expect(getDocumentNumberValidators('CI').length).toBeGreaterThan(1);
     expect(getDocumentNumberValidators('PS').length).toBeGreaterThan(1);
