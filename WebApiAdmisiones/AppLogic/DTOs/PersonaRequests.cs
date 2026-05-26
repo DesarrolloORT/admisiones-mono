@@ -30,6 +30,14 @@ namespace AppLogic.Requests
     [ExcludeFromCodeCoverage]
     public class ActualizarDatosPersonaRequest
     {
+        public string? TipoDocumento { get; set; }
+        public string? Documento { get; set; }
+        public string? PrimerNombre { get; set; }
+        public string? SegundoNombre { get; set; }
+        public string? PrimerApellido { get; set; }
+        public string? SegundoApellido { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
+        public string? Sexo { get; set; }
         public long CodigoPais { get; set; }
         public long CodigoEstado { get; set; }
         public long CodigoCiudad { get; set; }

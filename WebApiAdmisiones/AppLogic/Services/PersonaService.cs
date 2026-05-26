@@ -28,7 +28,10 @@ namespace AppLogic.Services
                     404);
             }
 
-            return OperationResult<DtoDatosPersona>.Ok(MapearDatosPersona(persona), nameof(ObtenerDatosPersona));
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            return OperationResult<DtoDatosPersona>.Ok(
+                MapearDatosPersona(persona, identidadRestringida),
+                nameof(ObtenerDatosPersona));
         }
 
         public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request)
@@ -50,6 +53,17 @@ namespace AppLogic.Services
                 return validacion;
             }
 
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            var validacionIdentidad = PersonaIdentityHelper.ValidarCambiosIdentidad(
+                persona,
+                request,
+                identidadRestringida,
+                nameof(ActualizarDatosPersona));
+            if (!validacionIdentidad.Success)
+            {
+                return validacionIdentidad;
+            }
+
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad is null)
             {
@@ -60,6 +74,7 @@ namespace AppLogic.Services
                     400);
             }
 
+            PersonaIdentityHelper.AplicarCambiosIdentidad(persona, request, identidadRestringida);
             persona.CodigoPais = request.CodigoPais;
             persona.CodigoEstado = request.CodigoEstado;
             persona.CodigoCiudad = request.CodigoCiudad;
@@ -160,7 +175,7 @@ namespace AppLogic.Services
             return OperationResult<bool>.Ok(true, nameof(ActualizarDatosPersona));
         }
 
-        private static DtoDatosPersona MapearDatosPersona(Persona persona)
+        private static DtoDatosPersona MapearDatosPersona(Persona persona, bool identidadRestringida)
         {
             var mail = persona.Email ?? string.Empty;
             return new DtoDatosPersona
@@ -179,7 +194,8 @@ namespace AppLogic.Services
                 Direccion = persona.Direccion?.Trim() ?? string.Empty,
                 Telefono1 = persona.Telefono1?.Trim() ?? string.Empty,
                 Mail = mail,
-                VerificacionMail = mail
+                VerificacionMail = mail,
+                IdentidadRestringida = identidadRestringida
             };
         }
 

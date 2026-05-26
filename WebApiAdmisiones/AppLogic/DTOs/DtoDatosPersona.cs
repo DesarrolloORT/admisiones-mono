@@ -21,5 +21,6 @@ namespace AppLogic.DTOs
         public string Telefono1 { get; set; } = string.Empty;
         public string Mail { get; set; } = string.Empty;
         public string VerificacionMail { get; set; } = string.Empty;
+        public bool IdentidadRestringida { get; set; }
     }
 }
