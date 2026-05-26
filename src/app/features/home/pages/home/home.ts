@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -14,6 +15,7 @@ const ACTION_CARDS: HomeActionCard[] = [
     icon: 'school',
     ctaLabel: 'Comenzar inscripción',
     imageSrc: 'assets/home/inscripcion-card.png',
+    disabledReason: 'Disponible próximamente.',
   },
   {
     id: 'scholarship',
@@ -22,12 +24,13 @@ const ACTION_CARDS: HomeActionCard[] = [
     icon: 'workspace_premium',
     ctaLabel: 'Postularme a beca',
     imageSrc: 'assets/home/becas-card.png',
+    disabledReason: 'Disponible próximamente.',
   },
 ];
 
 @Component({
   selector: 'app-home',
-  imports: [OrtButtonModule, OrtIconModule],
+  imports: [OrtButtonModule, OrtIconModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -3,23 +3,6 @@
   display: block;
 }
 
-.home-action-card__chevron {
-  display: inline-grid;
-  grid-area: action;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: var(--ort-sys-avatar-border-radius);
-  background: var(--home-tonal);
-  color: var(--home-primary);
-  cursor: pointer;
-
-  ort-icon {
-    font-size: 24px;
-  }
-}
-
 .home-main {
   display: grid;
   gap: var(--ort-sys-spacing-48);
@@ -79,12 +62,21 @@
   grid-area: description;
 }
 
+.home-action-card__status {
+  grid-area: status;
+  color: var(--home-body);
+  font-size: var(--ort-sys-caption-text-size, 14px);
+  line-height: var(--ort-sys-caption-line-height, 20px);
+}
+
 .home-action-card__content {
   display: grid;
   grid-template-areas:
-    'icon title action'
-    '. description action';
-  grid-template-columns: 32px minmax(0, 1fr) 40px;
+    'icon title'
+    '. description'
+    '. button'
+    '. status';
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: 4px var(--ort-sys-spacing-16);
   align-items: center;
   padding: var(--ort-sys-spacing-24);
@@ -115,21 +107,17 @@
     'icon'
     'title'
     'description'
-    'button' / 1fr;
+    'button'
+    'status' / 1fr;
   gap: var(--ort-sys-spacing-8);
   align-content: end;
   background: linear-gradient(to bottom, rgb(255 255 255 / 0%) 0%, var(--home-surface) 57%);
 }
 
-.home-action-card__primary,
-.home-action-card__mobile-cta {
+.home-action-card__primary {
   grid-area: button;
   width: 100%;
   margin-top: 10px;
-}
-
-.home-action-card__mobile-cta {
-  display: none;
 }
 
 @media (width <=760px) {
@@ -165,7 +153,8 @@
       'icon'
       'title'
       'description'
-      'button' / 1fr;
+      'button'
+      'status' / 1fr;
     gap: 8px;
     align-content: start;
     min-height: 238px;
@@ -178,13 +167,8 @@
     line-height: var(--ort-sys-heading-level6-line-height);
   }
 
-  .home-action-card__primary,
-  .home-action-card__mobile-cta {
+  .home-action-card__primary {
     display: block;
     margin-top: 8px;
-  }
-
-  .home-action-card__chevron {
-    display: none;
   }
 }
