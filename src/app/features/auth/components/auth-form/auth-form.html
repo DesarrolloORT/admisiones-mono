@@ -1,5 +1,7 @@
 <main
   class="auth-shell"
+  id="main-content"
+  tabindex="-1"
   [class.auth-shell--long]="cardSize() === 'long'"
   [class.auth-shell--step]="isStep()">
   <div aria-hidden="true" class="auth-shell__background"></div>
@@ -34,7 +36,7 @@
       <img alt="ORT" class="auth-hero__logo" src="assets/auth/ort-logo-white.svg" />
 
       <div class="auth-hero__message">
-      <ort-icon>{{ heroIcon() }}</ort-icon>
+        <ort-icon aria-hidden="true">{{ heroIcon() }}</ort-icon>
         <h2>{{ heroTitle() }}</h2>
         <p>{{ heroDescription() }}</p>
       </div>

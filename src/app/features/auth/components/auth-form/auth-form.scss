@@ -36,8 +36,10 @@
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent),
-      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent)),
+    linear-gradient(
+      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent),
+      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent)
+    ),
     url('/assets/auth/auth-background.png') center / cover no-repeat;
 }
 
@@ -94,6 +96,7 @@
     width: 32px;
     height: 32px;
     margin-bottom: 8px;
+    color: #fff;
     font-size: 32px;
   }
 
@@ -370,16 +373,18 @@
   height: 18px;
   border: 1px solid #cdd5df;
   border-radius: 50%;
-  background: linear-gradient(to bottom,
-      #fff 0 11%,
-      #2f80ed 11% 22%,
-      #fff 22% 33%,
-      #2f80ed 33% 44%,
-      #fff 44% 55%,
-      #2f80ed 55% 66%,
-      #fff 66% 77%,
-      #2f80ed 77% 88%,
-      #fff 88% 100%);
+  background: linear-gradient(
+    to bottom,
+    #fff 0 11%,
+    #2f80ed 11% 22%,
+    #fff 22% 33%,
+    #2f80ed 33% 44%,
+    #fff 44% 55%,
+    #2f80ed 55% 66%,
+    #fff 66% 77%,
+    #2f80ed 77% 88%,
+    #fff 88% 100%
+  );
 }
 
 @media (width <=760px) {
