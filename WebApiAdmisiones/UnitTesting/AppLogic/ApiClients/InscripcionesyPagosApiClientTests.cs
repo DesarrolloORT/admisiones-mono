@@ -12,31 +12,55 @@ namespace UnitTesting.AppLogic.ApiClients
         {
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """
-                {
-                  "ofertas": [
-                    {
-                      "idOferta": 10,
-                      "idProducto": 20,
-                      "idTurno": 30,
-                      "nombreTurno": "Nocturno",
-                      "idComienzo": 40,
-                      "totalCount": 1,
-                      "disponible": true
-                    }
-                  ],
-                  "totalCount": 1
-                }
+                [
+                  {
+                    "idOferta": 10,
+                    "idTurno": 30,
+                    "nombreTurno": "Nocturno",
+                    "horarioReferencia": "Martes 19:00"
+                  }
+                ]
                 """));
             var client = CrearClient(handler);
 
             var result = await client.ObtenerOfertasParaInscripcionAdmisionesAsync(20, 40, 30);
 
             Assert.True(result.Success);
-            Assert.Equal(1, result.Data!.TotalCount);
-            Assert.Equal(10, result.Data.Ofertas.Single().IdOferta);
+            var oferta = Assert.Single(result.Data!);
+            Assert.Equal(10, oferta.IdOferta);
+            Assert.Equal(30, oferta.Turno.IdTurno);
+            Assert.Equal("Nocturno", oferta.Turno.NombreTurno);
+            Assert.Equal("Martes 19:00", oferta.HorarioReferencia);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Contains("OfertasParaInscripcionAdmisiones?idProducto=20&idComienzo=40&idTurno=30", request.RequestUri);
+            Assert.Contains("OfertasParaInscripcionAdmisiones?idProducto=20&idComienzo=40", request.RequestUri);
+            Assert.DoesNotContain("idTurno", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync_WithSuccess_MapsOfertaAdmisionesResponse()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {
+                    "idOferta": 57319,
+                    "horarioReferencia": "Lunes y miercoles 08:00",
+                    "idTurno": 1,
+                    "nombreTurno": "Matutino"
+                  }
+                ]
+                """));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(20, 99);
+
+            Assert.True(result.Success);
+            var oferta = Assert.Single(result.Data!);
+            Assert.Equal(57319, oferta.IdOferta);
+            Assert.Equal(1, oferta.Turno.IdTurno);
+            Assert.Equal("Matutino", oferta.Turno.NombreTurno);
+            Assert.Equal("Lunes y miercoles 08:00", oferta.HorarioReferencia);
         }
 
         [Fact]
@@ -46,7 +70,7 @@ namespace UnitTesting.AppLogic.ApiClients
                 JsonResponse(HttpStatusCode.BadRequest, "combinacion invalida"));
             var client = CrearClient(handler);
 
-            var result = await client.ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(20, 99, 30);
+            var result = await client.ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(20, 99);
 
             Assert.False(result.Success);
             Assert.Equal("OFERTAS_INSCRIPCION_PROCESO_01", result.ErrorCode);

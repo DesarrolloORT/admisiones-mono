@@ -1,6 +1,7 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
+using AppLogic.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -104,6 +105,31 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task ObtenerTurnos_ReturnsOk()
+        {
+            var serviceMock = new Mock<ICatalogosService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<CatalogosController>>();
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            serviceMock.Setup(s => s.ObtenerTurnos(10, 20))
+                .ReturnsAsync(OperationResult<List<OfertaInscripcionDto>>.Ok(
+                    [
+                        new OfertaInscripcionDto
+                        {
+                            IdOferta = 1,
+                            Turno = new DtoTurno { IdTurno = 1, NombreTurno = "Matutino" }
+                        }
+                    ],
+                    nameof(ICatalogosService.ObtenerTurnos)));
+
+            var response = await controller.ObtenerTurnos(10, 20);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
         public void ObtenerCarreras_ReturnsOk()
         {
             var serviceMock = new Mock<ICatalogosService>();
@@ -127,6 +153,7 @@ namespace UnitTesting.Controllers
         //[InlineData(nameof(CatalogosController.ObtenerTipoDocumentos))]
         [InlineData(nameof(CatalogosController.ObtenerCarreras))]
         [InlineData(nameof(CatalogosController.ObtenerComienzos))]
+        [InlineData(nameof(CatalogosController.ObtenerTurnos))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)
         {
             var method = typeof(CatalogosController).GetMethod(methodName);

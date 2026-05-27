@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using Utilities;
@@ -10,6 +11,7 @@ namespace AppLogic.IServices
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
+        Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
         OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();

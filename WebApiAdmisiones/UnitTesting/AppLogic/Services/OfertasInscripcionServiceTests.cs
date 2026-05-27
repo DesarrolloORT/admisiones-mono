@@ -81,22 +81,19 @@ namespace UnitTesting.AppLogic.Services
             var uow = CrearUow(personaRepo.Object, personaAdmiteRepo.Object);
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """
-                {
-                  "ofertas": [
-                    { "idOferta": 44, "idProducto": 10, "idTurno": 30, "disponible": true }
-                  ],
-                  "totalCount": 1
-                }
+                [
+                  { "idOferta": 44, "idTurno": 30, "nombreTurno": "Nocturno" }
+                ]
                 """));
             var service = CrearService(uow.Object, handler);
 
             var result = await service.ObtenerOfertasParaPersonaAsync(123, 10, 20, 30);
 
             Assert.True(result.Success);
-            Assert.Equal(1, result.Data!.TotalCount);
-            Assert.Equal(44, result.Data.Ofertas.Single().IdOferta);
+            Assert.Equal(44, result.Data!.Single().IdOferta);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("idProducto=10&idComienzo=20&idTurno=30", request.RequestUri);
+            Assert.Contains("idProducto=10&idComienzo=20", request.RequestUri);
+            Assert.DoesNotContain("idTurno", request.RequestUri);
         }
 
         private static OfertasInscripcionService CrearService(

@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
@@ -10,10 +11,17 @@ namespace AppLogic.Services
     public class CatalogosService : ICatalogosService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
+        private readonly InscripcionesyPagosApiClient? _inscripcionesyPagosApiClient;
 
         public CatalogosService(IUnitOfWorkFactory uowFactory)
         {
             _uowFactory = uowFactory;
+        }
+
+        public CatalogosService(IUnitOfWorkFactory uowFactory, InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
+        {
+            _uowFactory = uowFactory;
+            _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
         public OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades()
@@ -69,6 +77,36 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var entidades = uow.Procesos.GetProcesosHabilitadosPorProducto(idCarrera);
             return OperationResult<IEnumerable<DtoComienzoResponse>>.Ok(entidades.Select(ComienzosMapper.ToAdmisionesDto), nameof(ObtenerComienzos));
+        }
+
+        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso)
+        {
+            if (_inscripcionesyPagosApiClient == null)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    "CAT_TURNOS_01",
+                    nameof(ObtenerTurnos),
+                    "Cliente de Inscripciones y Pagos no configurado.",
+                    500,
+                    default
+                );
+            }
+
+            var resultadoOfertas = await _inscripcionesyPagosApiClient
+                .ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(idCarrera, idProceso);
+
+            if (!resultadoOfertas.Success)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    resultadoOfertas.ErrorCode,
+                    nameof(ObtenerTurnos),
+                    resultadoOfertas.Message,
+                    resultadoOfertas.HttpCode,
+                    resultadoOfertas.Data
+                );
+            }
+
+            return OperationResult<List<OfertaInscripcionDto>>.Ok(resultadoOfertas.Data, nameof(ObtenerTurnos));
         }
 
         public OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion()
