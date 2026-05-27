@@ -1,6 +1,6 @@
-using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
+using AppLogic.Helpers;
 using AppLogic.IServices;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
@@ -72,29 +72,15 @@ namespace AppLogic.Services
         {
             using var uow = _uowFactory.Create();
 
-            if (!uow.Personas.ExistePersona(codigoPersona))
+            var validacion = InteresProductoValidationHelper.ValidarRegistroInteresProducto(
+                uow,
+                codigoPersona,
+                request.IdProducto,
+                request.IdProcesoSeleccionado,
+                nameof(RegistrarInteresProducto));
+            if (!validacion.Success)
             {
-                return OperationResult<bool>.IsFailed("GEN_IP_01", nameof(RegistrarInteresProducto), "Persona no encontrada.", 404);
-            }
-
-            if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto))
-            {
-                return OperationResult<bool>.IsFailed("GEN_IP_02", nameof(RegistrarInteresProducto), "El producto indicado es inválido.", 400);
-            }
-
-            if (!uow.Procesos.TieneProcesoHabilitadoPorProducto(request.IdProducto, request.IdProcesoSeleccionado))
-            {
-                return OperationResult<bool>.IsFailed("GEN_IP_03", nameof(RegistrarInteresProducto), "Proceso no habilitado para el producto seleccionado.", 400);
-            }
-
-            if (uow.Inscriptos.TieneInscripcionPreviaAProducto(codigoPersona, request.IdProducto))
-            {
-                return OperationResult<bool>.IsFailed("GEN_IP_04", nameof(RegistrarInteresProducto), "Ya fue inscripto una vez al producto indicado.", 409);
-            }
-
-            if (uow.InstanciaWorkflows.TieneInscripcionPendienteParaProducto(codigoPersona, request.IdProducto))
-            {
-                return OperationResult<bool>.IsFailed("GEN_IP_05", nameof(RegistrarInteresProducto), "Ya tiene una inscripción pendiente al producto indicado.", 409);
+                return validacion;
             }
 
             var fechaActual = _dbConnectionContext.CurrentDateTime();
@@ -233,7 +219,7 @@ namespace AppLogic.Services
 
                     interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
                     interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
-                    interesProductoActual.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
+                    interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
                     interesProductoActual.FechaModifInteresProd = fechaActual;
                     interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
                     uow.InteresProductos.Update(interesProductoActual);
@@ -243,18 +229,10 @@ namespace AppLogic.Services
 
         private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso)
         {
-            var interes = new Intere
-            {
-                IdInteres = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
-                CodigoPersona = codigoPersona,
-                IdProceso = idProceso,
-                IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
-                ContactadorInteres = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                ObservacionesInteres = InscripcionesConstants.InteresProducto.ObservacionesWeb,
-                IdLugar = InscripcionesConstants.InteresProducto.LugarInteresWeb,
-                IdGradoPureza = InscripcionesConstants.InteresProducto.GradoPurezaPuro
-            };
-
+            var interes = InteresProductoEntityFactoryHelper.CrearInteres(
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
+                codigoPersona,
+                idProceso);
             uow.Interes.Add(interes);
             return interes;
         }
@@ -264,17 +242,8 @@ namespace AppLogic.Services
             var interesProductoExistente = interes.InteresProductos.FirstOrDefault(ip => ip.IdProducto == idProducto);
             if (interesProductoExistente == null)
             {
-                uow.InteresProductos.Add(new InteresProducto
-                {
-                    IdInteres = interes.IdInteres,
-                    IdProducto = idProducto,
-                    IdTipoInteres = Constantes.KTIPO_INTERES_COMUN,
-                    IdGradoInteres = Constantes.kGRADO_INTERES_ALTO,
-                    IdGradoInteresAnt = Constantes.kGRADO_INTERES_DESINTERESADO,
-                    FechaInteresProd = fechaActual,
-                    FechaAltaInteresProd = fechaActual,
-                    ObservacionesInteresProd = InscripcionesConstants.InteresProducto.ObservacionesWeb
-                });
+                uow.InteresProductos.Add(
+                    InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
                 return;
             }
 
@@ -287,7 +256,7 @@ namespace AppLogic.Services
             interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
             interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
             interesProductoActual.FechaInteresProd = fechaActual;
-            interesProductoActual.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
+            interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
             interesProductoActual.FechaModifInteresProd = fechaActual;
             interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
             uow.InteresProductos.Update(interesProductoActual);
@@ -298,11 +267,8 @@ namespace AppLogic.Services
             var personaAdmite = uow.PersonaAdmites.GetByKey(codigoPersona);
             if (personaAdmite == null)
             {
-                uow.PersonaAdmites.Add(new PersonaAdmite
-                {
-                    CodigoPersona = codigoPersona,
-                    FechaFrescoPersonaAdmite = fechaActual
-                });
+                uow.PersonaAdmites.Add(
+                    InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
                 return;
             }
 
@@ -344,30 +310,12 @@ namespace AppLogic.Services
             }
 
             var actividadId = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100);
-            uow.Actividads.Add(new Actividad
-            {
-                IdActividad = actividadId,
-                IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
-                IdTipoActividad = InscripcionesConstants.InteresProducto.TipoActividadMonoAccion,
-                IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                UsernameGeneradorActividad = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaGeneradorActividad = fechaActual,
-                UsernameRealizadoActividad = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaRealizadoActividad = fechaActual,
-                IdProceso = idProceso
-            });
-
-            uow.Accions.Add(new Accion
-            {
-                IdAccion = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100),
-                IdActividad = actividadId,
-                CodigoPersona = codigoPersona,
-                FechaRealizadoAccion = fechaActual,
-                UsuarioRealizadoAccion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                IdAccionResultado = InscripcionesConstants.InteresProducto.ResultadoAccionRealizada
-            });
+            uow.Actividads.Add(InteresProductoEntityFactoryHelper.CrearActividad(actividadId, idProceso, fechaActual));
+            uow.Accions.Add(InteresProductoEntityFactoryHelper.CrearAccion(
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100),
+                actividadId,
+                codigoPersona,
+                fechaActual));
         }
 
         private static DtoInscripcionHome MapInscripcionConfirmada(Inscripto inscripto)

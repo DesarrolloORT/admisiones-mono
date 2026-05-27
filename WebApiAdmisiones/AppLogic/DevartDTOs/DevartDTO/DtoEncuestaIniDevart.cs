@@ -194,14 +194,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(30)]
         public string? PlantCadaDestacEncuestaIni { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(2)]
         public string? ImpresoEncuestaIni { get; set; }
 

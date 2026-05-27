@@ -34,14 +34,6 @@ namespace AppLogic.DevartDTOs
 
         public decimal? NroAdmite1 { get; set; }
 
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         [StringLength(1)]
         public string? ProcesadoPersonaAdmite { get; set; }
 

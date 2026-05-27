@@ -54,9 +54,6 @@ namespace AppLogic.DevartDTOs
             target.CodigoInstitucionBac = source.CodigoInstitucionBac;
             target.CodigoTipoBachillerato = source.CodigoTipoBachillerato;
             target.FechaInscriptoPrueba = source.FechaInscriptoPrueba;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.DjFechaInscriptoPrueba = source.DjFechaInscriptoPrueba;
             target.ModeloCartaInscriptoPrueba = source.ModeloCartaInscriptoPrueba;
             target.PtosMatAntInscriptoPrueba = source.PtosMatAntInscriptoPrueba;
@@ -129,9 +126,6 @@ namespace AppLogic.DevartDTOs
             target.CodigoInstitucionBac = source.CodigoInstitucionBac;
             target.CodigoTipoBachillerato = source.CodigoTipoBachillerato;
             target.FechaInscriptoPrueba = source.FechaInscriptoPrueba;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.DjFechaInscriptoPrueba = source.DjFechaInscriptoPrueba;
             target.ModeloCartaInscriptoPrueba = source.ModeloCartaInscriptoPrueba;
             target.PtosMatAntInscriptoPrueba = source.PtosMatAntInscriptoPrueba;

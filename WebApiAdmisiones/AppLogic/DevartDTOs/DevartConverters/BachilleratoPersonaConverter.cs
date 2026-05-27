@@ -39,9 +39,6 @@ namespace AppLogic.DevartDTOs
             target.AnioBachillerPer = source.AnioBachillerPer;
             target.CodigoOrientacion = source.CodigoOrientacion;
             target.ActualizacionBachillerPer = source.ActualizacionBachillerPer;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // Navigation Properties
             if (level > 0) {
@@ -69,9 +66,6 @@ namespace AppLogic.DevartDTOs
             target.AnioBachillerPer = source.AnioBachillerPer;
             target.CodigoOrientacion = source.CodigoOrientacion;
             target.ActualizacionBachillerPer = source.ActualizacionBachillerPer;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

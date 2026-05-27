@@ -42,9 +42,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionProducto = source.FechaCreacionProducto;
             target.FechaCaducidadProducto = source.FechaCaducidadProducto;
             target.DestinoRegaliaProducto = source.DestinoRegaliaProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdDepartamento = source.IdDepartamento;
             target.DepartamentoRpg = source.DepartamentoRpg;
             target.CarreraRpg = source.CarreraRpg;
@@ -137,9 +134,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionProducto = source.FechaCreacionProducto;
             target.FechaCaducidadProducto = source.FechaCaducidadProducto;
             target.DestinoRegaliaProducto = source.DestinoRegaliaProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdDepartamento = source.IdDepartamento;
             target.DepartamentoRpg = source.DepartamentoRpg;
             target.CarreraRpg = source.CarreraRpg;

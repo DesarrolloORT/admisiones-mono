@@ -36,14 +36,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(40)]
         public string? TipoImagen { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
         public byte[]? BlobImagen { get; set; }
 
         public DateTime? FechaVtoDocumentoPersona { get; set; }

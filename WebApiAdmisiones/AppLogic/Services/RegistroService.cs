@@ -387,9 +387,10 @@ namespace AppLogic.Services
             try
             {
                 uow.BeginTransaction();
-                UpsertInteres(uow, persona.CodigoPersona, idProducto, idProceso);
-                AsegurarPersonaAdmite(uow, persona.CodigoPersona);
-                RegistrarActividadYAccion(uow, persona.CodigoPersona, idProceso);
+                var fechaActual = _dbConnectionContext.CurrentDateTime();
+                UpsertInteres(uow, persona.CodigoPersona, idProducto, idProceso, fechaActual);
+                AsegurarPersonaAdmite(uow, persona.CodigoPersona, fechaActual);
+                RegistrarActividadYAccion(uow, persona.CodigoPersona, idProceso, fechaActual);
 
                 var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
                 if (!crearUsuario.Success)
@@ -442,10 +443,11 @@ namespace AppLogic.Services
                     ciudad,
                     DateTime.Now);
                 uow.Personas.Add(persona);
-                UpsertInteres(uow, persona.CodigoPersona, request.IdProducto, request.IdProceso);
+                var fechaActual = _dbConnectionContext.CurrentDateTime();
+                UpsertInteres(uow, persona.CodigoPersona, request.IdProducto, request.IdProceso, fechaActual);
                 // TODO Tivenos: encolar RegistroDesdeSitioAdmisiones para la persona/interes creado.
-                AsegurarPersonaAdmite(uow, persona.CodigoPersona);
-                RegistrarActividadYAccion(uow, persona.CodigoPersona, request.IdProceso);
+                AsegurarPersonaAdmite(uow, persona.CodigoPersona, fechaActual);
+                RegistrarActividadYAccion(uow, persona.CodigoPersona, request.IdProceso, fechaActual);
 
                 var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
                 if (!crearUsuario.Success)
@@ -503,71 +505,69 @@ namespace AppLogic.Services
             }
         }
 
-        private void UpsertInteres(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso)
+        private void UpsertInteres(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso, DateTime fechaActual)
         {
-            var now = DateTime.Now;
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
             var interesExistente = intereses.FirstOrDefault(i => i.IdProceso == idProceso);
 
             if (interesExistente == null)
             {
                 var idInteres = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES);
-                uow.Interes.Add(RegistroEntityFactoryHelper.CrearInteres(idInteres, codigoPersona, idProceso, now));
-                AgregarInteresProducto(uow, idInteres, idProducto, now);
+                uow.Interes.Add(InteresProductoEntityFactoryHelper.CrearInteres(idInteres, codigoPersona, idProceso));
+                AgregarInteresProducto(uow, idInteres, idProducto, fechaActual);
                 return;
             }
 
             // TODO Tivenos: encolar DesinteresProductoxAlta para los productos que se desinteresan.
             uow.InteresProductos.ResetearGradosPorIntereses(
                 intereses.Select(i => i.IdInteres),
-                InscripcionesConstants.InteresProducto.GradoInteresDesinteresado);
+                Constantes.kGRADO_INTERES_DESINTERESADO);
 
             var productoExistente = uow.InteresProductos.GetByKey(interesExistente.IdInteres, idProducto);
             if (productoExistente == null)
             {
-                AgregarInteresProducto(uow, interesExistente.IdInteres, idProducto, now);
+                AgregarInteresProducto(uow, interesExistente.IdInteres, idProducto, fechaActual);
                 return;
             }
 
             productoExistente.IdGradoInteresAnt = productoExistente.IdGradoInteres;
-            productoExistente.IdGradoInteres = InscripcionesConstants.InteresProducto.GradoInteresRegistro;
-            productoExistente.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
-            productoExistente.FechaModifInteresProd = now.Date;
+            productoExistente.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
+            productoExistente.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
+            productoExistente.FechaModifInteresProd = fechaActual;
             uow.InteresProductos.Update(productoExistente);
         }
 
-        private static void AgregarInteresProducto(IUnitOfWork uow, decimal idInteres, long idProducto, DateTime now)
+        private static void AgregarInteresProducto(IUnitOfWork uow, decimal idInteres, long idProducto, DateTime fechaActual)
         {
-            uow.InteresProductos.Add(RegistroEntityFactoryHelper.CrearInteresProducto(idInteres, idProducto, now));
+            uow.InteresProductos.Add(InteresProductoEntityFactoryHelper.CrearInteresProducto(idInteres, idProducto, fechaActual));
         }
 
-        private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona)
+        private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)
         {
             var existente = uow.PersonaAdmites.GetByKey(codigoPersona);
             if (existente == null)
             {
-                uow.PersonaAdmites.Add(RegistroEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, DateTime.Now));
+                uow.PersonaAdmites.Add(InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
                 return;
             }
 
             if (!existente.FechaFrescoPersonaAdmite.HasValue)
             {
-                existente.FechaFrescoPersonaAdmite = DateTime.Today;
+                existente.FechaFrescoPersonaAdmite = fechaActual;
                 uow.PersonaAdmites.Update(existente);
             }
         }
 
-        private void RegistrarActividadYAccion(IUnitOfWork uow, long codigoPersona, long idProceso)
+        private void RegistrarActividadYAccion(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
         {
-            var now = DateTime.Now;
             var idActividad = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_ACTIVIDAD);
 
-            uow.Actividads.Add(RegistroEntityFactoryHelper.CrearActividad(idActividad, idProceso, now));
-            uow.Accions.Add(RegistroEntityFactoryHelper.CrearAccion(
+            uow.Actividads.Add(InteresProductoEntityFactoryHelper.CrearActividad(idActividad, idProceso, fechaActual));
+            uow.Accions.Add(InteresProductoEntityFactoryHelper.CrearAccion(
                 _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_ACCION),
                 idActividad,
                 codigoPersona,
-                now));
+                fechaActual));
         }
 
         private async Task<OperationResult<object?>> EnviarMailLinkPasswordAsync(Persona persona, string originMethod)

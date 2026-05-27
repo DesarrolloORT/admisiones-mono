@@ -38,15 +38,7 @@ namespace AppLogic.DevartDTOs
 
         public long? CodigoPersona { get; set; }
 
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
         public DateTime? FechaRealizadoAccion { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
 
         public decimal? IdEstadoAccion { get; set; }
 

@@ -51,9 +51,6 @@ namespace AppLogic.DevartDTOs
             target.ObservacionesActividad = source.ObservacionesActividad;
             target.FechaRealizadoActividad = source.FechaRealizadoActividad;
             target.UsernameRealizadoActividad = source.UsernameRealizadoActividad;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdEvento = source.IdEvento;
             target.IdProceso = source.IdProceso;
 
@@ -94,9 +91,6 @@ namespace AppLogic.DevartDTOs
             target.ObservacionesActividad = source.ObservacionesActividad;
             target.FechaRealizadoActividad = source.FechaRealizadoActividad;
             target.UsernameRealizadoActividad = source.UsernameRealizadoActividad;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdEvento = source.IdEvento;
             target.IdProceso = source.IdProceso;
 

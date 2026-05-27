@@ -47,9 +47,6 @@ namespace AppLogic.DevartDTOs
             target.DepartamentoTituloRpg = source.DepartamentoTituloRpg;
             target.CarreraTituloRpg = source.CarreraTituloRpg;
             target.PlanTituloRpg = source.PlanTituloRpg;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.MinimoMateriasTitulo = source.MinimoMateriasTitulo;
             target.MinimoCreditosTitulo = source.MinimoCreditosTitulo;
             target.MinimoPacTitulo = source.MinimoPacTitulo;
@@ -121,9 +118,6 @@ namespace AppLogic.DevartDTOs
             target.DepartamentoTituloRpg = source.DepartamentoTituloRpg;
             target.CarreraTituloRpg = source.CarreraTituloRpg;
             target.PlanTituloRpg = source.PlanTituloRpg;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.MinimoMateriasTitulo = source.MinimoMateriasTitulo;
             target.MinimoCreditosTitulo = source.MinimoCreditosTitulo;
             target.MinimoPacTitulo = source.MinimoPacTitulo;

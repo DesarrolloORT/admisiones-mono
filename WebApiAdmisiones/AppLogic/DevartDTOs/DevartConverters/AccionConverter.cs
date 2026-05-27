@@ -39,10 +39,7 @@ namespace AppLogic.DevartDTOs
             target.ProcesoLockeadorAccion = source.ProcesoLockeadorAccion;
             target.IdActividad = source.IdActividad;
             target.CodigoPersona = source.CodigoPersona;
-            target.HoraIngreso = source.HoraIngreso;
             target.FechaRealizadoAccion = source.FechaRealizadoAccion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdEstadoAccion = source.IdEstadoAccion;
             target.UsuarioRealizadoAccion = source.UsuarioRealizadoAccion;
             target.IdAccionResultado = source.IdAccionResultado;
@@ -75,10 +72,7 @@ namespace AppLogic.DevartDTOs
             target.ProcesoLockeadorAccion = source.ProcesoLockeadorAccion;
             target.IdActividad = source.IdActividad;
             target.CodigoPersona = source.CodigoPersona;
-            target.HoraIngreso = source.HoraIngreso;
             target.FechaRealizadoAccion = source.FechaRealizadoAccion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdEstadoAccion = source.IdEstadoAccion;
             target.UsuarioRealizadoAccion = source.UsuarioRealizadoAccion;
             target.IdAccionResultado = source.IdAccionResultado;

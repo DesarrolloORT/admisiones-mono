@@ -35,6 +35,26 @@ namespace WebApiAdmisiones.Controllers
         }
 
         ///// <summary>
+        ///// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
+        ///// </summary>
+        ///// <param name="request">Producto y proceso seleccionados.</param>
+        ///// <returns>Resultado de la actualización del interés.</returns>
+        ///// <response code="200">Interés registrado correctamente.</response>
+        ///// <response code="400">Producto o proceso inválido.</response>
+        ///// <response code="404">Persona no encontrada.</response>
+        ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
+        [HttpPost("InteresProducto")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
+        {
+            var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        ///// <summary>
         ///// Obtiene la última inscripción activa de la persona autenticada.
         ///// </summary>
         ///// <returns>Última inscripción del alumno.</returns>
@@ -48,26 +68,6 @@ namespace WebApiAdmisiones.Controllers
         //public IActionResult ObtenerUltimaInscripcionActiva()
         //{
         //    var result = inscripcionesService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
-        ///// </summary>
-        ///// <param name="request">Producto y proceso seleccionados.</param>
-        ///// <returns>Resultado de la actualización del interés.</returns>
-        ///// <response code="200">Interés registrado correctamente.</response>
-        ///// <response code="400">Producto o proceso inválido.</response>
-        ///// <response code="404">Persona no encontrada.</response>
-        ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
-        //[HttpPost("InteresProducto")]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        //public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
-        //{
-        //    var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
         //    return ValidateResponse(result);
         //}
 

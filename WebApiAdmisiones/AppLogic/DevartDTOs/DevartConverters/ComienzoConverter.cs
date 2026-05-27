@@ -39,9 +39,6 @@ namespace AppLogic.DevartDTOs
             target.ObservacionesComienzo = source.ObservacionesComienzo;
             target.FechaInicioComienzo = source.FechaInicioComienzo;
             target.FechaFinComienzo = source.FechaFinComienzo;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.AliasComienzo = source.AliasComienzo;
             target.IdTipoPaqCom = source.IdTipoPaqCom;
             target.VisibleInternetComienzo = source.VisibleInternetComienzo;
@@ -80,9 +77,6 @@ namespace AppLogic.DevartDTOs
             target.ObservacionesComienzo = source.ObservacionesComienzo;
             target.FechaInicioComienzo = source.FechaInicioComienzo;
             target.FechaFinComienzo = source.FechaFinComienzo;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.AliasComienzo = source.AliasComienzo;
             target.IdTipoPaqCom = source.IdTipoPaqCom;
             target.VisibleInternetComienzo = source.VisibleInternetComienzo;

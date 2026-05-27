@@ -46,17 +46,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(200)]
         public string? ObservacionesDepartamento { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         public long? ClaveDeptoRpg { get; set; }
 
         [StringLength(31)]
