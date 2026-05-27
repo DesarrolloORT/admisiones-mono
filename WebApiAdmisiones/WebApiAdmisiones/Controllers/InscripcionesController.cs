@@ -43,7 +43,7 @@ namespace WebApiAdmisiones.Controllers
         ///// <response code="400">Producto o proceso inválido.</response>
         ///// <response code="404">Persona no encontrada.</response>
         ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
-        [HttpPost("InteresProducto")]
+        [HttpPost("RegistrarInteresProducto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]

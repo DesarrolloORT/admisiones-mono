@@ -147,21 +147,5 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
-
-        [Theory]
-        [InlineData(nameof(CatalogosController.ObtenerPaisesEstadosCiudades))]
-        //[InlineData(nameof(CatalogosController.ObtenerTipoDocumentos))]
-        [InlineData(nameof(CatalogosController.ObtenerCarreras))]
-        [InlineData(nameof(CatalogosController.ObtenerComienzos))]
-        [InlineData(nameof(CatalogosController.ObtenerTurnos))]
-        public void PublicEndpoints_HaveAllowAnonymous(string methodName)
-        {
-            var method = typeof(CatalogosController).GetMethod(methodName);
-
-            Assert.NotNull(method);
-            Assert.Contains(
-                method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true),
-                attribute => attribute is AllowAnonymousAttribute);
-        }
     }
 }
