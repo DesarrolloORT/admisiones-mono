@@ -49,7 +49,7 @@ namespace DataAccess.DevartRepositories
                 join inscripcion in Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>()
                     on instancia.IdInstanciaWorkflow equals inscripcion.IdInstanciaWorkflow
                 where (instancia.IdProceso == 75 || instancia.IdProceso == 82)
-                      && instancia.SolicitanteInstanciaWorkflow == codigoPersona
+                      && instancia.IdObjetoInstanciaWorkflow == (decimal?)codigoPersona
                       && instancia.FechaCanceladoInstanciaWf == null
                       && instancia.FechaFinalInstanciaWf == null
                       && inscripcion.IdProducto == (decimal?)idProducto

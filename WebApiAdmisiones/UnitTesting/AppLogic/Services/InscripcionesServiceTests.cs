@@ -22,8 +22,13 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.CurrentDateTime())
+                .Returns(FechaBase);
             _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
         }
+
+        private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
 
         [Fact]
         public void ObtenerUltimaInscripcionActiva_NotFound_ReturnsFailed()
@@ -267,15 +272,86 @@ namespace UnitTesting.AppLogic.Services
             interesProductoRepo.Verify(r => r.Add(It.Is<InteresProducto>(i =>
                 i.IdInteres == 500m &&
                 i.IdProducto == 10 &&
-                i.IdGradoInteres == 4m)), Times.Once);
+                i.IdGradoInteres == 4m &&
+                i.FechaInteresProd == FechaBase)), Times.Once);
             personaAdmiteRepo.Verify(r => r.Add(It.Is<PersonaAdmite>(p => p.CodigoPersona == 123)), Times.Once);
             Assert.Equal(20, encuesta.IdProceso);
             Assert.Equal(30, encuesta.IdComienzo);
-            actividadRepo.Verify(r => r.Add(It.Is<Actividad>(a => a.IdProceso == 20 && a.IdTipoAccion == 109m)), Times.Once);
-            accionRepo.Verify(r => r.Add(It.Is<Accion>(a => a.CodigoPersona == 123 && a.IdActividad == 900m)), Times.Once);
+            actividadRepo.Verify(r => r.Add(It.Is<Actividad>(a =>
+                a.IdProceso == 20 &&
+                a.IdTipoAccion == 109m &&
+                a.FechaGeneradorActividad == FechaBase &&
+                a.FechaRealizadoActividad == FechaBase)), Times.Once);
+            accionRepo.Verify(r => r.Add(It.Is<Accion>(a =>
+                a.CodigoPersona == 123 &&
+                a.IdActividad == 900m &&
+                a.FechaRealizadoAccion == FechaBase &&
+                a.IdAccionResultado == 1m)), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public void RegistrarInteresProducto_ConEncuestaSinComienzoActivo_DevuelveErrorYRollback()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoRepo = new Mock<IProcesoRepository>();
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(false);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+
+            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
+            intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
+            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES))
+                .Returns(500);
+
+            var interesProductoRepo = new Mock<BusinessLogic.IDevartRepositories.IInteresProductoRepository>();
+            _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
+
+            var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
+            personaAdmiteRepo.Setup(r => r.GetByKey(123)).Returns((PersonaAdmite)null);
+            _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision { IdEncuestaIni = 77, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns((long?)null);
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+
+            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
+            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
+
+            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
+            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
+
+            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20 });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("GEN_IP_06", result.ErrorCode);
+            _uowMock.Verify(u => u.Rollback(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
+            actividadRepo.Verify(r => r.Add(It.IsAny<Actividad>()), Times.Never);
+            accionRepo.Verify(r => r.Add(It.IsAny<Accion>()), Times.Never);
         }
 
         [Fact]
@@ -309,7 +385,8 @@ namespace UnitTesting.AppLogic.Services
                 InteresProductos = new List<InteresProducto>
                 {
                     new InteresProducto { IdInteres = 700, IdProducto = 10, IdGradoInteres = 2 },
-                    new InteresProducto { IdInteres = 700, IdProducto = 11, IdGradoInteres = 4 }
+                    new InteresProducto { IdInteres = 700, IdProducto = 11, IdGradoInteres = 4 },
+                    new InteresProducto { IdInteres = 700, IdProducto = 12, IdGradoInteres = 5 }
                 }
             };
 
@@ -320,12 +397,16 @@ namespace UnitTesting.AppLogic.Services
             var interesProductoRepo = new Mock<BusinessLogic.IDevartRepositories.IInteresProductoRepository>();
             var interesProductoProducto10 = new InteresProducto { IdInteres = 700, IdProducto = 10, IdGradoInteres = 2 };
             var interesProductoProducto11 = new InteresProducto { IdInteres = 700, IdProducto = 11, IdGradoInteres = 4 };
+            var interesProductoProducto12 = new InteresProducto { IdInteres = 700, IdProducto = 12, IdGradoInteres = 5 };
             interesProductoRepo
                 .Setup(r => r.GetByKey(700, 10))
                 .Returns(interesProductoProducto10);
             interesProductoRepo
                 .Setup(r => r.GetByKey(700, 11))
                 .Returns(interesProductoProducto11);
+            interesProductoRepo
+                .Setup(r => r.GetByKey(700, 12))
+                .Returns(interesProductoProducto12);
             _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
 
             var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
@@ -357,7 +438,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(0m, interesProductoProducto10.IdGradoInteresAnt);
             Assert.Equal(0m, interesProductoProducto11.IdGradoInteres);
             Assert.Equal(4m, interesProductoProducto11.IdGradoInteresAnt);
+            Assert.Equal(5m, interesProductoProducto12.IdGradoInteres);
             interesProductoRepo.Verify(r => r.Update(It.IsAny<InteresProducto>()), Times.AtLeast(2));
+            interesProductoRepo.Verify(r => r.Update(interesProductoProducto12), Times.Never);
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
         }
 

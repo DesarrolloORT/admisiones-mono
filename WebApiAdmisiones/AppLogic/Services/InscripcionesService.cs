@@ -97,7 +97,7 @@ namespace AppLogic.Services
                 return OperationResult<bool>.IsFailed("GEN_IP_05", nameof(RegistrarInteresProducto), "Ya tiene una inscripción pendiente al producto indicado.", 409);
             }
 
-            var fechaActual = DateTime.Now;
+            var fechaActual = _dbConnectionContext.CurrentDateTime();
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
@@ -108,12 +108,19 @@ namespace AppLogic.Services
                 var interesExistente = intereses.FirstOrDefault(i => i.IdProceso == request.IdProcesoSeleccionado);
                 if (interesExistente == null)
                 {
-                    interesExistente = CrearInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
+                    interesExistente = CrearInteres(uow, codigoPersona, request.IdProcesoSeleccionado);
                 }
 
                 ActivarInteresProducto(uow, interesExistente, request.IdProducto, fechaActual);
+                // TODO Tivenos: encolar AltaInteresXSeleccionEnSitio para el interes producto registrado.
                 AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
-                ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
+                var resultadoEncuesta = ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
+                if (!resultadoEncuesta.Success)
+                {
+                    uow.Rollback();
+                    return resultadoEncuesta;
+                }
+
                 RegistrarActividadInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
                 uow.Commit();
 
@@ -219,6 +226,11 @@ namespace AppLogic.Services
                         continue;
                     }
 
+                    if (interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
+                    {
+                        continue;
+                    }
+
                     interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
                     interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
                     interesProductoActual.UsuarioModifInteresProd = InscripcionesConstants.InteresProducto.UsuarioAdmisiones;
@@ -229,7 +241,7 @@ namespace AppLogic.Services
             }
         }
 
-        private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
+        private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso)
         {
             var interes = new Intere
             {
@@ -239,9 +251,6 @@ namespace AppLogic.Services
                 IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
                 ContactadorInteres = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 ObservacionesInteres = InscripcionesConstants.InteresProducto.ObservacionesWeb,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                 IdLugar = InscripcionesConstants.InteresProducto.LugarInteresWeb,
                 IdGradoPureza = InscripcionesConstants.InteresProducto.GradoPurezaPuro
             };
@@ -264,16 +273,13 @@ namespace AppLogic.Services
                     IdGradoInteresAnt = Constantes.kGRADO_INTERES_DESINTERESADO,
                     FechaInteresProd = fechaActual,
                     FechaAltaInteresProd = fechaActual,
-                    FechaIngreso = fechaActual,
-                    HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
-                    UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                     ObservacionesInteresProd = InscripcionesConstants.InteresProducto.ObservacionesWeb
                 });
                 return;
             }
 
             var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
-            if (interesProductoActual == null)
+            if (interesProductoActual == null || interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
             {
                 return;
             }
@@ -307,22 +313,27 @@ namespace AppLogic.Services
             }
         }
 
-        private static void ActualizarEncuestaInicial(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso)
+        private static OperationResult<bool> ActualizarEncuestaInicial(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso)
         {
             var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuesta == null)
             {
-                return;
+                return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
             }
 
             var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(idProducto, idProceso);
             if (!idComienzo.HasValue || idComienzo.Value == 0)
             {
-                return;
+                return OperationResult<bool>.IsFailed(
+                    "GEN_IP_06",
+                    nameof(RegistrarInteresProducto),
+                    $"No existe comienzo activo, producto:{idProducto} proceso:{idProceso}.",
+                    400);
             }
 
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo.Value;
+            return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
         }
 
         private void RegistrarActividadInteres(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
@@ -344,9 +355,6 @@ namespace AppLogic.Services
                 FechaGeneradorActividad = fechaActual,
                 UsernameRealizadoActividad = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
                 FechaRealizadoActividad = fechaActual,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
                 IdProceso = idProceso
             });
 
@@ -357,32 +365,8 @@ namespace AppLogic.Services
                 CodigoPersona = codigoPersona,
                 FechaRealizadoAccion = fechaActual,
                 UsuarioRealizadoAccion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = fechaActual,
-                HoraIngreso = fechaActual.ToString(InscripcionesConstants.InteresProducto.FormatoHora),
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada
-            });
-        }
-
-        private static IEnumerable<DtoInstanciaWorkflowDevart> MapearInstanciasWorkflowConInscripcion(
-            IUnitOfWork uow,
-            IEnumerable<InstanciaWorkflow> instancias)
-        {
-            var instanciasList = instancias.ToList();
-            var ids = instanciasList.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(ids)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-            return instanciasList.Select(iw =>
-            {
-                var dto = iw.ToDto();
-                if (inscripcionesPorInstanciaId.TryGetValue(iw.IdInstanciaWorkflow, out var inscripcion))
-                {
-                    dto.InstWorkflowInscripcion = inscripcion.ToDto();
-                }
-
-                return dto;
+                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
+                IdAccionResultado = InscripcionesConstants.InteresProducto.ResultadoAccionRealizada
             });
         }
 

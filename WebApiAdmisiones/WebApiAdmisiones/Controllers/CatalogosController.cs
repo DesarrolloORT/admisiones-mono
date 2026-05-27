@@ -120,14 +120,13 @@ namespace WebApiAdmisiones.Controllers
         /// Lista las ofertas disponibles para una carrera y proceso.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico para obtener las ofertas disponibles en Inscripciones y Pagos.
+        /// Endpoint para obtener las ofertas disponibles en Inscripciones y Pagos.
         /// </remarks>
         /// <param name="idCarrera">Identificador de la carrera/producto seleccionado.</param>
         /// <param name="idProceso">Identificador del proceso/comienzo seleccionado.</param>
         /// <returns>Ofertas disponibles para la combinacion indicada.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
         /// <response code="400">Carrera, proceso o solicitud invalida.</response>
-        [AllowAnonymous]
         [HttpGet("Turnos")]
         [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 200)]
         [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 400)]
