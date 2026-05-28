@@ -24,6 +24,7 @@ Migracion de `admisiones_legacy` hacia una aplicacion Angular moderna, con nueva
   - [Prerequisitos (en caso de no usar el Dev Container)](#prerequisitos-en-caso-de-no-usar-el-dev-container)
   - [Arquitectura del proyecto](#arquitectura-del-proyecto)
   - [Guia de contribucion](#guia-de-contribucion)
+  - [Accesibilidad](#accesibilidad)
   - [Scripts](#scripts)
   - [Pre-commit hook](#pre-commit-hook)
   - [Generacion de archivos de testing](#generacion-de-archivos-de-testing)
@@ -105,6 +106,8 @@ Documentacion relacionada:
 - [docs/WORKFLOW.md](docs/WORKFLOW.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
+- [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
+- [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md)
 - [docs/codegen/update-endpoints.md](docs/codegen/update-endpoints.md)
 
 > [!IMPORTANT]
@@ -154,6 +157,12 @@ Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para reglas de flujo, calidad y convenciones de colaboracion.
 
+## Accesibilidad
+
+El portal debe cumplir WCAG 2.2 AA en los flujos visibles. Las pautas, comandos
+de validacion, criterios manuales y gaps de ORT Components estan documentados en
+[docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+
 ## Scripts
 
 Estos son algunos de los scripts disponibles para el proyecto:
@@ -169,10 +178,16 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `lint:check`: valida formato y estilo sin modificar archivos.
 - `test`: ejecuta las pruebas unitarias.
 - `test:ci`: ejecuta las pruebas unitarias para CI.
+- `test:a11y`: ejecuta Playwright + axe en desktop y mobile.
+- `test:e2e:smoke`: ejecuta los E2E rapidos y bloqueantes para PR.
+- `test:e2e:regression`: ejecuta manualmente flujos completos antes de releases,
+  hotfixes delicados o cambios en registro/login/datos personales.
+- `test:e2e:ui`: abre Playwright UI para elegir y observar cualquier E2E.
+- `test:e2e:report`: abre el reporte HTML de la ultima corrida Playwright.
 - `test:coverage`: ejecuta pruebas con reporte de cobertura.
 - `test:watch`: ejecuta pruebas en modo observacion.
 - `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
-- `ci`: ejecuta validaciones principales de CI (`lint:check`, `test`, `build`).
+- `ci`: ejecuta validaciones principales de CI (`lint:check`, `test:ci`, `build`, `test:a11y`, `test:e2e:smoke`).
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.

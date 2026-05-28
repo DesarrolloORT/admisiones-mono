@@ -18,8 +18,10 @@ Ejecutar antes de abrir un pull request:
 
 ```bash
 npm run lint:check
-npm run test
+npm run test:ci
 npm run build
+npm run test:a11y
+npm run test:e2e:smoke
 ```
 
 Si corresponde actualizar snapshots:
@@ -41,6 +43,9 @@ Eso implica que:
 - no deberian subirse cambios con formato roto;
 - no deberian agregarse archivos fuente en `src/app/` sin su cobertura minima esperada;
 - no deberian agregarse accesos HTTP desde pages, components, stores o services fuera de `endpoints/`.
+- no deberian introducirse flujos sin labels, foco visible, soporte de teclado y resumen de errores cuando corresponda.
+- no deberian romper smoke E2E ni agregar flujos grandes sin casos `@regression`
+  o escenarios acceptance-first cuando aplique.
 
 ## Pull requests
 
@@ -62,6 +67,9 @@ Reglas:
 - actualizar la documentacion junto con el cambio;
 - usar nombres exactos de rutas, scripts, comandos, archivos y contratos;
 - evitar duplicacion y contenido obsoleto;
+- actualizar [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) si aparece un gap de `@desarrolloort/components`;
+- actualizar [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md) si cambia la
+  estrategia de smoke, regression, assisted, nightly o datos E2E;
 - si se usa una exencion documental, dejar el motivo visible.
 
 ## Referencias
@@ -71,3 +79,4 @@ Reglas:
 - [docs/WORKFLOW.md](docs/WORKFLOW.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
+- [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
