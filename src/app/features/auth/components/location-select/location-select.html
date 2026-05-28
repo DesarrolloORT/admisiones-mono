@@ -1,6 +1,7 @@
 <ort-form-field [hideRequiredMarker]="!!countryControl.value">
   <ort-label>País de residencia</ort-label>
   <ort-select
+    aria-label="País de residencia"
     [formControl]="countryControl"
     [id]="'location-country'"
     (blur)="onBlur()"
@@ -16,6 +17,7 @@
 <ort-form-field [hideRequiredMarker]="!!stateControl.value">
   <ort-label>Departamento / Estado</ort-label>
   <ort-select
+    aria-label="Departamento / Estado"
     [formControl]="stateControl"
     [id]="'location-state'"
     (blur)="onBlur()"
@@ -30,6 +32,7 @@
 <ort-form-field [hideRequiredMarker]="!!cityControl.value">
   <ort-label>Ciudad</ort-label>
   <ort-select
+    aria-label="Ciudad"
     [formControl]="cityControl"
     [id]="'location-city'"
     (blur)="onBlur()"

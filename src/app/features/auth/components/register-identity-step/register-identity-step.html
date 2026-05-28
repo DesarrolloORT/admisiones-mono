@@ -7,10 +7,20 @@
         <p>Los campos se autocompletarán</p>
       </div>
 
-      <input #documentFile accept="image/*,application/pdf" aria-label="Adjuntar documento para escaneo"
-        class="auth-hidden-file" id="document-file" type="file" (change)="documentSelected.emit($event)" />
+      <input
+        #documentFile
+        accept="image/*,application/pdf"
+        aria-label="Adjuntar documento para escaneo"
+        class="auth-hidden-file"
+        id="document-file"
+        type="file"
+        (change)="documentSelected.emit($event)" />
 
-      <button ort-tonal-button type="button" [disabled]="isRecognizingDocument()" (click)="documentFile.click()">
+      <button
+        ort-tonal-button
+        type="button"
+        [disabled]="isRecognizingDocument()"
+        (click)="documentFile.click()">
         <ort-icon aria-hidden="true">center_focus_weak</ort-icon>
         {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
       </button>
@@ -30,7 +40,10 @@
 
     <ort-form-field [hideRequiredMarker]="!!form().controls.documentType.value">
       <ort-label>Tipo de documento</ort-label>
-      <ort-select aria-label="Tipo de documento" formControlName="documentType" [id]="'register-document-type'">
+      <ort-select
+        aria-label="Tipo de documento"
+        formControlName="documentType"
+        [id]="'register-document-type'">
         <ort-option value="CI">Cédula</ort-option>
         <ort-option value="PS">Pasaporte</ort-option>
         <ort-option value="DE">Documento extranjero</ort-option>
@@ -45,11 +58,20 @@
     <ort-form-field [hideRequiredMarker]="!!form().controls.documentNumber.value">
       <ort-label>{{ documentNumberLabel() }}</ort-label>
       @if (isCedulaInput()) {
-      <input formControlName="documentNumber" ortCedulaInput type="text" [_ariaLabel]="documentNumberLabel()"
+      <input
+        formControlName="documentNumber"
+        ortCedulaInput
+        type="text"
+        [_ariaLabel]="documentNumberLabel()"
         [id]="'register-document-number'" />
       } @else {
-      <input formControlName="documentNumber" inputmode="numeric" ortInput type="text"
-        [_ariaLabel]="documentNumberLabel()" [id]="'register-document-number'" />
+      <input
+        formControlName="documentNumber"
+        inputmode="numeric"
+        ortInput
+        type="text"
+        [_ariaLabel]="documentNumberLabel()"
+        [id]="'register-document-number'" />
       } @if (!isCedulaInput()) {
       <ort-hint>Sin puntos ni espacios.</ort-hint>
       } @if ( form().controls.documentNumber.touched &&

@@ -4,7 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
-import { buildFormErrorSummary } from '../../../shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from '../../../shared/forms/form-error-summary';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { createLoginForm, syncDocumentNumberValidators } from '../forms/auth-forms';
 import { cleanDocumentNumber, isCedulaDocumentType } from '../models/document-number';
@@ -35,26 +38,30 @@ export class LoginFacade {
   );
   public readonly errorSummary = computed(() =>
     this.submitted()
-      ? buildFormErrorSummary(this.form, [
-          {
-            controlName: 'documentType',
-            fieldId: 'login-document-type',
-            label: 'Tipo de documento',
-          },
-          {
-            controlName: 'documentNumber',
-            fieldId: 'login-document-number',
-            label: 'Nro. de documento',
-            messages: {
-              pattern: 'Ingresá solo caracteres alfanuméricos.',
+      ? buildFormErrorSummary(
+          this.form,
+          [
+            {
+              controlName: 'documentType',
+              fieldId: 'login-document-type',
+              label: 'Tipo de documento',
             },
-          },
-          {
-            controlName: 'password',
-            fieldId: 'login-password',
-            label: 'Contraseña',
-          },
-        ])
+            {
+              controlName: 'documentNumber',
+              fieldId: 'login-document-number',
+              label: 'Nro. de documento',
+              messages: {
+                pattern: 'Ingresá solo caracteres alfanuméricos.',
+              },
+            },
+            {
+              controlName: 'password',
+              fieldId: 'login-password',
+              label: 'Contraseña',
+            },
+          ],
+          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+        )
       : []
   );
 

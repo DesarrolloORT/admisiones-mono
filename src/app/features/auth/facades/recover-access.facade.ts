@@ -4,7 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
-import { buildFormErrorSummary } from '../../../shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from '../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { createRecoverAccessForm, syncDocumentNumberValidators } from '../forms/auth-forms';
 import { formatDocumentForBackend, isCedulaDocumentType } from '../models/document-number';
@@ -32,26 +35,30 @@ export class RecoverAccessFacade {
   public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
   public readonly errorSummary = computed(() =>
     this.submitted()
-      ? buildFormErrorSummary(this.form, [
-          {
-            controlName: 'documentType',
-            fieldId: 'recover-document-type',
-            label: 'Tipo de documento',
-          },
-          {
-            controlName: 'documentNumber',
-            fieldId: 'recover-document-number',
-            label: 'Nro. de documento',
-            messages: {
-              pattern: 'Ingresá solo caracteres alfanuméricos.',
+      ? buildFormErrorSummary(
+          this.form,
+          [
+            {
+              controlName: 'documentType',
+              fieldId: 'recover-document-type',
+              label: 'Tipo de documento',
             },
-          },
-          {
-            controlName: 'primerApellido',
-            fieldId: 'recover-primer-apellido',
-            label: 'Primer apellido',
-          },
-        ])
+            {
+              controlName: 'documentNumber',
+              fieldId: 'recover-document-number',
+              label: 'Nro. de documento',
+              messages: {
+                pattern: 'Ingresá solo caracteres alfanuméricos.',
+              },
+            },
+            {
+              controlName: 'primerApellido',
+              fieldId: 'recover-primer-apellido',
+              label: 'Primer apellido',
+            },
+          ],
+          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+        )
       : []
   );
 

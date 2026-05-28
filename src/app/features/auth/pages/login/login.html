@@ -1,12 +1,18 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
-<app-auth-form description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
-  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="school"
-  heroTitle="Tu red profesional comienza hoy." title="Comenzá tu camino en ORT">
+<app-auth-form
+  description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
+  heroIcon="school"
+  heroTitle="Tu red profesional comienza hoy."
+  title="Comenzá tu camino en ORT">
   <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
     <section class="auth-form-section">
       <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentType.value">
         <ort-label>Tipo de documento</ort-label>
-        <ort-select formControlName="documentType" id="login-document-type">
+        <ort-select
+          aria-label="Tipo de documento"
+          formControlName="documentType"
+          [id]="'login-document-type'">
           <ort-option value="CI">Cédula</ort-option>
           <ort-option value="PS">Pasaporte</ort-option>
           <ort-option value="DE">Documento extranjero</ort-option>
@@ -20,11 +26,19 @@
       <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
         @if (facade.isCedulaInput()) {
-        <input autocomplete="username" formControlName="documentNumber" id="login-document-number" ortCedulaInput
-          type="text" />
+        <input
+          autocomplete="username"
+          formControlName="documentNumber"
+          ortCedulaInput
+          type="text"
+          [id]="'login-document-number'" />
         } @else {
-        <input autocomplete="username" formControlName="documentNumber" id="login-document-number" ortInput
-          type="text" />
+        <input
+          autocomplete="username"
+          formControlName="documentNumber"
+          ortInput
+          type="text"
+          [id]="'login-document-number'" />
         } @if (!facade.isCedulaInput()) {
         <ort-hint>Sin puntos ni guiones</ort-hint>
         } @if ( facade.form.controls.documentNumber.touched &&
@@ -41,9 +55,18 @@
 
       <ort-form-field [hideRequiredMarker]="!!facade.form.controls.password.value">
         <ort-label>Contraseña</ort-label>
-        <input #passwordInput formControlName="password" id="login-password" ortInput
-          [attr.autocomplete]="'current-password'" [type]="facade.passwordInputType()" />
-        <button ort-icon-button ortSuffix type="button" [attr.aria-label]="facade.passwordToggleLabel()"
+        <input
+          #passwordInput
+          formControlName="password"
+          ortInput
+          [attr.autocomplete]="'current-password'"
+          [id]="'login-password'"
+          [type]="facade.passwordInputType()" />
+        <button
+          ort-icon-button
+          ortSuffix
+          type="button"
+          [attr.aria-label]="facade.passwordToggleLabel()"
           (click)="facade.togglePasswordVisibility()">
           <ort-icon aria-hidden="true">{{ facade.passwordIcon() }}</ort-icon>
         </button>
@@ -53,7 +76,9 @@
         }
       </ort-form-field>
 
-      <a class="auth-link" routerLink="/recuperar-acceso"
+      <a
+        class="auth-link"
+        routerLink="/recuperar-acceso"
         [queryParams]="{ tipoDoc: facade.form.controls.documentType.value, doc: facade.form.controls.documentNumber.value }">
         ¿Olvidaste tu usuario o contraseña?
       </a>

@@ -468,3 +468,4 @@ export class RegisterFlowFacade {
     return 'No se pudo leer el archivo seleccionado.';
   }
 }
+
