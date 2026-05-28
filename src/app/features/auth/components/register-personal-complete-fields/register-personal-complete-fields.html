@@ -39,7 +39,7 @@
 
   <ort-form-field [hideRequiredMarker]="!!form().controls.sexo.value">
     <ort-label>Sexo</ort-label>
-    <ort-select formControlName="sexo" [id]="'sex'">
+    <ort-select aria-label="Sexo" formControlName="sexo" [id]="'sex'">
       <ort-option value="">Seleccioná...</ort-option>
       <ort-option value="F">Femenino</ort-option>
       <ort-option value="M">Masculino</ort-option>

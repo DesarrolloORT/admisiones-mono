@@ -2,20 +2,8 @@
 <form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="onSubmit()">
   <section class="auth-form-section">
     <!-- TODO(a11y-ort-component): OrtRadioGroup no expone un target público de foco para links de OrtErrorSummary; el resumen se anuncia sin link hasta que la librería lo soporte. -->
-    <ort-radio-group
-      formControlName="propuestaAcademica"
-      legend="Propuesta académica"
-      name="propuestaAcademica"
-      orientation="vertical"
-      [ariaDescribedby]="
-        form().controls.propuestaAcademica.touched &&
-        form().controls.propuestaAcademica.hasError('required')
-          ? 'academic-level-error'
-          : ''
-      "
-      [id]="'academic-level-group'"
-      [required]="true"
-      (valueChange)="onPropuestaChange()">
+    <ort-radio-group formControlName="propuestaAcademica" legend="Propuesta académica" name="propuestaAcademica"
+      orientation="vertical" [id]="'academic-level-group'" [required]="true" (valueChange)="onPropuestaChange()">
       @for (level of academicLevels(); track level.id) {
       <ort-radio-card-button indicatorPosition="left" [value]="level.id">
         <ort-icon aria-hidden="true" ortRadioCardIcon>school</ort-icon>
@@ -31,10 +19,7 @@
 
     <ort-form-field [hideRequiredMarker]="!!form().controls.carrera.value">
       <ort-label>Carrera</ort-label>
-      <ort-select
-        formControlName="carrera"
-        [id]="'career-select'"
-        (selectionChange)="onCarreraChange()">
+      <ort-select formControlName="carrera" [id]="'career-select'" (selectionChange)="onCarreraChange()">
         <ort-option disabled [value]="null">Seleccioná...</ort-option>
         @for (career of filteredCareers(); track career.idProducto) {
         <ort-option [value]="career.idProducto">{{ career.nombreProducto }}</ort-option>

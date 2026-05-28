@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { OrtButtonModule, OrtFormFieldModule } from '@desarrolloort/components';
-import { buildFormErrorSummary } from 'src/app/shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from 'src/app/shared/forms/form-error-summary';
 
 import { PersonalForm } from '../../forms/auth-forms';
 import { RegisterPersonalMode } from '../../models/register-flow';
@@ -82,7 +85,8 @@ export class RegisterPersonalStep {
 
     return buildFormErrorSummary(
       this.form(),
-      this.personalMode() === 'verification' ? verificationFields : completeFields
+      this.personalMode() === 'verification' ? verificationFields : completeFields,
+      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
     );
   });
 

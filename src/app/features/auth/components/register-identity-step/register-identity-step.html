@@ -30,7 +30,7 @@
 
     <ort-form-field [hideRequiredMarker]="!!form().controls.documentType.value">
       <ort-label>Tipo de documento</ort-label>
-      <ort-select formControlName="documentType" [ariaLabel]="'Tipo de documento'" [id]="'register-document-type'">
+      <ort-select aria-label="Tipo de documento" formControlName="documentType" [id]="'register-document-type'">
         <ort-option value="CI">Cédula</ort-option>
         <ort-option value="PS">Pasaporte</ort-option>
         <ort-option value="DE">Documento extranjero</ort-option>
