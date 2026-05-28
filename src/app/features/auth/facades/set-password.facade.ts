@@ -4,7 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
-import { buildFormErrorSummary } from '../../../shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from '../../../shared/forms/form-error-summary';
 import {
   buildOrtPasswordRequirements,
   ORT_PASSWORD_ERROR_MESSAGES,
@@ -93,24 +96,28 @@ export class SetPasswordFacade {
   );
   public readonly errorSummary = computed(() =>
     this.submitted()
-      ? buildFormErrorSummary(this.form, [
-          {
-            controlName: 'password',
-            fieldId: 'crear-password',
-            label: 'Contraseña',
-            messages: {
-              ...ORT_PASSWORD_ERROR_MESSAGES,
+      ? buildFormErrorSummary(
+          this.form,
+          [
+            {
+              controlName: 'password',
+              fieldId: 'crear-password',
+              label: 'Contraseña',
+              messages: {
+                ...ORT_PASSWORD_ERROR_MESSAGES,
+              },
             },
-          },
-          {
-            controlName: 'confirmPassword',
-            fieldId: 'crear-password-confirm',
-            label: 'Confirmar contraseña',
-            messages: {
-              confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+            {
+              controlName: 'confirmPassword',
+              fieldId: 'crear-password-confirm',
+              label: 'Confirmar contraseña',
+              messages: {
+                confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+              },
             },
-          },
-        ])
+          ],
+          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+        )
       : []
   );
 
@@ -165,4 +172,3 @@ export class SetPasswordFacade {
     });
   }
 }
-
