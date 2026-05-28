@@ -84,6 +84,56 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerEncuestaInicial_ReturnsAllStaticCatalogs()
+        {
+            var result = _service.ObtenerEncuestaInicial();
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerEncuestaInicial), result.Method);
+            Assert.NotNull(result.Data);
+            Assert.Equal(4, result.Data.NivelConocimiento.Count);
+            Assert.Equal(4, result.Data.DecisionCarrera.Count);
+            Assert.Equal(5, result.Data.CompartidoCon.Count);
+            Assert.Equal(7, result.Data.FormacionTutores.Count);
+            Assert.Equal(3, result.Data.EstadoEducacionSuperior.Count);
+            Assert.Equal(4, result.Data.DecisionUniversidad.Count);
+            Assert.Equal(8, result.Data.AniosAprobadosEducacionSuperior.Count);
+        }
+
+        [Fact]
+        public void ObtenerEncuestaInicial_UsesEmsLabelsForSecondaryDecisionOptions()
+        {
+            var result = _service.ObtenerEncuestaInicial();
+
+            var decisionCarrera = result.Data!.DecisionCarrera.ToList();
+            Assert.Collection(
+                decisionCarrera,
+                item =>
+                {
+                    Assert.Equal(2, item.Value);
+                    Assert.Equal("1° EMS (4° año)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(3, item.Value);
+                    Assert.Equal("2° EMS (5° año)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(4, item.Value);
+                    Assert.Equal("3° EMS (6° año)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(0, item.Value);
+                    Assert.Equal("Otro", item.Label);
+                });
+
+            Assert.Equal(decisionCarrera.Select(x => x.Value), result.Data.DecisionUniversidad.Select(x => x.Value));
+            Assert.Equal(decisionCarrera.Select(x => x.Label), result.Data.DecisionUniversidad.Select(x => x.Label));
+        }
+
+        [Fact]
         public void ObtenerPais_PaisNotFound_ReturnsFailed()
         {
             var paisRepo = new Mock<IPaisRepository>();

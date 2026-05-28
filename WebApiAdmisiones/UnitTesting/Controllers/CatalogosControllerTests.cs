@@ -60,6 +60,31 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
         }
 
+        [Fact]
+        public void ObtenerEncuestaInicial_ReturnsOk()
+        {
+            var serviceMock = new Mock<ICatalogosService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<CatalogosController>>();
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            serviceMock.Setup(s => s.ObtenerEncuestaInicial())
+                .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
+                    new DtoEncuestaInicialCatalogosResponse
+                    {
+                        DecisionCarrera =
+                        [
+                            new DtoComboOption { Value = 2, Label = "1° EMS (4° año)" }
+                        ]
+                    },
+                    nameof(ICatalogosService.ObtenerEncuestaInicial)));
+
+            var response = controller.ObtenerEncuestaInicial();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
         //[Fact]
         //public void CatalogosController_ExposesTipoDocumentos()
         //{

@@ -59,6 +59,22 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Lista todos los combos estaticos necesarios para la encuesta inicial de admision.
+        /// </summary>
+        /// <remarks>
+        /// Endpoint publico para poblar la encuesta inicial con los valores canonicos que valida y persiste backend.
+        /// </remarks>
+        /// <returns>Catalogos de encuesta inicial agrupados por campo.</returns>
+        /// <response code="200">Catalogos obtenidos correctamente.</response>
+        [HttpGet("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialCatalogosResponse>), 200)]
+        public IActionResult ObtenerEncuestaInicial()
+        {
+            var result = catalogosService.ObtenerEncuestaInicial();
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Lista los tipos de documento aceptados por admisiones.
         /// </summary>
         /// <remarks>

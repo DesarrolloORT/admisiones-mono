@@ -9,6 +9,7 @@ namespace AppLogic.IServices
     {
         OperationResult<DtoPaisDevart> ObtenerPais(long idPais);
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
+        OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
         Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
