@@ -1,6 +1,7 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # Environment variables
+.env.e2e.local
 src/environments/environment.prod.ts
 src/environments/environment.staging.ts
 src/environments/environment.dev.ts
@@ -42,6 +43,8 @@ yarn-error.log
 .sass-cache/
 /connect.lock
 /coverage
+/playwright-report
+/test-results
 /libpeerconnection.log
 testem.log
 /typings
