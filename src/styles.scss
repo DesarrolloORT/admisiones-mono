@@ -3,6 +3,7 @@
 @include mat.elevation-classes();
 @include mat.app-background();
 
+/* stylelint-disable declaration-property-unit-allowed-list -- Screen-reader utility uses conventional 1px clipping dimensions. */
 :root {
   --mat-sys-primary: var(--ort-sys-base-surface-primary-background);
   --mat-sys-on-surface: var(--ort-sys-base-text-color-headline);
@@ -15,4 +16,23 @@ html,
 body {
   height: 100%;
   scroll-behavior: smooth;
+}
+
+.sr-only {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
 }
