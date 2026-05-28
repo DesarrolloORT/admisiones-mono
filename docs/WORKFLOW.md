@@ -14,8 +14,10 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 
    ```bash
    npm run lint:check
-   npm run test
+   npm run test:ci
    npm run build
+   npm run test:a11y
+   npm run test:e2e:smoke
    ```
 
 4. Hacer commit y abrir un pull request.
@@ -36,6 +38,10 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
   ```
 
 - `lint-staged` aplica `eslint --cache --fix .`, `prettier --write .` y `stylelint --fix **/*.scss` segun el tipo de archivo.
+- `test:a11y` ejecuta Playwright + axe con mocks de API en desktop y mobile.
+- `test:e2e:smoke` ejecuta la suite rapida de flujos criticos con mocks.
+- `test:e2e:regression` se corre manualmente antes de releases, hotfixes
+  delicados o cambios en registro/login/datos personales.
 
 ## Estandares de codigo
 
@@ -44,6 +50,8 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 - Los servicios son la API interna que consumen los componentes de una feature.
 - `ApiHttpClient` es la unica capa que resuelve URLs y usa `environment.API_URL`.
 - `ApiHttpClient` cachea por defecto los `GET` sin parámetros; los servicios no deben duplicar ese cache con `shareReplay`.
+- Las UIs nuevas o modificadas deben cumplir WCAG 2.2 AA y seguir
+  [docs/ACCESSIBILITY.md](./ACCESSIBILITY.md).
 
 Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 
@@ -59,7 +67,7 @@ Se dispara al crear un pull request hacia una rama con patron `v*.*.*/main`.
 
 Trabajos principales:
 
-- `CI Checks`
+- `CI Checks` (lint, unit tests, build, accessibility tests y E2E smoke)
 - `Coverage`
 - `SonarQube Scan`
 - notificaciones
@@ -139,6 +147,8 @@ Usa las mismas variables de despliegue que `cd.yml`.
 ### Otras automatizaciones
 
 - [`.github/workflows/pr-to-main.yml`](../.github/workflows/pr-to-main.yml): auditoria de dependencias, CI para ramas `feature/*`, `fix/*`, `hotfix/*` y `dependabot/*`, y validacion de version.
+- [`.github/workflows/e2e-nightly.yml`](../.github/workflows/e2e-nightly.yml):
+  E2E semanal o manual contra preprod controlado cuando `E2E_BASE_URL` esta configurado.
 - [`.github/workflows/pr-title-lint.yml`](../.github/workflows/pr-title-lint.yml): exige titulos `release/vX.Y.Z` en PRs a `main`.
 - [`.github/workflows/tag-on-push.yml`](../.github/workflows/tag-on-push.yml): genera tags de preproduccion.
 - [`.github/workflows/label-manager.yml`](../.github/workflows/label-manager.yml): administra etiquetas del repositorio.

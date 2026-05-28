@@ -243,6 +243,29 @@ El proyecto usa Angular standalone, `OnPush` por defecto y
 - usar `async` pipe, `toSignal` o limpieza explicita cuando una suscripcion viva mas que un request HTTP autocompletado;
 - no introducir `httpResource` para mutaciones imperativas como login, registro o submits `POST`; usar servicios y `Observable`.
 
+## Accesibilidad de UI
+
+Toda pantalla o componente nuevo debe cumplir WCAG 2.2 AA y seguir
+[docs/ACCESSIBILITY.md](./ACCESSIBILITY.md).
+
+Reglas practicas:
+
+- usar componentes ORT existentes antes que controles custom;
+- usar landmarks, headings, labels visibles, hints y errores por campo;
+- agregar `OrtErrorSummary` en formularios con mas de un campo validable;
+- habilitar links del resumen al campo solo si el componente expone un target
+  publico estable; en controles ORT actuales usar
+  `ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED`;
+- asegurar navegacion por teclado, foco visible y soporte de `Escape` en menus o dialogos;
+- reflejar informacion visual decorativa en texto accesible cuando corresponda,
+  por ejemplo prefijos telefonicos;
+- no parchear `@desarrolloort/components` desde la app.
+
+Si falta soporte accesible en un componente ORT, dejar
+`TODO(a11y-ort-component): ...` en el punto de uso y registrar el gap en
+[docs/ACCESSIBILITY.md](./ACCESSIBILITY.md). No usar overrides contra DOM o
+clases internas de ORT.
+
 ## Testing
 
 Los tests `.spec.ts` deben estar co-localizados junto al archivo fuente. El
@@ -253,6 +276,14 @@ pero la ubicacion preferida es junto al source.
 - Los servicios se prueban mockeando endpoints.
 - Las pages y components se prueban mockeando servicios, no endpoints.
 - Los stores se prueban como estado puro, sin HTTP.
+- Los flujos criticos de UI deben tener cobertura Playwright `@smoke` o
+  `@regression` segun su criticidad. Ver
+  [docs/E2E-GUARDRAILS.md](./E2E-GUARDRAILS.md).
+- Para features grandes nuevas como becas o inscripciones, usar
+  acceptance-first: escribir los escenarios Playwright desde Figma y criterios
+  funcionales antes de implementar.
+- Los datos sensibles de E2E viven en `.env.e2e.local` o secrets de GitHub; no
+  se versionan en specs, fixtures ni docs.
 
 ## Enforcement
 
