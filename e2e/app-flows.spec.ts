@@ -1,0 +1,86 @@
+import { expect, test } from '@playwright/test';
+
+import { mockApi } from './support/api-mocks';
+import { LoginPage } from './support/pages/login-page';
+import { addAuthenticatedSession } from './support/session';
+import { personalData } from './support/test-data/register-scenarios';
+
+const validPassword = 'Ort2027!Cambio';
+const recoverySuccessMessage =
+  'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
+
+test.describe('Base user flows', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockApi(page);
+  });
+
+  test('logs in and reaches home @smoke @regression', async ({ page }) => {
+    const login = new LoginPage(page);
+
+    await login.goto();
+    await login.login({ documentNumber: '12345672', password: validPassword });
+
+    await expect(page).toHaveURL(/\/inicio/);
+    await expect(page.getByRole('heading', { name: /Hola/ })).toBeVisible();
+  });
+
+  test('submits recovery access with controlled data @regression', async ({ page }) => {
+    await page.goto('/recuperar-acceso');
+    await expect(page.getByRole('heading', { name: 'Recuperar acceso' })).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Nro. de documento' }).fill('12345672');
+    await page.getByRole('textbox', { name: 'Primer apellido' }).fill(personalData.firstLastName);
+    await page.getByRole('button', { name: 'Enviar' }).click();
+
+    await expect(
+      page.locator('#main-content output[role="status"]').filter({
+        hasText: recoverySuccessMessage,
+      })
+    ).toBeVisible();
+  });
+
+  test('creates a password from a valid activation token @regression', async ({ page }) => {
+    await page.goto('/crear-password?token=e2e-token');
+    await expect(page.getByRole('heading', { name: 'Creá tu contraseña' })).toBeVisible();
+
+    await page.getByRole('textbox', { exact: true, name: 'Contraseña' }).fill(validPassword);
+    await page.getByRole('textbox', { name: 'Confirmar contraseña' }).fill(validPassword);
+    await page.getByRole('button', { name: 'Activar cuenta' }).click();
+
+    await expect(page).toHaveURL(/\/iniciar-sesion/);
+  });
+
+  test('updates personal data for an authenticated user @regression', async ({ page }) => {
+    await addAuthenticatedSession(page);
+    await page.goto('/inicio/datos-personales');
+    await expect(page.getByRole('heading', { name: 'Datos personales' })).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Dirección' }).fill('Bulevar España 2633 apto 402');
+    await page
+      .getByRole('textbox', { exact: true, name: 'E-mail' })
+      .fill('gabrielaortiz.updated@example.com');
+    await page
+      .getByRole('textbox', { name: 'Confirmar e-mail' })
+      .fill('gabrielaortiz.updated@example.com');
+    await page.getByRole('button', { name: 'Guardar' }).click();
+
+    await expect(
+      page.locator('#main-content').getByRole('status').filter({
+        hasText: 'Datos personales actualizados.',
+      })
+    ).toBeVisible();
+  });
+
+  test('changes password for an authenticated user @regression', async ({ page }) => {
+    await addAuthenticatedSession(page);
+    await page.goto('/inicio/cambiar-contrasena');
+    await expect(page.getByRole('heading', { name: 'Definí tu nueva contraseña' })).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Contraseña actual' }).fill('Anterior2027!');
+    await page.getByRole('textbox', { name: 'Nueva contraseña' }).fill(validPassword);
+    await page.getByRole('textbox', { name: 'Confirmar contraseña' }).fill(validPassword);
+    await page.getByRole('button', { name: 'Guardar nueva contraseña' }).click();
+
+    await expect(page).toHaveURL(/\/inicio/);
+  });
+});
