@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -10,6 +10,10 @@ import {
   OrtSelectModule,
 } from '@desarrolloort/components';
 import { Observable } from 'rxjs';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from 'src/app/shared/forms/form-error-summary';
 
 import { DocumentType } from '../../../catalogs/models/catalog.interface';
 import { IdentityForm } from '../../forms/auth-forms';
@@ -43,5 +47,33 @@ export class RegisterIdentityStep {
 
   public readonly documentSelected = output<Event>();
   public readonly continueStep = output<void>();
-}
 
+  public readonly submitted = signal(false);
+  public readonly errorSummary = computed(() => {
+    if (!this.submitted()) {
+      return [];
+    }
+
+    return buildFormErrorSummary(
+      this.form(),
+      [
+        {
+          controlName: 'documentType',
+          fieldId: 'register-document-type',
+          label: 'Tipo de documento',
+        },
+        {
+          controlName: 'documentNumber',
+          fieldId: 'register-document-number',
+          label: this.documentNumberLabel(),
+        },
+      ],
+      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    );
+  });
+
+  public onSubmit(): void {
+    this.submitted.set(true);
+    this.continueStep.emit();
+  }
+}

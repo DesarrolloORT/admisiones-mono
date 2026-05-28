@@ -1,4 +1,5 @@
-<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="continueStep.emit()">
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="onSubmit()">
   <section class="auth-form-section">
     <section aria-labelledby="document-capture-title" class="auth-capture">
       <div>
@@ -6,20 +7,20 @@
         <p>Los campos se autocompletarán</p>
       </div>
 
-      <input #documentFile accept="image/*,application/pdf" class="auth-hidden-file" id="document-file" type="file"
-        (change)="documentSelected.emit($event)" />
+      <input #documentFile accept="image/*,application/pdf" aria-label="Adjuntar documento para escaneo"
+        class="auth-hidden-file" id="document-file" type="file" (change)="documentSelected.emit($event)" />
 
       <button ort-tonal-button type="button" [disabled]="isRecognizingDocument()" (click)="documentFile.click()">
-        <ort-icon>center_focus_weak</ort-icon>
+        <ort-icon aria-hidden="true">center_focus_weak</ort-icon>
         {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
       </button>
 
-      <p class="auth-selected-file" [hidden]="!selectedFileName()">
+      <p class="auth-selected-file" role="status" [hidden]="!selectedFileName()">
         Archivo seleccionado: {{ selectedFileName() }}
       </p>
 
       @if (recognitionSuccessMessage()) {
-      <output class="auth-success">{{ recognitionSuccessMessage() }}</output>
+      <output class="auth-success" role="status">{{ recognitionSuccessMessage() }}</output>
       } @if (recognitionError()) {
       <p class="auth-error" role="alert">{{ recognitionError() }}</p>
       }
@@ -27,10 +28,10 @@
 
     <div class="auth-divider">O ingresá tus datos manualmente</div>
 
-    <ort-form-field>
+    <ort-form-field [hideRequiredMarker]="!!form().controls.documentType.value">
       <ort-label>Tipo de documento</ort-label>
-      <ort-select formControlName="documentType" id="register-document-type">
-        <ort-option value="CI">Cédula </ort-option>
+      <ort-select formControlName="documentType" [ariaLabel]="'Tipo de documento'" [id]="'register-document-type'">
+        <ort-option value="CI">Cédula</ort-option>
         <ort-option value="PS">Pasaporte</ort-option>
         <ort-option value="DE">Documento extranjero</ort-option>
       </ort-select>
@@ -40,17 +41,18 @@
       }
     </ort-form-field>
 
-    <ort-form-field>
+    <!-- TODO(a11y-ort-component): OrtInput no conserva siempre el nombre accesible del OrtFormField al alternar entre cédula y documento no-CI; se explicita aria-label hasta que la librería lo resuelva. -->
+    <ort-form-field [hideRequiredMarker]="!!form().controls.documentNumber.value">
       <ort-label>{{ documentNumberLabel() }}</ort-label>
       @if (isCedulaInput()) {
-      <input ortCedulaInput formControlName="documentNumber" id="register-document-number" type="text" />
+      <input formControlName="documentNumber" ortCedulaInput type="text" [_ariaLabel]="documentNumberLabel()"
+        [id]="'register-document-number'" />
       } @else {
-      <input ortInput formControlName="documentNumber" id="register-document-number" inputmode="numeric" type="text" />
-      }
-      @if (!isCedulaInput()) {
+      <input formControlName="documentNumber" inputmode="numeric" ortInput type="text"
+        [_ariaLabel]="documentNumberLabel()" [id]="'register-document-number'" />
+      } @if (!isCedulaInput()) {
       <ort-hint>Sin puntos ni espacios.</ort-hint>
-      }
-      @if ( form().controls.documentNumber.touched &&
+      } @if ( form().controls.documentNumber.touched &&
       form().controls.documentNumber.hasError('required') ) {
       <ort-error>Este campo es obligatorio</ort-error>
       } @if ( isCedulaInput() && form().controls.documentNumber.touched &&
@@ -63,9 +65,7 @@
     </ort-form-field>
   </section>
 
-  <p class="auth-error" role="alert" [hidden]="!form().touched || !form().invalid">
-    Completá los campos obligatorios para continuar.
-  </p>
+  <ort-error-summary [errors]="errorSummary()" />
 
   @if (error()) {
   <p class="auth-error" role="alert">{{ error() }}</p>

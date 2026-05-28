@@ -1,6 +1,9 @@
 <ort-form-field [hideRequiredMarker]="!!countryControl.value">
   <ort-label>País de residencia</ort-label>
-  <ort-select id="location-country" [formControl]="countryControl" (blur)="onBlur()"
+  <ort-select
+    [formControl]="countryControl"
+    [id]="'location-country'"
+    (blur)="onBlur()"
     (selectionChange)="onCountryChange()">
     <ort-option value="">Seleccioná...</ort-option>
     @for (country of countries(); track country.codigoPais) {
@@ -12,7 +15,11 @@
 @if (showStates()) {
 <ort-form-field [hideRequiredMarker]="!!stateControl.value">
   <ort-label>Departamento / Estado</ort-label>
-  <ort-select id="location-state" [formControl]="stateControl" (blur)="onBlur()" (selectionChange)="onStateChange()">
+  <ort-select
+    [formControl]="stateControl"
+    [id]="'location-state'"
+    (blur)="onBlur()"
+    (selectionChange)="onStateChange()">
     <ort-option value="">Seleccioná...</ort-option>
     @for (state of states(); track state.codigoEstado) {
     <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
@@ -22,7 +29,11 @@
 } @if (showCities()) {
 <ort-form-field [hideRequiredMarker]="!!cityControl.value">
   <ort-label>Ciudad</ort-label>
-  <ort-select id="location-city" [formControl]="cityControl" (blur)="onBlur()" (selectionChange)="onCityChange()">
+  <ort-select
+    [formControl]="cityControl"
+    [id]="'location-city'"
+    (blur)="onBlur()"
+    (selectionChange)="onCityChange()">
     <ort-option value="">Seleccioná...</ort-option>
     @for (city of cities(); track city.codigoCiudad) {
     <ort-option [value]="city.codigoCiudad.toString()">{{ city.nombre }}</ort-option>

@@ -1,8 +1,9 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="contact-title" class="auth-form-section" [formGroup]="form()">
   <h2 class="auth-contact-title" id="contact-title">Datos de contacto</h2>
 
-  <ort-form-field>
-    <ort-label>Celular</ort-label>
+  <ort-form-field [hideRequiredMarker]="!!form().controls.telefono1.value">
+    <ort-label>Celular con prefijo +598</ort-label>
     <span aria-hidden="true" class="auth-phone-prefix" ortTextPrefix>
       <span class="auth-phone-flag"></span>
       +598
@@ -10,19 +11,20 @@
     <input
       autocomplete="tel"
       formControlName="telefono1"
-      id="phone"
       inputmode="tel"
       ortInput
       placeholder="00 000 000"
-      type="tel" />
+      type="tel"
+      [id]="'phone'" />
+    <ort-hint>Ingresá el número sin el prefijo nacional.</ort-hint>
     @if (form().controls.telefono1.touched && form().controls.telefono1.hasError('required')) {
     <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
-  <ort-form-field>
+  <ort-form-field [hideRequiredMarker]="!!form().controls.mail.value">
     <ort-label>E-mail</ort-label>
-    <input autocomplete="email" formControlName="mail" id="email" ortInput type="email" />
+    <input autocomplete="email" formControlName="mail" ortInput type="email" [id]="'email'" />
     @if (form().controls.mail.touched && form().controls.mail.hasError('required')) {
     <ort-error>Este campo es obligatorio</ort-error>
     } @if (form().controls.mail.touched && form().controls.mail.hasError('email')) {
@@ -30,20 +32,23 @@
     }
   </ort-form-field>
 
-  <ort-form-field>
+  <ort-form-field [hideRequiredMarker]="!!form().controls.verificacionMail.value">
     <ort-label>Confirmar e-mail</ort-label>
     <input
       autocomplete="email"
       formControlName="verificacionMail"
-      id="confirm-email"
       ortInput
-      type="email" />
+      type="email"
+      [id]="'confirm-email'" />
     @if (form().controls.verificacionMail.touched &&
     form().controls.verificacionMail.hasError('required')) {
     <ort-error>Este campo es obligatorio</ort-error>
     } @if (form().controls.verificacionMail.touched &&
     form().controls.verificacionMail.hasError('email')) {
     <ort-error>Ingresá un e-mail válido</ort-error>
+    } @if (form().controls.verificacionMail.touched &&
+    form().controls.verificacionMail.hasError('emailMismatch')) {
+    <ort-error>Los e-mails ingresados no coinciden</ort-error>
     }
   </ort-form-field>
 </section>

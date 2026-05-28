@@ -3,7 +3,10 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
-import { buildFormErrorSummary } from 'src/app/shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from 'src/app/shared/forms/form-error-summary';
 import {
   buildOrtPasswordRequirements,
   ORT_PASSWORD_ERROR_MESSAGES,
@@ -92,29 +95,33 @@ export class ChangePasswordFacade {
   );
   public readonly errorSummary = computed(() =>
     this.submitted()
-      ? buildFormErrorSummary(this.form, [
-          {
-            controlName: 'currentPassword',
-            fieldId: 'current-password',
-            label: 'Contraseña actual',
-          },
-          {
-            controlName: 'password',
-            fieldId: 'new-password',
-            label: 'Nueva contraseña',
-            messages: {
-              ...ORT_PASSWORD_ERROR_MESSAGES,
+      ? buildFormErrorSummary(
+          this.form,
+          [
+            {
+              controlName: 'currentPassword',
+              fieldId: 'current-password',
+              label: 'Contraseña actual',
             },
-          },
-          {
-            controlName: 'confirmPassword',
-            fieldId: 'confirm-new-password',
-            label: 'Confirmar contraseña',
-            messages: {
-              confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+            {
+              controlName: 'password',
+              fieldId: 'new-password',
+              label: 'Nueva contraseña',
+              messages: {
+                ...ORT_PASSWORD_ERROR_MESSAGES,
+              },
             },
-          },
-        ])
+            {
+              controlName: 'confirmPassword',
+              fieldId: 'confirm-new-password',
+              label: 'Confirmar contraseña',
+              messages: {
+                confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+              },
+            },
+          ],
+          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+        )
       : []
   );
 
