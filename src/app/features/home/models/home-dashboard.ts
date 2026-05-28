@@ -5,6 +5,8 @@ export interface HomeActionCard {
   icon: string;
   ctaLabel: string;
   imageSrc?: string;
+  route?: string;
+  disabledReason?: string;
 }
 
 export interface HomeDashboard {

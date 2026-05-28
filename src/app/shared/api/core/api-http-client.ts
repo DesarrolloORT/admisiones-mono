@@ -72,7 +72,7 @@ export class ApiHttpClient {
   ): Observable<{ data: EndpointData<TEndpoint>; message: string | null }> {
     const url = this.resolveUrl(buildApiPath(endpoint.path, options.pathParams));
     const requestOptions = {
-      context: this.resolveContext(options),
+      context: this.resolveContext({ ...options, unwrapOperationResult: false }),
       params: this.buildHttpParams(options.queryParams),
       withCredentials: options.withCredentials,
     };

@@ -191,6 +191,36 @@ describe('ApiHttpClient', () => {
     request.flush({ success: true, httpCode: 200, data: { nombre: 'Ana' }, message: null });
   });
 
+  it('should return operation result data and message when requested explicitly', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: { data: { nombre: string }; message?: string | null };
+    }>({
+      operationId: 'EvaluarDocumento',
+      method: 'POST',
+      path: '/registro/evaluar-documento',
+    });
+
+    api.requestWithMessage(endpoint).subscribe(response => {
+      expect(response).toEqual({
+        data: { nombre: 'Ana' },
+        message: 'Documento ya registrado.',
+      });
+    });
+
+    const request = httpController.expectOne(
+      new URL('/registro/evaluar-documento', environment.API_URL).toString()
+    );
+    request.flush({
+      success: true,
+      httpCode: 200,
+      data: { nombre: 'Ana' },
+      message: 'Documento ya registrado.',
+    });
+  });
+
   it('should treat unsuccessful operation result responses as errors', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;

@@ -18,7 +18,10 @@ import {
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
-import { buildFormErrorSummary } from 'src/app/shared/forms/form-error-summary';
+import {
+  buildFormErrorSummary,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from 'src/app/shared/forms/form-error-summary';
 import {
   matchingFieldsValidator,
   normalizeEmailValue,
@@ -123,18 +126,22 @@ export class PersonalData implements OnInit {
       return [];
     }
 
-    return buildFormErrorSummary(this.form, [
-      { controlName: 'countryCode', fieldId: 'profile-country', label: 'País de residencia' },
-      { controlName: 'stateCode', fieldId: 'profile-state', label: 'Departamento' },
-      { controlName: 'address', fieldId: 'profile-address', label: 'Dirección' },
-      { controlName: 'phone', fieldId: 'profile-phone', label: 'Celular' },
-      { controlName: 'email', fieldId: 'profile-email', label: 'E-mail' },
-      {
-        controlName: 'emailConfirmation',
-        fieldId: 'profile-email-confirmation',
-        label: 'Confirmar e-mail',
-      },
-    ]);
+    return buildFormErrorSummary(
+      this.form,
+      [
+        { controlName: 'countryCode', fieldId: 'profile-country', label: 'País de residencia' },
+        { controlName: 'stateCode', fieldId: 'profile-state', label: 'Departamento' },
+        { controlName: 'address', fieldId: 'profile-address', label: 'Dirección' },
+        { controlName: 'phone', fieldId: 'profile-phone', label: 'Celular' },
+        { controlName: 'email', fieldId: 'profile-email', label: 'E-mail' },
+        {
+          controlName: 'emailConfirmation',
+          fieldId: 'profile-email-confirmation',
+          label: 'Confirmar e-mail',
+        },
+      ],
+      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    );
   });
 
   ngOnInit(): void {
