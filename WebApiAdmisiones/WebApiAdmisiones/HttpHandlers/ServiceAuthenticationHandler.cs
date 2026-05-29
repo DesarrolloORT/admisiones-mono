@@ -60,7 +60,7 @@ namespace WebApiAdmisiones.HttpHandlers
 
             // 3. Agregar headers adicionales para trazabilidad
             request.Headers.Add("X-Source-Service", "api-admisiones");
-            request.Headers.Add("X-Correlation-Id", Guid.NewGuid().ToString());
+            request.Headers.Add("X-Correlation-Id", LoggingHelper.EnsureCorrelationId(_httpContextAccessor.HttpContext).ToString());
 
             // 4. Enviar la petición
             return await base.SendAsync(request, cancellationToken);

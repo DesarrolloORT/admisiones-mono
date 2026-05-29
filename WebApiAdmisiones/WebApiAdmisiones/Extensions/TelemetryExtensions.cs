@@ -3,6 +3,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
+using WebApiAdmisiones.Observability;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -46,7 +47,10 @@ namespace WebApiAdmisiones.Extensions
             {
                 otBuilder.WithTracing(tb => tb
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otlpServiceName))
-                    .AddAspNetCoreInstrumentation()
+                    .AddAspNetCoreInstrumentation(options =>
+                    {
+                        options.EnrichWithHttpRequest = ClientTelemetryHeaders.EnrichActivity;
+                    })
                     .AddHttpClientInstrumentation()
                     .AddOtlpExporter(o =>
                     {

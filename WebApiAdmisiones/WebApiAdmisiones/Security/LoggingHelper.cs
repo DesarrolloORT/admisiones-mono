@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using WebApiAdmisiones.Observability;
 
 namespace WebApiAdmisiones.Security
 {
@@ -40,7 +41,10 @@ namespace WebApiAdmisiones.Security
 
             if (!context.Items.ContainsKey(CorrelationIdKey))
             {
-                context.Items[CorrelationIdKey] = Guid.NewGuid();
+                var incomingCorrelationId = context.Request.Headers[ClientTelemetryHeaders.CorrelationId].FirstOrDefault();
+                context.Items[CorrelationIdKey] = Guid.TryParse(incomingCorrelationId, out var parsedCorrelationId)
+                    ? parsedCorrelationId
+                    : Guid.NewGuid();
             }
 
             return context.Items.TryGetValue(CorrelationIdKey, out var storedId) && storedId is Guid guidValue
@@ -137,7 +141,29 @@ namespace WebApiAdmisiones.Security
                 parts.Add($"CorrelationId: {correlationId.Value}");
             }
 
+            AddClientTelemetryParts(parts, context);
+
             return string.Join(" | ", parts);
+        }
+
+        private static void AddClientTelemetryParts(List<string> parts, HttpContext? context)
+        {
+            if (!ClientTelemetryHeaders.HasClientTelemetry(context) || context is null)
+            {
+                return;
+            }
+
+            parts.Add($"ClientService: {ClientTelemetryHeaders.LogValue(context, ClientTelemetryHeaders.ClientService)}");
+            parts.Add($"ClientEnv: {ClientTelemetryHeaders.LogValue(context, ClientTelemetryHeaders.ClientEnvironment)}");
+            parts.Add($"ClientVersion: {ClientTelemetryHeaders.LogValue(context, ClientTelemetryHeaders.ClientVersion)}");
+            parts.Add($"ClientRoute: {ClientTelemetryHeaders.ClientRouteLogValue(context)}");
+            parts.Add($"ClientRouteHistory: {ClientTelemetryHeaders.ClientRouteHistoryLogValue(context)}");
+            parts.Add($"ClientDevice: {ClientTelemetryHeaders.LogValue(context, ClientTelemetryHeaders.ClientDevice)}");
+
+            if (context.Request.Headers.ContainsKey(ClientTelemetryHeaders.TestRunId))
+            {
+                parts.Add($"TestRunId: {ClientTelemetryHeaders.LogValue(context, ClientTelemetryHeaders.TestRunId)}");
+            }
         }
 
         private static string GetServicePath(HttpContext? context)

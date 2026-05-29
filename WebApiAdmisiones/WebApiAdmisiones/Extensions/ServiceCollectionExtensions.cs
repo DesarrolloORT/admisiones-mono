@@ -75,6 +75,7 @@ namespace WebApiAdmisiones.Extensions
                 {
                     policy.WithOrigins(allowedOrigins)
                           .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                          // El frontend agrega traceparent/baggage y headers X-Client-* de telemetría.
                           .AllowAnyHeader()
                           .AllowCredentials();  // Requerido: API usa cookies HttpOnly para tokens (X-Access-Token, X-Refresh-Token)
                 });

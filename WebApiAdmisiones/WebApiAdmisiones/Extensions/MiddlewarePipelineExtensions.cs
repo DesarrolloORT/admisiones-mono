@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Prometheus;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using WebApiAdmisiones.Observability;
 using WebApiAdmisiones.Security;
 
 namespace WebApiAdmisiones.Extensions
@@ -59,7 +60,15 @@ namespace WebApiAdmisiones.Extensions
             app.UseMiddleware<ModelBindingErrorLoggingMiddleware>();
 
             // Métricas Prometheus
-            app.UseHttpMetrics();
+            app.UseHttpMetrics(options =>
+            {
+                options.AddCustomLabel("client_service", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientService));
+                options.AddCustomLabel("client_environment", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientEnvironment));
+                options.AddCustomLabel("client_version", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientVersion));
+                options.AddCustomLabel("client_device", ClientTelemetryHeaders.ClientDeviceMetricLabel);
+                options.AddCustomLabel("client_route", ClientTelemetryHeaders.ClientRouteMetricLabel);
+                options.AddCustomLabel("test_run_id", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.TestRunId));
+            });
             app.MapMetrics();
 
             // Endpoints de la API
