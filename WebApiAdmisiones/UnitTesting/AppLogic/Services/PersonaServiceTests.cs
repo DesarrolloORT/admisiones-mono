@@ -3,6 +3,7 @@ using AppLogic.Requests;
 using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
+using ConnectionContext;
 using LdapService.Interfaces;
 using Moq;
 using Utilities;
@@ -18,6 +19,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IInscriptoRepository> _inscriptoRepositoryMock;
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepositoryMock;
         private readonly Mock<ILdap> _ldapMock;
+        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly PersonaService _service;
 
         public PersonaServiceTests()
@@ -28,6 +30,7 @@ namespace UnitTesting.AppLogic.Services
             _inscriptoRepositoryMock = new Mock<IInscriptoRepository>();
             _ciudadRepositoryMock = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
             _ldapMock = new Mock<ILdap>();
+            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
 
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _uowMock.Setup(u => u.Personas).Returns(_personaRepositoryMock.Object);
@@ -36,7 +39,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
-            _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object);
+            _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object, _dbConnectionContextMock.Object);
         }
 
         [Fact]

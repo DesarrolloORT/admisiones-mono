@@ -4,6 +4,7 @@ using AppLogic.Requests;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
@@ -17,7 +18,9 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<IGeneralService> _generalServiceMock;
+        private readonly Mock<ILdap> _ldapMock;
         private readonly PersonaAdmisionService _service;
+        private readonly PersonaService _personaService;
 
         public PersonaAdmisionServiceTests()
         {
@@ -25,8 +28,10 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _generalServiceMock = new Mock<IGeneralService>();
+            _ldapMock = new Mock<ILdap>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new PersonaAdmisionService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object);
+            _personaService = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object, _dbConnectionContextMock.Object);
         }
 
         #region Perfil
@@ -1134,9 +1139,9 @@ namespace UnitTesting.AppLogic.Services
         #region Archivos
 
         [Fact]
-        public void ObtenerDocumentoAlumno_TipoInvalido_ReturnsFailed()
+        public void ObtenerDocumentoPersona_TipoInvalido_ReturnsFailed()
         {
-            var result = _service.ObtenerDocumentoAlumno(1, 9);
+            var result = _personaService.ObtenerDocumentoPersona(1, 9);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_DA_01", result.ErrorCode);
@@ -1144,13 +1149,13 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDocumentoAlumno_NotFound_ReturnsFailed()
+        public void ObtenerDocumentoPersona_NotFound_ReturnsFailed()
         {
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
 
-            var result = _service.ObtenerDocumentoAlumno(1, 1);
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_DA_02", result.ErrorCode);
@@ -1158,7 +1163,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDocumentoAlumno_Vencido_ReturnsFailed()
+        public void ObtenerDocumentoPersona_Vencido_ReturnsFailed()
         {
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new ImagenTemporal
@@ -1168,7 +1173,7 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
 
-            var result = _service.ObtenerDocumentoAlumno(1, 1);
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_DA_03", result.ErrorCode);
@@ -1176,7 +1181,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDocumentoAlumno_SinImagen_ReturnsFailed()
+        public void ObtenerDocumentoPersona_SinImagen_ReturnsFailed()
         {
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new ImagenTemporal
@@ -1186,7 +1191,7 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
 
-            var result = _service.ObtenerDocumentoAlumno(1, 1);
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_DA_04", result.ErrorCode);
@@ -1194,7 +1199,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDocumentoAlumno_HappyPath_ReturnsBytes()
+        public void ObtenerDocumentoPersona_HappyPath_ReturnsBytes()
         {
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new ImagenTemporal
@@ -1204,20 +1209,20 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
 
-            var result = _service.ObtenerDocumentoAlumno(1, 1);
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
             Assert.True(result.Success);
             Assert.Equal(new byte[] { 1, 2, 3 }, result.Data);
         }
 
         [Fact]
-        public void ObtenerFotoAlumno_NotFound_ReturnsFailed()
+        public void ObtenerFotoPersona_NotFound_ReturnsFailed()
         {
             var repo = new Mock<IImagenRepository>();
             repo.Setup(r => r.GetFotoByPersona(1)).Returns((Imagen)null);
             _uowMock.Setup(u => u.Imagens).Returns(repo.Object);
 
-            var result = _service.ObtenerFotoAlumno(1);
+            var result = _personaService.ObtenerFotoPersona(1);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_FA_01", result.ErrorCode);
@@ -1225,13 +1230,13 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerFotoAlumno_SinImagen_ReturnsFailed()
+        public void ObtenerFotoPersona_SinImagen_ReturnsFailed()
         {
             var repo = new Mock<IImagenRepository>();
             repo.Setup(r => r.GetFotoByPersona(1)).Returns(new Imagen { BlobImagen = Array.Empty<byte>() });
             _uowMock.Setup(u => u.Imagens).Returns(repo.Object);
 
-            var result = _service.ObtenerFotoAlumno(1);
+            var result = _personaService.ObtenerFotoPersona(1);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_FA_02", result.ErrorCode);
@@ -1239,26 +1244,26 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerFotoAlumno_HappyPath_ReturnsBytes()
+        public void ObtenerFotoPersona_HappyPath_ReturnsBytes()
         {
             var repo = new Mock<IImagenRepository>();
             repo.Setup(r => r.GetFotoByPersona(1)).Returns(new Imagen { BlobImagen = new byte[] { 5, 6, 7 } });
             _uowMock.Setup(u => u.Imagens).Returns(repo.Object);
 
-            var result = _service.ObtenerFotoAlumno(1);
+            var result = _personaService.ObtenerFotoPersona(1);
 
             Assert.True(result.Success);
             Assert.Equal(new byte[] { 5, 6, 7 }, result.Data);
         }
 
         [Fact]
-        public void SubirFotoAlumno_PersonaNoEncontrada_ReturnsFailed()
+        public void SubirFotoPersona_PersonaNoEncontrada_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns((Persona)null);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
-            var result = _service.SubirFotoAlumno(1, [0xFF, 0xD8, 0xFF], "foto.jpg");
+            var result = _personaService.SubirFotoPersona(1, [0xFF, 0xD8, 0xFF], "foto.jpg");
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SFA_01", result.ErrorCode);
@@ -1267,7 +1272,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_JpegValido_ActualizaFoto()
+        public void SubirFotoPersona_JpegValido_ActualizaFoto()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             var persona = new Persona { CodigoPersona = 1 };
@@ -1282,7 +1287,7 @@ namespace UnitTesting.AppLogic.Services
             _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN)).Returns(123);
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
 
-            var result = _service.SubirFotoAlumno(1, jpegContent, "foto.jpg");
+            var result = _personaService.SubirFotoPersona(1, jpegContent, "foto.jpg");
 
             Assert.True(result.Success);
             Assert.Equal("1", persona.UsuarioModifFdp);
@@ -1298,7 +1303,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_PngValido_ActualizaFoto()
+        public void SubirFotoPersona_PngValido_ActualizaFoto()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             var persona = new Persona { CodigoPersona = 1 };
@@ -1313,7 +1318,7 @@ namespace UnitTesting.AppLogic.Services
             _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN)).Returns(123);
             var pngContent = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
-            var result = _service.SubirFotoAlumno(1, pngContent, "foto.png");
+            var result = _personaService.SubirFotoPersona(1, pngContent, "foto.png");
 
             Assert.True(result.Success);
             Assert.Equal("1", persona.UsuarioModifFdp);
@@ -1328,7 +1333,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_Existente_ModificaFoto()
+        public void SubirFotoPersona_Existente_ModificaFoto()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             var persona = new Persona { CodigoPersona = 1 };
@@ -1351,7 +1356,7 @@ namespace UnitTesting.AppLogic.Services
 
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
 
-            var result = _service.SubirFotoAlumno(1, jpegContent, "foto.jpg");
+            var result = _personaService.SubirFotoPersona(1, jpegContent, "foto.jpg");
 
             Assert.True(result.Success);
             Assert.Equal("1_3.jpg", fotoExistente.NombreImagen);
@@ -1363,7 +1368,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_ExtensionInvalida_ReturnsFailed()
+        public void SubirFotoPersona_ExtensionInvalida_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
@@ -1375,7 +1380,7 @@ namespace UnitTesting.AppLogic.Services
 
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
 
-            var result = _service.SubirFotoAlumno(1, jpegContent, "foto.gif");
+            var result = _personaService.SubirFotoPersona(1, jpegContent, "foto.gif");
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
@@ -1383,7 +1388,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirFotoAlumno_Existente_ContenidoInvalido_ReturnsFailed()
+        public void SubirFotoPersona_Existente_ContenidoInvalido_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
@@ -1404,7 +1409,7 @@ namespace UnitTesting.AppLogic.Services
 
             var invalidContent = new byte[] { 0x00, 0x01, 0x02, 0x03 };
 
-            var result = _service.SubirFotoAlumno(1, invalidContent, "foto.jpg");
+            var result = _personaService.SubirFotoPersona(1, invalidContent, "foto.jpg");
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
@@ -1413,9 +1418,9 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_TipoInvalido_ReturnsFailed()
+        public void SubirDocumentoPersona_TipoInvalido_ReturnsFailed()
         {
-            var result = _service.SubirDocumentoAlumno(1, 3, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+            var result = _personaService.SubirDocumentoPersona(1, 3, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_01", result.ErrorCode);
@@ -1423,13 +1428,13 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_PersonaNoEncontrada_ReturnsFailed()
+        public void SubirDocumentoPersona_PersonaNoEncontrada_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns((Persona)null);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
-            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
+            var result = _personaService.SubirDocumentoPersona(1, 1, DateTime.Today.AddYears(1), new byte[] { 1, 2, 3 }, "cedula.pdf");
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_02", result.ErrorCode);
@@ -1437,7 +1442,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_ActualizaFechaDocumentoPersonaYAuditoria()
+        public void SubirDocumentoPersona_ActualizaFechaDocumentoPersonaYAuditoria()
         {
             var fechaVencimiento = new DateTime(2030, 12, 31);
             var persona = new Persona { CodigoPersona = 1 };
@@ -1454,7 +1459,7 @@ namespace UnitTesting.AppLogic.Services
             _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL)).Returns(456);
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
 
-            var result = _service.SubirDocumentoAlumno(1, 1, fechaVencimiento, pdfContent, "cedula.pdf");
+            var result = _personaService.SubirDocumentoPersona(1, 1, fechaVencimiento, pdfContent, "cedula.pdf");
 
             Assert.True(result.Success);
             Assert.Equal(fechaVencimiento, persona.FechaVtoDocumentoPersona);
@@ -1472,7 +1477,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_Existente_ModificaDocumento()
+        public void SubirDocumentoPersona_Existente_ModificaDocumento()
         {
             var fechaVencimiento = new DateTime(2031, 1, 15);
             var persona = new Persona { CodigoPersona = 1 };
@@ -1498,7 +1503,7 @@ namespace UnitTesting.AppLogic.Services
 
             var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
 
-            var result = _service.SubirDocumentoAlumno(1, 1, fechaVencimiento, pdfContent, "cedula.pdf");
+            var result = _personaService.SubirDocumentoPersona(1, 1, fechaVencimiento, pdfContent, "cedula.pdf");
 
             Assert.True(result.Success);
             Assert.Equal("1_1.pdf", documentoExistente.NombreImagen);
@@ -1512,7 +1517,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_ExtensionInvalida_ReturnsFailed()
+        public void SubirDocumentoPersona_ExtensionInvalida_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
@@ -1524,7 +1529,7 @@ namespace UnitTesting.AppLogic.Services
 
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
 
-            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
+            var result = _personaService.SubirDocumentoPersona(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
@@ -1533,7 +1538,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_Existente_ExtensionInvalida_ReturnsFailed()
+        public void SubirDocumentoPersona_Existente_ExtensionInvalida_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
@@ -1553,7 +1558,7 @@ namespace UnitTesting.AppLogic.Services
 
             var jpegContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
 
-            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
+            var result = _personaService.SubirDocumentoPersona(1, 1, DateTime.Today.AddYears(1), jpegContent, "cedula.jpg");
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
@@ -1562,7 +1567,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void SubirDocumentoAlumno_ContenidoInvalido_ReturnsFailed()
+        public void SubirDocumentoPersona_ContenidoInvalido_ReturnsFailed()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona { CodigoPersona = 1 });
@@ -1574,7 +1579,7 @@ namespace UnitTesting.AppLogic.Services
 
             var invalidPdfContent = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 };
 
-            var result = _service.SubirDocumentoAlumno(1, 1, DateTime.Today.AddYears(1), invalidPdfContent, "cedula.pdf");
+            var result = _personaService.SubirDocumentoPersona(1, 1, DateTime.Today.AddYears(1), invalidPdfContent, "cedula.pdf");
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);

@@ -1,6 +1,6 @@
 namespace AppLogic.Constants
 {
-    public static class PersonaAdmisionConstants
+    public static class PersonaConstants
     {
         public const string PersonaNoEncontradaMessage = "Persona no encontrada.";
         public const string TipoPersonaSgi = "SGI";
@@ -16,7 +16,7 @@ namespace AppLogic.Constants
             public const long TituloGenericoSextoExterior = 5;
         }
 
-        public static class DocumentoAlumno
+        public static class DocumentoPersona
         {
             public const int Frente = 1;
             public const int Dorso = 2;

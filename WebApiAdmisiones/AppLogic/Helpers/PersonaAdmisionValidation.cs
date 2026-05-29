@@ -118,7 +118,7 @@ namespace AppLogic.Helpers
             string tipoPersona,
             string callingMethod)
         {
-            if (tipoPersona != PersonaAdmisionConstants.TipoPersonaSgi)
+            if (tipoPersona != PersonaConstants.TipoPersonaSgi)
             {
                 return OperationResult<bool>.Ok(true, callingMethod);
             }
@@ -190,7 +190,7 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed("PER_DPE_20", callingMethod, "Debe indicar la decisi\u00f3n de carrera.", 400);
             if (request.DecisionUniversidad is not (0 or 2 or 3 or 4))
                 return OperationResult<bool>.IsFailed("PER_DPE_21", callingMethod, "Debe indicar la decisi\u00f3n de universidad.", 400);
-            if (request.CompartidoCon < PersonaAdmisionConstants.CompartidoCon.Padres || request.CompartidoCon > PersonaAdmisionConstants.CompartidoCon.Nadie)
+            if (request.CompartidoCon < PersonaConstants.CompartidoCon.Padres || request.CompartidoCon > PersonaConstants.CompartidoCon.Nadie)
                 return OperationResult<bool>.IsFailed("PER_DPE_22", callingMethod, "Debe indicar con qui\u00e9n comparti\u00f3 la decisi\u00f3n.", 400);
             if (request.InfoOtrasUniversidadesAntes is not (CommonConstants.Booleanos.Si or CommonConstants.Booleanos.No))
                 return OperationResult<bool>.IsFailed("PER_DPE_23", callingMethod, "Debe indicar si se inform\u00f3 en alguna universidad.", 400);
