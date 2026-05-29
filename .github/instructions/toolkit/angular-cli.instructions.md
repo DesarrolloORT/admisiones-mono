@@ -1,13 +1,14 @@
 ---
 name: angular-cli
 description: "Implementacion Angular alineada con Angular CLI y patrones del workspace."
-applyTo: "**/*.component.ts, **/*.component.html, **/*.component.scss, **/*.component.sass, **/*.component.css, **/*.directive.ts, **/*.pipe.ts, **/*.service.ts, **/*.guard.ts, **/*.interceptor.ts, **/*.resolver.ts, **/*.module.ts, **/*.routes.ts, **/*.route.ts, **/*.config.ts"
+applyTo: "**/*.ts, **/*.html, **/*.scss, **/*.sass, **/*.css, **/*.routes.ts, **/*.route.ts, **/*.config.ts"
 ---
 
 <!-- ai-toolkit:toolkit profile=angular path=.github/instructions/toolkit/angular-cli.instructions.md -->
 
 # Angular CLI
 
+- **No uses sufijos de tipo en nombres de archivo.** Este repo usa `nombre.ts` en vez de `nombre.component.ts`, `nombre.service.ts`, `nombre.guard.ts`, `nombre.interceptor.ts`, `nombre.directive.ts` o `nombre.pipe.ts`. Lo mismo para specs: `nombre.spec.ts`.
 - Sigue naming, estructura y separacion de archivos del workspace Angular.
 - Prefiere standalone si el workspace ya lo adopto; usa NgModules solo cuando siga vigente.
 - Respeta selectors, templates, estilos, tests y scaffolding del repo.

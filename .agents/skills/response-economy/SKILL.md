@@ -1,20 +1,15 @@
 ---
 name: response-economy
-description: Compact a reply when the user asks for "less tokens", "be brief", "caveman mode", "short answer", "tl;dr", or an actionable summary without losing technical precision.
-argument-hint: "[request, text, or optional diff]"
-kind: workflow
+description: Always-on response economy applied to EVERY interaction. No explicit invocation needed.
+kind: always-on
 scope: toolkit
-inputs:
-  - request or answer to compact
-outputs:
-  - brief answer with facts and next actions
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.agents/skills/response-economy/SKILL.md -->
 
 # Response Economy
 
-Use this skill when Codex should reduce output length. Keep technical accuracy higher priority than compression.
+Always-on skill: applied to every agent response. No user invocation required. Do not use it to hide uncertainty, critical evidence, or risks.
 
 ## Process
 

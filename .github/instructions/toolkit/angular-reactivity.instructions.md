@@ -1,7 +1,7 @@
 ---
 name: angular-reactivity
 description: "Reactividad Angular predecible con signals, computed(), effect() y timing estable."
-applyTo: "**/*.component.ts, **/*.service.ts, **/*.directive.ts, **/*.guard.ts, **/*.interceptor.ts, **/*.resolver.ts, **/*.route.ts, **/*.routes.ts, **/*.config.ts"
+applyTo: "**/*.ts, **/*.routes.ts, **/*.route.ts, **/*.config.ts"
 ---
 
 <!-- ai-toolkit:toolkit profile=angular path=.github/instructions/toolkit/angular-reactivity.instructions.md -->
