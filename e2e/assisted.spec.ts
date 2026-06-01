@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { mockApi } from './support/api-mocks';
-import { getE2eEnv } from './support/env';
+import { getE2eBoolean, getE2eEnv } from './support/env';
 import { RegisterPage } from './support/pages/register-page';
 import { REGISTER_SCENARIOS } from './support/test-data/register-scenarios';
 
@@ -15,8 +15,14 @@ test.describe('Assisted E2E flows @assisted', () => {
   test('prepares registration and lets the tester provide a private document @assisted', async ({
     page,
   }) => {
+    const manualAssistedEnabled = getE2eBoolean('E2E_ASSISTED_MANUAL');
     const register = new RegisterPage(page);
     const privateDocumentNumber = getE2eEnv('E2E_ASSISTED_DOCUMENT_NUMBER');
+
+    test.skip(
+      !manualAssistedEnabled && !privateDocumentNumber,
+      'Set E2E_ASSISTED_MANUAL=true or E2E_ASSISTED_DOCUMENT_NUMBER to run this assisted test.'
+    );
 
     await register.goto();
 

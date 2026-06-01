@@ -44,3 +44,25 @@ export function getE2eEnv(name: string): string | null {
 
   return value ? value : null;
 }
+
+export function getE2eBoolean(name: string, defaultValue = false): boolean {
+  const value = getE2eEnv(name);
+
+  if (!value) {
+    return defaultValue;
+  }
+
+  return ['1', 'true', 'yes', 'y'].includes(value.toLowerCase());
+}
+
+export function getE2eNumber(name: string, defaultValue: number): number {
+  const rawValue = getE2eEnv(name);
+
+  if (!rawValue) {
+    return defaultValue;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isFinite(value) ? value : defaultValue;
+}

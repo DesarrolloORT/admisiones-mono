@@ -4,6 +4,8 @@ import { getE2eEnv } from './support/env';
 import { LoginPage } from './support/pages/login-page';
 
 test.describe('Preprod controlled nightly flows @nightly @real', () => {
+  test.skip(!getE2eEnv('E2E_BASE_URL'), 'Set E2E_BASE_URL to run nightly tests.');
+
   test('renders the deployed public auth surfaces @nightly @real', async ({ page }) => {
     await page.goto('/iniciar-sesion');
     await expect(page.getByRole('heading', { name: 'Comenzá tu camino en ORT' })).toBeVisible();

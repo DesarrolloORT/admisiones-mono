@@ -1,5 +1,6 @@
 import {
   HttpContextToken,
+  HttpErrorResponse,
   HttpEvent,
   HttpHeaders,
   HttpInterceptorFn,
@@ -11,6 +12,8 @@ import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-util
 import { asyncScheduler, of } from 'rxjs';
 import { finalize, observeOn, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+
+import { TelemetryService } from '../services/telemetry';
 
 export const CACHING_ENABLED = new HttpContextToken<boolean>(() => environment.CACHING_ENABLED);
 const IGNORED_LOADER_URLS: string[] = [
@@ -31,6 +34,7 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const services = {
     cacheHandler: inject(CacheService),
     loader: inject(LoaderService),
+    telemetry: inject(TelemetryService),
   };
 
   const handleLoader = (url: string): void => {
@@ -80,15 +84,28 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const cachedResponse = services.cacheHandler.get(cacheKey);
 
   if (request.context.get(CACHING_ENABLED) && cachedResponse) {
+    services.telemetry.trackCacheHit(request);
     return of(cachedResponse as HttpEvent<unknown>).pipe(observeOn(asyncScheduler));
   }
 
   //* Process request
   handleLoader(request.url);
-  request = processRequest(setHeaders(request));
+  request = services.telemetry.addHttpHeaders(processRequest(setHeaders(request)));
+  const telemetryStartedAt = services.telemetry.startHttpRequest(request);
 
   return next(request).pipe(
     finalize(() => services.loader.hide()),
-    tap(handleResponse)
+    tap({
+      next: event => {
+        handleResponse(event);
+
+        if (event instanceof HttpResponse) {
+          services.telemetry.trackHttpResponse(request, event, telemetryStartedAt);
+        }
+      },
+      error: (error: HttpErrorResponse) => {
+        services.telemetry.trackHttpError(request, error, telemetryStartedAt);
+      },
+    })
   );
 };

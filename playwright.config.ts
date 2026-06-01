@@ -20,6 +20,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
+    ignoreHTTPSErrors: process.env['E2E_IGNORE_HTTPS_ERRORS'] === 'true',
     trace: 'retain-on-failure',
   },
   webServer: shouldStartLocalServer

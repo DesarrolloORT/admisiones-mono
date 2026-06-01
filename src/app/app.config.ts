@@ -2,6 +2,7 @@ import { LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  inject,
   LOCALE_ID,
   provideAppInitializer,
   provideZonelessChangeDetection,
@@ -23,6 +24,7 @@ import {
 import { routes } from './app.routes';
 import { httpInterceptor } from './core/interceptors/http';
 import { AppApiErrorNotifier } from './core/services/api-error-notifier';
+import { TelemetryService } from './core/services/telemetry';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -34,6 +36,7 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
     ),
     provideAppInitializer(() => UiUtils.initializeMaterialSymbols()),
+    provideAppInitializer(() => inject(TelemetryService).initialize()),
     provideHttpClient(
       withInterceptors([httpInterceptor, ortApiErrorInterceptor, operationResultInterceptor])
     ),

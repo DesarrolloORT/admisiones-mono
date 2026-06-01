@@ -15,6 +15,9 @@ de lo que depende de datos privados o ambientes reales.
 - `@regression`: casos funcionales completos que protegen flujos ya
   implementados. Se corre manualmente antes de releases, hotfixes delicados o
   cambios en registro/login/datos personales.
+- `@assisted`: casos locales con intervencion humana o datos privados. No corren
+  en CI y el caso manual requiere `E2E_ASSISTED_MANUAL=true` o
+  `E2E_ASSISTED_DOCUMENT_NUMBER`.
 - `@nightly`: corre contra preprod con datos semilla controlados desde el
   workflow semanal o manual.
 - `@real`: tests contra un ambiente real. Requieren configuracion explicita y no
@@ -23,11 +26,17 @@ de lo que depende de datos privados o ambientes reales.
 ## Comandos
 
 ```bash
+npm run test:e2e
 npm run test:e2e:smoke
 npm run test:e2e:regression
+npm run test:e2e:telemetry
 npm run test:e2e:ui
 npm run test:e2e:report
 ```
+
+`npm run test:e2e` corre la suite local deterministica (`@smoke`,
+`@regression`, `@a11y` y `@telemetry`). `@assisted`, `@nightly` y probes contra
+backend real se habilitan explicitamente con variables de entorno.
 
 Para ver una ejecucion en vivo, usar `test:e2e:ui`. Permite elegir un test,
 correrlo paso a paso, inspeccionar locators y abrir el trace. Para necesidades

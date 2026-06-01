@@ -13,6 +13,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
 import { firstValueFrom, of, throwError } from 'rxjs';
 
+import { TelemetryService } from '../services/telemetry';
 import { CACHING_ENABLED, httpInterceptor } from './http';
 
 type CacheServiceMock = {
@@ -23,10 +24,18 @@ type LoaderServiceMock = {
   show: ReturnType<typeof vi.fn>;
   hide: ReturnType<typeof vi.fn>;
 };
+type TelemetryServiceMock = {
+  addHttpHeaders: ReturnType<typeof vi.fn>;
+  startHttpRequest: ReturnType<typeof vi.fn>;
+  trackHttpResponse: ReturnType<typeof vi.fn>;
+  trackHttpError: ReturnType<typeof vi.fn>;
+  trackCacheHit: ReturnType<typeof vi.fn>;
+};
 
 describe('httpInterceptor', () => {
   let mockCacheService: CacheServiceMock;
   let mockLoader: LoaderServiceMock;
+  let mockTelemetry: TelemetryServiceMock;
   let injector: Injector;
 
   beforeEach(() => {
@@ -38,6 +47,15 @@ describe('httpInterceptor', () => {
       show: vi.fn(),
       hide: vi.fn(),
     };
+    mockTelemetry = {
+      addHttpHeaders: vi.fn((req: HttpRequest<unknown>) =>
+        req.clone({ setHeaders: { 'x-correlation-id': 'correlation-123' } })
+      ),
+      startHttpRequest: vi.fn(() => 100),
+      trackHttpResponse: vi.fn(),
+      trackHttpError: vi.fn(),
+      trackCacheHit: vi.fn(),
+    };
 
     // Stub out CacheUtils
     vi.spyOn(CacheUtils, 'createCacheKey').mockReturnValue('cache-key');
@@ -47,6 +65,7 @@ describe('httpInterceptor', () => {
       providers: [
         { provide: CacheService, useValue: mockCacheService as unknown as CacheService },
         { provide: LoaderService, useValue: mockLoader as unknown as LoaderService },
+        { provide: TelemetryService, useValue: mockTelemetry as unknown as TelemetryService },
       ],
     });
   });
@@ -73,6 +92,7 @@ describe('httpInterceptor', () => {
 
     expect(response).toBe(cached);
     expect(mockCacheService.get).toHaveBeenCalledWith('cache-key');
+    expect(mockTelemetry.trackCacheHit).toHaveBeenCalledWith(req);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -95,6 +115,14 @@ describe('httpInterceptor', () => {
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
     expect(intercepted.headers.get('Content-Type')).toBe('application/json');
     expect(intercepted.headers.get('authorization')).toBe('Basic Og==');
+    expect(intercepted.headers.get('x-correlation-id')).toBe('correlation-123');
+    expect(mockTelemetry.addHttpHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: req.url,
+      })
+    );
+    expect(mockTelemetry.startHttpRequest).toHaveBeenCalledWith(intercepted);
+    expect(mockTelemetry.trackHttpResponse).toHaveBeenCalledWith(intercepted, resp, 100);
 
     // response unchanged
     expect(result).toBe(resp);
@@ -150,5 +178,10 @@ describe('httpInterceptor', () => {
 
     await expect(firstValueFrom(invoke(req, next))).rejects.toBe(httpErr);
     expect(mockLoader.hide).toHaveBeenCalled();
+    expect(mockTelemetry.trackHttpError).toHaveBeenCalledWith(
+      expect.any(HttpRequest),
+      httpErr,
+      100
+    );
   });
 });
