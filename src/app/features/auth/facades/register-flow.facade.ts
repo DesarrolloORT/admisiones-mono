@@ -176,6 +176,13 @@ export class RegisterFlowFacade {
     this.step.set('identity');
   }
 
+  public navigateToLogin(): void {
+    const identity = this.getCleanIdentityValues();
+    void this.router.navigate(['/iniciar-sesion'], {
+      queryParams: { tipoDoc: identity.documentType, doc: identity.documentNumber },
+    });
+  }
+
   public backToPersonal(): void {
     this.error.set(null);
     this.successMessage.set(null);
@@ -415,8 +422,10 @@ export class RegisterFlowFacade {
     documentType: string,
     documentNumber: string
   ): void {
+    const message = backendMessage ?? 'Ya existe un registro con este documento.';
+    this.error.set(message);
     this.snackbar.show({
-      message: backendMessage ?? 'Ya existe un registro con este documento.',
+      message,
       variant: 'warning',
       actionLabel: 'Iniciar sesión',
       duration: 10000,
