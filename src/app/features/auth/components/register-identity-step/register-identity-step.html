@@ -93,7 +93,11 @@
   <p class="auth-error" role="alert">{{ error() }}</p>
   }
 
-  <button ort-primary-button type="submit" [disabled]="isRecognizingDocument() || isSubmitting()">
+  @if (showLoginAction()) {
+  <button ort-primary-button type="button" (click)="loginAction.emit()">Iniciar sesión</button>
+  }
+
+  <button ort-primary-button type="submit" [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()">
     {{ isSubmitting() ? 'Verificando...' : 'Continuar' }}
   </button>
 

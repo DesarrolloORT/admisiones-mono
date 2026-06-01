@@ -5,10 +5,9 @@
     <ort-radio-group formControlName="propuestaAcademica" legend="Propuesta académica" name="propuestaAcademica"
       orientation="vertical" [id]="'academic-level-group'" [required]="true" (valueChange)="onPropuestaChange()">
       @for (level of academicLevels(); track level.id) {
-      <ort-radio-card-button indicatorPosition="left" [value]="level.id">
-        <ort-icon aria-hidden="true" ortRadioCardIcon>school</ort-icon>
+      <ort-radio-button [value]="level.id">
         {{ level.nombre }}
-      </ort-radio-card-button>
+      </ort-radio-button>
       } @if ( form().controls.propuestaAcademica.touched &&
       form().controls.propuestaAcademica.hasError('required') ) {
       <p class="auth-error" id="academic-level-error" role="alert">

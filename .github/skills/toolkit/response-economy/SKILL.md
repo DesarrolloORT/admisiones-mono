@@ -1,20 +1,15 @@
 ---
 name: response-economy
-description: Compacta una respuesta o activa modo breve cuando el usuario pide "menos tokens", "se breve", "modo caveman", "respuesta corta", "tl;dr" o quiere salida accionable sin perder precision tecnica.
-argument-hint: "[pedido, texto o diff opcional]"
-kind: workflow
+description: Aplica economia de respuesta en TODA interaccion. Siempre activa, sin necesidad de invocacion explicita.
+kind: always-on
 scope: toolkit
-inputs:
-  - pedido o respuesta a compactar
-outputs:
-  - respuesta breve con hechos y proximas acciones
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/skills/toolkit/response-economy/SKILL.md -->
 
 # Response Economy
 
-Usa esta skill para reducir salida de una conversacion, review, resumen o explicacion. No la uses para ocultar incertidumbre, evidencia critica o riesgos.
+Skill always-on: se aplica a toda respuesta del agente. No requiere que el usuario la invoque. No la uses para ocultar incertidumbre, evidencia critica o riesgos.
 
 ## Proceso
 

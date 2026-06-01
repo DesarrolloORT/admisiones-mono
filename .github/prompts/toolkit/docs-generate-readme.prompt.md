@@ -16,7 +16,7 @@ Respeta [Markdown](../../instructions/toolkit/markdown.instructions.md).
 
 ## Entrada sugerida
 
-- `packages/ai-catalog`
+- `packages/ai-cli`
 
 ## Enfoque
 

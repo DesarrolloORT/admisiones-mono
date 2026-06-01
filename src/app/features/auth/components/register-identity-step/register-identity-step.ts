@@ -44,9 +44,11 @@ export class RegisterIdentityStep {
   public readonly error = input<string | null>(null);
   public readonly recognitionError = input<string | null>(null);
   public readonly recognitionSuccessMessage = input<string | null>(null);
+  public readonly showLoginAction = input(false);
 
   public readonly documentSelected = output<Event>();
   public readonly continueStep = output<void>();
+  public readonly loginAction = output<void>();
 
   public readonly submitted = signal(false);
   public readonly errorSummary = computed(() => {

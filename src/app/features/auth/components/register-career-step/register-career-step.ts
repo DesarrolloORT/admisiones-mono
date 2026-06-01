@@ -3,7 +3,6 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   OrtButtonModule,
   OrtFormFieldModule,
-  OrtIconModule,
   OrtRadioModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
@@ -21,7 +20,6 @@ import { AcademicLevel } from '../../models/register-step';
   imports: [
     OrtButtonModule,
     OrtFormFieldModule,
-    OrtIconModule,
     OrtRadioModule,
     OrtSelectModule,
     ReactiveFormsModule,
@@ -79,3 +77,4 @@ export class RegisterCareerStep {
     this.submitStep.emit();
   }
 }
+
