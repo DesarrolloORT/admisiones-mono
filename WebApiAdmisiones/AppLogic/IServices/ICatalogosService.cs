@@ -7,7 +7,13 @@ namespace AppLogic.IServices
     public interface ICatalogosService
     {
         OperationResult<DtoPaisDevart> ObtenerPais(long idPais);
+
+        // Versión síncrona (legacy, mantener para compatibilidad)
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
+
+        // Versión asíncrona (preferida, soporta cache distribuido)
+        Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
+
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
         OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();

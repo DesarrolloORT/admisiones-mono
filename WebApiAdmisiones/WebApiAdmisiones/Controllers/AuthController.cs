@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Extensions;
+using ServiceCollectionExtensions = WebApiAdmisiones.Extensions.ServiceCollectionExtensions;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -15,7 +17,8 @@ namespace WebApiAdmisiones.Controllers
         IPasswordActivationService passwordActivationService,
         IConfiguration configuration,
         ILogger<AuthController> logger,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IRedisRateLimiterService redisRateLimiter)
         : ApiBaseController<AuthController>(logger, currentUser)
     {
         #region AUTH
@@ -33,10 +36,31 @@ namespace WebApiAdmisiones.Controllers
         /// <remarks>
         /// Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.
         /// 
-        /// Protección contra fuerza bruta:
-        /// - Máximo 5 intentos cada 15 minutos por IP
-        /// - Algoritmo: Sliding Window (más estricto que ventana fija)
-        /// - Bloqueo automático al superar el límite con HTTP 429
+        /// 🔐 Protección DUAL ADAPTATIVA contra fuerza bruta (OWASP Anti-Automation):
+        /// 
+        /// 1️⃣ Rate Limit por IP SOLAMENTE:
+        ///    - Límite: 10 intentos cada 15 minutos por dirección IP
+        ///    - Previene: Credential stuffing masivo (probar muchas cuentas)
+        ///    - Permite: Múltiples usuarios legítimos en la misma red/PC/hogar
+        ///    - Algoritmo: Sliding Window con Redis distribuido
+        /// 
+        /// 2️⃣ Rate Limit por IP + Documento:
+        ///    - Límite: 5 intentos cada 15 minutos por combinación única
+        ///    - Previene: Ataque focalizado a una cuenta específica
+        ///    - Normaliza formato de documento (ignora puntos/guiones)
+        ///    - Bloquea: Intentos repetidos al mismo usuario desde la misma IP
+        /// 
+        /// 🎯 Ejemplos de comportamiento:
+        /// - Usuario olvida contraseña → Bloqueado al 5to intento con SU documento
+        /// - Familia con IP compartida → 10 usuarios diferentes pueden intentar (2 veces c/u)
+        /// - Ataque a cuenta "12345678" → Bloqueado al 5to intento desde esa IP
+        /// - Credential stuffing → Bloqueado al 10mo intento desde esa IP
+        /// 
+        /// Si cualquiera de los dos límites se excede → HTTP 429 con headers:
+        /// - X-RateLimit-Limit: Límite máximo configurado
+        /// - X-RateLimit-Remaining: Intentos restantes
+        /// - X-RateLimit-Reset: Timestamp UNIX de cuando se resetea
+        /// - Retry-After: Segundos hasta poder reintentar
         /// </remarks>
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
@@ -55,6 +79,53 @@ namespace WebApiAdmisiones.Controllers
                     nameof(Login),
                     "El tipo de documento y el documento son requeridos.",
                     400,
+                    default!));
+            }
+
+            // ✅ VALIDACIÓN 2/2: Rate Limit por IP + Documento (protección focal contra ataques a cuentas específicas)
+            // Nota: El middleware ya validó rate limit por IP (10 intentos, permite múltiples usuarios en misma red)
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var maxAccountAttempts = configuration.GetValue<int?>("Authentication:Login:RateLimitAccountAttempts") ?? 5;
+            var windowMinutes = configuration.GetValue<int?>("Authentication:Login:RateLimitWindowMinutes") ?? 15;
+
+            var accountRateLimit = await redisRateLimiter.ValidateAsync(
+                ipAddress,
+                request.TipoDocumento,
+                request.Documento,
+                maxAccountAttempts,
+                TimeSpan.FromMinutes(windowMinutes));
+
+            if (!accountRateLimit.IsAllowed)
+            {
+                // Incrementar métrica Prometheus
+                ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
+
+                _logger.LogWarning(
+                    "Rate limit EXCEEDED for account {TipoDoc}:{Doc} from IP {IP}. " +
+                    "Attempts: {Remaining}/{Limit}. Partition: {Key}",
+                    request.TipoDocumento,
+                    request.Documento,
+                    ipAddress,
+                    accountRateLimit.RemainingAttempts,
+                    maxAccountAttempts,
+                    accountRateLimit.PartitionKey);
+
+                // Headers estándar de rate limiting
+                Response.Headers["X-RateLimit-Limit"] = maxAccountAttempts.ToString();
+                Response.Headers["X-RateLimit-Remaining"] = accountRateLimit.RemainingAttempts.ToString();
+
+                if (accountRateLimit.ResetTime.HasValue)
+                {
+                    Response.Headers["X-RateLimit-Reset"] = accountRateLimit.ResetTime.Value.ToUnixTimeSeconds().ToString();
+                    var retryAfter = (int)(accountRateLimit.ResetTime.Value - DateTimeOffset.UtcNow).TotalSeconds;
+                    Response.Headers["Retry-After"] = Math.Max(0, retryAfter).ToString();
+                }
+
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "AUTH_RL_02",
+                    nameof(Login),
+                    $"Se superó el límite de intentos de inicio de sesión para esta cuenta ({maxAccountAttempts} intentos cada {windowMinutes} minutos). Por tu seguridad, intentá nuevamente más tarde.",
+                    429,
                     default!));
             }
 

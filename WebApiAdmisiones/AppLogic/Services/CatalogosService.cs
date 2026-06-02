@@ -26,6 +26,12 @@ namespace AppLogic.Services
             return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(response, nameof(ObtenerPaisesEstadosCiudades));
         }
 
+        // Versión async para compatibilidad con controllers async
+        public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
+        {
+            return Task.FromResult(ObtenerPaisesEstadosCiudades());
+        }
+
         public OperationResult<DtoPaisDevart> ObtenerPais(long idPais)
         {
             using var uow = _uowFactory.Create();
