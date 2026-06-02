@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     environment: prod
     steps:
       - name: Checkout repository
@@ -31,7 +31,7 @@ jobs:
         with:
           env-filename: prod
           CSP_POLICY: ${{ vars.CSP_POLICY }}
-          CACHING_ENABLED: ${{ vars.CACHING_ENABLED }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
         env:
           RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
           API_URL: ${{ secrets.API_URL }}

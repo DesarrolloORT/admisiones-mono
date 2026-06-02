@@ -15,7 +15,7 @@ on:
 jobs:
   audit_dependencies:
     name: Audit dependencies
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -38,11 +38,12 @@ jobs:
         run: npm audit --audit-level=high
 
   CI:
-    name: CI Checks (unplanned features/hotfixes)
-    runs-on: ubuntu-latest
+    name: CI Checks (unplanned features/hotfixes or release PRs)
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     if: >
       startsWith(github.event.pull_request.head.ref, 'feature/') ||
       startsWith(github.event.pull_request.head.ref, 'fix/') ||
+      startsWith(github.event.pull_request.head.ref, 'release/') ||
       startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
       startsWith(github.event.pull_request.head.ref, 'hotfix/')
     environment: preprod
@@ -66,18 +67,21 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Setup environment variables
         uses: ./.github/actions/setup-env
         with:
           env-filename: staging
           CSP_POLICY: ${{ vars.CSP_POLICY }}
-          CACHING_ENABLED: ${{ vars.CACHING_ENABLED }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
         env:
           RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
           API_URL: ${{ secrets.API_URL }}
 
       - name: Run linters and formatters
-        run: npm run format:check
+        run: npm run lint:check
 
       - name: Run Tests
         run: npm run test:ci
@@ -85,8 +89,18 @@ jobs:
       - name: Build
         run: npm run build:staging
 
+      - name: Run accessibility tests
+        run: npm run test:a11y
+
+      - name: Run E2E smoke tests
+        run: npm run test:e2e:smoke
+
   version_matches:
     name: Check version matches
+    if: >
+      (startsWith(github.event.pull_request.head.ref, 'v') &&
+      endsWith(github.event.pull_request.head.ref, '/main')) ||
+      startsWith(github.event.pull_request.title, 'release/v')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -151,3 +165,4 @@ jobs:
           fi
 
           echo "Version match confirmed."
+
