@@ -86,11 +86,8 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    npm install
    ```
 
-4. Configurar los archivos de ambiente:
-   Renombrar `environment.template.ts` a `environment.ts` y completar con las propiedades de entorno.
-
-> [!NOTE]
-> Crear y/o editar `environment.prod.ts`, `environment.staging.ts` y `environment.dev.ts` segun corresponda.
+4. Configurar el ambiente:
+   Ejecutar `envs login` (una sola vez) y luego usar `npm run start` o `npm run start:dev` para generar automaticamente `environment.generated.ts`.
 
 ## Ejecutar la aplicacion en un servidor local
 
