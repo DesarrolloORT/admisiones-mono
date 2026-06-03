@@ -20,6 +20,7 @@ using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {

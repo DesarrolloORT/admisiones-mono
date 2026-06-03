@@ -11,6 +11,7 @@ using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace UnitTesting.Controllers
 {

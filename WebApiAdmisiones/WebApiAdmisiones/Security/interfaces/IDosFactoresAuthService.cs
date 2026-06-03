@@ -1,7 +1,7 @@
 using AppLogic.DTOs;
 using Utilities;
 
-namespace WebApiAdmisiones.Security
+namespace WebApiAdmisiones.Security.interfaces
 {
     /// <summary>
     /// Servicio de autenticación de dos factores (2FA) por email.

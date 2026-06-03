@@ -1,4 +1,5 @@
 using StackExchange.Redis;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Security
 {

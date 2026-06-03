@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Utilities;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Security
 {

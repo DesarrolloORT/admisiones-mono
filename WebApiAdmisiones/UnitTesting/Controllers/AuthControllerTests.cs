@@ -9,6 +9,7 @@ using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 using Xunit;
 
 namespace UnitTesting.Controllers

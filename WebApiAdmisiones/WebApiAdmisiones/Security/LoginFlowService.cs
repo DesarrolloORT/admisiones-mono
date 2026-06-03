@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Utilities;
 using WebApiAdmisiones.Extensions;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Security
 {

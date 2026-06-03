@@ -1,4 +1,4 @@
-namespace WebApiAdmisiones.Security
+namespace WebApiAdmisiones.Security.interfaces
 {
     /// <summary>
     /// Interfaz para el servicio de rate limiting distribuido con Redis.

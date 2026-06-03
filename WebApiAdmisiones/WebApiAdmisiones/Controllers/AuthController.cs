@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Controllers
 {

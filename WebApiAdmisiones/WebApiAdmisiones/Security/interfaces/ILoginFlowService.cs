@@ -1,6 +1,6 @@
 using AppLogic.DTOs;
 
-namespace WebApiAdmisiones.Security
+namespace WebApiAdmisiones.Security.interfaces
 {
     public interface ILoginFlowService
     {
