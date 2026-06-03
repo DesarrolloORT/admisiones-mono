@@ -3,7 +3,6 @@
 exports[`Loader > should match snapshot when loading = true 1`] = `
 <div
   _nghost-a-c3144323453=""
-  id="root0"
   ng-version="21.2.7"
 >
   <div

@@ -43,6 +43,8 @@ export class Login {
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   constructor() {
+    window.__TEST_RUN_ID__ = 'manual-front-telemetry-20260529-1';
+
     if (this.facade.prefilled()) {
       afterNextRender(() => this.passwordInput()?.nativeElement.focus());
     }

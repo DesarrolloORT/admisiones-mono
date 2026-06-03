@@ -63,10 +63,13 @@ export function expectTelemetryHeaders(requests: ObservedApiRequest[], testRunId
     expect(request.headers['traceparent']).toMatch(/^00-[a-f0-9]{32}-[a-f0-9]{16}-01$/);
     expect(request.headers['baggage']).toContain('client_route=');
     expect(request.headers['x-correlation-id']).toBeTruthy();
-    expect(request.headers['x-client-service']).toBe('admisiones-frontend');
+    expect(request.headers['x-client-route-history']).toBeUndefined();
     expect(request.headers['x-client-environment']).toBeTruthy();
     expect(request.headers['x-client-version']).toBeTruthy();
     expect(request.headers['x-client-device']).toBeTruthy();
+    expect(request.headers['x-client-page-age-bucket']).toMatch(
+      /^(<1m|1m-5m|5m-30m|30m-2h|2h\+)$/
+    );
     expect(request.headers['x-client-route']).toMatch(/^\/[^?#]*$/);
     expect(request.headers['x-test-run-id']).toBe(testRunId);
   }

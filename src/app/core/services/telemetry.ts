@@ -40,6 +40,7 @@ export class TelemetryService {
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly sessionId = this.resolveSessionId();
+  private readonly pageStartedAt = this.now();
   private initialized = false;
   private routeTrail: string[] = [];
 
@@ -144,10 +145,9 @@ export class TelemetryService {
       'x-correlation-id': this.sessionId,
       'x-client-session-id': this.sessionId,
       'x-client-route': currentRoute,
-      'x-client-route-history': this.routeTrail.join(' > '),
       'x-client-device': this.deviceSummary(),
       'x-client-environment': TELEMETRY_ENVIRONMENT.ENVIRONMENT_NAME ?? this.environmentName(),
-      'x-client-service': TELEMETRY_ENVIRONMENT.TELEMETRY_SERVICE_NAME ?? 'admisiones-frontend',
+      'x-client-page-age-bucket': this.pageAgeBucket(),
       'x-client-version': TELEMETRY_ENVIRONMENT.APP_VERSION ?? '0.0.0',
     };
     const testRunId = this.testRunId();
@@ -447,6 +447,30 @@ export class TelemetryService {
 
   private elapsedMs(startedAt: number): number {
     return Math.round(this.now() - startedAt);
+  }
+
+  private pageAgeBucket(): string {
+    const ageMs = this.elapsedMs(this.pageStartedAt);
+    const minute = 60_000;
+    const hour = 60 * minute;
+
+    if (ageMs < minute) {
+      return '<1m';
+    }
+
+    if (ageMs < 5 * minute) {
+      return '1m-5m';
+    }
+
+    if (ageMs < 30 * minute) {
+      return '5m-30m';
+    }
+
+    if (ageMs < 2 * hour) {
+      return '30m-2h';
+    }
+
+    return '2h+';
   }
 
   private now(): number {

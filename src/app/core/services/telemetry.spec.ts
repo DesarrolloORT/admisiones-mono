@@ -54,12 +54,16 @@ describe('TelemetryService', () => {
     expect(intercepted.headers.get('x-correlation-id')).toBeTruthy();
     expect(intercepted.headers.get('x-client-session-id')).toBeTruthy();
     expect(intercepted.headers.get('x-client-route')).toBe('/iniciar-sesion');
-    expect(intercepted.headers.get('x-client-route-history')).toBe('/iniciar-sesion');
+    expect(intercepted.headers.get('x-client-route-history')).toBeNull();
+    expect(intercepted.headers.get('x-client-service')).toBeNull();
+    expect(intercepted.headers.get('x-client-page-age-bucket')).toMatch(
+      /^(<1m|1m-5m|5m-30m|30m-2h|2h\+)$/
+    );
     expect(intercepted.headers.get('x-client-device')).toContain('desktop');
     expect(intercepted.headers.get('x-test-run-id')).toBe('playwright-20260528-001');
   });
 
-  it('keeps the latest route trail for backend diagnostics', () => {
+  it('does not send the route trail in normal API headers', () => {
     service.initialize();
 
     routerEvents.next(
@@ -73,6 +77,7 @@ describe('TelemetryService', () => {
         '/inicio/datos-personales?token=secret'
       )
     );
+    window.history.replaceState(null, '', '/inicio/datos-personales?token=secret');
 
     const request = new HttpRequest(
       'POST',
@@ -81,10 +86,8 @@ describe('TelemetryService', () => {
     );
     const intercepted = service.addHttpHeaders(request);
 
-    expect(intercepted.headers.get('x-client-route-history')).toBe(
-      '/iniciar-sesion > /registro > /inicio > /inicio/datos-personales'
-    );
-    expect(intercepted.headers.get('x-client-route')).toBe('/iniciar-sesion');
+    expect(intercepted.headers.get('x-client-route-history')).toBeNull();
+    expect(intercepted.headers.get('x-client-route')).toBe('/inicio/datos-personales');
   });
 
   it('buffers http response and error telemetry', () => {
