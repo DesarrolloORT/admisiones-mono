@@ -11,6 +11,8 @@ namespace AppLogic.IServices
 
         // Versión síncrona (legacy, mantener para compatibilidad)
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
+        // Versión asíncrona (preferida, soporta cache distribuido)
+        Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
         OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
