@@ -119,6 +119,12 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
+            // Servicio de autenticación de dos factores (2FA) por email.
+            services.AddScoped<IDosFactoresAuthService, DosFactoresAuthService>();
+
+            // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
+            services.AddScoped<ILoginFlowService, LoginFlowService>();
+
             return services;
         }
     }

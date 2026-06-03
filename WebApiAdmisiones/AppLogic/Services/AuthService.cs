@@ -119,7 +119,8 @@ public class AuthService : IAuthService
                     PrimerApellido = persona.PrimerApellido,
                     SegundoApellido = persona.SegundoApellido,
                     TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento
+                    Documento = persona.Documento,
+                    Email = persona.Email
                 },
                 // Estas propiedades son internas y se usan en el controlador para establecer las cookies
                 AccessToken = accessToken,
@@ -415,7 +416,8 @@ public class AuthService : IAuthService
                     PrimerApellido = persona.PrimerApellido,
                     SegundoApellido = persona.SegundoApellido,
                     TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento
+                    Documento = persona.Documento,
+                    Email = persona.Email
                 },
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,

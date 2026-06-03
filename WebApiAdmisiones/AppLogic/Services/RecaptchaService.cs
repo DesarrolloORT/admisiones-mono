@@ -103,6 +103,82 @@ namespace AppLogic.Services
             }
         }
 
+        public async Task<OperationResult<double>> ValidarConScoreAsync(string token, string expectedAction = "login")
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_01",
+                    nameof(ValidarConScoreAsync),
+                    "El parámetro captcha es obligatorio.",
+                    400,
+                    0d);
+            }
+
+            var siteKey = Environment.GetEnvironmentVariable("RECAPTCHA_SITE_KEY");
+            var apiKey = Environment.GetEnvironmentVariable("RECAPTCHA_API_KEY");
+
+            if (string.IsNullOrWhiteSpace(siteKey) || string.IsNullOrWhiteSpace(apiKey))
+            {
+                return OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_02",
+                    nameof(ValidarConScoreAsync),
+                    "No se encontró la configuración de reCAPTCHA.",
+                    500,
+                    0d);
+            }
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(
+                    $"https://recaptchaenterprise.googleapis.com/v1/projects/{DefaultProjectId}/assessments?key={apiKey}",
+                    new
+                    {
+                        @event = new
+                        {
+                            token,
+                            siteKey,
+                            expectedAction
+                        }
+                    });
+
+                var body = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    return OperationResult<double>.IsFailed(
+                        "AUTH_CAPTCHA_03",
+                        nameof(ValidarConScoreAsync),
+                        $"Error al validar captcha contra Google: {body}",
+                        502,
+                        0d);
+                }
+
+                using var json = JsonDocument.Parse(body);
+                if (!json.RootElement.TryGetProperty("riskAnalysis", out var riskAnalysis)
+                    || !riskAnalysis.TryGetProperty("score", out var scoreElement)
+                    || !scoreElement.TryGetDouble(out var score))
+                {
+                    return OperationResult<double>.IsFailed(
+                        "AUTH_CAPTCHA_04",
+                        nameof(ValidarConScoreAsync),
+                        "Error al obtener el score del captcha.",
+                        400,
+                        0d);
+                }
+
+                return OperationResult<double>.Ok(score, nameof(ValidarConScoreAsync));
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_99",
+                    nameof(ValidarConScoreAsync),
+                    $"Error al validar captcha: {ex.Message}",
+                    500,
+                    0d);
+            }
+        }
+
         private static double GetMinimumScore()
         {
             var rawValue = Environment.GetEnvironmentVariable("RECAPTCHA_SCORE") ?? "0.5";
