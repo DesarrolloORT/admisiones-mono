@@ -1,5 +1,4 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -65,7 +64,7 @@ namespace WebApiAdmisiones.Security
                 if (!allowed)
                 {
                     _logger.LogWarning(
-                        "2FA init rate limit exceeded for document {Doc}",
+                        "Límite de solicitudes de inicio 2FA superado para el documento {Doc}",
                         normalizedDoc);
 
                     return OperationResult<DtoLogin2FARequired>.IsFailed(
@@ -112,7 +111,7 @@ namespace WebApiAdmisiones.Security
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to send 2FA email to {Email}", email);
+                    _logger.LogError(ex, "Error al enviar email 2FA a {Email}", email);
                     await db.KeyDeleteAsync($"2fa:session:{sessionId}");
 
                     return OperationResult<DtoLogin2FARequired>.IsFailed(
@@ -126,7 +125,7 @@ namespace WebApiAdmisiones.Security
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                        "2FA initiated for persona {CodigoPersona}, session {SessionId}",
+                        "2FA iniciado para persona {CodigoPersona}, sesión {SessionId}",
                         pendingAuth.Persona.CodigoPersona,
                         sessionId);
                 }
@@ -137,7 +136,7 @@ namespace WebApiAdmisiones.Security
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error initiating 2FA");
+                _logger.LogError(ex, "Error inesperado al iniciar 2FA");
 
                 return OperationResult<DtoLogin2FARequired>.IsFailed(
                     "AUTH_2FA_INIT_99",
@@ -184,7 +183,7 @@ namespace WebApiAdmisiones.Security
                 }
                 catch (JsonException ex)
                 {
-                    _logger.LogError(ex, "Failed to deserialize 2FA session {SessionId}", sessionId);
+                    _logger.LogError(ex, "Error al deserializar la sesión 2FA {SessionId}", sessionId);
                     await db.KeyDeleteAsync($"2fa:session:{sessionId}");
 
                     return OperationResult<DtoAuthenticationResponse>.IsFailed(
@@ -220,7 +219,7 @@ namespace WebApiAdmisiones.Security
                         await db.KeyDeleteAsync($"2fa:session:{sessionId}");
 
                         _logger.LogWarning(
-                            "2FA max attempts exceeded for session {SessionId}, persona {CodigoPersona}",
+                            "Máximo de intentos 2FA superado para la sesión {SessionId}, persona {CodigoPersona}",
                             sessionId,
                             session.CodigoPersona);
 
@@ -269,14 +268,14 @@ namespace WebApiAdmisiones.Security
                 };
 
                 _logger.LogInformation(
-                    "2FA verified successfully for persona {CodigoPersona}",
+                    "2FA verificado exitosamente para la persona {CodigoPersona}",
                     session.CodigoPersona);
 
                 return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(VerificarCodigoAsync));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error verifying 2FA code for session {SessionId}", sessionId);
+                _logger.LogError(ex, "Error inesperado al verificar el código 2FA para la sesión {SessionId}", sessionId);
 
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "AUTH_2FA_99",

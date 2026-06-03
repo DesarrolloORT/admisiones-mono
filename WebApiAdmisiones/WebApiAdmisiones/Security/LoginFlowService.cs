@@ -45,7 +45,7 @@ namespace WebApiAdmisiones.Security
                 var captchaResult = await _recaptchaService.ValidarConScoreAsync(captchaToken, "login");
                 if (!captchaResult.Success)
                 {
-                    _logger.LogWarning("reCAPTCHA validation failed. ErrorCode: {Code}", captchaResult.ErrorCode);
+                    _logger.LogWarning("Validación reCAPTCHA fallida. Código de error: {Code}", captchaResult.ErrorCode);
 
                     return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                         captchaResult.ErrorCode,
@@ -74,8 +74,8 @@ namespace WebApiAdmisiones.Security
                 Extensions.ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
 
                 _logger.LogWarning(
-                    "Rate limit EXCEEDED for account {TipoDoc}:{Doc} from IP {IP}. " +
-                    "Attempts: {Remaining}/{Limit}. Partition: {Key}",
+                    "Límite de intentos SUPERADO para la cuenta {TipoDoc}:{Doc} desde IP {IP}. " +
+                    "Intentos: {Remaining}/{Limit}. Partición: {Key}",
                     request.TipoDocumento,
                     request.Documento,
                     ipAddress,
@@ -113,7 +113,7 @@ namespace WebApiAdmisiones.Security
             var userFailRemaining = await _rateLimiter.GetRemainingAsync(failUserKey, failUserLimit, failWindow);
             if (userFailRemaining == 0)
             {
-                _logger.LogWarning("Post-failure credential rate limit exceeded for document {Doc}", normalizedDoc);
+                _logger.LogWarning("Bloqueo por intentos fallidos activo para el documento {Doc}", normalizedDoc);
 
                 return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "AUTH_RL_03",
@@ -126,7 +126,7 @@ namespace WebApiAdmisiones.Security
             var ipFailRemaining = await _rateLimiter.GetRemainingAsync(failIpKey, failIpLimit, failWindow);
             if (ipFailRemaining == 0)
             {
-                _logger.LogWarning("Post-failure IP credential rate limit exceeded for IP {IP}", ipAddress);
+                _logger.LogWarning("Bloqueo por intentos fallidos activo para la IP {IP}", ipAddress);
 
                 return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "AUTH_RL_04",
@@ -172,7 +172,7 @@ namespace WebApiAdmisiones.Security
             if (string.IsNullOrWhiteSpace(result.Data.Persona.Email))
             {
                 _logger.LogWarning(
-                    "Low reCAPTCHA score ({Score}) for {Doc} but no email registered. Access denied.",
+                    "Score reCAPTCHA bajo ({Score}) para {Doc} pero no tiene email registrado. Acceso denegado.",
                     recaptchaScore,
                     request.Documento);
 
@@ -185,7 +185,7 @@ namespace WebApiAdmisiones.Security
             }
 
             _logger.LogInformation(
-                "Low reCAPTCHA score ({Score}) for {Doc}. Initiating 2FA.",
+                "Score reCAPTCHA bajo ({Score}) para {Doc}. Iniciando 2FA.",
                 recaptchaScore,
                 request.Documento);
 
