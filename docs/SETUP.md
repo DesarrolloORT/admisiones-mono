@@ -21,21 +21,18 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Crear los archivos de entorno locales en `src/environments/`:
-   - Renombrar `src/environments/environment.template.ts` a `src/environments/environment.ts`.
-   - Renombrar `src/environments/environment.prod.template.ts` a `src/environments/environment.prod.ts`.
-   - Crear `src/environments/environment.staging.ts`.
-   - Crear `src/environments/environment.dev.ts`.
+2. Configurar `envs-cli` (una sola vez por maquina):
 
-3. Completar las variables necesarias en cada archivo de entorno:
-   - `RECAPTCHA_KEY`
-   - `CSP_POLICY`
-   - `CACHING_ENABLED`
-   - `API_URL`
+   ```bash
+   envs config --repo-url https://github.com/DesarrolloORT/front-envs.git
+   envs login
+   ```
 
-Los archivos `src/environments/environment.ts`, `src/environments/environment.dev.ts`, `src/environments/environment.staging.ts` y `src/environments/environment.prod.ts` estan ignorados por [`.gitignore`](../.gitignore).
+   Los scripts `npm run start`, `start:local` y `start:preprod` generan automaticamente `src/environments/environment.generated.ts` mediante `envs run`.
 
-4. Actualizar contratos generados si el backend Swagger ya esta disponible:
+   El archivo `src/environments/environment.generated.ts` esta ignorado por [`.gitignore`](../.gitignore).
+
+3. Actualizar contratos generados si el backend Swagger ya esta disponible:
 
    ```bash
    npm run update-api
@@ -54,7 +51,7 @@ Los archivos `src/environments/environment.ts`, `src/environments/environment.de
    tecnicos en `src/app/shared/api/generated/endpoints/`. Ninguno de esos
    archivos generados debe editarse manualmente.
 
-5. Ajustar la base del repositorio nuevo:
+4. Ajustar la base del repositorio nuevo:
    - reemplazar `angular-template` por el slug real del proyecto;
    - revisar dependencias, workflows y scripts que no apliquen;
    - completar README y documentacion especifica del proyecto que nace desde esta plantilla.
@@ -100,3 +97,4 @@ La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcon
 - [docs/WORKFLOW.md](./WORKFLOW.md)
 - [docs/EXTENSIONS.md](./EXTENSIONS.md)
 - [docs/codegen/update-endpoints.md](./codegen/update-endpoints.md)
+
