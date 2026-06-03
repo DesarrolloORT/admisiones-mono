@@ -1,19 +1,17 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
-import { ValidationUtils } from '@desarrolloort/ngx-utils';
+import type { OrtErrorItem } from '@desarrolloort/components';
+import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import {
-  buildFormErrorSummary,
-  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
-} from 'src/app/shared/forms/form-error-summary';
-import {
-  buildOrtPasswordRequirements,
-  ORT_PASSWORD_ERROR_MESSAGES,
-  ORT_PASSWORD_VALIDATORS,
-} from 'src/app/shared/forms/password-validation';
-
-import { ChangePasswordService } from '../../services/change-password';
+import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
+import { postPersonaCambiarContrasenaEndpoint } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 
 export interface ChangePasswordForm {
   currentPassword: FormControl<string>;
@@ -26,11 +24,9 @@ interface PasswordRequirement {
   met: boolean;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class ChangePasswordFacade {
-  private readonly changePasswordService = inject(ChangePasswordService);
+  private readonly api = inject(ApiHttpClient);
   private readonly router = inject(Router);
 
   public readonly form = new FormGroup<ChangePasswordForm>(
@@ -41,16 +37,19 @@ export class ChangePasswordFacade {
       }),
       password: new FormControl('', {
         nonNullable: true,
-        validators: ORT_PASSWORD_VALIDATORS,
+        validators: [
+          Validators.required,
+          Validators.minLength(12),
+          Validators.maxLength(20),
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$%@_.!-])/),
+        ],
       }),
       confirmPassword: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required],
       }),
     },
-    {
-      validators: [ValidationUtils.confirmPasswordValidator('password', 'confirmPassword')],
-    }
+    { validators: [passwordMatchValidator] }
   );
 
   private readonly _isSubmitting = signal(false);
@@ -58,7 +57,6 @@ export class ChangePasswordFacade {
 
   private readonly _error = signal<string | null>(null);
   public readonly error = this._error.asReadonly();
-  public readonly submitted = signal(false);
 
   private readonly _currentPasswordVisible = signal(false);
   private readonly _passwordVisible = signal(false);
@@ -68,68 +66,66 @@ export class ChangePasswordFacade {
     this._currentPasswordVisible() ? 'text' : 'password'
   );
   public readonly currentPasswordIcon = computed(() =>
-    this._currentPasswordVisible() ? 'visibility_off' : 'visibility'
-  );
-  public readonly currentPasswordToggleLabel = computed(() =>
-    this._currentPasswordVisible() ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'
+    this._currentPasswordVisible() ? 'visibility' : 'visibility_off'
   );
   public readonly passwordInputType = computed(() =>
     this._passwordVisible() ? 'text' : 'password'
   );
   public readonly passwordIcon = computed(() =>
-    this._passwordVisible() ? 'visibility_off' : 'visibility'
-  );
-  public readonly passwordToggleLabel = computed(() =>
-    this._passwordVisible() ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'
+    this._passwordVisible() ? 'visibility' : 'visibility_off'
   );
   public readonly confirmPasswordInputType = computed(() =>
     this._confirmPasswordVisible() ? 'text' : 'password'
   );
   public readonly confirmPasswordIcon = computed(() =>
-    this._confirmPasswordVisible() ? 'visibility_off' : 'visibility'
+    this._confirmPasswordVisible() ? 'visibility' : 'visibility_off'
+  );
+
+  public readonly currentPasswordToggleLabel = computed(() =>
+    this._currentPasswordVisible() ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'
+  );
+  public readonly passwordToggleLabel = computed(() =>
+    this._passwordVisible() ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'
   );
   public readonly confirmPasswordToggleLabel = computed(() =>
     this._confirmPasswordVisible()
       ? 'Ocultar confirmación de contraseña'
       : 'Mostrar confirmación de contraseña'
   );
-  public readonly errorSummary = computed(() =>
-    this.submitted()
-      ? buildFormErrorSummary(
-          this.form,
-          [
-            {
-              controlName: 'currentPassword',
-              fieldId: 'current-password',
-              label: 'Contraseña actual',
-            },
-            {
-              controlName: 'password',
-              fieldId: 'new-password',
-              label: 'Nueva contraseña',
-              messages: {
-                ...ORT_PASSWORD_ERROR_MESSAGES,
-              },
-            },
-            {
-              controlName: 'confirmPassword',
-              fieldId: 'confirm-new-password',
-              label: 'Confirmar contraseña',
-              messages: {
-                confirmPasswordMismatch: 'Las contraseñas no coinciden.',
-              },
-            },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
+
+  public readonly errorSummary = computed<OrtErrorItem[]>(() => {
+    const errors: OrtErrorItem[] = [];
+    const controls = this.form.controls;
+    if (controls.currentPassword.touched && controls.currentPassword.hasError('required')) {
+      errors.push({ message: 'Contraseña actual es obligatoria' });
+    }
+    if (controls.password.touched && controls.password.hasError('required')) {
+      errors.push({ message: 'Nueva contraseña es obligatoria' });
+    } else if (controls.password.touched && controls.password.invalid) {
+      errors.push({ message: 'La contraseña no cumple los requisitos de seguridad' });
+    }
+    if (controls.confirmPassword.touched && controls.confirmPassword.hasError('required')) {
+      errors.push({ message: 'Confirmar contraseña es obligatorio' });
+    } else if (
+      controls.confirmPassword.touched &&
+      controls.confirmPassword.hasError('confirmPasswordMismatch')
+    ) {
+      errors.push({ message: 'Las contraseñas no coinciden' });
+    }
+    return errors;
+  });
 
   private readonly _password = signal('');
 
   public readonly requirements = computed<PasswordRequirement[]>(() => {
-    this._password();
-    return buildOrtPasswordRequirements(this.form.controls.password);
+    const value = this._password();
+    return [
+      { label: '12 caracteres', met: value.length >= 12 },
+      { label: 'Una letra mayúscula', met: /[A-Z]/.test(value) },
+      { label: 'Una letra minúscula', met: /[a-z]/.test(value) },
+      { label: 'Un número', met: /\d/.test(value) },
+      { label: 'Un caracter especial ($%@_!.-)', met: /[$%@_.!-]/.test(value) },
+    ];
   });
 
   constructor() {
@@ -149,7 +145,6 @@ export class ChangePasswordFacade {
   }
 
   public submit(): void {
-    this.submitted.set(true);
     this.form.markAllAsTouched();
     if (this.form.invalid || this._isSubmitting()) {
       return;
@@ -158,11 +153,7 @@ export class ChangePasswordFacade {
     this._isSubmitting.set(true);
     this._error.set(null);
 
-    this.changePasswordService
-      .changePassword({
-        currentPassword: this.form.controls.currentPassword.value,
-        password: this.form.controls.password.value,
-      })
+    this.changePassword()
       .pipe(finalize(() => this._isSubmitting.set(false)))
       .subscribe({
         next: () => this.router.navigate(['/inicio']),
@@ -170,4 +161,24 @@ export class ChangePasswordFacade {
           this._error.set('No se pudo cambiar la contraseña. Verificá que la actual sea correcta.'),
       });
   }
+
+  private changePassword(): Observable<unknown> {
+    return this.api.request(postPersonaCambiarContrasenaEndpoint, {
+      body: {
+        passwordActual: this.form.controls.currentPassword.value,
+        passwordNueva: this.form.controls.password.value,
+      },
+      withCredentials: true,
+    });
+  }
+}
+
+function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value;
+  const confirm = group.get('confirmPassword')?.value;
+  if (password && confirm && password !== confirm) {
+    group.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+    return { passwordMismatch: true };
+  }
+  return null;
 }
