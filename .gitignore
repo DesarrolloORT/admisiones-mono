@@ -6,6 +6,7 @@ src/environments/environment.prod.ts
 src/environments/environment.staging.ts
 src/environments/environment.dev.ts
 src/environments/environment.ts
+src/environments/environment.generated.ts
 
 # Generated API layer (local-only, regenerate with: npm run update-api)
 src/app/shared/api/generated/
