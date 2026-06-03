@@ -38,9 +38,6 @@ namespace AppLogic.DevartDTOs
             target.NombrePais = source.NombrePais;
             target.Iso2 = source.Iso2;
             target.Caracteristica = source.Caracteristica;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // Navigation Properties
             if (level > 0) {
@@ -66,9 +63,6 @@ namespace AppLogic.DevartDTOs
             target.NombrePais = source.NombrePais;
             target.Iso2 = source.Iso2;
             target.Caracteristica = source.Caracteristica;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

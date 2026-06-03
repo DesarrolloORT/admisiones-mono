@@ -41,9 +41,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionDepartamento = source.FechaCreacionDepartamento;
             target.IdEscuela = source.IdEscuela;
             target.ObservacionesDepartamento = source.ObservacionesDepartamento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ClaveDeptoRpg = source.ClaveDeptoRpg;
             target.UsernameResponsable = source.UsernameResponsable;
             target.Ptoid = source.Ptoid;
@@ -94,9 +91,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionDepartamento = source.FechaCreacionDepartamento;
             target.IdEscuela = source.IdEscuela;
             target.ObservacionesDepartamento = source.ObservacionesDepartamento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ClaveDeptoRpg = source.ClaveDeptoRpg;
             target.UsernameResponsable = source.UsernameResponsable;
             target.Ptoid = source.Ptoid;

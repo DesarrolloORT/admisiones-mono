@@ -36,23 +36,12 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public decimal IdFormaContacto { get; set; }
 
-        [StringLength(8)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         [StringLength(31)]
         [Required()]
         public string ContactadorInteres { get; set; }
 
         [StringLength(200)]
         public string? ObservacionesInteres { get; set; }
-
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
 
         [Required()]
         public decimal IdLugar { get; set; }

@@ -46,10 +46,10 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Usuario no autenticado o token invalido.</response>
         /// <response code="422">La combinacion no tiene oferta aplicable para el alumno.</response>
         [HttpGet("Ofertas")]
-        [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<OfertasInscripcionResponse>), 422)]
+        [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 401)]
+        [ProducesResponseType(typeof(OperationResult<List<OfertaInscripcionDto>>), 422)]
         public async Task<IActionResult> ObtenerMisOfertas(
             [FromQuery] long idProducto,
             [FromQuery] long idComienzo,
@@ -60,7 +60,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (!codigoPersonaActual.HasValue)
             {
-                var errorResult = OperationResult<OfertasInscripcionResponse>.IsFailed(
+                var errorResult = OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "EJEMPLO_OFERTAS_03",
                     nameof(ObtenerMisOfertas),
                     "No se pudo identificar al usuario autenticado.",

@@ -36,9 +36,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoBeca = source.IdTipoBeca;
             target.IdNivelProducto = source.IdNivelProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.HabilitadoSitioOrt = source.HabilitadoSitioOrt;
 
             // Navigation Properties
@@ -63,9 +60,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoBeca = source.IdTipoBeca;
             target.IdNivelProducto = source.IdNivelProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.HabilitadoSitioOrt = source.HabilitadoSitioOrt;
 
             // User-defined partial method

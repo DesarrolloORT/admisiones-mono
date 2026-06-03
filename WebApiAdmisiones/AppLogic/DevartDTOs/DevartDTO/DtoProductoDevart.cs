@@ -49,17 +49,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(3)]
         public string? DestinoRegaliaProducto { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         [Required()]
         public long IdDepartamento { get; set; }
 

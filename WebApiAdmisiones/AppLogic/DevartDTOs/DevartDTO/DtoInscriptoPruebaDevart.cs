@@ -72,14 +72,6 @@ namespace AppLogic.DevartDTOs
 
         public DateTime? FechaInscriptoPrueba { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         public DateTime? DjFechaInscriptoPrueba { get; set; }
 
         public long? ModeloCartaInscriptoPrueba { get; set; }

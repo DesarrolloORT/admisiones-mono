@@ -53,14 +53,9 @@ namespace AppLogic.DevartDTOs
 
         public DateTime? FechaIngresoCompPagoInscr { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
         public DateTime? BajaInscr { get; set; }
 
         public DateTime? FechaDesercionInscr { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
 
         [StringLength(200)]
         public string? ObservacionesDesercionInscr { get; set; }
@@ -73,9 +68,6 @@ namespace AppLogic.DevartDTOs
         public decimal? PorcentajeDtoTotalInscr { get; set; }
 
         public decimal? PorcentajeTotalInscr { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
 
         [StringLength(31)]
         public string? AutorizadorSinPagoInscr { get; set; }

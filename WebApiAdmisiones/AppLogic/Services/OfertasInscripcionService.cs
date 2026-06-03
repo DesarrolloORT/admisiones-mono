@@ -39,7 +39,7 @@ namespace AppLogic.Services
         /// <param name="idComienzo">ID del comienzo</param>
         /// <param name="idTurno">ID del turno</param>
         /// <returns>Lista de ofertas disponibles para la persona</returns>
-        public async Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaPersonaAsync(
+        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerOfertasParaPersonaAsync(
             long codigoPersona,
             long idProducto,
             long idComienzo,
@@ -65,7 +65,7 @@ namespace AppLogic.Services
             if (persona == null)
             {
                 _logger.LogWarning("Persona {CodigoPersona} no encontrada en la base de datos local", codigoPersona);
-                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "OFERTAS_PERSONA_01",
                     nameof(ObtenerOfertasParaPersonaAsync),
                     "La persona no existe en el sistema.",
@@ -93,7 +93,7 @@ namespace AppLogic.Services
                     "Persona {CodigoPersona} no tiene código de vigencia asignado",
                     codigoPersona
                 );
-                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "OFERTAS_PERSONA_02",
                     nameof(ObtenerOfertasParaPersonaAsync),
                     "La persona no tiene código de vigencia asignado. Debe completar su registro.",
@@ -171,14 +171,14 @@ namespace AppLogic.Services
             {
                 _logger.LogInformation(
                 "Ofertas obtenidas exitosamente. Total: {TotalOfertas} ofertas disponibles",
-                ofertas.TotalCount
+                ofertas.Count
                 );
             }
 
             // Aquí podrías enriquecer las ofertas con datos adicionales de tu BD local
             // Por ejemplo: agregar información de cupos, horarios específicos, etc.
 
-            return OperationResult<OfertasInscripcionResponse>.Ok(
+            return OperationResult<List<OfertaInscripcionDto>>.Ok(
                 ofertas,
                 nameof(ObtenerOfertasParaPersonaAsync)
             );
@@ -194,7 +194,7 @@ namespace AppLogic.Services
         /// <summary>
         /// Obtiene las ofertas disponibles para una persona, validando datos locales.
         /// </summary>
-        Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaPersonaAsync(
+        Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerOfertasParaPersonaAsync(
             long codigoPersona,
             long idProducto,
             long idComienzo,

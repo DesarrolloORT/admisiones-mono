@@ -38,9 +38,6 @@ namespace AppLogic.DevartDTOs
             target.NroAdmite2 = source.NroAdmite2;
             target.EstadoAdmite = source.EstadoAdmite;
             target.NroAdmite1 = source.NroAdmite1;
-            target.HoraIngreso = source.HoraIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.ProcesadoPersonaAdmite = source.ProcesadoPersonaAdmite;
             target.ProcesahistoriaPersonaAdmite = source.ProcesahistoriaPersonaAdmite;
             target.PreferenciaPersonaAdmite = source.PreferenciaPersonaAdmite;
@@ -69,9 +66,6 @@ namespace AppLogic.DevartDTOs
             target.NroAdmite2 = source.NroAdmite2;
             target.EstadoAdmite = source.EstadoAdmite;
             target.NroAdmite1 = source.NroAdmite1;
-            target.HoraIngreso = source.HoraIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.ProcesadoPersonaAdmite = source.ProcesadoPersonaAdmite;
             target.ProcesahistoriaPersonaAdmite = source.ProcesahistoriaPersonaAdmite;
             target.PreferenciaPersonaAdmite = source.PreferenciaPersonaAdmite;

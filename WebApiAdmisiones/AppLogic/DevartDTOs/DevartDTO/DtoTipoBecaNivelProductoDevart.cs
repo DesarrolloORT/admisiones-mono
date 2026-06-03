@@ -31,17 +31,6 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public long IdNivelProducto { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         [StringLength(2)]
         public string? HabilitadoSitioOrt { get; set; }
 

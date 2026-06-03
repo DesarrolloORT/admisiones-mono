@@ -38,11 +38,8 @@ namespace AppLogic.DevartDTOs
             target.CodigoPersona = source.CodigoPersona;
             target.IdProceso = source.IdProceso;
             target.IdFormaContacto = source.IdFormaContacto;
-            target.HoraIngreso = source.HoraIngreso;
             target.ContactadorInteres = source.ContactadorInteres;
             target.ObservacionesInteres = source.ObservacionesInteres;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdLugar = source.IdLugar;
             target.IdGradoPureza = source.IdGradoPureza;
 
@@ -71,11 +68,8 @@ namespace AppLogic.DevartDTOs
             target.CodigoPersona = source.CodigoPersona;
             target.IdProceso = source.IdProceso;
             target.IdFormaContacto = source.IdFormaContacto;
-            target.HoraIngreso = source.HoraIngreso;
             target.ContactadorInteres = source.ContactadorInteres;
             target.ObservacionesInteres = source.ObservacionesInteres;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.IdLugar = source.IdLugar;
             target.IdGradoPureza = source.IdGradoPureza;
 

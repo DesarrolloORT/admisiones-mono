@@ -36,9 +36,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoEgresoDj = source.IdTipoEgresoDj;
             target.NombreTipoEgresoDj = source.NombreTipoEgresoDj;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.AliasTipoEgresoDj = source.AliasTipoEgresoDj;
             target.Orden = source.Orden;
             target.Activo = source.Activo;
@@ -64,9 +61,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoEgresoDj = source.IdTipoEgresoDj;
             target.NombreTipoEgresoDj = source.NombreTipoEgresoDj;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.AliasTipoEgresoDj = source.AliasTipoEgresoDj;
             target.Orden = source.Orden;
             target.Activo = source.Activo;

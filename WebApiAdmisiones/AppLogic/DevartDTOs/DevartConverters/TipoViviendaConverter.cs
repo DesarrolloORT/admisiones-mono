@@ -36,9 +36,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoVivienda = source.IdTipoVivienda;
             target.NombreTipoVivienda = source.NombreTipoVivienda;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -56,9 +53,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdTipoVivienda = source.IdTipoVivienda;
             target.NombreTipoVivienda = source.NombreTipoVivienda;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

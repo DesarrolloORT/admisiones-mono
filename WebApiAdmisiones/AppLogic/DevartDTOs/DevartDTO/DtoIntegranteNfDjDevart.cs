@@ -44,14 +44,6 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public decimal IdDeclaracionjuradaWeb { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         #endregion
 
         #region Navigation Properties

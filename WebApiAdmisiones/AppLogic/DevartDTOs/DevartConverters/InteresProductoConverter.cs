@@ -38,10 +38,7 @@ namespace AppLogic.DevartDTOs
             target.IdProducto = source.IdProducto;
             target.IdTipoInteres = source.IdTipoInteres;
             target.IdGradoInteres = source.IdGradoInteres;
-            target.HoraIngreso = source.HoraIngreso;
             target.FechaInteresProd = source.FechaInteresProd;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.ObservacionesInteresProd = source.ObservacionesInteresProd;
             target.IdGradoInteresAnt = source.IdGradoInteresAnt;
             target.IdTurno = source.IdTurno;
@@ -75,10 +72,7 @@ namespace AppLogic.DevartDTOs
             target.IdProducto = source.IdProducto;
             target.IdTipoInteres = source.IdTipoInteres;
             target.IdGradoInteres = source.IdGradoInteres;
-            target.HoraIngreso = source.HoraIngreso;
             target.FechaInteresProd = source.FechaInteresProd;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
             target.ObservacionesInteresProd = source.ObservacionesInteresProd;
             target.IdGradoInteresAnt = source.IdGradoInteresAnt;
             target.IdTurno = source.IdTurno;

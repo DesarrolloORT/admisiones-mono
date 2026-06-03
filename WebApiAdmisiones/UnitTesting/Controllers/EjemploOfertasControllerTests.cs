@@ -34,21 +34,15 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IOfertasInscripcionService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             currentUserMock.Setup(c => c.UserId).Returns(123);
-            var result = OperationResult<OfertasInscripcionResponse>.Ok(
-                new OfertasInscripcionResponse
-                {
-                    TotalCount = 1,
-                    Ofertas =
-                    [
-                        new OfertaInscripcionDto
-                        {
-                            IdOferta = 44,
-                            IdProducto = 10,
-                            IdTurno = 30,
-                            Disponible = true
-                        }
-                    ]
-                },
+            var result = OperationResult<List<OfertaInscripcionDto>>.Ok(
+                [
+                    new OfertaInscripcionDto
+                    {
+                        IdOferta = 44,
+                        Turno = new DtoTurno { IdTurno = 30, NombreTurno = "Nocturno" },
+                        HorarioReferencia = "Lunes 19:00"
+                    }
+                ],
                 nameof(IOfertasInscripcionService.ObtenerOfertasParaPersonaAsync));
             serviceMock
                 .Setup(s => s.ObtenerOfertasParaPersonaAsync(123, 10, 20, 30))

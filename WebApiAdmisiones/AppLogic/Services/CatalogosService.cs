@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
@@ -10,10 +11,17 @@ namespace AppLogic.Services
     public class CatalogosService : ICatalogosService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
+        private readonly InscripcionesyPagosApiClient? _inscripcionesyPagosApiClient;
 
         public CatalogosService(IUnitOfWorkFactory uowFactory)
         {
             _uowFactory = uowFactory;
+        }
+
+        public CatalogosService(IUnitOfWorkFactory uowFactory, InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
+        {
+            _uowFactory = uowFactory;
+            _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
         public OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades()
@@ -25,6 +33,73 @@ namespace AppLogic.Services
 
             return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(response, nameof(ObtenerPaisesEstadosCiudades));
         }
+
+        public OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
+        {
+            var response = new DtoEncuestaInicialCatalogosResponse
+            {
+                NivelConocimiento =
+                [
+                    Combo(1, "Ninguno"),
+                    Combo(2, "Básico"),
+                    Combo(3, "Medio"),
+                    Combo(4, "Superior")
+                ],
+                DecisionCarrera = DecisionSecundariaOptions(),
+                CompartidoCon =
+                [
+                    Combo(1, "Padres u otros familiares"),
+                    Combo(2, "Amigos de la familia"),
+                    Combo(3, "Amigos propios, compañeros"),
+                    Combo(4, "Otros"),
+                    Combo(5, "Nadie")
+                ],
+                FormacionTutores =
+                [
+                    Combo(1, "Primaria"),
+                    Combo(2, "Secundaria"),
+                    Combo(3, "Formación técnica"),
+                    Combo(4, "Formación universitaria incompleta"),
+                    Combo(5, "Formación universitaria completa"),
+                    Combo(6, "Estudios de postgrado"),
+                    Combo(7, "Otros estudios")
+                ],
+                EstadoEducacionSuperior =
+                [
+                    Combo(3, "Egresado"),
+                    Combo(1, "En curso"),
+                    Combo(2, "Abandonado")
+                ],
+                DecisionUniversidad = DecisionSecundariaOptions(),
+                AniosAprobadosEducacionSuperior =
+                [
+                    Combo(13, "1 año"),
+                    Combo(14, "2 años"),
+                    Combo(15, "3 años"),
+                    Combo(16, "4 años"),
+                    Combo(17, "5 años"),
+                    Combo(18, "6 años"),
+                    Combo(19, "7 años"),
+                    Combo(20, "8 años o más")
+                ]
+            };
+
+            return OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(response, nameof(ObtenerEncuestaInicial));
+        }
+
+        private static IReadOnlyList<DtoComboOption> DecisionSecundariaOptions() =>
+        [
+            Combo(2, "1° EMS (4° año)"),
+            Combo(3, "2° EMS (5° año)"),
+            Combo(4, "3° EMS (6° año)"),
+            Combo(0, "Otro")
+        ];
+
+        private static DtoComboOption Combo(int value, string label) => new()
+        {
+            Value = value,
+            Label = label
+        };
 
         // Versión async para compatibilidad con controllers async
         public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
@@ -75,6 +150,36 @@ namespace AppLogic.Services
             using var uow = _uowFactory.Create();
             var entidades = uow.Procesos.GetProcesosHabilitadosPorProducto(idCarrera);
             return OperationResult<IEnumerable<DtoComienzoResponse>>.Ok(entidades.Select(ComienzosMapper.ToAdmisionesDto), nameof(ObtenerComienzos));
+        }
+
+        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso)
+        {
+            if (_inscripcionesyPagosApiClient == null)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    "CAT_TURNOS_01",
+                    nameof(ObtenerTurnos),
+                    "Cliente de Inscripciones y Pagos no configurado.",
+                    500,
+                    default
+                );
+            }
+
+            var resultadoOfertas = await _inscripcionesyPagosApiClient
+                .ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(idCarrera, idProceso);
+
+            if (!resultadoOfertas.Success)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    resultadoOfertas.ErrorCode,
+                    nameof(ObtenerTurnos),
+                    resultadoOfertas.Message,
+                    resultadoOfertas.HttpCode,
+                    resultadoOfertas.Data
+                );
+            }
+
+            return OperationResult<List<OfertaInscripcionDto>>.Ok(resultadoOfertas.Data, nameof(ObtenerTurnos));
         }
 
         public OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion()

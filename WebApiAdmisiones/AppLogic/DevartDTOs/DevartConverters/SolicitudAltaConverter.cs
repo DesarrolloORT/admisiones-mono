@@ -42,9 +42,6 @@ namespace AppLogic.DevartDTOs
             target.AccionesSolicitudAlta = source.AccionesSolicitudAlta;
             target.AccionesFuturasSolicituAlta = source.AccionesFuturasSolicituAlta;
             target.IdEstadoSolicitudAlta = source.IdEstadoSolicitudAlta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.PrimerApellidoSolicitudAlta = source.PrimerApellidoSolicitudAlta;
             target.SegundoApellidoSolicituAlta = source.SegundoApellidoSolicituAlta;
             target.PrimerNombreSolicitudAlta = source.PrimerNombreSolicitudAlta;
@@ -106,9 +103,6 @@ namespace AppLogic.DevartDTOs
             target.AccionesSolicitudAlta = source.AccionesSolicitudAlta;
             target.AccionesFuturasSolicituAlta = source.AccionesFuturasSolicituAlta;
             target.IdEstadoSolicitudAlta = source.IdEstadoSolicitudAlta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.PrimerApellidoSolicitudAlta = source.PrimerApellidoSolicitudAlta;
             target.SegundoApellidoSolicituAlta = source.SegundoApellidoSolicituAlta;
             target.PrimerNombreSolicitudAlta = source.PrimerNombreSolicitudAlta;

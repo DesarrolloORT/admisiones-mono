@@ -37,9 +37,6 @@ namespace AppLogic.DevartDTOs
             target.IdTipoDesercion = source.IdTipoDesercion;
             target.NombreTipoDesercion = source.NombreTipoDesercion;
             target.ObservacionesTipoDesercion = source.ObservacionesTipoDesercion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -58,9 +55,6 @@ namespace AppLogic.DevartDTOs
             target.IdTipoDesercion = source.IdTipoDesercion;
             target.NombreTipoDesercion = source.NombreTipoDesercion;
             target.ObservacionesTipoDesercion = source.ObservacionesTipoDesercion;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

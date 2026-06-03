@@ -48,25 +48,8 @@ namespace AppLogic.ApiClients
     public class OfertaInscripcionDto
     {
         public long IdOferta { get; set; }
-        public long IdProducto { get; set; }
-        public long IdTurno { get; set; }
-        public string? NombreTurno { get; set; }
-        public long? IdComienzo { get; set; }
-        public string? NombreComienzo { get; set; }
-        public long? IdProceso { get; set; }
-        public string? NombreProceso { get; set; }
-        public int? CuposDisponibles { get; set; }
-        public bool Disponible { get; set; }
-    }
-
-    /// <summary>
-    /// Response para lista de ofertas.
-    /// Corresponde a: GET /OfertasParaInscripcionAdmisiones y GET /OfertasParaInscripcionAdmisionesConProceso
-    /// </summary>
-    public class OfertasInscripcionResponse
-    {
-        public List<OfertaInscripcionDto> Ofertas { get; set; } = new();
-        public int TotalCount { get; set; }
+        public DtoTurno Turno { get; set; } = new();
+        public string? HorarioReferencia { get; set; }
     }
 
     #endregion
@@ -248,7 +231,7 @@ namespace AppLogic.ApiClients
         /// <param name="idComienzo">ID del comienzo</param>
         /// <param name="idTurno">ID del turno</param>
         /// <returns>Lista de ofertas disponibles</returns>
-        public async Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaInscripcionAdmisionesAsync(
+        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerOfertasParaInscripcionAdmisionesAsync(
             long idProducto,
             long idComienzo,
             long idTurno)
@@ -264,20 +247,21 @@ namespace AppLogic.ApiClients
                     idTurno
                     );
                 }
-                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}&idTurno={idTurno}";
+                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<OfertasInscripcionResponse>();
-                    return OperationResult<OfertasInscripcionResponse>.Ok(
+                    var ofertasApi = await response.Content.ReadFromJsonAsync<List<OfertaInscripcionApiResponse>>();
+                    var result = MapearOfertasInscripcion(ofertasApi);
+                    return OperationResult<List<OfertaInscripcionDto>>.Ok(
                         result!,
                         nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
                     );
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "OFERTAS_INSCRIPCION_01",
                     nameof(ObtenerOfertasParaInscripcionAdmisionesAsync),
                     $"Error al obtener ofertas: {response.StatusCode} - {errorContent}",
@@ -287,7 +271,7 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<OfertasInscripcionResponse>(
+                return HandleException<List<OfertaInscripcionDto>>(
                     ex,
                     nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
                 );
@@ -300,38 +284,36 @@ namespace AppLogic.ApiClients
         /// </summary>
         /// <param name="idProducto">ID del producto</param>
         /// <param name="idProceso">ID del proceso</param>
-        /// <param name="idTurno">ID del turno</param>
         /// <returns>Lista de ofertas disponibles</returns>
-        public async Task<OperationResult<OfertasInscripcionResponse>> ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(
+        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync(
             long idProducto,
-            long idProceso,
-            long idTurno)
+            long idProceso)
         {
             try
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                    "Obteniendo ofertas para inscripción con proceso - Producto: {IdProducto}, Proceso: {IdProceso}, Turno: {IdTurno}",
+                    "Obteniendo ofertas para inscripción con proceso - Producto: {IdProducto}, Proceso: {IdProceso}",
                     idProducto,
-                    idProceso,
-                    idTurno
+                    idProceso
                     );
                 }
-                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}&idTurno={idTurno}";
+                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisionesConProceso?idProducto={idProducto}&idProceso={idProceso}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<OfertasInscripcionResponse>();
-                    return OperationResult<OfertasInscripcionResponse>.Ok(
+                    var ofertasApi = await response.Content.ReadFromJsonAsync<List<OfertaInscripcionApiResponse>>();
+                    var result = MapearOfertasInscripcion(ofertasApi);
+                    return OperationResult<List<OfertaInscripcionDto>>.Ok(
                         result!,
                         nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync)
                     );
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<OfertasInscripcionResponse>.IsFailed(
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "OFERTAS_INSCRIPCION_PROCESO_01",
                     nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync),
                     $"Error al obtener ofertas con proceso: {response.StatusCode} - {errorContent}",
@@ -341,7 +323,7 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<OfertasInscripcionResponse>(
+                return HandleException<List<OfertaInscripcionDto>>(
                     ex,
                     nameof(ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync)
                 );
@@ -576,6 +558,35 @@ namespace AppLogic.ApiClients
 
             _logger.LogError(ex, "Error inesperado");
             return OperationResult<T>.IsFailed("API_UNEXPECTED", methodName, $"Error: {ex.Message}", 500, default!);
+        }
+
+        private static List<OfertaInscripcionDto> MapearOfertasInscripcion(List<OfertaInscripcionApiResponse>? ofertasApi)
+        {
+            return ofertasApi?
+                .Select(MapOfertaInscripcion)
+                .ToList() ?? new List<OfertaInscripcionDto>();
+        }
+
+        private static OfertaInscripcionDto MapOfertaInscripcion(OfertaInscripcionApiResponse source)
+        {
+            return new OfertaInscripcionDto
+            {
+                IdOferta = source.IdOferta,
+                Turno = new DtoTurno
+                {
+                    IdTurno = source.IdTurno,
+                    NombreTurno = source.NombreTurno
+                },
+                HorarioReferencia = source.HorarioReferencia
+            };
+        }
+
+        private sealed class OfertaInscripcionApiResponse
+        {
+            public long IdOferta { get; set; }
+            public long IdTurno { get; set; }
+            public string? NombreTurno { get; set; }
+            public string? HorarioReferencia { get; set; }
         }
 
         #endregion

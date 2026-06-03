@@ -40,17 +40,6 @@ namespace AppLogic.DevartDTOs
 
         public DateTime? FechaCreacionEscuela { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         [StringLength(60)]
         public string? DescripcionEscuela { get; set; }
 

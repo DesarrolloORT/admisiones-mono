@@ -13,13 +13,13 @@ namespace WebApiAdmisiones.Models
     }
 
     [ExcludeFromCodeCoverage]
-    public class SubirFotoAlumnoRequest
+    public class SubirFotoPersonaRequest
     {
         public ArchivoPayload ArchivoAdjunto { get; set; } = new();
     }
 
     [ExcludeFromCodeCoverage]
-    public class UploadDocumentoAlumnoRequest
+    public class UploadDocumentoPersonaRequest
     {
         [JsonRequired]
         public int Tipo { get; set; }

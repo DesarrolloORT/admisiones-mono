@@ -60,17 +60,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? PlanTituloRpg { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
         [Required()]
         public long MinimoMateriasTitulo { get; set; }
 

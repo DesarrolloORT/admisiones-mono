@@ -35,7 +35,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, "PER_AP_06");
         }
@@ -48,9 +48,9 @@ namespace UnitTesting.AppLogic.Services
 
             var result = PersonaAdmisionValidation.ValidarDatosPersonaEncuestaRequest(
                 request,
-                PersonaAdmisionConstants.TipoPersonaSgi,
+                PersonaConstants.TipoPersonaSgi,
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, "PER_DPE_15");
         }
@@ -64,9 +64,9 @@ namespace UnitTesting.AppLogic.Services
 
             var result = PersonaAdmisionValidation.ValidarDatosPersonaEncuestaRequest(
                 request,
-                PersonaAdmisionConstants.TipoPersonaSgi,
+                PersonaConstants.TipoPersonaSgi,
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, "PER_DPE_16");
         }
@@ -100,7 +100,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, expectedErrorCode);
         }
@@ -134,7 +134,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, expectedErrorCode);
         }
@@ -150,7 +150,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, "PER_DPE_24");
         }
@@ -165,7 +165,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, "PER_DPE_37");
         }
@@ -207,7 +207,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, expectedErrorCode);
         }
@@ -246,7 +246,7 @@ namespace UnitTesting.AppLogic.Services
                 request,
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             AssertFailure(result, expectedErrorCode);
         }
@@ -258,7 +258,7 @@ namespace UnitTesting.AppLogic.Services
                 BuildValidEncuestaRequest(),
                 "WEB",
                 "TestMethod",
-                PersonaAdmisionConstants.Parametros.FechaMinimaNacimiento);
+                PersonaConstants.Parametros.FechaMinimaNacimiento);
 
             Assert.True(result.Success);
             Assert.True(result.Data);
@@ -297,7 +297,7 @@ namespace UnitTesting.AppLogic.Services
                 DecisionCarrera = 2,
                 DecisionUniversidad = 2,
                 InfoOtrasUniversidadesAntes = CommonConstants.Booleanos.No,
-                CompartidoCon = PersonaAdmisionConstants.CompartidoCon.Padres,
+                CompartidoCon = PersonaConstants.CompartidoCon.Padres,
                 CodigoInstitucionBac = 100,
                 InformarEncuesta = CommonConstants.Booleanos.Si,
                 NombreInstitucion = "Instituto",

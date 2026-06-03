@@ -27,9 +27,6 @@ namespace AppLogic.DevartDTOs
 
         public DateTime? FechaInscr { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         [Required()]
         public long IdTurno { get; set; }
 

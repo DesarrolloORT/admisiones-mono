@@ -37,9 +37,6 @@ namespace AppLogic.DevartDTOs
             target.IdCentroCostos = source.IdCentroCostos;
             target.NombreCentroCostos = source.NombreCentroCostos;
             target.ObservacionesCentroCostos = source.ObservacionesCentroCostos;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.NombreCentroCostosAntespsig = source.NombreCentroCostosAntespsig;
 
             // Navigation Properties
@@ -64,9 +61,6 @@ namespace AppLogic.DevartDTOs
             target.IdCentroCostos = source.IdCentroCostos;
             target.NombreCentroCostos = source.NombreCentroCostos;
             target.ObservacionesCentroCostos = source.ObservacionesCentroCostos;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.NombreCentroCostosAntespsig = source.NombreCentroCostosAntespsig;
 
             // User-defined partial method

@@ -36,7 +36,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.CodigoPersona = source.CodigoPersona;
             target.FechaInscr = source.FechaInscr;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdTurno = source.IdTurno;
             target.IdProducto = source.IdProducto;
             target.IdComienzo = source.IdComienzo;
@@ -60,7 +59,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.CodigoPersona = source.CodigoPersona;
             target.FechaInscr = source.FechaInscr;
-            target.UsuarioIngreso = source.UsuarioIngreso;
             target.IdTurno = source.IdTurno;
             target.IdProducto = source.IdProducto;
             target.IdComienzo = source.IdComienzo;

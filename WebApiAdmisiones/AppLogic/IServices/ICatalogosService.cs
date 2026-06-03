@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using Utilities;
@@ -10,12 +11,10 @@ namespace AppLogic.IServices
 
         // Versión síncrona (legacy, mantener para compatibilidad)
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
-
-        // Versión asíncrona (preferida, soporta cache distribuido)
-        Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
-
+        OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
+        Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
         OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();

@@ -93,9 +93,6 @@ namespace AppLogic.DevartDTOs
             target.PlantCadaUnaEncuestaIni = source.PlantCadaUnaEncuestaIni;
             target.PlantPrivParEncuestaIni = source.PlantPrivParEncuestaIni;
             target.PlantCadaDestacEncuestaIni = source.PlantCadaDestacEncuestaIni;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ImpresoEncuestaIni = source.ImpresoEncuestaIni;
             target.InforOtrasLinea1Ini = source.InforOtrasLinea1Ini;
             target.InforOtrasLinea2Ini = source.InforOtrasLinea2Ini;
@@ -192,9 +189,6 @@ namespace AppLogic.DevartDTOs
             target.PlantCadaUnaEncuestaIni = source.PlantCadaUnaEncuestaIni;
             target.PlantPrivParEncuestaIni = source.PlantPrivParEncuestaIni;
             target.PlantCadaDestacEncuestaIni = source.PlantCadaDestacEncuestaIni;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ImpresoEncuestaIni = source.ImpresoEncuestaIni;
             target.InforOtrasLinea1Ini = source.InforOtrasLinea1Ini;
             target.InforOtrasLinea2Ini = source.InforOtrasLinea2Ini;

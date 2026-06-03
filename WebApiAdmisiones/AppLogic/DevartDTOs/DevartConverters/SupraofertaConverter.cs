@@ -41,9 +41,6 @@ namespace AppLogic.DevartDTOs
             target.IdCalendarioPago = source.IdCalendarioPago;
             target.IdMoneda = source.IdMoneda;
             target.ObservacionesSupraoferta = source.ObservacionesSupraoferta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.EstadoSupraoferta = source.EstadoSupraoferta;
             target.FechaComienzo = source.FechaComienzo;
             target.DepRpg = source.DepRpg;
@@ -87,9 +84,6 @@ namespace AppLogic.DevartDTOs
             target.IdCalendarioPago = source.IdCalendarioPago;
             target.IdMoneda = source.IdMoneda;
             target.ObservacionesSupraoferta = source.ObservacionesSupraoferta;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.EstadoSupraoferta = source.EstadoSupraoferta;
             target.FechaComienzo = source.FechaComienzo;
             target.DepRpg = source.DepRpg;

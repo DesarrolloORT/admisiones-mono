@@ -3,9 +3,9 @@ using AppLogic.DTOs;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using Utilities;
 
 namespace AppLogic.Helpers
 {
@@ -24,7 +24,7 @@ namespace AppLogic.Helpers
                 SegundoApellidoSolicituAlta = DocumentUtils.FormatoCapital(request.SegundoApellido),
                 PrimerNombreSolicitudAlta = DocumentUtils.FormatoCapital(request.PrimerNombre),
                 SegundoNombreSolicitudAlta = DocumentUtils.FormatoCapital(request.SegundoNombre),
-                UsuarioSolicitudAlta = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
+                UsuarioSolicitudAlta = Constantes.kUSERNAME_USUARIO_ADMISIONES,
                 DireccionSolicitudAlta = DocumentUtils.Normalizar(request.Direccion),
                 CodigoPais = request.CodigoPais,
                 CodigoEstado = request.CodigoEstado,
@@ -36,90 +36,6 @@ namespace AppLogic.Helpers
                 IdProducto = request.IdProducto,
                 IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
                 IdProceso = request.IdProceso
-            };
-        }
-
-        public static Intere CrearInteres(decimal idInteres, long codigoPersona, long idProceso, DateTime now)
-        {
-            return new Intere
-            {
-                IdInteres = idInteres,
-                CodigoPersona = codigoPersona,
-                IdProceso = idProceso,
-                IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
-                ContactadorInteres = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                ObservacionesInteres = InscripcionesConstants.InteresProducto.ObservacionesWeb,
-                IdLugar = InscripcionesConstants.InteresProducto.LugarInteresWeb,
-                IdGradoPureza = InscripcionesConstants.InteresProducto.GradoPurezaPuro,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture)
-            };
-        }
-
-        public static InteresProducto CrearInteresProducto(decimal idInteres, long idProducto, DateTime now)
-        {
-            return new InteresProducto
-            {
-                IdInteres = idInteres,
-                IdProducto = idProducto,
-                IdTipoInteres = InscripcionesConstants.InteresProducto.TipoInteresComun,
-                IdGradoInteres = InscripcionesConstants.InteresProducto.GradoInteresRegistro,
-                FechaInteresProd = now.Date,
-                FechaIngreso = now.Date,
-                FechaAltaInteresProd = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                ObservacionesInteresProd = InscripcionesConstants.InteresProducto.ObservacionesWeb
-            };
-        }
-
-        public static PersonaAdmite CrearPersonaAdmite(long codigoPersona, DateTime now)
-        {
-            return new PersonaAdmite
-            {
-                CodigoPersona = codigoPersona,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
-                FechaFrescoPersonaAdmite = now.Date
-            };
-        }
-
-        public static Actividad CrearActividad(decimal idActividad, long idProceso, DateTime now)
-        {
-            return new Actividad
-            {
-                IdActividad = idActividad,
-                IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
-                IdTipoActividad = InscripcionesConstants.InteresProducto.TipoActividadMonoAccion,
-                IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                UsernameGeneradorActividad = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                UsernameRealizadoActividad = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaGeneradorActividad = now.Date,
-                FechaRealizadoActividad = now.Date,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
-                IdProceso = idProceso
-            };
-        }
-
-        public static Accion CrearAccion(decimal idAccion, decimal idActividad, long codigoPersona, DateTime now)
-        {
-            return new Accion
-            {
-                IdAccion = idAccion,
-                IdActividad = idActividad,
-                CodigoPersona = codigoPersona,
-                FechaRealizadoAccion = now.Date,
-                UsuarioRealizadoAccion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                IdAccionResultado = InscripcionesConstants.InteresProducto.ResultadoAccionRealizada,
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture)
             };
         }
 
@@ -156,12 +72,9 @@ namespace AppLogic.Helpers
                 CodigoFuenteDatos = InscripcionesConstants.InteresProducto.CodigoFuenteDatosAdmisiones,
                 RecibeCartasPersona = "SI",
                 RecibeEmailsPersona = "SI",
-                UsuarioUltimaActualizacion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
+                UsuarioUltimaActualizacion = Constantes.kUSERNAME_USUARIO_ADMISIONES,
                 FechaUltimaActualizacion = now.Date,
                 HoraUltimaActualizacion = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
-                UsuarioIngreso = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
-                FechaIngreso = now.Date,
-                HoraIngreso = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
                 Ciudad = ciudad
             };
         }
@@ -187,7 +100,7 @@ namespace AppLogic.Helpers
                 TipoDocumento = persona.TipoDocumento ?? string.Empty,
                 CodigoVigencia = persona.CodigoVigencia,
                 NombreCiudad = persona.Ciudad?.Nombre ?? string.Empty,
-                UsuarioModificacion = InscripcionesConstants.InteresProducto.UsuarioAdmisiones,
+                UsuarioModificacion = Constantes.kUSERNAME_USUARIO_ADMISIONES,
                 NuevoUsuario = persona.CodigoPersona.ToString(CultureInfo.InvariantCulture)
             };
         }

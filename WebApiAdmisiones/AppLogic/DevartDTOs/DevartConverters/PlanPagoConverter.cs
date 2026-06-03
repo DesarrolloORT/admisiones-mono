@@ -42,9 +42,6 @@ namespace AppLogic.DevartDTOs
             target.PorcentajeSeniaMinima = source.PorcentajeSeniaMinima;
             target.IdMoneda = source.IdMoneda;
             target.ObservacionesPlanPago = source.ObservacionesPlanPago;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdRegimenPlanPago = source.IdRegimenPlanPago;
 
             // User-defined partial method
@@ -69,9 +66,6 @@ namespace AppLogic.DevartDTOs
             target.PorcentajeSeniaMinima = source.PorcentajeSeniaMinima;
             target.IdMoneda = source.IdMoneda;
             target.ObservacionesPlanPago = source.ObservacionesPlanPago;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.IdRegimenPlanPago = source.IdRegimenPlanPago;
 
             // User-defined partial method

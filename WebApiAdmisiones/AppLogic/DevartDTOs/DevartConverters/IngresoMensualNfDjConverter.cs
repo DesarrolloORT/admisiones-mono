@@ -43,9 +43,6 @@ namespace AppLogic.DevartDTOs
             target.IdIngresoFront = source.IdIngresoFront;
             target.ExtensionArchivoIngreso = source.ExtensionArchivoIngreso;
             target.NombreArchivoIngreso = source.NombreArchivoIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // Navigation Properties
             if (level > 0) {
@@ -75,9 +72,6 @@ namespace AppLogic.DevartDTOs
             target.IdIngresoFront = source.IdIngresoFront;
             target.ExtensionArchivoIngreso = source.ExtensionArchivoIngreso;
             target.NombreArchivoIngreso = source.NombreArchivoIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);
