@@ -84,13 +84,18 @@ builder.Services.AddInscripcionesyPagosApiClient(builder.Configuration);
 builder.Services.AddCorsPolicy();
 
 // --------------------------------------------------------------------------
-// 7. Rate Limiting (solo para endpoints específicos)
+// 7. Redis para Rate Limiting Distribuido
+// --------------------------------------------------------------------------
+builder.Services.AddRedisRateLimiting(builder.Configuration);
+
+// --------------------------------------------------------------------------
+// 8. Rate Limiting (políticas específicas por endpoint)
 // --------------------------------------------------------------------------
 builder.Services.AddReconocimientoDocumentoRateLimiting(builder.Configuration);
 builder.Services.AddLoginRateLimiting(builder.Configuration);
 
 // --------------------------------------------------------------------------
-// 8. Build Application
+// 9. Build Application
 // --------------------------------------------------------------------------
 var app = builder.Build();
 

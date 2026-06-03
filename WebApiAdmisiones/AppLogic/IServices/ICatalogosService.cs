@@ -8,6 +8,8 @@ namespace AppLogic.IServices
     public interface ICatalogosService
     {
         OperationResult<DtoPaisDevart> ObtenerPais(long idPais);
+
+        // Versión síncrona (legacy, mantener para compatibilidad)
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
         OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();

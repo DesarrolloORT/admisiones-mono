@@ -19,6 +19,7 @@ namespace UnitTesting.Controllers
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<ILogger<AuthController>> _loggerMock;
         private readonly Mock<ICurrentUserService> _currentUserMock;
+        private readonly Mock<IRedisRateLimiterService> _redisRateLimiterMock;
         private readonly IConfiguration _configuration;
         private readonly AuthController _controller;
         private readonly DefaultHttpContext _httpContext;
@@ -29,20 +30,43 @@ namespace UnitTesting.Controllers
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _loggerMock = new Mock<ILogger<AuthController>>();
             _currentUserMock = new Mock<ICurrentUserService>();
+            _redisRateLimiterMock = new Mock<IRedisRateLimiterService>();
             _httpContext = new DefaultHttpContext();
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["PasswordActivation:SessionMinutes"] = "15"
+                    ["PasswordActivation:SessionMinutes"] = "15",
+                    ["Authentication:Login:RateLimitAccountAttempts"] = "5",
+                    ["Authentication:Login:RateLimitWindowMinutes"] = "15"
                 })
                 .Build();
+
+            // Mock remote IP address para rate limiting
+            _httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.168.1.100");
+
+            // Configurar mock de RedisRateLimiterService para permitir todos los intentos por defecto
+            _redisRateLimiterMock
+                .Setup(r => r.ValidateAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<TimeSpan>()))
+                .ReturnsAsync(new RateLimitValidationResult
+                {
+                    IsAllowed = true,
+                    RemainingAttempts = 5,
+                    ResetTime = DateTimeOffset.UtcNow.AddMinutes(15),
+                    PartitionKey = "test-key"
+                });
 
             _controller = new AuthController(
                 _authServiceMock.Object,
                 _passwordActivationServiceMock.Object,
                 _configuration,
                 _loggerMock.Object,
-                _currentUserMock.Object)
+                _currentUserMock.Object,
+                _redisRateLimiterMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -401,6 +425,133 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<OkObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
+
+        #region Rate Limiting Tests
+
+        [Fact]
+        public async Task Login_ExceedsAccountRateLimit_Returns429()
+        {
+            // Arrange
+            var request = new AuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                Password = "password123"
+            };
+
+            // Configurar mock para rechazar por rate limit
+            _redisRateLimiterMock
+                .Setup(r => r.ValidateAsync(
+                    "192.168.1.100",
+                    "CI",
+                    "12345678",
+                    5,
+                    It.IsAny<TimeSpan>()))
+                .ReturnsAsync(new RateLimitValidationResult
+                {
+                    IsAllowed = false,
+                    RemainingAttempts = 0,
+                    ResetTime = DateTimeOffset.UtcNow.AddMinutes(15),
+                    PartitionKey = "login-account:CI:12345678:ip:192.168.1.100"
+                });
+
+            // Act
+            var response = await _controller.Login(request);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(429, statusCodeResult.StatusCode);
+
+            // Verificar que NO se llamó al servicio de autenticación
+            _authServiceMock.Verify(
+                s => s.AutenticarUsuarioLDAPAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task Login_WithinRateLimit_CallsAuthService()
+        {
+            // Arrange
+            var request = new AuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                Password = "password123"
+            };
+
+            var authResponse = new DtoAuthenticationResponse
+            {
+                Persona = new DtoPersonaAuth
+                {
+                    CodigoPersona = 12345,
+                    PrimerNombre = "Juan",
+                    PrimerApellido = "Pérez",
+                    Documento = "12345678"
+                },
+                AccessToken = "access-token",
+                RefreshToken = "refresh-token"
+            };
+
+            _authServiceMock
+                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
+                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
+                    authResponse,
+                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
+
+            // Mock ya configurado en constructor para permitir intentos
+
+            // Act
+            var response = await _controller.Login(request);
+
+            // Assert
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+
+            // Verificar que SÍ se llamó al servicio de autenticación
+            _authServiceMock.Verify(
+                s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task Login_RateLimitResponse_IncludesCorrectHeaders()
+        {
+            // Arrange
+            var request = new AuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "12345678",
+                Password = "password123"
+            };
+
+            var resetTime = DateTimeOffset.UtcNow.AddMinutes(15);
+
+            _redisRateLimiterMock
+                .Setup(r => r.ValidateAsync(
+                    "192.168.1.100",
+                    "CI",
+                    "12345678",
+                    5,
+                    It.IsAny<TimeSpan>()))
+                .ReturnsAsync(new RateLimitValidationResult
+                {
+                    IsAllowed = false,
+                    RemainingAttempts = 0,
+                    ResetTime = resetTime,
+                    PartitionKey = "login-account:CI:12345678:ip:192.168.1.100"
+                });
+
+            // Act
+            var response = await _controller.Login(request);
+
+            // Assert
+            Assert.NotNull(_httpContext.Response.Headers["X-RateLimit-Limit"]);
+            Assert.NotNull(_httpContext.Response.Headers["X-RateLimit-Remaining"]);
+            Assert.NotNull(_httpContext.Response.Headers["X-RateLimit-Reset"]);
+            Assert.NotNull(_httpContext.Response.Headers["Retry-After"]);
+        }
+
+        #endregion
 
     }
 }

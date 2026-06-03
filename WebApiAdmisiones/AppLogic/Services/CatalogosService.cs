@@ -101,6 +101,12 @@ namespace AppLogic.Services
             Label = label
         };
 
+        // Versión async para compatibilidad con controllers async
+        public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
+        {
+            return Task.FromResult(ObtenerPaisesEstadosCiudades());
+        }
+
         public OperationResult<DtoPaisDevart> ObtenerPais(long idPais)
         {
             using var uow = _uowFactory.Create();
