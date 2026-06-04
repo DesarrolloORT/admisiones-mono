@@ -284,17 +284,6 @@ namespace WebApiAdmisiones.Controllers
                         default!));
                 }
 
-                var validacionPassword = Util.ValidarPasswordNueva(request.PasswordNueva);
-                if (!string.IsNullOrWhiteSpace(validacionPassword))
-                {
-                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
-                        "INI_PAS_02",
-                        nameof(CompletarPassword),
-                        validacionPassword,
-                        400,
-                        default!));
-                }
-
                 var crearResult = await registroFlowService.CompletarNuevaPersona(pending, request.PasswordNueva);
                 if (!crearResult.Success)
                 {

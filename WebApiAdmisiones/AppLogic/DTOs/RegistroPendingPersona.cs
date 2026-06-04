@@ -5,7 +5,8 @@ namespace AppLogic.DTOs;
 /// <summary>
 /// Datos de una nueva persona pendiente de creación en t_persona,
 /// almacenados temporalmente en Redis hasta que el usuario establece su contraseña.
-/// Redis key: registro:pending:{FlowId}   TTL = PasswordActivation:ExpireHours
+/// Redis key: registro:pending:{FlowId}   TTL = PasswordActivation:ExpireHours.
+/// Redis index: registro:pending-doc:{TipoDocumento}:{Documento} -> FlowId.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed class RegistroPendingPersona

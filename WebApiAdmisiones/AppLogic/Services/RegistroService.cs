@@ -447,6 +447,7 @@ namespace AppLogic.Services
                     ciudad,
                     DateTime.Now);
                 uow.Personas.Add(persona);
+                uow.Save();
                 var fechaActual = _dbConnectionContext.CurrentDateTime();
                 UpsertInteres(uow, persona.CodigoPersona, data.IdProducto, data.IdProceso, fechaActual);
                 AsegurarPersonaAdmite(uow, persona.CodigoPersona, fechaActual);
@@ -616,6 +617,7 @@ namespace AppLogic.Services
                     ciudad,
                     DateTime.Now);
                 uow.Personas.Add(persona);
+                uow.Save();
                 var fechaActual = _dbConnectionContext.CurrentDateTime();
                 UpsertInteres(uow, persona.CodigoPersona, request.IdProducto, request.IdProceso, fechaActual);
                 // TODO Tivenos: encolar RegistroDesdeSitioAdmisiones para la persona/interes creado.

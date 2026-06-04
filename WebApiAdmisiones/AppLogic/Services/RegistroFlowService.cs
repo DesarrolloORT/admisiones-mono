@@ -16,6 +16,7 @@ public class RegistroFlowService : IRegistroFlowService
     private const string NuevaPersonaPurpose = "nueva-persona-activacion";
     private const string FlowSessionKeyPrefix = "registro:flow-session:";
     private const string PendingPersonaKeyPrefix = "registro:pending:";
+    private const string PendingPersonaDocumentoKeyPrefix = "registro:pending-doc:";
 
     private readonly IRegistroService _registroService;
     private readonly IPasswordActivationService _passwordActivationService;
@@ -231,16 +232,20 @@ public class RegistroFlowService : IRegistroFlowService
             return flowDocumentoValidation;
         }
 
-        // 2. Generar JWT de activación (sub = flowId)
+        // 2. Generar JWT de activación (sub = flow pendiente vigente)
         var expireHours = _configuration.GetValue<double?>("PasswordActivation:ExpireHours") ?? 24;
         var ttl = TimeSpan.FromHours(expireHours);
-        var token = PasswordActivationService.GenerarTokenFlowIdPublic(flowId, NuevaPersonaPurpose, ttl);
+        var flowIdPending = await ResolverFlowIdPendingDocumentoAsync(
+            request.TipoDocumento,
+            request.Documento,
+            flowId);
+        var token = PasswordActivationService.GenerarTokenFlowIdPublic(flowIdPending, NuevaPersonaPurpose, ttl);
         var tokenHash = PasswordActivationService.HashToken(token);
 
         // 3. Guardar persona pendiente en Redis
         var pending = new RegistroPendingPersona
         {
-            FlowId = flowId,
+            FlowId = flowIdPending,
             TipoDocumento = request.TipoDocumento,
             Documento = request.Documento,
             IdProducto = request.IdProducto,
@@ -262,10 +267,14 @@ public class RegistroFlowService : IRegistroFlowService
         };
 
         var pendingJson = JsonSerializer.Serialize(pending, JsonOptions);
-        await _redisDb.StringSetAsync($"{PendingPersonaKeyPrefix}{flowId}", pendingJson, ttl);
+        await _redisDb.StringSetAsync($"{PendingPersonaKeyPrefix}{flowIdPending}", pendingJson, ttl);
+        await _redisDb.StringSetAsync(
+            CrearPendingDocumentoKey(request.TipoDocumento, request.Documento),
+            flowIdPending,
+            ttl);
 
         // 4. Enviar mail de activación
-        var mailResult = await _passwordActivationService.EnviarMailNuevaPersonaAsync(flowId, request.Mail, token);
+        var mailResult = await _passwordActivationService.EnviarMailNuevaPersonaAsync(flowIdPending, request.Mail, token);
         if (!mailResult.Success)
         {
             // El registro quedó en Redis; el usuario puede reintentar con la opción de reenvío
@@ -276,6 +285,10 @@ public class RegistroFlowService : IRegistroFlowService
 
         // 5. Actualizar step
         await ActualizarStepAsync(flowId, "confirmado");
+        if (!string.Equals(flowIdPending, flowId, StringComparison.Ordinal))
+        {
+            await ActualizarStepAsync(flowIdPending, "confirmado");
+        }
 
         return OperationResult<RegistroFlowResult>.Ok(
             new RegistroFlowResult("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."),
@@ -333,9 +346,58 @@ public class RegistroFlowService : IRegistroFlowService
         }
     }
 
-    public Task DeletePendingPersonaAsync(string flowId)
-        => _redisDb.KeyDeleteAsync($"{PendingPersonaKeyPrefix}{flowId}");
+    public async Task DeletePendingPersonaAsync(string flowId)
+    {
+        var pending = await GetPendingPersonaInternalAsync(flowId);
+        if (pending != null)
+        {
+            await _redisDb.KeyDeleteAsync(CrearPendingDocumentoKey(pending.TipoDocumento, pending.Documento));
+        }
+
+        await _redisDb.KeyDeleteAsync($"{PendingPersonaKeyPrefix}{flowId}");
+    }
 
     public Task<OperationResult<long>> CompletarNuevaPersona(RegistroPendingPersona data, string passwordNueva)
         => _registroService.CompletarNuevaPersonaAsync(data, passwordNueva);
+
+    private async Task<string> ResolverFlowIdPendingDocumentoAsync(
+        string tipoDocumento,
+        string documento,
+        string fallbackFlowId)
+    {
+        var docKey = CrearPendingDocumentoKey(tipoDocumento, documento);
+        var existingFlowId = await _redisDb.StringGetAsync(docKey);
+        if (!existingFlowId.HasValue)
+        {
+            return fallbackFlowId;
+        }
+
+        var flowId = existingFlowId.ToString();
+        if (string.IsNullOrWhiteSpace(flowId))
+        {
+            await _redisDb.KeyDeleteAsync(docKey);
+            return fallbackFlowId;
+        }
+
+        var pending = await GetPendingPersonaInternalAsync(flowId);
+        if (pending != null)
+        {
+            return flowId;
+        }
+
+        await _redisDb.KeyDeleteAsync(docKey);
+        return fallbackFlowId;
+    }
+
+    private static string CrearPendingDocumentoKey(string tipoDocumento, string documento)
+    {
+        var tipoNormalizado = DocumentUtils.NormalizarMayusculas(tipoDocumento);
+        var documentoNormalizado = DocumentUtils.NormalizarMayusculas(documento);
+        if (string.Equals(tipoNormalizado, "CI", StringComparison.Ordinal))
+        {
+            documentoNormalizado = new string(documentoNormalizado.Where(char.IsDigit).ToArray());
+        }
+
+        return $"{PendingPersonaDocumentoKeyPrefix}{tipoNormalizado}:{documentoNormalizado}";
+    }
 }
