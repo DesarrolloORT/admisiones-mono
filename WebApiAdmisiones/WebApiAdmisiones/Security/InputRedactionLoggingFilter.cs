@@ -18,15 +18,7 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
         var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(httpContext);
         var origin = nameof(InputRedactionLoggingFilter);
 
-        // Reutilizar correlationId si ya existe (generado en middleware), o crear uno nuevo
-        if (!httpContext.Items.ContainsKey(LoggingHelper.CorrelationIdKey))
-        {
-            httpContext.Items[LoggingHelper.CorrelationIdKey] = Guid.NewGuid();
-        }
-        var correlationId = httpContext.Items.TryGetValue(LoggingHelper.CorrelationIdKey, out var storedId)
-            && storedId is Guid guidValue
-            ? guidValue
-            : Guid.NewGuid();
+        var correlationId = LoggingHelper.EnsureCorrelationId(httpContext);
         
         // Marcar que se logueó la entrada (para evitar duplicados en middleware)
         httpContext.Items[LoggingHelper.EntradaLoggedKey] = true;
