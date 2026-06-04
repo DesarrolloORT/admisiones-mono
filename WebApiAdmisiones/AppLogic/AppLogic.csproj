@@ -18,6 +18,7 @@
 	</ItemGroup>
   <ItemGroup>
 	  <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.9" />
+	  <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
 	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
   </ItemGroup>
 </Project>

@@ -11,6 +11,7 @@ using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace UnitTesting.Controllers
 {
@@ -144,8 +145,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<ICatalogosService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<CatalogosController>>();
-            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object, Mock.Of<IRedisCacheService>(), Mock.Of<IConfiguration>());
             serviceMock.Setup(s => s.ObtenerEncuestaInicial())
                 .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
                     new DtoEncuestaInicialCatalogosResponse
@@ -210,7 +210,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<ICatalogosService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<CatalogosController>>();
-            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object, Mock.Of<IRedisCacheService>(), Mock.Of<IConfiguration>());
 
             serviceMock.Setup(s => s.ObtenerTurnos(10, 20))
                 .ReturnsAsync(OperationResult<List<OfertaInscripcionDto>>.Ok(

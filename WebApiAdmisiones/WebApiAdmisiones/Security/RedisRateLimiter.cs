@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Security
 {

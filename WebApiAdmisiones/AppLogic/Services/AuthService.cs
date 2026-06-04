@@ -3,6 +3,7 @@ using AppLogic.IServices;
 using AppLogic.Utilities;
 using BusinessLogic.IServices;
 using LdapService.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 using Utilities;
 
@@ -19,6 +20,8 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IPasswordActivationService _passwordActivationService;
+    private readonly IHashTokenStore _hashTokenStore;
+    private readonly IServiceScopeFactory? _serviceScopeFactory;
 
     /// <summary>
     /// Constructor del servicio LDAP.
@@ -32,13 +35,17 @@ public class AuthService : IAuthService
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory admisionesUowFactory,
         ITokenService tokenService,
         IRefreshTokenService refreshTokenService,
-        IPasswordActivationService passwordActivationService)
+        IPasswordActivationService passwordActivationService,
+        IHashTokenStore hashTokenStore,
+        IServiceScopeFactory? serviceScopeFactory = null)
     {
         _ldap = ldap;
         _admisionesUowFactory = admisionesUowFactory;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
         _passwordActivationService = passwordActivationService;
+        _hashTokenStore = hashTokenStore;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     /// <summary>
@@ -119,7 +126,8 @@ public class AuthService : IAuthService
                     PrimerApellido = persona.PrimerApellido,
                     SegundoApellido = persona.SegundoApellido,
                     TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento
+                    Documento = persona.Documento,
+                    Email = persona.Email
                 },
                 // Estas propiedades son internas y se usan en el controlador para establecer las cookies
                 AccessToken = accessToken,
@@ -364,7 +372,8 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            if (string.IsNullOrWhiteSpace(persona.HashTokenPassword))
+            var storedHash = await _hashTokenStore.GetAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
+            if (string.IsNullOrWhiteSpace(storedHash))
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_04",
@@ -388,7 +397,7 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            persona.HashTokenPassword = null;
+            await _hashTokenStore.DeleteAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
             persona.FechaUltModifPassword = DateTime.Today;
             persona.UsuarioUltModifPassword = "ADMISIONES";
             uow.Personas.Update(persona);
@@ -415,7 +424,8 @@ public class AuthService : IAuthService
                     PrimerApellido = persona.PrimerApellido,
                     SegundoApellido = persona.SegundoApellido,
                     TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento
+                    Documento = persona.Documento,
+                    Email = persona.Email
                 },
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
@@ -464,5 +474,85 @@ public class AuthService : IAuthService
         }
 
         return days;
+    }
+
+    public async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
+    {
+        if (_serviceScopeFactory == null)
+        {
+            return await GenerarTokensParaPersonaCoreAsync(
+                codigoPersona,
+                _admisionesUowFactory,
+                _refreshTokenService);
+        }
+
+        using var scope = _serviceScopeFactory.CreateScope();
+        return await GenerarTokensParaPersonaCoreAsync(
+            codigoPersona,
+            scope.ServiceProvider.GetRequiredService<BusinessLogic.IDevartRepositories.IUnitOfWorkFactory>(),
+            scope.ServiceProvider.GetRequiredService<IRefreshTokenService>());
+    }
+
+    private async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaCoreAsync(
+        long codigoPersona,
+        BusinessLogic.IDevartRepositories.IUnitOfWorkFactory uowFactory,
+        IRefreshTokenService refreshTokenService)
+    {
+        try
+        {
+            using var uow = uowFactory.Create();
+            var persona = uow.Personas.GetByKey(codigoPersona);
+
+            if (persona == null)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "GEN_TOK_01",
+                    nameof(GenerarTokensParaPersonaAsync),
+                    "Usuario no encontrado en la base de datos.",
+                    404,
+                    default!);
+            }
+
+            var accessToken = _tokenService.GenerateAccessToken(persona);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenHash = _tokenService.HashToken(refreshToken);
+            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
+
+            await refreshTokenService.SaveRefreshTokenAsync(
+                codigoPersona,
+                SISTEMA,
+                refreshTokenHash,
+                DateTime.UtcNow.AddDays(refreshExpireDays));
+
+            return OperationResult<DtoAuthenticationResponse>.Ok(
+                new DtoAuthenticationResponse
+                {
+                    Persona = new DtoPersonaAuth
+                    {
+                        CodigoPersona = persona.CodigoPersona,
+                        PrimerNombre = persona.PrimerNombre,
+                        SegundoNombre = persona.SegundoNombre,
+                        PrimerApellido = persona.PrimerApellido,
+                        SegundoApellido = persona.SegundoApellido,
+                        TipoPersona = persona.TipoPersona,
+                        Documento = persona.Documento,
+                        Email = persona.Email
+                    },
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    RefreshTokenHash = refreshTokenHash,
+                    Message = "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras."
+                },
+                nameof(GenerarTokensParaPersonaAsync));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                "GEN_TOK_99",
+                nameof(GenerarTokensParaPersonaAsync),
+                $"Error al generar tokens: {ex.Message}",
+                500,
+                default!);
+        }
     }
 }

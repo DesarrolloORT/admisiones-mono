@@ -16,22 +16,6 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
-    public class RegistroConfirmarPersonaExistenteRequest
-    {
-        [Required]
-        public string TipoDocumento { get; set; } = string.Empty;
-
-        [Required]
-        public string Documento { get; set; } = string.Empty;
-
-        [Range(1, long.MaxValue)]
-        public long IdProducto { get; set; }
-
-        [Range(1, long.MaxValue)]
-        public long IdProceso { get; set; }
-    }
-
-    [ExcludeFromCodeCoverage]
     public class RegistroPersonaRequest
     {
         [Required]
@@ -39,12 +23,6 @@ namespace AppLogic.DTOs
 
         [Required]
         public string Documento { get; set; } = string.Empty;
-
-        [Range(1, long.MaxValue)]
-        public long IdProducto { get; set; }
-
-        [Range(1, long.MaxValue)]
-        public long IdProceso { get; set; }
 
         [Required]
         [MinLength(2)]
@@ -139,5 +117,12 @@ namespace AppLogic.DTOs
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool SolicitudAltaExistente { get; set; }
+
+        /// <summary>
+        /// Identificador de la sesión de registro. Debe enviarse en el header X-Flow-Id
+        /// en todos los pasos subsiguientes del flujo.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public string? FlowId { get; set; }
     }
 }

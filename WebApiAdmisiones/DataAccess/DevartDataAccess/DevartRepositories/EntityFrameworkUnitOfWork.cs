@@ -20,6 +20,7 @@ namespace DataAccess.DevartRepositories
     {
         protected DbContext context = null;
         private readonly DbConnectionContext _db;
+        private readonly bool _ownsContext;
 
         IPaisRepository _Paises;
 
@@ -141,10 +142,11 @@ namespace DataAccess.DevartRepositories
 
         IEncuestaIniRepository _EncuestaInis;
 
-        public EntityFrameworkUnitOfWork(DbContext _context, DbConnectionContext db)
+        public EntityFrameworkUnitOfWork(DbContext _context, DbConnectionContext db, bool ownsContext = true)
         {
             context = _context ?? throw new ArgumentNullException(nameof(_context));
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _ownsContext = ownsContext;
         }
 
         public DbContext Context
@@ -159,7 +161,10 @@ namespace DataAccess.DevartRepositories
         {
             if (context != null)
             {
-                context.Dispose();
+                if (_ownsContext)
+                {
+                    context.Dispose();
+                }
                 context = null;
             }
         }

@@ -8,6 +8,7 @@ using Sanitization.Code;
 using Utilities;
 using WebApiAdmisiones.Security;
 using StackExchange.Redis;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {

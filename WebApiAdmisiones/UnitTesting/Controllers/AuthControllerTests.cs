@@ -1,4 +1,4 @@
-﻿using AppLogic.DTOs;
+using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +9,7 @@ using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 using Xunit;
 
 namespace UnitTesting.Controllers
@@ -19,7 +20,9 @@ namespace UnitTesting.Controllers
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<ILogger<AuthController>> _loggerMock;
         private readonly Mock<ICurrentUserService> _currentUserMock;
-        private readonly Mock<IRedisRateLimiterService> _redisRateLimiterMock;
+        private readonly Mock<IDosFactoresAuthService> _dosFactoresServiceMock;
+        private readonly Mock<ILoginFlowService> _loginFlowServiceMock;
+        private readonly Mock<IRegistroFlowService> _registroFlowServiceMock;
         private readonly IConfiguration _configuration;
         private readonly AuthController _controller;
         private readonly DefaultHttpContext _httpContext;
@@ -30,35 +33,32 @@ namespace UnitTesting.Controllers
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _loggerMock = new Mock<ILogger<AuthController>>();
             _currentUserMock = new Mock<ICurrentUserService>();
-            _redisRateLimiterMock = new Mock<IRedisRateLimiterService>();
+            _dosFactoresServiceMock = new Mock<IDosFactoresAuthService>();
+            _loginFlowServiceMock = new Mock<ILoginFlowService>();
+            _registroFlowServiceMock = new Mock<IRegistroFlowService>();
             _httpContext = new DefaultHttpContext();
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["PasswordActivation:SessionMinutes"] = "15",
-                    ["Authentication:Login:RateLimitAccountAttempts"] = "5",
-                    ["Authentication:Login:RateLimitWindowMinutes"] = "15"
+                    ["PasswordActivation:SessionMinutes"] = "15"
                 })
                 .Build();
 
-            // Mock remote IP address para rate limiting
             _httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.168.1.100");
 
-            // Configurar mock de RedisRateLimiterService para permitir todos los intentos por defecto
-            _redisRateLimiterMock
-                .Setup(r => r.ValidateAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<int>(),
-                    It.IsAny<TimeSpan>()))
-                .ReturnsAsync(new RateLimitValidationResult
-                {
-                    IsAllowed = true,
-                    RemainingAttempts = 5,
-                    ResetTime = DateTimeOffset.UtcNow.AddMinutes(15),
-                    PartitionKey = "test-key"
-                });
+            // Setup por defecto: login exitoso sin cookies (los tests de Login lo sobreescriben)
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                    OperationResult<DtoAuthenticationResponse>.Ok(
+                        new DtoAuthenticationResponse
+                        {
+                            Persona = new DtoPersonaAuth { CodigoPersona = 1 },
+                            AccessToken = "token",
+                            RefreshToken = "refresh",
+                            RefreshTokenHash = "hash"
+                        },
+                        "EjecutarAsync")));
 
             _controller = new AuthController(
                 _authServiceMock.Object,
@@ -66,7 +66,9 @@ namespace UnitTesting.Controllers
                 _configuration,
                 _loggerMock.Object,
                 _currentUserMock.Object,
-                _redisRateLimiterMock.Object)
+                _dosFactoresServiceMock.Object,
+                _loginFlowServiceMock.Object,
+                _registroFlowServiceMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -107,12 +109,12 @@ namespace UnitTesting.Controllers
 
             _passwordActivationServiceMock
                 .Setup(s => s.ValidarSessionToken(string.Empty))
-                .Returns(OperationResult<long>.IsFailed(
+                .Returns(OperationResult<DtoValidatedSession>.IsFailed(
                     "ACT_SES_01",
                     nameof(IPasswordActivationService.ValidarSessionToken),
                     "Sesión temporal no encontrada.",
                     401,
-                    default));
+                    default!));
 
             var response = await _controller.CompletarPassword(request);
 
@@ -146,13 +148,10 @@ namespace UnitTesting.Controllers
                 RefreshToken = "test-refresh-token"
             };
 
-            var result = OperationResult<DtoAuthenticationResponse>.Ok(
-                authResponse,
-                nameof(IAuthService.AutenticarUsuarioLDAPAsync));
-
-            _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
-                .ReturnsAsync(result);
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -175,27 +174,15 @@ namespace UnitTesting.Controllers
 
             var authResponse = new DtoAuthenticationResponse
             {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = 12345,
-                    PrimerNombre = "Test",
-                    PrimerApellido = "User"
-                },
+                Persona = new DtoPersonaAuth { CodigoPersona = 12345 },
                 AccessToken = "test-access-token",
                 RefreshToken = "test-refresh-token"
             };
 
-            var result = OperationResult<DtoAuthenticationResponse>.Ok(
-                authResponse,
-                nameof(IAuthService.AutenticarUsuarioLDAPAsync));
-
-            _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
-                .ReturnsAsync(result);
-
-            _loggerMock
-                .Setup(l => l.IsEnabled(LogLevel.Information))
-                .Returns(true);
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -203,14 +190,6 @@ namespace UnitTesting.Controllers
             // Assert
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-            _loggerMock.Verify(
-                l => l.Log(
-                    LogLevel.Information,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("autenticado exitosamente")),
-                    null,
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
         }
 
         [Fact]
@@ -224,15 +203,14 @@ namespace UnitTesting.Controllers
                 Password = "wrongPassword"
             };
 
-            var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
-                errorCode: "AUTH_01",
-                originMethod: nameof(IAuthService.AutenticarUsuarioLDAPAsync),
-                message: "Credenciales inválidas",
-                httpCode: 401);
-
-            _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
-                .ReturnsAsync(result);
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.Fallo(
+                    OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        errorCode: "AUTH_01",
+                        originMethod: "EjecutarAsync",
+                        message: "Credenciales inv�lidas",
+                        httpCode: 401)));
 
             // Act
             var response = await _controller.Login(request);
@@ -253,13 +231,10 @@ namespace UnitTesting.Controllers
                 Password = "testPassword"
             };
 
-            var result = OperationResult<DtoAuthenticationResponse>.Ok(
-                null,
-                nameof(IAuthService.AutenticarUsuarioLDAPAsync));
-
-            _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
-                .ReturnsAsync(result);
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                    OperationResult<DtoAuthenticationResponse>.Ok(null, "EjecutarAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -363,7 +338,7 @@ namespace UnitTesting.Controllers
             var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
                 errorCode: "AUTH_02",
                 originMethod: nameof(IAuthService.RefrescarTokensAsync),
-                message: "Refresh token inválido",
+                message: "Refresh token inv�lido",
                 httpCode: 401);
 
             _authServiceMock
@@ -439,21 +414,14 @@ namespace UnitTesting.Controllers
                 Password = "password123"
             };
 
-            // Configurar mock para rechazar por rate limit
-            _redisRateLimiterMock
-                .Setup(r => r.ValidateAsync(
-                    "192.168.1.100",
-                    "CI",
-                    "12345678",
-                    5,
-                    It.IsAny<TimeSpan>()))
-                .ReturnsAsync(new RateLimitValidationResult
-                {
-                    IsAllowed = false,
-                    RemainingAttempts = 0,
-                    ResetTime = DateTimeOffset.UtcNow.AddMinutes(15),
-                    PartitionKey = "login-account:CI:12345678:ip:192.168.1.100"
-                });
+            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = DateTimeOffset.UtcNow.AddMinutes(15) };
+
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.FalloConRateLimit(
+                    OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
+                    headers));
 
             // Act
             var response = await _controller.Login(request);
@@ -461,11 +429,6 @@ namespace UnitTesting.Controllers
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(429, statusCodeResult.StatusCode);
-
-            // Verificar que NO se llamó al servicio de autenticación
-            _authServiceMock.Verify(
-                s => s.AutenticarUsuarioLDAPAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never);
         }
 
         [Fact]
@@ -481,24 +444,15 @@ namespace UnitTesting.Controllers
 
             var authResponse = new DtoAuthenticationResponse
             {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = 12345,
-                    PrimerNombre = "Juan",
-                    PrimerApellido = "Pérez",
-                    Documento = "12345678"
-                },
+                Persona = new DtoPersonaAuth { CodigoPersona = 12345 },
                 AccessToken = "access-token",
                 RefreshToken = "refresh-token"
             };
 
-            _authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password))
-                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
-                    authResponse,
-                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
-
-            // Mock ya configurado en constructor para permitir intentos
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -506,11 +460,6 @@ namespace UnitTesting.Controllers
             // Assert
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-
-            // Verificar que SÍ se llamó al servicio de autenticación
-            _authServiceMock.Verify(
-                s => s.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password),
-                Times.Once);
         }
 
         [Fact]
@@ -525,21 +474,14 @@ namespace UnitTesting.Controllers
             };
 
             var resetTime = DateTimeOffset.UtcNow.AddMinutes(15);
+            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = resetTime };
 
-            _redisRateLimiterMock
-                .Setup(r => r.ValidateAsync(
-                    "192.168.1.100",
-                    "CI",
-                    "12345678",
-                    5,
-                    It.IsAny<TimeSpan>()))
-                .ReturnsAsync(new RateLimitValidationResult
-                {
-                    IsAllowed = false,
-                    RemainingAttempts = 0,
-                    ResetTime = resetTime,
-                    PartitionKey = "login-account:CI:12345678:ip:192.168.1.100"
-                });
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(LoginFlowResult.FalloConRateLimit(
+                    OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
+                    headers));
 
             // Act
             var response = await _controller.Login(request);
@@ -555,3 +497,4 @@ namespace UnitTesting.Controllers
 
     }
 }
+

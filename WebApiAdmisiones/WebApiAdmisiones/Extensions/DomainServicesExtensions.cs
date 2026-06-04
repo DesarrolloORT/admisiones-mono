@@ -20,6 +20,7 @@ using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -105,6 +106,8 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPasswordActivationService, PasswordActivationService>();
+            services.AddScoped<IHashTokenStore, RedisHashTokenStore>();
+            services.AddScoped<IRegistroFlowService, RegistroFlowService>();
             services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
@@ -118,6 +121,12 @@ namespace WebApiAdmisiones.Extensions
             // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
+
+            // Servicio de autenticación de dos factores (2FA) por email.
+            services.AddScoped<IDosFactoresAuthService, DosFactoresAuthService>();
+
+            // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
+            services.AddScoped<ILoginFlowService, LoginFlowService>();
 
             return services;
         }

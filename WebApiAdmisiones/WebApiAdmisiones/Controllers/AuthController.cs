@@ -5,8 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Extensions;
-using ServiceCollectionExtensions = WebApiAdmisiones.Extensions.ServiceCollectionExtensions;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -18,9 +17,13 @@ namespace WebApiAdmisiones.Controllers
         IConfiguration configuration,
         ILogger<AuthController> logger,
         ICurrentUserService currentUser,
-        IRedisRateLimiterService redisRateLimiter)
+        IDosFactoresAuthService dosFactoresService,
+        ILoginFlowService loginFlowService,
+        IRegistroFlowService registroFlowService)
         : ApiBaseController<AuthController>(logger, currentUser)
     {
+        private const string NuevaPersonaSessionPurpose = "nueva-persona-session";
+
         #region AUTH
 
         /// <summary>
@@ -65,7 +68,9 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
+        [RequireCaptcha]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
@@ -82,71 +87,63 @@ namespace WebApiAdmisiones.Controllers
                     default!));
             }
 
-            // ✅ VALIDACIÓN 2/2: Rate Limit por IP + Documento (protección focal contra ataques a cuentas específicas)
-            // Nota: El middleware ya validó rate limit por IP (10 intentos, permite múltiples usuarios en misma red)
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var maxAccountAttempts = configuration.GetValue<int?>("Authentication:Login:RateLimitAccountAttempts") ?? 5;
-            var windowMinutes = configuration.GetValue<int?>("Authentication:Login:RateLimitWindowMinutes") ?? 15;
+            var captchaToken = HttpContext.Request.Headers[RequireCaptchaFilter.HeaderName].FirstOrDefault() ?? string.Empty;
+            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, captchaToken);
 
-            var accountRateLimit = await redisRateLimiter.ValidateAsync(
-                ipAddress,
-                request.TipoDocumento,
-                request.Documento,
-                maxAccountAttempts,
-                TimeSpan.FromMinutes(windowMinutes));
+            if (flowResult.RateLimitHeaders != null)
+                AgregarHeadersRateLimit(flowResult.RateLimitHeaders);
 
-            if (!accountRateLimit.IsAllowed)
+            if (flowResult.RequiresTwoFactor)
+                return Accepted(flowResult.TwoFactorResult!);
+
+            if (flowResult.SetCookies && flowResult.AuthResult?.Data != null)
+                SetAuthenticationCookies(flowResult.AuthResult.Data);
+
+            return ValidateResponse(flowResult.AuthResult!);
+        }
+
+        private void AgregarHeadersRateLimit(LoginRateLimitHeaders headers)
+        {
+            Response.Headers["X-RateLimit-Limit"] = headers.Limit.ToString();
+            Response.Headers["X-RateLimit-Remaining"] = headers.Remaining.ToString();
+
+            if (headers.ResetTime.HasValue)
             {
-                // Incrementar métrica Prometheus
-                ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
-
-                _logger.LogWarning(
-                    "Rate limit EXCEEDED for account {TipoDoc}:{Doc} from IP {IP}. " +
-                    "Attempts: {Remaining}/{Limit}. Partition: {Key}",
-                    request.TipoDocumento,
-                    request.Documento,
-                    ipAddress,
-                    accountRateLimit.RemainingAttempts,
-                    maxAccountAttempts,
-                    accountRateLimit.PartitionKey);
-
-                // Headers estándar de rate limiting
-                Response.Headers["X-RateLimit-Limit"] = maxAccountAttempts.ToString();
-                Response.Headers["X-RateLimit-Remaining"] = accountRateLimit.RemainingAttempts.ToString();
-
-                if (accountRateLimit.ResetTime.HasValue)
-                {
-                    Response.Headers["X-RateLimit-Reset"] = accountRateLimit.ResetTime.Value.ToUnixTimeSeconds().ToString();
-                    var retryAfter = (int)(accountRateLimit.ResetTime.Value - DateTimeOffset.UtcNow).TotalSeconds;
-                    Response.Headers["Retry-After"] = Math.Max(0, retryAfter).ToString();
-                }
-
-                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    "AUTH_RL_02",
-                    nameof(Login),
-                    $"Se superó el límite de intentos de inicio de sesión para esta cuenta ({maxAccountAttempts} intentos cada {windowMinutes} minutos). Por tu seguridad, intentá nuevamente más tarde.",
-                    429,
-                    default!));
+                Response.Headers["X-RateLimit-Reset"] = headers.ResetTime.Value.ToUnixTimeSeconds().ToString();
+                var retryAfter = (int)(headers.ResetTime.Value - DateTimeOffset.UtcNow).TotalSeconds;
+                Response.Headers["Retry-After"] = Math.Max(0, retryAfter).ToString();
             }
+        }
 
-            var result = await loginService.AutenticarUsuarioLDAPAsync(request.TipoDocumento, request.Documento, request.Password);
+        /// <summary>
+        /// Verifica el código de dos factores enviado por email y completa la autenticación.
+        /// Los tokens se devuelven como cookies HttpOnly seguras, no en el body de la respuesta.
+        /// </summary>
+        /// <param name="request">Session ID y código de verificación.</param>
+        /// <returns>Resultado de la verificación con información del usuario.</returns>
+        /// <response code="200">Verificación exitosa. Las cookies han sido establecidas.</response>
+        /// <response code="400">Datos de entrada inválidos.</response>
+        /// <response code="401">Código incorrecto, sesión expirada o máximo de intentos superado.</response>
+        /// <response code="429">Se superó el máximo de solicitudes de verificación.</response>
+        [AllowAnonymous]
+        [HttpPost("VerificarCodigo2FA")]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
+        public async Task<IActionResult> VerificarCodigo2FA([FromBody] DtoVerificarCodigo2FARequest request)
+        {
+            var result = await dosFactoresService.VerificarCodigoAsync(request.SessionId, request.Codigo);
 
             if (result.Success && result.Data != null)
             {
-
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Usuario {CodigoPersona} autenticado exitosamente", request.Documento);
-                }
-
                 SetAuthenticationCookies(result.Data);
-
-                // No retornar los tokens en el body.
-                // Los tokens ya fueron establecidos como cookies HttpOnly.
             }
 
             return ValidateResponse(result);
         }
+
 
         /// <summary>
         /// Valida el link de creacion y recuperación de password y crea una sesion temporal.
@@ -248,7 +245,80 @@ namespace WebApiAdmisiones.Controllers
                     default!));
             }
 
-            var result = await loginService.CompletarPasswordAsync(sessionResult.Data, request);
+            var session = sessionResult.Data;
+            if (session == null)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_06",
+                    nameof(CompletarPassword),
+                    "Sesion temporal invalida.",
+                    401,
+                    default!));
+            }
+
+            // Flujo nueva persona (registro diferido en Redis)
+            if (string.Equals(session.Purpose, NuevaPersonaSessionPurpose, StringComparison.Ordinal))
+            {
+                var flowId = session.FlowId;
+                if (string.IsNullOrWhiteSpace(flowId))
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "ACT_SES_NUP_01",
+                        nameof(CompletarPassword),
+                        "Sesion temporal sin FlowId valido.",
+                        401,
+                        default!));
+                }
+
+                var pending = await registroFlowService.GetPendingPersonaAsync(flowId);
+                if (pending == null)
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "NUP_COMP_01",
+                        nameof(CompletarPassword),
+                        "El registro pendiente expiró o ya fue completado. Por favor, iniciá el proceso de registro nuevamente.",
+                        401,
+                        default!));
+                }
+
+                var crearResult = await registroFlowService.CompletarNuevaPersona(pending, request.PasswordNueva);
+                if (!crearResult.Success)
+                {
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        crearResult.ErrorCode,
+                        nameof(CompletarPassword),
+                        crearResult.Message,
+                        crearResult.HttpCode,
+                        default!));
+                }
+
+                var tokenResult = await loginService.GenerarTokensParaPersonaAsync(crearResult.Data);
+                if (tokenResult.Success && tokenResult.Data != null)
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    SetAuthenticationCookies(tokenResult.Data);
+                    await registroFlowService.DeletePendingPersonaAsync(flowId);
+                    await registroFlowService.EliminarFlowSessionAsync(flowId);
+                }
+                return ValidateResponse(tokenResult);
+            }
+
+            // Flujo persona existente (password inicial o recuperación)
+            if (!session.CodigoPersona.HasValue)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_03",
+                    nameof(CompletarPassword),
+                    "Sesion temporal sin persona valida.",
+                    401,
+                    default!));
+            }
+
+            var result = await loginService.CompletarPasswordAsync(session.CodigoPersona.Value, request);
 
             if (result.Success && result.Data != null)
             {

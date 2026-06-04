@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices;
@@ -11,6 +12,7 @@ using BusinessLogic.IDevartRepositories;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using Utilities;
 
 namespace AppLogic.Services;
@@ -20,6 +22,8 @@ public class PasswordActivationService : IPasswordActivationService
     private const string ActivationPurpose = "password-activation";
     private const string RecoveryPurpose = "password-recovery";
     private const string SessionPurpose = "password-activation-session";
+    private const string NuevaPersonaPurpose = "nueva-persona-activacion";
+    private const string NuevaPersonaSessionPurpose = "nueva-persona-session";
     private const string Issuer = "WebApiAdmisiones";
     private const string Audience = "AdmisionesPassword";
     private const string SistemaMail = "ADMISIONES";
@@ -27,15 +31,27 @@ public class PasswordActivationService : IPasswordActivationService
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly IConfiguration _configuration;
     private readonly EnvioMail _envioMail;
+    private readonly IHashTokenStore _hashTokenStore;
+    private readonly IDatabase _redisDb;
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
 
     public PasswordActivationService(
         IUnitOfWorkFactory uowFactory,
         IConfiguration configuration,
-        EnvioMail envioMail)
+        EnvioMail envioMail,
+        IHashTokenStore hashTokenStore,
+        IConnectionMultiplexer redis)
     {
         _uowFactory = uowFactory;
         _configuration = configuration;
         _envioMail = envioMail;
+        _hashTokenStore = hashTokenStore;
+        _redisDb = redis.GetDatabase();
     }
 
     private sealed record PasswordMailFlow(
@@ -86,6 +102,48 @@ public class PasswordActivationService : IPasswordActivationService
                 "recuperación de contraseña"));
     }
 
+    /// <inheritdoc />
+    public async Task<OperationResult<object?>> EnviarMailNuevaPersonaAsync(string flowId, string email, string token)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return OperationResult<object?>.IsFailed(
+                    "ACT_NUP_01",
+                    nameof(EnviarMailNuevaPersonaAsync),
+                    "El email es obligatorio para enviar el link de activación.",
+                    400);
+            }
+
+            var link = PasswordActivationLinkBuilder.ConstruirLink(_configuration, token, flow: "registration");
+
+            // Reutilizar plantilla de activación pero sin persona (solo necesitamos el link)
+            var body = PasswordMailTemplateHelper.ConstruirMailActivacionSinPersona(link);
+            var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
+
+            await _envioMail.EnviarMail(
+                from,
+                new List<string> { email.Trim() },
+                "Crea tu contraseña de Admisiones",
+                body,
+                sistema: SistemaMail);
+
+            return OperationResult<object?>.IsSuccess(
+                null,
+                nameof(EnviarMailNuevaPersonaAsync),
+                "Registro realizado correctamente.");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object?>.IsFailed(
+                "ACT_NUP_99",
+                nameof(EnviarMailNuevaPersonaAsync),
+                $"Error al enviar link de activación para nueva persona: {ex.Message}",
+                500);
+        }
+    }
+
     private async Task<OperationResult<object?>> EnviarMailPasswordAsync(
         Persona persona,
         string originMethod,
@@ -111,10 +169,10 @@ public class PasswordActivationService : IPasswordActivationService
                     400);
             }
 
-            var token = GenerarToken(persona.CodigoPersona, flow.Purpose, ObtenerHorasExpiracion());
+            var token = GenerarTokenPersona(persona.CodigoPersona, flow.Purpose, ObtenerHorasExpiracion());
             var hash = HashToken(token);
 
-            var uow = _uowFactory.Create();
+            using var uow = _uowFactory.Create();
             var personaDb = uow.Personas.GetByKey(persona.CodigoPersona);
             if (personaDb == null)
             {
@@ -125,8 +183,11 @@ public class PasswordActivationService : IPasswordActivationService
                     404);
             }
 
-            personaDb.HashTokenPassword = hash;
-            uow.Save();
+            // Almacenar hash en Redis
+            await _hashTokenStore.StoreAsync(
+                persona.CodigoPersona.ToString(CultureInfo.InvariantCulture),
+                hash,
+                ObtenerHorasExpiracion());
 
             var link = PasswordActivationLinkBuilder.ConstruirLink(_configuration, token, flow.QueryFlow);
             var body = flow.ConstruirBody(persona, link);
@@ -170,6 +231,14 @@ public class PasswordActivationService : IPasswordActivationService
 
             var principal = ValidarJwt(token);
             var purpose = principal.FindFirst("purpose")?.Value;
+
+            // Flujo nueva persona (sub = flowId)
+            if (string.Equals(purpose, NuevaPersonaPurpose, StringComparison.Ordinal))
+            {
+                return ActivarTokenNuevaPersonaAsync(token, principal);
+            }
+
+            // Flujo persona existente (sub = codigoPersona)
             if (!EsPurposeLinkPasswordValido(purpose))
             {
                 return Task.FromResult(OperationResult<DtoPasswordActivationSession>.IsFailed(
@@ -191,31 +260,7 @@ public class PasswordActivationService : IPasswordActivationService
                     default!));
             }
 
-            var uow = _uowFactory.Create();
-            var persona = uow.Personas.GetByKey(codigoPersona.Value);
-            var tokenHash = HashToken(token);
-            if (persona == null ||
-                string.IsNullOrWhiteSpace(persona.HashTokenPassword) ||
-                !string.Equals(persona.HashTokenPassword, tokenHash, StringComparison.Ordinal))
-            {
-                return Task.FromResult(OperationResult<DtoPasswordActivationSession>.IsFailed(
-                    "ACT_LINK_04",
-                    nameof(ActivarLinkPasswordAsync),
-                    "El link de activación es inválido o ya fue utilizado.",
-                    401,
-                    default!));
-            }
-
-            var sessionToken = GenerarToken(codigoPersona.Value, SessionPurpose, TimeSpan.FromMinutes(ObtenerMinutosSesion()));
-            var response = new DtoPasswordActivationSession
-            {
-                CodigoPersona = codigoPersona.Value,
-                SessionToken = sessionToken
-            };
-
-            return Task.FromResult(OperationResult<DtoPasswordActivationSession>.Ok(
-                response,
-                nameof(ActivarLinkPasswordAsync)));
+            return ActivarTokenPersonaExistenteAsync(token, codigoPersona.Value);
         }
         catch (SecurityTokenExpiredException)
         {
@@ -246,75 +291,198 @@ public class PasswordActivationService : IPasswordActivationService
         }
     }
 
-    public OperationResult<long> ValidarSessionToken(string sessionToken)
+    private async Task<OperationResult<DtoPasswordActivationSession>> ActivarTokenPersonaExistenteAsync(
+        string token,
+        long codigoPersona)
+    {
+        var tokenHash = HashToken(token);
+        var storedHash = await _hashTokenStore.GetAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
+
+        if (string.IsNullOrWhiteSpace(storedHash) ||
+            !string.Equals(storedHash, tokenHash, StringComparison.Ordinal))
+        {
+            return OperationResult<DtoPasswordActivationSession>.IsFailed(
+                "ACT_LINK_04",
+                nameof(ActivarLinkPasswordAsync),
+                "El link de activación es inválido o ya fue utilizado.",
+                401,
+                default!);
+        }
+
+        var sessionToken = GenerarTokenPersona(codigoPersona, SessionPurpose, TimeSpan.FromMinutes(ObtenerMinutosSesion()));
+        var response = new DtoPasswordActivationSession
+        {
+            CodigoPersona = codigoPersona,
+            SessionToken = sessionToken
+        };
+
+        return OperationResult<DtoPasswordActivationSession>.Ok(response, nameof(ActivarLinkPasswordAsync));
+    }
+
+    private async Task<OperationResult<DtoPasswordActivationSession>> ActivarTokenNuevaPersonaAsync(
+        string token,
+        ClaimsPrincipal principal)
+    {
+        var flowId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrWhiteSpace(flowId))
+        {
+            return OperationResult<DtoPasswordActivationSession>.IsFailed(
+                "ACT_LINK_NUP_01",
+                nameof(ActivarLinkPasswordAsync),
+                "El token no contiene un FlowId válido.",
+                401,
+                default!);
+        }
+
+        var pendingKey = $"registro:pending:{flowId}";
+        var pendingJson = await _redisDb.StringGetAsync(pendingKey);
+
+        if (!pendingJson.HasValue)
+        {
+            return OperationResult<DtoPasswordActivationSession>.IsFailed(
+                "ACT_LINK_NUP_02",
+                nameof(ActivarLinkPasswordAsync),
+                "El link de activación es inválido, ya fue utilizado o expiró.",
+                401,
+                default!);
+        }
+
+        RegistroPendingPersona? pending;
+        try
+        {
+            pending = JsonSerializer.Deserialize<RegistroPendingPersona>(pendingJson.ToString(), JsonOptions);
+        }
+        catch
+        {
+            pending = null;
+        }
+
+        if (pending == null)
+        {
+            return OperationResult<DtoPasswordActivationSession>.IsFailed(
+                "ACT_LINK_NUP_03",
+                nameof(ActivarLinkPasswordAsync),
+                "No se pudo recuperar los datos del registro pendiente.",
+                500,
+                default!);
+        }
+
+        var tokenHash = HashToken(token);
+        if (!string.Equals(pending.TokenHash, tokenHash, StringComparison.Ordinal))
+        {
+            return OperationResult<DtoPasswordActivationSession>.IsFailed(
+                "ACT_LINK_NUP_04",
+                nameof(ActivarLinkPasswordAsync),
+                "El link de activación es inválido o ya fue utilizado.",
+                401,
+                default!);
+        }
+
+        var sessionToken = GenerarTokenFlowId(flowId, NuevaPersonaSessionPurpose, TimeSpan.FromMinutes(ObtenerMinutosSesion()));
+        var response = new DtoPasswordActivationSession
+        {
+            Documento = pending.Documento,
+            SessionToken = sessionToken
+        };
+
+        return OperationResult<DtoPasswordActivationSession>.Ok(response, nameof(ActivarLinkPasswordAsync));
+    }
+
+    public OperationResult<DtoValidatedSession> ValidarSessionToken(string sessionToken)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(sessionToken))
             {
-                return OperationResult<long>.IsFailed(
+                return OperationResult<DtoValidatedSession>.IsFailed(
                     "ACT_SES_01",
                     nameof(ValidarSessionToken),
                     "Sesión temporal no encontrada.",
                     401,
-                    default);
+                    default!);
             }
 
             var principal = ValidarJwt(sessionToken);
             var purpose = principal.FindFirst("purpose")?.Value;
+
+            if (string.Equals(purpose, NuevaPersonaSessionPurpose, StringComparison.Ordinal))
+            {
+                var flowId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                    ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrWhiteSpace(flowId))
+                {
+                    return OperationResult<DtoValidatedSession>.IsFailed(
+                        "ACT_SES_NUP_01",
+                        nameof(ValidarSessionToken),
+                        "Sesión temporal sin FlowId válido.",
+                        401,
+                        default!);
+                }
+
+                return OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { FlowId = flowId, Purpose = NuevaPersonaSessionPurpose },
+                    nameof(ValidarSessionToken));
+            }
+
             if (!string.Equals(purpose, SessionPurpose, StringComparison.Ordinal))
             {
-                return OperationResult<long>.IsFailed(
+                return OperationResult<DtoValidatedSession>.IsFailed(
                     "ACT_SES_02",
                     nameof(ValidarSessionToken),
                     "Sesión temporal inválida.",
                     401,
-                    default);
+                    default!);
             }
 
             var codigoPersona = ObtenerCodigoPersona(principal);
             if (!codigoPersona.HasValue)
             {
-                return OperationResult<long>.IsFailed(
+                return OperationResult<DtoValidatedSession>.IsFailed(
                     "ACT_SES_03",
                     nameof(ValidarSessionToken),
                     "Sesión temporal sin persona válida.",
                     401,
-                    default);
+                    default!);
             }
 
-            return OperationResult<long>.Ok(codigoPersona.Value, nameof(ValidarSessionToken));
+            return OperationResult<DtoValidatedSession>.Ok(
+                new DtoValidatedSession { CodigoPersona = codigoPersona.Value, Purpose = SessionPurpose },
+                nameof(ValidarSessionToken));
         }
         catch (SecurityTokenExpiredException)
         {
-            return OperationResult<long>.IsFailed(
+            return OperationResult<DtoValidatedSession>.IsFailed(
                 "ACT_SES_04",
                 nameof(ValidarSessionToken),
                 "La sesión temporal expiró.",
                 401,
-                default);
+                default!);
         }
         catch (Exception ex) when (ex is SecurityTokenException || ex is ArgumentException)
         {
-            return OperationResult<long>.IsFailed(
+            return OperationResult<DtoValidatedSession>.IsFailed(
                 "ACT_SES_05",
                 nameof(ValidarSessionToken),
                 "Sesión temporal inválida.",
                 401,
-                default);
+                default!);
         }
         catch (Exception ex)
         {
-            return OperationResult<long>.IsFailed(
+            return OperationResult<DtoValidatedSession>.IsFailed(
                 "ACT_SES_99",
                 nameof(ValidarSessionToken),
                 $"Error al validar sesión temporal: {ex.Message}",
                 500,
-                default);
+                default!);
         }
     }
 
-    private static string GenerarToken(long codigoPersona, string purpose, TimeSpan duration)
+    /// <summary>Genera un JWT donde el subject es un codigoPersona (long).</summary>
+    private static string GenerarTokenPersona(long codigoPersona, string purpose, TimeSpan duration)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -334,6 +502,31 @@ public class PasswordActivationService : IPasswordActivationService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>Genera un JWT donde el subject es un flowId (string GUID).</summary>
+    private static string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, flowId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new Claim("purpose", purpose)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: Issuer,
+            audience: Audience,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(duration),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    internal static string GenerarTokenFlowIdPublic(string flowId, string purpose, TimeSpan duration)
+        => GenerarTokenFlowId(flowId, purpose, duration);
 
     private static ClaimsPrincipal ValidarJwt(string token)
     {
@@ -385,6 +578,8 @@ public class PasswordActivationService : IPasswordActivationService
         return secret;
     }
 
+    internal static string ObtenerSecretKeyPublic() => ObtenerSecretKey();
+
     private TimeSpan ObtenerHorasExpiracion()
     {
         var hours = _configuration.GetValue<double?>("PasswordActivation:ExpireHours") ?? 24;
@@ -396,7 +591,7 @@ public class PasswordActivationService : IPasswordActivationService
         return _configuration.GetValue<double?>("PasswordActivation:SessionMinutes") ?? 15;
     }
 
-    private static string HashToken(string token)
+    internal static string HashToken(string token)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         return Convert.ToBase64String(bytes);

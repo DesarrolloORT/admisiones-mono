@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
 using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Controllers
 {

@@ -1,6 +1,7 @@
 using AppLogic.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace AppLogic.DTOs
 {
@@ -143,5 +144,31 @@ namespace AppLogic.DTOs
         /// Documento de identidad.
         /// </summary>
         public string? Documento { get; set; }
+
+        /// <summary>
+        /// Email de la persona. Uso interno — no se expone en la respuesta. Usado para flujo 2FA.
+        /// </summary>
+        [JsonIgnore]
+        public string? Email { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para completar la verificación de dos factores.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class DtoVerificarCodigo2FARequest
+    {
+        /// <summary>
+        /// Identificador de sesión 2FA devuelto por el endpoint de Login.
+        /// </summary>
+        [Required(ErrorMessage = "El session ID es requerido.")]
+        public required string SessionId { get; set; }
+
+        /// <summary>
+        /// Código de verificación recibido por email.
+        /// </summary>
+        [Required(ErrorMessage = "El código es requerido.")]
+        [Redact]
+        public required string Codigo { get; set; }
     }
 }

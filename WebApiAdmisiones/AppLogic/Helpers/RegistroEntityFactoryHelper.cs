@@ -33,9 +33,7 @@ namespace AppLogic.Helpers
                 EmailSolicitudAlta = DocumentUtils.Normalizar(request.Mail),
                 FechaNacimientoSolicituAlta = request.FechaNacimiento.Date,
                 TipoDocumentoSolicitudAlta = DocumentUtils.Normalizar(request.TipoDocumento),
-                IdProducto = request.IdProducto,
                 IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
-                IdProceso = request.IdProceso
             };
         }
 
@@ -69,6 +67,49 @@ namespace AppLogic.Helpers
                 CodigoPais = request.CodigoPais,
                 CodigoEstado = request.CodigoEstado,
                 CodigoCiudad = request.CodigoCiudad,
+                CodigoFuenteDatos = InscripcionesConstants.InteresProducto.CodigoFuenteDatosAdmisiones,
+                RecibeCartasPersona = "SI",
+                RecibeEmailsPersona = "SI",
+                UsuarioUltimaActualizacion = Constantes.kUSERNAME_USUARIO_ADMISIONES,
+                FechaUltimaActualizacion = now.Date,
+                HoraUltimaActualizacion = now.ToString(InscripcionesConstants.InteresProducto.FormatoHora, CultureInfo.InvariantCulture),
+                Ciudad = ciudad
+            };
+        }
+
+        /// <summary>
+        /// Crea una entidad Persona a partir de los datos de registro pendiente en Redis.
+        /// </summary>
+        public static Persona CrearPersona(long codigoPersona, RegistroPendingPersona data, Ciudad ciudad, DateTime now)
+        {
+            var primerNombre = DocumentUtils.FormatoCapital(data.PrimerNombre);
+            var segundoNombre = DocumentUtils.FormatoCapital(data.SegundoNombre);
+            var primerApellido = DocumentUtils.FormatoCapital(data.PrimerApellido);
+            var segundoApellido = DocumentUtils.FormatoCapital(data.SegundoApellido);
+
+            return new Persona
+            {
+                CodigoPersona = codigoPersona,
+                CodigoVigencia = InscripcionesConstants.InteresProducto.CodigoVigenciaActiva,
+                TipoPersona = InscripcionesConstants.InteresProducto.TipoPersonaSgi,
+                PrimerNombre = primerNombre,
+                SegundoNombre = segundoNombre,
+                PrimerApellido = primerApellido,
+                SegundoApellido = segundoApellido,
+                PrimerNombreMay = DocumentUtils.NormalizarMayusculas(primerNombre),
+                SegundoNombreMay = DocumentUtils.NormalizarMayusculas(segundoNombre),
+                PrimerApellidoMay = DocumentUtils.NormalizarMayusculas(primerApellido),
+                SegundoApellidoMay = DocumentUtils.NormalizarMayusculas(segundoApellido),
+                FechaNacimiento = data.FechaNacimiento.Date,
+                Sexo = DocumentUtils.Normalizar(data.Sexo),
+                Direccion = DocumentUtils.Normalizar(data.Direccion),
+                Telefono1 = DocumentUtils.Normalizar(data.Telefono1),
+                Email = DocumentUtils.Normalizar(data.Email),
+                Documento = DocumentUtils.Normalizar(data.Documento),
+                TipoDocumento = DocumentUtils.Normalizar(data.TipoDocumento),
+                CodigoPais = data.CodigoPais,
+                CodigoEstado = data.CodigoEstado,
+                CodigoCiudad = data.CodigoCiudad,
                 CodigoFuenteDatos = InscripcionesConstants.InteresProducto.CodigoFuenteDatosAdmisiones,
                 RecibeCartasPersona = "SI",
                 RecibeEmailsPersona = "SI",

@@ -1,5 +1,6 @@
 using StackExchange.Redis;
 using System.Text.Json;
+using WebApiAdmisiones.Security.interfaces;
 
 namespace WebApiAdmisiones.Security
 {

@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace AppLogic.Helpers;
 
-internal static class PasswordActivationLinkBuilder
+public static class PasswordActivationLinkBuilder
 {
     public static string ConstruirLink(IConfiguration configuration, string token, string? flow = null)
     {
