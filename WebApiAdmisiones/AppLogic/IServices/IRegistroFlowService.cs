@@ -37,13 +37,6 @@ public interface IRegistroFlowService
         RegistroPersonaRequest request,
         string flowId);
 
-    /// <summary>
-    /// Orquesta la confirmación de una persona existente: registra interés, crea usuario LDAP y envía email.
-    /// </summary>
-    Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(
-        RegistroConfirmarPersonaExistenteRequest request,
-        string flowId);
-
     /// <summary>Retorna los datos de una persona pendiente en Redis, o null si no existe/expiró.</summary>
     Task<RegistroPendingPersona?> GetPendingPersonaAsync(string flowId);
 

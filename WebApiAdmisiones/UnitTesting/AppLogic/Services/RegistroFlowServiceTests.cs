@@ -114,8 +114,6 @@ namespace UnitTesting.AppLogic.Services
             {
                 TipoDocumento = "CI",
                 Documento = "12345672",
-                IdProducto = 10,
-                IdProceso = 20,
                 PrimerApellido = "Perez",
                 PrimerNombre = "Ana",
                 FechaNacimiento = new DateTime(1990, 1, 1),

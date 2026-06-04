@@ -248,8 +248,6 @@ public class RegistroFlowService : IRegistroFlowService
             FlowId = flowIdPending,
             TipoDocumento = request.TipoDocumento,
             Documento = request.Documento,
-            IdProducto = request.IdProducto,
-            IdProceso = request.IdProceso,
             PrimerApellido = request.PrimerApellido,
             SegundoApellido = request.SegundoApellido,
             PrimerNombre = request.PrimerNombre,
@@ -293,37 +291,6 @@ public class RegistroFlowService : IRegistroFlowService
         return OperationResult<RegistroFlowResult>.Ok(
             new RegistroFlowResult("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."),
             nameof(ConfirmarNuevaPersonaAsync));
-    }
-
-    // ───── ConfirmarPersonaExistente ────────────────────────────────────────
-
-    public async Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(
-        RegistroConfirmarPersonaExistenteRequest request,
-        string flowId)
-    {
-        if (request == null)
-        {
-            return await _registroService.ConfirmarPersonaExistenteAsync(request!);
-        }
-
-        var flowDocumentoValidation = await ValidarDocumentoFlowAsync(
-            flowId,
-            request.TipoDocumento,
-            request.Documento,
-            nameof(ConfirmarPersonaExistenteAsync));
-        if (flowDocumentoValidation != null)
-        {
-            return flowDocumentoValidation;
-        }
-
-        var result = await _registroService.ConfirmarPersonaExistenteAsync(request);
-
-        if (result.Success)
-        {
-            await ActualizarStepAsync(flowId, "confirmado");
-        }
-
-        return result;
     }
 
     // ───── PendingPersona ──────────────────────────────────────────────────

@@ -188,6 +188,17 @@ namespace UnitTesting.AppLogic.Services
             personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
+            _passwordActivationServiceMock
+                .Setup(s => s.EnviarMailLinkPasswordAsync(
+                    It.Is<Persona>(p => p.CodigoPersona == 123),
+                    nameof(IRegistroService.VerificarIdentidadAsync)))
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(IRegistroService.VerificarIdentidadAsync),
+                    "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."));
 
             var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
             {
@@ -199,6 +210,10 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Null(result.Data);
+            _ldapMock.Verify(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()), Times.Once);
+            _passwordActivationServiceMock.Verify(
+                s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), nameof(IRegistroService.VerificarIdentidadAsync)),
+                Times.Once);
         }
 
         [Fact]
@@ -219,6 +234,10 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.False(result.Success);
             Assert.Equal("REG_PERSONA_VERIF_01", result.ErrorCode);
+            _ldapMock.Verify(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()), Times.Never);
+            _passwordActivationServiceMock.Verify(
+                s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
         }
 
         [Fact]
@@ -265,91 +284,96 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPersonaExistente_InvalidProduct_ReturnsFailure()
+        public async Task ConfirmarSolicitudAlta_DoesNotRequireProductOrProcess()
         {
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.EsProductoValidoParaInteres(99)).Returns(false);
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+            SolicitudAlta? solicitudAgregada = null;
+            var solicitudAltaRepo = new Mock<ISolicitudAltaRepository>();
+            solicitudAltaRepo
+                .Setup(r => r.Add(It.IsAny<SolicitudAlta>()))
+                .Callback<SolicitudAlta>(s => solicitudAgregada = s);
+            _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_SOLICITUD_ALTA))
+                .Returns(1000);
 
-            var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
-            {
-                TipoDocumento = "CI",
-                Documento = "1234567-2",
-                IdProducto = 99,
-                IdProceso = 20
-            });
+            var result = await _service.ConfirmarSolicitudAltaAsync(CrearRegistroPersonaRequest("PS", "A123"));
 
-            Assert.False(result.Success);
-            Assert.Equal("REG_PRODUCTO_01", result.ErrorCode);
+            Assert.True(result.Success);
+            Assert.NotNull(solicitudAgregada);
+            Assert.Null(solicitudAgregada!.IdProducto);
+            Assert.Null(solicitudAgregada.IdProceso);
+            _uowMock.Verify(u => u.Productos, Times.Never);
+            _uowMock.Verify(u => u.Procesos, Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 
         [Fact]
-        public async Task ConfirmarPersonaExistente_ExistingWithoutLdap_OnlyRequiresProductAndProcess()
+        public async Task CompletarNuevaPersonaAsync_DoesNotCreateInteresOrActividad()
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            var productoRepo = new Mock<IProductoRepository>();
-            var procesoRepo = new Mock<IProcesoRepository>();
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            var interesRepo = new Mock<IIntereRepository>();
-            var interesProductoRepo = new Mock<IInteresProductoRepository>();
-            var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
-            var actividadRepo = new Mock<IActividadRepository>();
-            var accionRepo = new Mock<IAccionRepository>();
-
-            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
-            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
-            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
-            inscriptoRepo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns(default(Inscripto)!);
-            interesRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns([]);
-            personaAdmiteRepo.Setup(r => r.GetByKey(123)).Returns(default(PersonaAdmite)!);
-
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-            _uowMock.Setup(u => u.Interes).Returns(interesRepo.Object);
-            _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
-            _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
             _dbConnectionContextMock
-                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES))
-                .Returns(1000);
-            _dbConnectionContextMock
-                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_ACTIVIDAD))
-                .Returns(2000);
-            _dbConnectionContextMock
-                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_ACCION))
-                .Returns(3000);
-            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA))
+                .Returns(123);
             _ldapMock
                 .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
                 .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
-            _passwordActivationServiceMock
-                .Setup(s => s.EnviarMailLinkPasswordAsync(
-                    It.Is<Persona>(p => p.CodigoPersona == 123),
-                    nameof(IRegistroService.ConfirmarPersonaExistenteAsync)))
-                .ReturnsAsync(OperationResult<object?>.IsSuccess(
-                    null,
-                    nameof(IRegistroService.ConfirmarPersonaExistenteAsync),
-                    "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."));
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync("123", "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
 
-            var result = await _service.ConfirmarPersonaExistenteAsync(new RegistroConfirmarPersonaExistenteRequest
+            var result = await _service.CompletarNuevaPersonaAsync(new RegistroPendingPersona
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
-                IdProducto = 10,
-                IdProceso = 20
-            });
+                PrimerApellido = "Perez",
+                PrimerNombre = "Ana",
+                FechaNacimiento = new DateTime(1990, 1, 1),
+                Sexo = "F",
+                Direccion = "Calle 1",
+                Telefono1 = "099123456",
+                Email = "ana@example.com",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3
+            }, "NuevaPassword1!");
 
             Assert.True(result.Success);
-            Assert.Equal("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña.", result.Message);
-            interesRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Once);
-            interesProductoRepo.Verify(r => r.Add(It.IsAny<InteresProducto>()), Times.Once);
-            _passwordActivationServiceMock.Verify(
-                s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), nameof(IRegistroService.ConfirmarPersonaExistenteAsync)),
-                Times.Once);
+            Assert.Equal(123, result.Data);
+            _uowMock.Verify(u => u.Interes, Times.Never);
+            _uowMock.Verify(u => u.InteresProductos, Times.Never);
+            _uowMock.Verify(u => u.PersonaAdmites, Times.Never);
+            _uowMock.Verify(u => u.Actividads, Times.Never);
+            _uowMock.Verify(u => u.Accions, Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public async Task VerificarIdentidad_ExistingLdapUser_ReturnsConflict()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(true);
+
+            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                Mail = "ana@example.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_USUARIO_01", result.ErrorCode);
+            _ldapMock.Verify(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()), Times.Never);
+            _passwordActivationServiceMock.Verify(
+                s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), It.IsAny<string>()),
+                Times.Never);
         }
 
         private static Persona CrearPersonaExistente()
@@ -366,5 +390,23 @@ namespace UnitTesting.AppLogic.Services
                 CodigoVigencia = "SI"
             };
         }
+
+        private static RegistroPersonaRequest CrearRegistroPersonaRequest(string tipoDocumento, string documento)
+            => new()
+            {
+                TipoDocumento = tipoDocumento,
+                Documento = documento,
+                PrimerApellido = "Perez",
+                PrimerNombre = "Ana",
+                FechaNacimiento = new DateTime(1990, 1, 1),
+                Sexo = "F",
+                Direccion = "Calle 1",
+                Telefono1 = "099123456",
+                Mail = "ana@example.com",
+                VerificacionMail = "ana@example.com",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3
+            };
     }
 }

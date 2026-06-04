@@ -68,7 +68,8 @@ namespace WebApiAdmisiones.Controllers
         /// Verifica la identidad de una persona existente.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico para confirmar que quien continua el registro conoce los datos requeridos de la persona encontrada por documento. El front debe usarlo antes de confirmar una persona existente.
+        /// Endpoint publico para confirmar que quien continua el registro conoce los datos requeridos de la persona encontrada por documento.
+        /// Si la identidad es valida, se crea el usuario LDAP y se envia el mail de activacion de password.
         /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluarDocumento.
         /// </remarks>
         /// <param name="request">Datos de validacion de identidad asociados a la persona.</param>
@@ -105,7 +106,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Success && flowId != null)
             {
-                await registroFlowService.ActualizarStepAsync(flowId, "identidad_verificada");
+                await registroFlowService.ActualizarStepAsync(flowId, "confirmado");
             }
 
             return ValidateResponse(result);
@@ -155,41 +156,15 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Confirma el registro de una persona ya existente.
-        /// </summary>
-        /// <remarks>
-        /// Endpoint publico protegido por captcha. El front lo usa despues de evaluar documento y verificar identidad para crear o actualizar el interes/solicitud de registro de una persona existente.
-        /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluarDocumento.
-        /// </remarks>
-        /// <param name="request">Datos necesarios para confirmar la persona existente en el flujo de registro.</param>
-        /// <returns>Resultado de la confirmacion del registro.</returns>
-        /// <response code="200">Persona existente confirmada correctamente.</response>
-        /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
-        [AllowAnonymous]
-        [RequireCaptcha]
-        [HttpPost("ConfirmarPersonaExistente")]
-        [ProducesResponseType(typeof(OperationResult<object>), 200)]
-        [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmarPersonaExistente([FromBody] RegistroConfirmarPersonaExistenteRequest request)
-        {
-            var flowId = ObtenerFlowId();
-            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "identidad_verificada");
-            if (flowValidation != null) return ValidateResponse(flowValidation);
-
-            var result = await registroFlowService.ConfirmarPersonaExistenteAsync(request, flowId!);
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
         /// Confirma el registro de una persona nueva.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico protegido por captcha. El front lo usa cuando el documento evaluado no corresponde a una persona existente y debe enviar los datos personales, ubicacion y seleccion academica.
+        /// Endpoint publico protegido por captcha. El front lo usa cuando el documento evaluado no corresponde a una persona existente y debe enviar los datos personales y ubicacion.
         /// La persona NO se crea en la base de datos todavía; los datos se guardan temporalmente en Redis.
         /// La persona se crea definitivamente cuando el usuario establece su contraseña (CompletarPassword).
         /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluarDocumento.
         /// </remarks>
-        /// <param name="request">Datos personales y academicos de la nueva persona.</param>
+        /// <param name="request">Datos personales de la nueva persona.</param>
         /// <returns>Resultado de la confirmacion. La persona queda pendiente hasta que se establezca la contraseña.</returns>
         /// <response code="200">Persona nueva confirmada correctamente. Se envió mail de activación.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>

@@ -42,27 +42,6 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task ConfirmarPersonaExistente_ReturnsOk()
-        {
-            var serviceMock = new Mock<IRegistroService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<RegistroController>>();
-            var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new RegistroConfirmarPersonaExistenteRequest { TipoDocumento = "CI", Documento = "1234567-2" };
-
-            serviceMock.Setup(s => s.ConfirmarPersonaExistenteAsync(request))
-                .ReturnsAsync(OperationResult<object?>.IsSuccess(
-                    null,
-                    nameof(IRegistroService.ConfirmarPersonaExistenteAsync),
-                    "Registro realizado correctamente."));
-
-            var response = await controller.ConfirmarPersonaExistente(request);
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
-        [Fact]
         public async Task ConfirmarNuevaPersona_ReturnsOk()
         {
             var serviceMock = new Mock<IRegistroService>();
@@ -136,7 +115,6 @@ namespace UnitTesting.Controllers
         [Theory]
         [InlineData(nameof(RegistroController.EvaluarDocumento))]
         [InlineData(nameof(RegistroController.VerificarIdentidad))]
-        [InlineData(nameof(RegistroController.ConfirmarPersonaExistente))]
         [InlineData(nameof(RegistroController.ConfirmarNuevaPersona))]
         [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta))]
         public void PublicEndpoints_HaveAllowAnonymous(string methodName)
@@ -150,7 +128,6 @@ namespace UnitTesting.Controllers
         }
 
         [Theory]
-        [InlineData(nameof(RegistroController.ConfirmarPersonaExistente))]
         [InlineData(nameof(RegistroController.ConfirmarNuevaPersona))]
         [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta))]
         public void ConfirmarEndpoints_HaveRequireCaptcha(string methodName)
@@ -334,8 +311,6 @@ namespace UnitTesting.Controllers
                 .ReturnsAsync(OperationResult<RegistroFlowResult>.Ok(
                     new RegistroFlowResult("Registro realizado correctamente."),
                     "ConfirmarNuevaPersonaAsync"));
-            mock.Setup(f => f.ConfirmarPersonaExistenteAsync(It.IsAny<RegistroConfirmarPersonaExistenteRequest>(), It.IsAny<string>()))
-                .ReturnsAsync(OperationResult<object?>.IsSuccess(null, "ConfirmarPersonaExistenteAsync", "OK."));
             return mock.Object;
         }
     }

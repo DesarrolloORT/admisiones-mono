@@ -5,7 +5,6 @@ namespace AppLogic.Services;
 
 /// <summary>
 /// Almacena hashes de tokens de activación en Redis.
-/// Reemplaza la columna t_persona.HashTokenPassword.
 /// Redis key: registro:hash-token:{key}
 /// </summary>
 public class RedisHashTokenStore : IHashTokenStore

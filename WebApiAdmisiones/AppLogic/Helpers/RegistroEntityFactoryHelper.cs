@@ -33,9 +33,7 @@ namespace AppLogic.Helpers
                 EmailSolicitudAlta = DocumentUtils.Normalizar(request.Mail),
                 FechaNacimientoSolicituAlta = request.FechaNacimiento.Date,
                 TipoDocumentoSolicitudAlta = DocumentUtils.Normalizar(request.TipoDocumento),
-                IdProducto = request.IdProducto,
                 IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
-                IdProceso = request.IdProceso
             };
         }
 

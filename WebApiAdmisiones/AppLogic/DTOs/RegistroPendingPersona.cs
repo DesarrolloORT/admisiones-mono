@@ -14,8 +14,6 @@ public sealed class RegistroPendingPersona
     public string FlowId { get; set; } = string.Empty;
     public string TipoDocumento { get; set; } = string.Empty;
     public string Documento { get; set; } = string.Empty;
-    public long IdProducto { get; set; }
-    public long IdProceso { get; set; }
 
     public string PrimerApellido { get; set; } = string.Empty;
     public string? SegundoApellido { get; set; }

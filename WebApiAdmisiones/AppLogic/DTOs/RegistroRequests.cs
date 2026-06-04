@@ -16,22 +16,6 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
-    public class RegistroConfirmarPersonaExistenteRequest
-    {
-        [Required]
-        public string TipoDocumento { get; set; } = string.Empty;
-
-        [Required]
-        public string Documento { get; set; } = string.Empty;
-
-        [Range(1, long.MaxValue)]
-        public long IdProducto { get; set; }
-
-        [Range(1, long.MaxValue)]
-        public long IdProceso { get; set; }
-    }
-
-    [ExcludeFromCodeCoverage]
     public class RegistroPersonaRequest
     {
         [Required]
@@ -39,12 +23,6 @@ namespace AppLogic.DTOs
 
         [Required]
         public string Documento { get; set; } = string.Empty;
-
-        [Range(1, long.MaxValue)]
-        public long IdProducto { get; set; }
-
-        [Range(1, long.MaxValue)]
-        public long IdProceso { get; set; }
 
         [Required]
         [MinLength(2)]
