@@ -144,7 +144,6 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Carreras vigentes disponibles para admision.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
         /// <response code="400">Solicitud invalida.</response>
-        [AllowAnonymous]
         [HttpGet("Carreras")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 400)]
@@ -164,7 +163,6 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Comienzos habilitados para la carrera indicada.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
         /// <response code="400">Carrera invalida o solicitud invalida.</response>
-        [AllowAnonymous]
         [HttpGet("Comienzos")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoComienzoResponse>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoComienzoResponse>>), 400)]
