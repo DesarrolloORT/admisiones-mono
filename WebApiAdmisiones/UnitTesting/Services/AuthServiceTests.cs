@@ -18,6 +18,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
+        private readonly Mock<IHashTokenStore> _hashTokenStoreMock;
         private readonly AuthService _service;
 
         public AuthServiceTests()
@@ -27,13 +28,15 @@ namespace UnitTesting.AppLogic.Services
             _tokenServiceMock = new Mock<ITokenService>();
             _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
+            _hashTokenStoreMock = new Mock<IHashTokenStore>();
 
             _service = new AuthService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
                 _refreshTokenServiceMock.Object,
-                _passwordActivationServiceMock.Object);
+                _passwordActivationServiceMock.Object,
+                _hashTokenStoreMock.Object);
         }
 
         [Fact]
@@ -45,7 +48,8 @@ namespace UnitTesting.AppLogic.Services
                 _uowFactoryMock.Object,
                 _tokenServiceMock.Object,
                 _refreshTokenServiceMock.Object,
-                _passwordActivationServiceMock.Object);
+                _passwordActivationServiceMock.Object,
+                _hashTokenStoreMock.Object);
 
             // Assert
             Assert.NotNull(service);
@@ -567,8 +571,7 @@ namespace UnitTesting.AppLogic.Services
                 PrimerNombre = "Ana",
                 PrimerApellido = "Perez",
                 TipoPersona = "SGI",
-                CodigoVigencia = "SI",
-                HashTokenPassword = "hash"
+                CodigoVigencia = "SI"
             };
             var request = new DtoCompletarPasswordInicialRequest
             {
@@ -579,6 +582,9 @@ namespace UnitTesting.AppLogic.Services
             personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
             _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _hashTokenStoreMock
+                .Setup(h => h.GetAsync(codigoPersona.ToString()))
+                .ReturnsAsync("stored-hash");
             _ldapMock
                 .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
                 .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
@@ -592,10 +598,10 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.CompletarPasswordAsync(codigoPersona, request);
 
             Assert.True(result.Success);
-            Assert.Null(persona.HashTokenPassword);
             Assert.Equal("access-token", result.Data!.AccessToken);
             Assert.Equal("refresh-token", result.Data.RefreshToken);
             uowMock.Verify(u => u.Save(), Times.Once);
+            _hashTokenStoreMock.Verify(h => h.DeleteAsync(codigoPersona.ToString()), Times.Once);
             _refreshTokenServiceMock.Verify(
                 r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
                 Times.Once);

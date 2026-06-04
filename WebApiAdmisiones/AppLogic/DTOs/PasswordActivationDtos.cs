@@ -4,6 +4,29 @@ using System.Text.Json.Serialization;
 namespace AppLogic.DTOs;
 
 /// <summary>
+/// Resultado de ValidarSessionToken: identifica si la sesión corresponde
+/// a una persona ya existente en DB o a una nueva persona pendiente en Redis.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public class DtoValidatedSession
+{
+    /// <summary>
+    /// Código de persona en DB (solo para flujo de persona existente:
+    /// purpose = "password-activation-session").
+    /// </summary>
+    public long? CodigoPersona { get; set; }
+
+    /// <summary>
+    /// FlowId del flujo de nueva persona en Redis (solo para
+    /// purpose = "nueva-persona-session").
+    /// </summary>
+    public string? FlowId { get; set; }
+
+    /// <summary>Propósito del token de sesión ("password-activation-session" | "nueva-persona-session").</summary>
+    public string Purpose { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// Respuesta del endpoint que valida el link de creacion de password inicial.
 /// </summary>
 /// <remarks>
@@ -15,8 +38,17 @@ public class DtoPasswordActivationSession
 {
     /// <summary>
     /// Codigo de persona asociado al token de activacion validado.
+    /// Solo aplica cuando la persona ya existe en DB.
     /// </summary>
-    public long CodigoPersona { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? CodigoPersona { get; set; }
+
+    /// <summary>
+    /// Documento asociado al token de activacion validado.
+    /// Se usa en el flujo de persona nueva, cuando aun no existe CodigoPersona.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Documento { get; set; }
 
     /// <summary>
     /// Token de sesion temporal usado internamente para setear la cookie X-Password-Activation.

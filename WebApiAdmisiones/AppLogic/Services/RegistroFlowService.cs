@@ -1,0 +1,341 @@
+using System.Text.Json;
+using AppLogic.DTOs;
+using AppLogic.IServices;
+using AppLogic.Utilities;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
+using Utilities;
+
+namespace AppLogic.Services;
+
+/// <summary>
+/// Orquesta el flujo de registro: FlowId session, nueva persona (Redis-deferred), persona existente.
+/// </summary>
+public class RegistroFlowService : IRegistroFlowService
+{
+    private const string NuevaPersonaPurpose = "nueva-persona-activacion";
+    private const string FlowSessionKeyPrefix = "registro:flow-session:";
+    private const string PendingPersonaKeyPrefix = "registro:pending:";
+
+    private readonly IRegistroService _registroService;
+    private readonly IPasswordActivationService _passwordActivationService;
+    private readonly IConfiguration _configuration;
+    private readonly IDatabase _redisDb;
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
+    public RegistroFlowService(
+        IRegistroService registroService,
+        IPasswordActivationService passwordActivationService,
+        IConfiguration configuration,
+        IConnectionMultiplexer redis)
+    {
+        _registroService = registroService;
+        _passwordActivationService = passwordActivationService;
+        _configuration = configuration;
+        _redisDb = redis.GetDatabase();
+    }
+
+    // ───── FlowSession ─────────────────────────────────────────────────────
+
+    public async Task<string> CrearFlowSessionAsync(string tipoDocumento, string documento, long? codigoPersona)
+    {
+        var flowId = Guid.NewGuid().ToString("N");
+        var session = new RegistroFlowSession
+        {
+            FlowId = flowId,
+            TipoDocumento = tipoDocumento,
+            Documento = documento,
+            CodigoPersona = codigoPersona,
+            Step = "evaluado",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var json = JsonSerializer.Serialize(session, JsonOptions);
+        var ttl = TimeSpan.FromMinutes(_configuration.GetValue<double?>("Registro:FlowSessionMinutes") ?? 30);
+        await _redisDb.StringSetAsync($"{FlowSessionKeyPrefix}{flowId}", json, ttl);
+
+        return flowId;
+    }
+
+    public async Task<OperationResult<object?>?> ValidarFlowSessionAsync(string? flowId, string stepEsperado)
+    {
+        if (string.IsNullOrWhiteSpace(flowId))
+        {
+            return OperationResult<object?>.IsFailed(
+                "FLOW_01",
+                nameof(ValidarFlowSessionAsync),
+                "El header X-Flow-Id es obligatorio.",
+                400);
+        }
+
+        var json = await _redisDb.StringGetAsync($"{FlowSessionKeyPrefix}{flowId}");
+        if (!json.HasValue)
+        {
+            return OperationResult<object?>.IsFailed(
+                "FLOW_02",
+                nameof(ValidarFlowSessionAsync),
+                "La sesión de registro expiró o no existe. Reiniciá el proceso desde EvaluarDocumento.",
+                400);
+        }
+
+        RegistroFlowSession? session;
+        try
+        {
+            session = JsonSerializer.Deserialize<RegistroFlowSession>(json.ToString(), JsonOptions);
+        }
+        catch
+        {
+            session = null;
+        }
+
+        if (session == null)
+        {
+            return OperationResult<object?>.IsFailed(
+                "FLOW_03",
+                nameof(ValidarFlowSessionAsync),
+                "Sesión de registro inválida.",
+                400);
+        }
+
+        if (!string.IsNullOrWhiteSpace(stepEsperado) &&
+            !string.Equals(session.Step, stepEsperado, StringComparison.OrdinalIgnoreCase))
+        {
+            return OperationResult<object?>.IsFailed(
+                "FLOW_04",
+                nameof(ValidarFlowSessionAsync),
+                $"Paso de registro inválido. Se esperaba '{stepEsperado}' pero el flujo está en '{session.Step}'.",
+                400);
+        }
+
+        return null; // valid
+    }
+
+    private async Task<RegistroFlowSession?> ObtenerFlowSessionAsync(string flowId)
+    {
+        var json = await _redisDb.StringGetAsync($"{FlowSessionKeyPrefix}{flowId}");
+        if (!json.HasValue) return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<RegistroFlowSession>(json.ToString(), JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<OperationResult<RegistroFlowResult>?> ValidarDocumentoFlowResultAsync(
+        string flowId,
+        string tipoDocumento,
+        string documento,
+        string originMethod)
+    {
+        var session = await ObtenerFlowSessionAsync(flowId);
+        if (session == null)
+        {
+            return OperationResult<RegistroFlowResult>.IsFailed(
+                "FLOW_03",
+                originMethod,
+                "Sesion de registro invalida.",
+                400,
+                default!);
+        }
+
+        if (DocumentUtils.Normalizar(session.TipoDocumento) != DocumentUtils.Normalizar(tipoDocumento) ||
+            DocumentUtils.Normalizar(session.Documento) != DocumentUtils.Normalizar(documento))
+        {
+            return OperationResult<RegistroFlowResult>.IsFailed(
+                "FLOW_05",
+                originMethod,
+                "El documento del request no coincide con la sesion de registro.",
+                400,
+                default!);
+        }
+
+        return null;
+    }
+
+    public async Task<OperationResult<object?>?> ValidarDocumentoFlowAsync(
+        string flowId,
+        string tipoDocumento,
+        string documento,
+        string originMethod)
+    {
+        var result = await ValidarDocumentoFlowResultAsync(flowId, tipoDocumento, documento, originMethod);
+        if (result == null) return null;
+
+        return OperationResult<object?>.IsFailed(
+            result.ErrorCode,
+            originMethod,
+            result.Message,
+            result.HttpCode);
+    }
+
+    public async Task ActualizarStepAsync(string flowId, string nuevoStep)
+    {
+        var key = $"{FlowSessionKeyPrefix}{flowId}";
+        var json = await _redisDb.StringGetAsync(key);
+        if (!json.HasValue) return;
+
+        RegistroFlowSession? session;
+        try
+        {
+            session = JsonSerializer.Deserialize<RegistroFlowSession>(json.ToString(), JsonOptions);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (session == null) return;
+
+        session.Step = nuevoStep;
+        var ttl = await _redisDb.KeyTimeToLiveAsync(key);
+        await _redisDb.StringSetAsync(key, JsonSerializer.Serialize(session, JsonOptions), ttl);
+    }
+
+    public Task EliminarFlowSessionAsync(string flowId)
+        => _redisDb.KeyDeleteAsync($"{FlowSessionKeyPrefix}{flowId}");
+
+    // ───── ConfirmarNuevaPersona ────────────────────────────────────────────
+
+    public async Task<OperationResult<RegistroFlowResult>> ConfirmarNuevaPersonaAsync(
+        RegistroPersonaRequest request,
+        string flowId)
+    {
+        // 1. Validar solo (sin crear nada en DB)
+        var validacion = await _registroService.ValidarNuevaPersonaAsync(request);
+        if (!validacion.Success)
+        {
+            return OperationResult<RegistroFlowResult>.IsFailed(
+                validacion.ErrorCode,
+                nameof(ConfirmarNuevaPersonaAsync),
+                validacion.Message,
+                validacion.HttpCode,
+                default!);
+        }
+
+        var flowDocumentoValidation = await ValidarDocumentoFlowResultAsync(
+            flowId,
+            request.TipoDocumento,
+            request.Documento,
+            nameof(ConfirmarNuevaPersonaAsync));
+        if (flowDocumentoValidation != null)
+        {
+            return flowDocumentoValidation;
+        }
+
+        // 2. Generar JWT de activación (sub = flowId)
+        var expireHours = _configuration.GetValue<double?>("PasswordActivation:ExpireHours") ?? 24;
+        var ttl = TimeSpan.FromHours(expireHours);
+        var token = PasswordActivationService.GenerarTokenFlowIdPublic(flowId, NuevaPersonaPurpose, ttl);
+        var tokenHash = PasswordActivationService.HashToken(token);
+
+        // 3. Guardar persona pendiente en Redis
+        var pending = new RegistroPendingPersona
+        {
+            FlowId = flowId,
+            TipoDocumento = request.TipoDocumento,
+            Documento = request.Documento,
+            IdProducto = request.IdProducto,
+            IdProceso = request.IdProceso,
+            PrimerApellido = request.PrimerApellido,
+            SegundoApellido = request.SegundoApellido,
+            PrimerNombre = request.PrimerNombre,
+            SegundoNombre = request.SegundoNombre,
+            FechaNacimiento = request.FechaNacimiento,
+            Sexo = request.Sexo,
+            Direccion = request.Direccion,
+            Telefono1 = request.Telefono1,
+            Email = request.Mail,
+            CodigoPais = request.CodigoPais,
+            CodigoEstado = request.CodigoEstado,
+            CodigoCiudad = request.CodigoCiudad,
+            TokenHash = tokenHash,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var pendingJson = JsonSerializer.Serialize(pending, JsonOptions);
+        await _redisDb.StringSetAsync($"{PendingPersonaKeyPrefix}{flowId}", pendingJson, ttl);
+
+        // 4. Enviar mail de activación
+        var mailResult = await _passwordActivationService.EnviarMailNuevaPersonaAsync(flowId, request.Mail, token);
+        if (!mailResult.Success)
+        {
+            // El registro quedó en Redis; el usuario puede reintentar con la opción de reenvío
+            return OperationResult<RegistroFlowResult>.Ok(
+                new RegistroFlowResult("Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña."),
+                nameof(ConfirmarNuevaPersonaAsync));
+        }
+
+        // 5. Actualizar step
+        await ActualizarStepAsync(flowId, "confirmado");
+
+        return OperationResult<RegistroFlowResult>.Ok(
+            new RegistroFlowResult("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."),
+            nameof(ConfirmarNuevaPersonaAsync));
+    }
+
+    // ───── ConfirmarPersonaExistente ────────────────────────────────────────
+
+    public async Task<OperationResult<object?>> ConfirmarPersonaExistenteAsync(
+        RegistroConfirmarPersonaExistenteRequest request,
+        string flowId)
+    {
+        if (request == null)
+        {
+            return await _registroService.ConfirmarPersonaExistenteAsync(request!);
+        }
+
+        var flowDocumentoValidation = await ValidarDocumentoFlowAsync(
+            flowId,
+            request.TipoDocumento,
+            request.Documento,
+            nameof(ConfirmarPersonaExistenteAsync));
+        if (flowDocumentoValidation != null)
+        {
+            return flowDocumentoValidation;
+        }
+
+        var result = await _registroService.ConfirmarPersonaExistenteAsync(request);
+
+        if (result.Success)
+        {
+            await ActualizarStepAsync(flowId, "confirmado");
+        }
+
+        return result;
+    }
+
+    // ───── PendingPersona ──────────────────────────────────────────────────
+
+    public Task<RegistroPendingPersona?> GetPendingPersonaAsync(string flowId)
+        => GetPendingPersonaInternalAsync(flowId);
+
+    private async Task<RegistroPendingPersona?> GetPendingPersonaInternalAsync(string flowId)
+    {
+        var json = await _redisDb.StringGetAsync($"{PendingPersonaKeyPrefix}{flowId}");
+        if (!json.HasValue) return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<RegistroPendingPersona>(json.ToString(), JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public Task DeletePendingPersonaAsync(string flowId)
+        => _redisDb.KeyDeleteAsync($"{PendingPersonaKeyPrefix}{flowId}");
+
+    public Task<OperationResult<long>> CompletarNuevaPersona(RegistroPendingPersona data, string passwordNueva)
+        => _registroService.CompletarNuevaPersonaAsync(data, passwordNueva);
+}

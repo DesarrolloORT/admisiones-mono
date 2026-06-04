@@ -22,6 +22,7 @@ namespace UnitTesting.Controllers
         private readonly Mock<ICurrentUserService> _currentUserMock;
         private readonly Mock<IDosFactoresAuthService> _dosFactoresServiceMock;
         private readonly Mock<ILoginFlowService> _loginFlowServiceMock;
+        private readonly Mock<IRegistroFlowService> _registroFlowServiceMock;
         private readonly IConfiguration _configuration;
         private readonly AuthController _controller;
         private readonly DefaultHttpContext _httpContext;
@@ -34,6 +35,7 @@ namespace UnitTesting.Controllers
             _currentUserMock = new Mock<ICurrentUserService>();
             _dosFactoresServiceMock = new Mock<IDosFactoresAuthService>();
             _loginFlowServiceMock = new Mock<ILoginFlowService>();
+            _registroFlowServiceMock = new Mock<IRegistroFlowService>();
             _httpContext = new DefaultHttpContext();
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -65,7 +67,8 @@ namespace UnitTesting.Controllers
                 _loggerMock.Object,
                 _currentUserMock.Object,
                 _dosFactoresServiceMock.Object,
-                _loginFlowServiceMock.Object)
+                _loginFlowServiceMock.Object,
+                _registroFlowServiceMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -106,12 +109,12 @@ namespace UnitTesting.Controllers
 
             _passwordActivationServiceMock
                 .Setup(s => s.ValidarSessionToken(string.Empty))
-                .Returns(OperationResult<long>.IsFailed(
+                .Returns(OperationResult<DtoValidatedSession>.IsFailed(
                     "ACT_SES_01",
                     nameof(IPasswordActivationService.ValidarSessionToken),
-                    "Sesión temporal no encontrada.",
+                    "SesiÃ³n temporal no encontrada.",
                     401,
-                    default));
+                    default!));
 
             var response = await _controller.CompletarPassword(request);
 
@@ -206,7 +209,7 @@ namespace UnitTesting.Controllers
                     OperationResult<DtoAuthenticationResponse>.IsFailed(
                         errorCode: "AUTH_01",
                         originMethod: "EjecutarAsync",
-                        message: "Credenciales inválidas",
+                        message: "Credenciales invï¿½lidas",
                         httpCode: 401)));
 
             // Act
@@ -254,7 +257,7 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
             var operationResult = Assert.IsType<OperationResult<string>>(okResult.Value);
             Assert.True(operationResult.Success);
-            Assert.Equal("Sesión cerrada correctamente.", operationResult.Data);
+            Assert.Equal("SesiÃ³n cerrada correctamente.", operationResult.Data);
         }
 
         [Fact]
@@ -335,7 +338,7 @@ namespace UnitTesting.Controllers
             var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
                 errorCode: "AUTH_02",
                 originMethod: nameof(IAuthService.RefrescarTokensAsync),
-                message: "Refresh token inválido",
+                message: "Refresh token invï¿½lido",
                 httpCode: 401);
 
             _authServiceMock

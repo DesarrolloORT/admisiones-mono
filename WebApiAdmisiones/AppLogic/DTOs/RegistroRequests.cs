@@ -139,5 +139,12 @@ namespace AppLogic.DTOs
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool SolicitudAltaExistente { get; set; }
+
+        /// <summary>
+        /// Identificador de la sesión de registro. Debe enviarse en el header X-Flow-Id
+        /// en todos los pasos subsiguientes del flujo.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public string? FlowId { get; set; }
     }
 }

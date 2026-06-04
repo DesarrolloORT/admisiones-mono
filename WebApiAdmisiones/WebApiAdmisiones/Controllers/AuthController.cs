@@ -18,9 +18,12 @@ namespace WebApiAdmisiones.Controllers
         ILogger<AuthController> logger,
         ICurrentUserService currentUser,
         IDosFactoresAuthService dosFactoresService,
-        ILoginFlowService loginFlowService)
+        ILoginFlowService loginFlowService,
+        IRegistroFlowService registroFlowService)
         : ApiBaseController<AuthController>(logger, currentUser)
     {
+        private const string NuevaPersonaSessionPurpose = "nueva-persona-session";
+
         #region AUTH
 
         /// <summary>
@@ -242,7 +245,91 @@ namespace WebApiAdmisiones.Controllers
                     default!));
             }
 
-            var result = await loginService.CompletarPasswordAsync(sessionResult.Data, request);
+            var session = sessionResult.Data;
+            if (session == null)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_06",
+                    nameof(CompletarPassword),
+                    "Sesion temporal invalida.",
+                    401,
+                    default!));
+            }
+
+            // Flujo nueva persona (registro diferido en Redis)
+            if (string.Equals(session.Purpose, NuevaPersonaSessionPurpose, StringComparison.Ordinal))
+            {
+                var flowId = session.FlowId;
+                if (string.IsNullOrWhiteSpace(flowId))
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "ACT_SES_NUP_01",
+                        nameof(CompletarPassword),
+                        "Sesion temporal sin FlowId valido.",
+                        401,
+                        default!));
+                }
+
+                var pending = await registroFlowService.GetPendingPersonaAsync(flowId);
+                if (pending == null)
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "NUP_COMP_01",
+                        nameof(CompletarPassword),
+                        "El registro pendiente expiró o ya fue completado. Por favor, iniciá el proceso de registro nuevamente.",
+                        401,
+                        default!));
+                }
+
+                var validacionPassword = Util.ValidarPasswordNueva(request.PasswordNueva);
+                if (!string.IsNullOrWhiteSpace(validacionPassword))
+                {
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "INI_PAS_02",
+                        nameof(CompletarPassword),
+                        validacionPassword,
+                        400,
+                        default!));
+                }
+
+                var crearResult = await registroFlowService.CompletarNuevaPersona(pending, request.PasswordNueva);
+                if (!crearResult.Success)
+                {
+                    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        crearResult.ErrorCode,
+                        nameof(CompletarPassword),
+                        crearResult.Message,
+                        crearResult.HttpCode,
+                        default!));
+                }
+
+                var tokenResult = await loginService.GenerarTokensParaPersonaAsync(crearResult.Data);
+                if (tokenResult.Success && tokenResult.Data != null)
+                {
+                    CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                    SetAuthenticationCookies(tokenResult.Data);
+                    await registroFlowService.DeletePendingPersonaAsync(flowId);
+                    await registroFlowService.EliminarFlowSessionAsync(flowId);
+                }
+                return ValidateResponse(tokenResult);
+            }
+
+            // Flujo persona existente (password inicial o recuperación)
+            if (!session.CodigoPersona.HasValue)
+            {
+                CookieAuthenticationHelper.ClearPasswordActivationCookie(HttpContext);
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_03",
+                    nameof(CompletarPassword),
+                    "Sesion temporal sin persona valida.",
+                    401,
+                    default!));
+            }
+
+            var result = await loginService.CompletarPasswordAsync(session.CodigoPersona.Value, request);
 
             if (result.Success && result.Data != null)
             {

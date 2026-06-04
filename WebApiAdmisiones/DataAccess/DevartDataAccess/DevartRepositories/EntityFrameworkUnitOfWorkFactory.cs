@@ -30,7 +30,7 @@ namespace DataAccess.DevartRepositories
             {
                 _ef.Database.UseTransaction(_db.Transaction);
             }
-            return new EntityFrameworkUnitOfWork(_ef, _db);
+            return new EntityFrameworkUnitOfWork(_ef, _db, ownsContext: false);
         }
     }
 }
