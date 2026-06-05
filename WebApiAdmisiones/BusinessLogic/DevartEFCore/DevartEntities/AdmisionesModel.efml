@@ -3889,6 +3889,26 @@
       <column name="INSTRUCCION_PADRE_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="RegistroAdmisione" entity-set="RegistroAdmisiones" table="T_REGISTRO_ADMISIONES" schema="CREADOR" p1:Guid="a6884ca4-ba20-4d70-ae72-8b17f5c2a404">
+    <id name="IdRegistroAdmisiones" type="Int64" p1:ValidateRequired="true" p1:Guid="06ae8982-d864-4c1d-ac59-4774293a04c8">
+      <column name="ID_REGISTRO_ADMISIONES" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="CodigoPersona" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="cf6cb756-851e-4091-acff-10cc092bbf6d">
+      <column name="CODIGO_PERSONA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdSolicitudAlta" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="f2484cd8-52c7-4e77-b145-b8e58d360751">
+      <column name="ID_SOLICITUD_ALTA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="4c54976d-459d-48f9-876c-d3f3d023c537" p1:GenerateDTO="False">
+      <column name="FECHA_INGRESO" default="trunc(sysdate) " not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="70394248-7627-4a73-a992-3bc587505876" p1:GenerateDTO="False">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss') " not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="9c003b81-0837-4dcd-829a-42b3ef3e13c8" p1:GenerateDTO="False">
+      <column name="USUARIO_INGRESO" default="USER " not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
