@@ -2,7 +2,6 @@ import {
   HttpContextToken,
   HttpErrorResponse,
   HttpEvent,
-  HttpHeaders,
   HttpInterceptorFn,
   HttpRequest,
   HttpResponse,
@@ -52,7 +51,7 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
       return req;
     }
 
-    return req.clone({ headers: new HttpHeaders(DEFAULT_HEADERS) });
+    return req.clone({ setHeaders: DEFAULT_HEADERS });
   };
 
   const processRequest = (req: HttpRequest<unknown>): HttpRequest<unknown> => {

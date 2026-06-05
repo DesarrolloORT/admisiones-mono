@@ -6,6 +6,7 @@ import {
   HttpContext,
   HttpErrorResponse,
   HttpHandlerFn,
+  HttpHeaders,
   HttpRequest,
   HttpResponse,
 } from '@angular/common/http';
@@ -103,6 +104,7 @@ describe('httpInterceptor', () => {
 
     const req = new HttpRequest('GET', '/api/data', null, {
       context: new HttpContext().set(CACHING_ENABLED, false),
+      headers: new HttpHeaders({ 'X-Flow-Id': 'flow-123' }),
     });
 
     const result = await firstValueFrom(invoke(req, next));
@@ -114,6 +116,7 @@ describe('httpInterceptor', () => {
     // headers
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
     expect(intercepted.headers.get('Content-Type')).toBe('application/json');
+    expect(intercepted.headers.get('X-Flow-Id')).toBe('flow-123');
     expect(intercepted.headers.get('authorization')).toBe('Basic Og==');
     expect(intercepted.headers.get('x-correlation-id')).toBe('correlation-123');
     expect(mockTelemetry.addHttpHeaders).toHaveBeenCalledWith(
