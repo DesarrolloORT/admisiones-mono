@@ -1,0 +1,112 @@
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
+
+import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
+import { Catalogs } from '../../catalogs/services/catalogs';
+import { AuthSessionService } from '../services/auth-session';
+import { LoginFacade } from './login.facade';
+
+describe('LoginFacade', () => {
+  let facade: LoginFacade;
+  let authMock: {
+    login: ReturnType<typeof vi.fn>;
+  };
+  let routerMock: {
+    navigateByUrl: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(() => {
+    authMock = {
+      login: vi.fn().mockReturnValue(
+        of({
+          token: 'token-123',
+          documentType: 'CI',
+          documentNumber: '12345678',
+          expiresAt: null,
+        })
+      ),
+    };
+    routerMock = {
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        LoginFacade,
+        { provide: AuthSessionService, useValue: authMock },
+        {
+          provide: Catalogs,
+          useValue: { getDocumentTypes: vi.fn().mockReturnValue(of([])) },
+        },
+        { provide: Router, useValue: routerMock },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: { get: () => null },
+            },
+          },
+        },
+        {
+          provide: SnackbarHandler,
+          useValue: { success: vi.fn(), error: vi.fn(), show: vi.fn() },
+        },
+      ],
+    });
+
+    facade = TestBed.inject(LoginFacade);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should submit valid credentials, clear password and navigate home', () => {
+    facade.form.setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      password: 'secret',
+    });
+
+    facade.submit();
+
+    expect(authMock.login).toHaveBeenCalledWith({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      password: 'secret',
+    });
+    expect(facade.form.controls.password.value).toBe('');
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/inicio');
+  });
+
+  it('should mark the form as touched when invalid', () => {
+    facade.submit();
+
+    expect(authMock.login).not.toHaveBeenCalled();
+    expect(facade.form.touched).toBe(true);
+  });
+
+  it('should expose auth errors in UI state', () => {
+    authMock.login.mockReturnValue(
+      throwError(() => ({
+        status: 401,
+        message: 'Credenciales inválidas.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('boom'),
+      }))
+    );
+    facade.form.setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      password: 'secret',
+    });
+
+    facade.submit();
+
+    expect(facade.error()).toBe('Credenciales inválidas.');
+  });
+});
+

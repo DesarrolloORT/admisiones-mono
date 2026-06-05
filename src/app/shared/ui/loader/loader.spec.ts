@@ -33,6 +33,7 @@ describe('Loader', () => {
 
   it('should match snapshot when loading = true', () => {
     createComponent(true);
+    fixture.nativeElement.removeAttribute('id');
     expect(fixture.nativeElement).toMatchSnapshot();
   });
 

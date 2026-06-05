@@ -1,0 +1,78 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+<section aria-label="Datos personales" class="auth-form-grid" [formGroup]="form()">
+  <ort-form-field [hideRequiredMarker]="!!form().controls.primerNombre.value">
+    <ort-label>Primer nombre</ort-label>
+    <input formControlName="primerNombre" ortInput type="text" [id]="'first-name'" />
+    @if (form().controls.primerNombre.touched && form().controls.primerNombre.hasError('required'))
+    {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field>
+    <ort-label>Segundo nombre</ort-label>
+    <input formControlName="segundoNombre" ortInput type="text" [id]="'second-name'" />
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.primerApellido.value">
+    <ort-label>Primer apellido</ort-label>
+    <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
+    @if (form().controls.primerApellido.touched &&
+    form().controls.primerApellido.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field>
+    <ort-label>Segundo apellido</ort-label>
+    <input formControlName="segundoApellido" ortInput type="text" [id]="'second-last-name'" />
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.fechaNacimiento.value">
+    <ort-label>Fecha de nacimiento</ort-label>
+    <input formControlName="fechaNacimiento" ortInput type="date" [id]="'birth-date'" />
+    @if (form().controls.fechaNacimiento.touched &&
+    form().controls.fechaNacimiento.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.sexo.value">
+    <ort-label>Sexo</ort-label>
+    <ort-select aria-label="Sexo" formControlName="sexo" [id]="'sex'">
+      <ort-option value="">Seleccioná...</ort-option>
+      <ort-option value="F">Femenino</ort-option>
+      <ort-option value="M">Masculino</ort-option>
+    </ort-select>
+    @if (form().controls.sexo.touched && form().controls.sexo.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <app-location-select class="auth-field--wide" formControlName="location" />
+  @if (form().controls.location.touched && form().controls.location.hasError('locationRequired')) {
+  <p class="auth-error auth-field--wide" id="location-country-error" role="alert">
+    Seleccioná el país de residencia
+  </p>
+  } @if (form().controls.location.touched &&
+  form().controls.location.hasError('locationStateRequired')) {
+  <p class="auth-error auth-field--wide" id="location-state-error" role="alert">
+    Seleccioná el departamento o estado
+  </p>
+  } @if (form().controls.location.touched &&
+  form().controls.location.hasError('locationCityRequired')) {
+  <p class="auth-error auth-field--wide" id="location-city-error" role="alert">
+    Seleccioná la ciudad
+  </p>
+  }
+
+  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.direccion.value">
+    <ort-label>Dirección</ort-label>
+    <input formControlName="direccion" ortInput type="text" [id]="'address'" />
+    @if (form().controls.direccion.touched && form().controls.direccion.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+</section>
+
+<app-register-personal-contact-fields [form]="form()" />

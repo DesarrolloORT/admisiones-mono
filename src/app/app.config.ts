@@ -2,22 +2,29 @@ import { LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  inject,
   LOCALE_ID,
   provideAppInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
-import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
   withRouterConfig,
 } from '@angular/router';
-import { DateUtils, PaginationUtils, UiUtils } from '@desarrolloort/ngx-utils';
+import {
+  ApiErrorNotifier,
+  operationResultInterceptor,
+  ortApiErrorInterceptor,
+  provideOrtApiErrorHandling,
+  UiUtils,
+} from '@desarrolloort/ngx-utils';
 
 import { routes } from './app.routes';
 import { httpInterceptor } from './core/interceptors/http';
+import { AppApiErrorNotifier } from './core/services/api-error-notifier';
+import { TelemetryService } from './core/services/telemetry';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -29,12 +36,14 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
     ),
     provideAppInitializer(() => UiUtils.initializeMaterialSymbols()),
-    provideHttpClient(withInterceptors([httpInterceptor])),
+    provideAppInitializer(() => inject(TelemetryService).initialize()),
+    provideHttpClient(
+      withInterceptors([httpInterceptor, ortApiErrorInterceptor, operationResultInterceptor])
+    ),
+    ...provideOrtApiErrorHandling({
+      notifier: { provide: ApiErrorNotifier, useClass: AppApiErrorNotifier },
+    }),
     { provide: LOCALE_ID, useValue: 'es-UY' },
-    { provide: MAT_DATE_LOCALE, useValue: 'es-UY' },
     { provide: LocationStrategy, useClass: PathLocationStrategy },
-    { provide: MatPaginatorIntl, useValue: PaginationUtils.createPaginatorIntl() },
-    { provide: MAT_DATE_FORMATS, useValue: DateUtils.getLocalizedDateFormats() },
   ],
 };
-

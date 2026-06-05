@@ -15,7 +15,7 @@ Analiza `${input:scope:diff o cambio}` y actualiza solo la documentacion minima 
 
 ## Entrada sugerida
 
-- `diff de agent-hooks y policy`
+- `diff de release y CLI`
 
 ## Instrucciones
 

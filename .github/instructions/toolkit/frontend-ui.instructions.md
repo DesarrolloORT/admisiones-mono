@@ -29,3 +29,6 @@ applyTo: "**/*.tsx, **/*.jsx, **/*.vue, **/*.svelte, **/*.astro, **/*.html, **/*
 - Toda UI nueva debe cumplir WCAG 2.2 AA: semantica correcta, labels, teclado, foco visible, estados, errores, contraste y feedback claro.
 - Prefiere HTML semantico y componentes base accesibles antes que wrappers opacos o divs sin rol.
 - No sacrifiques accesibilidad por estilo visual ni por velocidad.
+- Si falta soporte accesible en `@desarrolloort/components`, no parches la app ni uses overrides contra DOM o clases internas de ORT. Deja `TODO(a11y-ort-component): ...` en el punto de uso y documenta el gap en `docs/ACCESSIBILITY.md` para elevarlo a la libreria.
+- Para `OrtErrorSummary`, habilita links al campo solo si el componente expone un target publico estable. En controles ORT actuales usa `ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED` y no dependas de ids/clases internas generadas por ORT.
+- Si la UI toca un flujo critico, agrega o actualiza Playwright `@smoke`/`@regression` segun `docs/E2E-GUARDRAILS.md`. Para features grandes nuevas, usa acceptance-first desde Figma e historia funcional.

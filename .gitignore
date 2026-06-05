@@ -1,10 +1,11 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # Environment variables
-src/environments/environment.prod.ts
-src/environments/environment.staging.ts
-src/environments/environment.dev.ts
-src/environments/environment.ts
+.env.e2e.local
+src/environments/environment.generated.ts
+
+# Generated API layer (local-only, regenerate with: npm run update-api)
+src/app/shared/api/generated/
 
 # Compiled output
 /dist
@@ -39,6 +40,8 @@ yarn-error.log
 .sass-cache/
 /connect.lock
 /coverage
+/playwright-report
+/test-results
 /libpeerconnection.log
 testem.log
 /typings

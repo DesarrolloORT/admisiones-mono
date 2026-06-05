@@ -1,0 +1,29 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
+import { OrtIconModule } from '@desarrolloort/components';
+
+@Component({
+  selector: 'app-auth-form',
+  imports: [OrtIconModule],
+  templateUrl: './auth-form.html',
+  styleUrl: './auth-form.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+})
+export class AuthForm {
+  public readonly title = input.required<string>();
+  public readonly description = input.required<string>();
+  public readonly heroTitle = input.required<string>();
+  public readonly heroDescription = input.required<string>();
+  public readonly heroIcon = input.required<string>();
+  public readonly stepLabel = input<string | null>(null);
+  public readonly stepTitle = input<string | null>(null);
+  public readonly cardSize = input<'default' | 'long'>('default');
+
+  protected readonly isStep = computed(() => Boolean(this.stepLabel() && this.stepTitle()));
+}

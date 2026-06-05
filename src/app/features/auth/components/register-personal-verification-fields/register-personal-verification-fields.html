@@ -1,0 +1,26 @@
+<section aria-label="Verificación de identidad" class="auth-form-grid" [formGroup]="form()">
+  <p class="auth-field--wide auth-verification-hint">
+    Confirmá tus datos para continuar con el registro.
+  </p>
+
+  <ort-form-field
+    class="auth-field--wide"
+    [hideRequiredMarker]="!!form().controls.primerApellido.value">
+    <ort-label>Primer apellido</ort-label>
+    <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
+    @if (form().controls.primerApellido.touched &&
+    form().controls.primerApellido.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.mail.value">
+    <ort-label>E-mail</ort-label>
+    <input autocomplete="email" formControlName="mail" ortInput type="email" [id]="'email'" />
+    @if (form().controls.mail.touched && form().controls.mail.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    } @if (form().controls.mail.touched && form().controls.mail.hasError('email')) {
+    <ort-error>Ingresá un e-mail válido</ort-error>
+    }
+  </ort-form-field>
+</section>

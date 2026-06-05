@@ -1,0 +1,22 @@
+<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="onSubmit()">
+  @if (personalMode() === 'verification') {
+  <app-register-personal-verification-fields [form]="form()" />
+  } @else {
+  <app-register-personal-complete-fields [form]="form()" />
+  }
+
+  <ort-error-summary [errors]="errorSummary()" />
+
+  @if (error()) {
+  <p class="auth-error" role="alert">{{ error() }}</p>
+  } @if (successMessage()) {
+  <output class="auth-success" role="status">{{ successMessage() }}</output>
+  }
+
+  <div class="auth-actions">
+    <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
+    <button ort-primary-button type="submit" [disabled]="isSubmitting() || !!successMessage()">
+      {{ successMessage() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
+    </button>
+  </div>
+</form>

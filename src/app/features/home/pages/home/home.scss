@@ -1,0 +1,185 @@
+/* stylelint-disable declaration-property-unit-allowed-list -- Home follows Figma px measurements and ORT token fallbacks. */
+:host {
+  display: block;
+}
+
+.home-main {
+  display: grid;
+  gap: var(--ort-sys-spacing-48);
+  width: min(884px, calc(100% - 96px));
+  margin: 0 auto;
+  padding-block: var(--ort-sys-spacing-64);
+}
+
+.home-welcome {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+}
+
+.home-welcome h1,
+.home-action-card h2 {
+  margin: 0;
+  font-weight: 700;
+  font-family: var(--home-display);
+  letter-spacing: 0;
+}
+
+.home-welcome h1 {
+  font-size: var(--ort-sys-heading-level4-text-size);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.home-welcome p,
+.home-action-card p {
+  margin: 0;
+  color: var(--home-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ort-sys-spacing-36);
+}
+
+.home-action-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  border-radius: var(--ort-sys-border-radius-12);
+  background: var(--home-surface);
+  box-shadow: var(--home-shadow);
+}
+
+.home-action-card h2 {
+  grid-area: title;
+  font-size: var(--ort-sys-heading-level5-text-size);
+  line-height: var(--ort-sys-heading-level5-line-height);
+}
+
+.home-action-card p {
+  grid-area: description;
+}
+
+.home-action-card__status {
+  position: absolute;
+  grid-area: status;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  color: var(--home-body);
+  font-size: var(--ort-sys-caption-text-size, 14px);
+  line-height: var(--ort-sys-caption-line-height, 20px);
+  white-space: nowrap;
+}
+
+.home-action-card__content {
+  display: grid;
+  grid-template-areas:
+    'icon title'
+    '. description'
+    '. button'
+    '. status';
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 4px var(--ort-sys-spacing-16);
+  align-items: center;
+  padding: var(--ort-sys-spacing-24);
+}
+
+.home-action-card__icon {
+  grid-area: icon;
+  color: var(--ort-sys-base-icon-color-subtle, #697586);
+  font-size: 32px;
+}
+
+.home-action-card--image {
+  min-height: 480px;
+}
+
+.home-action-card__image {
+  position: absolute;
+  inset: 0 0 auto;
+  object-fit: cover;
+  width: 100%;
+  height: 330px;
+}
+
+.home-action-card--image .home-action-card__content {
+  position: absolute;
+  inset: 0;
+  grid-template:
+    'icon'
+    'title'
+    'description'
+    'button'
+    'status' / 1fr;
+  gap: var(--ort-sys-spacing-8);
+  align-content: end;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0%) 0%, var(--home-surface) 57%);
+}
+
+.home-action-card__primary {
+  display: flex;
+  grid-area: button;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 10px;
+}
+
+@media (width <=760px) {
+  .home-main {
+    gap: 24px;
+    width: 100%;
+    padding: 24px 16px;
+  }
+
+  .home-welcome {
+    gap: var(--ort-sys-spacing-4);
+  }
+
+  .home-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .home-action-card,
+  .home-action-card--image {
+    min-height: unset;
+  }
+
+  .home-action-card__image {
+    display: none;
+  }
+
+  .home-action-card__content,
+  .home-action-card--image .home-action-card__content {
+    position: relative;
+    inset: auto;
+    grid-template:
+      'icon'
+      'title'
+      'description'
+      'button'
+      'status' / 1fr;
+    gap: 8px;
+    align-content: start;
+    min-height: 240px;
+    padding: 24px 16px;
+    background: transparent;
+  }
+
+  .home-action-card h2 {
+    font-size: var(--ort-sys-heading-level6-text-size);
+    line-height: var(--ort-sys-heading-level6-line-height);
+  }
+
+  .home-action-card__primary {
+    min-height: 56px;
+    margin-top: 8px;
+  }
+}

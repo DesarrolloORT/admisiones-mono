@@ -1,11 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { MatProgressBar } from '@angular/material/progress-bar';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { OrtSpinner } from '@desarrolloort/components';
 import { LoaderService } from '@desarrolloort/ngx-utils';
 
 @Component({
   selector: 'app-loader',
-  imports: [MatProgressSpinner, MatProgressBar],
+  imports: [OrtSpinner],
   templateUrl: './loader.html',
   styleUrl: './loader.scss',
 })
@@ -14,3 +13,4 @@ export class Loader {
 
   protected readonly loading = this.loaderService.isLoading;
 }
+

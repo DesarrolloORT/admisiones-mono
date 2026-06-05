@@ -1,0 +1,66 @@
+<main
+  class="auth-shell"
+  id="main-content"
+  tabindex="-1"
+  [class.auth-shell--long]="cardSize() === 'long'"
+  [class.auth-shell--step]="isStep()">
+  <div aria-hidden="true" class="auth-shell__background"></div>
+
+  <section class="auth-shell__layout" [attr.aria-label]="title()">
+    <header class="auth-mobile-header" [class.auth-mobile-header--step]="isStep()">
+      <div aria-hidden="true" class="auth-statusbar">
+        <span>9:41</span>
+        <span class="auth-statusbar__icons">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </div>
+
+      <div class="auth-mobile-header__logo">
+        <img alt="ORT" src="assets/auth/ort-logo-white.svg" />
+      </div>
+
+      @if (isStep()) {
+      <div class="auth-mobile-stepper">
+        <p>{{ stepLabel() }}</p>
+        <h1>{{ stepTitle() }}</h1>
+        <div aria-hidden="true" class="auth-progress">
+          <span></span>
+        </div>
+      </div>
+      }
+    </header>
+
+    <aside aria-hidden="true" class="auth-hero">
+      <img alt="ORT" class="auth-hero__logo" src="assets/auth/ort-logo-white.svg" />
+
+      <div class="auth-hero__message">
+        <ort-icon aria-hidden="true">{{ heroIcon() }}</ort-icon>
+        <h2>{{ heroTitle() }}</h2>
+        <p>{{ heroDescription() }}</p>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <div class="auth-card__content">
+        @if (isStep()) {
+        <header class="auth-card__stepper">
+          <p>{{ stepLabel() }}</p>
+          <h1>{{ stepTitle() }}</h1>
+          <div aria-hidden="true" class="auth-progress">
+            <span></span>
+          </div>
+        </header>
+        } @else {
+        <header class="auth-card__header">
+          <h1>{{ title() }}</h1>
+          <p>{{ description() }}</p>
+        </header>
+        }
+
+        <ng-content />
+      </div>
+    </section>
+  </section>
+</main>

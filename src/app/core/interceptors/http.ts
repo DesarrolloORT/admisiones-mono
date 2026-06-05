@@ -2,18 +2,17 @@ import {
   HttpContextToken,
   HttpErrorResponse,
   HttpEvent,
-  HttpHeaders,
   HttpInterceptorFn,
   HttpRequest,
   HttpResponse,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
-import { asyncScheduler, of, throwError } from 'rxjs';
-import { catchError, finalize, observeOn, tap } from 'rxjs/operators';
+import { asyncScheduler, of } from 'rxjs';
+import { finalize, observeOn, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
-import { ErrorHandling } from '../services/error-handling';
+import { TelemetryService } from '../services/telemetry';
 
 export const CACHING_ENABLED = new HttpContextToken<boolean>(() => environment.CACHING_ENABLED);
 const IGNORED_LOADER_URLS: string[] = [
@@ -28,11 +27,13 @@ const DEFAULT_HEADERS = {
   castmanchecontrol: 'no-cache',
 };
 
+const LOGIN_URL_PATTERN = /\/login\/?$/i;
+
 export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const services = {
     cacheHandler: inject(CacheService),
     loader: inject(LoaderService),
-    errorHandler: inject(ErrorHandling),
+    telemetry: inject(TelemetryService),
   };
 
   const handleLoader = (url: string): void => {
@@ -46,10 +47,18 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   };
 
   const setHeaders = (req: HttpRequest<unknown>): HttpRequest<unknown> => {
-    return req.clone({ headers: new HttpHeaders(DEFAULT_HEADERS) });
+    if (LOGIN_URL_PATTERN.test(req.url)) {
+      return req;
+    }
+
+    return req.clone({ setHeaders: DEFAULT_HEADERS });
   };
 
   const processRequest = (req: HttpRequest<unknown>): HttpRequest<unknown> => {
+    if (LOGIN_URL_PATTERN.test(req.url)) {
+      return req;
+    }
+
     const { method, body, responseType } = req;
 
     if ((method === 'PUT' || method === 'POST') && body && responseType === 'json') {
@@ -74,19 +83,28 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   const cachedResponse = services.cacheHandler.get(cacheKey);
 
   if (request.context.get(CACHING_ENABLED) && cachedResponse) {
+    services.telemetry.trackCacheHit(request);
     return of(cachedResponse as HttpEvent<unknown>).pipe(observeOn(asyncScheduler));
   }
 
   //* Process request
   handleLoader(request.url);
-  request = processRequest(setHeaders(request));
+  request = services.telemetry.addHttpHeaders(processRequest(setHeaders(request)));
+  const telemetryStartedAt = services.telemetry.startHttpRequest(request);
 
   return next(request).pipe(
     finalize(() => services.loader.hide()),
-    tap(handleResponse),
-    catchError((error: HttpErrorResponse) => {
-      services.errorHandler.handleErrorInUI(error);
-      return throwError(() => error);
+    tap({
+      next: event => {
+        handleResponse(event);
+
+        if (event instanceof HttpResponse) {
+          services.telemetry.trackHttpResponse(request, event, telemetryStartedAt);
+        }
+      },
+      error: (error: HttpErrorResponse) => {
+        services.telemetry.trackHttpError(request, error, telemetryStartedAt);
+      },
     })
   );
 };

@@ -1,0 +1,44 @@
+<main aria-labelledby="home-title" class="home-main" id="main-content" tabindex="-1">
+  <header class="home-welcome">
+    <h1 id="home-title">{{ greeting() }}</h1>
+    <p>{{ dashboard().description }}</p>
+  </header>
+
+  <section aria-label="Acciones principales" class="home-actions">
+    @for (card of dashboard().actionCards; track card.id) {
+    <article
+      class="home-action-card"
+      [class.home-action-card--career]="card.id === 'career'"
+      [class.home-action-card--image]="card.imageSrc"
+      [class.home-action-card--scholarship]="card.id === 'scholarship'"
+      [attr.aria-labelledby]="'home-action-' + card.id + '-title'">
+      @if (card.imageSrc) {
+      <img alt="" class="home-action-card__image" [src]="card.imageSrc" />
+      }
+      <div class="home-action-card__content">
+        <ort-icon aria-hidden="true" class="home-action-card__icon">{{ card.icon }}</ort-icon>
+        <h2 [id]="'home-action-' + card.id + '-title'">{{ card.title }}</h2>
+        <p>{{ card.description }}</p>
+
+        @if (card.route) {
+        <a class="home-action-card__primary" ort-primary-button [routerLink]="card.route">
+          {{ card.ctaLabel }}
+        </a>
+        } @else {
+        <button
+          class="home-action-card__primary"
+          ort-primary-button
+          type="button"
+          aria-disabled="true"
+          [attr.aria-describedby]="'home-action-' + card.id + '-status'">
+          {{ card.ctaLabel }}
+        </button>
+        <p class="home-action-card__status" [id]="'home-action-' + card.id + '-status'">
+          {{ card.disabledReason || 'Acción no disponible.' }}
+        </p>
+        }
+      </div>
+    </article>
+    }
+  </section>
+</main>
