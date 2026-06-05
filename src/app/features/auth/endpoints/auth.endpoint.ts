@@ -313,3 +313,4 @@ export class AuthEndpoint {
     return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
   }
 }
+
