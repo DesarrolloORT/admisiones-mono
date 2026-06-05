@@ -1,5 +1,4 @@
 import {
-  buildAuthRegisterRequest,
   toAuthRegisterPersonalData,
   toRegisterPayload,
   toVerifyIdentityPayload,
@@ -40,9 +39,12 @@ describe('registration mapper', () => {
   });
 
   it('should build and format registration payloads for the endpoint adapter', () => {
-    const request = buildAuthRegisterRequest(identity, toAuthRegisterPersonalData(personal));
-
-    expect(toRegisterPayload(request)).toEqual({
+    expect(
+      toRegisterPayload({
+        identity,
+        personal: toAuthRegisterPersonalData(personal),
+      })
+    ).toEqual({
       tipoDocumento: 'CI',
       documento: '1234567-8',
       primerNombre: 'Ana',

@@ -47,16 +47,6 @@ export function toAuthRegisterPersonalData(
   };
 }
 
-export function buildAuthRegisterRequest(
-  identity: AuthIdentityData,
-  personal: AuthRegisterPersonalData
-): AuthRegisterRequest {
-  return {
-    identity,
-    personal,
-  };
-}
-
 export function toRegisterPayload(payload: AuthRegisterRequest): RegisterPayload {
   const { identity, personal } = payload;
 
