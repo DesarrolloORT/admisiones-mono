@@ -239,6 +239,141 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task AnalizarAdjunto_WithRecognizedDocument_StoresImagesInCache()
+        {
+            var reconocimientoMock = new Mock<IReconocimientoDocumento>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            var controller = CrearController(
+                reconocimientoDocumentoService: reconocimientoMock.Object,
+                documentoImagenCacheService: cacheMock.Object);
+            var request = new ReconocimientoDocumentoApiRequest
+            {
+                TipoMime = "application/pdf",
+                ArchivoAdjunto = new ArchivoPayload
+                {
+                    NombreArchivo = "documento.pdf",
+                    Archivo = [0x25, 0x50, 0x44, 0x46, 1]
+                }
+            };
+            reconocimientoMock
+                .Setup(s => s.ReconocerDocumentoAsync(It.IsAny<ReconocimientoDocumentoRequest>()))
+                .ReturnsAsync(OperationResult<ReconocimientoDocumentoResponse>.Ok(
+                    new ReconocimientoDocumentoResponse
+                    {
+                        Campos = new CamposDocumentoReconocidoDto
+                        {
+                            TipoDocumento = "CI",
+                            NumeroDocumento = "12345672",
+                            FechaVencimiento = new DateTime(2030, 1, 1)
+                        },
+                        CaraPersona = new ArchivoDescargaDto
+                        {
+                            Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                            NombreArchivo = "cara.jpg",
+                            ContentType = "image/jpeg"
+                        }
+                    },
+                    nameof(IReconocimientoDocumento.ReconocerDocumentoAsync)));
+
+            var response = await controller.AnalizarAdjunto(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            cacheMock.Verify(
+                s => s.GuardarAsync(
+                    "CI",
+                    "12345672",
+                    It.Is<RegistroDocumentoImagenesTemporales>(i =>
+                        i.DocumentoFrente.NombreArchivo == "documento.pdf"
+                        && i.DocumentoFrente.Archivo.SequenceEqual(request.ArchivoAdjunto.Archivo!)
+                        && i.CaraPersona != null
+                        && i.CaraPersona.NombreArchivo == "cara.jpg"
+                        && i.FechaVencimiento == new DateTime(2030, 1, 1))),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task AnalizarAdjunto_WithoutRecognizedDocument_DoesNotStoreImages()
+        {
+            var reconocimientoMock = new Mock<IReconocimientoDocumento>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            var controller = CrearController(
+                reconocimientoDocumentoService: reconocimientoMock.Object,
+                documentoImagenCacheService: cacheMock.Object);
+            reconocimientoMock
+                .Setup(s => s.ReconocerDocumentoAsync(It.IsAny<ReconocimientoDocumentoRequest>()))
+                .ReturnsAsync(OperationResult<ReconocimientoDocumentoResponse>.Ok(
+                    new ReconocimientoDocumentoResponse
+                    {
+                        Campos = new CamposDocumentoReconocidoDto
+                        {
+                            TipoDocumento = "CI"
+                        }
+                    },
+                    nameof(IReconocimientoDocumento.ReconocerDocumentoAsync)));
+
+            var response = await controller.AnalizarAdjunto(new ReconocimientoDocumentoApiRequest
+            {
+                TipoMime = "application/pdf",
+                ArchivoAdjunto = new ArchivoPayload
+                {
+                    NombreArchivo = "documento.pdf",
+                    Archivo = [0x25, 0x50, 0x44, 0x46, 1]
+                }
+            });
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            cacheMock.Verify(
+                s => s.GuardarAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<RegistroDocumentoImagenesTemporales>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task AnalizarAdjunto_WhenCacheFails_ReturnsRecognitionResult()
+        {
+            var reconocimientoMock = new Mock<IReconocimientoDocumento>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            cacheMock
+                .Setup(s => s.GuardarAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<RegistroDocumentoImagenesTemporales>()))
+                .ThrowsAsync(new InvalidOperationException("Redis unavailable"));
+            var controller = CrearController(
+                reconocimientoDocumentoService: reconocimientoMock.Object,
+                documentoImagenCacheService: cacheMock.Object);
+            reconocimientoMock
+                .Setup(s => s.ReconocerDocumentoAsync(It.IsAny<ReconocimientoDocumentoRequest>()))
+                .ReturnsAsync(OperationResult<ReconocimientoDocumentoResponse>.Ok(
+                    new ReconocimientoDocumentoResponse
+                    {
+                        Campos = new CamposDocumentoReconocidoDto
+                        {
+                            TipoDocumento = "CI",
+                            NumeroDocumento = "12345672"
+                        }
+                    },
+                    nameof(IReconocimientoDocumento.ReconocerDocumentoAsync)));
+
+            var response = await controller.AnalizarAdjunto(new ReconocimientoDocumentoApiRequest
+            {
+                TipoMime = "application/pdf",
+                ArchivoAdjunto = new ArchivoPayload
+                {
+                    NombreArchivo = "documento.pdf",
+                    Archivo = [0x25, 0x50, 0x44, 0x46, 1]
+                }
+            });
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+        }
+
+        [Fact]
         public async Task ConfirmarNuevaPersona_DelegatesToServiceAndReturnsOk()
         {
             var flowServiceMock = new Mock<IRegistroFlowService>();
@@ -273,7 +408,8 @@ namespace UnitTesting.Controllers
         private static RegistroController CrearController(
             IRegistroService? registroService = null,
             IReconocimientoDocumento? reconocimientoDocumentoService = null,
-            IRegistroFlowService? registroFlowService = null)
+            IRegistroFlowService? registroFlowService = null,
+            IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null)
         {
             var currentUserMock = new Mock<ICurrentUserService>();
             currentUserMock.Setup(c => c.UserId).Returns(1);
@@ -284,6 +420,7 @@ namespace UnitTesting.Controllers
                 registroService ?? Mock.Of<IRegistroService>(),
                 flowServiceMock,
                 reconocimientoDocumentoService ?? Mock.Of<IReconocimientoDocumento>(),
+                documentoImagenCacheService ?? Mock.Of<IRegistroDocumentoImagenCacheService>(),
                 Mock.Of<ILogger<RegistroController>>(),
                 currentUserMock.Object)
             {

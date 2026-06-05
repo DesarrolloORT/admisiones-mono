@@ -404,6 +404,18 @@ namespace AppLogic.Helpers
         }
 
         /// <summary>
+        /// Valida documentos de identidad reconocidos desde el onboarding (PDF o imagen).
+        /// </summary>
+        public static OperationResult<bool> ValidateIdentityDocumentFile(
+            byte[] fileContent,
+            string fileName,
+            string originMethod)
+        {
+            var allowedExtensions = new List<string> { ".pdf", ".jpg", ".jpeg", ".png" };
+            return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
+        }
+
+        /// <summary>
         /// Valida el contenido de un archivo (magic bytes) sin validar el nombre.
         /// Útil cuando solo se tiene el contenido del archivo y se necesita verificar que sea de un tipo específico.
         /// Valida que el contenido coincida con PDF, JPG o JPEG.

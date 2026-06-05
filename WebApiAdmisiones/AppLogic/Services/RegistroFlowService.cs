@@ -3,6 +3,7 @@ using AppLogic.DTOs;
 using AppLogic.IServices;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Utilities;
 
@@ -22,6 +23,8 @@ public class RegistroFlowService : IRegistroFlowService
     private readonly IPasswordActivationService _passwordActivationService;
     private readonly IConfiguration _configuration;
     private readonly IDatabase _redisDb;
+    private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
+    private readonly ILogger<RegistroFlowService>? _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -33,12 +36,16 @@ public class RegistroFlowService : IRegistroFlowService
         IRegistroService registroService,
         IPasswordActivationService passwordActivationService,
         IConfiguration configuration,
-        IConnectionMultiplexer redis)
+        IConnectionMultiplexer redis,
+        IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null,
+        ILogger<RegistroFlowService>? logger = null)
     {
         _registroService = registroService;
         _passwordActivationService = passwordActivationService;
         _configuration = configuration;
         _redisDb = redis.GetDatabase();
+        _documentoImagenCacheService = documentoImagenCacheService;
+        _logger = logger;
     }
 
     // ───── FlowSession ─────────────────────────────────────────────────────
@@ -325,7 +332,66 @@ public class RegistroFlowService : IRegistroFlowService
     }
 
     public Task<OperationResult<long>> CompletarNuevaPersona(RegistroPendingPersona data, string passwordNueva)
-        => _registroService.CompletarNuevaPersonaAsync(data, passwordNueva);
+        => CompletarNuevaPersonaAsync(data, passwordNueva);
+
+    private async Task<OperationResult<long>> CompletarNuevaPersonaAsync(
+        RegistroPendingPersona data,
+        string passwordNueva)
+    {
+        var imagenes = await ObtenerImagenesTemporalesAsync(data);
+        var result = await _registroService.CompletarNuevaPersonaAsync(data, passwordNueva, imagenes);
+
+        if (result.Success)
+        {
+            await EliminarImagenesTemporalesAsync(data);
+        }
+
+        return result;
+    }
+
+    private async Task<RegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(
+        RegistroPendingPersona data)
+    {
+        if (_documentoImagenCacheService is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _documentoImagenCacheService.ObtenerAsync(data.TipoDocumento, data.Documento);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                data.TipoDocumento,
+                data.Documento);
+            return null;
+        }
+    }
+
+    private async Task EliminarImagenesTemporalesAsync(RegistroPendingPersona data)
+    {
+        if (_documentoImagenCacheService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _documentoImagenCacheService.EliminarAsync(data.TipoDocumento, data.Documento);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                data.TipoDocumento,
+                data.Documento);
+        }
+    }
 
     private async Task<string> ResolverFlowIdPendingDocumentoAsync(
         string tipoDocumento,
