@@ -6,10 +6,8 @@ import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
-import { Career, Comienzo } from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import {
-  createCareerForm,
   createIdentityForm,
   createPersonalForm,
   syncDocumentNumberValidators,
@@ -29,7 +27,7 @@ import {
   RegisterFlowKind,
   resolveRegisterFlow,
 } from '../models/register-flow';
-import { AcademicLevel, REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
+import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
 import { DocumentPrefillResult, DocumentPrefillService } from '../services/document-prefill';
 import { RegistrationService } from '../services/registration';
 
@@ -46,7 +44,6 @@ export class RegisterFlowFacade {
   public readonly documentTypes$ = this.catalogs.getDocumentTypes();
   public readonly identityForm = createIdentityForm();
   public readonly personalForm = createPersonalForm();
-  public readonly careerForm = createCareerForm();
   public readonly step = signal<RegisterStep>('identity');
   public readonly selectedFileName = signal<string | null>(null);
   public readonly isSubmitting = signal(false);
@@ -56,9 +53,7 @@ export class RegisterFlowFacade {
   public readonly recognitionSuccessMessage = signal<string | null>(null);
   public readonly successMessage = signal<string | null>(null);
   public readonly registrationFlow = signal<RegisterFlowKind | null>(null);
-  public readonly careers = signal<Career[]>([]);
-  public readonly comienzos = signal<Comienzo[]>([]);
-  private readonly selectedAcademicLevel = signal<number | null>(null);
+  public readonly registrationFlowId = signal<string | null>(null);
 
   private readonly _documentTypeValue = toSignal(
     this.identityForm.controls.documentType.valueChanges,
@@ -72,29 +67,8 @@ export class RegisterFlowFacade {
   );
 
   public readonly isPersonalStep = computed(() => this.step() === 'personal');
-  public readonly isCareerStep = computed(() => this.step() === 'career');
   public readonly personalMode = computed(() => getRegisterPersonalMode(this.registrationFlow()));
   public readonly stepViewModel = computed(() => REGISTER_STEP_VIEW_MODELS[this.step()]);
-  public readonly filteredCareers = computed(() => {
-    const nivel = this.selectedAcademicLevel();
-
-    if (nivel === null) {
-      return [];
-    }
-
-    return this.careers().filter(c => c.idNivelProducto === nivel);
-  });
-  public readonly academicLevels = computed<AcademicLevel[]>(() => {
-    const seen = new Map<number, string>();
-
-    for (const career of this.careers()) {
-      if (!seen.has(career.idNivelProducto)) {
-        seen.set(career.idNivelProducto, career.nombreNivelProducto);
-      }
-    }
-
-    return Array.from(seen, ([id, nombre]) => ({ id, nombre }));
-  });
 
   constructor() {
     effect(() => {
@@ -113,7 +87,7 @@ export class RegisterFlowFacade {
     this.recognitionError.set(null);
     this.recognitionSuccessMessage.set(null);
     this.error.set(null);
-    this.registrationFlow.set(null);
+    this.clearRegistrationFlow();
     this.clearRecognizedFields();
 
     if (!selectedFile) {
@@ -141,7 +115,7 @@ export class RegisterFlowFacade {
 
     this.error.set(null);
     this.successMessage.set(null);
-    this.registrationFlow.set(null);
+    this.clearRegistrationFlow();
     this.isSubmitting.set(true);
 
     const identity = this.getCleanIdentityValues();
@@ -150,9 +124,15 @@ export class RegisterFlowFacade {
       const flow = resolveRegisterFlow(identity.documentType, result);
 
       this.registrationFlow.set(flow);
+      this.registrationFlowId.set(result.flowId);
 
       if (!flow) {
         this.showError('No se pudo determinar el flujo de registro para este documento.');
+        return;
+      }
+
+      if (isRegisterContinuableFlow(flow) && !result.flowId) {
+        this.showError('No se pudo iniciar el flujo de registro. Intentá nuevamente.');
         return;
       }
 
@@ -172,7 +152,7 @@ export class RegisterFlowFacade {
   public backToIdentity(): void {
     this.error.set(null);
     this.successMessage.set(null);
-    this.registrationFlow.set(null);
+    this.clearRegistrationFlow();
     this.step.set('identity');
   }
 
@@ -181,12 +161,6 @@ export class RegisterFlowFacade {
     void this.router.navigate(['/iniciar-sesion'], {
       queryParams: { tipoDoc: identity.documentType, doc: identity.documentNumber },
     });
-  }
-
-  public backToPersonal(): void {
-    this.error.set(null);
-    this.successMessage.set(null);
-    this.step.set('personal');
   }
 
   public submitPersonalData(): void {
@@ -198,7 +172,7 @@ export class RegisterFlowFacade {
         return;
       case 'new-person':
       case 'new-application':
-        this.submitFullPersonalData();
+        this.submitFullRegistration(flow);
         return;
       case 'user-exists':
       case 'application-exists':
@@ -208,7 +182,14 @@ export class RegisterFlowFacade {
     }
   }
 
-  private submitFullPersonalData(): void {
+  private submitFullRegistration(flow: 'new-person' | 'new-application'): void {
+    const flowId = this.registrationFlowId();
+
+    if (!flowId) {
+      this.showError('Primero evaluá el documento para continuar.');
+      return;
+    }
+
     if (this.personalForm.invalid) {
       this.personalForm.markAllAsTouched();
       return;
@@ -216,11 +197,36 @@ export class RegisterFlowFacade {
 
     this.error.set(null);
     this.successMessage.set(null);
-    this.loadCareers();
-    this.step.set('career');
+    this.isSubmitting.set(true);
+
+    this.registration
+      .confirmRegistration({
+        flow,
+        flowId,
+        identity: this.getCleanIdentityValues(),
+        personal: toAuthRegisterPersonalData(this.personalForm.getRawValue()),
+      })
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: () => {
+          this.showSuccess(
+            'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
+          );
+        },
+        error: error => {
+          this.setError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+        },
+      });
   }
 
   private submitVerification(): void {
+    const flowId = this.registrationFlowId();
+
+    if (!flowId) {
+      this.showError('Primero evaluá el documento para continuar.');
+      return;
+    }
+
     const { primerApellido, mail } = this.personalForm.controls;
 
     primerApellido.markAsTouched();
@@ -236,6 +242,7 @@ export class RegisterFlowFacade {
 
     this.registration
       .verifyExistingPersonIdentity({
+        flowId,
         identity: this.getCleanIdentityValues(),
         primerApellido: primerApellido.value,
         mail: mail.value,
@@ -244,8 +251,9 @@ export class RegisterFlowFacade {
       .subscribe({
         next: result => {
           if (result.success) {
-            this.loadCareers();
-            this.step.set('career');
+            this.showSuccess(
+              'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
+            );
           } else {
             this.snackbar.error('No se pudo verificar la identidad.');
           }
@@ -257,84 +265,6 @@ export class RegisterFlowFacade {
       });
   }
 
-  public onPropuestaChange(): void {
-    const level = this.careerForm.controls.propuestaAcademica.value;
-    this.selectedAcademicLevel.set(level);
-    this.careerForm.controls.carrera.reset(null);
-    this.careerForm.controls.comienzo.reset(null);
-    this.comienzos.set([]);
-  }
-
-  public onCarreraChange(): void {
-    this.careerForm.controls.comienzo.reset(null);
-    this.comienzos.set([]);
-    const idCarrera = this.careerForm.controls.carrera.value;
-
-    if (idCarrera !== null) {
-      this.loadComienzos(idCarrera);
-    }
-  }
-
-  public submitCareerData(): void {
-    const flow = this.registrationFlow();
-
-    if (!isRegisterContinuableFlow(flow)) {
-      this.showError('Primero evaluá el documento para continuar.');
-      return;
-    }
-
-    if (this.careerForm.invalid) {
-      this.careerForm.markAllAsTouched();
-      return;
-    }
-
-    const selection = this.getCareerSelection();
-
-    if (!selection) {
-      this.careerForm.markAllAsTouched();
-      return;
-    }
-
-    this.error.set(null);
-    this.successMessage.set(null);
-    this.isSubmitting.set(true);
-
-    this.registration
-      .confirmCareerInterest({
-        flow,
-        identity: this.getCleanIdentityValues(),
-        personal:
-          flow === 'existing-person'
-            ? null
-            : toAuthRegisterPersonalData(this.personalForm.getRawValue()),
-        selection,
-      })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: () => {
-          this.showSuccess(
-            'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-          );
-        },
-        error: error => {
-          this.setError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
-        },
-      });
-  }
-
-  private getCareerSelection(): { idProducto: number; idProceso: number } | null {
-    const { carrera, comienzo } = this.careerForm.getRawValue();
-
-    if (carrera === null || comienzo === null) {
-      return null;
-    }
-
-    return {
-      idProducto: carrera,
-      idProceso: comienzo,
-    };
-  }
-
   private getCleanIdentityValues(): AuthIdentityData {
     const { documentType, documentNumber } = this.identityForm.getRawValue();
 
@@ -342,22 +272,6 @@ export class RegisterFlowFacade {
       documentType,
       documentNumber: cleanDocumentNumber(documentType, documentNumber),
     };
-  }
-
-  private loadCareers(): void {
-    this.catalogs.getCareers().subscribe({
-      next: careers => this.careers.set(careers),
-      error: error =>
-        this.setError(this.getApiErrorMessage(error, 'No se pudieron cargar las carreras.')),
-    });
-  }
-
-  private loadComienzos(idCarrera: number): void {
-    this.catalogs.getComienzos(idCarrera).subscribe({
-      next: comienzos => this.comienzos.set(comienzos),
-      error: error =>
-        this.setError(this.getApiErrorMessage(error, 'No se pudieron cargar los comienzos.')),
-    });
   }
 
   private async preloadDocumentData(file: File): Promise<void> {
@@ -406,6 +320,11 @@ export class RegisterFlowFacade {
 
   private setError(message: string): void {
     this.error.set(message);
+  }
+
+  private clearRegistrationFlow(): void {
+    this.registrationFlow.set(null);
+    this.registrationFlowId.set(null);
   }
 
   private getApiErrorMessage(error: unknown, fallback: string): string {
@@ -477,4 +396,3 @@ export class RegisterFlowFacade {
     return 'No se pudo leer el archivo seleccionado.';
   }
 }
-

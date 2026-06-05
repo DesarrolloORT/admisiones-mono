@@ -1,4 +1,4 @@
-export type RegisterStep = 'identity' | 'personal' | 'career';
+export type RegisterStep = 'identity' | 'personal';
 
 export interface RegisterStepViewModel {
   title: string;
@@ -9,11 +9,6 @@ export interface RegisterStepViewModel {
   stepLabel: string | null;
   stepTitle: string | null;
   cardSize: 'default' | 'long';
-}
-
-export interface AcademicLevel {
-  id: number;
-  nombre: string;
 }
 
 export const REGISTER_STEP_VIEW_MODELS: Record<RegisterStep, RegisterStepViewModel> = {
@@ -29,22 +24,12 @@ export const REGISTER_STEP_VIEW_MODELS: Record<RegisterStep, RegisterStepViewMod
   },
   personal: {
     title: 'Datos personales',
-    description: 'Paso 1 de 2',
+    description: 'Completá tus datos para crear la cuenta.',
     heroIcon: 'public',
     heroTitle: 'Proyección global.',
     heroDescription: 'Validá tu talento con una formación alineada a estándares internacionales.',
-    stepLabel: 'Paso 1 de 2',
+    stepLabel: null,
     stepTitle: 'Datos personales',
-    cardSize: 'long',
-  },
-  career: {
-    title: 'Interés académico',
-    description: 'Paso 2 de 2',
-    heroIcon: 'school',
-    heroTitle: 'Tu futuro empieza aquí.',
-    heroDescription: 'Elegí la propuesta académica que se adapta a tu perfil profesional.',
-    stepLabel: 'Paso 2 de 2',
-    stepTitle: 'Interés académico',
     cardSize: 'long',
   },
 };

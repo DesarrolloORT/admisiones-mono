@@ -92,27 +92,30 @@ describe('Auth', () => {
       },
     };
 
-    auth.register(payload).subscribe(response => {
+    auth.register(payload, 'flow-new-person').subscribe(response => {
       expect(response.success).toBe(true);
     });
 
-    expect(endpointMock.register).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      primerNombre: 'Ana',
-      segundoNombre: 'Maria',
-      primerApellido: 'Silva',
-      segundoApellido: 'Pereira',
-      fechaNacimiento: '2000-01-01',
-      sexo: 'F',
-      direccion: 'Mercedes 1234',
-      telefono1: '099123456',
-      mail: 'ana@example.com',
-      verificacionMail: 'ana@example.com',
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: 100,
-    });
+    expect(endpointMock.register).toHaveBeenCalledWith(
+      {
+        tipoDocumento: 'CI',
+        documento: '1234567-8',
+        primerNombre: 'Ana',
+        segundoNombre: 'Maria',
+        primerApellido: 'Silva',
+        segundoApellido: 'Pereira',
+        fechaNacimiento: '2000-01-01',
+        sexo: 'F',
+        direccion: 'Mercedes 1234',
+        telefono1: '099123456',
+        mail: 'ana@example.com',
+        verificacionMail: 'ana@example.com',
+        codigoPais: 1,
+        codigoEstado: 10,
+        codigoCiudad: 100,
+      },
+      'flow-new-person'
+    );
   });
 
   it('should delegate application request confirmation with formatted document', () => {
@@ -136,33 +139,32 @@ describe('Auth', () => {
         mail: 'ana@example.com',
         verificacionMail: 'ana@example.com',
       },
-      idProducto: 20,
-      idProceso: 30,
     };
 
-    auth.confirmApplicationRequest(payload).subscribe(response => {
+    auth.confirmApplicationRequest(payload, 'flow-new-application').subscribe(response => {
       expect(response.success).toBe(true);
     });
 
-    expect(endpointMock.confirmApplicationRequest).toHaveBeenCalledWith({
-      tipoDocumento: 'PS',
-      documento: 'AB123456',
-      primerNombre: 'Ana',
-      segundoNombre: null,
-      primerApellido: 'Silva',
-      segundoApellido: null,
-      fechaNacimiento: '2000-01-01',
-      sexo: 'F',
-      direccion: 'Mercedes 1234',
-      telefono1: '099123456',
-      mail: 'ana@example.com',
-      verificacionMail: 'ana@example.com',
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: 100,
-      idProducto: 20,
-      idProceso: 30,
-    });
+    expect(endpointMock.confirmApplicationRequest).toHaveBeenCalledWith(
+      {
+        tipoDocumento: 'PS',
+        documento: 'AB123456',
+        primerNombre: 'Ana',
+        segundoNombre: null,
+        primerApellido: 'Silva',
+        segundoApellido: null,
+        fechaNacimiento: '2000-01-01',
+        sexo: 'F',
+        direccion: 'Mercedes 1234',
+        telefono1: '099123456',
+        mail: 'ana@example.com',
+        verificacionMail: 'ana@example.com',
+        codigoPais: 1,
+        codigoEstado: 10,
+        codigoCiudad: 100,
+      },
+      'flow-new-application'
+    );
   });
 
   describe('logout', () => {
@@ -193,4 +195,3 @@ describe('Auth', () => {
     });
   });
 });
-

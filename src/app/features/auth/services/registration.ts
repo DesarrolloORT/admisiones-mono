@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import {
   EvaluateDocumentResult,
@@ -9,8 +9,6 @@ import {
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import {
   buildAuthRegisterRequest,
-  RegisterCareerSelection,
-  toConfirmExistingPersonPayload,
   toRegisterPayload,
   toVerifyIdentityPayload,
   VerifyExistingPersonIdentityInput,
@@ -19,12 +17,18 @@ import { AuthIdentityData, AuthRegisterPersonalData } from '../models/auth.inter
 import { formatDocumentForBackend } from '../models/document-number';
 import { RegisterContinuableFlowKind } from '../models/register-flow';
 
-export interface ConfirmCareerInterestInput {
-  flow: RegisterContinuableFlowKind;
+type FullRegistrationFlow = Exclude<RegisterContinuableFlowKind, 'existing-person'>;
+
+export interface ConfirmRegistrationInput {
+  flow: FullRegistrationFlow;
+  flowId: string;
   identity: AuthIdentityData;
-  personal: AuthRegisterPersonalData | null;
-  selection: RegisterCareerSelection;
+  personal: AuthRegisterPersonalData;
 }
+
+export type VerifyExistingPersonIdentityFlowInput = VerifyExistingPersonIdentityInput & {
+  flowId: string;
+};
 
 @Injectable({
   providedIn: 'root',
@@ -40,34 +44,16 @@ export class RegistrationService {
   }
 
   public verifyExistingPersonIdentity(
-    input: VerifyExistingPersonIdentityInput
+    input: VerifyExistingPersonIdentityFlowInput
   ): Observable<VerifyIdentityResult> {
-    return this.endpoint.verifyIdentity(toVerifyIdentityPayload(input));
+    return this.endpoint.verifyIdentity(toVerifyIdentityPayload(input), input.flowId);
   }
 
-  public confirmCareerInterest(input: ConfirmCareerInterestInput): Observable<RegisterResult> {
-    switch (input.flow) {
-      case 'existing-person':
-        return this.endpoint.confirmExistingPerson(
-          toConfirmExistingPersonPayload(input.identity, input.selection)
-        );
-      case 'new-person':
-      case 'new-application':
-        return this.confirmFullRegistration(input);
-    }
-  }
-
-  private confirmFullRegistration(input: ConfirmCareerInterestInput): Observable<RegisterResult> {
-    if (!input.personal) {
-      return throwError(() => new Error('Personal data is required for this registration flow.'));
-    }
-
-    const payload = toRegisterPayload(
-      buildAuthRegisterRequest(input.identity, input.personal, input.selection)
-    );
+  public confirmRegistration(input: ConfirmRegistrationInput): Observable<RegisterResult> {
+    const payload = toRegisterPayload(buildAuthRegisterRequest(input.identity, input.personal));
 
     return input.flow === 'new-person'
-      ? this.endpoint.register(payload)
-      : this.endpoint.confirmApplicationRequest(payload);
+      ? this.endpoint.register(payload, input.flowId)
+      : this.endpoint.confirmApplicationRequest(payload, input.flowId);
   }
 }

@@ -7,7 +7,6 @@ import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
 import type {
-  ConfirmExistingPersonPayload,
   EvaluateDocumentResult,
   RegisterPayload,
   VerifyIdentityPayload,
@@ -47,12 +46,15 @@ export class Auth {
       );
   }
 
-  public register(payload: AuthRegisterRequest): Observable<AuthRegisterResponse> {
-    return this.endpoint.register(this.toRegisterPayload(payload));
+  public register(payload: AuthRegisterRequest, flowId: string): Observable<AuthRegisterResponse> {
+    return this.endpoint.register(this.toRegisterPayload(payload), flowId);
   }
 
-  public confirmApplicationRequest(payload: AuthRegisterRequest): Observable<AuthRegisterResponse> {
-    return this.endpoint.confirmApplicationRequest(this.toRegisterPayload(payload));
+  public confirmApplicationRequest(
+    payload: AuthRegisterRequest,
+    flowId: string
+  ): Observable<AuthRegisterResponse> {
+    return this.endpoint.confirmApplicationRequest(this.toRegisterPayload(payload), flowId);
   }
 
   private toRegisterPayload(payload: AuthRegisterRequest): RegisterPayload {
@@ -74,8 +76,6 @@ export class Auth {
       codigoPais: personal.codigoPais ?? undefined,
       codigoEstado: personal.codigoEstado ?? undefined,
       codigoCiudad: personal.codigoCiudad ?? undefined,
-      idProducto: payload.idProducto,
-      idProceso: payload.idProceso,
     };
   }
 
@@ -89,26 +89,16 @@ export class Auth {
     });
   }
 
-  public confirmExistingPerson(
-    payload: ConfirmExistingPersonPayload
-  ): Observable<AuthRegisterResponse> {
+  public verifyIdentity(
+    payload: VerifyIdentityPayload,
+    flowId: string
+  ): Observable<VerifyIdentityResult> {
     const formatted = {
       ...payload,
       documento: this.formatDocumentForBackend(payload.tipoDocumento, payload.documento),
     };
 
-    return this.endpoint
-      .confirmExistingPerson(formatted)
-      .pipe(map(result => ({ success: result.success })));
-  }
-
-  public verifyIdentity(payload: VerifyIdentityPayload): Observable<VerifyIdentityResult> {
-    const formatted = {
-      ...payload,
-      documento: this.formatDocumentForBackend(payload.tipoDocumento, payload.documento),
-    };
-
-    return this.endpoint.verifyIdentity(formatted);
+    return this.endpoint.verifyIdentity(formatted, flowId);
   }
 
   public logout(): void {
@@ -189,4 +179,3 @@ export class Auth {
     return this.document.defaultView?.localStorage ?? null;
   }
 }
-

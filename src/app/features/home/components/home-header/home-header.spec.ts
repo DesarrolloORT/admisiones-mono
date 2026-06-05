@@ -58,11 +58,13 @@ describe('HomeHeader', () => {
   it('should keep the menu button and logo visible in the shared header', () => {
     fixture.detectChanges();
 
-    const logo = fixture.nativeElement.querySelector('.home-header__logo') as HTMLImageElement;
+    const logo = fixture.nativeElement.querySelector('.home-brand__logo') as HTMLImageElement;
+    const brandName = fixture.nativeElement.querySelector('.home-brand__name') as HTMLSpanElement;
     const profileButton = fixture.nativeElement.querySelector('.home-avatar') as HTMLButtonElement;
 
     expect(logo?.getAttribute('src')).toBe('assets/auth/ort-logo-white.svg');
     expect(logo?.getAttribute('alt')).toBe('ORT');
+    expect(brandName?.textContent?.trim()).toBe('Admisiones');
     expect(profileButton?.getAttribute('aria-label')).toBe('Abrir menú de usuario');
     expect(profileButton?.getAttribute('aria-haspopup')).toBe('dialog');
     expect(profileButton?.getAttribute('aria-controls')).toBe('home-profile-menu');

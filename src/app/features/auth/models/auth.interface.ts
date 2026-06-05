@@ -40,8 +40,6 @@ export interface AuthRegisterPersonalData {
 export interface AuthRegisterRequest {
   identity: AuthIdentityData;
   personal: AuthRegisterPersonalData;
-  idProducto?: number;
-  idProceso?: number;
 }
 
 // Stable type from endpoint adapter (not a backend DTO).

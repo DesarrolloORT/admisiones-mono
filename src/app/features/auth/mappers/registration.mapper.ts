@@ -1,8 +1,4 @@
-import type {
-  ConfirmExistingPersonPayload,
-  RegisterPayload,
-  VerifyIdentityPayload,
-} from '../endpoints/auth.endpoint';
+import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
 import {
   AuthIdentityData,
   AuthRegisterPersonalData,
@@ -10,11 +6,6 @@ import {
 } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
 import { LocationValue } from '../models/location-value';
-
-export interface RegisterCareerSelection {
-  idProducto: number;
-  idProceso: number;
-}
 
 export interface RegisterPersonalFormValue {
   primerNombre: string;
@@ -58,14 +49,11 @@ export function toAuthRegisterPersonalData(
 
 export function buildAuthRegisterRequest(
   identity: AuthIdentityData,
-  personal: AuthRegisterPersonalData,
-  selection: RegisterCareerSelection
+  personal: AuthRegisterPersonalData
 ): AuthRegisterRequest {
   return {
     identity,
     personal,
-    idProducto: selection.idProducto,
-    idProceso: selection.idProceso,
   };
 }
 
@@ -88,20 +76,6 @@ export function toRegisterPayload(payload: AuthRegisterRequest): RegisterPayload
     codigoPais: personal.codigoPais ?? undefined,
     codigoEstado: personal.codigoEstado ?? undefined,
     codigoCiudad: personal.codigoCiudad ?? undefined,
-    idProducto: payload.idProducto,
-    idProceso: payload.idProceso,
-  };
-}
-
-export function toConfirmExistingPersonPayload(
-  identity: AuthIdentityData,
-  selection: RegisterCareerSelection
-): ConfirmExistingPersonPayload {
-  return {
-    tipoDocumento: identity.documentType,
-    documento: formatDocumentForBackend(identity.documentType, identity.documentNumber),
-    idProducto: selection.idProducto,
-    idProceso: selection.idProceso,
   };
 }
 

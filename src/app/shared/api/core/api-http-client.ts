@@ -1,4 +1,4 @@
-import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { isOperationResult, unwrapOperationResultContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
@@ -22,11 +22,16 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   pathParams?: EndpointPathParams<TEndpoint>;
   queryParams?: EndpointQueryParams<TEndpoint>;
   body?: EndpointRequest<TEndpoint>;
+  headers?: ApiRequestHeaders;
   withCredentials?: boolean;
   cache?: boolean;
   context?: HttpContext;
   unwrapOperationResult?: boolean;
 };
+
+export type ApiRequestHeaders =
+  | HttpHeaders
+  | Record<string, string | number | boolean | null | undefined>;
 
 @Injectable({ providedIn: 'root' })
 export class ApiHttpClient {
@@ -42,6 +47,7 @@ export class ApiHttpClient {
     const params = this.buildHttpParams(options.queryParams);
     const requestOptions = {
       context: this.resolveContext(options),
+      headers: this.buildHttpHeaders(options.headers),
       params,
       withCredentials: options.withCredentials,
     };
@@ -73,6 +79,7 @@ export class ApiHttpClient {
     const url = this.resolveUrl(buildApiPath(endpoint.path, options.pathParams));
     const requestOptions = {
       context: this.resolveContext({ ...options, unwrapOperationResult: false }),
+      headers: this.buildHttpHeaders(options.headers),
       params: this.buildHttpParams(options.queryParams),
       withCredentials: options.withCredentials,
     };
@@ -126,7 +133,12 @@ export class ApiHttpClient {
   private execute<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     endpoint: TEndpoint,
     url: string,
-    requestOptions: { context: HttpContext; params?: HttpParams; withCredentials?: boolean },
+    requestOptions: {
+      context: HttpContext;
+      headers?: HttpHeaders;
+      params?: HttpParams;
+      withCredentials?: boolean;
+    },
     body?: EndpointRequest<TEndpoint>
   ): Observable<EndpointData<TEndpoint>> {
     const response$ = this.executeRaw(endpoint, url, requestOptions, body);
@@ -137,7 +149,12 @@ export class ApiHttpClient {
   private executeRaw<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     endpoint: TEndpoint,
     url: string,
-    requestOptions: { context: HttpContext; params?: HttpParams; withCredentials?: boolean },
+    requestOptions: {
+      context: HttpContext;
+      headers?: HttpHeaders;
+      params?: HttpParams;
+      withCredentials?: boolean;
+    },
     body?: EndpointRequest<TEndpoint>
   ): Observable<EndpointResponse<TEndpoint>> {
     switch (endpoint.method) {
@@ -186,6 +203,28 @@ export class ApiHttpClient {
     }
 
     return params;
+  }
+
+  private buildHttpHeaders(headers: ApiRequestHeaders | undefined): HttpHeaders | undefined {
+    if (!headers) {
+      return undefined;
+    }
+
+    if (headers instanceof HttpHeaders) {
+      return headers;
+    }
+
+    let httpHeaders = new HttpHeaders();
+
+    for (const [key, value] of Object.entries(headers)) {
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      httpHeaders = httpHeaders.set(key, String(value));
+    }
+
+    return httpHeaders;
   }
 
   private appendHttpParam(params: HttpParams, key: string, value: unknown): HttpParams {

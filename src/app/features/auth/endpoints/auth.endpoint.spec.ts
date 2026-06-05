@@ -8,7 +8,7 @@ import {
   provideOrtApiErrorHandling,
 } from '@desarrolloort/ngx-utils';
 
-import { AuthEndpoint } from './auth.endpoint';
+import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
 
 describe('AuthEndpoint', () => {
   let endpoint: AuthEndpoint;
@@ -120,6 +120,36 @@ describe('AuthEndpoint', () => {
   });
 
   describe('register', () => {
+    it('should map document evaluation with flowId', () => {
+      endpoint.evaluateDocument({ tipoDocumento: 'CI', documento: '12345' }).subscribe(result => {
+        expect(result).toEqual({
+          flowId: 'flow-existing-person',
+          requiereAltaPersona: false,
+          requiereAltaSolicitud: false,
+          requiereVerificacion: true,
+          solicitudAltaExistente: false,
+          usuarioExistente: false,
+          message: null,
+        });
+      });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Registro/EvaluarDocumento') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toEqual({ tipoDocumento: 'CI', documento: '12345' });
+      expect(req.request.withCredentials).toBe(true);
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: {
+          flowId: 'flow-existing-person',
+          requiereVerificacion: true,
+        },
+      });
+    });
+
     it('should POST to /Registro/ConfirmarNuevaPersona and return success', () => {
       const payload = {
         tipoDocumento: 'CI',
@@ -136,7 +166,7 @@ describe('AuthEndpoint', () => {
         verificacionMail: 'ana@example.com',
       };
 
-      endpoint.register(payload).subscribe(result => {
+      endpoint.register(payload, 'flow-new-person').subscribe(result => {
         expect(result.success).toBe(true);
       });
 
@@ -145,6 +175,7 @@ describe('AuthEndpoint', () => {
       );
 
       expect(req.request.body).toEqual(payload);
+      expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-person');
       expect(req.request.withCredentials).toBe(true);
 
       req.flush({ success: true, httpCode: 200, data: null });
@@ -152,20 +183,23 @@ describe('AuthEndpoint', () => {
 
     it('should propagate normalized API failures', () => {
       endpoint
-        .register({
-          tipoDocumento: 'CI',
-          documento: '1',
-          primerNombre: 'X',
-          segundoNombre: null,
-          primerApellido: 'Y',
-          segundoApellido: null,
-          fechaNacimiento: '2000-01-01',
-          sexo: 'M',
-          direccion: '',
-          telefono1: '',
-          mail: '',
-          verificacionMail: '',
-        })
+        .register(
+          {
+            tipoDocumento: 'CI',
+            documento: '1',
+            primerNombre: 'X',
+            segundoNombre: null,
+            primerApellido: 'Y',
+            segundoApellido: null,
+            fechaNacimiento: '2000-01-01',
+            sexo: 'M',
+            direccion: '',
+            telefono1: '',
+            mail: '',
+            verificacionMail: '',
+          },
+          'flow-new-person'
+        )
         .subscribe({
           error: error => {
             expect(isNormalizedApiError(error)).toBe(true);
@@ -197,11 +231,9 @@ describe('AuthEndpoint', () => {
         telefono1: '099123456',
         mail: 'ana@example.com',
         verificacionMail: 'ana@example.com',
-        idProducto: 20,
-        idProceso: 30,
       };
 
-      endpoint.confirmApplicationRequest(payload).subscribe(result => {
+      endpoint.confirmApplicationRequest(payload, 'flow-new-application').subscribe(result => {
         expect(result.success).toBe(true);
       });
 
@@ -210,6 +242,32 @@ describe('AuthEndpoint', () => {
       );
 
       expect(req.request.body).toEqual(payload);
+      expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-application');
+      expect(req.request.withCredentials).toBe(true);
+
+      req.flush({ success: true, httpCode: 200, data: null });
+    });
+  });
+
+  describe('verifyIdentity', () => {
+    it('should POST to /Registro/VerificarIdentidad with X-Flow-Id and return success', () => {
+      const payload = {
+        tipoDocumento: 'CI',
+        documento: '12345678',
+        primerApellido: 'Silva',
+        mail: 'ana@example.com',
+      };
+
+      endpoint.verifyIdentity(payload, 'flow-existing-person').subscribe(result => {
+        expect(result.success).toBe(true);
+      });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Registro/VerificarIdentidad') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toEqual(payload);
+      expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-existing-person');
       expect(req.request.withCredentials).toBe(true);
 
       req.flush({ success: true, httpCode: 200, data: null });

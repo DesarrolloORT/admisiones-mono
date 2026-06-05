@@ -10,13 +10,13 @@
   @if (error()) {
   <p class="auth-error" role="alert">{{ error() }}</p>
   } @if (successMessage()) {
-  <output class="auth-success">{{ successMessage() }}</output>
+  <output class="auth-success" role="status">{{ successMessage() }}</output>
   }
 
   <div class="auth-actions">
     <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
-    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Enviando...' : 'Continuar' }}
+    <button ort-primary-button type="submit" [disabled]="isSubmitting() || !!successMessage()">
+      {{ successMessage() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
     </button>
   </div>
 </form>

@@ -14,13 +14,14 @@ describe('RegisterFlowFacade', () => {
   let registrationMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
     verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
-    confirmCareerInterest: ReturnType<typeof vi.fn>;
+    confirmRegistration: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     registrationMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
+          flowId: 'flow-existing-person',
           requiereAltaPersona: false,
           requiereAltaSolicitud: false,
           requiereVerificacion: true,
@@ -30,7 +31,7 @@ describe('RegisterFlowFacade', () => {
         })
       ),
       verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmCareerInterest: vi.fn().mockReturnValue(of({ success: true })),
+      confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
     };
 
     TestBed.configureTestingModule({
@@ -41,8 +42,6 @@ describe('RegisterFlowFacade', () => {
           provide: Catalogs,
           useValue: {
             getDocumentTypes: vi.fn().mockReturnValue(of([])),
-            getCareers: vi.fn().mockReturnValue(of([])),
-            getComienzos: vi.fn().mockReturnValue(of([])),
           },
         },
         {
@@ -72,28 +71,34 @@ describe('RegisterFlowFacade', () => {
   });
 
   it('should block identity step when document already has a user', async () => {
-    mockEvaluation({ usuarioExistente: true });
+    mockEvaluation({
+      usuarioExistente: true,
+      message: 'Ya existe un usuario registrado con este documento.',
+    });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
 
     await facade.continueToPersonalData();
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('user-exists');
-    expect(facade.error()).toBeNull();
+    expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
   });
 
   it('should block identity step when application already exists', async () => {
-    mockEvaluation({ solicitudAltaExistente: true });
+    mockEvaluation({
+      solicitudAltaExistente: true,
+      message: 'Ya existe una solicitud de alta pendiente para este documento.',
+    });
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
 
     await facade.continueToPersonalData();
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('application-exists');
-    expect(facade.error()).toBeNull();
+    expect(facade.error()).toBe('Ya existe una solicitud de alta pendiente para este documento.');
   });
 
-  it('should verify an existing CI person before career selection', async () => {
+  it('should verify an existing CI person from the personal step', async () => {
     mockEvaluation({ requiereVerificacion: true });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
@@ -104,77 +109,85 @@ describe('RegisterFlowFacade', () => {
     expect(facade.registrationFlow()).toBe('existing-person');
     expect(facade.personalMode()).toBe('verification');
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
+      flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
       primerApellido: 'Silva',
       mail: 'ana@example.com',
     });
-    expect(facade.step()).toBe('career');
+    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
+    expect(facade.step()).toBe('personal');
+    expect(facade.successMessage()).toBe(
+      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
+    );
   });
 
-  it('should confirm career data for an existing CI person', async () => {
-    mockEvaluation({ requiereVerificacion: true });
-    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
-    await facade.continueToPersonalData();
-    setValidCareerForm(facade);
-
-    facade.submitCareerData();
-
-    expect(registrationMock.confirmCareerInterest).toHaveBeenCalledWith({
-      flow: 'existing-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      personal: null,
-      selection: { idProducto: 20, idProceso: 30 },
-    });
-  });
-
-  it('should collect full data and register a new CI person', async () => {
-    mockEvaluation({ requiereAltaPersona: true });
+  it('should collect full data and register a new CI person from the personal step', async () => {
+    mockEvaluation({ requiereAltaPersona: true, flowId: 'flow-new-person' });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
     await facade.continueToPersonalData();
     facade.submitPersonalData();
-    setValidCareerForm(facade);
-    facade.submitCareerData();
 
     expect(facade.registrationFlow()).toBe('new-person');
     expect(facade.personalMode()).toBe('complete');
-    expect(registrationMock.confirmCareerInterest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        flow: 'new-person',
-        identity: { documentType: 'CI', documentNumber: '11111111' },
-        selection: { idProducto: 20, idProceso: 30 },
-      })
+    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith({
+      flow: 'new-person',
+      flowId: 'flow-new-person',
+      identity: { documentType: 'CI', documentNumber: '11111111' },
+      personal: expect.objectContaining({
+        primerNombre: 'Ana',
+        primerApellido: 'Silva',
+        mail: 'ana@example.com',
+      }),
+    });
+    expect(facade.step()).toBe('personal');
+    expect(facade.successMessage()).toBe(
+      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
 
+  it('should block continuable registration when backend omits flowId', async () => {
+    mockEvaluation({ requiereAltaPersona: true, flowId: null });
+    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
+
+    await facade.continueToPersonalData();
+
+    expect(facade.step()).toBe('identity');
+    expect(facade.error()).toBe('No se pudo iniciar el flujo de registro. Intentá nuevamente.');
+    expect(facade.registrationFlow()).toBe('new-person');
+    expect(facade.registrationFlowId()).toBeNull();
+  });
+
   it('should collect full data and confirm a non-CI application request', async () => {
-    mockEvaluation({ requiereAltaSolicitud: true });
+    mockEvaluation({ requiereAltaSolicitud: true, flowId: 'flow-new-application' });
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
     setValidPersonalForm(facade);
 
     await facade.continueToPersonalData();
     facade.submitPersonalData();
-    setValidCareerForm(facade);
-    facade.submitCareerData();
 
     expect(facade.registrationFlow()).toBe('new-application');
-    expect(registrationMock.confirmCareerInterest).toHaveBeenCalledWith(
+    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith(
       expect.objectContaining({
         flow: 'new-application',
+        flowId: 'flow-new-application',
         identity: { documentType: 'PS', documentNumber: 'AB123456' },
       })
     );
+    expect(facade.successMessage()).toBe(
+      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
+    );
   });
 
-  it('should reject career confirmation when no flow was evaluated', () => {
+  it('should reject personal submit when no flow was evaluated', () => {
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
-    setValidCareerForm(facade);
+    setValidPersonalForm(facade);
 
-    facade.submitCareerData();
+    facade.submitPersonalData();
 
     expect(facade.error()).toBe('Primero evaluá el documento para continuar.');
-    expect(registrationMock.confirmCareerInterest).not.toHaveBeenCalled();
+    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
   });
 
   it('should surface evaluate document errors', async () => {
@@ -195,16 +208,6 @@ describe('RegisterFlowFacade', () => {
     expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
   });
 
-  it('should reset dependent career fields when academic level changes', () => {
-    facade.careerForm.setValue({ propuestaAcademica: 1, carrera: 2, comienzo: 3 });
-
-    facade.onPropuestaChange();
-
-    expect(facade.careerForm.controls.carrera.value).toBeNull();
-    expect(facade.careerForm.controls.comienzo.value).toBeNull();
-    expect(facade.comienzos()).toEqual([]);
-  });
-
   function mockEvaluation(
     partial: Partial<{
       requiereAltaPersona: boolean;
@@ -212,11 +215,13 @@ describe('RegisterFlowFacade', () => {
       requiereVerificacion: boolean;
       solicitudAltaExistente: boolean;
       usuarioExistente: boolean;
+      flowId: string | null;
       message: string | null;
     }>
   ): void {
     registrationMock.evaluateDocument.mockReturnValue(
       of({
+        flowId: 'flow-existing-person',
         requiereAltaPersona: false,
         requiereAltaSolicitud: false,
         requiereVerificacion: false,
@@ -244,12 +249,3 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     verificacionMail: 'ana@example.com',
   });
 }
-
-function setValidCareerForm(facade: RegisterFlowFacade): void {
-  facade.careerForm.setValue({
-    propuestaAcademica: 1,
-    carrera: 20,
-    comienzo: 30,
-  });
-}
-

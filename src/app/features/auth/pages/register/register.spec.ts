@@ -16,12 +16,7 @@ describe('Register', () => {
   let registrationMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
     verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
-    confirmCareerInterest: ReturnType<typeof vi.fn>;
-  };
-  let catalogsMock: {
-    getDocumentTypes: ReturnType<typeof vi.fn>;
-    getCareers: ReturnType<typeof vi.fn>;
-    getComienzos: ReturnType<typeof vi.fn>;
+    confirmRegistration: ReturnType<typeof vi.fn>;
   };
   let documentPrefillMock: {
     preload: ReturnType<typeof vi.fn>;
@@ -31,6 +26,7 @@ describe('Register', () => {
     registrationMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
+          flowId: 'flow-existing-person',
           requiereAltaPersona: false,
           requiereAltaSolicitud: false,
           requiereVerificacion: true,
@@ -40,29 +36,7 @@ describe('Register', () => {
         })
       ),
       verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmCareerInterest: vi.fn().mockReturnValue(of({ success: true })),
-    };
-    catalogsMock = {
-      getDocumentTypes: vi.fn().mockReturnValue(
-        of([
-          { id: 1, label: 'Cédula de identidad', code: 'CI' },
-          { id: 2, label: 'Pasaporte', code: 'PS' },
-          { id: 3, label: 'DNI', code: 'DNI' },
-        ])
-      ),
-      getCareers: vi.fn().mockReturnValue(
-        of([
-          {
-            idProducto: 20,
-            idNivelProducto: 1,
-            nombreProducto: 'Licenciatura en Diseño Gráfico',
-            nombreNivelProducto: 'Carreras universitarias',
-          },
-        ])
-      ),
-      getComienzos: vi
-        .fn()
-        .mockReturnValue(of([{ idProceso: 30, nombreProceso: 'Marzo 2026. 08:00 - 14:00' }])),
+      confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
     };
     documentPrefillMock = {
       preload: vi.fn().mockResolvedValue({
@@ -92,7 +66,19 @@ describe('Register', () => {
       providers: [
         provideRouter([]),
         { provide: RegistrationService, useValue: registrationMock },
-        { provide: Catalogs, useValue: catalogsMock },
+        {
+          provide: Catalogs,
+          useValue: {
+            getDocumentTypes: vi.fn().mockReturnValue(
+              of([
+                { id: 1, label: 'Cédula de identidad', code: 'CI' },
+                { id: 2, label: 'Pasaporte', code: 'PS' },
+                { id: 3, label: 'DNI', code: 'DNI' },
+              ])
+            ),
+            getCountryLocations: vi.fn().mockReturnValue(of([])),
+          },
+        },
         { provide: DocumentPrefillService, useValue: documentPrefillMock },
         {
           provide: SnackbarHandler,
@@ -166,7 +152,7 @@ describe('Register', () => {
     );
   });
 
-  it('should verify identity and move to career step', async () => {
+  it('should verify identity and finish existing-person flow', async () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
@@ -178,12 +164,16 @@ describe('Register', () => {
     facade.submitPersonalData();
 
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
+      flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
       primerApellido: 'Silva',
       mail: 'ana@example.com',
     });
-    expect(catalogsMock.getCareers).toHaveBeenCalled();
-    expect(facade.step()).toBe('career');
+    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
+    expect(facade.step()).toBe('personal');
+    expect(facade.successMessage()).toBe(
+      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
+    );
   });
 
   it('should still call verifyIdentity even if verificacionMail differs', async () => {
@@ -199,32 +189,40 @@ describe('Register', () => {
     facade.submitPersonalData();
 
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
+      flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
       primerApellido: 'Silva',
       mail: 'ana@example.com',
     });
   });
 
-  it('should confirm career data', async () => {
+  it('should create a new account directly from personal data', async () => {
+    registrationMock.evaluateDocument.mockReturnValue(
+      of({
+        flowId: 'flow-new-person',
+        requiereAltaPersona: true,
+        requiereAltaSolicitud: false,
+        requiereVerificacion: false,
+        solicitudAltaExistente: false,
+        usuarioExistente: false,
+        message: null,
+      })
+    );
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
       documentNumber: '11111111',
     });
+    setValidPersonalForm(facade);
+
     await facade.continueToPersonalData();
-    facade.careerForm.setValue({
-      propuestaAcademica: 1,
-      carrera: 20,
-      comienzo: 30,
-    });
+    facade.submitPersonalData();
 
-    facade.submitCareerData();
-
-    expect(registrationMock.confirmCareerInterest).toHaveBeenCalledWith({
-      flow: 'existing-person',
+    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith({
+      flow: 'new-person',
+      flowId: 'flow-new-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
-      personal: null,
-      selection: { idProducto: 20, idProceso: 30 },
+      personal: expect.objectContaining({ primerNombre: 'Ana' }),
     });
     expect(facade.successMessage()).toBe(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
@@ -247,4 +245,3 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     verificacionMail: 'ana@example.com',
   });
 }
-

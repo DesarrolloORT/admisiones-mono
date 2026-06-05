@@ -10,7 +10,6 @@ describe('RegistrationService', () => {
   let endpointMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
     verifyIdentity: ReturnType<typeof vi.fn>;
-    confirmExistingPerson: ReturnType<typeof vi.fn>;
     register: ReturnType<typeof vi.fn>;
     confirmApplicationRequest: ReturnType<typeof vi.fn>;
   };
@@ -19,7 +18,6 @@ describe('RegistrationService', () => {
     endpointMock = {
       evaluateDocument: vi.fn().mockReturnValue(of({ usuarioExistente: false })),
       verifyIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmExistingPerson: vi.fn().mockReturnValue(of({ success: true })),
       register: vi.fn().mockReturnValue(of({ success: true })),
       confirmApplicationRequest: vi.fn().mockReturnValue(of({ success: true })),
     };
@@ -47,42 +45,29 @@ describe('RegistrationService', () => {
   it('should verify identity with a formatted document', () => {
     service
       .verifyExistingPersonIdentity({
+        flowId: 'flow-existing-person',
         identity: { documentType: 'CI', documentNumber: '12345678' },
         primerApellido: 'Silva',
         mail: 'ana@example.com',
       })
       .subscribe();
 
-    expect(endpointMock.verifyIdentity).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      primerApellido: 'Silva',
-      mail: 'ana@example.com',
-    });
-  });
-
-  it('should confirm existing-person career interest', () => {
-    service
-      .confirmCareerInterest({
-        flow: 'existing-person',
-        identity: { documentType: 'CI', documentNumber: '12345678' },
-        personal: null,
-        selection: { idProducto: 20, idProceso: 30 },
-      })
-      .subscribe();
-
-    expect(endpointMock.confirmExistingPerson).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      idProducto: 20,
-      idProceso: 30,
-    });
+    expect(endpointMock.verifyIdentity).toHaveBeenCalledWith(
+      {
+        tipoDocumento: 'CI',
+        documento: '1234567-8',
+        primerApellido: 'Silva',
+        mail: 'ana@example.com',
+      },
+      'flow-existing-person'
+    );
   });
 
   it('should confirm a new person with full registration payload', () => {
     service
-      .confirmCareerInterest({
+      .confirmRegistration({
         flow: 'new-person',
+        flowId: 'flow-new-person',
         identity: { documentType: 'CI', documentNumber: '12345678' },
         personal: {
           primerNombre: 'Ana',
@@ -99,7 +84,6 @@ describe('RegistrationService', () => {
           mail: 'ana@example.com',
           verificacionMail: 'ana@example.com',
         },
-        selection: { idProducto: 20, idProceso: 30 },
       })
       .subscribe();
 
@@ -108,16 +92,16 @@ describe('RegistrationService', () => {
         tipoDocumento: 'CI',
         documento: '1234567-8',
         primerNombre: 'Ana',
-        idProducto: 20,
-        idProceso: 30,
-      })
+      }),
+      'flow-new-person'
     );
   });
 
   it('should confirm a non-CI application request', () => {
     service
-      .confirmCareerInterest({
+      .confirmRegistration({
         flow: 'new-application',
+        flowId: 'flow-new-application',
         identity: { documentType: 'PS', documentNumber: 'AB123456' },
         personal: {
           primerNombre: 'Ana',
@@ -134,7 +118,6 @@ describe('RegistrationService', () => {
           mail: 'ana@example.com',
           verificacionMail: 'ana@example.com',
         },
-        selection: { idProducto: 20, idProceso: 30 },
       })
       .subscribe();
 
@@ -142,7 +125,8 @@ describe('RegistrationService', () => {
       expect.objectContaining({
         tipoDocumento: 'PS',
         documento: 'AB123456',
-      })
+      }),
+      'flow-new-application'
     );
   });
 });

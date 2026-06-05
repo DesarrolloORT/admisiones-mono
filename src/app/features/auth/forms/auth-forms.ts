@@ -33,12 +33,6 @@ export interface PersonalForm {
   verificacionMail: FormControl<string>;
 }
 
-export interface CareerForm {
-  propuestaAcademica: FormControl<number | null>;
-  carrera: FormControl<number | null>;
-  comienzo: FormControl<number | null>;
-}
-
 export interface RecoverAccessForm {
   documentType: FormControl<string>;
   documentNumber: FormControl<string>;
@@ -135,20 +129,6 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
       ],
     }
   );
-}
-
-export function createCareerForm(): FormGroup<CareerForm> {
-  return new FormGroup<CareerForm>({
-    propuestaAcademica: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-    carrera: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-    comienzo: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-  });
 }
 
 export function emailsMatch(form: FormGroup<PersonalForm>): boolean {

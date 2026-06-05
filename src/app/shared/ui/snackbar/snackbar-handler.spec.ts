@@ -1,31 +1,53 @@
 import { TestBed } from '@angular/core/testing';
+import { OrtSnackbarService } from '@desarrolloort/components';
+import { EMPTY } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SnackbarHandler } from './snackbar-handler';
 
 describe('SnackbarHandler', () => {
   let handler: SnackbarHandler;
+  let openMock: ReturnType<typeof vi.fn>;
+  let dismissMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    dismissMock = vi.fn();
+    openMock = vi.fn().mockReturnValue({
+      dismiss: dismissMock,
+      onAction: () => EMPTY,
+    });
+
     TestBed.configureTestingModule({
-      providers: [SnackbarHandler],
+      providers: [
+        SnackbarHandler,
+        {
+          provide: OrtSnackbarService,
+          useValue: { open: openMock },
+        },
+      ],
     });
 
     handler = TestBed.inject(SnackbarHandler);
   });
 
-  it('should show success snackbar without errors', () => {
-    const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
+  it('should show success snackbar without errors', async () => {
     handler.success('Guardado');
+    await Promise.resolve();
 
-    expect(spy).toHaveBeenCalledWith('[Snackbar][success] Guardado');
-    spy.mockRestore();
+    expect(openMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Guardado',
+        variant: 'success',
+      })
+    );
   });
 
-  it('should dismiss current snackbar', () => {
+  it('should dismiss current snackbar', async () => {
     handler.information('Info');
+    await Promise.resolve();
+
     handler.dismiss();
-    // No errors thrown means dismiss worked
-    expect(true).toBe(true);
+
+    expect(dismissMock).toHaveBeenCalled();
   });
 });

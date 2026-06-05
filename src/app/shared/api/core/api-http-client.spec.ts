@@ -49,6 +49,7 @@ describe('ApiHttpClient', () => {
         pathParams: { id: 'CI 123' },
         queryParams: { page: 2, search: null },
         body: { nombre: 'Ana' },
+        headers: { 'X-Flow-Id': 'flow-123', 'X-Skip-Empty': null },
         withCredentials: true,
       })
       .subscribe(response => {
@@ -63,6 +64,8 @@ describe('ApiHttpClient', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.withCredentials).toBe(true);
     expect(request.request.body).toEqual({ nombre: 'Ana' });
+    expect(request.request.headers.get('X-Flow-Id')).toBe('flow-123');
+    expect(request.request.headers.has('X-Skip-Empty')).toBe(false);
 
     request.flush({ ok: true });
   });

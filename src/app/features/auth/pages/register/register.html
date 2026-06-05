@@ -32,18 +32,5 @@
     [successMessage]="facade.successMessage()"
     (back)="facade.backToIdentity()"
     (submitStep)="facade.submitPersonalData()" />
-  } @else {
-  <app-register-career-step
-    [academicLevels]="facade.academicLevels()"
-    [comienzos]="facade.comienzos()"
-    [error]="facade.error()"
-    [filteredCareers]="facade.filteredCareers()"
-    [form]="facade.careerForm"
-    [isSubmitting]="facade.isSubmitting()"
-    [successMessage]="facade.successMessage()"
-    (back)="facade.backToPersonal()"
-    (carreraChange)="facade.onCarreraChange()"
-    (propuestaChange)="facade.onPropuestaChange()"
-    (submitStep)="facade.submitCareerData()" />
   }
 </app-auth-form>

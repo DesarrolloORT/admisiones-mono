@@ -1,7 +1,6 @@
 import {
   buildAuthRegisterRequest,
   toAuthRegisterPersonalData,
-  toConfirmExistingPersonPayload,
   toRegisterPayload,
   toVerifyIdentityPayload,
 } from './registration.mapper';
@@ -21,7 +20,6 @@ describe('registration mapper', () => {
     mail: 'ana@example.com',
     verificacionMail: 'ana@example.com',
   };
-  const selection = { idProducto: 20, idProceso: 30 };
 
   it('should map personal form values to registration data', () => {
     expect(toAuthRegisterPersonalData(personal)).toEqual({
@@ -42,11 +40,7 @@ describe('registration mapper', () => {
   });
 
   it('should build and format registration payloads for the endpoint adapter', () => {
-    const request = buildAuthRegisterRequest(
-      identity,
-      toAuthRegisterPersonalData(personal),
-      selection
-    );
+    const request = buildAuthRegisterRequest(identity, toAuthRegisterPersonalData(personal));
 
     expect(toRegisterPayload(request)).toEqual({
       tipoDocumento: 'CI',
@@ -64,18 +58,10 @@ describe('registration mapper', () => {
       codigoPais: 1,
       codigoEstado: 10,
       codigoCiudad: 100,
-      idProducto: 20,
-      idProceso: 30,
     });
   });
 
-  it('should build existing-person and verification payloads', () => {
-    expect(toConfirmExistingPersonPayload(identity, selection)).toEqual({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      idProducto: 20,
-      idProceso: 30,
-    });
+  it('should build verification payloads for existing-person flow', () => {
     expect(
       toVerifyIdentityPayload({ identity, primerApellido: 'Silva', mail: 'ana@example.com' })
     ).toEqual({

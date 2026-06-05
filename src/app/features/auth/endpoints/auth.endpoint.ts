@@ -13,7 +13,6 @@ import {
 import {
   postRegistroAnalizarAdjuntoEndpoint,
   postRegistroConfirmarNuevaPersonaEndpoint,
-  postRegistroConfirmarPersonaExistenteEndpoint,
   postRegistroConfirmarSolicitudAltaEndpoint,
   postRegistroEvaluarDocumentoEndpoint,
   postRegistroVerificarIdentidadEndpoint,
@@ -23,6 +22,8 @@ import type {
   DocumentRecognitionData,
   DocumentRecognitionRequest,
 } from '../models/document-recognition.interface';
+
+export const AUTH_FLOW_ID_HEADER = 'X-Flow-Id';
 
 // ---------------------------------------------------------------------------
 // Stable public types — these are the contract that the rest of the feature
@@ -60,19 +61,9 @@ export interface RegisterPayload {
   telefono1: string;
   mail: string;
   verificacionMail: string;
-  idProducto?: number;
-  idProceso?: number;
 }
 
-/** Input for confirming an existing person with academic interest. */
-export interface ConfirmExistingPersonPayload {
-  tipoDocumento: string;
-  documento: string;
-  idProducto?: number;
-  idProceso?: number;
-}
-
-/** Input for confirming an application request with academic interest. */
+/** Input for confirming an application request. */
 export type ConfirmApplicationRequestPayload = RegisterPayload;
 
 /** Input for identity verification. */
@@ -101,6 +92,7 @@ export interface EvaluateDocumentPayload {
 
 /** Stable output of document evaluation. */
 export interface EvaluateDocumentResult {
+  flowId: string | null;
   requiereAltaPersona: boolean;
   requiereAltaSolicitud: boolean;
   requiereVerificacion: boolean;
@@ -203,27 +195,30 @@ export class AuthEndpoint {
    * no field mapping is needed — the body is passed through as-is.
    * Response mapped from `ObjectOperationResult` → `RegisterResult`.
    */
-  public register(payload: RegisterPayload): Observable<RegisterResult> {
+  public register(payload: RegisterPayload, flowId: string): Observable<RegisterResult> {
     return this.api
       .request(postRegistroConfirmarNuevaPersonaEndpoint, {
         body: payload,
+        headers: this.getFlowHeaders(flowId),
         withCredentials: true,
       })
       .pipe(map(() => ({ success: true })));
   }
 
   /**
-   * Confirm a pending application request with academic interest.
+   * Confirm a pending application request.
    *
    * Behind the scenes: POST /Registro/ConfirmarSolicitudAlta using generated endpoint.
    * Response mapped from `ObjectOperationResult` → `RegisterResult`.
    */
   public confirmApplicationRequest(
-    payload: ConfirmApplicationRequestPayload
+    payload: ConfirmApplicationRequestPayload,
+    flowId: string
   ): Observable<RegisterResult> {
     return this.api
       .request(postRegistroConfirmarSolicitudAltaEndpoint, {
         body: payload,
+        headers: this.getFlowHeaders(flowId),
         withCredentials: true,
       })
       .pipe(map(() => ({ success: true })));
@@ -243,6 +238,7 @@ export class AuthEndpoint {
       })
       .pipe(
         map(({ data, message }) => ({
+          flowId: data.flowId ?? null,
           requiereAltaPersona: data.requiereAltaPersona ?? false,
           requiereAltaSolicitud: data.requiereAltaSolicitud ?? false,
           requiereVerificacion: data.requiereVerificacion ?? false,
@@ -269,30 +265,19 @@ export class AuthEndpoint {
   }
 
   /**
-   * Verify the identity of a person before confirming academic interest.
+   * Verify the identity of a person before completing registration.
    *
    * Behind the scenes: POST /Registro/VerificarIdentidad using generated endpoint.
    * Response mapped from `ObjectOperationResult` → `VerifyIdentityResult`.
    */
-  public verifyIdentity(payload: VerifyIdentityPayload): Observable<VerifyIdentityResult> {
+  public verifyIdentity(
+    payload: VerifyIdentityPayload,
+    flowId: string
+  ): Observable<VerifyIdentityResult> {
     return this.api
       .request(postRegistroVerificarIdentidadEndpoint, {
         body: payload,
-        withCredentials: true,
-      })
-      .pipe(map(() => ({ success: true })));
-  }
-
-  /**
-   * Confirm an existing person with academic interest.
-   *
-   * Behind the scenes: POST /Registro/ConfirmarPersonaExistente using generated endpoint.
-   * Response mapped from `ObjectOperationResult` → `RegisterResult`.
-   */
-  public confirmExistingPerson(payload: ConfirmExistingPersonPayload): Observable<RegisterResult> {
-    return this.api
-      .request(postRegistroConfirmarPersonaExistenteEndpoint, {
-        body: payload,
+        headers: this.getFlowHeaders(flowId),
         withCredentials: true,
       })
       .pipe(map(() => ({ success: true })));
@@ -323,5 +308,8 @@ export class AuthEndpoint {
       .request(postAuthLogoutEndpoint, { withCredentials: true })
       .pipe(map(() => undefined));
   }
-}
 
+  private getFlowHeaders(flowId: string): Record<string, string> {
+    return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
+  }
+}

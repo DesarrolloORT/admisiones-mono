@@ -63,10 +63,17 @@
 }
 
 .home-action-card__status {
+  position: absolute;
   grid-area: status;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
   color: var(--home-body);
   font-size: var(--ort-sys-caption-text-size, 14px);
   line-height: var(--ort-sys-caption-line-height, 20px);
+  white-space: nowrap;
 }
 
 .home-action-card__content {
@@ -84,7 +91,7 @@
 
 .home-action-card__icon {
   grid-area: icon;
-  color: var(--home-body);
+  color: var(--ort-sys-base-icon-color-subtle, #697586);
   font-size: 32px;
 }
 
@@ -115,8 +122,12 @@
 }
 
 .home-action-card__primary {
+  display: flex;
   grid-area: button;
+  justify-content: center;
+  align-items: center;
   width: 100%;
+  min-height: 48px;
   margin-top: 10px;
 }
 
@@ -157,7 +168,7 @@
       'status' / 1fr;
     gap: 8px;
     align-content: start;
-    min-height: 238px;
+    min-height: 240px;
     padding: 24px 16px;
     background: transparent;
   }
@@ -168,7 +179,7 @@
   }
 
   .home-action-card__primary {
-    display: block;
+    min-height: 56px;
     margin-top: 8px;
   }
 }
