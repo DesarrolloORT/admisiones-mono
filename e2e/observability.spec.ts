@@ -13,7 +13,6 @@ import {
   observeAdmisionesApiRequests,
 } from './support/telemetry';
 import {
-  careerData,
   personalData,
   REGISTER_SCENARIOS,
   RegisterScenario,
@@ -71,8 +70,6 @@ test.describe('Backend observability probes', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData(realBackendPersonalData(testRunId));
     await register.continueFromPersonalData();
-    await register.fillCareerSelection(realBackendCareerData());
-    await register.submitCareerSelection();
     await register.expectCreatedAccount();
 
     const observed = relevantRegistrationRequests(requests);
@@ -161,13 +158,14 @@ async function completeMockedRegistration(
 
   if (scenario.kind === 'existing-person') {
     await register.fillVerificationData(personal);
+    await register.continueFromPersonalData();
+    await register.expectVerifiedIdentity();
+    return;
   } else {
     await register.fillFullPersonalData(personal);
   }
 
   await register.continueFromPersonalData();
-  await register.fillCareerSelection();
-  await register.submitCareerSelection();
   await register.expectCreatedAccount();
 }
 
@@ -185,6 +183,7 @@ function realBackendScenario(testRunId: string): RegisterScenario {
     documentType,
     documentNumber:
       getE2eEnv('E2E_REAL_REGISTER_DOCUMENT_NUMBER') ?? `PW-${testRunId.slice(0, 24)}`,
+    flowId: '',
     evaluation: {
       requiereAltaPersona: false,
       requiereAltaSolicitud: true,
@@ -212,14 +211,6 @@ function realBackendPersonalData(testRunId = String(Date.now())): typeof persona
 
 function telemetryEmail(seed: string): string {
   return `telemetry.${seed.replace(/[^a-z0-9]+/gi, '').slice(0, 32)}@example.com`;
-}
-
-function realBackendCareerData(): typeof careerData {
-  return {
-    academicLevel: getE2eEnv('E2E_REAL_REGISTER_ACADEMIC_LEVEL') ?? careerData.academicLevel,
-    career: getE2eEnv('E2E_REAL_REGISTER_CAREER') ?? careerData.career,
-    start: getE2eEnv('E2E_REAL_REGISTER_START') ?? careerData.start,
-  };
 }
 
 function documentProbeFile(index: number): { name: string; mimeType: string; buffer: Buffer } {

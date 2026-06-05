@@ -1,10 +1,9 @@
 import { expect, Page } from '@playwright/test';
 
-import { careerData, personalData, RegisterScenario } from '../test-data/register-scenarios';
-import { clickRadioByName, selectOrtOption } from './ort-controls';
+import { personalData, RegisterScenario } from '../test-data/register-scenarios';
+import { selectOrtOption } from './ort-controls';
 
 type PersonalData = typeof personalData;
-type CareerData = typeof careerData;
 
 const documentTypeLabels: Record<RegisterScenario['documentType'], string> = {
   CI: 'Cédula',
@@ -80,30 +79,18 @@ export class RegisterPage {
   }
 
   public async continueFromPersonalData(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Continuar' }).click();
-  }
-
-  public async fillCareerSelection(data: CareerData = careerData): Promise<void> {
-    await clickRadioByName(this.page, data.academicLevel);
-    await selectOrtOption(
-      this.page,
-      this.page.getByRole('combobox', { name: 'Carrera' }),
-      data.career
-    );
-    await selectOrtOption(
-      this.page,
-      this.page.getByRole('combobox', { name: 'Comienzo' }),
-      data.start
-    );
-  }
-
-  public async submitCareerSelection(): Promise<void> {
     await this.page.getByRole('button', { name: 'Crear cuenta' }).click();
   }
 
   public async expectCreatedAccount(): Promise<void> {
     await expect(this.page.getByRole('status').first()).toContainText(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
+    );
+  }
+
+  public async expectVerifiedIdentity(): Promise<void> {
+    await expect(this.page.getByRole('status').first()).toContainText(
+      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
     );
   }
 }

@@ -14,8 +14,6 @@ test.describe('Registration flow guardrails', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
     await register.continueFromPersonalData();
-    await register.fillCareerSelection();
-    await register.submitCareerSelection();
     await register.expectCreatedAccount();
   });
 
@@ -28,9 +26,7 @@ test.describe('Registration flow guardrails', () => {
     await register.continueFromIdentity();
     await register.fillVerificationData();
     await register.continueFromPersonalData();
-    await register.fillCareerSelection();
-    await register.submitCareerSelection();
-    await register.expectCreatedAccount();
+    await register.expectVerifiedIdentity();
   });
 
   test('completes the new-application flow for non-CI documents @regression', async ({ page }) => {
@@ -42,8 +38,6 @@ test.describe('Registration flow guardrails', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
     await register.continueFromPersonalData();
-    await register.fillCareerSelection();
-    await register.submitCareerSelection();
     await register.expectCreatedAccount();
   });
 
@@ -60,29 +54,30 @@ test.describe('Registration flow guardrails', () => {
       await register.continueFromIdentity();
 
       await expect(
-        page.getByRole('alert').filter({ hasText: scenario.terminalMessage ?? '' })
+        page
+          .locator('#main-content')
+          .getByRole('alert')
+          .filter({
+            hasText: scenario.terminalMessage ?? '',
+          })
       ).toBeVisible();
-      await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+      await page.locator('#main-content').getByRole('button', { name: 'Iniciar sesión' }).click();
       await expect(page).toHaveURL(/\/iniciar-sesion/);
     });
   }
 
-  test('surfaces required academic selection errors before submit @regression', async ({
-    page,
-  }) => {
-    await mockApi(page, { registerFlow: 'existing-person' });
+  test('surfaces required personal data errors before submit @regression', async ({ page }) => {
+    await mockApi(page, { registerFlow: 'new-person' });
 
     const register = new RegisterPage(page);
     await register.goto();
-    await register.fillIdentity(REGISTER_SCENARIOS['existing-person']);
+    await register.fillIdentity(REGISTER_SCENARIOS['new-person']);
     await register.continueFromIdentity();
-    await register.fillVerificationData();
     await register.continueFromPersonalData();
-    await register.submitCareerSelection();
 
-    await expect(page.getByText('Seleccioná una propuesta académica.')).toBeVisible();
-    await expect(page.getByText('Carrera es obligatorio.')).toBeVisible();
-    await expect(page.getByText('Comienzo es obligatorio.')).toBeVisible();
+    await expect(page.getByText('Primer nombre es obligatorio.')).toBeVisible();
+    await expect(page.getByText('Fecha de nacimiento es obligatorio.')).toBeVisible();
+    await expect(page.getByText('E-mail es obligatorio.', { exact: true })).toBeVisible();
   });
 
   test('surfaces API errors without leaving the identity step @regression', async ({ page }) => {

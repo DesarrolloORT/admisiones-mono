@@ -39,8 +39,6 @@ test.describe('Assisted E2E flows @assisted', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
     await register.continueFromPersonalData();
-    await register.fillCareerSelection();
-    await register.submitCareerSelection();
     await register.expectCreatedAccount();
   });
 
@@ -54,8 +52,6 @@ test.describe('Assisted E2E flows @assisted', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
     await register.continueFromPersonalData();
-    await register.fillCareerSelection();
-    await register.submitCareerSelection();
     await register.expectCreatedAccount();
   });
 });

@@ -26,6 +26,10 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return route.continue();
     }
 
+    if (request.method() === 'OPTIONS') {
+      return fulfillCorsPreflight(route);
+    }
+
     if (failPaths.has(path)) {
       return fulfillApiError(route, 'No se pudo completar el registro.');
     }
@@ -50,14 +54,6 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, countryLocations());
     }
 
-    if (path === '/Catalogos/Carreras') {
-      return fulfillOperation(route, careers());
-    }
-
-    if (path === '/Catalogos/Comienzos') {
-      return fulfillOperation(route, [{ idProceso: 30, nombreProceso: 'Marzo 2027' }]);
-    }
-
     if (path === '/Persona/DatosPersona' && request.method() === 'GET') {
       return fulfillOperation(route, profileData());
     }
@@ -73,9 +69,17 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     if (
       path === '/Registro/VerificarIdentidad' ||
       path === '/Registro/ConfirmarNuevaPersona' ||
-      path === '/Registro/ConfirmarPersonaExistente' ||
       path === '/Registro/ConfirmarSolicitudAlta'
     ) {
+      if (request.headers()['x-flow-id'] !== registerScenario.flowId) {
+        const receivedFlowId = request.headers()['x-flow-id'] ?? '<missing>';
+
+        return fulfillApiError(
+          route,
+          `Flujo de registro inválido. Esperado ${registerScenario.flowId}, recibido ${receivedFlowId}.`
+        );
+      }
+
       return fulfillOperation(route, true);
     }
 
@@ -97,9 +101,13 @@ function isApiPath(path: string): boolean {
 }
 
 function fulfillRegisterEvaluation(route: Route, scenario: RegisterScenario): Promise<void> {
-  return fulfillOperation(route, scenario.evaluation, {
-    message: scenario.terminalMessage ?? null,
-  });
+  return fulfillOperation(
+    route,
+    { ...scenario.evaluation, flowId: scenario.flowId },
+    {
+      message: scenario.terminalMessage ?? null,
+    }
+  );
 }
 
 function fulfillOperation(
@@ -109,6 +117,7 @@ function fulfillOperation(
 ): Promise<void> {
   return route.fulfill({
     contentType: 'application/json',
+    headers: corsHeaders(route),
     body: JSON.stringify({
       isOperationResult: true,
       success: true,
@@ -123,6 +132,7 @@ function fulfillApiError(route: Route, message: string): Promise<void> {
   return route.fulfill({
     status: 400,
     contentType: 'application/json',
+    headers: corsHeaders(route),
     body: JSON.stringify({
       isOperationResult: true,
       success: false,
@@ -133,21 +143,20 @@ function fulfillApiError(route: Route, message: string): Promise<void> {
   });
 }
 
-function careers(): unknown[] {
-  return [
-    {
-      idProducto: 20,
-      idNivelProducto: 1,
-      nombreProducto: 'Analista en Tecnologías de la Información',
-      nombreNivelProducto: 'Carreras',
-    },
-    {
-      idProducto: 21,
-      idNivelProducto: 2,
-      nombreProducto: 'Programa de Actualización en Datos',
-      nombreNivelProducto: 'Programas',
-    },
-  ];
+function fulfillCorsPreflight(route: Route): Promise<void> {
+  return route.fulfill({
+    status: 204,
+    headers: corsHeaders(route),
+  });
+}
+
+function corsHeaders(route: Route): Record<string, string> {
+  return {
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Headers': 'content-type,x-flow-id,x-correlation-id,x-client-session-id',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    'Access-Control-Allow-Origin': route.request().headers()['origin'] ?? 'http://127.0.0.1:4200',
+  };
 }
 
 function countryLocations(): unknown[] {

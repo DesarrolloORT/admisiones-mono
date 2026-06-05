@@ -12,6 +12,7 @@ export interface RegisterScenario {
   kind: RegisterFlowKind;
   documentType: 'CI' | 'PS' | 'DE';
   documentNumber: string;
+  flowId: string;
   evaluation: RegisterDocumentEvaluationMock;
   terminalMessage?: string;
 }
@@ -21,6 +22,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     kind: 'new-person',
     documentType: 'CI',
     documentNumber: '12345672',
+    flowId: 'flow-e2e-new-person',
     evaluation: {
       requiereAltaPersona: true,
       requiereAltaSolicitud: false,
@@ -33,6 +35,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     kind: 'existing-person',
     documentType: 'CI',
     documentNumber: '12345672',
+    flowId: 'flow-e2e-existing-person',
     evaluation: {
       requiereAltaPersona: false,
       requiereAltaSolicitud: false,
@@ -45,6 +48,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     kind: 'new-application',
     documentType: 'PS',
     documentNumber: 'PS-123456',
+    flowId: 'flow-e2e-new-application',
     evaluation: {
       requiereAltaPersona: false,
       requiereAltaSolicitud: true,
@@ -57,6 +61,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     kind: 'user-exists',
     documentType: 'CI',
     documentNumber: '12345672',
+    flowId: 'flow-e2e-user-exists',
     terminalMessage: 'Ya existe un usuario registrado con este documento.',
     evaluation: {
       requiereAltaPersona: false,
@@ -70,6 +75,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     kind: 'application-exists',
     documentType: 'CI',
     documentNumber: '12345672',
+    flowId: 'flow-e2e-application-exists',
     terminalMessage: 'Ya existe una solicitud de alta pendiente para este documento.',
     evaluation: {
       requiereAltaPersona: false,
@@ -94,10 +100,4 @@ export const personalData = {
   address: 'Bulevar España 2633',
   phone: '99123456',
   email: 'ana.pereira@example.com',
-};
-
-export const careerData = {
-  academicLevel: 'Carreras',
-  career: 'Analista en Tecnologías de la Información',
-  start: 'Marzo 2027',
 };
