@@ -31,6 +31,7 @@
     "test:only-changed": "npm run test:ci",
     "generate-tests": "node ./scripts/testing/generate-missing-tests.js",
     "check-missing-tests": "node ./scripts/testing/check-missing-tests.js",
+    "api:endpoints": "node ./scripts/codegen/list-endpoints.js",
     "update-models": "node ./scripts/codegen/update-models.js",
     "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
     "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
@@ -117,4 +118,3 @@
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
-
