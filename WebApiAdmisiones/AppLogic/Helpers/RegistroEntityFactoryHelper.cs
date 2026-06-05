@@ -37,6 +37,19 @@ namespace AppLogic.Helpers
             };
         }
 
+        public static RegistroAdmisione CrearRegistroAdmisione(
+            long idRegistroAdmisiones,
+            long? codigoPersona,
+            long? idSolicitudAlta)
+        {
+            return new RegistroAdmisione
+            {
+                IdRegistroAdmisiones = idRegistroAdmisiones,
+                CodigoPersona = codigoPersona,
+                IdSolicitudAlta = idSolicitudAlta
+            };
+        }
+
         public static Persona CrearPersona(long codigoPersona, RegistroPersonaRequest request, Ciudad ciudad, DateTime now)
         {
             var primerNombre = DocumentUtils.FormatoCapital(request.PrimerNombre);

@@ -188,7 +188,10 @@ namespace AppLogic.Services
                     verificacion.HttpCode);
             }
 
-            return await CrearUsuarioYEnviarMailLinkPasswordAsync(persona, nameof(VerificarIdentidadAsync));
+            return await CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
+                uow,
+                persona,
+                nameof(VerificarIdentidadAsync));
         }
 
         public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroPersonaRequest request)
@@ -393,6 +396,7 @@ namespace AppLogic.Services
                 }
 
                 ActualizarMetadataPassword(uow, persona);
+                RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
                 uow.Commit();
             }
             catch (Exception ex)
@@ -483,6 +487,7 @@ namespace AppLogic.Services
                         crearUsuario.HttpCode);
                 }
 
+                RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
                 uow.Commit();
             }
             catch (Exception ex)
@@ -498,7 +503,8 @@ namespace AppLogic.Services
             return await EnviarMailLinkPasswordAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
         }
 
-        private async Task<OperationResult<object?>> CrearUsuarioYEnviarMailLinkPasswordAsync(
+        private async Task<OperationResult<object?>> CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
+            IUnitOfWork uow,
             Persona persona,
             string originMethod)
         {
@@ -510,6 +516,22 @@ namespace AppLogic.Services
                     originMethod,
                     crearUsuario.Message,
                     crearUsuario.HttpCode);
+            }
+
+            try
+            {
+                uow.BeginTransaction();
+                RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
+                uow.Commit();
+            }
+            catch (Exception ex)
+            {
+                uow.Rollback();
+                return OperationResult<object?>.IsFailed(
+                    "REG_ADMISIONES_99",
+                    originMethod,
+                    $"Error al registrar la admisión: {ex.Message}",
+                    500);
             }
 
             return await EnviarMailLinkPasswordAsync(persona, originMethod);
@@ -527,6 +549,7 @@ namespace AppLogic.Services
                     request);
 
                 uow.SolicitudAltas.Add(solicitud);
+                RegistrarAdmisionPorSolicitudAlta(uow, solicitud.IdSolicitudAlta);
                 uow.Commit();
 
                 return OperationResult<object?>.IsSuccess(
@@ -543,6 +566,22 @@ namespace AppLogic.Services
                     $"Error al crear la solicitud de alta: {ex.Message}",
                     500);
             }
+        }
+
+        private void RegistrarAdmisionPorPersona(IUnitOfWork uow, long codigoPersona)
+        {
+            uow.RegistroAdmisiones.Add(RegistroEntityFactoryHelper.CrearRegistroAdmisione(
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES),
+                codigoPersona,
+                null));
+        }
+
+        private void RegistrarAdmisionPorSolicitudAlta(IUnitOfWork uow, long idSolicitudAlta)
+        {
+            uow.RegistroAdmisiones.Add(RegistroEntityFactoryHelper.CrearRegistroAdmisione(
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES),
+                null,
+                idSolicitudAlta));
         }
 
         private async Task<OperationResult<object?>> EnviarMailLinkPasswordAsync(Persona persona, string originMethod)
