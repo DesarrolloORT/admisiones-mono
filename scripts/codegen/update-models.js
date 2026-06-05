@@ -7,7 +7,7 @@ import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
-  env: 'environment.ts',
+  env: 'environment.generated.ts',
   output: 'src/app/shared/api/generated/models',
 };
 

@@ -8,7 +8,7 @@ import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
-  env: 'environment.ts',
+  env: 'environment.generated.ts',
   output: 'src/app/shared/api/generated/endpoints',
   models: 'src/app/shared/api/generated/models',
 };
@@ -1108,6 +1108,8 @@ function createExportedResponseType(operation, constantName, tagName, swagger) {
 }
 
 function deriveResponseName(constantName, tagName) {
+  const methodMatch = constantName.match(/^(get|post|put|patch|delete)/);
+  const method = methodMatch ? methodMatch[1] : '';
   const base = constantName.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
 
   const tagPrefix = tagName.charAt(0).toUpperCase() + tagName.slice(1).toLowerCase();
@@ -1119,6 +1121,13 @@ function deriveResponseName(constantName, tagName) {
       : normalizedBase;
 
   const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
+
+  // Prefix with capitalized method for non-GET to avoid collisions when
+  // multiple HTTP methods share the same path (e.g. GET vs PUT /DatosPersona).
+  if (method && method !== 'get') {
+    const methodPrefix = method.charAt(0).toUpperCase() + method.slice(1);
+    return `${methodPrefix}${name}Response`;
+  }
   return `${name}Response`;
 }
 
@@ -1514,3 +1523,4 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
+
