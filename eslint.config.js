@@ -79,13 +79,18 @@ export default [
   },
   {
     files: ['src/app/features/**/*.ts'],
-    ignores: ['**/*.spec.ts', 'src/app/features/**/endpoints/**/*.ts'],
+    ignores: ['src/app/features/**/endpoints/**/*.ts'],
 
     rules: {
       'no-restricted-imports': [
         'error',
         {
           paths: [
+            {
+              name: 'src/app/shared/api/core/api-http-client',
+              message:
+                'Las features deben usar su adapter en endpoints/. ApiHttpClient vive detras de esa capa.',
+            },
             {
               name: '@angular/common/http',
               message: 'Las features deben usar ApiHttpClient; HttpClient vive en shared/api/core.',
@@ -101,7 +106,13 @@ export default [
               message: 'Las features no deben resolver API_URL; usar ApiHttpClient.',
             },
             {
-              group: ['**/api/endpoints/generated/**', '**/api-models/**'],
+              group: [
+                '**/shared/api/core/api-http-client',
+                'src/app/shared/api/generated/**',
+                '**/shared/api/generated/**',
+                '**/api/generated/**',
+                '**/api-models/**',
+              ],
               message:
                 'Solo los adapters en endpoints/ pueden importar contratos generados. Los services usan el adapter de feature.',
             },
@@ -129,6 +140,11 @@ export default [
                 'Las pages, components y stores deben usar servicios de feature, no HttpClient.',
             },
             {
+              name: 'src/app/shared/api/core/api-http-client',
+              message:
+                'Las pages, components y stores deben depender de services/, no de ApiHttpClient.',
+            },
+            {
               name: 'src/environments/environment',
               message: 'Las pages, components y stores no deben resolver endpoints ni API_URL.',
             },
@@ -140,6 +156,10 @@ export default [
                 '../endpoints/**',
                 '../../endpoints/**',
                 'src/app/features/**/endpoints/**',
+                '**/shared/api/core/api-http-client',
+                'src/app/shared/api/generated/**',
+                '**/shared/api/generated/**',
+                '**/api/generated/**',
                 '**/environments/environment',
               ],
               message:
@@ -190,4 +210,3 @@ export default [
   },
   eslintConfigPrettier,
 ];
-
