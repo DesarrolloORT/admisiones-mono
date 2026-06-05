@@ -4,6 +4,7 @@ using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
+using ConnectionContext;
 using LdapService.Interfaces;
 using Moq;
 using Utilities;
@@ -605,6 +606,112 @@ namespace UnitTesting.AppLogic.Services
             _refreshTokenServiceMock.Verify(
                 r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordAsync_WithTemporaryImages_PersistsAndDeletesCache()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI",
+                TipoDocumento = "CI",
+                Documento = "1234567-2"
+            };
+            var request = new DtoCompletarPasswordInicialRequest
+            {
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var imagenes = new RegistroDocumentoImagenesTemporales
+            {
+                FechaVencimiento = new DateTime(2030, 1, 1),
+                DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                {
+                    Archivo = [0x25, 0x50, 0x44, 0x46, 1],
+                    NombreArchivo = "documento.pdf",
+                    ContentType = "application/pdf"
+                },
+                CaraPersona = new RegistroDocumentoArchivoTemporal
+                {
+                    Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                    NombreArchivo = "cara.jpg",
+                    ContentType = "image/jpeg"
+                }
+            };
+            Imagen? fotoAgregada = null;
+            ImagenTemporal? documentoAgregado = null;
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            var imagenRepoMock = new Mock<IImagenRepository>();
+            var imagenTemporalRepoMock = new Mock<IImagenTemporalRepository>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            var dbConnectionContextMock = new Mock<IDbConnectionContext>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            imagenRepoMock.Setup(r => r.GetFotoByPersona(codigoPersona)).Returns(default(Imagen)!);
+            imagenRepoMock
+                .Setup(r => r.Add(It.IsAny<Imagen>()))
+                .Callback<Imagen>(i => fotoAgregada = i);
+            imagenTemporalRepoMock.Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, 1)).Returns(default(ImagenTemporal)!);
+            imagenTemporalRepoMock
+                .Setup(r => r.Add(It.IsAny<ImagenTemporal>()))
+                .Callback<ImagenTemporal>(i => documentoAgregado = i);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            uowMock.Setup(u => u.Imagens).Returns(imagenRepoMock.Object);
+            uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            cacheMock
+                .Setup(c => c.ObtenerAsync("CI", "1234567-2"))
+                .ReturnsAsync(imagenes);
+            dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL))
+                .Returns(3000);
+            dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN))
+                .Returns(4000);
+            _hashTokenStoreMock
+                .Setup(h => h.GetAsync(codigoPersona.ToString()))
+                .ReturnsAsync("stored-hash");
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+            _tokenServiceMock.Setup(t => t.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(t => t.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
+            var service = new AuthService(
+                _ldapMock.Object,
+                _uowFactoryMock.Object,
+                _tokenServiceMock.Object,
+                _refreshTokenServiceMock.Object,
+                _passwordActivationServiceMock.Object,
+                _hashTokenStoreMock.Object,
+                dbConnectionContext: dbConnectionContextMock.Object,
+                documentoImagenCacheService: cacheMock.Object);
+
+            var result = await service.CompletarPasswordAsync(codigoPersona, request);
+
+            Assert.True(result.Success);
+            Assert.NotNull(documentoAgregado);
+            Assert.Equal(3000, documentoAgregado!.IdImagenTemporal);
+            Assert.Equal(codigoPersona, documentoAgregado.CodigoPersona);
+            Assert.Equal("1", documentoAgregado.TipoImagen);
+            Assert.Equal("12345_1.pdf", documentoAgregado.NombreImagen);
+            Assert.Equal(new DateTime(2030, 1, 1), documentoAgregado.FechaVtoDocumentoPersona);
+            Assert.NotNull(fotoAgregada);
+            Assert.Equal(4000, fotoAgregada!.IdImagen);
+            Assert.Equal(codigoPersona, fotoAgregada.CodigoPersona);
+            Assert.Equal("3", fotoAgregada.TipoImagen);
+            Assert.Equal("12345_3.jpg", fotoAgregada.NombreImagen);
+            Assert.Equal(new DateTime(2030, 1, 1), persona.FechaVtoDocumentoPersona);
+            cacheMock.Verify(c => c.EliminarAsync("CI", "1234567-2"), Times.Once);
+            uowMock.Verify(u => u.Save(), Times.Once);
         }
     }
 }

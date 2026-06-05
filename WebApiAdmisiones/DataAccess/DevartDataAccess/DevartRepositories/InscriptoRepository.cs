@@ -68,9 +68,9 @@ namespace DataAccess.DevartRepositories
 
         public virtual bool TieneInscripcionActiva(long codigoPersona)
         {
-            return objectSet.Any(i =>
+            return objectSet.Count(i =>
                 i.CodigoPersona == codigoPersona
-                && i.BajaInscr == null);
+                && i.BajaInscr == null) > 0;
         }
 
         /// <summary>

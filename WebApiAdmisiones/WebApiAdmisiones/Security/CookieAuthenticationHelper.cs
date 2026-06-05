@@ -34,7 +34,7 @@ namespace WebApiAdmisiones.Security
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 IsEssential = true
@@ -55,7 +55,7 @@ namespace WebApiAdmisiones.Security
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(expiresInDays),
                 Path = "/",
                 IsEssential = true
@@ -93,7 +93,7 @@ namespace WebApiAdmisiones.Security
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 IsEssential = true
