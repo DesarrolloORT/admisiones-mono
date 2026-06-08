@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
+import { HomeEndpoint } from '../../endpoints/home.endpoint';
 import { HomeActionCard, HomeDashboard } from '../../models/home-dashboard';
 
 const HOME_DESCRIPTION = 'Aquí podés gestionar tu inscripción y postulación a becas.';
@@ -35,8 +36,15 @@ const ACTION_CARDS: HomeActionCard[] = [
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Home {
+export class Home implements OnInit {
   private readonly authSession = inject(AuthSessionService);
+  private readonly endpoint = inject(HomeEndpoint);
+
+  ngOnInit(): void {
+    this.endpoint.getMisInscripciones().subscribe(inscripciones => {
+      console.log('Mis inscripciones:', inscripciones);
+    });
+  }
 
   protected readonly dashboard = computed<HomeDashboard>(() => {
     const session = this.authSession.session();
@@ -54,3 +62,4 @@ export class Home {
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });
 }
+
