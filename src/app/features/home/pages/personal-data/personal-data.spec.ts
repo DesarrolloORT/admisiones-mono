@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { AccountService } from 'src/app/features/auth/services/account';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
-import { PersonalDataService } from '../../services/personal-data';
 import { PersonalData } from './personal-data';
 
 interface TestPersonalDataForm {
@@ -69,7 +69,7 @@ describe('PersonalData', () => {
       imports: [PersonalData],
       providers: [
         provideRouter([]),
-        { provide: PersonalDataService, useValue: service },
+        { provide: AccountService, useValue: service },
         {
           provide: Catalogs,
           useValue: {
