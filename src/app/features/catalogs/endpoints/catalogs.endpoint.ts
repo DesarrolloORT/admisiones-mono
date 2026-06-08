@@ -78,9 +78,7 @@ export class CatalogsEndpoint {
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
     return this.api.request(getCatalogosEncuestaInicialEndpoint).pipe(
       map(data => ({
-        aniosAprobadosEducacionSuperior: this.toCatalogItems(
-          data?.aniosAprobadosEducacionSuperior
-        ),
+        aniosAprobadosEducacionSuperior: this.toCatalogItems(data?.aniosAprobadosEducacionSuperior),
         compartidoCon: this.toCatalogItems(data?.compartidoCon),
         decisionCarrera: this.toCatalogItems(data?.decisionCarrera),
         decisionUniversidad: this.toCatalogItems(data?.decisionUniversidad),
