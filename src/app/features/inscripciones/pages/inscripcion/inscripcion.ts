@@ -1,28 +1,20 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import {
-  OrtButtonModule,
-  OrtFormFieldModule,
-  OrtIconModule,
-  OrtSelectModule,
-} from '@desarrolloort/components';
 
-import { InscripcionRadioCard } from '../../components/inscripcion-radio-card/inscripcion-radio-card';
+import { InscripcionAcademicStep } from '../../components/inscripcion-academic-step/inscripcion-academic-step';
+import { InscripcionConfirmationStep } from '../../components/inscripcion-confirmation-step/inscripcion-confirmation-step';
+import { InscripcionPersonalStep } from '../../components/inscripcion-personal-step/inscripcion-personal-step';
 import { InscripcionShell } from '../../components/inscripcion-shell/inscripcion-shell';
+import { InscripcionSuccessStep } from '../../components/inscripcion-success-step/inscripcion-success-step';
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
 
 @Component({
   selector: 'app-inscripcion',
   imports: [
-    InscripcionRadioCard,
+    InscripcionAcademicStep,
+    InscripcionConfirmationStep,
+    InscripcionPersonalStep,
     InscripcionShell,
-    OrtButtonModule,
-    OrtFormFieldModule,
-    OrtIconModule,
-    OrtSelectModule,
-    ReactiveFormsModule,
-    RouterLink,
+    InscripcionSuccessStep,
   ],
   providers: [InscripcionFlowFacade],
   templateUrl: './inscripcion.html',
