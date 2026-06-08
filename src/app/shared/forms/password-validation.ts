@@ -91,3 +91,4 @@ function toStrengthLevel(score: number): OrtPasswordStrengthLevel {
   }
   return 'weak';
 }
+

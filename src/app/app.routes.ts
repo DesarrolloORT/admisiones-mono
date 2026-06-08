@@ -9,9 +9,13 @@ export const routes: Routes = [
     loadChildren: () => import('./features/home/home.routes').then(m => m.routes),
   },
   {
+    path: 'inscripciones',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/inscripciones/inscripciones.routes').then(m => m.routes),
+  },
+  {
     path: '',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.routes),
   },
   { path: '**', redirectTo: 'iniciar-sesion' },
 ];
-

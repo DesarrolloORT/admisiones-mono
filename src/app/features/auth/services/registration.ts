@@ -8,7 +8,6 @@ import {
 } from '../endpoints/auth.endpoint';
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import {
-  buildAuthRegisterRequest,
   toRegisterPayload,
   toVerifyIdentityPayload,
   VerifyExistingPersonIdentityInput,
@@ -50,7 +49,10 @@ export class RegistrationService {
   }
 
   public confirmRegistration(input: ConfirmRegistrationInput): Observable<RegisterResult> {
-    const payload = toRegisterPayload(buildAuthRegisterRequest(input.identity, input.personal));
+    const payload = toRegisterPayload({
+      identity: input.identity,
+      personal: input.personal,
+    });
 
     return input.flow === 'new-person'
       ? this.endpoint.register(payload, input.flowId)
