@@ -8,10 +8,11 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
-import { asyncScheduler, of } from 'rxjs';
-import { finalize, observeOn, tap } from 'rxjs/operators';
+import { asyncScheduler, Observable, of, throwError } from 'rxjs';
+import { catchError, finalize, map, observeOn, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
+import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
 import { TelemetryService } from '../services/telemetry';
 
 export const CACHING_ENABLED = new HttpContextToken<boolean>(() => environment.CACHING_ENABLED);
@@ -67,6 +68,52 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
     return req;
   };
 
+  const addCaptchaHeader = (req: HttpRequest<unknown>): Observable<HttpRequest<unknown>> => {
+    const captchaAction = req.context.get(CAPTCHA_ACTION);
+
+    if (!captchaAction) {
+      debugCaptcha('skip', { method: req.method, url: req.urlWithParams });
+      return of(req);
+    }
+
+    debugCaptcha('request-token', {
+      action: captchaAction,
+      method: req.method,
+      url: req.urlWithParams,
+    });
+
+    return inject(CaptchaTokenService)
+      .execute(captchaAction)
+      .pipe(
+        map(token => {
+          debugCaptcha('token-received', {
+            action: captchaAction,
+            method: req.method,
+            tokenLength: token.length,
+            url: req.urlWithParams,
+          });
+
+          return req.clone({
+            setHeaders: {
+              [CAPTCHA_HEADER]: token,
+            },
+          });
+        })
+      );
+  };
+
+  const debugCaptcha = (event: string, data: Record<string, unknown>): void => {
+    if (!environment.production) {
+      console.debug(`[captcha-http] ${event}`, data);
+    }
+  };
+
+  const errorCaptcha = (event: string, data: Record<string, unknown>): void => {
+    if (!environment.production) {
+      console.error(`[captcha-http] ${event}`, data);
+    }
+  };
+
   const handleResponse = (event: HttpEvent<unknown>): void => {
     if (
       event instanceof HttpResponse &&
@@ -89,22 +136,49 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
 
   //* Process request
   handleLoader(request.url);
-  request = services.telemetry.addHttpHeaders(processRequest(setHeaders(request)));
-  const telemetryStartedAt = services.telemetry.startHttpRequest(request);
+  const processedRequest = processRequest(setHeaders(request));
 
-  return next(request).pipe(
-    finalize(() => services.loader.hide()),
-    tap({
-      next: event => {
-        handleResponse(event);
+  debugCaptcha('interceptor-start', {
+    action: processedRequest.context.get(CAPTCHA_ACTION),
+    method: processedRequest.method,
+    url: processedRequest.urlWithParams,
+  });
 
-        if (event instanceof HttpResponse) {
-          services.telemetry.trackHttpResponse(request, event, telemetryStartedAt);
-        }
-      },
-      error: (error: HttpErrorResponse) => {
-        services.telemetry.trackHttpError(request, error, telemetryStartedAt);
-      },
-    })
+  return addCaptchaHeader(processedRequest).pipe(
+    switchMap(processedRequest => {
+      request = services.telemetry.addHttpHeaders(processedRequest);
+      const telemetryStartedAt = services.telemetry.startHttpRequest(request);
+
+      debugCaptcha('calling-api', {
+        hasCaptchaHeader: request.headers.has(CAPTCHA_HEADER),
+        method: request.method,
+        url: request.urlWithParams,
+      });
+
+      return next(request).pipe(
+        tap({
+          next: event => {
+            handleResponse(event);
+
+            if (event instanceof HttpResponse) {
+              services.telemetry.trackHttpResponse(request, event, telemetryStartedAt);
+            }
+          },
+          error: (error: HttpErrorResponse) => {
+            services.telemetry.trackHttpError(request, error, telemetryStartedAt);
+          },
+        })
+      );
+    }),
+    catchError(error => {
+      errorCaptcha('stopped-before-api-or-api-error', {
+        message: error instanceof Error ? error.message : String(error),
+        method: processedRequest.method,
+        url: processedRequest.urlWithParams,
+      });
+
+      return throwError(() => error);
+    }),
+    finalize(() => services.loader.hide())
   );
 };

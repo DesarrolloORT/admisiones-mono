@@ -151,12 +151,14 @@ export class AuthEndpoint {
       password: payload.password,
     };
 
-    return this.api.data(postAuthLoginEndpoint, { body, withCredentials: true }).pipe(
-      map(response => ({
-        documento: response.persona?.documento ?? '',
-        primerNombre: response.persona?.primerNombre ?? '',
-      }))
-    );
+    return this.api
+      .data(postAuthLoginEndpoint, { body, withCredentials: true, captchaAction: 'login' })
+      .pipe(
+        map(response => ({
+          documento: response.persona?.documento ?? '',
+          primerNombre: response.persona?.primerNombre ?? '',
+        }))
+      );
   }
 
   /**
@@ -313,4 +315,3 @@ export class AuthEndpoint {
     return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
   }
 }
-

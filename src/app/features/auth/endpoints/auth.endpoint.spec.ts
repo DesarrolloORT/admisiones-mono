@@ -8,6 +8,7 @@ import {
   provideOrtApiErrorHandling,
 } from '@desarrolloort/ngx-utils';
 
+import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
 
 describe('AuthEndpoint', () => {
@@ -49,6 +50,7 @@ describe('AuthEndpoint', () => {
         password: 'pwd',
       });
       expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('login');
 
       req.flush({
         success: true,
