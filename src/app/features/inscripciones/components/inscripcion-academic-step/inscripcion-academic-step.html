@@ -6,14 +6,8 @@
   </header>
 
   <form class="inscription-form" [formGroup]="facade.academicForm" (ngSubmit)="facade.continue()">
-    <ort-radio-group
-      class="inscription-radio-list"
-      formControlName="proposalType"
-      indicatorPosition="right"
-      legend="Propuesta académica"
-      name="proposal"
-      orientation="vertical"
-      [required]="true">
+    <ort-radio-group class="inscription-radio-list" formControlName="proposalType" indicatorPosition="right"
+      legend="Propuesta académica" name="proposal" orientation="vertical" [required]="true">
       @for (option of facade.proposalOptions(); track option.value) {
       <ort-radio-card-button [value]="option.value">
         @if (option.icon) {

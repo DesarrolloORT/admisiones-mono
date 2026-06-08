@@ -148,3 +148,4 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.subjectsToggleLabel()).toBe('Ver menos materias');
   });
 });
+

@@ -67,3 +67,4 @@ export const INSCRIPCION_STEP_METADATA: Record<
     supportLabel: 'Paso 3 de 3 - Confirmación',
   },
 };
+

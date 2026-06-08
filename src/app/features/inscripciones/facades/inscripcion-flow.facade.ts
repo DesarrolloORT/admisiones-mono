@@ -373,3 +373,4 @@ export class InscripcionFlowFacade {
     return options.find(option => option.value === value)?.label ?? fallback;
   }
 }
+
