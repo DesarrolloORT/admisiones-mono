@@ -1,0 +1,22 @@
+<section aria-labelledby="inscription-personal-title" class="inscription-screen">
+  <header class="inscription-screen__header">
+    <h1 id="inscription-personal-title">Información personal</h1>
+    <p>
+      Completá la información para continuar con tu inscripción. Algunos datos nos ayudan a mejorar
+      el proceso de admisión y orientación académica.
+    </p>
+    <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
+  </header>
+
+  <form class="inscription-form" [formGroup]="facade.personalForm" (ngSubmit)="facade.continue()">
+    <div class="inscription-accordion-list">
+      <app-inscripcion-personal-education-section />
+      <app-inscripcion-personal-decision-section />
+      <app-inscripcion-personal-work-section />
+    </div>
+
+    <footer class="inscription-footer">
+      <button ort-primary-button type="submit">Continuar</button>
+    </footer>
+  </form>
+</section>

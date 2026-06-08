@@ -44,11 +44,11 @@
         </ort-select>
       </ort-form-field>
 
-      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.shift.value">
+      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.turno.value">
         <ort-label>Turno</ort-label>
-        <ort-select aria-label="Turno" formControlName="shift" id="inscription-shift">
+        <ort-select aria-label="Turno" formControlName="turno" id="inscription-turno">
           <ort-option value="">Seleccioná...</ort-option>
-          @for (option of facade.shiftOptions(); track option.value) {
+          @for (option of facade.turnoOptions(); track option.value) {
           <ort-option [value]="option.value">{{ option.label }}</ort-option>
           }
         </ort-select>

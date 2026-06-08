@@ -1,0 +1,63 @@
+<section aria-labelledby="inscription-confirm-title" class="inscription-screen">
+  <header class="inscription-screen__header">
+    <h1 id="inscription-confirm-title">Confirmá tu inscripción</h1>
+    <p>Para confirmar tu inscripción, realizá el pago de la seña antes de la fecha indicada.</p>
+  </header>
+
+  <form class="inscription-form" [formGroup]="facade.paymentForm" (ngSubmit)="facade.continue()">
+    <section aria-labelledby="summary-title" class="inscription-card">
+      <h2 id="summary-title">Resumen de inscripción</h2>
+      <dl class="inscription-summary-list">
+        @for (item of facade.summaryItems(); track item.label) {
+        <div class="inscription-summary-list__item">
+          <dt>
+            <ort-icon aria-hidden="true">{{ item.icon }}</ort-icon>
+            <span>{{ item.label }}</span>
+          </dt>
+          <dd>{{ item.value }}</dd>
+        </div>
+        }
+      </dl>
+    </section>
+
+    <section aria-labelledby="payment-title" class="inscription-card inscription-card--muted">
+      <div class="inscription-payment">
+        <h2 id="payment-title">Seña de inscripción</h2>
+        <strong>{{ facade.inscriptionAmount }}</strong>
+        <p>
+          El pago de la seña confirma tu inscripción y se descuenta de la primera cuota de tu
+          carrera.
+        </p>
+      </div>
+      <p class="inscription-alert inscription-alert--warning" role="note">
+        <ort-icon aria-hidden="true">error_outline</ort-icon>
+        <span>Plazo para realizar el pago: {{ facade.paymentDeadline }}</span>
+      </p>
+    </section>
+
+    <section aria-labelledby="payment-method-title" class="inscription-payment-method">
+      <h2 id="payment-method-title">Opciones de pago</h2>
+      <p>Elegí el medio de pago con el que querés abonar la seña.</p>
+
+      <ort-radio-group
+        class="inscription-radio-list"
+        formControlName="paymentMethod"
+        indicatorPosition="right"
+        legend="Medio de pago"
+        name="payment-method"
+        orientation="vertical">
+        @for (option of facade.paymentOptions; track option.value) {
+        <ort-radio-card-button [value]="option.value">
+          {{ option.label }} @if (option.hint) {
+          <span ortRadioSupportingText>{{ option.hint }}</span>
+          }
+        </ort-radio-card-button>
+        }
+      </ort-radio-group>
+    </section>
+
+    <footer class="inscription-footer">
+      <button ort-primary-button type="submit">Continuar</button>
+    </footer>
+  </form>
+</section>

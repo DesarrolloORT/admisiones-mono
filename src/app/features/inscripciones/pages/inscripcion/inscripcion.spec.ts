@@ -12,7 +12,7 @@ describe('Inscripcion', () => {
     getCareers: ReturnType<typeof vi.fn>;
     getComienzos: ReturnType<typeof vi.fn>;
     getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
-    getShifts: ReturnType<typeof vi.fn>;
+    getTurnos: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('Inscripcion', () => {
           nivelConocimiento: [],
         })
       ),
-      getShifts: vi.fn().mockReturnValue(
+      getTurnos: vi.fn().mockReturnValue(
         of([
           {
             idOferta: 300,
