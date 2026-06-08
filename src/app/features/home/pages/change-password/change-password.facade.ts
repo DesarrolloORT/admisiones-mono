@@ -8,10 +8,9 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { OrtErrorItem } from '@desarrolloort/components';
-import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import { postPersonaCambiarContrasenaEndpoint } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+
+import { AccountService } from '../../../auth/services/account';
 
 export interface ChangePasswordForm {
   currentPassword: FormControl<string>;
@@ -24,9 +23,11 @@ interface PasswordRequirement {
   met: boolean;
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class ChangePasswordFacade {
-  private readonly api = inject(ApiHttpClient);
+  private readonly account = inject(AccountService);
   private readonly router = inject(Router);
 
   public readonly form = new FormGroup<ChangePasswordForm>(
@@ -153,23 +154,17 @@ export class ChangePasswordFacade {
     this._isSubmitting.set(true);
     this._error.set(null);
 
-    this.changePassword()
+    this.account
+      .changePassword({
+        currentPassword: this.form.controls.currentPassword.value,
+        password: this.form.controls.password.value,
+      })
       .pipe(finalize(() => this._isSubmitting.set(false)))
       .subscribe({
         next: () => this.router.navigate(['/inicio']),
         error: () =>
           this._error.set('No se pudo cambiar la contraseña. Verificá que la actual sea correcta.'),
       });
-  }
-
-  private changePassword(): Observable<unknown> {
-    return this.api.request(postPersonaCambiarContrasenaEndpoint, {
-      body: {
-        passwordActual: this.form.controls.currentPassword.value,
-        passwordNueva: this.form.controls.password.value,
-      },
-      withCredentials: true,
-    });
   }
 }
 
