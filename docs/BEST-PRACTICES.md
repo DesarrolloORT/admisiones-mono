@@ -117,10 +117,10 @@ export class AuthEndpoint {
 ```
 
 ```typescript
-// services/auth.ts — NO conoce generated, solo el adapter
+// services/auth-session.ts — NO conoce generated, solo el adapter
 
 @Injectable({ providedIn: 'root' })
-export class Auth {
+export class AuthSessionService {
   private readonly endpoint = inject(AuthEndpoint);
 
   login(payload: AuthLoginRequest): Observable<AuthSession> {
@@ -221,6 +221,12 @@ Esto ejecuta:
 - `npm run update-models`: regenera modelos en `src/app/shared/api/generated/models/`.
 - `npm run update-endpoints`: regenera constantes en
   `src/app/shared/api/generated/endpoints/`.
+
+Para descubrir endpoints reales en el ambiente local:
+
+```bash
+npm run api:endpoints
+```
 
 Para detectar drift en CI o antes de un PR:
 

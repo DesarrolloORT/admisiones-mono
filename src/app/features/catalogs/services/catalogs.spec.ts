@@ -10,6 +10,10 @@ describe('Catalogs', () => {
   let endpointMock: {
     getCountries: ReturnType<typeof vi.fn>;
     getCountryLocations: ReturnType<typeof vi.fn>;
+    getCareers: ReturnType<typeof vi.fn>;
+    getComienzos: ReturnType<typeof vi.fn>;
+    getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
+    getTurnos: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
   };
 
@@ -17,6 +21,10 @@ describe('Catalogs', () => {
     endpointMock = {
       getCountries: vi.fn(),
       getCountryLocations: vi.fn(),
+      getCareers: vi.fn(),
+      getComienzos: vi.fn(),
+      getInitialSurveyCatalogs: vi.fn(),
+      getTurnos: vi.fn(),
       clearCache: vi.fn(),
     };
 
@@ -52,9 +60,76 @@ describe('Catalogs', () => {
     expect(endpointMock.getCountries).toHaveBeenCalledOnce();
   });
 
+  it('should delegate getCareers to the endpoint', () => {
+    const result = [
+      {
+        idProducto: 20,
+        idNivelProducto: 1,
+        nombreProducto: 'Diseño',
+        nombreNivelProducto: 'Carreras',
+      },
+    ];
+    endpointMock.getCareers.mockReturnValue(of(result));
+
+    service.getCareers().subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getCareers).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getComienzos to the endpoint', () => {
+    const result = [{ idProceso: 10, nombreProceso: 'Marzo 2026' }];
+    endpointMock.getComienzos.mockReturnValue(of(result));
+
+    service.getComienzos(20).subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getComienzos).toHaveBeenCalledWith(20);
+  });
+
+  it('should delegate getInitialSurveyCatalogs to the endpoint', () => {
+    const result = {
+      aniosAprobadosEducacionSuperior: [],
+      compartidoCon: [],
+      decisionCarrera: [],
+      decisionUniversidad: [],
+      estadoEducacionSuperior: [],
+      formacionTutores: [],
+      nivelConocimiento: [],
+    };
+    endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
+
+    service.getInitialSurveyCatalogs().subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getTurnos to the endpoint', () => {
+    const result = [
+      {
+        idOferta: 30,
+        idTurno: 2,
+        nombreTurno: 'Nocturno',
+        horarioReferencia: '19:00',
+      },
+    ];
+    endpointMock.getTurnos.mockReturnValue(of(result));
+
+    service.getTurnos(20, 10).subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getTurnos).toHaveBeenCalledWith(20, 10);
+  });
+
   it('should delegate clearCache to the endpoint', () => {
     service.clearCache();
 
     expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });
+

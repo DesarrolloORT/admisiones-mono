@@ -1,0 +1,55 @@
+<div class="inscription-accordion-list" [formGroup]="facade.personalForm">
+  <details class="inscription-accordion">
+    <summary>
+      <span>
+        <ort-icon aria-hidden="true">business_center</ort-icon>
+        Situación laboral
+      </span>
+      <ort-icon aria-hidden="true">expand_more</ort-icon>
+    </summary>
+    <div class="inscription-accordion__content">
+      <ort-radio-group
+        class="inscription-choice-list"
+        formControlName="workStatus"
+        indicatorPosition="right"
+        legend="¿Trabajás actualmente?"
+        name="work-status"
+        orientation="vertical">
+        @for (option of facade.workStatusOptions; track option.value) {
+        <ort-radio-card-button [value]="option.value">{{ option.label }}</ort-radio-card-button>
+        }
+      </ort-radio-group>
+    </div>
+  </details>
+
+  <details class="inscription-accordion">
+    <summary>
+      <span>
+        <ort-icon aria-hidden="true">verified</ort-icon>
+        Verificación de identidad
+      </span>
+      <ort-icon aria-hidden="true">expand_more</ort-icon>
+    </summary>
+    <div class="inscription-accordion__content">
+      <p class="inscription-status">
+        <ort-icon aria-hidden="true">check_circle</ort-icon>
+        Documento validado
+      </p>
+    </div>
+  </details>
+
+  <details class="inscription-accordion">
+    <summary>
+      <span>
+        <ort-icon aria-hidden="true">article</ort-icon>
+        Reglamento estudiantil
+      </span>
+      <ort-icon aria-hidden="true">expand_more</ort-icon>
+    </summary>
+    <div class="inscription-accordion__content">
+      <ort-checkbox class="inscription-checkbox" formControlName="acceptedRules">
+        Acepto el reglamento estudiantil.
+      </ort-checkbox>
+    </div>
+  </details>
+</div>

@@ -7,7 +7,9 @@ import {
   Comienzo,
   Country,
   DocumentType,
+  InitialSurveyCatalogs,
   LocationCountry,
+  Turno,
 } from '../models/catalog.interface';
 
 // TODO: reemplazar cuando el endpoint getCatalogosTiposDocumentos vuelva al API.
@@ -41,6 +43,14 @@ export class Catalogs {
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
     return this.endpoint.getComienzos(idCarrera);
+  }
+
+  public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
+    return this.endpoint.getInitialSurveyCatalogs();
+  }
+
+  public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
+    return this.endpoint.getTurnos(idCarrera, idProceso);
   }
 
   public clearCache(): void {

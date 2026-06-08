@@ -1,5 +1,5 @@
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
-import { ValidationUtils } from '@desarrolloort/ngx-utils';
+import { PasswordStrengthConfig, ValidationUtils } from '@desarrolloort/ngx-utils';
 
 export type OrtPasswordErrorKey =
   | 'minChar'
@@ -51,5 +51,44 @@ export function buildOrtPasswordRequirements(
     label: requirement.label,
     met: !control.hasError(requirement.errorKey),
   }));
+}
+
+export type OrtPasswordStrengthLevel = 'weak' | 'moderate' | 'strong';
+
+export interface OrtPasswordStrength {
+  score: number;
+  rating: string;
+  level: OrtPasswordStrengthLevel;
+}
+
+const ORT_PASSWORD_STRENGTH_CONFIG: PasswordStrengthConfig = {
+  ratingTexts: {
+    weak: 'Débil',
+    moderate: 'Moderada',
+    strong: 'Fuerte',
+  },
+};
+
+export function buildOrtPasswordStrength(password: string): OrtPasswordStrength | null {
+  if (!password) {
+    return null;
+  }
+
+  const { score, rating } = ValidationUtils.evalPasswordStrength(
+    password,
+    ORT_PASSWORD_STRENGTH_CONFIG
+  );
+
+  return { score, rating, level: toStrengthLevel(score) };
+}
+
+function toStrengthLevel(score: number): OrtPasswordStrengthLevel {
+  if (score >= 70) {
+    return 'strong';
+  }
+  if (score >= 40) {
+    return 'moderate';
+  }
+  return 'weak';
 }
 

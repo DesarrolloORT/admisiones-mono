@@ -5,7 +5,9 @@ import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getCatalogosCarrerasEndpoint,
   getCatalogosComienzosEndpoint,
+  getCatalogosEncuestaInicialEndpoint,
   getCatalogosPaisesEstadosCiudadesEndpoint,
+  getCatalogosTurnosEndpoint,
   PaisesEstadosCiudadesItem,
   PaisesEstadosCiudadesItemEstado,
   PaisesEstadosCiudadesItemEstadoCiudad,
@@ -13,11 +15,14 @@ import {
 
 import {
   Career,
+  CatalogItem,
   Comienzo,
   Country,
+  InitialSurveyCatalogs,
   LocationCity,
   LocationCountry,
   LocationState,
+  Turno,
 } from '../models/catalog.interface';
 
 @Injectable({
@@ -70,6 +75,35 @@ export class CatalogsEndpoint {
     );
   }
 
+  public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
+    return this.api.request(getCatalogosEncuestaInicialEndpoint).pipe(
+      map(data => ({
+        aniosAprobadosEducacionSuperior: this.toCatalogItems(data?.aniosAprobadosEducacionSuperior),
+        compartidoCon: this.toCatalogItems(data?.compartidoCon),
+        decisionCarrera: this.toCatalogItems(data?.decisionCarrera),
+        decisionUniversidad: this.toCatalogItems(data?.decisionUniversidad),
+        estadoEducacionSuperior: this.toCatalogItems(data?.estadoEducacionSuperior),
+        formacionTutores: this.toCatalogItems(data?.formacionTutores),
+        nivelConocimiento: this.toCatalogItems(data?.nivelConocimiento),
+      }))
+    );
+  }
+
+  public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
+    return this.api
+      .request(getCatalogosTurnosEndpoint, { queryParams: { idCarrera, idProceso } })
+      .pipe(
+        map(data =>
+          this.fromData(data, item => ({
+            idOferta: item.idOferta ?? 0,
+            idTurno: item.turno?.idTurno ?? 0,
+            nombreTurno: item.turno?.nombreTurno ?? '',
+            horarioReferencia: item.horarioReferencia ?? '',
+          }))
+        )
+      );
+  }
+
   public clearCache(): void {
     this.api.clearCache();
   }
@@ -100,6 +134,15 @@ export class CatalogsEndpoint {
     };
   }
 
+  private toCatalogItems(
+    data: Array<{ value?: number; label?: string | null }> | null | undefined
+  ): CatalogItem[] {
+    return (data ?? []).map(item => ({
+      id: item.value ?? '',
+      label: item.label ?? '',
+    }));
+  }
+
   private fromData<TItem, TResult>(
     data: TItem | TItem[] | null | undefined,
     mapper: (item: TItem) => TResult
@@ -111,3 +154,4 @@ export class CatalogsEndpoint {
     return (Array.isArray(data) ? data : [data]).map(mapper);
   }
 }
+

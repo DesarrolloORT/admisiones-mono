@@ -1,0 +1,16 @@
+<app-inscripcion-shell
+  [showBack]="facade.canGoBack()"
+  [showStepper]="!facade.isFinished()"
+  [stepLabel]="facade.stepSupportLabel()"
+  [stepNumber]="facade.stepNumber()"
+  (back)="facade.back()">
+  @switch (facade.step()) { @case ('propuesta') {
+  <app-inscripcion-academic-step />
+  } @case ('personal') {
+  <app-inscripcion-personal-step />
+  } @case ('confirmacion') {
+  <app-inscripcion-confirmation-step />
+  } @case ('finalizada') {
+  <app-inscripcion-success-step />
+  } }
+</app-inscripcion-shell>

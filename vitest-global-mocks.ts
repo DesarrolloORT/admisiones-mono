@@ -31,9 +31,18 @@ window.ResizeObserver = vi.fn().mockImplementation(() => ({
 try {
   Object.defineProperty(window, 'location', {
     value: {
+      href: 'http://localhost/',
+      protocol: 'http:',
+      host: 'localhost',
+      hostname: 'localhost',
+      port: '',
+      pathname: '/',
+      search: '',
+      hash: '',
       reload: vi.fn(),
       replace: vi.fn(),
       origin: 'http://localhost',
+      toString: () => 'http://localhost/',
     },
     writable: true,
     configurable: true,

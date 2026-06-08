@@ -121,9 +121,10 @@ export interface RecoverPasswordPayload {
 /**
  * Auth endpoint adapter.
  *
- * This is the **only** file in the auth feature that imports generated endpoints
- * and backend DTOs. It translates between the unstable generated layer and the
- * stable frontend types consumed by services, pages and components.
+ * This adapter is one of the auth feature files allowed to import generated
+ * endpoints and backend DTOs. It translates between the unstable generated
+ * layer and the stable frontend types consumed by services, pages and
+ * components.
  *
  * When the backend changes (URL, DTO shape, field names), only this file needs
  * adjustment — the rest of the feature keeps compiling unchanged.

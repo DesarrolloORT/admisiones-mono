@@ -28,8 +28,8 @@ import {
 } from 'src/app/shared/forms/matching-fields.validator';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
+import { AccountService, PersonalDataRecord } from '../../../auth/services/account';
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
-import { PersonalDataRecord, PersonalDataService } from '../../services/personal-data';
 
 interface PersonalDataForm {
   documentType: FormControl<string>;
@@ -64,7 +64,7 @@ interface PersonalDataForm {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PersonalData implements OnInit {
-  private readonly personalData = inject(PersonalDataService);
+  private readonly account = inject(AccountService);
   private readonly catalogs = inject(Catalogs);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
@@ -179,7 +179,7 @@ export class PersonalData implements OnInit {
     const value = this.form.getRawValue();
     this.isSubmitting.set(true);
 
-    this.personalData
+    this.account
       .updatePersonalData({
         countryCode: this.toNullableNumber(value.countryCode),
         stateCode: this.toNullableNumber(value.stateCode),
@@ -215,7 +215,7 @@ export class PersonalData implements OnInit {
     this.error.set(null);
 
     forkJoin({
-      data: this.personalData.getPersonalData(),
+      data: this.account.getPersonalData(),
       locations: this.catalogs.getCountryLocations(),
     })
       .pipe(finalize(() => this.isLoading.set(false)))

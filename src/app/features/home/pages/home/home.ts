@@ -15,7 +15,7 @@ const ACTION_CARDS: HomeActionCard[] = [
     icon: 'school',
     ctaLabel: 'Comenzar inscripción',
     imageSrc: 'assets/home/inscripcion-card.png',
-    disabledReason: 'Disponible próximamente.',
+    route: '/inscripciones',
   },
   {
     id: 'scholarship',

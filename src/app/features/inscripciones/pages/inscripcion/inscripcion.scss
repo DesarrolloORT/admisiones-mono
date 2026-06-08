@@ -1,0 +1,436 @@
+:host {
+  display: block;
+}
+
+.inscription-screen {
+  display: grid;
+  gap: var(--ort-sys-spacing-24);
+  padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
+}
+
+.inscription-screen__header {
+  display: grid;
+  gap: var(--ort-sys-spacing-4);
+}
+
+.inscription-screen__header h1,
+.inscription-success-heading h1 {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-weight: 700;
+  font-size: var(--ort-sys-heading-level4-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.inscription-screen__header p,
+.inscription-success-heading p,
+.inscription-card p,
+.inscription-payment-method p {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-form,
+.inscription-form__stack {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
+.inscription-fieldset {
+  display: grid;
+  gap: var(--ort-sys-radio-label-gap);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.inscription-fieldset legend {
+  margin: 0 0 var(--ort-sys-spacing-6);
+  color: var(--ort-sys-radio-label-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-fieldset--compact legend {
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+.inscription-fieldset--sr-legend legend {
+  position: absolute;
+  overflow: hidden;
+  width: 1rem;
+  height: 1rem;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.inscription-radio-list,
+.inscription-choice-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+}
+
+.inscription-choice-list {
+  gap: 0;
+}
+
+.inscription-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  margin-inline: calc(var(--ort-sys-spacing-16) * -1);
+  padding: var(--ort-sys-spacing-16) var(--ort-sys-spacing-16)
+    calc(var(--ort-sys-spacing-16) + env(safe-area-inset-bottom));
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.inscription-footer button,
+.inscription-footer a,
+.inscription-card button,
+.inscription-services button {
+  width: 100%;
+}
+
+.inscription-accordion-list {
+  display: grid;
+  gap: var(--ort-sys-accordeon-group-gap);
+}
+
+.inscription-accordion {
+  border: var(--ort-sys-accordeon-border-width) solid var(--ort-sys-accordeon-border-color);
+  border-radius: var(--ort-sys-accordeon-border-radius);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.inscription-accordion summary {
+  display: flex;
+  gap: var(--ort-sys-accordeon-gap);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--ort-sys-accordeon-padding-block) var(--ort-sys-accordeon-padding-inline);
+  list-style: none;
+  cursor: pointer;
+}
+
+.inscription-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.inscription-accordion summary:focus-visible {
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: -2px;
+}
+
+.inscription-accordion summary span {
+  display: flex;
+  gap: var(--ort-sys-accordeon-gap);
+  align-items: center;
+  color: var(--ort-sys-accordeon-title-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-accordeon-title-font-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-accordeon-title-line-height);
+}
+
+.inscription-accordion summary ort-icon {
+  color: var(--ort-sys-base-icon-color-subtle);
+}
+
+.inscription-accordion[open] summary > ort-icon {
+  transform: rotate(180deg);
+}
+
+.inscription-accordion__content {
+  display: grid;
+  gap: var(--ort-sys-accordeon-content-gap);
+  padding: 0 var(--ort-sys-accordeon-padding-inline) var(--ort-sys-accordeon-padding-block);
+}
+
+.inscription-subsection {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
+.inscription-subsection h2,
+.inscription-card h2,
+.inscription-payment-method h2,
+.inscription-services h2 {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-weight: 700;
+  font-size: var(--ort-sys-heading-level5-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level5-line-height);
+}
+
+.inscription-status,
+.inscription-checkbox {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-status ort-icon {
+  color: var(--ort-sys-color-success);
+}
+
+.inscription-checkbox {
+  cursor: pointer;
+}
+
+.inscription-checkbox input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--ort-sys-base-surface-primary-background);
+}
+
+.inscription-card {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+  padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
+  border: 1px solid var(--ort-sys-base-border-dim-color);
+  border-radius: var(--ort-sys-border-radius-12);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.inscription-card--muted {
+  background: var(--ort-sys-base-surface-background-subtle);
+}
+
+.inscription-summary-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  margin: 0;
+}
+
+.inscription-summary-list__item {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0 var(--ort-sys-list-gap);
+}
+
+.inscription-summary-list__item dt {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  grid-column: 1 / -1;
+  gap: 0 var(--ort-sys-list-gap);
+}
+
+.inscription-summary-list__item dt ort-icon {
+  grid-row: span 2;
+  color: var(--ort-sys-base-icon-color-subtle);
+  font-size: 1.5rem;
+}
+
+.inscription-summary-list__item dt span {
+  grid-column: 2;
+  color: var(--ort-sys-list-overline-color);
+  font-size: var(--ort-sys-list-overline-font-size);
+  line-height: var(--ort-sys-list-overline-line-height);
+}
+
+.inscription-summary-list__item dd {
+  grid-column: 2;
+  margin: 0;
+  color: var(--ort-sys-list-title-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-list-title-font-size);
+  line-height: var(--ort-sys-list-title-line-height);
+}
+
+.inscription-payment {
+  display: grid;
+  gap: var(--ort-sys-spacing-4);
+  justify-items: center;
+  text-align: center;
+}
+
+.inscription-payment strong {
+  color: var(--ort-sys-base-text-color-headline);
+  font-size: var(--ort-sys-heading-level3-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level3-line-height);
+}
+
+.inscription-payment p {
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+.inscription-alert {
+  display: flex;
+  gap: var(--ort-sys-alert-content-gap);
+  align-items: center;
+  margin: 0;
+  padding: var(--ort-sys-alert-padding-block) var(--ort-sys-alert-padding-inline);
+  border: var(--ort-sys-alert-border-width) solid transparent;
+  border-radius: var(--ort-sys-alert-border-radius-rounded);
+  font-size: var(--ort-sys-alert-message-font-size);
+  line-height: var(--ort-sys-alert-message-line-height);
+}
+
+.inscription-alert ort-icon {
+  flex: 0 0 auto;
+}
+
+.inscription-alert--warning {
+  border-color: var(--ort-sys-alert-border-color-warning);
+  background: var(--ort-sys-alert-background-warning);
+  color: var(--ort-sys-alert-title-color-warning);
+  font-weight: 700;
+}
+
+.inscription-alert--info {
+  border-color: var(--ort-sys-alert-border-color-information);
+  background: var(--ort-sys-alert-background-information);
+  color: var(--ort-sys-alert-message-information);
+}
+
+.inscription-alert--info span {
+  display: grid;
+  gap: var(--ort-sys-spacing-2);
+}
+
+.inscription-alert--info strong {
+  color: var(--ort-sys-alert-title-color-information);
+  font-size: var(--ort-sys-alert-title-font-size);
+  line-height: var(--ort-sys-alert-title-line-height);
+}
+
+.inscription-payment-method {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+}
+
+.inscription-screen--success {
+  gap: var(--ort-sys-spacing-24);
+}
+
+.inscription-success-heading {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  justify-items: center;
+  padding-top: var(--ort-sys-spacing-48);
+  text-align: center;
+}
+
+.inscription-success-heading__icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--ort-sys-border-radius-round);
+  background: var(--ort-sys-base-surface-subtle-success-background);
+  color: var(--ort-sys-color-success);
+}
+
+.inscription-success-heading__icon ort-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: inherit;
+  background: var(--ort-sys-color-success);
+  color: var(--ort-sys-base-text-on-color-body);
+  font-size: 1.5rem;
+  line-height: 2.25rem;
+}
+
+.inscription-contact-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+}
+
+.inscription-contact {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: var(--ort-sys-list-gap);
+  align-items: center;
+}
+
+.inscription-contact__avatar {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--ort-sys-avatar-border-radius);
+  background: var(--ort-sys-avatar-background);
+  color: var(--ort-sys-base-surface-primary-background);
+}
+
+.inscription-contact h3,
+.inscription-contact p {
+  margin: 0;
+  color: var(--ort-sys-list-title-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-contact p,
+.inscription-contact a {
+  color: var(--ort-sys-base-text-color-body);
+  font-weight: 400;
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+.inscription-contact a {
+  color: var(--ort-sys-base-text-primary-color);
+}
+
+.inscription-card h3 {
+  margin: var(--ort-sys-spacing-8) 0 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-subject-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inscription-subject-list li {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+  color: var(--ort-sys-base-text-color-headline);
+  font-weight: 600;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.inscription-subject-list ort-icon {
+  color: var(--ort-sys-base-surface-primary-background);
+  font-size: 1.125rem;
+}
+
+.inscription-santander {
+  color: var(--ort-sys-color-error);
+}
+
+.inscription-services {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+}
+
+.inscription-services button {
+  display: inline-flex;
+  gap: var(--ort-sys-spacing-8);
+}

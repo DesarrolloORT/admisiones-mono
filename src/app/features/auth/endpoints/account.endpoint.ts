@@ -4,10 +4,11 @@ import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getPersonaDatosPersonaEndpoint,
+  postPersonaCambiarContrasenaEndpoint,
   putPersonaDatosPersonaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 
-export interface PersonalDataRecord {
+export interface AccountPersonalData {
   documentType: string;
   documentNumber: string;
   firstName: string;
@@ -25,7 +26,7 @@ export interface PersonalDataRecord {
   emailVerification: string;
 }
 
-export interface UpdatePersonalDataPayload {
+export interface UpdateAccountPersonalDataPayload {
   countryCode: number | null;
   stateCode: number | null;
   cityCode: number | null;
@@ -35,13 +36,18 @@ export interface UpdatePersonalDataPayload {
   emailVerification: string;
 }
 
+export interface AccountChangePasswordPayload {
+  currentPassword: string;
+  password: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
-export class PersonalDataService {
+export class AccountEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getPersonalData(): Observable<PersonalDataRecord> {
+  public getPersonalData(): Observable<AccountPersonalData> {
     return this.api
       .request(getPersonaDatosPersonaEndpoint, { withCredentials: true, cache: false })
       .pipe(
@@ -65,7 +71,7 @@ export class PersonalDataService {
       );
   }
 
-  public updatePersonalData(payload: UpdatePersonalDataPayload): Observable<boolean> {
+  public updatePersonalData(payload: UpdateAccountPersonalDataPayload): Observable<boolean> {
     return this.api
       .request(putPersonaDatosPersonaEndpoint, {
         body: {
@@ -80,6 +86,16 @@ export class PersonalDataService {
         withCredentials: true,
       })
       .pipe(map(result => result === true));
+  }
+
+  public changePassword(payload: AccountChangePasswordPayload): Observable<unknown> {
+    return this.api.request(postPersonaCambiarContrasenaEndpoint, {
+      body: {
+        passwordActual: payload.currentPassword,
+        passwordNueva: payload.password,
+      },
+      withCredentials: true,
+    });
   }
 
   private toOptionalNumber(value: number | null): number | undefined {

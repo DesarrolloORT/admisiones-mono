@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -27,7 +28,7 @@ describe('Home', () => {
 
     TestBed.configureTestingModule({
       imports: [Home],
-      providers: [{ provide: AuthSessionService, useValue: authMock }],
+      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
     });
 
     fixture = TestBed.createComponent(Home);
@@ -45,5 +46,11 @@ describe('Home', () => {
     expect(text).toContain('Postularme a beca');
     expect(text).not.toContain('Mis carreras');
     expect(text).not.toContain('Mis becas');
+
+    const primaryLink = fixture.nativeElement.querySelector(
+      'a.home-action-card__primary'
+    ) as HTMLAnchorElement | null;
+
+    expect(primaryLink?.getAttribute('href')).toBe('/inscripciones');
   });
 });

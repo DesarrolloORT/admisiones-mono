@@ -136,17 +136,18 @@ tools/
 ```
 
 Las features deben seguir el flujo
-`pages/components -> services -> ApiHttpClient -> endpoints generados -> API`.
+`pages/components -> services -> endpoint adapter -> ApiHttpClient -> generated -> API`.
 Ver [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md) para las reglas de capas.
 
 Los contratos tecnicos de la API se generan desde Swagger. Cuando cambia el
 backend, ejecutar `npm run update-api` para regenerar modelos en
 `src/app/shared/api/generated/models/` y endpoints en
-`src/app/shared/api/generated/endpoints/`.
+`src/app/shared/api/generated/endpoints/`. Esos archivos son locales y estan
+ignorados por Git.
 
 `ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
-defecto los `GET` sin parámetros. Los servicios de feature solo pasan
-parámetros, request body y mapean el retorno cuando corresponde.
+defecto los `GET` sin parámetros. Los services consumen adapters de feature; si
+necesitas ver los endpoints reales locales, ejecuta `npm run api:endpoints`.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
