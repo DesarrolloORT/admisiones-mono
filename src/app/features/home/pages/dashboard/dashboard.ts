@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+
+import { HomeEndpoint } from '../../endpoints/home.endpoint';
 
 @Component({
   selector: 'app-dashboard',
@@ -6,5 +8,13 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Dashboard {}
+export class Dashboard implements OnInit {
+  private readonly endpoint = inject(HomeEndpoint);
+
+  ngOnInit(): void {
+    this.endpoint.getMisInscripciones().subscribe(inscripciones => {
+      console.log('Mis inscripciones:', inscripciones);
+    });
+  }
+}
 
