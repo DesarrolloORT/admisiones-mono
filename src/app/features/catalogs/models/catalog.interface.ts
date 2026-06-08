@@ -52,7 +52,7 @@ export interface Comienzo {
   nombreProceso: string;
 }
 
-export interface Shift {
+export interface Turno {
   idOferta: number;
   idTurno: number;
   nombreTurno: string;
@@ -92,3 +92,4 @@ export interface InitialSurveyCatalogs {
   formacionTutores: CatalogItem[];
   nivelConocimiento: CatalogItem[];
 }
+

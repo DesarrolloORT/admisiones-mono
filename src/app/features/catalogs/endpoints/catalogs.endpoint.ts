@@ -22,7 +22,7 @@ import {
   LocationCity,
   LocationCountry,
   LocationState,
-  Shift,
+  Turno,
 } from '../models/catalog.interface';
 
 @Injectable({
@@ -89,7 +89,7 @@ export class CatalogsEndpoint {
     );
   }
 
-  public getShifts(idCarrera: number, idProceso: number): Observable<Shift[]> {
+  public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
     return this.api
       .request(getCatalogosTurnosEndpoint, { queryParams: { idCarrera, idProceso } })
       .pipe(
@@ -154,3 +154,4 @@ export class CatalogsEndpoint {
     return (Array.isArray(data) ? data : [data]).map(mapper);
   }
 }
+

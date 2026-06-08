@@ -13,7 +13,7 @@ describe('Catalogs', () => {
     getCareers: ReturnType<typeof vi.fn>;
     getComienzos: ReturnType<typeof vi.fn>;
     getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
-    getShifts: ReturnType<typeof vi.fn>;
+    getTurnos: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
   };
 
@@ -24,7 +24,7 @@ describe('Catalogs', () => {
       getCareers: vi.fn(),
       getComienzos: vi.fn(),
       getInitialSurveyCatalogs: vi.fn(),
-      getShifts: vi.fn(),
+      getTurnos: vi.fn(),
       clearCache: vi.fn(),
     };
 
@@ -108,7 +108,7 @@ describe('Catalogs', () => {
     expect(endpointMock.getInitialSurveyCatalogs).toHaveBeenCalledOnce();
   });
 
-  it('should delegate getShifts to the endpoint', () => {
+  it('should delegate getTurnos to the endpoint', () => {
     const result = [
       {
         idOferta: 30,
@@ -117,13 +117,13 @@ describe('Catalogs', () => {
         horarioReferencia: '19:00',
       },
     ];
-    endpointMock.getShifts.mockReturnValue(of(result));
+    endpointMock.getTurnos.mockReturnValue(of(result));
 
-    service.getShifts(20, 10).subscribe(data => {
+    service.getTurnos(20, 10).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getShifts).toHaveBeenCalledWith(20, 10);
+    expect(endpointMock.getTurnos).toHaveBeenCalledWith(20, 10);
   });
 
   it('should delegate clearCache to the endpoint', () => {
@@ -132,3 +132,4 @@ describe('Catalogs', () => {
     expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });
+

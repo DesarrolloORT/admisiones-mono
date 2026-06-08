@@ -9,7 +9,7 @@ import {
   DocumentType,
   InitialSurveyCatalogs,
   LocationCountry,
-  Shift,
+  Turno,
 } from '../models/catalog.interface';
 
 // TODO: reemplazar cuando el endpoint getCatalogosTiposDocumentos vuelva al API.
@@ -49,11 +49,12 @@ export class Catalogs {
     return this.endpoint.getInitialSurveyCatalogs();
   }
 
-  public getShifts(idCarrera: number, idProceso: number): Observable<Shift[]> {
-    return this.endpoint.getShifts(idCarrera, idProceso);
+  public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
+    return this.endpoint.getTurnos(idCarrera, idProceso);
   }
 
   public clearCache(): void {
     this.endpoint.clearCache();
   }
 }
+

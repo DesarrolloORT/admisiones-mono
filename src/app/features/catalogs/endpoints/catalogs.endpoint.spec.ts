@@ -75,7 +75,7 @@ describe('CatalogsEndpoint', () => {
     });
   });
 
-  it('should map shifts from API data', () => {
+  it('should map turnos from API data', () => {
     apiMock.request.mockReturnValue(
       of([
         {
@@ -89,7 +89,7 @@ describe('CatalogsEndpoint', () => {
       ])
     );
 
-    endpoint.getShifts(20, 10).subscribe(result => {
+    endpoint.getTurnos(20, 10).subscribe(result => {
       expect(result).toEqual([
         {
           idOferta: 30,
@@ -107,3 +107,4 @@ describe('CatalogsEndpoint', () => {
     expect(apiMock.clearCache).toHaveBeenCalled();
   });
 });
+
