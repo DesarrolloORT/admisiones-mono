@@ -74,5 +74,18 @@ describe('SetPasswordFacade', () => {
 
     expect(facade.error()).toBe('No se pudo crear la contraseña. Intentá de nuevo.');
   });
+
+  it('should expose password strength from ngx-utils only when there is input', () => {
+    expect(facade.strength()).toBeNull();
+
+    facade.form.controls.password.setValue('NuevaPassword1!');
+
+    const strength = facade.strength();
+    expect(strength).not.toBeNull();
+    expect(strength!.score).toBeGreaterThan(0);
+    expect(strength!.score).toBeLessThanOrEqual(100);
+    expect(['weak', 'moderate', 'strong']).toContain(strength!.level);
+    expect(strength!.rating).toBeTruthy();
+  });
 });
 

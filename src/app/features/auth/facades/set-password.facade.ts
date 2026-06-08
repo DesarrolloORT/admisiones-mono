@@ -10,8 +10,10 @@ import {
 } from '../../../shared/forms/form-error-summary';
 import {
   buildOrtPasswordRequirements,
+  buildOrtPasswordStrength,
   ORT_PASSWORD_ERROR_MESSAGES,
   ORT_PASSWORD_VALIDATORS,
+  OrtPasswordStrength,
 } from '../../../shared/forms/password-validation';
 import { PasswordActivationService } from '../services/password-activation';
 
@@ -127,6 +129,10 @@ export class SetPasswordFacade {
     this._password();
     return buildOrtPasswordRequirements(this.form.controls.password);
   });
+
+  public readonly strength = computed<OrtPasswordStrength | null>(() =>
+    buildOrtPasswordStrength(this._password())
+  );
 
   constructor() {
     this.form.controls.password.valueChanges.subscribe(v => this._password.set(v));
