@@ -52,6 +52,13 @@ export interface Comienzo {
   nombreProceso: string;
 }
 
+export interface Shift {
+  idOferta: number;
+  idTurno: number;
+  nombreTurno: string;
+  horarioReferencia: string;
+}
+
 export type ReasonForChoice = CatalogItem;
 
 export type AdvertisingChoice = CatalogItem;
@@ -74,5 +81,15 @@ export type ScholarshipProduct = CatalogItem;
 
 export interface ScholarshipFund extends CatalogItem {
   productId: number | string;
+}
+
+export interface InitialSurveyCatalogs {
+  aniosAprobadosEducacionSuperior: CatalogItem[];
+  compartidoCon: CatalogItem[];
+  decisionCarrera: CatalogItem[];
+  decisionUniversidad: CatalogItem[];
+  estadoEducacionSuperior: CatalogItem[];
+  formacionTutores: CatalogItem[];
+  nivelConocimiento: CatalogItem[];
 }
 
