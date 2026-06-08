@@ -30,11 +30,11 @@ namespace WebApiAdmisiones.Security
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            if (_environment.IsDevelopment() || _environment.IsEnvironment("LocalHost"))
-            {
-                await next();
-                return;
-            }
+            //if (_environment.IsDevelopment() || _environment.IsEnvironment("LocalHost"))
+            //{
+            //    await next();
+            //    return;
+            //}
 
             var token = context.HttpContext.Request.Headers[HeaderName].FirstOrDefault();
             var validation = await _recaptchaService.ValidarAsync(token ?? string.Empty);

@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Globalization;
 using System.Text.Json;
 using AppLogic.IServices;
 using Utilities;
@@ -7,7 +7,9 @@ namespace AppLogic.Services
 {
     public class RecaptchaService : IRecaptchaService
     {
-        private const string DefaultProjectId = "admisiones-457619";
+        private const string VerifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+        private const string SecretKeyEnvironmentVariable = "RECAPTCHA_SECRET_KEY";
+
         private readonly HttpClient _httpClient;
 
         public RecaptchaService(HttpClient httpClient)
@@ -22,85 +24,34 @@ namespace AppLogic.Services
                 return OperationResult<bool>.IsFailed(
                     "REG_CAPTCHA_01",
                     nameof(ValidarAsync),
-                    "El parámetro captcha es obligatorio.",
+                    "El parametro captcha es obligatorio.",
                     400,
                     false);
             }
 
-            var siteKey = Environment.GetEnvironmentVariable("RECAPTCHA_SITE_KEY");
-            var apiKey = Environment.GetEnvironmentVariable("RECAPTCHA_API_KEY");
-            var projectId = DefaultProjectId;
+            var verification = await VerifyV3Async(token, "login");
+            if (!verification.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    MapAuthErrorToRegistrationError(verification.ErrorCode),
+                    nameof(ValidarAsync),
+                    verification.Message,
+                    verification.HttpCode,
+                    false);
+            }
+
             var minimumScore = GetMinimumScore();
-
-            if (string.IsNullOrWhiteSpace(siteKey) || string.IsNullOrWhiteSpace(apiKey))
+            if (verification.Data!.Score < minimumScore)
             {
                 return OperationResult<bool>.IsFailed(
-                    "REG_CAPTCHA_02",
+                    "REG_CAPTCHA_05",
                     nameof(ValidarAsync),
-                    "No se encontró la configuración de reCAPTCHA.",
-                    500,
+                    "Error al validar el captcha. Actividad sospechosa detectada.",
+                    400,
                     false);
             }
 
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync(
-                    $"https://recaptchaenterprise.googleapis.com/v1/projects/{projectId}/assessments?key={apiKey}",
-                    new
-                    {
-                        @event = new
-                        {
-                            token,
-                            siteKey,
-                            expectedAction = "USER_ACTION"
-                        }
-                    });
-
-                var body = await response.Content.ReadAsStringAsync();
-                if (!response.IsSuccessStatusCode)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "REG_CAPTCHA_03",
-                        nameof(ValidarAsync),
-                        $"Error al validar captcha contra Google: {body}",
-                        502,
-                        false);
-                }
-
-                using var json = JsonDocument.Parse(body);
-                if (!json.RootElement.TryGetProperty("riskAnalysis", out var riskAnalysis)
-                    || !riskAnalysis.TryGetProperty("score", out var scoreElement)
-                    || !scoreElement.TryGetDouble(out var score))
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "REG_CAPTCHA_04",
-                        nameof(ValidarAsync),
-                        "Error al validar el captcha contra Google.",
-                        400,
-                        false);
-                }
-
-                if (score < minimumScore)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "REG_CAPTCHA_05",
-                        nameof(ValidarAsync),
-                        "Error al validar el captcha. Actividad sospechosa detectada.",
-                        400,
-                        false);
-                }
-
-                return OperationResult<bool>.Ok(true, nameof(ValidarAsync));
-            }
-            catch (Exception ex)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "REG_CAPTCHA_99",
-                    nameof(ValidarAsync),
-                    $"Error al validar captcha: {ex.Message}",
-                    500,
-                    false);
-            }
+            return OperationResult<bool>.Ok(true, nameof(ValidarAsync));
         }
 
         public async Task<OperationResult<double>> ValidarConScoreAsync(string token, string expectedAction = "login")
@@ -110,82 +61,150 @@ namespace AppLogic.Services
                 return OperationResult<double>.IsFailed(
                     "AUTH_CAPTCHA_01",
                     nameof(ValidarConScoreAsync),
-                    "El parámetro captcha es obligatorio.",
+                    "El parametro captcha es obligatorio.",
                     400,
                     0d);
             }
 
-            var siteKey = Environment.GetEnvironmentVariable("RECAPTCHA_SITE_KEY");
-            var apiKey = Environment.GetEnvironmentVariable("RECAPTCHA_API_KEY");
-
-            if (string.IsNullOrWhiteSpace(siteKey) || string.IsNullOrWhiteSpace(apiKey))
+            var verification = await VerifyV3Async(token, expectedAction);
+            if (!verification.Success)
             {
                 return OperationResult<double>.IsFailed(
-                    "AUTH_CAPTCHA_02",
+                    verification.ErrorCode,
                     nameof(ValidarConScoreAsync),
-                    "No se encontró la configuración de reCAPTCHA.",
-                    500,
+                    verification.Message,
+                    verification.HttpCode,
                     0d);
+            }
+
+            return OperationResult<double>.Ok(verification.Data!.Score, nameof(ValidarConScoreAsync));
+        }
+
+        private async Task<OperationResult<RecaptchaV3Verification>> VerifyV3Async(
+            string token,
+            string? expectedAction)
+        {
+            var secretKey = Environment.GetEnvironmentVariable(SecretKeyEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(secretKey))
+            {
+                return OperationResult<RecaptchaV3Verification>.IsFailed(
+                    "AUTH_CAPTCHA_02",
+                    nameof(VerifyV3Async),
+                    $"No se encontro la configuracion de reCAPTCHA v3. Defini {SecretKeyEnvironmentVariable}.",
+                    500);
             }
 
             try
             {
-                var response = await _httpClient.PostAsJsonAsync(
-                    $"https://recaptchaenterprise.googleapis.com/v1/projects/{DefaultProjectId}/assessments?key={apiKey}",
-                    new
-                    {
-                        @event = new
-                        {
-                            token,
-                            siteKey,
-                            expectedAction
-                        }
-                    });
+                using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["secret"] = secretKey,
+                    ["response"] = token
+                });
 
+                var response = await _httpClient.PostAsync(VerifyUrl, content);
                 var body = await response.Content.ReadAsStringAsync();
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    return OperationResult<double>.IsFailed(
+                    return OperationResult<RecaptchaV3Verification>.IsFailed(
                         "AUTH_CAPTCHA_03",
-                        nameof(ValidarConScoreAsync),
+                        nameof(VerifyV3Async),
                         $"Error al validar captcha contra Google: {body}",
-                        502,
-                        0d);
+                        502);
                 }
 
                 using var json = JsonDocument.Parse(body);
-                if (!json.RootElement.TryGetProperty("riskAnalysis", out var riskAnalysis)
-                    || !riskAnalysis.TryGetProperty("score", out var scoreElement)
-                    || !scoreElement.TryGetDouble(out var score))
+                var root = json.RootElement;
+
+                if (!root.TryGetProperty("success", out var successElement)
+                    || !successElement.GetBoolean())
                 {
-                    return OperationResult<double>.IsFailed(
+                    return OperationResult<RecaptchaV3Verification>.IsFailed(
                         "AUTH_CAPTCHA_04",
-                        nameof(ValidarConScoreAsync),
-                        "Error al obtener el score del captcha.",
-                        400,
-                        0d);
+                        nameof(VerifyV3Async),
+                        $"Google no valido el captcha. {GetErrorCodes(root)}",
+                        400);
                 }
 
-                return OperationResult<double>.Ok(score, nameof(ValidarConScoreAsync));
+                if (!root.TryGetProperty("score", out var scoreElement)
+                    || !scoreElement.TryGetDouble(out var score))
+                {
+                    return OperationResult<RecaptchaV3Verification>.IsFailed(
+                        "AUTH_CAPTCHA_04",
+                        nameof(VerifyV3Async),
+                        "Error al obtener el score del captcha.",
+                        400);
+                }
+
+                var action = root.TryGetProperty("action", out var actionElement)
+                    ? actionElement.GetString()
+                    : null;
+
+                if (!string.IsNullOrWhiteSpace(expectedAction)
+                    && !string.Equals(action, expectedAction, StringComparison.Ordinal))
+                {
+                    return OperationResult<RecaptchaV3Verification>.IsFailed(
+                        "AUTH_CAPTCHA_05",
+                        nameof(VerifyV3Async),
+                        "La accion del captcha no coincide con la accion esperada.",
+                        400);
+                }
+
+                return OperationResult<RecaptchaV3Verification>.Ok(
+                    new RecaptchaV3Verification(score, action),
+                    nameof(VerifyV3Async));
             }
             catch (Exception ex)
             {
-                return OperationResult<double>.IsFailed(
+                return OperationResult<RecaptchaV3Verification>.IsFailed(
                     "AUTH_CAPTCHA_99",
-                    nameof(ValidarConScoreAsync),
+                    nameof(VerifyV3Async),
                     $"Error al validar captcha: {ex.Message}",
-                    500,
-                    0d);
+                    500);
             }
         }
+
+        private static string GetErrorCodes(JsonElement root)
+        {
+            if (!root.TryGetProperty("error-codes", out var errorCodes)
+                || errorCodes.ValueKind != JsonValueKind.Array)
+            {
+                return string.Empty;
+            }
+
+            var codes = errorCodes
+                .EnumerateArray()
+                .Select(code => code.GetString())
+                .Where(code => !string.IsNullOrWhiteSpace(code));
+
+            return $"Codigos: {string.Join(", ", codes)}";
+        }
+
+        private static string MapAuthErrorToRegistrationError(string errorCode) =>
+            errorCode switch
+            {
+                "AUTH_CAPTCHA_02" => "REG_CAPTCHA_02",
+                "AUTH_CAPTCHA_03" => "REG_CAPTCHA_03",
+                "AUTH_CAPTCHA_04" => "REG_CAPTCHA_04",
+                "AUTH_CAPTCHA_05" => "REG_CAPTCHA_04",
+                "AUTH_CAPTCHA_99" => "REG_CAPTCHA_99",
+                _ => "REG_CAPTCHA_99"
+            };
 
         private static double GetMinimumScore()
         {
             var rawValue = Environment.GetEnvironmentVariable("RECAPTCHA_SCORE") ?? "0.5";
 
-            return double.TryParse(rawValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var score)
+            return double.TryParse(
+                rawValue,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var score)
                 ? score
                 : 0.5;
         }
+
+        private sealed record RecaptchaV3Verification(double Score, string? Action);
     }
 }

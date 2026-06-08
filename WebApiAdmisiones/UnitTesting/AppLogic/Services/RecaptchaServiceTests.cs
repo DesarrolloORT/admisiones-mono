@@ -26,8 +26,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ValidarAsync_WithoutConfiguration_ReturnsServerError()
         {
             using var scope = new EnvironmentVariableScope(
-                ("RECAPTCHA_SITE_KEY", null),
-                ("RECAPTCHA_API_KEY", null));
+                ("RECAPTCHA_SECRET_KEY", null));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK))));
 
@@ -42,11 +41,10 @@ namespace UnitTesting.AppLogic.Services
         public async Task ValidarAsync_WithAcceptedScore_ReturnsOk()
         {
             using var scope = new EnvironmentVariableScope(
-                ("RECAPTCHA_SITE_KEY", "site-key"),
-                ("RECAPTCHA_API_KEY", "api-key"),
+                ("RECAPTCHA_SECRET_KEY", "secret-key"),
                 ("RECAPTCHA_SCORE", "0.7"));
             var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """{"riskAnalysis":{"score":0.9}}"""));
+                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.9,"action":"login"}"""));
             var service = new RecaptchaService(new HttpClient(handler));
 
             var result = await service.ValidarAsync("captcha-token");
@@ -55,20 +53,19 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Contains("projects/admisiones-457619/assessments?key=api-key", request.RequestUri);
-            Assert.Contains("captcha-token", request.Body);
-            Assert.Contains("site-key", request.Body);
+            Assert.Equal("https://www.google.com/recaptcha/api/siteverify", request.RequestUri);
+            Assert.Contains("secret=secret-key", request.Body);
+            Assert.Contains("response=captcha-token", request.Body);
         }
 
         [Fact]
         public async Task ValidarAsync_WithLowScore_ReturnsSuspiciousActivity()
         {
             using var scope = new EnvironmentVariableScope(
-                ("RECAPTCHA_SITE_KEY", "site-key"),
-                ("RECAPTCHA_API_KEY", "api-key"),
+                ("RECAPTCHA_SECRET_KEY", "secret-key"),
                 ("RECAPTCHA_SCORE", "0.8"));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """{"riskAnalysis":{"score":0.3}}"""))));
+                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.3,"action":"login"}"""))));
 
             var result = await service.ValidarAsync("captcha-token");
 
@@ -81,8 +78,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ValidarAsync_WhenGoogleReturnsError_ReturnsBadGateway()
         {
             using var scope = new EnvironmentVariableScope(
-                ("RECAPTCHA_SITE_KEY", "site-key"),
-                ("RECAPTCHA_API_KEY", "api-key"));
+                ("RECAPTCHA_SECRET_KEY", "secret-key"));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.BadRequest, """{"error":"invalid"}"""))));
 
@@ -91,6 +87,35 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("REG_CAPTCHA_03", result.ErrorCode);
             Assert.Equal(502, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ValidarConScoreAsync_WhenActionDoesNotMatch_ReturnsBadRequest()
+        {
+            using var scope = new EnvironmentVariableScope(
+                ("RECAPTCHA_SECRET_KEY", "secret-key"));
+            var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.9,"action":"registro"}"""))));
+
+            var result = await service.ValidarConScoreAsync("captcha-token", "login");
+
+            Assert.False(result.Success);
+            Assert.Equal("AUTH_CAPTCHA_05", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ValidarConScoreAsync_WithValidV3Response_ReturnsScore()
+        {
+            using var scope = new EnvironmentVariableScope(
+                ("RECAPTCHA_SECRET_KEY", "secret-key"));
+            var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.6,"action":"login"}"""))));
+
+            var result = await service.ValidarConScoreAsync("captcha-token", "login");
+
+            Assert.True(result.Success);
+            Assert.Equal(0.6, result.Data);
         }
 
         private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
