@@ -30,7 +30,7 @@ Cada feature bajo `src/app/features/<feature>/` debe respetar el flujo:
 > Ver [Features transversales](#features-transversales).
 
 ```text
-pages/components -> services -> ApiHttpClient -> endpoints generados -> API
+pages/components -> services -> endpoint adapter -> ApiHttpClient -> generated -> API
 ```
 
 Capas esperadas:
@@ -38,19 +38,19 @@ Capas esperadas:
 - `pages/`: componentes de ruta, formularios, navegacion y estado visual.
 - `components/`: UI reutilizable de la feature.
 - `services/`: casos de uso y orquestacion consumidos por pages/components.
-- `endpoints/`: adaptadores HTTP opcionales para casos especiales. En flujos
-  simples, el service de feature consume `ApiHttpClient` y endpoints generados
-  directamente.
+- `endpoints/`: adaptadores HTTP obligatorios para llamadas a API. Es la unica
+  capa de una feature que importa contratos generados y usa `ApiHttpClient`.
 - `store/`: estado local con `signal` y `computed`.
 - `models/`: contratos, DTOs y errores de dominio.
 
-Las pages, components y stores no deben importar endpoints ni `HttpClient`
-directamente. Ver [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
+Las pages, components, stores, facades y services no deben importar contratos
+generados ni usar `HttpClient` directamente. Ver
+[docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 
 ## Contratos API generados
 
 El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
-frontend versiona dos salidas generadas:
+frontend genera localmente dos salidas tecnicas ignoradas por Git:
 
 - `src/app/shared/api/generated/models/`: modelos TypeScript generados por
   `npm run update-models`.
@@ -66,10 +66,10 @@ npm run update-api
 Los endpoints generados solo describen `operationId`, metodo, path, parametros,
 request y response. No contienen logica funcional ni reemplazan los servicios de
 feature. La ejecucion centralizada vive en
-`src/app/shared/api/core/api-http-client.service.ts`, que usa
-`environment.API_URL`, `HttpClient` y `buildApiPath`. Para los `OperationResult`
-del backend, los servicios deben preferir `api.data(...)` o `api.list(...)` y no
-leer `.data` a mano en cada llamada.
+`src/app/shared/api/core/api-http-client.ts`, que usa `environment.API_URL`,
+`HttpClient` y `buildApiPath`. Para los `OperationResult` del backend, los
+adapters deben preferir `api.data(...)` o `api.list(...)` y no leer `.data` a
+mano en cada llamada.
 
 Acoplamiento esperado:
 
@@ -77,6 +77,7 @@ Acoplamiento esperado:
 Swagger backend
   -> npm run update-api
   -> modelos y endpoints generados
+  -> endpoint adapters de feature
   -> servicios de aplicacion
   -> pages, components, stores
 ```
@@ -84,9 +85,11 @@ Swagger backend
 Reglas:
 
 - no editar manualmente archivos generados;
-- no importar endpoints generados desde pages, components o stores;
+- no importar endpoints generados fuera de `features/*/endpoints/*.endpoint.ts`;
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
 - usar `npm run check-endpoints` cuando se quiera validar drift contra Swagger.
+- usar `npm run api:endpoints` para listar endpoints reales locales y el adapter
+  que los consume.
 
 `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
 `queryParams`. Esto cubre catálogos y datos de referencia sin agregar
@@ -153,7 +156,8 @@ Estructura:
 
 ```text
 features/catalogs/
-  services/catalogs.ts             ← ApiHttpClient, endpoints generados, mapeos y API pública
+  endpoints/catalogs.endpoint.ts   ← generated, ApiHttpClient y mapeos HTTP
+  services/catalogs.ts             ← API pública para otras features
   models/catalog.interface.ts      ← tipos de cada catálogo
 ```
 

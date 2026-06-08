@@ -48,8 +48,14 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    ```
 
    Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints
-   tecnicos en `src/app/shared/api/generated/endpoints/`. Ninguno de esos
-   archivos generados debe editarse manualmente.
+   tecnicos en `src/app/shared/api/generated/endpoints/`. Esos archivos son
+   locales, estan ignorados por Git y no deben editarse manualmente.
+
+   Para descubrir los endpoints reales disponibles en tu ambiente local:
+
+   ```bash
+   npm run api:endpoints
+   ```
 
 4. Ajustar la base del repositorio nuevo:
    - reemplazar `angular-template` por el slug real del proyecto;
@@ -72,15 +78,15 @@ npm run test
 npm run build
 ```
 
-Cuando el PR depende de cambios en Swagger, tambien conviene validar que los
-contratos versionados no quedaron desactualizados:
+Cuando el PR depende de cambios en Swagger, tambien conviene validar si el
+Swagger local elimina o renombra endpoints consumidos por adapters:
 
 ```bash
 npm run check-endpoints
 ```
 
-Ese comando regenera modelos y endpoints, y luego ejecuta `git diff --exit-code`
-sobre `src/app/shared/api/generated/models` y `src/app/shared/api/generated/endpoints`.
+Ese comando es de solo lectura: compara el Swagger actual contra los endpoints
+generados locales y reporta breaking changes o imports obsoletos.
 
 ## Dev Container
 
@@ -97,4 +103,3 @@ La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcon
 - [docs/WORKFLOW.md](./WORKFLOW.md)
 - [docs/EXTENSIONS.md](./EXTENSIONS.md)
 - [docs/codegen/update-endpoints.md](./codegen/update-endpoints.md)
-
