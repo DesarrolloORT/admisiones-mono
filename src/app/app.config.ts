@@ -2,6 +2,7 @@ import { LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  importProvidersFrom,
   inject,
   LOCALE_ID,
   provideAppInitializer,
@@ -20,6 +21,8 @@ import {
   provideOrtApiErrorHandling,
   UiUtils,
 } from '@desarrolloort/ngx-utils';
+import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
+import { environment } from 'src/environments/environment';
 
 import { routes } from './app.routes';
 import { httpInterceptor } from './core/interceptors/http';
@@ -40,6 +43,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([httpInterceptor, ortApiErrorInterceptor, operationResultInterceptor])
     ),
+    importProvidersFrom(RecaptchaV3Module),
+    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.RECAPTCHA_KEY },
     ...provideOrtApiErrorHandling({
       notifier: { provide: ApiErrorNotifier, useClass: AppApiErrorNotifier },
     }),

@@ -87,6 +87,8 @@ Variables:
 - `CSP_POLICY`
 - `CACHING_ENABLED`
 
+`CSP_POLICY` debe permitir reCAPTCHA v3 cuando el login o endpoints publicos protegidos usen captcha. Como minimo debe incluir `https://www.google.com` y `https://www.gstatic.com` en `script-src`, `https://www.google.com` en `connect-src`, y `https://www.google.com` / `https://recaptcha.google.com` en `frame-src`.
+
 Notas:
 
 - cualquier otro secreto o variable adicional debe configurarse en el repositorio de la misma manera;

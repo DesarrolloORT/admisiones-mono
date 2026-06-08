@@ -8,6 +8,7 @@ import {
 } from '@desarrolloort/ngx-utils';
 import { environment } from 'src/environments/environment';
 
+import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import { defineEndpoint } from './api-endpoint';
 import { ApiHttpClient } from './api-http-client';
 
@@ -66,6 +67,36 @@ describe('ApiHttpClient', () => {
     expect(request.request.body).toEqual({ nombre: 'Ana' });
     expect(request.request.headers.get('X-Flow-Id')).toBe('flow-123');
     expect(request.request.headers.has('X-Skip-Empty')).toBe(false);
+
+    request.flush({ ok: true });
+  });
+
+  it('should attach captcha action to request context when requested', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: { documento: string };
+      response: { ok: boolean };
+    }>({
+      operationId: 'Login',
+      method: 'POST',
+      path: '/auth/login',
+    });
+
+    api
+      .request(endpoint, {
+        body: { documento: '12345678' },
+        captchaAction: ' login ',
+      })
+      .subscribe(response => {
+        expect(response.ok).toBe(true);
+      });
+
+    const request = httpController.expectOne(
+      new URL('/auth/login', environment.API_URL).toString()
+    );
+
+    expect(request.request.context.get(CAPTCHA_ACTION)).toBe('login');
 
     request.flush({ ok: true });
   });

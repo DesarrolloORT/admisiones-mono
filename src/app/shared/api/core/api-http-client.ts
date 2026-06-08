@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
+import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import {
   ApiEndpoint,
   ApiResponseData,
@@ -25,6 +26,7 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   headers?: ApiRequestHeaders;
   withCredentials?: boolean;
   cache?: boolean;
+  captchaAction?: string;
   context?: HttpContext;
   unwrapOperationResult?: boolean;
 };
@@ -174,7 +176,12 @@ export class ApiHttpClient {
   private resolveContext<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     options: ApiRequestOptions<TEndpoint>
   ): HttpContext {
-    const context = options.context ?? new HttpContext();
+    let context = options.context ?? new HttpContext();
+    const captchaAction = options.captchaAction?.trim();
+
+    if (captchaAction) {
+      context = context.set(CAPTCHA_ACTION, captchaAction);
+    }
 
     if (options.unwrapOperationResult === false) {
       return context;

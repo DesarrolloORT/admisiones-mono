@@ -14,6 +14,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
 import { firstValueFrom, of, throwError } from 'rxjs';
 
+import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
 import { TelemetryService } from '../services/telemetry';
 import { CACHING_ENABLED, httpInterceptor } from './http';
 
@@ -25,6 +26,9 @@ type LoaderServiceMock = {
   show: ReturnType<typeof vi.fn>;
   hide: ReturnType<typeof vi.fn>;
 };
+type CaptchaTokenServiceMock = {
+  execute: ReturnType<typeof vi.fn>;
+};
 type TelemetryServiceMock = {
   addHttpHeaders: ReturnType<typeof vi.fn>;
   startHttpRequest: ReturnType<typeof vi.fn>;
@@ -35,6 +39,7 @@ type TelemetryServiceMock = {
 
 describe('httpInterceptor', () => {
   let mockCacheService: CacheServiceMock;
+  let mockCaptcha: CaptchaTokenServiceMock;
   let mockLoader: LoaderServiceMock;
   let mockTelemetry: TelemetryServiceMock;
   let injector: Injector;
@@ -43,6 +48,9 @@ describe('httpInterceptor', () => {
     mockCacheService = {
       get: vi.fn(),
       set: vi.fn(),
+    };
+    mockCaptcha = {
+      execute: vi.fn((action: string) => of(`${action}-captcha-token`)),
     };
     mockLoader = {
       show: vi.fn(),
@@ -65,6 +73,7 @@ describe('httpInterceptor', () => {
     injector = Injector.create({
       providers: [
         { provide: CacheService, useValue: mockCacheService as unknown as CacheService },
+        { provide: CaptchaTokenService, useValue: mockCaptcha as unknown as CaptchaTokenService },
         { provide: LoaderService, useValue: mockLoader as unknown as LoaderService },
         { provide: TelemetryService, useValue: mockTelemetry as unknown as TelemetryService },
       ],
@@ -117,7 +126,7 @@ describe('httpInterceptor', () => {
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
     expect(intercepted.headers.get('Content-Type')).toBe('application/json');
     expect(intercepted.headers.get('X-Flow-Id')).toBe('flow-123');
-    expect(intercepted.headers.get('authorization')).toBe('Basic Og==');
+    expect(intercepted.headers.has('authorization')).toBe(false);
     expect(intercepted.headers.get('x-correlation-id')).toBe('correlation-123');
     expect(mockTelemetry.addHttpHeaders).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -129,6 +138,27 @@ describe('httpInterceptor', () => {
 
     // response unchanged
     expect(result).toBe(resp);
+  });
+
+  it('adds a captcha token header when the request declares a captcha action', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const resp = new HttpResponse({ status: 200, body: { ok: true } });
+    const next = vi.fn().mockReturnValue(of(resp));
+
+    const req = new HttpRequest(
+      'POST',
+      '/Auth/Login',
+      { user: 'ana' },
+      {
+        context: new HttpContext().set(CACHING_ENABLED, false).set(CAPTCHA_ACTION, 'login'),
+      }
+    );
+
+    await firstValueFrom(invoke(req, next));
+
+    const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
+    expect(mockCaptcha.execute).toHaveBeenCalledWith('login');
+    expect(intercepted.headers.get(CAPTCHA_HEADER)).toBe('login-captcha-token');
   });
 
   it('stringifies POST/PUT bodies when responseType is json', async () => {
