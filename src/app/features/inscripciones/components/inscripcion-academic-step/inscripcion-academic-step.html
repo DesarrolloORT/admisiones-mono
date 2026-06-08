@@ -1,0 +1,62 @@
+<section aria-labelledby="inscription-academic-title" class="inscription-screen">
+  <header class="inscription-screen__header">
+    <h1 id="inscription-academic-title">Inscripción a carrera</h1>
+    <p>Completar el proceso toma unos 10-15 minutos.</p>
+    <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
+  </header>
+
+  <form class="inscription-form" [formGroup]="facade.academicForm" (ngSubmit)="facade.continue()">
+    <ort-radio-group
+      class="inscription-radio-list"
+      formControlName="proposalType"
+      indicatorPosition="right"
+      legend="Propuesta académica"
+      name="proposal"
+      orientation="vertical"
+      [required]="true">
+      @for (option of facade.proposalOptions(); track option.value) {
+      <ort-radio-card-button [value]="option.value">
+        @if (option.icon) {
+        <ort-icon aria-hidden="true" ortRadioCardIcon>{{ option.icon }}</ort-icon>
+        } {{ option.label }}
+      </ort-radio-card-button>
+      }
+    </ort-radio-group>
+
+    <div class="inscription-form__stack">
+      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.career.value">
+        <ort-label>Carrera</ort-label>
+        <ort-select aria-label="Carrera" formControlName="career" id="inscription-career">
+          <ort-option value="">Seleccioná...</ort-option>
+          @for (option of facade.careerOptions(); track option.value) {
+          <ort-option [value]="option.value">{{ option.label }}</ort-option>
+          }
+        </ort-select>
+      </ort-form-field>
+
+      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.start.value">
+        <ort-label>Comienzo</ort-label>
+        <ort-select aria-label="Comienzo" formControlName="start" id="inscription-start">
+          <ort-option value="">Seleccioná...</ort-option>
+          @for (option of facade.startOptions(); track option.value) {
+          <ort-option [value]="option.value">{{ option.label }}</ort-option>
+          }
+        </ort-select>
+      </ort-form-field>
+
+      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.shift.value">
+        <ort-label>Turno</ort-label>
+        <ort-select aria-label="Turno" formControlName="shift" id="inscription-shift">
+          <ort-option value="">Seleccioná...</ort-option>
+          @for (option of facade.shiftOptions(); track option.value) {
+          <ort-option [value]="option.value">{{ option.label }}</ort-option>
+          }
+        </ort-select>
+      </ort-form-field>
+    </div>
+
+    <footer class="inscription-footer">
+      <button ort-primary-button type="submit">Continuar</button>
+    </footer>
+  </form>
+</section>
