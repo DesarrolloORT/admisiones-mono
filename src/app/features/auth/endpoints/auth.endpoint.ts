@@ -9,6 +9,7 @@ import {
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
   postAuthRecuperarContrasenaEndpoint,
+  postAuthVerificarCodigo2FaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
   postRegistroAnalizarAdjuntoEndpoint,
@@ -38,11 +39,22 @@ export interface LoginPayload {
   password: string;
 }
 
-/** Stable output of login. Hides backend DTO shape (`DtoAuthenticationResponse`). */
-export interface LoginResult {
-  documento: string;
-  primerNombre: string;
-}
+/**
+ * Stable output of login. Discriminated union: 200 → authenticated, 202 → 2FA required.
+ * Hides backend DTO shape (`DtoAuthenticationResponse` / `DtoLogin2FARequired`).
+ */
+export type LoginResult =
+  | {
+      kind: 'authenticated';
+      documento: string;
+      primerNombre: string;
+    }
+  | {
+      kind: 'twoFactorRequired';
+      sessionId: string;
+      maskedEmail: string;
+      message: string;
+    };
 
 /** Input for user registration. */
 export interface RegisterPayload {
@@ -118,6 +130,18 @@ export interface RecoverPasswordPayload {
   primerApellido: string;
 }
 
+/** Input for verifying the two-factor authentication code. */
+export interface VerifyTwoFactorCodePayload {
+  sessionId: string;
+  codigo: string;
+}
+
+/** Stable output of 2FA verification. Same shape as authenticated login. */
+export interface VerifyTwoFactorCodeResult {
+  documento: string;
+  primerNombre: string;
+}
+
 /**
  * Auth endpoint adapter.
  *
@@ -143,7 +167,10 @@ export class AuthEndpoint {
    * Authenticate user credentials.
    *
    * Behind the scenes: POST /Auth/Login using generated `postAuthLoginEndpoint`.
-   * Response mapped from `DtoAuthenticationResponse` → `LoginResult`.
+   * The backend returns either:
+   *   - 200 with `data.persona` → fully authenticated, cookies set.
+   *   - 202 with `data.sessionId` + `data.maskedEmail` → 2FA code emailed; caller must verify.
+   * Discriminates by presence of `sessionId` in the unwrapped data.
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
     const body: GeneratedLoginPayload = {
@@ -155,10 +182,28 @@ export class AuthEndpoint {
     return this.api
       .data(postAuthLoginEndpoint, { body, withCredentials: true, captchaAction: 'login' })
       .pipe(
-        map(response => ({
-          documento: response.persona?.documento ?? '',
-          primerNombre: response.persona?.primerNombre ?? '',
-        }))
+        map(response => {
+          const twoFactor = response as unknown as {
+            sessionId?: string;
+            maskedEmail?: string;
+            message?: string;
+          };
+
+          if (typeof twoFactor.sessionId === 'string' && twoFactor.sessionId.length > 0) {
+            return {
+              kind: 'twoFactorRequired',
+              sessionId: twoFactor.sessionId,
+              maskedEmail: twoFactor.maskedEmail ?? '',
+              message: twoFactor.message ?? '',
+            } satisfies LoginResult;
+          }
+
+          return {
+            kind: 'authenticated',
+            documento: response.persona?.documento ?? '',
+            primerNombre: response.persona?.primerNombre ?? '',
+          } satisfies LoginResult;
+        })
       );
   }
 
@@ -310,6 +355,29 @@ export class AuthEndpoint {
     return this.api
       .request(postAuthLogoutEndpoint, { withCredentials: true })
       .pipe(map(() => undefined));
+  }
+
+  /**
+   * Verify the 6-digit two-factor code emailed to the user and complete authentication.
+   *
+   * Behind the scenes: POST /Auth/VerificarCodigo2FA using generated endpoint.
+   * Sets the secure HttpOnly cookies on success and returns persona data so the
+   * caller can hydrate the local session.
+   */
+  public verifyTwoFactorCode(
+    payload: VerifyTwoFactorCodePayload
+  ): Observable<VerifyTwoFactorCodeResult> {
+    return this.api
+      .data(postAuthVerificarCodigo2FaEndpoint, {
+        body: payload,
+        withCredentials: true,
+      })
+      .pipe(
+        map(response => ({
+          documento: response.persona?.documento ?? '',
+          primerNombre: response.persona?.primerNombre ?? '',
+        }))
+      );
   }
 
   private getFlowHeaders(flowId: string): Record<string, string> {

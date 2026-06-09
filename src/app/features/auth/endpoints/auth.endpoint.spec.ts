@@ -33,11 +33,14 @@ describe('AuthEndpoint', () => {
   });
 
   describe('login', () => {
-    it('should POST to /Auth/Login and return documento from response', () => {
+    it('should POST to /Auth/Login and return authenticated outcome with documento', () => {
       endpoint
         .login({ tipoDocumento: 'CI', documento: '12345', password: 'pwd' })
         .subscribe(result => {
-          expect(result.documento).toBe('12345678');
+          expect(result.kind).toBe('authenticated');
+          if (result.kind === 'authenticated') {
+            expect(result.documento).toBe('12345678');
+          }
         });
 
       const req = httpController.expectOne(
@@ -59,13 +62,41 @@ describe('AuthEndpoint', () => {
       });
     });
 
-    it('should return empty documento when API response has no documento', () => {
+    it('should return empty documento when authenticated response has no documento', () => {
       endpoint.login({ tipoDocumento: 'CI', documento: '99', password: 'x' }).subscribe(result => {
-        expect(result.documento).toBe('');
+        expect(result.kind).toBe('authenticated');
+        if (result.kind === 'authenticated') {
+          expect(result.documento).toBe('');
+        }
       });
 
       const req = httpController.expectOne(r => r.url.includes('/Auth/Login'));
       req.flush({ success: true, httpCode: 200, data: { persona: {} } });
+    });
+
+    it('should return twoFactorRequired outcome when response includes sessionId', () => {
+      endpoint.login({ tipoDocumento: 'CI', documento: '99', password: 'x' }).subscribe(result => {
+        expect(result.kind).toBe('twoFactorRequired');
+        if (result.kind === 'twoFactorRequired') {
+          expect(result.sessionId).toBe('ab4df653422a4c19be2867c08355fa27');
+          expect(result.maskedEmail).toBe('c******a@gmail.******');
+          expect(result.message).toContain('código de verificación');
+        }
+      });
+
+      const req = httpController.expectOne(r => r.url.includes('/Auth/Login'));
+      req.flush(
+        {
+          success: true,
+          httpCode: 202,
+          data: {
+            sessionId: 'ab4df653422a4c19be2867c08355fa27',
+            maskedEmail: 'c******a@gmail.******',
+            message: 'Se envió un código de verificación a tu correo electrónico.',
+          },
+        },
+        { status: 202, statusText: 'Accepted' }
+      );
     });
 
     it('should propagate normalized API failures', () => {
