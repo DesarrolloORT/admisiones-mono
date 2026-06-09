@@ -1,4 +1,5 @@
 using AppLogic.DTOs;
+using AppLogic.Helpers;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -132,7 +133,11 @@ namespace WebApiAdmisiones.Security
                 }
 
                 return OperationResult<DtoLogin2FARequired>.Ok(
-                    new DtoLogin2FARequired { SessionId = sessionId },
+                    new DtoLogin2FARequired
+                    {
+                        SessionId = sessionId,
+                        MaskedEmail = EmailMaskingHelper.Mask(email)
+                    },
                     nameof(IniciarAsync));
             }
             catch (Exception ex)

@@ -20,6 +20,11 @@ namespace AppLogic.DTOs
         public required string SessionId { get; set; }
 
         /// <summary>
+        /// Email enmascarado al que se envio el codigo de verificacion.
+        /// </summary>
+        public string MaskedEmail { get; set; } = string.Empty;
+
+        /// <summary>
         /// Mensaje informativo para el usuario.
         /// </summary>
         public string Message { get; set; } = "Se envió un código de verificación a tu correo electrónico.";
