@@ -1,6 +1,6 @@
 using AppLogic.DTOs;
 using AppLogic.DevartDTOs;
-using AppLogic.Interfaces;
+using AppLogic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
