@@ -132,17 +132,14 @@ describe('LoginFacade', () => {
 
     facade.submit();
 
-    expect(routerMock.navigate).toHaveBeenCalledWith(
-      ['/verificar-codigo'],
-      {
-        state: {
-          email: 'c******a@gmail.******',
-          sessionId: 'ab4df653422a4c19be2867c08355fa27',
-          documentType: 'CI',
-          documentNumber: '11111111',
-        },
-      }
-    );
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/verificar-codigo'], {
+      state: {
+        email: 'c******a@gmail.******',
+        sessionId: 'ab4df653422a4c19be2867c08355fa27',
+        documentType: 'CI',
+        documentNumber: '11111111',
+      },
+    });
     expect(routerMock.navigateByUrl).not.toHaveBeenCalled();
     expect(facade.form.controls.password.value).toBe('');
   });

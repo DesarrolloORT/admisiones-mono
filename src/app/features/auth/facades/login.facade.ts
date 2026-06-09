@@ -140,9 +140,7 @@ export class LoginFacade {
 
           this.successMessage.set('Sesión iniciada correctamente.');
           this.form.controls.password.reset('');
-          this.router
-            .navigateByUrl('/inicio')
-            .finally(() => this.isSubmitting.set(false));
+          this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
           this.isSubmitting.set(false);
@@ -159,3 +157,4 @@ export class LoginFacade {
     return isNormalizedApiError(error) ? error.message : fallback;
   }
 }
+
