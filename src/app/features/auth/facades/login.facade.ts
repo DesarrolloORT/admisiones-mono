@@ -2,7 +2,6 @@ import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
-import { finalize } from 'rxjs/operators';
 
 import {
   buildFormErrorSummary,
@@ -122,14 +121,31 @@ export class LoginFacade {
         documentNumber: cleanDocumentNumber(documentType, documentNumber),
         password,
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: () => {
+        next: outcome => {
+          if (outcome.kind === 'twoFactorRequired') {
+            this.form.controls.password.reset('');
+            this.router
+              .navigate(['/verificar-codigo'], {
+                state: {
+                  email: outcome.maskedEmail,
+                  sessionId: outcome.sessionId,
+                  documentType,
+                  documentNumber: cleanDocumentNumber(documentType, documentNumber),
+                },
+              })
+              .finally(() => this.isSubmitting.set(false));
+            return;
+          }
+
           this.successMessage.set('Sesión iniciada correctamente.');
           this.form.controls.password.reset('');
-          void this.router.navigateByUrl('/inicio');
+          this.router
+            .navigateByUrl('/inicio')
+            .finally(() => this.isSubmitting.set(false));
         },
         error: error => {
+          this.isSubmitting.set(false);
           this.setError(this.getApiErrorMessage(error, 'No se pudo iniciar sesión.'));
         },
       });

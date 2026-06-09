@@ -15,21 +15,27 @@ describe('LoginFacade', () => {
   };
   let routerMock: {
     navigateByUrl: ReturnType<typeof vi.fn>;
+    navigate: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     authMock = {
       login: vi.fn().mockReturnValue(
         of({
-          token: 'token-123',
-          documentType: 'CI',
-          documentNumber: '12345678',
-          expiresAt: null,
+          kind: 'authenticated',
+          session: {
+            token: 'token-123',
+            documentType: 'CI',
+            documentNumber: '12345678',
+            primerNombre: 'Ana',
+            expiresAt: null,
+          },
         })
       ),
     };
     routerMock = {
       navigateByUrl: vi.fn().mockResolvedValue(true),
+      navigate: vi.fn().mockResolvedValue(true),
     };
 
     TestBed.configureTestingModule({
@@ -107,6 +113,38 @@ describe('LoginFacade', () => {
     facade.submit();
 
     expect(facade.error()).toBe('Credenciales inválidas.');
+  });
+
+  it('should navigate to /verificar-codigo with state when 2FA is required', () => {
+    authMock.login.mockReturnValue(
+      of({
+        kind: 'twoFactorRequired',
+        sessionId: 'ab4df653422a4c19be2867c08355fa27',
+        maskedEmail: 'c******a@gmail.******',
+        message: 'Se envió un código de verificación a tu correo electrónico.',
+      })
+    );
+    facade.form.setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      password: 'secret',
+    });
+
+    facade.submit();
+
+    expect(routerMock.navigate).toHaveBeenCalledWith(
+      ['/verificar-codigo'],
+      {
+        state: {
+          email: 'c******a@gmail.******',
+          sessionId: 'ab4df653422a4c19be2867c08355fa27',
+          documentType: 'CI',
+          documentNumber: '11111111',
+        },
+      }
+    );
+    expect(routerMock.navigateByUrl).not.toHaveBeenCalled();
+    expect(facade.form.controls.password.value).toBe('');
   });
 });
 
