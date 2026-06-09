@@ -1,11 +1,12 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Authentication;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Registro;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -68,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
@@ -88,8 +89,18 @@ namespace WebApiAdmisiones.Controllers
             }
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var captchaToken = HttpContext.Request.Headers[RequireCaptchaFilter.HeaderName].FirstOrDefault() ?? string.Empty;
-            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, captchaToken);
+            var recaptchaScore = HttpContext.GetRecaptchaScore();
+            if (!recaptchaScore.HasValue)
+            {
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "AUTH_CAPTCHA_99",
+                    nameof(Login),
+                    "No se encontro el score de captcha validado.",
+                    500,
+                    default!));
+            }
+
+            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, recaptchaScore.Value);
 
             if (flowResult.RateLimitHeaders != null)
                 AgregarHeadersRateLimit(flowResult.RateLimitHeaders);

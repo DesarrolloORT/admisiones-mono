@@ -1,5 +1,4 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
 using AppLogic.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,8 +6,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
+using AppLogic.IServices.Personas;
 
 namespace UnitTesting.Controllers
 {

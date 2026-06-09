@@ -3,7 +3,7 @@ using Prometheus;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using WebApiAdmisiones.Observability;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Middleware;
 
 namespace WebApiAdmisiones.Extensions
 {

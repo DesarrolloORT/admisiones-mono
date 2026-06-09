@@ -1,10 +1,10 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.IServices;
+using AppLogic.IServices.Inscripciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace WebApiAdmisiones.Controllers
 {

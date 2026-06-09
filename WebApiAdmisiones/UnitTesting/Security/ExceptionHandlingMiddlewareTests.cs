@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using WebApiAdmisiones.Security;
 using Xunit;
-using Sanitization.Code;
 using Utilities;
 using Microsoft.Extensions.FileProviders;
 using System.Security.Claims;
+using WebApiAdmisiones.Security.RequestValidation;
+using WebApiAdmisiones.Security.Observability;
+using WebApiAdmisiones.Security.Middleware;
 
 namespace UnitTesting.Security
 {

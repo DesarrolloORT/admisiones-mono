@@ -1,4 +1,4 @@
-using AppLogic.IServices;
+using AppLogic.IServices.Autenticacion;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -6,7 +6,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Observability;
 
 namespace WebApiAdmisiones.HttpHandlers
 {

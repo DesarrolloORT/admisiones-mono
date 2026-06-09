@@ -1,12 +1,11 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
-using Microsoft.AspNetCore.Hosting;
+using AppLogic.IServices.Autenticacion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.RateLimiting;
 
 namespace UnitTesting.Security
 {
@@ -15,15 +14,12 @@ namespace UnitTesting.Security
         [Fact]
         public async Task EjecutarAsync_WithCaptchaScoreAboveMinimum_ReturnsSuccessfulLogin()
         {
-            var recaptchaScore = 0.9;
             var sut = CreateService(
-                recaptchaScore,
                 out var authServiceMock,
-                out _,
                 out var dosFactoresMock);
             var request = CreateRequest();
 
-            var result = await sut.EjecutarAsync(request, "127.0.0.1", "captcha-token");
+            var result = await sut.EjecutarAsync(request, "127.0.0.1", 0.9);
 
             Assert.False(result.RequiresTwoFactor);
             Assert.True(result.SetCookies);
@@ -42,21 +38,16 @@ namespace UnitTesting.Security
         public async Task EjecutarAsync_WithCaptchaScoreAtOrBelowMinimum_StartsTwoFactorFlow(double recaptchaScore)
         {
             var sut = CreateService(
-                recaptchaScore,
                 out _,
-                out var recaptchaMock,
                 out var dosFactoresMock);
             var request = CreateRequest();
 
-            var result = await sut.EjecutarAsync(request, "127.0.0.1", "captcha-token");
+            var result = await sut.EjecutarAsync(request, "127.0.0.1", recaptchaScore);
 
             Assert.True(result.RequiresTwoFactor);
             Assert.Null(result.AuthResult);
             Assert.True(result.TwoFactorResult!.Success);
             Assert.Equal("2fa-session", result.TwoFactorResult.Data!.SessionId);
-            recaptchaMock.Verify(
-                s => s.ValidarConScoreAsync("captcha-token", "login"),
-                Times.Once);
             dosFactoresMock.Verify(
                 s => s.IniciarAsync(
                     It.Is<DtoAuthenticationResponse>(r => r.Persona.Email == "test@example.com"),
@@ -64,35 +55,9 @@ namespace UnitTesting.Security
                 Times.Once);
         }
 
-        [Fact]
-        public async Task EjecutarAsync_InLocalHost_SkipsCaptchaScoreValidation()
-        {
-            var sut = CreateService(
-                recaptchaScore: 0.4,
-                out _,
-                out var recaptchaMock,
-                out var dosFactoresMock,
-                environmentName: "LocalHost");
-            var request = CreateRequest();
-
-            var result = await sut.EjecutarAsync(request, "127.0.0.1", "captcha-token");
-
-            Assert.False(result.RequiresTwoFactor);
-            Assert.True(result.SetCookies);
-            recaptchaMock.Verify(
-                s => s.ValidarConScoreAsync(It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never);
-            dosFactoresMock.Verify(
-                s => s.IniciarAsync(It.IsAny<DtoAuthenticationResponse>(), "test@example.com"),
-                Times.Never);
-        }
-
         private static LoginFlowService CreateService(
-            double recaptchaScore,
             out Mock<IAuthService> authServiceMock,
-            out Mock<IRecaptchaService> recaptchaMock,
-            out Mock<IDosFactoresAuthService> dosFactoresMock,
-            string environmentName = "Production")
+            out Mock<IDosFactoresAuthService> dosFactoresMock)
         {
             Environment.SetEnvironmentVariable("RECAPTCHA_SCORE", "0.5");
 
@@ -137,22 +102,12 @@ namespace UnitTesting.Security
                 .Setup(s => s.ClearAsync(It.IsAny<string>()))
                 .ReturnsAsync(true);
 
-            recaptchaMock = new Mock<IRecaptchaService>();
-            recaptchaMock
-                .Setup(s => s.ValidarConScoreAsync("captcha-token", "login"))
-                .ReturnsAsync(OperationResult<double>.Ok(recaptchaScore, nameof(IRecaptchaService.ValidarConScoreAsync)));
-
             dosFactoresMock = new Mock<IDosFactoresAuthService>();
             dosFactoresMock
                 .Setup(s => s.IniciarAsync(It.IsAny<DtoAuthenticationResponse>(), It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<DtoLogin2FARequired>.Ok(
                     new DtoLogin2FARequired { SessionId = "2fa-session" },
                     nameof(IDosFactoresAuthService.IniciarAsync)));
-
-            var environmentMock = new Mock<IWebHostEnvironment>();
-            environmentMock
-                .Setup(e => e.EnvironmentName)
-                .Returns(environmentName);
 
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -168,9 +123,7 @@ namespace UnitTesting.Security
             return new LoginFlowService(
                 authServiceMock.Object,
                 rateLimiterMock.Object,
-                recaptchaMock.Object,
                 dosFactoresMock.Object,
-                environmentMock.Object,
                 configuration,
                 Mock.Of<ILogger<LoginFlowService>>());
         }

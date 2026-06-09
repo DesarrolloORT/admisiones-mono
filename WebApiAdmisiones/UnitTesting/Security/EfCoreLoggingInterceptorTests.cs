@@ -9,8 +9,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Moq;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Observability;
 
 namespace UnitTesting.Security
 {

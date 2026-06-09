@@ -1,11 +1,11 @@
 using AppLogic.ApiClients;
-using AppLogic.IServices;
-using AppLogic.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using WebApiAdmisiones.HttpHandlers;
+using AppLogic.Services.Autenticacion;
+using AppLogic.IServices.Autenticacion;
 
 namespace WebApiAdmisiones.Extensions
 {

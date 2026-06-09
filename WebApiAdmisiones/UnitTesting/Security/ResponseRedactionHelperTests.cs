@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using WebApiAdmisiones.Security;
 using AppLogic.Helpers;
+using WebApiAdmisiones.Security.Observability;
 
 namespace UnitTesting.Security
 {

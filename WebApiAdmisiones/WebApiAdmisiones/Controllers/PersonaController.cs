@@ -1,11 +1,11 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
+using AppLogic.IServices.Personas;
 using AppLogic.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
 using WebApiAdmisiones.Models;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace WebApiAdmisiones.Controllers
 {

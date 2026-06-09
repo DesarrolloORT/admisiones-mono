@@ -1,6 +1,4 @@
-﻿using AppLogic.DTOs;
-using AppLogic.IServices;
-using AppLogic.Services;
+using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
@@ -8,6 +6,9 @@ using ConnectionContext;
 using LdapService.Interfaces;
 using Moq;
 using Utilities;
+using AppLogic.Services.Autenticacion;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Registro;
 
 namespace UnitTesting.AppLogic.Services
 {

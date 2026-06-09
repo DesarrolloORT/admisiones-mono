@@ -13,7 +13,6 @@ using Microsoft.Extensions.Hosting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using WebApiAdmisiones.Extensions;
-using WebApiAdmisiones.Security;
 using Xunit;
 
 namespace UnitTesting.Extensions

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Sanitization.Code;
 using WebApiAdmisiones.Extensions;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.RequestValidation;
 
 namespace UnitTesting.Extensions
 {

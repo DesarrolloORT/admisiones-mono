@@ -1,5 +1,3 @@
-using AppLogic.IServices;
-using AppLogic.Services;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
@@ -19,7 +17,18 @@ using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using Moq;
 using WebApiAdmisiones.Extensions;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Observability;
+using AppLogic.Services.Autenticacion;
+using AppLogic.Services.Personas;
+using AppLogic.Services.Inscripciones;
+using AppLogic.Services.Becas;
+using AppLogic.Services.Catalogos;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Becas;
+using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Inscripciones;
+using AppLogic.IServices.Personas;
 
 namespace UnitTesting.Extensions
 {

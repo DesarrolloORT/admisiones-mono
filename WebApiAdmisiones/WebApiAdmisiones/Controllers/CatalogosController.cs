@@ -1,13 +1,12 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.IServices;
 using AppLogic.ApiClients;
-using AppLogic.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Cache;
+using AppLogic.IServices.Catalogos;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -25,24 +24,6 @@ namespace WebApiAdmisiones.Controllers
         private readonly IRedisCacheService _cache = cache;
         private readonly IConfiguration _configuration = configuration;
         #region CATALOGOS
-
-        /// <summary>
-        /// Obtiene el país y sus ciudades asociadas.
-        /// </summary>
-        /// <param name="id">ID del país.</param>
-        /// <returns>País y ciudades.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        /// <response code="404">País no encontrado.</response>
-        //[HttpGet("Pais")]
-        //[ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 400)]
-        //[ProducesResponseType(typeof(OperationResult<DtoPaisDevart>), 404)]
-        //public IActionResult ObtenerPais([FromQuery] long id)
-        //{
-        //    var result = catalogosService.ObtenerPais(id);
-        //    return ValidateResponse(result);
-        //}
 
         /// <summary>
         /// Lista paises, estados y ciudades para formularios de admision.

@@ -4,11 +4,11 @@ using System.Threading.RateLimiting;
 using AppLogic.DTOs;
 using AzureService.DTOs;
 using Prometheus;
-using Sanitization.Code;
 using Utilities;
-using WebApiAdmisiones.Security;
 using StackExchange.Redis;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.RateLimiting;
+using WebApiAdmisiones.Security.Cache;
+using WebApiAdmisiones.Security.RequestValidation;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -54,7 +54,6 @@ namespace WebApiAdmisiones.Extensions
             services.AddSingleton<IJsonSchemaRegistry, InMemoryJsonSchemaRegistry>();
             services.AddScoped<JsonSchemaValidationFilter>();
             services.AddScoped<InputRedactionLoggingFilter>();
-            services.AddScoped<RequireCaptchaFilter>();
 
             return services;
         }

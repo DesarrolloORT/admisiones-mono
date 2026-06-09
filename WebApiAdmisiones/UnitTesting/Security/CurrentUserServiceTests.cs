@@ -5,11 +5,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using Utilities;
-using WebApiAdmisiones.Security;
 using Xunit;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Xunit.Sdk;
 using Google.Protobuf.WellKnownTypes;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace UnitTesting.Security
 {

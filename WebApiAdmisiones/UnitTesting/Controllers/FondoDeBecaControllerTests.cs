@@ -7,8 +7,8 @@ using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Models;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace UnitTesting.Controllers
 {

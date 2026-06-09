@@ -9,8 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace UnitTesting.Security
 {

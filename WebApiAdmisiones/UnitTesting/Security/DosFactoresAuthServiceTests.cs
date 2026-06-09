@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
 using System.Text.Json;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.RateLimiting;
 
 namespace UnitTesting.Security
 {

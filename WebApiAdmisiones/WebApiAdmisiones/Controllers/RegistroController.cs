@@ -5,11 +5,13 @@ using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using WebApiAdmisiones.Security;
 using AzureService.DTOs;
 using AzureService.Interfaces;
 using WebApiAdmisiones.Models;
 using Utilities;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
+using AppLogic.IServices.Registro;
 
 namespace WebApiAdmisiones.Controllers
 {
