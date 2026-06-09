@@ -6,9 +6,18 @@ import { EMPTY, Observable } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
-import { AuthEndpoint } from '../endpoints/auth.endpoint';
+import { AuthEndpoint, LoginResult } from '../endpoints/auth.endpoint';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
+
+/**
+ * Outcome of `AuthSessionService.login`.
+ * - `authenticated`: session is established and stored.
+ * - `twoFactorRequired`: caller must navigate to the 2FA page and complete verification.
+ */
+export type LoginOutcome =
+  | { kind: 'authenticated'; session: AuthSession }
+  | { kind: 'twoFactorRequired'; sessionId: string; maskedEmail: string; message: string };
 
 @Injectable({
   providedIn: 'root',
@@ -23,15 +32,36 @@ export class AuthSessionService {
   public readonly session = this.sessionState.asReadonly();
   public readonly isAuthenticated = computed(() => this.sessionState() !== null);
 
-  public login(payload: AuthLoginRequest): Observable<AuthSession> {
+  public login(payload: AuthLoginRequest): Observable<LoginOutcome> {
     return this.endpoint
       .login({
         tipoDocumento: payload.documentType,
         documento: formatDocumentForBackend(payload.documentType, payload.documentNumber),
         password: payload.password,
       })
+      .pipe(map(result => this.toOutcome(result, payload)));
+  }
+
+  /**
+   * Verify the 6-digit code received by email and complete authentication.
+   * On success, stores the session locally so the auth guard accepts the user.
+   */
+  public completeTwoFactor(payload: {
+    sessionId: string;
+    code: string;
+    documentType: string;
+    documentNumber: string;
+  }): Observable<AuthSession> {
+    return this.endpoint
+      .verifyTwoFactorCode({ sessionId: payload.sessionId, codigo: payload.code })
       .pipe(
-        map(result => this.toSession(result, payload)),
+        map(result =>
+          this.toSession(result, {
+            documentType: payload.documentType,
+            documentNumber: payload.documentNumber,
+            password: '',
+          })
+        ),
         tap(session => this.storeSession(session))
       );
   }
@@ -50,6 +80,21 @@ export class AuthSessionService {
         })
       )
       .subscribe();
+  }
+
+  private toOutcome(result: LoginResult, payload: AuthLoginRequest): LoginOutcome {
+    if (result.kind === 'twoFactorRequired') {
+      return {
+        kind: 'twoFactorRequired',
+        sessionId: result.sessionId,
+        maskedEmail: result.maskedEmail,
+        message: result.message,
+      };
+    }
+
+    const session = this.toSession(result, payload);
+    this.storeSession(session);
+    return { kind: 'authenticated', session };
   }
 
   private toSession(

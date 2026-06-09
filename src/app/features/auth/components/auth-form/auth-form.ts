@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  ViewEncapsulation,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { OrtIconModule } from '@desarrolloort/components';
 
 @Component({
@@ -13,7 +7,6 @@ import { OrtIconModule } from '@desarrolloort/components';
   templateUrl: './auth-form.html',
   styleUrl: './auth-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
 })
 export class AuthForm {
   public readonly title = input.required<string>();
@@ -30,4 +23,3 @@ export class AuthForm {
   protected readonly isStep = computed(() => Boolean(this.stepLabel() && this.stepTitle()));
   protected readonly showHeader = computed(() => !this.hideHeader());
 }
-

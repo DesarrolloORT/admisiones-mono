@@ -20,7 +20,9 @@ describe('AuthSessionService', () => {
   beforeEach(() => {
     window.localStorage.clear();
     endpointMock = {
-      login: vi.fn().mockReturnValue(of({ documento: '12345678', primerNombre: 'Ana' })),
+      login: vi
+        .fn()
+        .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
       logout: vi.fn().mockReturnValue(of(undefined)),
     };
     routerMock = { navigateByUrl: vi.fn() };
@@ -50,9 +52,12 @@ describe('AuthSessionService', () => {
         documentNumber: '12345678',
         password: 'secret',
       })
-      .subscribe(session => {
-        expect(session.documentNumber).toBe('12345678');
-        expect(session.primerNombre).toBe('Ana');
+      .subscribe(outcome => {
+        expect(outcome.kind).toBe('authenticated');
+        if (outcome.kind === 'authenticated') {
+          expect(outcome.session.documentNumber).toBe('12345678');
+          expect(outcome.session.primerNombre).toBe('Ana');
+        }
         expect(service.isAuthenticated()).toBe(true);
       });
 
@@ -63,6 +68,30 @@ describe('AuthSessionService', () => {
     });
     expect(window.localStorage.getItem(storageKeys.token)).toBeNull();
     expect(window.localStorage.getItem(storageKeys.session)).toContain('12345678');
+  });
+
+  it('should propagate twoFactorRequired outcome without storing a session', () => {
+    endpointMock.login.mockReturnValue(
+      of({
+        kind: 'twoFactorRequired',
+        sessionId: 'abc',
+        maskedEmail: 'c***a@gmail.***',
+        message: 'envio',
+      })
+    );
+
+    service
+      .login({ documentType: 'CI', documentNumber: '12345678', password: 'secret' })
+      .subscribe(outcome => {
+        expect(outcome.kind).toBe('twoFactorRequired');
+        if (outcome.kind === 'twoFactorRequired') {
+          expect(outcome.sessionId).toBe('abc');
+          expect(outcome.maskedEmail).toBe('c***a@gmail.***');
+        }
+      });
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
   });
 
   it('should clear session locally after logout', () => {
