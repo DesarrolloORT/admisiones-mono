@@ -17,7 +17,7 @@ export class HomeEndpoint {
 
   public getMisInscripciones(): Observable<MiInscripcion[]> {
     return this.api
-      .request(getInscripcionesMisInscripcionesEndpoint)
+      .request(getInscripcionesMisInscripcionesEndpoint, { withCredentials: true })
       .pipe(map(data => this.toMisInscripciones(data)));
   }
 

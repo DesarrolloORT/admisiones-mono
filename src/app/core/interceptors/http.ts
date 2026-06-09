@@ -72,27 +72,13 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
     const captchaAction = req.context.get(CAPTCHA_ACTION);
 
     if (!captchaAction) {
-      debugCaptcha('skip', { method: req.method, url: req.urlWithParams });
       return of(req);
     }
-
-    debugCaptcha('request-token', {
-      action: captchaAction,
-      method: req.method,
-      url: req.urlWithParams,
-    });
 
     return inject(CaptchaTokenService)
       .execute(captchaAction)
       .pipe(
         map(token => {
-          debugCaptcha('token-received', {
-            action: captchaAction,
-            method: req.method,
-            tokenLength: token.length,
-            url: req.urlWithParams,
-          });
-
           return req.clone({
             setHeaders: {
               [CAPTCHA_HEADER]: token,
@@ -100,18 +86,6 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
           });
         })
       );
-  };
-
-  const debugCaptcha = (event: string, data: Record<string, unknown>): void => {
-    if (!environment.production) {
-      console.debug(`[captcha-http] ${event}`, data);
-    }
-  };
-
-  const errorCaptcha = (event: string, data: Record<string, unknown>): void => {
-    if (!environment.production) {
-      console.error(`[captcha-http] ${event}`, data);
-    }
   };
 
   const handleResponse = (event: HttpEvent<unknown>): void => {
@@ -138,22 +112,10 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   handleLoader(request.url);
   const processedRequest = processRequest(setHeaders(request));
 
-  debugCaptcha('interceptor-start', {
-    action: processedRequest.context.get(CAPTCHA_ACTION),
-    method: processedRequest.method,
-    url: processedRequest.urlWithParams,
-  });
-
   return addCaptchaHeader(processedRequest).pipe(
     switchMap(processedRequest => {
       request = services.telemetry.addHttpHeaders(processedRequest);
       const telemetryStartedAt = services.telemetry.startHttpRequest(request);
-
-      debugCaptcha('calling-api', {
-        hasCaptchaHeader: request.headers.has(CAPTCHA_HEADER),
-        method: request.method,
-        url: request.urlWithParams,
-      });
 
       return next(request).pipe(
         tap({
@@ -171,14 +133,9 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
       );
     }),
     catchError(error => {
-      errorCaptcha('stopped-before-api-or-api-error', {
-        message: error instanceof Error ? error.message : String(error),
-        method: processedRequest.method,
-        url: processedRequest.urlWithParams,
-      });
-
       return throwError(() => error);
     }),
     finalize(() => services.loader.hide())
   );
 };
+
