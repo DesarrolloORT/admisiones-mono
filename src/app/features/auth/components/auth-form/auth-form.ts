@@ -24,6 +24,10 @@ export class AuthForm {
   public readonly stepLabel = input<string | null>(null);
   public readonly stepTitle = input<string | null>(null);
   public readonly cardSize = input<'default' | 'long'>('default');
+  public readonly hideHeader = input<boolean>(false);
+  public readonly centerContent = input<boolean>(false);
 
   protected readonly isStep = computed(() => Boolean(this.stepLabel() && this.stepTitle()));
+  protected readonly showHeader = computed(() => !this.hideHeader());
 }
+
