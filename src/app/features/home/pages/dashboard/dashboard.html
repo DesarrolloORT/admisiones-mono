@@ -1,0 +1,16 @@
+<main class="dashboard-main" id="main-content" tabindex="-1">
+  <div class="swiper">
+    <!-- Additional required wrapper -->
+    <div class="swiper-wrapper">
+      <!-- Slides -->
+      @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+      <div class="swiper-slide">
+        <app-dashboard-card [inscripcion]="inscripcion" />
+      </div>
+      }
+    </div>
+    <!-- If we need pagination -->
+    <div class="swiper-pagination"></div>
+  </div>
+</main>
+

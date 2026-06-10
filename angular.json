@@ -36,6 +36,7 @@
             ],
             "styles": [
               "node_modules/@desarrolloort/design-system/index.min.css",
+              "node_modules/swiper/swiper-bundle.min.css",
               "src/styles.scss"
             ],
             "browser": "src/main.ts"
