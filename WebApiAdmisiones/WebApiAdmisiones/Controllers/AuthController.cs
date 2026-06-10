@@ -442,6 +442,7 @@ namespace WebApiAdmisiones.Controllers
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
+        [RequireCaptcha]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)

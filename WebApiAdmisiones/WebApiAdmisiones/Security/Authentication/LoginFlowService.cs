@@ -171,7 +171,11 @@ namespace WebApiAdmisiones.Security.Authentication
             }
 
             return LoginFlowResult.Requiere2FA(
-                OperationResult<DtoLogin2FARequired>.Ok(twoFactorResult.Data!, nameof(EjecutarAsync)));
+                OperationResult<DtoLogin2FARequired>.IsSuccess(
+                    twoFactorResult.Data!,
+                    nameof(EjecutarAsync),
+                    twoFactorResult.Message,
+                    202));
         }
     }
 }

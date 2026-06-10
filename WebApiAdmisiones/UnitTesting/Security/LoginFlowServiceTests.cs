@@ -47,6 +47,7 @@ namespace UnitTesting.Security
             Assert.True(result.RequiresTwoFactor);
             Assert.Null(result.AuthResult);
             Assert.True(result.TwoFactorResult!.Success);
+            Assert.Equal(202, result.TwoFactorResult.HttpCode);
             Assert.Equal("2fa-session", result.TwoFactorResult.Data!.SessionId);
             dosFactoresMock.Verify(
                 s => s.IniciarAsync(

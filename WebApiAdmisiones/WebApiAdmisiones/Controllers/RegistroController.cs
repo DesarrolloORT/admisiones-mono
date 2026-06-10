@@ -46,6 +46,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Documento evaluado correctamente.</response>
         /// <response code="400">Datos invalidos o regla funcional no cumplida.</response>
         [AllowAnonymous]
+        [RequireCaptcha]
         [HttpPost("EvaluarDocumento")]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 400)]
@@ -80,6 +81,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Identidad verificada correctamente.</response>
         /// <response code="400">Datos invalidos, verificacion rechazada o sesion de registro expirada.</response>
         [AllowAnonymous]
+        [RequireCaptcha]
         [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -124,6 +126,7 @@ namespace WebApiAdmisiones.Controllers
         /// </remarks>
         [AllowAnonymous]
         [EnableRateLimiting("ReconocimientoDocumento")]
+        [RequireCaptcha]
         [HttpPost("AnalizarAdjunto")]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 400)]

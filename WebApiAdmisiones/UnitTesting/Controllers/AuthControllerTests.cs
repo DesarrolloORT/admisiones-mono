@@ -276,6 +276,39 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task Login_WhenRequiresTwoFactor_ReturnsAcceptedWithOperationResult202()
+        {
+            var request = new AuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "4773331-2",
+                Password = "testPassword"
+            };
+
+            _loginFlowServiceMock
+                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.Requiere2FA(
+                    OperationResult<DtoLogin2FARequired>.IsSuccess(
+                        new DtoLogin2FARequired
+                        {
+                            SessionId = "2fa-session",
+                            MaskedEmail = "t**t@example.com",
+                            Message = "Se envio un codigo de verificacion a tu correo electronico."
+                        },
+                        "EjecutarAsync",
+                        "Se requiere verificacion de dos factores.",
+                        202)));
+
+            var response = await _controller.Login(request);
+
+            var acceptedResult = Assert.IsType<AcceptedResult>(response);
+            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(acceptedResult.Value);
+            Assert.True(operationResult.Success);
+            Assert.Equal(202, operationResult.HttpCode);
+            Assert.Equal("2fa-session", operationResult.Data!.SessionId);
+        }
+
+        [Fact]
         public async Task ReenviarCodigo2FA_WhenServiceSucceeds_ReturnsOkAndCallsService()
         {
             var request = new DtoReenviarCodigo2FARequest { SessionId = "2fa-session" };
