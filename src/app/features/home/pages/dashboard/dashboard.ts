@@ -36,9 +36,10 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     new Swiper('.swiper', {
-      spaceBetween: 30,
+      spaceBetween: 24,
       direction: 'horizontal',
-      loop: false,
+      loop: false, 
+      slidesPerView: 1,
       modules: [Navigation, Pagination],
       pagination: {
         el: '.swiper-pagination',
@@ -46,6 +47,14 @@ export class Dashboard implements OnInit, AfterViewInit {
       navigation: {
         nextEl: '.swiper-button-next',
         prevEl: '.swiper-button-prev',
+      },
+      breakpoints: {
+        768: {
+          slidesPerView: 2,
+        },
+        1200: {
+          slidesPerView: 3,
+        },
       },
     });
   }

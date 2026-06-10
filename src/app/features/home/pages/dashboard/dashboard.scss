@@ -8,6 +8,7 @@
   display: grid;
   gap: var(--ort-sys-spacing-48);
   width: 95%;
+  max-width: 1200px;
   margin: 0 auto;
   padding-block: var(--ort-sys-spacing-64);
 }
@@ -16,8 +17,9 @@
   width: 100%;
   padding-bottom: var(--ort-sys-spacing-32);
 }
-.swiper-slide{
-  padding:  var(--ort-sys-spacing-8);
+.swiper-slide {
+  height: auto;
+  padding: var(--ort-sys-spacing-8);
 }
 
 .swiper-pagination {
