@@ -60,7 +60,7 @@ namespace WebApiAdmisiones.Security.Authentication
                     OperationResult<DtoAuthenticationResponse>.IsFailed(
                         "AUTH_RL_02",
                         nameof(EjecutarAsync),
-                        $"Se superó el límite de intentos de inicio de sesión para esta cuenta ({maxAccountAttempts} intentos cada {windowMinutes} minutos). Por tu seguridad, intentá nuevamente más tarde.",
+                        $"Se superó el límite de intentos de inicio de sesión para esta cuenta. Por tu seguridad, intentá nuevamente más tarde.",
                         429,
                         default!),
                     new LoginRateLimitHeaders

@@ -276,6 +276,56 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task ReenviarCodigo2FA_WhenServiceSucceeds_ReturnsOkAndCallsService()
+        {
+            var request = new DtoReenviarCodigo2FARequest { SessionId = "2fa-session" };
+            var serviceResult = OperationResult<DtoLogin2FARequired>.Ok(
+                new DtoLogin2FARequired
+                {
+                    SessionId = request.SessionId,
+                    MaskedEmail = "t**t@example.com",
+                    Message = "Se reenvió un nuevo código de verificación a tu correo electrónico."
+                },
+                nameof(IDosFactoresAuthService.ReenviarCodigoAsync));
+
+            _dosFactoresServiceMock
+                .Setup(s => s.ReenviarCodigoAsync(request.SessionId))
+                .ReturnsAsync(serviceResult);
+
+            var response = await _controller.ReenviarCodigo2FA(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(okResult.Value);
+            Assert.True(operationResult.Success);
+            Assert.Equal(request.SessionId, operationResult.Data!.SessionId);
+            _dosFactoresServiceMock.Verify(s => s.ReenviarCodigoAsync(request.SessionId), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(401)]
+        [InlineData(429)]
+        public async Task ReenviarCodigo2FA_WhenServiceFails_ReturnsConfiguredStatusCode(int httpCode)
+        {
+            var request = new DtoReenviarCodigo2FARequest { SessionId = "2fa-session" };
+            _dosFactoresServiceMock
+                .Setup(s => s.ReenviarCodigoAsync(request.SessionId))
+                .ReturnsAsync(OperationResult<DtoLogin2FARequired>.IsFailed(
+                    "AUTH_2FA_RESEND_TEST",
+                    nameof(IDosFactoresAuthService.ReenviarCodigoAsync),
+                    "No se pudo reenviar el código.",
+                    httpCode,
+                    default!));
+
+            var response = await _controller.ReenviarCodigo2FA(request);
+
+            var result = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(httpCode, result.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(result.Value);
+            Assert.False(operationResult.Success);
+        }
+
+        [Fact]
         public void Logout_ClearsCookiesAndReturnsOk()
         {
             // Arrange - nothing needed

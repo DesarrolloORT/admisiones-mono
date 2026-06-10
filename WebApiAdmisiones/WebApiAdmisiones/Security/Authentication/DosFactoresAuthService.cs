@@ -19,6 +19,8 @@ namespace WebApiAdmisiones.Security.Authentication
     public class DosFactoresAuthService : IDosFactoresAuthService
     {
         private const string SistemaMail = "ADMISIONES";
+        private const int DefaultSessionMinutes = 30;
+        private const int DefaultCodeMinutes = 10;
 
         private readonly IConnectionMultiplexer _redis;
         private readonly IRedisRateLimiterService _rateLimiter;
@@ -54,7 +56,8 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 var normalizedDoc = NormalizeDoc(pendingAuth.Persona.Documento);
                 var initLimit = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxInitAttempts") ?? 3;
-                var sessionMinutes = _configuration.GetValue<int?>("Authentication:TwoFactor:SessionMinutes") ?? 10;
+                var sessionMinutes = ObtenerSessionMinutes();
+                var codeMinutes = ObtenerCodeMinutes();
                 var initWindow = TimeSpan.FromMinutes(sessionMinutes);
 
                 // Verificar rate limit de inicios de 2FA por usuario (anti email-bombing)
@@ -81,6 +84,7 @@ namespace WebApiAdmisiones.Security.Authentication
                 var codeLength = _configuration.GetValue<int?>("Authentication:TwoFactor:CodeLength") ?? 6;
                 var codigo = GenerarCodigo(codeLength);
                 var codigoHash = HashCodigo(codigo);
+                var codigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(codeMinutes);
 
                 var session = new TwoFactorSession
                 {
@@ -95,6 +99,7 @@ namespace WebApiAdmisiones.Security.Authentication
                     RefreshToken = pendingAuth.RefreshToken,
                     RefreshTokenHash = pendingAuth.RefreshTokenHash,
                     CodigoHash = codigoHash,
+                    CodigoExpiresAtUtc = codigoExpiresAtUtc,
                     Email = email,
                     Intentos = 0
                 };
@@ -214,6 +219,16 @@ namespace WebApiAdmisiones.Security.Authentication
 
                 var maxAttempts = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxCodeAttempts") ?? 5;
 
+                if (CodigoExpirado(session))
+                {
+                    return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                        "AUTH_2FA_06",
+                        nameof(VerificarCodigoAsync),
+                        "El código de verificación expiró. Solicitá uno nuevo para continuar.",
+                        401,
+                        default!);
+                }
+
                 // Verificar código
                 var codigoHash = HashCodigo(codigo.Trim());
                 if (!string.Equals(codigoHash, session.CodigoHash, StringComparison.Ordinal))
@@ -254,6 +269,7 @@ namespace WebApiAdmisiones.Security.Authentication
 
                 // Código correcto: eliminar sesión y retornar autenticación completa
                 await db.KeyDeleteAsync($"2fa:session:{sessionId}");
+                await LimpiarRateLimitInicioAsync(session);
 
                 var authResponse = new DtoAuthenticationResponse
                 {
@@ -292,10 +308,167 @@ namespace WebApiAdmisiones.Security.Authentication
             }
         }
 
+        public async Task<OperationResult<DtoLogin2FARequired>> ReenviarCodigoAsync(string sessionId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    return OperationResult<DtoLogin2FARequired>.IsFailed(
+                        "AUTH_2FA_RESEND_01",
+                        nameof(ReenviarCodigoAsync),
+                        "La sesión es requerida.",
+                        400,
+                        default!);
+                }
+
+                var db = _redis.GetDatabase();
+                var sessionKey = $"2fa:session:{sessionId}";
+                var sessionResult = await ObtenerSessionAsync(db, sessionKey, sessionId, nameof(ReenviarCodigoAsync));
+                if (!sessionResult.Success)
+                {
+                    return OperationResult<DtoLogin2FARequired>.IsFailed(
+                        sessionResult.ErrorCode,
+                        nameof(ReenviarCodigoAsync),
+                        sessionResult.Message,
+                        sessionResult.HttpCode,
+                        default!);
+                }
+
+                var session = sessionResult.Data!;
+                if (string.IsNullOrWhiteSpace(session.Email))
+                {
+                    return OperationResult<DtoLogin2FARequired>.IsFailed(
+                        "AUTH_2FA_RESEND_03",
+                        nameof(ReenviarCodigoAsync),
+                        "La sesión no tiene un email válido para reenviar el código.",
+                        422,
+                        default!);
+                }
+
+                var sessionMinutes = ObtenerSessionMinutes();
+                var initLimit = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxInitAttempts") ?? 3;
+                var normalizedDoc = NormalizeDoc(session.Documento);
+                var allowed = await _rateLimiter.IsAllowedAsync(
+                    $"2fa-init:{normalizedDoc}",
+                    initLimit,
+                    TimeSpan.FromMinutes(sessionMinutes));
+
+                if (!allowed)
+                {
+                    _logger.LogWarning(
+                        "Límite de reenvíos 2FA superado para el documento {Doc}",
+                        normalizedDoc);
+
+                    return OperationResult<DtoLogin2FARequired>.IsFailed(
+                        "AUTH_2FA_RESEND_04",
+                        nameof(ReenviarCodigoAsync),
+                        $"Se superó el límite de solicitudes de verificación para esta cuenta. Intentá nuevamente en {sessionMinutes} minutos.",
+                        429,
+                        default!);
+                }
+
+                var ttl = await db.KeyTimeToLiveAsync(sessionKey);
+                var codeLength = _configuration.GetValue<int?>("Authentication:TwoFactor:CodeLength") ?? 6;
+                var codeMinutes = ObtenerCodeMinutes();
+                var codigo = GenerarCodigo(codeLength);
+
+                try
+                {
+                    await EnviarCodigoMailAsync(session.Email, codigo);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al reenviar email 2FA a {Email}", session.Email);
+
+                    return OperationResult<DtoLogin2FARequired>.IsFailed(
+                        "AUTH_2FA_RESEND_MAIL_01",
+                        nameof(ReenviarCodigoAsync),
+                        "No fue posible reenviar el código de verificación. Intentá nuevamente.",
+                        500,
+                        default!);
+                }
+
+                session.CodigoHash = HashCodigo(codigo);
+                session.CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(codeMinutes);
+                session.Intentos = 0;
+
+                var updatedJson = JsonSerializer.Serialize(session, _jsonOptions);
+                await db.StringSetAsync(
+                    sessionKey,
+                    updatedJson,
+                    ttl ?? TimeSpan.FromMinutes(sessionMinutes));
+
+                _logger.LogInformation(
+                    "2FA reenviado para persona {CodigoPersona}, sesión {SessionId}",
+                    session.CodigoPersona,
+                    sessionId);
+
+                return OperationResult<DtoLogin2FARequired>.Ok(
+                    new DtoLogin2FARequired
+                    {
+                        SessionId = sessionId,
+                        MaskedEmail = EmailMaskingHelper.Mask(session.Email),
+                        Message = "Se reenvió un nuevo código de verificación a tu correo electrónico."
+                    },
+                    nameof(ReenviarCodigoAsync));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al reenviar el código 2FA para la sesión {SessionId}", sessionId);
+
+                return OperationResult<DtoLogin2FARequired>.IsFailed(
+                    "AUTH_2FA_RESEND_99",
+                    nameof(ReenviarCodigoAsync),
+                    "Error al reenviar el código.",
+                    500,
+                    default!);
+            }
+        }
+
+        private async Task<OperationResult<TwoFactorSession>> ObtenerSessionAsync(
+            IDatabase db,
+            string sessionKey,
+            string sessionId,
+            string originMethod)
+        {
+            var sessionJson = await db.StringGetAsync(sessionKey);
+            if (!sessionJson.HasValue)
+            {
+                return OperationResult<TwoFactorSession>.IsFailed(
+                    "AUTH_2FA_02",
+                    originMethod,
+                    "La sesión de verificación no existe o ha expirado.",
+                    401,
+                    default!);
+            }
+
+            try
+            {
+                var session = JsonSerializer.Deserialize<TwoFactorSession>(sessionJson.ToString(), _jsonOptions);
+                if (session != null)
+                {
+                    return OperationResult<TwoFactorSession>.Ok(session, originMethod);
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error al deserializar la sesión 2FA {SessionId}", sessionId);
+            }
+
+            await db.KeyDeleteAsync(sessionKey);
+            return OperationResult<TwoFactorSession>.IsFailed(
+                "AUTH_2FA_03",
+                originMethod,
+                "Error al procesar la sesión de verificación.",
+                500,
+                default!);
+        }
+
         private async Task EnviarCodigoMailAsync(string email, string codigo)
         {
             var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
-            var body = ConstruirMailBody(codigo);
+            var body = ConstruirMailBodyInstitucional(codigo);
 
             await _envioMail.EnviarMail(
                 from,
@@ -305,20 +478,16 @@ namespace WebApiAdmisiones.Security.Authentication
                 sistema: SistemaMail);
         }
 
-        private static string ConstruirMailBody(string codigo) =>
+        private static string ConstruirMailBodyInstitucional(string codigo) =>
             $"""
-            <html>
-            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #1a73e8;">Verificación de identidad</h2>
-              <p>Para completar tu inicio de sesión en Admisiones ORT, ingresá el siguiente código:</p>
-              <div style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #1a73e8;
-                          background: #f0f4ff; padding: 16px 24px; border-radius: 8px;
-                          display: inline-block; margin: 16px 0;">{codigo}</div>
-              <p style="color: #666; font-size: 14px;">
-                Este código expirará en breve. Si no realizaste esta solicitud, ignorá este mensaje.
-              </p>
-            </body>
-            </html>
+            {EnvioMail.CabezalHTML()}
+            {EnvioMail.Cabezal()}
+            {EnvioMail.CuerpoConTitulo("Verificaci&oacute;n de identidad", DateTime.Now, "Estimado/a:")}
+            {EnvioMail.CuerpoParrafos($"Recibimos una solicitud para ingresar al sitio de Admisiones. Para completar el inicio de sesi&oacute;n, ingres&aacute; el siguiente c&oacute;digo de verificaci&oacute;n:<br><br><strong style=\"font-size: 24px; letter-spacing: 6px;\">{codigo}</strong>")}
+            {EnvioMail.CuerpoParrafos("Por seguridad, este c&oacute;digo vence en breve y puede usarse una sola vez. Si no realizaste esta solicitud, pod&eacute;s ignorar este mensaje.")}
+            {EnvioMail.CuerpoParrafos("ORT nunca te solicitar&aacute; actualizar tu usuario, contrase&ntilde;a o datos de medios de pago electr&oacute;nicos por e-mail, tel&eacute;fono, SMS, WhatsApp ni redes sociales. M&aacute;s informaci&oacute;n en: <a href=\"https://www.ort.edu.uy/ciberseguridad\" target=\"_blank\" rel=\"noopener noreferrer\">www.ort.edu.uy/ciberseguridad</a>.")}
+            {EnvioMail.CuerpoParrafos("Atentamente,<br>Departamento de Admisiones")}
+            {EnvioMail.FinHtml}
             """;
 
         private static string GenerarCodigo(int length)
@@ -333,6 +502,30 @@ namespace WebApiAdmisiones.Security.Authentication
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(codigo));
             return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
+
+        private int ObtenerSessionMinutes() =>
+            _configuration.GetValue<int?>("Authentication:TwoFactor:SessionMinutes") ?? DefaultSessionMinutes;
+
+        private int ObtenerCodeMinutes() =>
+            _configuration.GetValue<int?>("Authentication:TwoFactor:CodeMinutes") ?? DefaultCodeMinutes;
+
+        private static bool CodigoExpirado(TwoFactorSession session) =>
+            session.CodigoExpiresAtUtc <= DateTime.UtcNow;
+
+        private async Task LimpiarRateLimitInicioAsync(TwoFactorSession session)
+        {
+            try
+            {
+                await _rateLimiter.ClearAsync($"2fa-init:{NormalizeDoc(session.Documento)}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "No se pudo limpiar el rate limit de inicio 2FA para la persona {CodigoPersona}.",
+                    session.CodigoPersona);
+            }
         }
 
         private static string NormalizeDoc(string? doc)
@@ -366,6 +559,7 @@ namespace WebApiAdmisiones.Security.Authentication
 
         // Datos de verificación
         public string? CodigoHash { get; set; }
+        public DateTime CodigoExpiresAtUtc { get; set; }
         public string? Email { get; set; }
         public int Intentos { get; set; }
     }

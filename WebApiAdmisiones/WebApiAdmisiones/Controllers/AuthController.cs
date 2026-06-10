@@ -155,6 +155,18 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        [AllowAnonymous]
+        [HttpPost("ReenviarCodigo2FA")]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 429)]
+        public async Task<IActionResult> ReenviarCodigo2FA([FromBody] DtoReenviarCodigo2FARequest request)
+        {
+            var result = await dosFactoresService.ReenviarCodigoAsync(request.SessionId);
+            return ValidateResponse(result);
+        }
+
 
         /// <summary>
         /// Valida el link de creacion y recuperación de password y crea una sesion temporal.

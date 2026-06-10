@@ -25,5 +25,10 @@ namespace WebApiAdmisiones.Security.Authentication
         /// <param name="codigo">Código de verificación ingresado por el usuario.</param>
         /// <returns>Resultado con la respuesta de autenticación completa si el código es correcto.</returns>
         Task<OperationResult<DtoAuthenticationResponse>> VerificarCodigoAsync(string sessionId, string codigo);
+
+        /// <summary>
+        /// Reenvia un nuevo codigo de verificacion para una sesion 2FA vigente.
+        /// </summary>
+        Task<OperationResult<DtoLogin2FARequired>> ReenviarCodigoAsync(string sessionId);
     }
 }
