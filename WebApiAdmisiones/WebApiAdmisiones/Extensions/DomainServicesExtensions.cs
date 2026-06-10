@@ -1,6 +1,4 @@
-using AppLogic.Interfaces;
 using AppLogic.IServices;
-using AppLogic.Services;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
@@ -19,8 +17,21 @@ using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Observability;
+using AppLogic.Services.Autenticacion;
+using AppLogic.Services.Registro;
+using AppLogic.Services.Personas;
+using AppLogic.Services.Inscripciones;
+using AppLogic.Services.Becas;
+using AppLogic.Services.Catalogos;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Becas;
+using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Inscripciones;
+using AppLogic.IServices.Personas;
+using AppLogic.IServices.Registro;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -110,7 +121,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IRegistroFlowService, RegistroFlowService>();
             services.AddScoped<IRegistroDocumentoImagenCacheService, RegistroDocumentoImagenCacheService>();
             services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
-            services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddHttpClient<IRecaptchaService, RecaptchaService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
@@ -123,11 +134,15 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
+            // Abstracciones de infraestructura para los servicios de AppLogic.
+            services.AddScoped<IEmailSender, AppLogic.Services.Email.EnvioMailEmailSender>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.ITwoFactorSessionStore, AppLogic.Services.Autenticacion.RedisTwoFactorSessionStore>();
+
             // Servicio de autenticación de dos factores (2FA) por email.
-            services.AddScoped<IDosFactoresAuthService, DosFactoresAuthService>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.IDosFactoresAuthService, AppLogic.Services.Autenticacion.DosFactoresAuthService>();
 
             // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
-            services.AddScoped<ILoginFlowService, LoginFlowService>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.ILoginFlowService, AppLogic.Services.Autenticacion.LoginFlowService>();
 
             return services;
         }

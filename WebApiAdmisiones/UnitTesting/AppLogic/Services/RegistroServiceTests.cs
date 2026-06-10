@@ -4,7 +4,6 @@ using System.Text.Json;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -12,6 +11,10 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
+using AppLogic.Services.Registro;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {

@@ -1,11 +1,12 @@
 using AppLogic.DTOs;
-using AppLogic.IServices;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Registro;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
-using WebApiAdmisiones.Security;
-using WebApiAdmisiones.Security.interfaces;
+using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -68,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
@@ -88,8 +89,18 @@ namespace WebApiAdmisiones.Controllers
             }
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var captchaToken = HttpContext.Request.Headers[RequireCaptchaFilter.HeaderName].FirstOrDefault() ?? string.Empty;
-            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, captchaToken);
+            var recaptchaScore = HttpContext.GetRecaptchaScore();
+            if (!recaptchaScore.HasValue)
+            {
+                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "AUTH_CAPTCHA_99",
+                    nameof(Login),
+                    "No se encontro el score de captcha validado.",
+                    500,
+                    default!));
+            }
+
+            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, recaptchaScore.Value);
 
             if (flowResult.RateLimitHeaders != null)
                 AgregarHeadersRateLimit(flowResult.RateLimitHeaders);
@@ -105,6 +116,7 @@ namespace WebApiAdmisiones.Controllers
 
         private void AgregarHeadersRateLimit(LoginRateLimitHeaders headers)
         {
+            WebApiAdmisiones.Extensions.ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
             Response.Headers["X-RateLimit-Limit"] = headers.Limit.ToString();
             Response.Headers["X-RateLimit-Remaining"] = headers.Remaining.ToString();
 
@@ -126,6 +138,11 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Datos de entrada inválidos.</response>
         /// <response code="401">Código incorrecto, sesión expirada o máximo de intentos superado.</response>
         /// <response code="429">Se superó el máximo de solicitudes de verificación.</response>
+        /// <remarks>
+        /// Endpoint publico usado como segundo paso del login cuando la API respondio <c>202 Accepted</c> en <c>Auth/Login</c>.
+        /// Si el codigo es valido, se eliminan los datos temporales de 2FA y se emiten las cookies normales de autenticacion.
+        /// Si el codigo vencio pero la sesion 2FA sigue activa, el front puede solicitar uno nuevo con <c>Auth/ReenviarCodigo2FA</c>.
+        /// </remarks>
         [AllowAnonymous]
         [HttpPost("VerificarCodigo2FA")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
@@ -141,6 +158,31 @@ namespace WebApiAdmisiones.Controllers
                 SetAuthenticationCookies(result.Data);
             }
 
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Reenvia el codigo de verificacion de dos factores para una sesion 2FA vigente.
+        /// </summary>
+        /// <param name="request">Identificador de la sesion 2FA devuelto por <c>Auth/Login</c>.</param>
+        /// <returns>Datos necesarios para continuar el login 2FA, incluyendo el mismo sessionId y el email enmascarado.</returns>
+        /// <response code="200">Codigo reenviado correctamente. El codigo anterior queda invalidado.</response>
+        /// <response code="400">El request es invalido o no contiene sessionId.</response>
+        /// <response code="401">La sesion 2FA no existe, expiro o ya fue consumida.</response>
+        /// <response code="429">Se supero el limite de reenvios para esta sesion o cuenta.</response>
+        /// <remarks>
+        /// Endpoint publico para el caso en que el usuario no recibio el mail o el codigo anterior expiro.
+        /// Cada reenvio exitoso genera un codigo nuevo, reinicia los intentos de validacion y conserva el tiempo restante de la sesion 2FA.
+        /// </remarks>
+        [AllowAnonymous]
+        [HttpPost("ReenviarCodigo2FA")]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 401)]
+        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 429)]
+        public async Task<IActionResult> ReenviarCodigo2FA([FromBody] DtoReenviarCodigo2FARequest request)
+        {
+            var result = await dosFactoresService.ReenviarCodigoAsync(request.SessionId);
             return ValidateResponse(result);
         }
 
@@ -419,6 +461,7 @@ namespace WebApiAdmisiones.Controllers
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
+        [RequireCaptcha]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)

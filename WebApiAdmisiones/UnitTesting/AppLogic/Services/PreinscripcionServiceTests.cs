@@ -1,11 +1,11 @@
 using AppLogic.DevartDTOs;
-using AppLogic.IServices;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;
 using Utilities;
 using Xunit;
+using AppLogic.Services.Inscripciones;
+using AppLogic.IServices.Catalogos;
 
 namespace UnitTesting.AppLogic.Services
 {

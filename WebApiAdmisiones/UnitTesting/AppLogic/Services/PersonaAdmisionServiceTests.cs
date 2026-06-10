@@ -1,5 +1,4 @@
 using System;
-using AppLogic.Services;
 using AppLogic.Requests;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -8,7 +7,8 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
-using AppLogic.IServices;
+using AppLogic.Services.Personas;
+using AppLogic.IServices.Catalogos;
 
 namespace UnitTesting.AppLogic.Services
 {

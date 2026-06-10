@@ -1,5 +1,3 @@
-using AppLogic.IServices;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -7,22 +5,24 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Moq;
 using Utilities;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Captcha;
 
 namespace UnitTesting.Security
 {
+    [Collection(UnitTesting.AppLogic.Services.EnvironmentVariablesCollection.Name)]
     public class RequireCaptchaFilterTests
     {
         [Fact]
-        public async Task OnActionExecutionAsync_ValidCaptcha_CallsNext()
+        public async Task OnActionExecutionAsync_RequireMinimumScoreWithValidCaptcha_CallsNextAndStoresScore()
         {
+            using var scope = new UnitTesting.AppLogic.Services.EnvironmentVariableScope(("RECAPTCHA_SCORE", "0.5"));
             var recaptchaMock = new Mock<IRecaptchaService>();
             recaptchaMock
-                .Setup(s => s.ValidarAsync("token"))
-                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(IRecaptchaService.ValidarAsync)));
+                .Setup(s => s.ValidarConScoreAsync("token", "login"))
+                .ReturnsAsync(OperationResult<double>.Ok(0.8, nameof(IRecaptchaService.ValidarConScoreAsync)));
 
             var context = CreateContext("token");
-            var filter = CreateFilter(recaptchaMock, "Production");
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -33,24 +33,25 @@ namespace UnitTesting.Security
 
             Assert.True(nextCalled);
             Assert.Null(context.Result);
-            recaptchaMock.Verify(s => s.ValidarAsync("token"), Times.Once);
+            Assert.Equal(0.8, context.HttpContext.GetRecaptchaScore());
+            recaptchaMock.Verify(s => s.ValidarConScoreAsync("token", "login"), Times.Once);
         }
 
         [Fact]
-        public async Task OnActionExecutionAsync_InvalidCaptcha_ReturnsFailure()
+        public async Task OnActionExecutionAsync_RequireMinimumScoreWithMissingCaptcha_ReturnsRegistrationFailure()
         {
             var recaptchaMock = new Mock<IRecaptchaService>();
             recaptchaMock
-                .Setup(s => s.ValidarAsync(string.Empty))
-                .ReturnsAsync(OperationResult<bool>.IsFailed(
-                    "REG_CAPTCHA_01",
-                    nameof(IRecaptchaService.ValidarAsync),
-                    "El parámetro captcha es obligatorio.",
+                .Setup(s => s.ValidarConScoreAsync(string.Empty, "login"))
+                .ReturnsAsync(OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_01",
+                    nameof(IRecaptchaService.ValidarConScoreAsync),
+                    "El parametro captcha es obligatorio.",
                     400,
-                    false));
+                    0d));
 
             var context = CreateContext(token: null);
-            var filter = CreateFilter(recaptchaMock, "Production");
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -60,22 +61,76 @@ namespace UnitTesting.Security
             });
 
             Assert.False(nextCalled);
-            var result = Assert.IsType<ObjectResult>(context.Result);
-            Assert.Equal(400, result.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<object>>(result.Value);
-            Assert.False(operationResult.Success);
+            var operationResult = AssertFailure(context, 400);
             Assert.Equal("REG_CAPTCHA_01", operationResult.ErrorCode);
-            recaptchaMock.Verify(s => s.ValidarAsync(string.Empty), Times.Once);
+            recaptchaMock.Verify(s => s.ValidarConScoreAsync(string.Empty, "login"), Times.Once);
         }
 
-        [Theory]
-        [InlineData("LocalHost")]
-        [InlineData("Development")]
-        public async Task OnActionExecutionAsync_DevelopmentLikeEnvironment_SkipsCaptcha(string environmentName)
+        [Fact]
+        public async Task OnActionExecutionAsync_RequireMinimumScoreWithLowCaptchaScore_ReturnsSuspiciousActivity()
+        {
+            using var scope = new UnitTesting.AppLogic.Services.EnvironmentVariableScope(("RECAPTCHA_SCORE", "0.7"));
+            var recaptchaMock = new Mock<IRecaptchaService>();
+            recaptchaMock
+                .Setup(s => s.ValidarConScoreAsync("token", "login"))
+                .ReturnsAsync(OperationResult<double>.Ok(0.3, nameof(IRecaptchaService.ValidarConScoreAsync)));
+
+            var context = CreateContext("token");
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+            var nextCalled = false;
+
+            await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(CreateExecutedContext(context));
+            });
+
+            Assert.False(nextCalled);
+            Assert.Equal(0.3, context.HttpContext.GetRecaptchaScore());
+            var operationResult = AssertFailure(context, 400);
+            Assert.Equal("REG_CAPTCHA_05", operationResult.ErrorCode);
+        }
+
+        [Fact]
+        public async Task OnActionExecutionAsync_ScoreOnlyWithInvalidCaptcha_ReturnsAuthFailure()
         {
             var recaptchaMock = new Mock<IRecaptchaService>();
+            recaptchaMock
+                .Setup(s => s.ValidarConScoreAsync(string.Empty, "login"))
+                .ReturnsAsync(OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_01",
+                    nameof(IRecaptchaService.ValidarConScoreAsync),
+                    "El parametro captcha es obligatorio.",
+                    400,
+                    0d));
+
             var context = CreateContext(token: null);
-            var filter = CreateFilter(recaptchaMock, environmentName);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.ScoreOnly);
+            var nextCalled = false;
+
+            await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(CreateExecutedContext(context));
+            });
+
+            Assert.False(nextCalled);
+            var operationResult = AssertFailure(context, 400);
+            Assert.Equal("AUTH_CAPTCHA_01", operationResult.ErrorCode);
+            Assert.Null(context.HttpContext.GetRecaptchaScore());
+        }
+
+        [Fact]
+        public async Task OnActionExecutionAsync_ScoreOnlyWithLowCaptchaScore_CallsNextAndStoresScore()
+        {
+            using var scope = new UnitTesting.AppLogic.Services.EnvironmentVariableScope(("RECAPTCHA_SCORE", "0.7"));
+            var recaptchaMock = new Mock<IRecaptchaService>();
+            recaptchaMock
+                .Setup(s => s.ValidarConScoreAsync("token", "login"))
+                .ReturnsAsync(OperationResult<double>.Ok(0.3, nameof(IRecaptchaService.ValidarConScoreAsync)));
+
+            var context = CreateContext("token");
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.ScoreOnly);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -86,7 +141,34 @@ namespace UnitTesting.Security
 
             Assert.True(nextCalled);
             Assert.Null(context.Result);
-            recaptchaMock.Verify(s => s.ValidarAsync(It.IsAny<string>()), Times.Never);
+            Assert.Equal(0.3, context.HttpContext.GetRecaptchaScore());
+        }
+
+        [Theory]
+        [InlineData("LocalHost")]
+        [InlineData("Development")]
+        public async Task OnActionExecutionAsync_DevelopmentLikeEnvironment_StillValidatesCaptcha(string environmentName)
+        {
+            var recaptchaMock = new Mock<IRecaptchaService>();
+            recaptchaMock
+                .Setup(s => s.ValidarConScoreAsync(string.Empty, "login"))
+                .ReturnsAsync(OperationResult<double>.IsFailed(
+                    "AUTH_CAPTCHA_01",
+                    nameof(IRecaptchaService.ValidarConScoreAsync),
+                    "El parametro captcha es obligatorio.",
+                    400,
+                    0d));
+
+            var context = CreateContext(token: null);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+
+            await filter.OnActionExecutionAsync(context, () =>
+                Task.FromResult(CreateExecutedContext(context)));
+
+            _ = environmentName;
+            var operationResult = AssertFailure(context, 400);
+            Assert.Equal("REG_CAPTCHA_01", operationResult.ErrorCode);
+            recaptchaMock.Verify(s => s.ValidarConScoreAsync(string.Empty, "login"), Times.Once);
         }
 
         private static ActionExecutingContext CreateContext(string? token)
@@ -109,14 +191,13 @@ namespace UnitTesting.Security
                 controller: new object());
         }
 
-        private static RequireCaptchaFilter CreateFilter(Mock<IRecaptchaService> recaptchaMock, string environmentName)
+        private static OperationResult<object> AssertFailure(ActionExecutingContext context, int statusCode)
         {
-            var environmentMock = new Mock<IWebHostEnvironment>();
-            environmentMock
-                .Setup(e => e.EnvironmentName)
-                .Returns(environmentName);
-
-            return new RequireCaptchaFilter(recaptchaMock.Object, environmentMock.Object);
+            var result = Assert.IsType<ObjectResult>(context.Result);
+            Assert.Equal(statusCode, result.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<object>>(result.Value);
+            Assert.False(operationResult.Success);
+            return operationResult;
         }
 
         private static ActionExecutedContext CreateExecutedContext(ActionExecutingContext context)

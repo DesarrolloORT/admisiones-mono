@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Moq;
-using Sanitization.Code;
 using Xunit;
+using WebApiAdmisiones.Security.RequestValidation;
 
 namespace UnitTesting.Security
 {

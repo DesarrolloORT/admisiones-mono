@@ -13,8 +13,10 @@ using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Models;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
+using AppLogic.IServices.Registro;
 
 namespace UnitTesting.Controllers
 {

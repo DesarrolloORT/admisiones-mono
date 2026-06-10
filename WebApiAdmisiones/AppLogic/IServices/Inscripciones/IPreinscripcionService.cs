@@ -1,0 +1,14 @@
+using AppLogic.DevartDTOs;
+using AppLogic.DTOs;
+using Utilities;
+
+namespace AppLogic.IServices.Inscripciones
+{
+    public interface IPreinscripcionService
+    {
+        OperationResult<IEnumerable<DtoProcesoDevart>> ObtenerProcesosHabilitadosPorProducto(long idProducto);
+        OperationResult<IEnumerable<DtoOfertaDevart>> ObtenerOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno);
+        OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso);
+        OperationResult<DtoDatosPreInscripcion> ObtenerDatosPreInscripcion(long codigoPersona);
+    }
+}

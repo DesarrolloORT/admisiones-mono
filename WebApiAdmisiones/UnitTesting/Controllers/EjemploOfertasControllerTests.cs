@@ -1,12 +1,12 @@
 using AppLogic.ApiClients;
-using AppLogic.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using AppLogic.Services.Inscripciones;
 
 namespace UnitTesting.Controllers
 {

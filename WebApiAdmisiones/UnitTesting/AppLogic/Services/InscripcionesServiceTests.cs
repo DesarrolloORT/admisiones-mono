@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using AppLogic.DTOs;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Moq;
 using Xunit;
+using AppLogic.Services.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {

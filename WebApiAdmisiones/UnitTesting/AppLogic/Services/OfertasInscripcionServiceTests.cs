@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text;
 using AppLogic.ApiClients;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using AppLogic.Services.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {

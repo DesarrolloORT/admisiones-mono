@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Observability;
 
 namespace WebApiAdmisiones.Controllers
 {

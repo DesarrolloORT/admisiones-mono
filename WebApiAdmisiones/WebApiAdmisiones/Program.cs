@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using WebApiAdmisiones.Extensions;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 
 // ============================================================================
 // Program.cs

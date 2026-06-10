@@ -4,11 +4,12 @@ using System.Threading.RateLimiting;
 using AppLogic.DTOs;
 using AzureService.DTOs;
 using Prometheus;
-using Sanitization.Code;
 using Utilities;
-using WebApiAdmisiones.Security;
 using StackExchange.Redis;
-using WebApiAdmisiones.Security.interfaces;
+using AppLogic.Services.RateLimiting;
+using WebApiAdmisiones.Security.RateLimiting;
+using WebApiAdmisiones.Security.Cache;
+using WebApiAdmisiones.Security.RequestValidation;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -54,7 +55,6 @@ namespace WebApiAdmisiones.Extensions
             services.AddSingleton<IJsonSchemaRegistry, InMemoryJsonSchemaRegistry>();
             services.AddScoped<JsonSchemaValidationFilter>();
             services.AddScoped<InputRedactionLoggingFilter>();
-            services.AddScoped<RequireCaptchaFilter>();
 
             return services;
         }
@@ -124,7 +124,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Registrar servicio de rate limiting
-            services.AddSingleton<IRedisRateLimiterService, RedisRateLimiterService>();
+            services.AddSingleton<AppLogic.IServices.IRateLimiterService, RedisRateLimiterService>();
 
             // Registrar servicio de cache distribuido
             services.AddSingleton<IRedisCacheService, RedisCacheService>();
@@ -288,7 +288,7 @@ namespace WebApiAdmisiones.Extensions
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     // Usar Redis Rate Limiter en lugar de in-memory
-                    var redisService = httpContext.RequestServices.GetRequiredService<IRedisRateLimiterService>();
+                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.IServices.IRateLimiterService>();
 
                     return RateLimitPartition.Get(
                         partitionKey,
@@ -304,7 +304,7 @@ namespace WebApiAdmisiones.Extensions
                     LoginRateLimitRejections.Inc();
 
                     // Obtener información adicional desde Redis
-                    var redisService = context.HttpContext.RequestServices.GetRequiredService<RedisRateLimiterService>();
+                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.IServices.IRateLimiterService>();
                     var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                     var partitionKey = $"login-ip:{ipAddress}";
 

@@ -4,6 +4,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using WebApiAdmisiones.Observability;
+using WebApiAdmisiones.Security.Observability;
 
 namespace WebApiAdmisiones.Extensions
 {

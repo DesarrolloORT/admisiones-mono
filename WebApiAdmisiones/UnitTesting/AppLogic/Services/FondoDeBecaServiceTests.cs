@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Moq;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using Utilities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using AppLogic.Services.Becas;
 
 namespace UnitTesting.AppLogic.Services
 {

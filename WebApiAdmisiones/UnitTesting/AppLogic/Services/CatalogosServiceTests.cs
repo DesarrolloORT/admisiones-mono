@@ -1,6 +1,5 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Collections.Generic;
 using Xunit;
+using AppLogic.Services.Catalogos;
 
 namespace UnitTesting.AppLogic.Services
 {

@@ -1,10 +1,10 @@
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Moq;
 using System.Linq;
 using Xunit;
+using AppLogic.Services.Becas;
 
 namespace UnitTesting.AppLogic.Services
 {

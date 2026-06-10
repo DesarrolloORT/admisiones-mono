@@ -171,4 +171,11 @@ namespace AppLogic.DTOs
         [Redact]
         public required string Codigo { get; set; }
     }
+
+    [ExcludeFromCodeCoverage]
+    public class DtoReenviarCodigo2FARequest
+    {
+        [Required(ErrorMessage = "El session ID es requerido.")]
+        public required string SessionId { get; set; }
+    }
 }

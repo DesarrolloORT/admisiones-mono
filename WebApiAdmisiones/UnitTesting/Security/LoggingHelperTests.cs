@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Observability;
 
 namespace UnitTesting.Security
 {
@@ -739,13 +739,13 @@ namespace UnitTesting.Security
         {
             // Arrange
             var context = CreateHttpContext();
-            var data = new { name = "José García", emoji = "??" };
+            var data = new { name = "Josï¿½ Garcï¿½a", emoji = "??" };
 
             // Act
             var result = LoggingHelper.FormatEntrada(context, "Test", data: data);
 
             // Assert
-            Assert.Contains("José García", result);
+            Assert.Contains("Josï¿½ Garcï¿½a", result);
             Assert.Contains("??", result);
         }
 

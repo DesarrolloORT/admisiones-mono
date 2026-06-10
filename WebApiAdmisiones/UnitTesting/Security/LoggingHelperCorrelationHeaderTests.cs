@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using WebApiAdmisiones.Observability;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Observability;
 
 namespace UnitTesting.Security;
 

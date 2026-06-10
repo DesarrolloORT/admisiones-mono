@@ -5,11 +5,13 @@ using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using WebApiAdmisiones.Security;
 using AzureService.DTOs;
 using AzureService.Interfaces;
 using WebApiAdmisiones.Models;
 using Utilities;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
+using AppLogic.IServices.Registro;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -44,6 +46,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Documento evaluado correctamente.</response>
         /// <response code="400">Datos invalidos o regla funcional no cumplida.</response>
         [AllowAnonymous]
+        [RequireCaptcha]
         [HttpPost("EvaluarDocumento")]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 400)]
@@ -78,6 +81,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Identidad verificada correctamente.</response>
         /// <response code="400">Datos invalidos, verificacion rechazada o sesion de registro expirada.</response>
         [AllowAnonymous]
+        [RequireCaptcha]
         [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -120,8 +124,18 @@ namespace WebApiAdmisiones.Controllers
         /// <remarks>
         /// Este endpoint está protegido por rate limiting: máximo 5 solicitudes por minuto por usuario/IP.
         /// </remarks>
+        /// <param name="request">Archivo adjunto y tipo MIME del documento a reconocer.</param>
+        /// <returns>Datos extraidos del documento y resultado del analisis de identidad visual, cuando corresponda.</returns>
+        /// <response code="200">Documento reconocido correctamente.</response>
+        /// <response code="400">No se recibio archivo o la solicitud es invalida.</response>
+        /// <response code="422">El archivo no cumple las reglas de validacion o no corresponde a un documento admitido.</response>
+        /// <response code="429">Se supero el limite de solicitudes de reconocimiento.</response>
+        /// <response code="500">Error interno al procesar el documento.</response>
+        /// <response code="502">Error del proveedor externo de reconocimiento.</response>
+        /// <response code="504">Timeout al consultar el proveedor externo de reconocimiento.</response>
         [AllowAnonymous]
         [EnableRateLimiting("ReconocimientoDocumento")]
+        [RequireCaptcha]
         [HttpPost("AnalizarAdjunto")]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 400)]

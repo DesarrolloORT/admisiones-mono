@@ -1,4 +1,3 @@
-using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;
@@ -10,10 +9,11 @@ using System.Text;
 using System.Text.Json;
 using Moq;
 using StackExchange.Redis;
-using AppLogic.Services;
 using AppLogic.DTOs;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
+using AppLogic.Services.Autenticacion;
+using AppLogic.IServices.Autenticacion;
 
 namespace UnitTesting.AppLogic.Services
 {
