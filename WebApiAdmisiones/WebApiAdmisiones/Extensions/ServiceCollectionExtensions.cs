@@ -140,13 +140,14 @@ namespace WebApiAdmisiones.Extensions
             var allowedOrigins = new[]
             {
                 "http://localhost:4200",
-                "http://localhost:5001/",
+                "http://localhost:5001",
 
                 "https://admisiones.ort.edu.uy",
                 "https://admisionespreprod.ort.edu.uy",
                 "https://admisionestesting.ort.edu.uy",
                 "https://admisionesdesa.ort.edu.uy",
                 "https://admisionesdesa2.ort.edu.uy",
+                "http://admisionesdesa2.ort.edu.uy"
             };
 
             const string corsPolicy = "AllowAngularApp";
