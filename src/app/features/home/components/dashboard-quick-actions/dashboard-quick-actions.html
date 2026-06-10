@@ -1,15 +1,15 @@
 @switch (action().type) {
   @case ('primary') {
-    <button class="quick-actions__btn" ort-primary-button type="button">
+    <button class="quick-actions__btn" ort-primary-button type="button" [attr.aria-label]="ariaLabel()">
       {{ action().label }}
     </button>
   }
   @case ('secondary') {
-    <button class="quick-actions__btn" ort-secondary-button type="button">
+    <button class="quick-actions__btn" ort-secondary-button type="button" [attr.aria-label]="ariaLabel()">
       {{ action().label }}
     </button>
   }
   @case ('text') {
-    <p class="quick-actions__message">{{ action().label }}</p>
+    <p class="quick-actions__message" [attr.aria-label]="ariaLabel()">{{ action().label }}</p>
   }
 }

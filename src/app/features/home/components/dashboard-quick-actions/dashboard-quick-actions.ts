@@ -25,7 +25,9 @@ const DEFAULT_ACTION: ActionConfig = { type: 'secondary', label: 'Ver detalle' }
 })
 export class DashboardQuickActions {
   readonly status = input.required<string>();
+   readonly careerName = input.required<string>();
 
   protected readonly action = computed<ActionConfig>(() => ACTION_MAP[this.status()] ?? DEFAULT_ACTION);
+  protected readonly ariaLabel = computed(() => `${this.action().label} - ${this.careerName()}`);
 }
 
