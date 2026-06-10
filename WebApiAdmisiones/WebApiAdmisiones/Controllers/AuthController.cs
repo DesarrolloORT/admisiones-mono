@@ -137,6 +137,11 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Datos de entrada inválidos.</response>
         /// <response code="401">Código incorrecto, sesión expirada o máximo de intentos superado.</response>
         /// <response code="429">Se superó el máximo de solicitudes de verificación.</response>
+        /// <remarks>
+        /// Endpoint publico usado como segundo paso del login cuando la API respondio <c>202 Accepted</c> en <c>Auth/Login</c>.
+        /// Si el codigo es valido, se eliminan los datos temporales de 2FA y se emiten las cookies normales de autenticacion.
+        /// Si el codigo vencio pero la sesion 2FA sigue activa, el front puede solicitar uno nuevo con <c>Auth/ReenviarCodigo2FA</c>.
+        /// </remarks>
         [AllowAnonymous]
         [HttpPost("VerificarCodigo2FA")]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
@@ -155,6 +160,19 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Reenvia el codigo de verificacion de dos factores para una sesion 2FA vigente.
+        /// </summary>
+        /// <param name="request">Identificador de la sesion 2FA devuelto por <c>Auth/Login</c>.</param>
+        /// <returns>Datos necesarios para continuar el login 2FA, incluyendo el mismo sessionId y el email enmascarado.</returns>
+        /// <response code="200">Codigo reenviado correctamente. El codigo anterior queda invalidado.</response>
+        /// <response code="400">El request es invalido o no contiene sessionId.</response>
+        /// <response code="401">La sesion 2FA no existe, expiro o ya fue consumida.</response>
+        /// <response code="429">Se supero el limite de reenvios para esta sesion o cuenta.</response>
+        /// <remarks>
+        /// Endpoint publico para el caso en que el usuario no recibio el mail o el codigo anterior expiro.
+        /// Cada reenvio exitoso genera un codigo nuevo, reinicia los intentos de validacion y conserva el tiempo restante de la sesion 2FA.
+        /// </remarks>
         [AllowAnonymous]
         [HttpPost("ReenviarCodigo2FA")]
         [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 200)]

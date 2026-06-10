@@ -124,6 +124,15 @@ namespace WebApiAdmisiones.Controllers
         /// <remarks>
         /// Este endpoint está protegido por rate limiting: máximo 5 solicitudes por minuto por usuario/IP.
         /// </remarks>
+        /// <param name="request">Archivo adjunto y tipo MIME del documento a reconocer.</param>
+        /// <returns>Datos extraidos del documento y resultado del analisis de identidad visual, cuando corresponda.</returns>
+        /// <response code="200">Documento reconocido correctamente.</response>
+        /// <response code="400">No se recibio archivo o la solicitud es invalida.</response>
+        /// <response code="422">El archivo no cumple las reglas de validacion o no corresponde a un documento admitido.</response>
+        /// <response code="429">Se supero el limite de solicitudes de reconocimiento.</response>
+        /// <response code="500">Error interno al procesar el documento.</response>
+        /// <response code="502">Error del proveedor externo de reconocimiento.</response>
+        /// <response code="504">Timeout al consultar el proveedor externo de reconocimiento.</response>
         [AllowAnonymous]
         [EnableRateLimiting("ReconocimientoDocumento")]
         [RequireCaptcha]
