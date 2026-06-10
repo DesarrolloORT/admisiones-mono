@@ -1,3 +1,4 @@
+using AppLogic.IServices;
 using System.Threading.RateLimiting;
 
 namespace WebApiAdmisiones.Security.RateLimiting
@@ -8,13 +9,13 @@ namespace WebApiAdmisiones.Security.RateLimiting
     /// </summary>
     public sealed class RedisRateLimiter : RateLimiter
     {
-        private readonly IRedisRateLimiterService _redisService;
+        private readonly IRateLimiterService _redisService;
         private readonly string _key;
         private readonly int _limit;
         private readonly TimeSpan _window;
 
         public RedisRateLimiter(
-            IRedisRateLimiterService redisService,
+            IRateLimiterService redisService,
             string key,
             int limit,
             TimeSpan window)

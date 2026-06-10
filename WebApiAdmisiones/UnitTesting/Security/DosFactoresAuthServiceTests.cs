@@ -1,15 +1,12 @@
-using AppLogic.DTOs;
-using MailORT;
+﻿using AppLogic.DTOs;
+using AppLogic.IServices;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.Services.Autenticacion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using StackExchange.Redis;
-using System.Globalization;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using WebApiAdmisiones.Security.Authentication;
-using WebApiAdmisiones.Security.RateLimiting;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace UnitTesting.Security
 {
@@ -18,9 +15,9 @@ namespace UnitTesting.Security
         [Fact]
         public async Task IniciarAsync_WhenMailIsSent_ReturnsMaskedEmailAndUsesRealEmailForDelivery()
         {
-            var redis = CreateRedisHarness();
-            var mail = new TestableEnvioMail();
-            var service = CreateService(redis, mail);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            var service = CreateService(sessionStoreMock: sessionStoreMock, emailSenderMock: emailSenderMock);
 
             var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
 
@@ -28,108 +25,200 @@ namespace UnitTesting.Security
             Assert.NotNull(result.Data);
             Assert.Equal("g******e@ort.******", result.Data.MaskedEmail);
             Assert.NotEqual("gabriele@ort.edu.uy", result.Data.MaskedEmail);
-            Assert.Contains("gabriele@ort.edu.uy", mail.To);
-            Assert.Equal(1, mail.SendCount);
-
-            var json = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-            Assert.Contains("\"maskedEmail\":\"g******e@ort.******\"", json);
-            Assert.DoesNotContain("gabriele@ort.edu.uy", json);
+            emailSenderMock.Verify(
+                e => e.SendAsync("gabriele@ort.edu.uy", It.IsAny<string>(), It.IsAny<string>()),
+                Times.Once);
+            sessionStoreMock.Verify(
+                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()),
+                Times.Once);
         }
 
         [Fact]
-        public async Task ReenviarCodigoAsync_WhenSessionExists_UpdatesCodeResetsAttemptsSendsMailAndPreservesTtl()
+        public async Task IniciarAsync_WhenRateLimitExceeded_Returns429WithoutSavingSession()
         {
-            var redis = CreateRedisHarness();
-            var mail = new TestableEnvioMail();
-            var service = CreateService(redis, mail);
+            var rateLimiterMock = new Mock<IRateLimiterService>();
+            rateLimiterMock
+                .Setup(r => r.IsAllowedAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(false);
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            var service = CreateService(sessionStoreMock: sessionStoreMock, rateLimiterMock: rateLimiterMock);
 
-            var start = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
-            var sessionId = start.Data!.SessionId;
-            var sessionKey = $"2fa:session:{sessionId}";
-            var remainingTtl = TimeSpan.FromMinutes(17);
+            var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
 
-            var before = JsonNode.Parse(redis.Store[sessionKey])!.AsObject();
-            before["intentos"] = 3;
-            redis.Store[sessionKey] = before.ToJsonString();
-            redis.Ttls[sessionKey] = remainingTtl;
-            var oldHash = before["codigoHash"]!.GetValue<string>();
-
-            var result = await service.ReenviarCodigoAsync(sessionId);
-
-            Assert.True(result.Success);
-            Assert.Equal(sessionId, result.Data!.SessionId);
-            Assert.Equal("g******e@ort.******", result.Data.MaskedEmail);
-            Assert.Equal(2, mail.SendCount);
-            Assert.Contains("gabriele@ort.edu.uy", mail.To);
-
-            var after = JsonNode.Parse(redis.Store[sessionKey])!.AsObject();
-            Assert.NotEqual(oldHash, after["codigoHash"]!.GetValue<string>());
-            Assert.Equal(0, after["intentos"]!.GetValue<int>());
-            Assert.Equal(remainingTtl, redis.Ttls[sessionKey]);
-
-            var expiresAt = DateTime.Parse(
-                after["codigoExpiresAtUtc"]!.GetValue<string>(),
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.RoundtripKind);
-            Assert.True(expiresAt > DateTime.UtcNow);
+            Assert.False(result.Success);
+            Assert.Equal(429, result.HttpCode);
+            Assert.Equal("AUTH_2FA_INIT_01", result.ErrorCode);
+            sessionStoreMock.Verify(
+                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()),
+                Times.Never);
         }
 
         [Fact]
-        public async Task ReenviarCodigoAsync_WhenSuccessful_InvalidatesPreviousCode()
+        public async Task IniciarAsync_WhenEmailFails_DeletesSessionAndReturns500()
         {
-            var redis = CreateRedisHarness();
-            var mail = new TestableEnvioMail();
-            var service = CreateService(redis, mail);
+            var emailSenderMock = new Mock<IEmailSender>();
+            emailSenderMock
+                .Setup(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new Exception("SMTP error"));
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            var service = CreateService(sessionStoreMock: sessionStoreMock, emailSenderMock: emailSenderMock);
 
-            var start = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
-            var sessionId = start.Data!.SessionId;
-            var oldCode = ExtractCode(mail.Body);
+            var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
 
-            var resend = await service.ReenviarCodigoAsync(sessionId);
-            var newCode = ExtractCode(mail.Body);
-
-            Assert.True(resend.Success);
-            Assert.NotEqual(oldCode, newCode);
-
-            var oldCodeResult = await service.VerificarCodigoAsync(sessionId, oldCode);
-            Assert.False(oldCodeResult.Success);
-            Assert.Equal("AUTH_2FA_05", oldCodeResult.ErrorCode);
-
-            var newCodeResult = await service.VerificarCodigoAsync(sessionId, newCode);
-            Assert.True(newCodeResult.Success);
+            Assert.False(result.Success);
+            Assert.Equal(500, result.HttpCode);
+            Assert.Equal("AUTH_2FA_MAIL_01", result.ErrorCode);
+            sessionStoreMock.Verify(s => s.DeleteAsync(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task VerificarCodigoAsync_WhenCodeExpired_ReturnsUnauthorizedEvenIfSessionExists()
+        public async Task VerificarCodigoAsync_WhenSessionNotFound_Returns401()
         {
-            var redis = CreateRedisHarness();
-            var mail = new TestableEnvioMail();
-            var service = CreateService(redis, mail);
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((TwoFactorSession?)null);
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
 
-            var start = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
-            var sessionId = start.Data!.SessionId;
-            var sessionKey = $"2fa:session:{sessionId}";
-            var code = ExtractCode(mail.Body);
+            var result = await service.VerificarCodigoAsync("missing-session", "123456");
 
-            var session = JsonNode.Parse(redis.Store[sessionKey])!.AsObject();
-            session["codigoExpiresAtUtc"] = DateTime.UtcNow.AddMinutes(-1);
-            redis.Store[sessionKey] = session.ToJsonString();
+            Assert.False(result.Success);
+            Assert.Equal(401, result.HttpCode);
+            Assert.Equal("AUTH_2FA_02", result.ErrorCode);
+        }
 
-            var result = await service.VerificarCodigoAsync(sessionId, code);
+        [Fact]
+        public async Task VerificarCodigoAsync_WhenCodeExpired_ReturnsUnauthorizedWithoutDeletingSession()
+        {
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoHash = "any-hash",
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1),
+                    Documento = "12345678"
+                });
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", "123456");
 
             Assert.False(result.Success);
             Assert.Equal(401, result.HttpCode);
             Assert.Equal("AUTH_2FA_06", result.ErrorCode);
-            Assert.True(redis.Store.ContainsKey(sessionKey));
+            sessionStoreMock.Verify(s => s.DeleteAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task ReenviarCodigoAsync_WhenSessionDoesNotExist_ReturnsUnauthorized()
+        public async Task VerificarCodigoAsync_WhenCodeIsCorrect_ReturnsAuthResponse()
         {
-            var service = CreateService(CreateRedisHarness(), new TestableEnvioMail());
+            var codigo = "123456";
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(codigo))).ToLowerInvariant();
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoPersona = 123,
+                    CodigoHash = hash,
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
+                    Documento = "1.234.567-8",
+                    AccessToken = "access-token",
+                    RefreshToken = "refresh-token"
+                });
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", codigo);
+
+            Assert.True(result.Success);
+            Assert.Equal(123, result.Data!.Persona.CodigoPersona);
+            Assert.Equal("access-token", result.Data.AccessToken);
+            sessionStoreMock.Verify(s => s.DeleteAsync("session-id"), Times.Once);
+        }
+
+        [Fact]
+        public async Task VerificarCodigoAsync_WhenCodeIsCorrect_ClearsTwoFactorInitRateLimit()
+        {
+            var codigo = "123456";
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(codigo))).ToLowerInvariant();
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoHash = hash,
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
+                    Documento = "1.234.567-8"
+                });
+            var rateLimiterMock = new Mock<IRateLimiterService>();
+            rateLimiterMock.Setup(r => r.ClearAsync(It.IsAny<string>())).ReturnsAsync(true);
+            var service = CreateService(sessionStoreMock: sessionStoreMock, rateLimiterMock: rateLimiterMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", codigo);
+
+            Assert.True(result.Success);
+            rateLimiterMock.Verify(r => r.ClearAsync("2fa-init:12345678"), Times.Once);
+        }
+
+        [Fact]
+        public async Task VerificarCodigoAsync_WhenCodeIsIncorrect_IncrementsAttemptsAndUpdatesSession()
+        {
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoHash = "correct-hash",
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
+                    Documento = "12345678",
+                    Intentos = 0
+                });
+            sessionStoreMock
+                .Setup(s => s.GetTtlAsync("session-id"))
+                .ReturnsAsync(TimeSpan.FromMinutes(25));
+            TwoFactorSession? capturedSession = null;
+            sessionStoreMock
+                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                .Callback<string, TwoFactorSession, TimeSpan>((_, session, _) => capturedSession = session)
+                .Returns(Task.CompletedTask);
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", "wrong-code");
+
+            Assert.False(result.Success);
+            Assert.Equal(401, result.HttpCode);
+            Assert.Equal("AUTH_2FA_05", result.ErrorCode);
+            Assert.NotNull(capturedSession);
+            Assert.Equal(1, capturedSession.Intentos);
+        }
+
+        [Fact]
+        public async Task VerificarCodigoAsync_WhenMaxAttemptsExceeded_DeletesSession()
+        {
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoHash = "correct-hash",
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
+                    Documento = "12345678",
+                    Intentos = 4
+                });
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", "wrong-code");
+
+            Assert.False(result.Success);
+            Assert.Equal(401, result.HttpCode);
+            Assert.Equal("AUTH_2FA_04", result.ErrorCode);
+            sessionStoreMock.Verify(s => s.DeleteAsync("session-id"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ReenviarCodigoAsync_WhenSessionNotFound_Returns401()
+        {
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((TwoFactorSession?)null);
+            var service = CreateService(sessionStoreMock: sessionStoreMock);
 
             var result = await service.ReenviarCodigoAsync("missing-session");
 
@@ -139,20 +228,49 @@ namespace UnitTesting.Security
         }
 
         [Fact]
-        public async Task VerificarCodigoAsync_WhenCodeIsCorrect_ClearsTwoFactorInitRateLimit()
+        public async Task ReenviarCodigoAsync_WhenSessionExists_SendsNewCodeResetsAttemptsAndPreservesTtl()
         {
-            var redis = CreateRedisHarness();
-            var mail = new TestableEnvioMail();
-            var rateLimiterMock = new Mock<IRedisRateLimiterService>();
-            var service = CreateService(redis, mail, rateLimiterMock);
+            var originalHash = "original-hash";
+            var remainingTtl = TimeSpan.FromMinutes(17);
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new TwoFactorSession
+                {
+                    CodigoHash = originalHash,
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(5),
+                    Email = "gabriele@ort.edu.uy",
+                    Documento = "1.234.567-8",
+                    Intentos = 3
+                });
+            sessionStoreMock
+                .Setup(s => s.GetTtlAsync("session-id"))
+                .ReturnsAsync(remainingTtl);
+            TwoFactorSession? capturedSession = null;
+            TimeSpan capturedTtl = default;
+            sessionStoreMock
+                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                .Callback<string, TwoFactorSession, TimeSpan>((_, session, ttl) =>
+                {
+                    capturedSession = session;
+                    capturedTtl = ttl;
+                })
+                .Returns(Task.CompletedTask);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = CreateService(sessionStoreMock: sessionStoreMock, emailSenderMock: emailSenderMock);
 
-            var start = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
-            var code = ExtractCode(mail.Body);
-
-            var result = await service.VerificarCodigoAsync(start.Data!.SessionId, code);
+            var result = await service.ReenviarCodigoAsync("session-id");
 
             Assert.True(result.Success);
-            rateLimiterMock.Verify(r => r.ClearAsync("2fa-init:12345678"), Times.Once);
+            Assert.Equal("g******e@ort.******", result.Data!.MaskedEmail);
+            emailSenderMock.Verify(
+                e => e.SendAsync("gabriele@ort.edu.uy", It.IsAny<string>(), It.IsAny<string>()),
+                Times.Once);
+            Assert.NotNull(capturedSession);
+            Assert.NotEqual(originalHash, capturedSession.CodigoHash);
+            Assert.Equal(0, capturedSession.Intentos);
+            Assert.True(capturedSession.CodigoExpiresAtUtc > DateTime.UtcNow);
+            Assert.Equal(remainingTtl, capturedTtl);
         }
 
         private static DtoAuthenticationResponse CreatePendingAuth() =>
@@ -184,122 +302,49 @@ namespace UnitTesting.Security
                 .Build();
 
         private static DosFactoresAuthService CreateService(
-            RedisHarness redis,
-            TestableEnvioMail mail,
-            Mock<IRedisRateLimiterService>? rateLimiterMock = null)
+            Mock<ITwoFactorSessionStore>? sessionStoreMock = null,
+            Mock<IEmailSender>? emailSenderMock = null,
+            Mock<IRateLimiterService>? rateLimiterMock = null)
         {
-            rateLimiterMock ??= new Mock<IRedisRateLimiterService>();
-            rateLimiterMock
-                .Setup(r => r.IsAllowedAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<TimeSpan>()))
-                .ReturnsAsync(true);
-            rateLimiterMock
-                .Setup(r => r.ClearAsync(It.IsAny<string>()))
-                .ReturnsAsync(true);
+            if (sessionStoreMock == null)
+            {
+                sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+                sessionStoreMock
+                    .Setup(s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                    .Returns(Task.CompletedTask);
+                sessionStoreMock
+                    .Setup(s => s.DeleteAsync(It.IsAny<string>()))
+                    .Returns(Task.CompletedTask);
+                sessionStoreMock
+                    .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                    .Returns(Task.CompletedTask);
+            }
+
+            if (emailSenderMock == null)
+            {
+                emailSenderMock = new Mock<IEmailSender>();
+                emailSenderMock
+                    .Setup(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                    .Returns(Task.CompletedTask);
+            }
+
+            if (rateLimiterMock == null)
+            {
+                rateLimiterMock = new Mock<IRateLimiterService>();
+                rateLimiterMock
+                    .Setup(r => r.IsAllowedAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                    .ReturnsAsync(true);
+                rateLimiterMock
+                    .Setup(r => r.ClearAsync(It.IsAny<string>()))
+                    .ReturnsAsync(true);
+            }
 
             return new DosFactoresAuthService(
-                redis.Connection.Object,
+                sessionStoreMock.Object,
                 rateLimiterMock.Object,
-                mail,
+                emailSenderMock.Object,
                 CreateConfiguration(),
                 Mock.Of<ILogger<DosFactoresAuthService>>());
-        }
-
-        private static RedisHarness CreateRedisHarness()
-        {
-            var harness = new RedisHarness();
-
-            harness.Database
-                .Setup(d => d.StringSetAsync(
-                    It.IsAny<RedisKey>(),
-                    It.IsAny<RedisValue>(),
-                    It.IsAny<TimeSpan?>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<When>(),
-                    It.IsAny<CommandFlags>()))
-                .Callback<RedisKey, RedisValue, TimeSpan?, bool, When, CommandFlags>(
-                    (key, value, expiry, _, _, _) =>
-                    {
-                        var keyText = key.ToString();
-                        harness.Store[keyText] = value.ToString();
-                        harness.Ttls[keyText] = expiry;
-                    })
-                .ReturnsAsync(true);
-
-            harness.Database
-                .Setup(d => d.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-                .Returns<RedisKey, CommandFlags>((key, _) =>
-                {
-                    var keyText = key.ToString();
-                    return Task.FromResult(
-                        harness.Store.TryGetValue(keyText, out var value)
-                            ? (RedisValue)value
-                            : RedisValue.Null);
-                });
-
-            harness.Database
-                .Setup(d => d.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-                .Callback<RedisKey, CommandFlags>((key, _) =>
-                {
-                    var keyText = key.ToString();
-                    harness.Store.Remove(keyText);
-                    harness.Ttls.Remove(keyText);
-                })
-                .ReturnsAsync(true);
-
-            harness.Database
-                .Setup(d => d.KeyTimeToLiveAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-                .Returns<RedisKey, CommandFlags>((key, _) =>
-                {
-                    var keyText = key.ToString();
-                    harness.Ttls.TryGetValue(keyText, out var ttl);
-                    return Task.FromResult(ttl);
-                });
-
-            harness.Connection
-                .Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
-                .Returns(harness.Database.Object);
-
-            return harness;
-        }
-
-        private static string ExtractCode(string body)
-        {
-            var match = Regex.Match(body, @"<strong[^>]*>(\d{6})</strong>");
-            Assert.True(match.Success, $"No se encontro codigo 2FA en el body: {body}");
-            return match.Groups[1].Value;
-        }
-
-        private sealed class RedisHarness
-        {
-            public Mock<IDatabase> Database { get; } = new();
-            public Mock<IConnectionMultiplexer> Connection { get; } = new();
-            public Dictionary<string, string> Store { get; } = [];
-            public Dictionary<string, TimeSpan?> Ttls { get; } = [];
-        }
-
-        private class TestableEnvioMail : EnvioMail
-        {
-            public List<string> To { get; private set; } = [];
-            public string Body { get; private set; } = string.Empty;
-            public int SendCount { get; private set; }
-
-            public TestableEnvioMail() : base("http://localhost/wsdl")
-            {
-            }
-
-            public override Task EnviarMail(
-                string from,
-                List<string> colTOs,
-                string subject,
-                string body,
-                List<string>? colReplyTo = null,
-                string sistema = "")
-            {
-                To = colTOs;
-                Body = body;
-                SendCount++;
-                return Task.CompletedTask;
-            }
         }
     }
 }

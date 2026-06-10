@@ -1,11 +1,11 @@
 using AppLogic.DTOs;
+using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
+using AppLogic.Services.Autenticacion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
-using WebApiAdmisiones.Security.Authentication;
-using WebApiAdmisiones.Security.RateLimiting;
 
 namespace UnitTesting.Security
 {
@@ -82,7 +82,7 @@ namespace UnitTesting.Security
                     },
                     nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
 
-            var rateLimiterMock = new Mock<IRedisRateLimiterService>();
+            var rateLimiterMock = new Mock<IRateLimiterService>();
             rateLimiterMock
                 .Setup(s => s.ValidateAsync(
                     It.IsAny<string>(),

@@ -1,13 +1,15 @@
+using AppLogic.IServices;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace WebApiAdmisiones.Security.RateLimiting
+namespace AppLogic.Services.RateLimiting
 {
     /// <summary>
     /// Rate limiter distribuido usando Redis.
     /// Permite compartir estado de rate limiting entre múltiples instancias de la API.
     /// Implementa Sliding Window algorithm para mayor precisión.
     /// </summary>
-    public class RedisRateLimiterService : IRedisRateLimiterService
+    public class RedisRateLimiterService : IRateLimiterService
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly ILogger<RedisRateLimiterService> _logger;
@@ -219,8 +221,8 @@ namespace WebApiAdmisiones.Security.RateLimiting
         /// </remarks>
         public async Task<RateLimitValidationResult> ValidateAsync(
             string ipAddress, 
-            string tipoDocumento, 
-            string documento, 
+            string? tipoDocumento, 
+            string? documento, 
             int limit, 
             TimeSpan window)
         {
@@ -244,7 +246,7 @@ namespace WebApiAdmisiones.Security.RateLimiting
         /// Normaliza el número de documento para evitar bypass por formato
         /// (ej: "1.234.567-8" vs "12345678").
         /// </summary>
-        private static string NormalizeDocumento(string documento)
+        private static string NormalizeDocumento(string? documento)
         {
             if (string.IsNullOrWhiteSpace(documento))
                 return "unknown";
@@ -256,31 +258,5 @@ namespace WebApiAdmisiones.Security.RateLimiting
                            .Trim()
                            .ToLowerInvariant();
         }
-    }
-
-    /// <summary>
-    /// Resultado de validación de rate limiting.
-    /// </summary>
-    public class RateLimitValidationResult
-    {
-        /// <summary>
-        /// Indica si el request está permitido.
-        /// </summary>
-        public bool IsAllowed { get; init; }
-
-        /// <summary>
-        /// Número de intentos restantes en la ventana actual.
-        /// </summary>
-        public int RemainingAttempts { get; init; }
-
-        /// <summary>
-        /// Timestamp de cuando se resetea el contador (UTC).
-        /// </summary>
-        public DateTimeOffset? ResetTime { get; init; }
-
-        /// <summary>
-        /// Clave de partición utilizada (para logging/debugging).
-        /// </summary>
-        public required string PartitionKey { get; init; }
     }
 }

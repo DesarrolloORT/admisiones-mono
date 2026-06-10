@@ -17,8 +17,8 @@ using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
-using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Observability;
 using AppLogic.Services.Autenticacion;
 using AppLogic.Services.Registro;
@@ -134,11 +134,15 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
+            // Abstracciones de infraestructura para los servicios de AppLogic.
+            services.AddScoped<IEmailSender, AppLogic.Services.Email.EnvioMailEmailSender>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.ITwoFactorSessionStore, AppLogic.Services.Autenticacion.RedisTwoFactorSessionStore>();
+
             // Servicio de autenticación de dos factores (2FA) por email.
-            services.AddScoped<IDosFactoresAuthService, DosFactoresAuthService>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.IDosFactoresAuthService, AppLogic.Services.Autenticacion.DosFactoresAuthService>();
 
             // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
-            services.AddScoped<ILoginFlowService, LoginFlowService>();
+            services.AddScoped<AppLogic.IServices.Autenticacion.ILoginFlowService, AppLogic.Services.Autenticacion.LoginFlowService>();
 
             return services;
         }

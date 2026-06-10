@@ -1,12 +1,12 @@
 using AppLogic.DTOs;
+using AppLogic.IServices.Autenticacion;
+using AppLogic.IServices.Registro;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Authentication;
-using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -116,6 +116,7 @@ namespace WebApiAdmisiones.Controllers
 
         private void AgregarHeadersRateLimit(LoginRateLimitHeaders headers)
         {
+            WebApiAdmisiones.Extensions.ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
             Response.Headers["X-RateLimit-Limit"] = headers.Limit.ToString();
             Response.Headers["X-RateLimit-Remaining"] = headers.Remaining.ToString();
 
