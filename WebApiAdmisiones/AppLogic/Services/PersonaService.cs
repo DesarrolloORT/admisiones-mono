@@ -21,7 +21,7 @@ namespace AppLogic.Services
         public OperationResult<DtoDatosPersona> ObtenerDatosPersona(long codigoPersona)
         {
             using var uow = uowFactory.Create();
-            var persona = uow.Personas.GetPersonaWithRelated(codigoPersona);
+            var persona = uow.Personas.GetByKey(codigoPersona);
             if (persona is null)
             {
                 return OperationResult<DtoDatosPersona>.IsFailed(
@@ -31,7 +31,9 @@ namespace AppLogic.Services
                     404);
             }
 
-            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(
+                persona,
+                uow.Inscriptos.TieneInscripcionActiva(codigoPersona));
             return OperationResult<DtoDatosPersona>.Ok(
                 MapearDatosPersona(persona, identidadRestringida),
                 nameof(ObtenerDatosPersona));
@@ -40,7 +42,7 @@ namespace AppLogic.Services
         public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request)
         {
             using var uow = uowFactory.Create();
-            var persona = uow.Personas.GetPersonaWithRelated(codigoPersona);
+            var persona = uow.Personas.GetByKey(codigoPersona);
             if (persona is null)
             {
                 return OperationResult<bool>.IsFailed(
@@ -56,7 +58,9 @@ namespace AppLogic.Services
                 return validacion;
             }
 
-            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(persona, uow);
+            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(
+                persona,
+                uow.Inscriptos.TieneInscripcionActiva(codigoPersona));
             var validacionIdentidad = PersonaIdentityHelper.ValidarCambiosIdentidad(
                 persona,
                 request,

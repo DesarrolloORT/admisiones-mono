@@ -1,9 +1,13 @@
 using AppLogic.DTOs;
+using AppLogic.Helpers;
 using AppLogic.IServices;
 using AppLogic.Utilities;
+using BusinessLogic.Entities;
 using BusinessLogic.IServices;
+using ConnectionContext;
 using LdapService.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
@@ -22,6 +26,9 @@ public class AuthService : IAuthService
     private readonly IPasswordActivationService _passwordActivationService;
     private readonly IHashTokenStore _hashTokenStore;
     private readonly IServiceScopeFactory? _serviceScopeFactory;
+    private readonly IDbConnectionContext? _dbConnectionContext;
+    private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
+    private readonly ILogger<AuthService>? _logger;
 
     /// <summary>
     /// Constructor del servicio LDAP.
@@ -37,7 +44,10 @@ public class AuthService : IAuthService
         IRefreshTokenService refreshTokenService,
         IPasswordActivationService passwordActivationService,
         IHashTokenStore hashTokenStore,
-        IServiceScopeFactory? serviceScopeFactory = null)
+        IServiceScopeFactory? serviceScopeFactory = null,
+        IDbConnectionContext? dbConnectionContext = null,
+        IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null,
+        ILogger<AuthService>? logger = null)
     {
         _ldap = ldap;
         _admisionesUowFactory = admisionesUowFactory;
@@ -46,6 +56,9 @@ public class AuthService : IAuthService
         _passwordActivationService = passwordActivationService;
         _hashTokenStore = hashTokenStore;
         _serviceScopeFactory = serviceScopeFactory;
+        _dbConnectionContext = dbConnectionContext;
+        _documentoImagenCacheService = documentoImagenCacheService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -383,6 +396,18 @@ public class AuthService : IAuthService
                     default!);
             }
 
+            var imagenes = await ObtenerImagenesTemporalesAsync(persona);
+            var imagenesValidation = ValidarImagenesDocumentoReconocido(imagenes);
+            if (!imagenesValidation.Success)
+            {
+                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    imagenesValidation.ErrorCode,
+                    nameof(CompletarPasswordAsync),
+                    imagenesValidation.Message,
+                    imagenesValidation.HttpCode,
+                    default!);
+            }
+
             var cambioPassword = await _ldap.ForzarCambiarPasswordAsync(
                 codigoPersona.ToString(CultureInfo.InvariantCulture),
                 request.PasswordNueva);
@@ -400,8 +425,10 @@ public class AuthService : IAuthService
             await _hashTokenStore.DeleteAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
             persona.FechaUltModifPassword = DateTime.Today;
             persona.UsuarioUltModifPassword = "ADMISIONES";
+            GuardarImagenesDocumentoReconocido(uow, persona, imagenes);
             uow.Personas.Update(persona);
             uow.Save();
+            await EliminarImagenesTemporalesAsync(persona, imagenes);
 
             var accessToken = _tokenService.GenerateAccessToken(persona);
             var refreshToken = _tokenService.GenerateRefreshToken();
@@ -447,6 +474,179 @@ public class AuthService : IAuthService
                 default!);
         }
     }
+
+    private async Task<RegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(Persona persona)
+    {
+        if (_documentoImagenCacheService is null ||
+            string.IsNullOrWhiteSpace(persona.TipoDocumento) ||
+            string.IsNullOrWhiteSpace(persona.Documento))
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _documentoImagenCacheService.ObtenerAsync(
+                persona.TipoDocumento,
+                persona.Documento);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                persona.TipoDocumento,
+                persona.Documento);
+            return null;
+        }
+    }
+
+    private async Task EliminarImagenesTemporalesAsync(
+        Persona persona,
+        RegistroDocumentoImagenesTemporales? imagenes)
+    {
+        if (_documentoImagenCacheService is null ||
+            imagenes is null ||
+            string.IsNullOrWhiteSpace(persona.TipoDocumento) ||
+            string.IsNullOrWhiteSpace(persona.Documento))
+        {
+            return;
+        }
+
+        try
+        {
+            await _documentoImagenCacheService.EliminarAsync(
+                persona.TipoDocumento,
+                persona.Documento);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                persona.TipoDocumento,
+                persona.Documento);
+        }
+    }
+
+    private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
+        RegistroDocumentoImagenesTemporales? imagenes)
+    {
+        if (imagenes is null)
+        {
+            return OperationResult<bool>.Ok(true, nameof(CompletarPasswordAsync));
+        }
+
+        var documento = imagenes.DocumentoFrente;
+        var documentValidation = FileValidationHelper.ValidateIdentityDocumentFile(
+            documento.Archivo,
+            ResolverNombreArchivo(documento.NombreArchivo, "documento.pdf"),
+            nameof(CompletarPasswordAsync));
+        if (!documentValidation.Success)
+        {
+            return documentValidation;
+        }
+
+        if (imagenes.CaraPersona is null)
+        {
+            return OperationResult<bool>.Ok(true, nameof(CompletarPasswordAsync));
+        }
+
+        var cara = imagenes.CaraPersona;
+        return FileValidationHelper.ValidateImageFile(
+            cara.Archivo,
+            ResolverNombreArchivo(cara.NombreArchivo, "cara.jpg"),
+            nameof(CompletarPasswordAsync));
+    }
+
+    private void GuardarImagenesDocumentoReconocido(
+        BusinessLogic.IDevartRepositories.IUnitOfWork uow,
+        Persona persona,
+        RegistroDocumentoImagenesTemporales? imagenes)
+    {
+        if (imagenes is null || _dbConnectionContext is null)
+        {
+            return;
+        }
+
+        var documento = imagenes.DocumentoFrente;
+        var fechaVencimiento = imagenes.FechaVencimiento ?? DateTime.Today.AddYears(1);
+        var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(persona.CodigoPersona, 1);
+
+        if (documentoExistente is null)
+        {
+            uow.ImagenTemporals.Add(new ImagenTemporal
+            {
+                IdImagenTemporal = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
+                CodigoPersona = persona.CodigoPersona,
+                NombreImagen = ConstruirNombrePersistido(
+                    persona.CodigoPersona,
+                    1,
+                    ResolverExtensionPersistida(documento.NombreArchivo, ".pdf")),
+                TipoImagen = "1",
+                BlobImagen = documento.Archivo,
+                FechaVtoDocumentoPersona = fechaVencimiento
+            });
+        }
+        else
+        {
+            documentoExistente.NombreImagen = ConstruirNombrePersistido(
+                persona.CodigoPersona,
+                1,
+                ResolverExtensionPersistida(documento.NombreArchivo, ".pdf"));
+            documentoExistente.TipoImagen = "1";
+            documentoExistente.BlobImagen = documento.Archivo;
+            documentoExistente.FechaVtoDocumentoPersona = fechaVencimiento;
+            uow.ImagenTemporals.Update(documentoExistente);
+        }
+
+        persona.FechaVtoDocumentoPersona = fechaVencimiento;
+
+        if (imagenes.CaraPersona is null)
+        {
+            return;
+        }
+
+        var cara = imagenes.CaraPersona;
+        var fotoExistente = uow.Imagens.GetFotoByPersona(persona.CodigoPersona);
+        if (fotoExistente is null)
+        {
+            uow.Imagens.Add(new Imagen
+            {
+                IdImagen = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
+                CodigoPersona = persona.CodigoPersona,
+                NombreImagen = ConstruirNombrePersistido(
+                    persona.CodigoPersona,
+                    3,
+                    ResolverExtensionPersistida(cara.NombreArchivo, ".jpg")),
+                TipoImagen = "3",
+                BlobImagen = cara.Archivo
+            });
+        }
+        else
+        {
+            fotoExistente.NombreImagen = ConstruirNombrePersistido(
+                persona.CodigoPersona,
+                3,
+                ResolverExtensionPersistida(cara.NombreArchivo, ".jpg"));
+            fotoExistente.TipoImagen = "3";
+            fotoExistente.BlobImagen = cara.Archivo;
+            uow.Imagens.Update(fotoExistente);
+        }
+    }
+
+    private static string ResolverNombreArchivo(string? fileName, string defaultFileName)
+        => string.IsNullOrWhiteSpace(fileName) ? defaultFileName : fileName;
+
+    private static string ResolverExtensionPersistida(string? fileName, string defaultExtension)
+    {
+        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(extension) ? defaultExtension : extension;
+    }
+
+    private static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
+        => $"{codigoPersona}_{tipoImagen}{extension}";
+
     private static string ObtenerCodigoValidacionDocumentoLogin(DocumentUtils.DocumentValidationError error)
     {
         return error == DocumentUtils.DocumentValidationError.InvalidDocumentType

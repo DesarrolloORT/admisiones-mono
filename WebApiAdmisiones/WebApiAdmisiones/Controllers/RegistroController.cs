@@ -22,6 +22,7 @@ namespace WebApiAdmisiones.Controllers
         IRegistroService registroService,
         IRegistroFlowService registroFlowService,
         IReconocimientoDocumento reconocimientoDocumentoService,
+        IRegistroDocumentoImagenCacheService documentoImagenCacheService,
         ILogger<RegistroController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<RegistroController>(logger, currentUser)
@@ -152,7 +153,68 @@ namespace WebApiAdmisiones.Controllers
                     TipoMime = request.TipoMime
                 });
 
+            if (result.Success && result.Data?.Campos is not null)
+            {
+                await IntentarGuardarImagenesDocumentoAsync(
+                    result.Data,
+                    fileContent,
+                    fileName,
+                    request.TipoMime);
+            }
+
             return ValidateResponse(result);
+        }
+
+        private async Task IntentarGuardarImagenesDocumentoAsync(
+            ReconocimientoDocumentoResponse reconocimiento,
+            byte[] documentoOriginal,
+            string nombreDocumento,
+            string? tipoMime)
+        {
+            var tipoDocumento = reconocimiento.Campos.TipoDocumento;
+            var numeroDocumento = reconocimiento.Campos.NumeroDocumento;
+            if (string.IsNullOrWhiteSpace(tipoDocumento) || string.IsNullOrWhiteSpace(numeroDocumento))
+            {
+                return;
+            }
+
+            try
+            {
+                await documentoImagenCacheService.GuardarAsync(
+                    tipoDocumento,
+                    numeroDocumento,
+                    new RegistroDocumentoImagenesTemporales
+                    {
+                        TipoDocumento = tipoDocumento,
+                        Documento = numeroDocumento,
+                        FechaVencimiento = reconocimiento.Campos.FechaVencimiento,
+                        DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                        {
+                            Archivo = documentoOriginal,
+                            NombreArchivo = nombreDocumento,
+                            ContentType = string.IsNullOrWhiteSpace(tipoMime)
+                                ? "application/octet-stream"
+                                : tipoMime
+                        },
+                        CaraPersona = reconocimiento.CaraPersona is null
+                            ? null
+                            : new RegistroDocumentoArchivoTemporal
+                            {
+                                Archivo = reconocimiento.CaraPersona.Archivo,
+                                NombreArchivo = reconocimiento.CaraPersona.NombreArchivo,
+                                ContentType = reconocimiento.CaraPersona.ContentType
+                            },
+                        CreatedAt = DateTime.UtcNow
+                    });
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "No se pudieron guardar en Redis las imagenes reconocidas para {TipoDocumento}:{Documento}.",
+                    tipoDocumento,
+                    numeroDocumento);
+            }
         }
 
         /// <summary>

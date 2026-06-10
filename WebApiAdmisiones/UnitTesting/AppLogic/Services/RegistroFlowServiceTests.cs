@@ -79,6 +79,71 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotEqual("old-token-hash", pending.TokenHash);
         }
 
+        [Fact]
+        public async Task CompletarNuevaPersona_WithCachedImages_PassesImagesAndDeletesCacheOnSuccess()
+        {
+            var redisConnectionMock = CrearRedisConnectionMock([]);
+            var registroServiceMock = new Mock<IRegistroService>();
+            var passwordActivationMock = new Mock<IPasswordActivationService>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            var pending = CrearPendingPersona();
+            var imagenes = CrearImagenesTemporales();
+            cacheMock
+                .Setup(c => c.ObtenerAsync("CI", "1234567-2"))
+                .ReturnsAsync(imagenes);
+            registroServiceMock
+                .Setup(s => s.CompletarNuevaPersonaAsync(pending, "NuevaPassword1!", imagenes))
+                .ReturnsAsync(OperationResult<long>.Ok(123, nameof(IRegistroService.CompletarNuevaPersonaAsync)));
+            var service = new RegistroFlowService(
+                registroServiceMock.Object,
+                passwordActivationMock.Object,
+                CrearConfiguracion(),
+                redisConnectionMock.Object,
+                cacheMock.Object);
+
+            var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");
+
+            Assert.True(result.Success);
+            registroServiceMock.Verify(
+                s => s.CompletarNuevaPersonaAsync(pending, "NuevaPassword1!", imagenes),
+                Times.Once);
+            cacheMock.Verify(c => c.ObtenerAsync("CI", "1234567-2"), Times.Once);
+            cacheMock.Verify(c => c.EliminarAsync("CI", "1234567-2"), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarNuevaPersona_WhenCreationFails_DoesNotDeleteCachedImages()
+        {
+            var redisConnectionMock = CrearRedisConnectionMock([]);
+            var registroServiceMock = new Mock<IRegistroService>();
+            var passwordActivationMock = new Mock<IPasswordActivationService>();
+            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
+            var pending = CrearPendingPersona();
+            var imagenes = CrearImagenesTemporales();
+            cacheMock
+                .Setup(c => c.ObtenerAsync("CI", "1234567-2"))
+                .ReturnsAsync(imagenes);
+            registroServiceMock
+                .Setup(s => s.CompletarNuevaPersonaAsync(pending, "NuevaPassword1!", imagenes))
+                .ReturnsAsync(OperationResult<long>.IsFailed(
+                    "REG_PERSONA_99",
+                    nameof(IRegistroService.CompletarNuevaPersonaAsync),
+                    "Error",
+                    500,
+                    default));
+            var service = new RegistroFlowService(
+                registroServiceMock.Object,
+                passwordActivationMock.Object,
+                CrearConfiguracion(),
+                redisConnectionMock.Object,
+                cacheMock.Object);
+
+            var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");
+
+            Assert.False(result.Success);
+            cacheMock.Verify(c => c.EliminarAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
         private static Mock<IDatabase> CrearRedisMock(Dictionary<string, string> redis)
         {
             var redisDbMock = new Mock<IDatabase>();
@@ -109,6 +174,16 @@ namespace UnitTesting.AppLogic.Services
             return redisDbMock;
         }
 
+        private static Mock<IConnectionMultiplexer> CrearRedisConnectionMock(Dictionary<string, string> redis)
+        {
+            var redisDbMock = CrearRedisMock(redis);
+            var redisConnectionMock = new Mock<IConnectionMultiplexer>();
+            redisConnectionMock
+                .Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
+                .Returns(redisDbMock.Object);
+            return redisConnectionMock;
+        }
+
         private static RegistroPersonaRequest CrearRegistroPersonaRequest(string mail)
             => new()
             {
@@ -125,6 +200,36 @@ namespace UnitTesting.AppLogic.Services
                 CodigoPais = 1,
                 CodigoEstado = 1,
                 CodigoCiudad = 1
+            };
+
+        private static RegistroPendingPersona CrearPendingPersona()
+            => new()
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerNombre = "Ana",
+                FechaNacimiento = new DateTime(1990, 1, 1),
+                Sexo = "F",
+                Direccion = "Calle 1",
+                Telefono1 = "099123456",
+                Email = "ana@example.com",
+                CodigoPais = 1,
+                CodigoEstado = 1,
+                CodigoCiudad = 1
+            };
+
+        private static RegistroDocumentoImagenesTemporales CrearImagenesTemporales()
+            => new()
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                {
+                    Archivo = [0x25, 0x50, 0x44, 0x46, 1],
+                    NombreArchivo = "documento.pdf",
+                    ContentType = "application/pdf"
+                }
             };
 
         private static IConfiguration CrearConfiguracion()

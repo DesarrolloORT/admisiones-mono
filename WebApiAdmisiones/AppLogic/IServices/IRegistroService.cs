@@ -21,6 +21,9 @@ namespace AppLogic.IServices
         /// Crea t_persona, registra interés, crea usuario LDAP con la contraseña definitiva.
         /// Retorna el CodigoPersona recien creado.
         /// </summary>
-        Task<OperationResult<long>> CompletarNuevaPersonaAsync(RegistroPendingPersona data, string passwordNueva);
+        Task<OperationResult<long>> CompletarNuevaPersonaAsync(
+            RegistroPendingPersona data,
+            string passwordNueva,
+            RegistroDocumentoImagenesTemporales? imagenes = null);
     }
 }

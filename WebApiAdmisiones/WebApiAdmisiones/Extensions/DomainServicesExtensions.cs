@@ -108,6 +108,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IPasswordActivationService, PasswordActivationService>();
             services.AddScoped<IHashTokenStore, RedisHashTokenStore>();
             services.AddScoped<IRegistroFlowService, RegistroFlowService>();
+            services.AddScoped<IRegistroDocumentoImagenCacheService, RegistroDocumentoImagenCacheService>();
             services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
             services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();

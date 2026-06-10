@@ -393,6 +393,138 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task CompletarNuevaPersonaAsync_WithTemporaryImages_PersistsPhotoAndDocument()
+        {
+            Imagen? fotoAgregada = null;
+            ImagenTemporal? documentoAgregado = null;
+            var personaRepo = new Mock<IPersonaRepository>();
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            var registroAdmisionesRepo = new Mock<IRegistroAdmisioneRepository>();
+            var imagenRepo = new Mock<IImagenRepository>();
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            imagenRepo
+                .Setup(r => r.Add(It.IsAny<Imagen>()))
+                .Callback<Imagen>(i => fotoAgregada = i);
+            imagenTemporalRepo
+                .Setup(r => r.Add(It.IsAny<ImagenTemporal>()))
+                .Callback<ImagenTemporal>(i => documentoAgregado = i);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+            _uowMock.Setup(u => u.RegistroAdmisiones).Returns(registroAdmisionesRepo.Object);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+            ConfigurarIdsAltaPersonaConImagenes();
+            ConfigurarLdapAltaPersona();
+
+            var result = await _service.CompletarNuevaPersonaAsync(
+                CrearPendingPersona(),
+                "NuevaPassword1!",
+                new RegistroDocumentoImagenesTemporales
+                {
+                    FechaVencimiento = new DateTime(2030, 1, 1),
+                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    {
+                        Archivo = [0x25, 0x50, 0x44, 0x46, 1],
+                        NombreArchivo = "documento.pdf",
+                        ContentType = "application/pdf"
+                    },
+                    CaraPersona = new RegistroDocumentoArchivoTemporal
+                    {
+                        Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                        NombreArchivo = "cara.jpg",
+                        ContentType = "image/jpeg"
+                    }
+                });
+
+            Assert.True(result.Success);
+            Assert.NotNull(fotoAgregada);
+            Assert.Equal(4000, fotoAgregada!.IdImagen);
+            Assert.Equal(123, fotoAgregada.CodigoPersona);
+            Assert.Equal("3", fotoAgregada.TipoImagen);
+            Assert.Equal("123_3.jpg", fotoAgregada.NombreImagen);
+            Assert.NotNull(documentoAgregado);
+            Assert.Equal(3000, documentoAgregado!.IdImagenTemporal);
+            Assert.Equal(123, documentoAgregado.CodigoPersona);
+            Assert.Equal("1", documentoAgregado.TipoImagen);
+            Assert.Equal("123_1.pdf", documentoAgregado.NombreImagen);
+            Assert.Equal(new DateTime(2030, 1, 1), documentoAgregado.FechaVtoDocumentoPersona);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarNuevaPersonaAsync_WithTemporaryDocumentOnly_DoesNotPersistPhoto()
+        {
+            ImagenTemporal? documentoAgregado = null;
+            var personaRepo = new Mock<IPersonaRepository>();
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            var registroAdmisionesRepo = new Mock<IRegistroAdmisioneRepository>();
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            imagenTemporalRepo
+                .Setup(r => r.Add(It.IsAny<ImagenTemporal>()))
+                .Callback<ImagenTemporal>(i => documentoAgregado = i);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+            _uowMock.Setup(u => u.RegistroAdmisiones).Returns(registroAdmisionesRepo.Object);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+            ConfigurarIdsAltaPersonaConImagenes();
+            ConfigurarLdapAltaPersona();
+
+            var result = await _service.CompletarNuevaPersonaAsync(
+                CrearPendingPersona(),
+                "NuevaPassword1!",
+                new RegistroDocumentoImagenesTemporales
+                {
+                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    {
+                        Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                        NombreArchivo = "documento.jpg",
+                        ContentType = "image/jpeg"
+                    }
+                });
+
+            Assert.True(result.Success);
+            Assert.NotNull(documentoAgregado);
+            Assert.Equal("123_1.jpg", documentoAgregado!.NombreImagen);
+            Assert.Equal(DateTime.Today.AddYears(1), documentoAgregado.FechaVtoDocumentoPersona);
+            _uowMock.Verify(u => u.Imagens, Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarNuevaPersonaAsync_WithInvalidTemporaryDocument_ReturnsFailureWithoutCommit()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+
+            var result = await _service.CompletarNuevaPersonaAsync(
+                CrearPendingPersona(),
+                "NuevaPassword1!",
+                new RegistroDocumentoImagenesTemporales
+                {
+                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    {
+                        Archivo = [1, 2, 3],
+                        NombreArchivo = "documento.pdf",
+                        ContentType = "application/pdf"
+                    }
+                });
+
+            Assert.False(result.Success);
+            Assert.Equal("FILE_VAL_06", result.ErrorCode);
+            _ldapMock.Verify(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()), Times.Never);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
+        }
+
+        [Fact]
         public async Task VerificarIdentidad_ExistingLdapUser_ReturnsConflict()
         {
             var personaRepo = new Mock<IPersonaRepository>();
@@ -480,5 +612,48 @@ namespace UnitTesting.AppLogic.Services
                 CodigoEstado = 2,
                 CodigoCiudad = 3
             };
+
+        private static RegistroPendingPersona CrearPendingPersona()
+            => new()
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerNombre = "Ana",
+                FechaNacimiento = new DateTime(1990, 1, 1),
+                Sexo = "F",
+                Direccion = "Calle 1",
+                Telefono1 = "099123456",
+                Email = "ana@example.com",
+                CodigoPais = 1,
+                CodigoEstado = 2,
+                CodigoCiudad = 3
+            };
+
+        private void ConfigurarIdsAltaPersonaConImagenes()
+        {
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA))
+                .Returns(123);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES))
+                .Returns(2000);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL))
+                .Returns(3000);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN))
+                .Returns(4000);
+        }
+
+        private void ConfigurarLdapAltaPersona()
+        {
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync("123", "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+        }
     }
 }

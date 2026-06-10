@@ -301,7 +301,10 @@ namespace AppLogic.Services
                 "Validación correcta.");
         }
 
-        public async Task<OperationResult<long>> CompletarNuevaPersonaAsync(RegistroPendingPersona data, string passwordNueva)
+        public async Task<OperationResult<long>> CompletarNuevaPersonaAsync(
+            RegistroPendingPersona data,
+            string passwordNueva,
+            RegistroDocumentoImagenesTemporales? imagenes = null)
         {
             if (data == null)
             {
@@ -357,6 +360,17 @@ namespace AppLogic.Services
                     default);
             }
 
+            var imagenesValidation = ValidarImagenesDocumentoReconocido(imagenes);
+            if (!imagenesValidation.Success)
+            {
+                return OperationResult<long>.IsFailed(
+                    imagenesValidation.ErrorCode,
+                    nameof(CompletarNuevaPersonaAsync),
+                    imagenesValidation.Message,
+                    imagenesValidation.HttpCode,
+                    default);
+            }
+
             Persona persona;
             try
             {
@@ -397,6 +411,7 @@ namespace AppLogic.Services
 
                 ActualizarMetadataPassword(uow, persona);
                 RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
+                GuardarImagenesDocumentoReconocido(uow, persona, imagenes);
                 uow.Commit();
             }
             catch (Exception ex)
@@ -575,6 +590,95 @@ namespace AppLogic.Services
                 codigoPersona,
                 null));
         }
+
+        private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
+            RegistroDocumentoImagenesTemporales? imagenes)
+        {
+            if (imagenes is null)
+            {
+                return OperationResult<bool>.Ok(true, nameof(CompletarNuevaPersonaAsync));
+            }
+
+            var documento = imagenes.DocumentoFrente;
+            var documentValidation = FileValidationHelper.ValidateIdentityDocumentFile(
+                documento.Archivo,
+                ResolverNombreArchivo(documento.NombreArchivo, "documento.pdf"),
+                nameof(CompletarNuevaPersonaAsync));
+            if (!documentValidation.Success)
+            {
+                return documentValidation;
+            }
+
+            if (imagenes.CaraPersona is null)
+            {
+                return OperationResult<bool>.Ok(true, nameof(CompletarNuevaPersonaAsync));
+            }
+
+            var cara = imagenes.CaraPersona;
+            return FileValidationHelper.ValidateImageFile(
+                cara.Archivo,
+                ResolverNombreArchivo(cara.NombreArchivo, "cara.jpg"),
+                nameof(CompletarNuevaPersonaAsync));
+        }
+
+        private void GuardarImagenesDocumentoReconocido(
+            IUnitOfWork uow,
+            Persona persona,
+            RegistroDocumentoImagenesTemporales? imagenes)
+        {
+            if (imagenes is null)
+            {
+                return;
+            }
+
+            var documento = imagenes.DocumentoFrente;
+            var fechaVencimiento = imagenes.FechaVencimiento ?? DateTime.Today.AddYears(1);
+            uow.ImagenTemporals.Add(new ImagenTemporal
+            {
+                IdImagenTemporal = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
+                CodigoPersona = persona.CodigoPersona,
+                NombreImagen = ConstruirNombrePersistido(
+                    persona.CodigoPersona,
+                    1,
+                    ResolverExtensionPersistida(documento.NombreArchivo, ".pdf")),
+                TipoImagen = "1",
+                BlobImagen = documento.Archivo,
+                FechaVtoDocumentoPersona = fechaVencimiento
+            });
+
+            persona.FechaVtoDocumentoPersona = fechaVencimiento;
+            uow.Personas.Update(persona);
+
+            if (imagenes.CaraPersona is null)
+            {
+                return;
+            }
+
+            var cara = imagenes.CaraPersona;
+            uow.Imagens.Add(new Imagen
+            {
+                IdImagen = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
+                CodigoPersona = persona.CodigoPersona,
+                NombreImagen = ConstruirNombrePersistido(
+                    persona.CodigoPersona,
+                    3,
+                    ResolverExtensionPersistida(cara.NombreArchivo, ".jpg")),
+                TipoImagen = "3",
+                BlobImagen = cara.Archivo
+            });
+        }
+
+        private static string ResolverNombreArchivo(string? fileName, string defaultFileName)
+            => string.IsNullOrWhiteSpace(fileName) ? defaultFileName : fileName;
+
+        private static string ResolverExtensionPersistida(string? fileName, string defaultExtension)
+        {
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            return string.IsNullOrWhiteSpace(extension) ? defaultExtension : extension;
+        }
+
+        private static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
+            => $"{codigoPersona}_{tipoImagen}{extension}";
 
         private void RegistrarAdmisionPorSolicitudAlta(IUnitOfWork uow, long idSolicitudAlta)
         {

@@ -1,14 +1,13 @@
 using System.Globalization;
 using AppLogic.Requests;
 using BusinessLogic.Entities;
-using BusinessLogic.IDevartRepositories;
 using Utilities;
 
 namespace AppLogic.Helpers
 {
     public static class PersonaIdentityHelper
     {
-        public static bool TieneIdentidadRestringida(Persona persona, IUnitOfWork uow)
+        public static bool TieneIdentidadRestringida(Persona persona, bool tieneInscripcionActiva)
         {
             var funcionarioActivo = EsSi(persona.FuncionarioActivoPersona);
             var usoExclusivoDba = EsSi(persona.UsoexclusivodbaPersona);
@@ -18,7 +17,7 @@ namespace AppLogic.Helpers
             }
 
             return EsSi(persona.AlumnoExtranjeroPersona)
-                || uow.Inscriptos.TieneInscripcionActiva(persona.CodigoPersona);
+                || tieneInscripcionActiva;
         }
 
         public static OperationResult<bool> ValidarCambiosIdentidad(

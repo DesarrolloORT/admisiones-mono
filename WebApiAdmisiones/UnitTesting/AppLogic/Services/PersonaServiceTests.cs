@@ -46,7 +46,7 @@ namespace UnitTesting.AppLogic.Services
         public void ObtenerDatosPersona_NotFound_ReturnsFailed()
         {
             _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
+                .Setup(r => r.GetByKey(123))
                 .Returns((Persona)null!);
 
             var result = _service.ObtenerDatosPersona(123);
@@ -61,7 +61,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var fechaNacimiento = new DateTime(2000, 1, 2);
             _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
+                .Setup(r => r.GetByKey(123))
                 .Returns(new Persona
                 {
                     CodigoPersona = 123,
@@ -114,18 +114,20 @@ namespace UnitTesting.AppLogic.Services
             string alumnoExtranjero,
             bool tieneInscripcionActiva)
         {
-            _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
-                .Returns(new Persona
+            var persona = new Persona
                 {
                     CodigoPersona = 123,
                     FuncionarioActivoPersona = funcionarioActivo,
                     UsoexclusivodbaPersona = usoExclusivoDba,
                     AlumnoExtranjeroPersona = alumnoExtranjero
-                });
+                };
             _inscriptoRepositoryMock
                 .Setup(r => r.TieneInscripcionActiva(123))
                 .Returns(tieneInscripcionActiva);
+
+            _personaRepositoryMock
+                .Setup(r => r.GetByKey(123))
+                .Returns(persona);
 
             var result = _service.ObtenerDatosPersona(123);
 
@@ -137,7 +139,7 @@ namespace UnitTesting.AppLogic.Services
         public void ObtenerDatosPersona_WithoutRestrictiveConditions_ReturnsIdentidadRestringidaFalse()
         {
             _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
+                .Setup(r => r.GetByKey(123))
                 .Returns(new Persona
                 {
                     CodigoPersona = 123,
@@ -184,7 +186,7 @@ namespace UnitTesting.AppLogic.Services
                 VerificacionMail = "nuevo@test.com"
             };
 
-            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _ciudadRepositoryMock.Setup(r => r.GetByKey(4, 5, 6)).Returns(new Ciudad());
 
             var result = _service.ActualizarDatosPersona(123, request);
@@ -224,7 +226,7 @@ namespace UnitTesting.AppLogic.Services
                 Sexo = "F"
             };
 
-            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
 
             var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
@@ -268,7 +270,7 @@ namespace UnitTesting.AppLogic.Services
                 Email = "viejo@test.com"
             };
 
-            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
             _ciudadRepositoryMock.Setup(r => r.GetByKey(4, 5, 6)).Returns(new Ciudad());
 
@@ -317,7 +319,7 @@ namespace UnitTesting.AppLogic.Services
                 Sexo = "F"
             };
 
-            _personaRepositoryMock.Setup(r => r.GetPersonaWithRelated(123)).Returns(persona);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _ciudadRepositoryMock.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad());
 
             var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
@@ -357,7 +359,7 @@ namespace UnitTesting.AppLogic.Services
         public void ActualizarDatosPersona_MailMismatch_ReturnsFailed()
         {
             _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
+                .Setup(r => r.GetByKey(123))
                 .Returns(new Persona { CodigoPersona = 123 });
 
             var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
@@ -379,7 +381,7 @@ namespace UnitTesting.AppLogic.Services
         public void ActualizarDatosPersona_InvalidCity_ReturnsFailed()
         {
             _personaRepositoryMock
-                .Setup(r => r.GetPersonaWithRelated(123))
+                .Setup(r => r.GetByKey(123))
                 .Returns(new Persona { CodigoPersona = 123 });
             _ciudadRepositoryMock
                 .Setup(r => r.GetByKey(1, 2, 3))
