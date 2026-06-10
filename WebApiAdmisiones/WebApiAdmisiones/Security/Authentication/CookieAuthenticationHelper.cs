@@ -34,7 +34,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.None,
+                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 IsEssential = true
@@ -55,7 +55,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.None,
+                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddDays(expiresInDays),
                 Path = "/",
                 IsEssential = true
@@ -93,7 +93,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None,
+                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 IsEssential = true
@@ -119,7 +119,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Path = "/"
             };
 
@@ -136,7 +136,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Path = "/"
             };
 
