@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { CUSTOM_ERROR_MESSAGES, suppressGlobalErrorContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
@@ -25,6 +26,11 @@ import type {
 } from '../models/document-recognition.interface';
 
 export const AUTH_FLOW_ID_HEADER = 'X-Flow-Id';
+
+const LOGIN_ERROR_MESSAGES: Record<number, string> = {
+  401: 'Credenciales inválidas.',
+  429: 'Demasiados intentos. Intentá nuevamente más tarde.',
+};
 
 // ---------------------------------------------------------------------------
 // Stable public types — these are the contract that the rest of the feature
@@ -180,7 +186,12 @@ export class AuthEndpoint {
     };
 
     return this.api
-      .data(postAuthLoginEndpoint, { body, withCredentials: true, captchaAction: 'login' })
+      .data(postAuthLoginEndpoint, {
+        body,
+        withCredentials: true,
+        captchaAction: 'login',
+        context: suppressGlobalErrorContext().set(CUSTOM_ERROR_MESSAGES, LOGIN_ERROR_MESSAGES),
+      })
       .pipe(
         map(response => {
           const twoFactor = response as unknown as {
@@ -283,6 +294,7 @@ export class AuthEndpoint {
       .requestWithMessage(postRegistroEvaluarDocumentoEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'evaluarDocumento',
       })
       .pipe(
         map(({ data, message }) => ({
@@ -309,6 +321,7 @@ export class AuthEndpoint {
     return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
       body: payload,
       withCredentials: true,
+      captchaAction: 'analizarAdjunto',
     });
   }
 
@@ -327,6 +340,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'verificarIdentidad',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -342,6 +356,7 @@ export class AuthEndpoint {
       .request(postAuthRecuperarContrasenaEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'recuperarContrasena',
       })
       .pipe(map(() => undefined));
   }
@@ -384,4 +399,3 @@ export class AuthEndpoint {
     return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
   }
 }
-

@@ -2,10 +2,12 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
+  CUSTOM_ERROR_MESSAGES,
   isNormalizedApiError,
   operationResultInterceptor,
   ortApiErrorInterceptor,
   provideOrtApiErrorHandling,
+  SUPPRESS_GLOBAL_ERROR,
 } from '@desarrolloort/ngx-utils';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
@@ -54,6 +56,11 @@ describe('AuthEndpoint', () => {
       });
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(CAPTCHA_ACTION)).toBe('login');
+      expect(req.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
+      expect(req.request.context.get(CUSTOM_ERROR_MESSAGES)).toEqual({
+        401: 'Credenciales inválidas.',
+        429: 'Demasiados intentos. Intentá nuevamente más tarde.',
+      });
 
       req.flush({
         success: true,
@@ -108,6 +115,7 @@ describe('AuthEndpoint', () => {
           }
 
           expect(error.status).toBe(401);
+          expect(error.message).toBe('Credenciales inválidas.');
         },
       });
 
@@ -172,6 +180,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual({ tipoDocumento: 'CI', documento: '12345' });
       expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('evaluarDocumento');
 
       req.flush({
         success: true,
@@ -302,6 +311,7 @@ describe('AuthEndpoint', () => {
       expect(req.request.body).toEqual(payload);
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-existing-person');
       expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('verificarIdentidad');
 
       req.flush({ success: true, httpCode: 200, data: null });
     });
@@ -324,6 +334,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual(payload);
       expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('analizarAdjunto');
 
       req.flush({ success: true, httpCode: 200, data: { requiereRevision: false } });
     });
@@ -349,5 +360,28 @@ describe('AuthEndpoint', () => {
       req.flush(null, { status: 500, statusText: 'Internal Server Error' });
     });
   });
-});
 
+  describe('recoverPassword', () => {
+    it('should POST to /Auth/RecuperarContraseña with captcha and return void', () => {
+      const payload = {
+        tipoDocumento: 'CI',
+        documento: '12345678',
+        primerApellido: 'Silva',
+      };
+
+      endpoint.recoverPassword(payload).subscribe(result => {
+        expect(result).toBeUndefined();
+      });
+
+      const req = httpController.expectOne(
+        r => decodeURIComponent(r.url).includes('/Auth/RecuperarContraseña') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toEqual(payload);
+      expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('recuperarContrasena');
+
+      req.flush({ success: true, httpCode: 200, data: null });
+    });
+  });
+});
