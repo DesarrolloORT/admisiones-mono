@@ -94,6 +94,15 @@ describe('LoginFacade', () => {
     expect(facade.form.touched).toBe(true);
   });
 
+  it('should clear a previous API error before validating a new submission', () => {
+    facade.error.set('Credenciales inválidas.');
+
+    facade.submit();
+
+    expect(facade.error()).toBeNull();
+    expect(authMock.login).not.toHaveBeenCalled();
+  });
+
   it('should expose auth errors in UI state', () => {
     authMock.login.mockReturnValue(
       throwError(() => ({
@@ -144,4 +153,3 @@ describe('LoginFacade', () => {
     expect(facade.form.controls.password.value).toBe('');
   });
 });
-

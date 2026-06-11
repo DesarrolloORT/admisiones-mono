@@ -103,14 +103,14 @@ export class LoginFacade {
 
   public submit(): void {
     this.submitted.set(true);
+    this.error.set(null);
+    this.successMessage.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.error.set(null);
-    this.successMessage.set(null);
     this.isSubmitting.set(true);
 
     const { documentType, documentNumber, password } = this.form.getRawValue();
@@ -157,4 +157,3 @@ export class LoginFacade {
     return isNormalizedApiError(error) ? error.message : fallback;
   }
 }
-

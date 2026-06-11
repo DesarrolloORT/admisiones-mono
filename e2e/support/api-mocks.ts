@@ -153,7 +153,8 @@ function fulfillCorsPreflight(route: Route): Promise<void> {
 function corsHeaders(route: Route): Record<string, string> {
   return {
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Headers': 'content-type,x-flow-id,x-correlation-id,x-client-session-id',
+    'Access-Control-Allow-Headers':
+      'content-type,x-flow-id,x-captcha-token,x-correlation-id,x-client-session-id',
     'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Origin': route.request().headers()['origin'] ?? 'http://127.0.0.1:4200',
   };
