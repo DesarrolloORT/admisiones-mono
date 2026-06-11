@@ -55,24 +55,6 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<DtoUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
         }
 
-        public OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosVigentesConInteres(codigoPersona);
-            var dtos = entidades.Select(MapProductoAdmisiones).ToList();
-            return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosVigentesConInteres));
-        }
-
-        public OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosConInteresActivo(codigoPersona);
-            var dtos = entidades
-                .Select(p => MapProductoConInteresActivo(p, uow.Interes.GetProcesoPorInteresActivo(codigoPersona, p.IdProducto)))
-                .ToList();
-            return OperationResult<IEnumerable<DtoProductoAdmisiones>>.Ok(dtos, nameof(ObtenerProductosConInteresActivo));
-        }
-
         public OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request)
         {
             using var uow = _uowFactory.Create();
@@ -89,7 +71,7 @@ namespace AppLogic.Services.Inscripciones
                 return validacion;
             }
 
-            var fechaActual = _dbConnectionContext.CurrentDateTime();
+            var fechaActual = DateTime.Now;
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
@@ -141,7 +123,19 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
         }
 
-        public OperationResult<bool> TieneDerechoAEncuestaInicial(long codigoPersona)
+        #region ENCUESTA INICIAL ADMISION
+
+        public OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicial(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
+            if (encuesta == null)
+                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerEncuestaInicial), "No se encontraron datos de pre-inscripción para la persona.", 204);
+
+            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerEncuestaInicial));
+        }
+
+        private OperationResult<bool> TieneDerechoAEncuestaInicial(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -184,6 +178,10 @@ namespace AppLogic.Services.Inscripciones
 
             return OperationResult<bool>.Ok(true, nameof(TieneDerechoAEncuestaInicial));
         }
+
+        #endregion ENCUESTA INICIAL ADMISION
+
+        #region METODOS PRIVADOS
 
         private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)
         {
@@ -313,5 +311,7 @@ namespace AppLogic.Services.Inscripciones
             dto.NombreProceso = procesoInteres?.NombreProceso;
             return dto;
         }
+
+        #endregion METODOS PRIVADOS
     }
 }

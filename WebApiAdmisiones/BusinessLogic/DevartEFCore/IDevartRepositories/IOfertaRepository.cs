@@ -10,6 +10,5 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IOfertaRepository
     {
-        ICollection<BusinessLogic.Entities.Oferta> GetOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno);
     }
 }

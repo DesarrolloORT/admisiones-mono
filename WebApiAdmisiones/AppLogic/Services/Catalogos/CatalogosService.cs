@@ -141,7 +141,7 @@ namespace AppLogic.Services.Catalogos
         public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosVigentesParaRegistro();
+            var entidades = uow.Productos.GetProductosVigentes();
             return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(entidades.Select(CarrerasMapper.ToAdmisionesDto), nameof(ObtenerCarreras));
         }
 
