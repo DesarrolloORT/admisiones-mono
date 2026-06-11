@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,13 +23,14 @@ namespace UnitTesting.Controllers
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerMisInscripciones(1))
-                .Returns(OperationResult<IEnumerable<DtoInscripcionHome>>.Ok(
+                .Returns(OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>>.Ok(
                 [
-                    new DtoInscripcionHome
+                    new DtoVdAdmisionesInscripciones12Devart
                     {
-                        Estado = "Confirmada",
+                        CodigoPersona = 1,
+                        EstadoInscripcion = "Confirmada",
                         IdProducto = 10,
-                        NombreProducto = "Analista en Tecnologias de la Informacion",
+                        NombreExtensoProducto = "Analista en Tecnologias de la Informacion",
                         IdComienzo = 20,
                         NombreComienzo = "Marzo",
                         IdTurno = 30,

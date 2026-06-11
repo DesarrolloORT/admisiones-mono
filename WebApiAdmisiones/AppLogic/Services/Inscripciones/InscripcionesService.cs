@@ -21,6 +21,15 @@ namespace AppLogic.Services.Inscripciones
             _dbConnectionContext = dbConnectionContext;
         }
 
+        public OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>> ObtenerMisInscripciones(long codigoPersona)
+        {
+
+            using var uow = _uowFactory.Create();
+            var dtos =  uow.VdAdmisionesInscripciones12s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
+
+            return OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
+        }
+
         public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
@@ -80,7 +89,7 @@ namespace AppLogic.Services.Inscripciones
                 return validacion;
             }
 
-            var fechaActual = DateTime.Now;
+            var fechaActual = _dbConnectionContext.CurrentDateTime();
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
