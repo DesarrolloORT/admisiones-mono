@@ -1,16 +1,37 @@
 <main class="dashboard-main" id="main-content" tabindex="-1">
-  <div class="swiper">
-    <!-- Additional required wrapper -->
-    <div class="swiper-wrapper">
-      <!-- Slides -->
-      @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
-      <div class="swiper-slide">
-        <app-dashboard-card [inscripcion]="inscripcion" />
+  <section class="dashboard-container">
+    <section class="dashboard-actions">
+      <app-dashboard-action-card variant="career" />
+      <app-dashboard-action-card variant="scholarship" />
+
+    </section>
+
+    <section class="mis-carreras">
+      <div class="dashboard-header">
+        <h3 class="dashboard-header__title">Mis carreras</h3>
+        <button
+          aria-label="Inscribirme a carrera"
+          class="dashboard-header__add"
+          ort-icon-button
+          type="button"
+          variant="tonal">
+          <ort-icon name="add" />
+        </button>
       </div>
-      }
-    </div>
-    <!-- If we need pagination -->
-    <div class="swiper-pagination"></div>
-  </div>
+
+      <div class="swiper">
+        <div class="swiper-wrapper">
+          @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+          <div class="swiper-slide">
+            <app-dashboard-card [inscripcion]="inscripcion" />
+          </div>
+          }
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </section>
+
+
+  </section>
 </main>
 

@@ -7,12 +7,14 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
+import { OrtIconButtonComponent, OrtIconModule } from '@desarrolloort/components';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 
 import { DashboardCard } from '../../components/dashboard-card/dashboard-card';
 import { MiInscripcion } from '../../models/mi-inscripcion';
 import { DashboardService } from '../../services/dashboard';
+import { DashboardActionCard } from "../../components/dashboard-action-card/dashboard-action-card";
 
 @Component({
   selector: 'app-dashboard',
@@ -20,7 +22,7 @@ import { DashboardService } from '../../services/dashboard';
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [DashboardCard],
+  imports: [DashboardCard, OrtIconButtonComponent, OrtIconModule, DashboardActionCard],
 })
 export class Dashboard implements OnInit, AfterViewInit {
   private readonly service = inject(DashboardService);
@@ -38,11 +40,12 @@ export class Dashboard implements OnInit, AfterViewInit {
     new Swiper('.swiper', {
       spaceBetween: 24,
       direction: 'horizontal',
-      loop: false, 
+      loop: false,
       slidesPerView: 1,
       modules: [Navigation, Pagination],
       pagination: {
         el: '.swiper-pagination',
+        clickable: true
       },
       navigation: {
         nextEl: '.swiper-button-next',
