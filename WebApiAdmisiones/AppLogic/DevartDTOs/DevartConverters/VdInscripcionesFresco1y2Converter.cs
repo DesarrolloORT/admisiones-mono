@@ -18,20 +18,20 @@ using System.Linq;
 namespace AppLogic.DevartDTOs
 {
 
-    public static partial class VdAdmisionesInscripciones12Converter
+    public static partial class VdInscripcionesFresco1y2Converter
     {
 
-        public static DtoVdAdmisionesInscripciones12Devart ToDto(this BusinessLogic.Entities.VdAdmisionesInscripciones12 source)
+        public static DtoVdInscripcionesFresco1y2Devart ToDto(this BusinessLogic.Entities.VdInscripcionesFresco1y2 source)
         {
             return source.ToDtoWithRelated(0);
         }
 
-        public static DtoVdAdmisionesInscripciones12Devart ToDtoWithRelated(this BusinessLogic.Entities.VdAdmisionesInscripciones12 source, int level)
+        public static DtoVdInscripcionesFresco1y2Devart ToDtoWithRelated(this BusinessLogic.Entities.VdInscripcionesFresco1y2 source, int level)
         {
             if (source == null)
               return null;
 
-            var target = new DtoVdAdmisionesInscripciones12Devart();
+            var target = new DtoVdInscripcionesFresco1y2Devart();
 
             // Properties
             target.CodigoPersona = source.CodigoPersona;
@@ -57,12 +57,12 @@ namespace AppLogic.DevartDTOs
             return target;
         }
 
-        public static BusinessLogic.Entities.VdAdmisionesInscripciones12 ToEntity(this DtoVdAdmisionesInscripciones12Devart source)
+        public static BusinessLogic.Entities.VdInscripcionesFresco1y2 ToEntity(this DtoVdInscripcionesFresco1y2Devart source)
         {
             if (source == null)
               return null;
 
-            var target = new BusinessLogic.Entities.VdAdmisionesInscripciones12();
+            var target = new BusinessLogic.Entities.VdInscripcionesFresco1y2();
 
             // Properties
             target.CodigoPersona = source.CodigoPersona;
@@ -88,7 +88,7 @@ namespace AppLogic.DevartDTOs
             return target;
         }
 
-        public static List<DtoVdAdmisionesInscripciones12Devart> ToDtos(this IEnumerable<BusinessLogic.Entities.VdAdmisionesInscripciones12> source)
+        public static List<DtoVdInscripcionesFresco1y2Devart> ToDtos(this IEnumerable<BusinessLogic.Entities.VdInscripcionesFresco1y2> source)
         {
             if (source == null)
               return null;
@@ -100,7 +100,7 @@ namespace AppLogic.DevartDTOs
             return target;
         }
 
-        public static List<DtoVdAdmisionesInscripciones12Devart> ToDtosWithRelated(this IEnumerable<BusinessLogic.Entities.VdAdmisionesInscripciones12> source, int level)
+        public static List<DtoVdInscripcionesFresco1y2Devart> ToDtosWithRelated(this IEnumerable<BusinessLogic.Entities.VdInscripcionesFresco1y2> source, int level)
         {
             if (source == null)
               return null;
@@ -112,7 +112,7 @@ namespace AppLogic.DevartDTOs
             return target;
         }
 
-        public static List<BusinessLogic.Entities.VdAdmisionesInscripciones12> ToEntities(this IEnumerable<DtoVdAdmisionesInscripciones12Devart> source)
+        public static List<BusinessLogic.Entities.VdInscripcionesFresco1y2> ToEntities(this IEnumerable<DtoVdInscripcionesFresco1y2Devart> source)
         {
             if (source == null)
               return null;
@@ -124,9 +124,9 @@ namespace AppLogic.DevartDTOs
             return target;
         }
 
-        static partial void OnDtoCreating(BusinessLogic.Entities.VdAdmisionesInscripciones12 source, DtoVdAdmisionesInscripciones12Devart target);
+        static partial void OnDtoCreating(BusinessLogic.Entities.VdInscripcionesFresco1y2 source, DtoVdInscripcionesFresco1y2Devart target);
 
-        static partial void OnEntityCreating(DtoVdAdmisionesInscripciones12Devart source, BusinessLogic.Entities.VdAdmisionesInscripciones12 target);
+        static partial void OnEntityCreating(DtoVdInscripcionesFresco1y2Devart source, BusinessLogic.Entities.VdInscripcionesFresco1y2 target);
 
     }
 

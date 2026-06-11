@@ -23,9 +23,9 @@ namespace UnitTesting.Controllers
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerMisInscripciones(1))
-                .Returns(OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>>.Ok(
+                .Returns(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(
                 [
-                    new DtoVdAdmisionesInscripciones12Devart
+                    new DtoVdInscripcionesFresco1y2Devart
                     {
                         CodigoPersona = 1,
                         EstadoInscripcion = "Confirmada",

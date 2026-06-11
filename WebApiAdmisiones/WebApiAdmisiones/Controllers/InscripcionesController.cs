@@ -26,8 +26,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Solicitud inválida.</response>
         [HttpGet("MisInscripciones")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
         public IActionResult ObtenerMisInscripciones()
         {
             var result = inscripcionesService.ObtenerMisInscripciones(_currentUser.GetUserId());

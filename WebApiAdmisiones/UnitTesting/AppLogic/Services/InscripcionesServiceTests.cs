@@ -1,11 +1,12 @@
-using System.Collections.Generic;
+using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
+using AppLogic.Services.Inscripciones;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Moq;
+using System.Collections.Generic;
 using Xunit;
-using AppLogic.Services.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -562,10 +563,10 @@ namespace UnitTesting.AppLogic.Services
             var fechaInscripcion = new DateTime(2026, 6, 1);
             var fechaInicioComienzo = new DateTime(2026, 8, 1);
             var fechaReferencia = new DateTime(2026, 6, 10);
-            var repo = new Mock<IVdAdmisionesInscripciones12Repository>();
+            var repo = new Mock<IVdInscripcionesFresco1y2Repository>();
             repo.Setup(r => r.GetInscripcionesFrescoHabilitadas(123)).Returns(
             [
-                new VdAdmisionesInscripciones12
+                new VdInscripcionesFresco1y2
                 {
                     CodigoPersona = 123,
                     FechaInscripcion = fechaInscripcion,
@@ -585,7 +586,7 @@ namespace UnitTesting.AppLogic.Services
                     VengoDe = "VD_INSCRIPCIONES_FRESCO_1y2"
                 }
             ]);
-            _uowMock.Setup(u => u.VdAdmisionesInscripciones12s).Returns(repo.Object);
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(repo.Object);
 
             var result = _service.ObtenerMisInscripciones(123);
 

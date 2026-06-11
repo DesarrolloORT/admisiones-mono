@@ -6,7 +6,7 @@ namespace AppLogic.IServices.Inscripciones
 {
     public interface IInscripcionesService
     {
-        OperationResult<IEnumerable<DtoVdAdmisionesInscripciones12Devart>> ObtenerMisInscripciones(long codigoPersona);
+        OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona);
         OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosVigentesConInteres(long codigoPersona);
         OperationResult<IEnumerable<DtoProductoAdmisiones>> ObtenerProductosConInteresActivo(long codigoPersona);
