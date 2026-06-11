@@ -40,6 +40,14 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       });
     }
 
+    if (path === '/Auth/ReenviarCodigo2FA') {
+      return fulfillOperation(route, {
+        sessionId: 'mock-2fa-session',
+        maskedEmail: 'a***@example.com',
+        message: 'Código reenviado.',
+      });
+    }
+
     if (
       path === '/Auth/ActivarLinkPassword' ||
       path === '/Auth/CompletarPassword' ||

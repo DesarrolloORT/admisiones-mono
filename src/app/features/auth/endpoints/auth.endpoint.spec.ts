@@ -384,4 +384,34 @@ describe('AuthEndpoint', () => {
       req.flush({ success: true, httpCode: 200, data: null });
     });
   });
+
+  describe('resendTwoFactorCode', () => {
+    it('should POST to /Auth/ReenviarCodigo2FA and return the refreshed session', () => {
+      endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe(result => {
+        expect(result).toEqual({
+          sessionId: 'session-456',
+          maskedEmail: 'a***@example.com',
+          message: 'Código reenviado.',
+        });
+      });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Auth/ReenviarCodigo2FA') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toEqual({ sessionId: 'session-123' });
+      expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: {
+          sessionId: 'session-456',
+          maskedEmail: 'a***@example.com',
+          message: 'Código reenviado.',
+        },
+      });
+    });
+  });
 });

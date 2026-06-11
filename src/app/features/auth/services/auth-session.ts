@@ -6,7 +6,7 @@ import { EMPTY, Observable } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
-import { AuthEndpoint, LoginResult } from '../endpoints/auth.endpoint';
+import { AuthEndpoint, LoginResult, ResendTwoFactorCodeResult } from '../endpoints/auth.endpoint';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
 
@@ -64,6 +64,10 @@ export class AuthSessionService {
         ),
         tap(session => this.storeSession(session))
       );
+  }
+
+  public resendTwoFactorCode(sessionId: string): Observable<ResendTwoFactorCodeResult> {
+    return this.endpoint.resendTwoFactorCode({ sessionId });
   }
 
   public logout(): void {
@@ -149,4 +153,3 @@ export class AuthSessionService {
     return this.document.defaultView?.localStorage ?? null;
   }
 }
-

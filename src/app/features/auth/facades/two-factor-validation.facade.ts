@@ -69,7 +69,35 @@ export class TwoFactorValidationFacade {
   }
 
   public resend(): void {
-    this.snackbar.success('Te enviamos un nuevo código a tu correo.');
+    const sessionId = this.sessionId();
+
+    if (!sessionId || this.isSubmitting()) {
+      return;
+    }
+
+    this.error.set(null);
+    this.isSubmitting.set(true);
+
+    this.authSession.resendTwoFactorCode(sessionId).subscribe({
+      next: result => {
+        this.sessionId.set(result.sessionId);
+
+        if (result.maskedEmail) {
+          this.email.set(result.maskedEmail);
+        }
+
+        this.isSubmitting.set(false);
+        this.snackbar.success(result.message || 'Te enviamos un nuevo código a tu correo.');
+      },
+      error: error => {
+        this.isSubmitting.set(false);
+        this.error.set(
+          isNormalizedApiError(error)
+            ? error.message
+            : 'No pudimos reenviar el código. Intentá nuevamente.'
+        );
+      },
+    });
   }
 
   private restoreStateFromNavigation(): void {
@@ -96,4 +124,3 @@ export class TwoFactorValidationFacade {
     this.documentNumber.set(documentNumber);
   }
 }
-

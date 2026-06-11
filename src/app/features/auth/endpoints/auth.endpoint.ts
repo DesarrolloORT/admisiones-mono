@@ -10,6 +10,7 @@ import {
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
   postAuthRecuperarContrasenaEndpoint,
+  postAuthReenviarCodigo2FaEndpoint,
   postAuthVerificarCodigo2FaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
@@ -140,6 +141,18 @@ export interface RecoverPasswordPayload {
 export interface VerifyTwoFactorCodePayload {
   sessionId: string;
   codigo: string;
+}
+
+/** Input for resending the two-factor authentication code. */
+export interface ResendTwoFactorCodePayload {
+  sessionId: string;
+}
+
+/** Stable output of resending the two-factor authentication code. */
+export interface ResendTwoFactorCodeResult {
+  sessionId: string;
+  maskedEmail: string;
+  message: string;
 }
 
 /** Stable output of 2FA verification. Same shape as authenticated login. */
@@ -391,6 +404,29 @@ export class AuthEndpoint {
         map(response => ({
           documento: response.persona?.documento ?? '',
           primerNombre: response.persona?.primerNombre ?? '',
+        }))
+      );
+  }
+
+  /**
+   * Resend the two-factor code for an active 2FA session.
+   *
+   * Behind the scenes: POST /Auth/ReenviarCodigo2FA using generated endpoint.
+   */
+  public resendTwoFactorCode(
+    payload: ResendTwoFactorCodePayload
+  ): Observable<ResendTwoFactorCodeResult> {
+    return this.api
+      .data(postAuthReenviarCodigo2FaEndpoint, {
+        body: payload,
+        withCredentials: true,
+        context: suppressGlobalErrorContext(),
+      })
+      .pipe(
+        map(response => ({
+          sessionId: response.sessionId ?? payload.sessionId,
+          maskedEmail: response.maskedEmail ?? '',
+          message: response.message ?? '',
         }))
       );
   }

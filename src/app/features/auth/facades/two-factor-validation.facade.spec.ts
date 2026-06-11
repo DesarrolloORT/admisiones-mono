@@ -8,7 +8,10 @@ import { AuthSessionService } from '../services/auth-session';
 import { TwoFactorValidationFacade } from './two-factor-validation.facade';
 
 describe('TwoFactorValidationFacade', () => {
-  let authSessionMock: { completeTwoFactor: ReturnType<typeof vi.fn> };
+  let authSessionMock: {
+    completeTwoFactor: ReturnType<typeof vi.fn>;
+    resendTwoFactorCode: ReturnType<typeof vi.fn>;
+  };
   let routerMock: {
     getCurrentNavigation: ReturnType<typeof vi.fn>;
     navigateByUrl: ReturnType<typeof vi.fn>;
@@ -36,6 +39,13 @@ describe('TwoFactorValidationFacade', () => {
       completeTwoFactor: vi
         .fn()
         .mockReturnValue(of({ documentType: 'CI', documentNumber: '12345678' })),
+      resendTwoFactorCode: vi.fn().mockReturnValue(
+        of({
+          sessionId: 'session-456',
+          maskedEmail: 'a***@example.com',
+          message: 'Código reenviado.',
+        })
+      ),
     };
     routerMock = {
       getCurrentNavigation: vi.fn().mockReturnValue(null),
@@ -91,13 +101,26 @@ describe('TwoFactorValidationFacade', () => {
     expect(facade.isSubmitting()).toBe(false);
   });
 
-  it('shows a snackbar when resend is requested', () => {
+  it('resends the code and shows the backend message', () => {
     setupHistory({ email: 'a@b.com', sessionId: 'abc-123' });
     const facade = buildFacade();
 
     facade.resend();
 
-    expect(snackbarMock.success).toHaveBeenCalledWith('Te enviamos un nuevo código a tu correo.');
+    expect(authSessionMock.resendTwoFactorCode).toHaveBeenCalledWith('abc-123');
+    expect(facade.email()).toBe('a***@example.com');
+    expect(facade.isSubmitting()).toBe(false);
+    expect(snackbarMock.success).toHaveBeenCalledWith('Código reenviado.');
+  });
+
+  it('shows an inline error when resending fails', () => {
+    setupHistory({ email: 'a@b.com', sessionId: 'abc-123' });
+    authSessionMock.resendTwoFactorCode.mockReturnValue(throwError(() => new Error('boom')));
+    const facade = buildFacade();
+
+    facade.resend();
+
+    expect(facade.error()).toBe('No pudimos reenviar el código. Intentá nuevamente.');
+    expect(facade.isSubmitting()).toBe(false);
   });
 });
-

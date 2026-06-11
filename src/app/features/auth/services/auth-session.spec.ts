@@ -13,6 +13,7 @@ describe('AuthSessionService', () => {
   let endpointMock: {
     login: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
+    resendTwoFactorCode: ReturnType<typeof vi.fn>;
   };
   let routerMock: { navigateByUrl: ReturnType<typeof vi.fn> };
   let cacheMock: { clear: ReturnType<typeof vi.fn> };
@@ -24,6 +25,13 @@ describe('AuthSessionService', () => {
         .fn()
         .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
       logout: vi.fn().mockReturnValue(of(undefined)),
+      resendTwoFactorCode: vi.fn().mockReturnValue(
+        of({
+          sessionId: 'session-456',
+          maskedEmail: 'a***@example.com',
+          message: 'Código reenviado.',
+        })
+      ),
     };
     routerMock = { navigateByUrl: vi.fn() };
     cacheMock = { clear: vi.fn() };
@@ -94,6 +102,16 @@ describe('AuthSessionService', () => {
     expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
   });
 
+  it('should delegate resending the two-factor code', () => {
+    service.resendTwoFactorCode('session-123').subscribe(result => {
+      expect(result.sessionId).toBe('session-456');
+    });
+
+    expect(endpointMock.resendTwoFactorCode).toHaveBeenCalledWith({
+      sessionId: 'session-123',
+    });
+  });
+
   it('should clear session locally after logout', () => {
     service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
 
@@ -117,4 +135,3 @@ describe('AuthSessionService', () => {
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 });
-
