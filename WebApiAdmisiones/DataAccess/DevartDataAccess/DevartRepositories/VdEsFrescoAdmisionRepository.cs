@@ -42,11 +42,11 @@ namespace DataAccess.DevartRepositories
             var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
             var normalizedDocumento = documento?.Trim() ?? string.Empty;
 
-            return objectSet.Any(f =>
+            return objectSet.Count(f =>
                 f.TipoDocumento != null
                 && f.Documento != null
                 && f.TipoDocumento.Trim() == normalizedTipoDocumento
-                && f.Documento.Trim() == normalizedDocumento);
+                && f.Documento.Trim() == normalizedDocumento) > 0;
         }
     }
 }

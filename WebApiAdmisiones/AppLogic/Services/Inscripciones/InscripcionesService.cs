@@ -125,13 +125,13 @@ namespace AppLogic.Services.Inscripciones
 
         #region ENCUESTA INICIAL ADMISION
 
-        public OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicial(long codigoPersona)
+        public OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
 
             var persona = uow.Personas.GetByKey(codigoPersona);
             if (persona == null)
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed(
+                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
                     "GEN_OEI_01",
                     nameof(ObtenerEncuestaInicial),
                     "Persona no encontrada.",
@@ -139,8 +139,8 @@ namespace AppLogic.Services.Inscripciones
 
             var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
             if (!validacionDocumento.IsValid)
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed(
-                    "GEN_OEI_03",
+                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
+                    "GEN_OEI_02",
                     nameof(ObtenerEncuestaInicial),
                     validacionDocumento.Message,
                     400);
@@ -149,17 +149,23 @@ namespace AppLogic.Services.Inscripciones
             var documento = DocumentUtils.Normalizar(persona.Documento);
 
             if (!TieneDerechoAEncuestaInicial(tipoDocumento, documento, uow))
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed(
-                    "GEN_OEI_02",
+                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
+                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = false },
                     nameof(ObtenerEncuestaInicial),
                     "La persona no tiene derecho a encuesta inicial.",
-                    403);
+                    200);
 
             var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuesta == null)
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerEncuestaInicial), "No se encontraron datos de pre-inscripción para la persona.", 204);
+                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
+                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = true },
+                    nameof(ObtenerEncuestaInicial),
+                    "La Persona ya completó la encuesta inicial.",
+                    200);
 
-            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerEncuestaInicial));
+            return OperationResult<DtoEncuestaInicialAdmisionResponse>.Ok(
+                new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = true, Encuesta = encuesta.ToDtoWithRelated(1) },
+                nameof(ObtenerEncuestaInicial));
         }
 
         #endregion ENCUESTA INICIAL ADMISION

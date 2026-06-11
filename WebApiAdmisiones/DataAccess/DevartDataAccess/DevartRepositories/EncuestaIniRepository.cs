@@ -28,7 +28,7 @@ namespace DataAccess.DevartRepositories
                       && persona.TipoDocumento.Trim() == normalizedTipoDocumento
                       && persona.Documento.Trim() == normalizedDocumento
                 select encuesta.IdEncuestaIni
-            ).Any();
+            ).Count() > 0;
         }
     }
 }

@@ -54,6 +54,23 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
+        /// </summary>
+        /// <returns>Datos de preinscripción.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 404)]
+        public IActionResult ObtenerEncuestaInicialAdmision()
+        {
+            var result = inscripcionesService.ObtenerEncuestaInicial(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
         ///// <summary>
         ///// Obtiene la última inscripción activa de la persona autenticada.
         ///// </summary>

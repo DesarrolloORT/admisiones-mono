@@ -11,6 +11,6 @@ namespace AppLogic.IServices.Inscripciones
         OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request);
         OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
         OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
-        OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicial(long codigoPersona);
+        OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona);
     }
 }
