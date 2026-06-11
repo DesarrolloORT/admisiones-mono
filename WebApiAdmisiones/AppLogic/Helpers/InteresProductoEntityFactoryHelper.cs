@@ -45,34 +45,13 @@ namespace AppLogic.Helpers
             };
         }
 
-        public static Actividad CrearActividad(decimal idActividad, long idProceso, DateTime fechaActual)
+        public static InteresProductoOferta CrearInteresProductoOferta(long idInteres, long idProducto, long idOferta)
         {
-            return new Actividad
+            return new InteresProductoOferta
             {
-                IdActividad = idActividad,
-                IdFormaContacto = InscripcionesConstants.InteresProducto.FormaContactoWeb,
-                IdTipoActividad = InscripcionesConstants.InteresProducto.TipoActividadMonoAccion,
-                IdTipoAccion = InscripcionesConstants.InteresProducto.TipoAccionRegistroSitioAdmisiones,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                UsernameGeneradorActividad = Constantes.kUSERNAME_USUARIO_ADMISIONES,
-                FechaGeneradorActividad = fechaActual,
-                UsernameRealizadoActividad = Constantes.kUSERNAME_USUARIO_ADMISIONES,
-                FechaRealizadoActividad = fechaActual,
-                IdProceso = idProceso
-            };
-        }
-
-        public static Accion CrearAccion(decimal idAccion, decimal idActividad, long codigoPersona, DateTime fechaActual)
-        {
-            return new Accion
-            {
-                IdAccion = idAccion,
-                IdActividad = idActividad,
-                CodigoPersona = codigoPersona,
-                FechaRealizadoAccion = fechaActual,
-                UsuarioRealizadoAccion = Constantes.kUSERNAME_USUARIO_ADMISIONES,
-                IdEstadoAccion = InscripcionesConstants.InteresProducto.EstadoAccionRealizada,
-                IdAccionResultado = InscripcionesConstants.InteresProducto.ResultadoAccionRealizada
+                IdInteres = idInteres,
+                IdProducto = idProducto,
+                IdOferta = idOferta
             };
         }
     }

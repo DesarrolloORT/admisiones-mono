@@ -12,10 +12,6 @@ namespace AppLogic.Services.Inscripciones
 {
     public class InscripcionesService : IInscripcionesService
     {
-        private const string EstadoConfirmada = "Confirmada";
-        private const string EstadoPendiente = "Pendiente";
-        private const string EstadoCancelada = "Cancelada";
-
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
 
@@ -23,6 +19,15 @@ namespace AppLogic.Services.Inscripciones
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
+        }
+
+        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
+        {
+
+            using var uow = _uowFactory.Create();
+            var dtos =  uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
+
+            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
         }
 
         public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
@@ -78,6 +83,7 @@ namespace AppLogic.Services.Inscripciones
                 request.IdProducto,
                 request.IdProcesoSeleccionado,
                 nameof(RegistrarInteresProducto));
+
             if (!validacion.Success)
             {
                 return validacion;
@@ -87,6 +93,7 @@ namespace AppLogic.Services.Inscripciones
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
+
             try
             {
                 ResetearInteresesProductos(uow, intereses, fechaActual);
@@ -100,6 +107,8 @@ namespace AppLogic.Services.Inscripciones
                 ActivarInteresProducto(uow, interesExistente, request.IdProducto, fechaActual);
                 // TODO Tivenos: encolar AltaInteresXSeleccionEnSitio para el interes producto registrado.
                 AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
+                uow.InteresProductoOfertas.Add(
+                    InteresProductoEntityFactoryHelper.CrearInteresProductoOferta((long)interesExistente.IdInteres, request.IdProducto, request.IdOferta));
                 var resultadoEncuesta = ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
                 if (!resultadoEncuesta.Success)
                 {
@@ -107,7 +116,6 @@ namespace AppLogic.Services.Inscripciones
                     return resultadoEncuesta;
                 }
 
-                RegistrarActividadInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
                 uow.Commit();
 
                 return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
@@ -124,29 +132,6 @@ namespace AppLogic.Services.Inscripciones
             using var uow = _uowFactory.Create();
             var tiene = uow.VdEsFrescoAdmisions.TieneInscripcionActivaParaProceso(codigoPersona, idProducto, idProceso);
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
-        }
-
-        public OperationResult<IEnumerable<DtoInscripcionHome>> ObtenerMisInscripciones(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-
-            var confirmadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
-                .Select(MapInscripcionConfirmada);
-            var pendientes = ConstruirInscripcionesWorkflow(
-                uow,
-                uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona),
-                EstadoPendiente);
-            var canceladas = ConstruirInscripcionesWorkflow(
-                uow,
-                uow.InstanciaWorkflows.GetInscripcionesCanceladas(codigoPersona),
-                EstadoCancelada);
-
-            var dtos = confirmadas
-                .Concat(pendientes)
-                .Concat(canceladas)
-                .ToList();
-
-            return OperationResult<IEnumerable<DtoInscripcionHome>>.Ok(dtos, nameof(ObtenerMisInscripciones));
         }
 
         public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
@@ -300,110 +285,6 @@ namespace AppLogic.Services.Inscripciones
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo.Value;
             return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
-        }
-
-        private void RegistrarActividadInteres(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
-        {
-            if (uow.Accions.ExisteAccionParaProcesoPersona(codigoPersona, idProceso))
-            {
-                return;
-            }
-
-            var actividadId = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100);
-            uow.Actividads.Add(InteresProductoEntityFactoryHelper.CrearActividad(actividadId, idProceso, fechaActual));
-            uow.Accions.Add(InteresProductoEntityFactoryHelper.CrearAccion(
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100),
-                actividadId,
-                codigoPersona,
-                fechaActual));
-        }
-
-        private static DtoInscripcionHome MapInscripcionConfirmada(Inscripto inscripto)
-        {
-            return new DtoInscripcionHome
-            {
-                Estado = EstadoConfirmada,
-                IdProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
-                NombreProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
-                IdComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.IdComienzo ?? 0,
-                NombreComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-                IdTurno = inscripto.Oferta?.Turno?.IdTurno ?? 0,
-                NombreTurno = inscripto.Oferta?.Turno?.NombreTurno
-            };
-        }
-
-        private static IEnumerable<DtoInscripcionHome> ConstruirInscripcionesWorkflow(
-            IUnitOfWork uow,
-            IEnumerable<InstanciaWorkflow> instancias,
-            string estado)
-        {
-            var instanciasList = instancias.ToList();
-            if (instanciasList.Count == 0)
-            {
-                return [];
-            }
-
-            var instanciaIds = instanciasList.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(instanciaIds)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-            var productoIds = inscripcionesPorInstanciaId.Values
-                .Where(iwi => iwi.IdProducto.HasValue)
-                .Select(iwi => (long)iwi.IdProducto!.Value)
-                .Distinct()
-                .ToList();
-            var productosPorId = uow.Productos
-                .GetByKeys(productoIds)
-                .ToDictionary(p => p.IdProducto);
-
-            var comienzoIds = inscripcionesPorInstanciaId.Values
-                .Where(iwi => iwi.IdComienzo.HasValue)
-                .Select(iwi => (long)iwi.IdComienzo!.Value)
-                .Distinct()
-                .ToList();
-            var comienzosPorId = uow.Comienzos
-                .GetByKeys(comienzoIds)
-                .ToDictionary(c => c.IdComienzo);
-
-            var turnoIds = inscripcionesPorInstanciaId.Values
-                .Where(iwi => iwi.IdTurno.HasValue)
-                .Select(iwi => (long)iwi.IdTurno!.Value)
-                .Distinct()
-                .ToList();
-            var turnosPorId = uow.Turnos
-                .GetByKeys(turnoIds)
-                .ToDictionary(t => t.IdTurno);
-
-            return instanciasList.Select(iw =>
-            {
-                inscripcionesPorInstanciaId.TryGetValue(iw.IdInstanciaWorkflow, out var inscripcion);
-
-                var idProducto = inscripcion?.IdProducto.HasValue == true
-                    ? (long)inscripcion.IdProducto.Value
-                    : 0;
-                var idComienzo = inscripcion?.IdComienzo.HasValue == true
-                    ? (long)inscripcion.IdComienzo.Value
-                    : 0;
-                var idTurno = inscripcion?.IdTurno.HasValue == true
-                    ? (long)inscripcion.IdTurno.Value
-                    : 0;
-
-                productosPorId.TryGetValue(idProducto, out var producto);
-                comienzosPorId.TryGetValue(idComienzo, out var comienzo);
-                turnosPorId.TryGetValue(idTurno, out var turno);
-
-                return new DtoInscripcionHome
-                {
-                    Estado = estado,
-                    IdProducto = idProducto,
-                    NombreProducto = producto?.NombreExtensoProducto,
-                    IdComienzo = idComienzo,
-                    NombreComienzo = comienzo?.NombreComienzo,
-                    IdTurno = idTurno,
-                    NombreTurno = turno?.NombreTurno
-                };
-            });
         }
 
         private static DtoProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)

@@ -37,35 +37,6 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault();
         }
 
-        /// <summary>
-        /// Devuelve todas las inscripciones activas (sin baja) de la persona en productos de nivel 1 o 2
-        /// con proceso habilitado. Incluye Oferta, Producto, Turno y Comienzo.
-        /// </summary>
-        public virtual IEnumerable<BusinessLogic.Entities.Inscripto> GetInscripcionesRealizadas(long codigoPersona)
-        {
-            return objectSet
-                .Where(i =>
-                    i.CodigoPersona == codigoPersona
-                    && i.BajaInscr == null
-                    && (i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 1
-                        || i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 2)
-                    && i.Oferta.Supraoferta.Paquete.Producto.ProcesoProductos
-                           .Count(pp => pp.Proceso.HabilitadoInteresSitio == "SI") > 0
-                    && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
-                           .Count(pc => pc.Proceso.HabilitadoInteresSitio == "SI") > 0)
-                .Include(i => i.Oferta)
-                    .ThenInclude(o => o.Supraoferta)
-                        .ThenInclude(s => s.Paquete)
-                            .ThenInclude(p => p.Producto)
-                .Include(i => i.Oferta)
-                    .ThenInclude(o => o.Turno)
-                .Include(i => i.Oferta)
-                    .ThenInclude(o => o.Supraoferta)
-                        .ThenInclude(s => s.Comienzo)
-                .OrderBy(i => i.FechaInscr)
-                .ToList();
-        }
-
         public virtual bool TieneInscripcionActiva(long codigoPersona)
         {
             return objectSet.Count(i =>

@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,13 +23,14 @@ namespace UnitTesting.Controllers
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerMisInscripciones(1))
-                .Returns(OperationResult<IEnumerable<DtoInscripcionHome>>.Ok(
+                .Returns(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(
                 [
-                    new DtoInscripcionHome
+                    new DtoVdInscripcionesFresco1y2Devart
                     {
-                        Estado = "Confirmada",
+                        CodigoPersona = 1,
+                        EstadoInscripcion = "Confirmada",
                         IdProducto = 10,
-                        NombreProducto = "Analista en Tecnologias de la Informacion",
+                        NombreExtensoProducto = "Analista en Tecnologias de la Informacion",
                         IdComienzo = 20,
                         NombreComienzo = "Marzo",
                         IdTurno = 30,
@@ -71,7 +72,7 @@ namespace UnitTesting.Controllers
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20 };
+            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 };
 
             serviceMock.Setup(s => s.RegistrarInteresProducto(1, request))
                 .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.RegistrarInteresProducto)));
