@@ -78,15 +78,17 @@ namespace AppLogic.Services.Inscripciones
                 request.IdProducto,
                 request.IdProcesoSeleccionado,
                 nameof(RegistrarInteresProducto));
+
             if (!validacion.Success)
             {
                 return validacion;
             }
 
-            var fechaActual = _dbConnectionContext.CurrentDateTime();
+            var fechaActual = DateTime.Now;
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
+
             try
             {
                 ResetearInteresesProductos(uow, intereses, fechaActual);
@@ -100,6 +102,8 @@ namespace AppLogic.Services.Inscripciones
                 ActivarInteresProducto(uow, interesExistente, request.IdProducto, fechaActual);
                 // TODO Tivenos: encolar AltaInteresXSeleccionEnSitio para el interes producto registrado.
                 AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
+                uow.InteresProductoOfertas.Add(
+                    InteresProductoEntityFactoryHelper.CrearInteresProductoOferta((long)interesExistente.IdInteres, request.IdProducto, request.IdOferta));
                 var resultadoEncuesta = ActualizarEncuestaInicial(uow, codigoPersona, request.IdProducto, request.IdProcesoSeleccionado);
                 if (!resultadoEncuesta.Success)
                 {
@@ -107,7 +111,6 @@ namespace AppLogic.Services.Inscripciones
                     return resultadoEncuesta;
                 }
 
-                RegistrarActividadInteres(uow, codigoPersona, request.IdProcesoSeleccionado, fechaActual);
                 uow.Commit();
 
                 return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
@@ -300,22 +303,6 @@ namespace AppLogic.Services.Inscripciones
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo.Value;
             return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
-        }
-
-        private void RegistrarActividadInteres(IUnitOfWork uow, long codigoPersona, long idProceso, DateTime fechaActual)
-        {
-            if (uow.Accions.ExisteAccionParaProcesoPersona(codigoPersona, idProceso))
-            {
-                return;
-            }
-
-            var actividadId = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100);
-            uow.Actividads.Add(InteresProductoEntityFactoryHelper.CrearActividad(actividadId, idProceso, fechaActual));
-            uow.Accions.Add(InteresProductoEntityFactoryHelper.CrearAccion(
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_3100),
-                actividadId,
-                codigoPersona,
-                fechaActual));
         }
 
         private static DtoInscripcionHome MapInscripcionConfirmada(Inscripto inscripto)

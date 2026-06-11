@@ -71,7 +71,7 @@ namespace UnitTesting.Controllers
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20 };
+            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 };
 
             serviceMock.Setup(s => s.RegistrarInteresProducto(1, request))
                 .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.RegistrarInteresProducto)));
