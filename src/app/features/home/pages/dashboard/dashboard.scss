@@ -69,4 +69,12 @@
   display: flex;
   gap: var(--ort-sys-spacing-36);
 }
+
+  .mis-carreras--single {
+    max-width: 40%;
+  }
+
+  .dashboard-header{
+    margin-bottom: var(--ort-sys-spacing-16);
+  }
 }

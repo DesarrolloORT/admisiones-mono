@@ -1,12 +1,12 @@
 <main class="dashboard-main" id="main-content" tabindex="-1">
   <section class="dashboard-container">
+
     <section class="dashboard-actions">
       <app-dashboard-action-card variant="career" />
       <app-dashboard-action-card variant="scholarship" />
-
     </section>
 
-    <section class="mis-carreras">
+    <section class="mis-carreras" [class.mis-carreras--single]="inscripciones().length === 1">
       <div class="dashboard-header">
         <h3 class="dashboard-header__title">Mis carreras</h3>
         <button
@@ -19,9 +19,12 @@
         </button>
       </div>
 
+      @if (inscripciones().length === 1) {
+        <app-dashboard-card [inscripcion]="inscripciones()[0]" />
+      } @else {
       <div class="swiper">
         <div class="swiper-wrapper">
-          @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+           @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
           <div class="swiper-slide">
             <app-dashboard-card [inscripcion]="inscripcion" />
           </div>
@@ -29,9 +32,8 @@
         </div>
         <div class="swiper-pagination"></div>
       </div>
+      }
     </section>
-
-
   </section>
 </main>
 
