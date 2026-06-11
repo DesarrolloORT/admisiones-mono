@@ -5,10 +5,10 @@ type ChipVariant = 'warning' | 'information' | 'success' | 'error';
 
 const VARIANT_MAP: Record<string, ChipVariant> = {
   'En proceso': 'warning',
-  'Pendiente': 'warning',
+  'Pago pendiente': 'warning',
   'A la espera': 'information',
   'Confirmada': 'success',
-  'Cancelada': 'error',
+  'Dada de baja': 'error',
 };
 
 const DEFAULT_VARIANT: ChipVariant = 'information';
@@ -26,3 +26,4 @@ export class DashboardCareerStatusChip {
   protected readonly variant = computed<ChipVariant>(() => VARIANT_MAP[this.status()] ?? DEFAULT_VARIANT);
 }
 
+ 
