@@ -30,10 +30,10 @@ export class HomeEndpoint {
       idProducto: item.idProducto ?? 0,
       idComienzo: item.idComienzo ?? 0,
       idTurno: item.idTurno ?? 0,
-      nombreProducto: item.nombreProducto ?? '',
+      nombreProducto: item.nombreExtensoProducto ?? '',
       nombreComienzo: item.nombreComienzo ?? '',
       nombreTurno: item.nombreTurno ?? '',
-      estado: item.estado ?? '',
+      estado: item.estadoInscripcion ?? '',
     }));
   }
 }
