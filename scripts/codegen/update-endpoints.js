@@ -1,10 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import http from 'node:http';
-import https from 'node:https';
 import { relative, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
+import { downloadJson, resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
@@ -409,60 +407,6 @@ function suggestReplacement(name, allExports) {
 function stripControllerPrefix(name) {
   const match = name.match(/^[A-Z][a-z0-9]*/);
   return match ? name.slice(match[0].length) : name;
-}
-
-function downloadJson(url, redirectCount = 0) {
-  if (redirectCount > 5) {
-    return Promise.reject(new Error(`Too many redirects while downloading Swagger: ${url}`));
-  }
-
-  return new Promise((resolvePromise, rejectPromise) => {
-    const parsedUrl = new URL(url);
-    const client = parsedUrl.protocol === 'http:' ? http : https;
-    const requestOptions = {
-      headers: {
-        Accept: 'application/json',
-      },
-      rejectUnauthorized: false,
-    };
-
-    const request = client.get(parsedUrl, requestOptions, response => {
-      const statusCode = response.statusCode ?? 0;
-      const location = response.headers.location;
-
-      if (statusCode >= 300 && statusCode < 400 && location) {
-        response.resume();
-        downloadJson(new URL(location, url).toString(), redirectCount + 1)
-          .then(resolvePromise)
-          .catch(rejectPromise);
-        return;
-      }
-
-      if (statusCode < 200 || statusCode >= 300) {
-        response.resume();
-        rejectPromise(new Error(`Swagger download failed with HTTP ${statusCode}: ${url}`));
-        return;
-      }
-
-      response.setEncoding('utf-8');
-      let raw = '';
-      response.on('data', chunk => {
-        raw += chunk;
-      });
-      response.on('end', () => {
-        try {
-          resolvePromise(JSON.parse(raw));
-        } catch (error) {
-          rejectPromise(new Error(`Swagger response is not valid JSON: ${error.message}`));
-        }
-      });
-    });
-
-    request.on('error', rejectPromise);
-    request.setTimeout(30000, () => {
-      request.destroy(new Error(`Swagger download timed out: ${url}`));
-    });
-  });
 }
 
 async function formatTypeScript(content) {
@@ -1523,4 +1467,3 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
-

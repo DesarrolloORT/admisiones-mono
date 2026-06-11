@@ -35,7 +35,7 @@
     "update-models": "node ./scripts/codegen/update-models.js",
     "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
     "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
-    "update-api": "npm run update-models && npm run update-endpoints"
+    "update-api": "node ./scripts/codegen/update-api.js"
   },
   "private": true,
   "dependencies": {
