@@ -229,128 +229,128 @@ namespace AppLogic.Services.Catalogos
             return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerUniversidades));
         }
 
-        public OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
+        //public OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona)
+        //{
+        //    using var uow = _uowFactory.Create();
 
-            // 1. Inscripciones realizadas (T_INSCRIPTO)
-            var realizadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
-                .Select(i => new DtoProductoBeca
-                {
-                    FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
-                    IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
-                    IdNivelProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdNivelProducto ?? 0,
-                    NombreProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
-                    NombreComienzo = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-                    NombreTurno = i.Oferta?.Turno?.NombreTurno,
-                    IdProceso = i.Oferta?.Supraoferta?.Comienzo?.ProcesoComienzos?
-                                           .FirstOrDefault()?.IdProceso ?? 0,
-                })
-                .ToList();
+        //    // 1. Inscripciones realizadas (T_INSCRIPTO)
+        //    var realizadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
+        //        .Select(i => new DtoProductoBeca
+        //        {
+        //            FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
+        //            IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
+        //            IdNivelProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdNivelProducto ?? 0,
+        //            NombreProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
+        //            NombreComienzo = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+        //            NombreTurno = i.Oferta?.Turno?.NombreTurno,
+        //            IdProceso = i.Oferta?.Supraoferta?.Comienzo?.ProcesoComienzos?
+        //                                   .FirstOrDefault()?.IdProceso ?? 0,
+        //        })
+        //        .ToList();
 
-            var pendientes = ConstruirPendientesProductosBeca(uow, codigoPersona);
+        //    var pendientes = ConstruirPendientesProductosBeca(uow, codigoPersona);
 
-            // 3. Productos con interés activo (sin inscripción pendiente en workflow)
-            var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
-                .Select(p => new DtoProductoBeca
-                {
-                    FechaInscripcion = DateTime.MinValue,
-                    IdProducto = p.IdProducto,
-                    IdNivelProducto = p.IdNivelProducto,
-                    NombreProducto = p.NombreExtensoProducto,
-                    NombreComienzo = p.ProcesoProductos?.FirstOrDefault()?.Proceso?.NombreProceso,
-                    NombreTurno = null,
-                    IdProceso = p.ProcesoProductos?.FirstOrDefault()?.IdProceso ?? 0,
-                })
-                .ToList();
+        //    // 3. Productos con interés activo (sin inscripción pendiente en workflow)
+        //    var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
+        //        .Select(p => new DtoProductoBeca
+        //        {
+        //            FechaInscripcion = DateTime.MinValue,
+        //            IdProducto = p.IdProducto,
+        //            IdNivelProducto = p.IdNivelProducto,
+        //            NombreProducto = p.NombreExtensoProducto,
+        //            NombreComienzo = p.ProcesoProductos?.FirstOrDefault()?.Proceso?.NombreProceso,
+        //            NombreTurno = null,
+        //            IdProceso = p.ProcesoProductos?.FirstOrDefault()?.IdProceso ?? 0,
+        //        })
+        //        .ToList();
 
-            var todos = realizadas.Concat(pendientes).Concat(intereses)
-                .GroupBy(b => b.IdProducto)
-                .Select(g => g.OrderBy(b => b.FechaInscripcion).First())
-                .ToList();
+        //    var todos = realizadas.Concat(pendientes).Concat(intereses)
+        //        .GroupBy(b => b.IdProducto)
+        //        .Select(g => g.OrderBy(b => b.FechaInscripcion).First())
+        //        .ToList();
 
-            return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
-        }
+        //    return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
+        //}
 
 
 
-        private static List<DtoProductoBeca> ConstruirPendientesProductosBeca(IUnitOfWork uow, long codigoPersona)
-        {
-            var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
-            var instanciaIds = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
-            var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
-                .GetByInstanciaIds(instanciaIds)
-                .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
+        //private static List<DtoProductoBeca> ConstruirPendientesProductosBeca(IUnitOfWork uow, long codigoPersona)
+        //{
+        //    var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
+        //    var instanciaIds = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
+        //    var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
+        //        .GetByInstanciaIds(instanciaIds)
+        //        .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
 
-            var pendientesConProducto = instancias
-                .Where(iw => inscripcionesPorInstanciaId.ContainsKey(iw.IdInstanciaWorkflow)
-                    && inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto.HasValue)
-                .ToList();
+        //    var pendientesConProducto = instanciass
+        //        .Where(iw => inscripcionesPorInstanciaId.ContainsKey(iw.IdInstanciaWorkflow)
+        //            && inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto.HasValue)
+        //        .ToList();
 
-            var productoIds = pendientesConProducto
-                .Select(iw => (long)inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto!.Value)
-                .Distinct()
-                .ToList();
+        //    var productoIds = pendientesConProducto
+        //        .Select(iw => (long)inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto!.Value)
+        //        .Distinct()
+        //        .ToList();
 
-            var productosPorId = uow.Productos
-                .GetByKeys(productoIds)
-                .ToDictionary(p => p.IdProducto);
+        //    var productosPorId = uow.Productos
+        //        .GetByKeys(productoIds)
+        //        .ToDictionary(p => p.IdProducto);
 
-            var comienzoIds = pendientesConProducto
-                .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdComienzo)
-                .Where(id => id.HasValue)
-                .Select(id => (long)id!.Value)
-                .Distinct()
-                .ToList();
+        //    var comienzoIds = pendientesConProducto
+        //        .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdComienzo)
+        //        .Where(id => id.HasValue)
+        //        .Select(id => (long)id!.Value)
+        //        .Distinct()
+        //        .ToList();
 
-            var comienzosPorId = uow.Comienzos
-                .GetByKeys(comienzoIds)
-                .ToDictionary(c => c.IdComienzo);
+        //    var comienzosPorId = uow.Comienzos
+        //        .GetByKeys(comienzoIds)
+        //        .ToDictionary(c => c.IdComienzo);
 
-            var turnoIds = pendientesConProducto
-                .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdTurno)
-                .Where(id => id.HasValue)
-                .Select(id => (long)id!.Value)
-                .Distinct()
-                .ToList();
+        //    var turnoIds = pendientesConProducto
+        //        .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdTurno)
+        //        .Where(id => id.HasValue)
+        //        .Select(id => (long)id!.Value)
+        //        .Distinct()
+        //        .ToList();
 
-            var turnosPorId = uow.Turnos
-                .GetByKeys(turnoIds)
-                .ToDictionary(t => t.IdTurno);
+        //    var turnosPorId = uow.Turnos
+        //        .GetByKeys(turnoIds)
+        //        .ToDictionary(t => t.IdTurno);
 
-            return pendientesConProducto
-                .Select(iw =>
-                {
-                    var inscripcion = inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow];
-                    var idProducto = (long)inscripcion.IdProducto!.Value;
+        //    return pendientesConProducto
+        //        .Select(iw =>
+        //        {
+        //            var inscripcion = inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow];
+        //            var idProducto = (long)inscripcion.IdProducto!.Value;
 
-                    productosPorId.TryGetValue(idProducto, out var producto);
+        //            productosPorId.TryGetValue(idProducto, out var producto);
 
-                    BusinessLogic.Entities.Comienzo? comienzo = null;
-                    if (inscripcion.IdComienzo.HasValue)
-                    {
-                        comienzosPorId.TryGetValue((long)inscripcion.IdComienzo.Value, out comienzo);
-                    }
+        //            BusinessLogic.Entities.Comienzo? comienzo = null;
+        //            if (inscripcion.IdComienzo.HasValue)
+        //            {
+        //                comienzosPorId.TryGetValue((long)inscripcion.IdComienzo.Value, out comienzo);
+        //            }
 
-                    BusinessLogic.Entities.Turno? turno = null;
-                    if (inscripcion.IdTurno.HasValue)
-                    {
-                        turnosPorId.TryGetValue((long)inscripcion.IdTurno.Value, out turno);
-                    }
+        //            BusinessLogic.Entities.Turno? turno = null;
+        //            if (inscripcion.IdTurno.HasValue)
+        //            {
+        //                turnosPorId.TryGetValue((long)inscripcion.IdTurno.Value, out turno);
+        //            }
 
-                    return new DtoProductoBeca
-                    {
-                        FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
-                        IdProducto = idProducto,
-                        IdNivelProducto = producto?.IdNivelProducto ?? 0,
-                        NombreProducto = producto?.NombreExtensoProducto,
-                        NombreComienzo = comienzo?.NombreComienzo,
-                        NombreTurno = turno?.NombreTurno,
-                        IdProceso = (long)iw.IdProceso,
-                    };
-                })
-                .ToList();
-        }
+        //            return new DtoProductoBeca
+        //            {
+        //                FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
+        //                IdProducto = idProducto,
+        //                IdNivelProducto = producto?.IdNivelProducto ?? 0,
+        //                NombreProducto = producto?.NombreExtensoProducto,
+        //                NombreComienzo = comienzo?.NombreComienzo,
+        //                NombreTurno = turno?.NombreTurno,
+        //                IdProceso = (long)iw.IdProceso,
+        //            };
+        //        })
+        //        .ToList();
+        //}
 
         public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto)
         {

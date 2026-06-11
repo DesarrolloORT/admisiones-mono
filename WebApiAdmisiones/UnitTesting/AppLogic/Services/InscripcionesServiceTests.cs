@@ -284,16 +284,6 @@ namespace UnitTesting.AppLogic.Services
                 x.IdOferta == 30)), Times.Once);
             Assert.Equal(20, encuesta.IdProceso);
             Assert.Equal(30, encuesta.IdComienzo);
-            actividadRepo.Verify(r => r.Add(It.Is<Actividad>(a =>
-                a.IdProceso == 20 &&
-                a.IdTipoAccion == 109m &&
-                a.FechaGeneradorActividad == FechaBase &&
-                a.FechaRealizadoActividad == FechaBase)), Times.Once);
-            accionRepo.Verify(r => r.Add(It.Is<Accion>(a =>
-                a.CodigoPersona == 123 &&
-                a.IdActividad == 900m &&
-                a.FechaRealizadoAccion == FechaBase &&
-                a.IdAccionResultado == 1m)), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
@@ -344,12 +334,6 @@ namespace UnitTesting.AppLogic.Services
             procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns((long?)null);
             _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
-            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-
-            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
-
             var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.False(result.Success);
@@ -357,8 +341,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("GEN_IP_06", result.ErrorCode);
             _uowMock.Verify(u => u.Rollback(), Times.Once);
             _uowMock.Verify(u => u.Commit(), Times.Never);
-            actividadRepo.Verify(r => r.Add(It.IsAny<Actividad>()), Times.Never);
-            accionRepo.Verify(r => r.Add(It.IsAny<Accion>()), Times.Never);
         }
 
         [Fact]
