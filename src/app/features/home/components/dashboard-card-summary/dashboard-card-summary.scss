@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+
+.card-summary {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+}
+
+.card-summary__item {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: flex-start;
+}
+
+.card-summary__icon {
+  flex-shrink: 0;
+  color: var(--ort-sys-base-icon-color-subtle, #697586);
+}
+
+.card-summary__text {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.card-summary__label {
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-caption-text-size, 14px);
+  line-height: var(--ort-sys-caption-line-height, 20px);
+}
+
+.card-summary__value {
+  font-weight: 500;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}

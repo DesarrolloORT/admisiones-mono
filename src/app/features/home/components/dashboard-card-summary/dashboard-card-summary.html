@@ -1,0 +1,11 @@
+<div class="card-summary">
+  @for (item of items(); track item.label) {
+  <div class="card-summary__item">
+    <ort-icon aria-hidden="true" class="card-summary__icon" size="md">{{ item.icon }}</ort-icon>
+    <p class="card-summary__text">
+      <span class="card-summary__label">{{ item.label }}</span>
+      <span class="card-summary__value">{{ item.value }}</span>
+    </p>
+  </div>
+  }
+</div>
