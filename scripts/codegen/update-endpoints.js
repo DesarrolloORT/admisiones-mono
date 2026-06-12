@@ -537,6 +537,14 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
     context.swagger
   );
 
+  const authMarker = detectAuthMarker(operation);
+  if (authMarker === 'unknown') {
+    context.warnings.push(
+      `${operationId} (${method.toUpperCase()} ${path}): sin marca [Privado] ni [Público] en summary/description; se asume público (sin credentials).`
+    );
+  }
+  const requiresAuthLine = authMarker === 'private' ? `\n  requiresAuth: true,` : '';
+
   const code = `${endpointDocComment}export const ${constantName} = defineEndpoint<{
   pathParams: ${pathParamsType};
   queryParams: ${queryParamsType};
@@ -545,7 +553,7 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
 }>({
   operationId: ${toTsStringLiteral(operationId)},
   method: '${method.toUpperCase()}',
-  path: ${toTsStringLiteral(path)},
+  path: ${toTsStringLiteral(path)},${requiresAuthLine}
 });
 `;
 
@@ -1313,6 +1321,24 @@ function sanitizeDocText(value) {
   return value.replaceAll('\r\n', '\n').replaceAll('\r', '\n').replaceAll('*/', '* /').trim();
 }
 
+/**
+ * Detects whether an endpoint is marked as `[Privado]` or `[Público]` in its
+ * Swagger summary/description. Used by the generator to emit `requiresAuth: true`
+ * so the runtime defaults `withCredentials` automatically.
+ *
+ * @returns {'private' | 'public' | 'unknown'}
+ */
+function detectAuthMarker(operation) {
+  const haystack = `${operation?.summary ?? ''}\n${operation?.description ?? ''}`.toLowerCase();
+  const hasPrivate = haystack.includes('[privado]');
+  const hasPublic = haystack.includes('[público]') || haystack.includes('[publico]');
+
+  if (hasPrivate && !hasPublic) return 'private';
+  if (hasPublic && !hasPrivate) return 'public';
+  if (hasPrivate && hasPublic) return 'private';
+  return 'unknown';
+}
+
 function warnForHeaderParameters(parameters, context) {
   const headerParameters = parameters.filter(parameter => parameter.in === 'header');
   if (headerParameters.length === 0) {
@@ -1467,3 +1493,4 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
+

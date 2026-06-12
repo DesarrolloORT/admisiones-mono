@@ -11,6 +11,7 @@ export type ApiEndpoint<TDefinition extends EndpointDefinition = EndpointDefinit
   readonly operationId: string;
   readonly method: ApiHttpMethod;
   readonly path: string;
+  readonly requiresAuth?: boolean;
   readonly __types?: TDefinition;
 };
 

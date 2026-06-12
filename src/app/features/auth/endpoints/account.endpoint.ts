@@ -48,27 +48,25 @@ export class AccountEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getPersonalData(): Observable<AccountPersonalData> {
-    return this.api
-      .request(getPersonaDatosPersonaEndpoint, { withCredentials: true, cache: false })
-      .pipe(
-        map(data => ({
-          documentType: data.tipoDocumento ?? '',
-          documentNumber: data.documento ?? '',
-          firstName: data.primerNombre ?? '',
-          secondName: data.segundoNombre ?? '',
-          firstLastName: data.primerApellido ?? '',
-          secondLastName: data.segundoApellido ?? '',
-          birthDate: data.fechaNacimiento ?? '',
-          sex: data.sexo ?? '',
-          countryCode: data.codigoPais ?? null,
-          stateCode: data.codigoEstado ?? null,
-          cityCode: data.codigoCiudad ?? null,
-          address: data.direccion ?? '',
-          phone: data.telefono1 ?? '',
-          email: data.mail ?? '',
-          emailVerification: data.verificacionMail ?? data.mail ?? '',
-        }))
-      );
+    return this.api.request(getPersonaDatosPersonaEndpoint, { cache: false }).pipe(
+      map(data => ({
+        documentType: data.tipoDocumento ?? '',
+        documentNumber: data.documento ?? '',
+        firstName: data.primerNombre ?? '',
+        secondName: data.segundoNombre ?? '',
+        firstLastName: data.primerApellido ?? '',
+        secondLastName: data.segundoApellido ?? '',
+        birthDate: data.fechaNacimiento ?? '',
+        sex: data.sexo ?? '',
+        countryCode: data.codigoPais ?? null,
+        stateCode: data.codigoEstado ?? null,
+        cityCode: data.codigoCiudad ?? null,
+        address: data.direccion ?? '',
+        phone: data.telefono1 ?? '',
+        email: data.mail ?? '',
+        emailVerification: data.verificacionMail ?? data.mail ?? '',
+      }))
+    );
   }
 
   public updatePersonalData(payload: UpdateAccountPersonalDataPayload): Observable<boolean> {
@@ -83,7 +81,6 @@ export class AccountEndpoint {
           mail: payload.email.trim(),
           verificacionMail: payload.emailVerification.trim(),
         },
-        withCredentials: true,
       })
       .pipe(map(result => result === true));
   }
@@ -94,7 +91,6 @@ export class AccountEndpoint {
         passwordActual: payload.currentPassword,
         passwordNueva: payload.password,
       },
-      withCredentials: true,
     });
   }
 
@@ -102,3 +98,4 @@ export class AccountEndpoint {
     return value ?? undefined;
   }
 }
+
