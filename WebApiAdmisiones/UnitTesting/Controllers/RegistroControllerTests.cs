@@ -148,7 +148,7 @@ namespace UnitTesting.Controllers
         [InlineData(nameof(RegistroController.AnalizarAdjunto), CaptchaActions.AnalizarAdjunto)]
         [InlineData(nameof(RegistroController.ConfirmarNuevaPersona), CaptchaActions.ConfirmarNuevaPersona)]
         [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta), CaptchaActions.ConfirmarSolicitudAlta)]
-        public void PublicCaptchaEndpoints_HaveExpectedCaptchaAction(string methodName, string expectedAction)
+        public void PublicCaptchaEndpoints_HaveExpectedCaptchaConfiguration(string methodName, string expectedAction)
         {
             var method = typeof(RegistroController).GetMethod(methodName);
 
@@ -156,6 +156,7 @@ namespace UnitTesting.Controllers
             var attribute = Assert.Single(
                 method!.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true)
                     .OfType<RequireCaptchaAttribute>());
+            Assert.Equal(CaptchaValidationMode.ScoreOnly, attribute.Arguments[0]);
             Assert.Equal(expectedAction, attribute.Arguments[1]);
         }
 

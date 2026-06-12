@@ -80,7 +80,7 @@ namespace UnitTesting.Controllers
 
         [Theory]
         [InlineData(nameof(AuthController.Login), CaptchaActions.Login, CaptchaValidationMode.ScoreOnly)]
-        [InlineData(nameof(AuthController.RecuperarPassword), CaptchaActions.RecuperarPassword, CaptchaValidationMode.RequireMinimumScore)]
+        [InlineData(nameof(AuthController.RecuperarPassword), CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
         public void CaptchaEndpoints_HaveExpectedCaptchaAction(
             string methodName,
             string expectedAction,
