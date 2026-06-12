@@ -1,5 +1,6 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
+using AppLogic.IServices.Catalogos;
 using AppLogic.Services.Inscripciones;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -15,6 +16,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
+        private readonly Mock<IGeneralService> _generalServiceMock;
         private readonly InscripcionesService _service;
 
         public InscripcionesServiceTests()
@@ -22,11 +24,15 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
+            _generalServiceMock = new Mock<IGeneralService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _dbConnectionContextMock
                 .Setup(d => d.CurrentDateTime())
                 .Returns(FechaBase);
-            _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
+            _generalServiceMock
+                .Setup(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(global::Utilities.OperationResult<DateTime>.Ok(FechaBase.AddDays(5), nameof(IGeneralService.CalcularFechaVencimientoAdmisiones)));
+            _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object);
         }
 
         private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
@@ -609,6 +615,59 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_ParcialMinimo_CreaTemporalSinActualizarPersona()
+        {
+            SetupPersonaValida();
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(900);
+
+            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest());
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal(900, encuestaAgregada!.IdEncuestaIni);
+            Assert.Equal("TEMPORAL", encuestaAgregada.EstadoEncuestaIniAdmision);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+            _uowMock.Verify(u => u.Personas.Update(It.IsAny<Persona>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_MotivosVacio_ReemplazaBorrandoSeleccion()
+        {
+            SetupPersonaValida();
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 10,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "TEMPORAL"
+            });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var motivoRepo = new Mock<IMotivoEleccionAdmisionRepository>();
+            _uowMock.Setup(u => u.MotivoEleccionAdmisions).Returns(motivoRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
+            {
+                OpcionesMotivosSeleccionados = []
+            });
+
+            Assert.True(result.Success);
+            motivoRepo.Verify(r => r.RemoveByPersona(123), Times.Once);
+            motivoRepo.Verify(r => r.Add(It.IsAny<MotivoEleccionAdmision>()), Times.Never);
         }
 
         private void SetupPersonaValida()

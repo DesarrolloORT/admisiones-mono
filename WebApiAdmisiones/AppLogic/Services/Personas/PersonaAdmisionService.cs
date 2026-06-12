@@ -4,6 +4,7 @@ using System.Text;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;

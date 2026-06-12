@@ -3,7 +3,7 @@ using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Helpers
+namespace AppLogic.Helpers.ValidationHelpers
 {
     public static class FondoDeBecaValidation
     {

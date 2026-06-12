@@ -57,6 +57,24 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Guarda parcial o completamente la encuesta inicial de admision.
+        /// </summary>
+        /// <param name="request">Campos de encuesta enviados por el front.</param>
+        /// <returns><c>true</c> si la encuesta se guardo correctamente.</returns>
+        /// <response code="200">Encuesta guardada correctamente.</response>
+        /// <response code="400">Los datos enviados son invalidos.</response>
+        /// <response code="404">No se encontro la persona, producto o proceso indicado.</response>
+        [HttpPost("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult GuardarEncuestaInicial([FromBody] GuardarEncuestaInicialRequest request)
+        {
+            var result = inscripcionesService.GuardarEncuestaInicial(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Registra la aceptación del reglamento estudiantil para la persona autenticada.
         /// Toma el producto y el comienzo desde la encuesta inicial de admisión vigente.
         /// </summary>

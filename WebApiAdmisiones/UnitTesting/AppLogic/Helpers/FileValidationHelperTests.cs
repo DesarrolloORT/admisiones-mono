@@ -1,4 +1,4 @@
-using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using Xunit;
 
 namespace UnitTesting.AppLogic.Helpers

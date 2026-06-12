@@ -13,5 +13,16 @@ namespace DataAccess.DevartRepositories
 {
     public partial class MotivoEleccionAdmisionRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.MotivoEleccionAdmision> GetByPersona(long codigoPersona)
+        {
+            return objectSet
+                .Where(e => e.CodigoPersona == codigoPersona)
+                .ToList();
+        }
+
+        public virtual void RemoveByPersona(long codigoPersona)
+        {
+            objectSet.RemoveRange(objectSet.Where(e => e.CodigoPersona == codigoPersona));
+        }
     }
 }

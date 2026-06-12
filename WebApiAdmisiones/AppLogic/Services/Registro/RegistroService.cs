@@ -1,6 +1,7 @@
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Catalogos;

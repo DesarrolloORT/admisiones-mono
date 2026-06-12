@@ -2,6 +2,7 @@ using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;
 using BusinessLogic.Entities;

@@ -1,7 +1,7 @@
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Helpers
+namespace AppLogic.Helpers.ValidationHelpers
 {
     public static class InteresProductoValidationHelper
     {

@@ -10,5 +10,7 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IEducacionSuperiorAdmisionRepository
     {
+        ICollection<BusinessLogic.Entities.EducacionSuperiorAdmision> GetByPersona(long codigoPersona);
+        void RemoveByPersona(long codigoPersona);
     }
 }
