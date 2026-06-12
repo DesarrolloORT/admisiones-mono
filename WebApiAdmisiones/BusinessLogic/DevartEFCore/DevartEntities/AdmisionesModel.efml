@@ -1032,6 +1032,9 @@
     <property name="InstruccionPadreOrtEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="911c7276-6602-4d9f-8f69-3d348639f2be">
       <column name="INSTRUCCION_PADRE_ORT_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
+    <property name="EstadoEncuestaIniAdmision" type="String" p1:nullable="True" p1:ValidateMaxLength="100" p1:ValidateRequired="false" p1:Guid="f0f29d79-6959-43a0-aa98-12f169942338">
+      <column name="ESTADO_ENCUESTA_INI_ADMISION" default="'TEMPORAL'" not-null="False" length="100" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
   </class>
   <class name="Producto" entity-set="Productos" table="T_PRODUCTO" schema="CREADOR" p1:Guid="e1ec1c7a-6aa8-47b5-9c7f-d16b3475777e">
     <id name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="89e7ebc0-56cd-4187-97cc-fc18df2fc423">
@@ -4668,14 +4671,6 @@
         <property name="IdInstanciaWorkflow" />
       </end2>
     </association>
-    <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="b31d1f5f-1329-45d4-8f66-d5321231c0e1">
-      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="3d497c19-12f6-4d80-9158-6f518195d13f">
-        <property name="IdComienzo" />
-      </end1>
-      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="99949ab8-c52d-4b96-b374-729cc5ac5ef9">
-        <property name="IdComienzo" />
-      </end2>
-    </association>
     <association name="Persona_RefreshToken" cardinality="OneToMany" p1:Guid="29e986e7-ac4b-4b09-9ff9-93be4480e5c1">
       <end1 multiplicity="One" name="Persona" class="RefreshToken" relation-class="Persona" constrained="True" lazy="False" p1:Guid="ccfd0631-4431-43aa-86e7-23cfce8047c6">
         <property name="CodigoPersona" />
@@ -4690,6 +4685,14 @@
       </end1>
       <end2 multiplicity="Many" name="EncuestaInis" class="Empresa" relation-class="EncuestaIni" lazy="False" p1:Guid="04ed299b-c009-4d59-91bb-4d469d08a840">
         <property name="CodigoInstitucionBac" />
+      </end2>
+    </association>
+    <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="3076f0f3-cd24-4ca3-8df2-aefbe25ef16c">
+      <end1 multiplicity="One" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="9c99afe3-024e-4f28-961c-a46ce00ae40e">
+        <property name="IdComienzo" />
+      </end1>
+      <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="b4fca5d4-d812-4376-af68-d785a9b97218">
+        <property name="IdEncuestaIni" />
       </end2>
     </association>
   </associations>

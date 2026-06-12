@@ -22,15 +22,6 @@ namespace AppLogic.Services.Inscripciones
             _dbConnectionContext = dbConnectionContext;
         }
 
-        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
-        {
-
-            using var uow = _uowFactory.Create();
-            var dtos =  uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
-
-            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
-        }
-
         public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
@@ -55,7 +46,21 @@ namespace AppLogic.Services.Inscripciones
             };
             return OperationResult<DtoUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
         }
+        public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+            var tiene = uow.VdEsFrescoAdmisions.TieneInscripcionActivaParaProceso(codigoPersona, idProducto, idProceso);
+            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
+        }
 
+        public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+            var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
+            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
+        }
+
+        #region PASO 1 - REGISTRAR INTERES POR PRODUCTO
         public OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request)
         {
             using var uow = _uowFactory.Create();
@@ -110,21 +115,110 @@ namespace AppLogic.Services.Inscripciones
             }
         }
 
-        public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
+        private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)
         {
-            using var uow = _uowFactory.Create();
-            var tiene = uow.VdEsFrescoAdmisions.TieneInscripcionActivaParaProceso(codigoPersona, idProducto, idProceso);
-            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
+            foreach (var interes in intereses)
+            {
+                foreach (var interesProducto in interes.InteresProductos)
+                {
+                    var interesProductoActual = uow.InteresProductos.GetByKey(interesProducto.IdInteres, interesProducto.IdProducto);
+                    if (interesProductoActual == null)
+                    {
+                        continue;
+                    }
+
+                    if (interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
+                    {
+                        continue;
+                    }
+
+                    interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
+                    interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
+                    interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
+                    interesProductoActual.FechaModifInteresProd = fechaActual;
+                    interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
+                    uow.InteresProductos.Update(interesProductoActual);
+                }
+            }
         }
 
-        public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
+        private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso)
         {
-            using var uow = _uowFactory.Create();
-            var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
-            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
+            var interes = InteresProductoEntityFactoryHelper.CrearInteres(
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
+                codigoPersona,
+                idProceso);
+            uow.Interes.Add(interes);
+            return interes;
         }
 
-        #region ENCUESTA INICIAL ADMISION
+        private static void ActivarInteresProducto(IUnitOfWork uow, Intere interes, long idProducto, DateTime fechaActual)
+        {
+            var interesProductoExistente = interes.InteresProductos.FirstOrDefault(ip => ip.IdProducto == idProducto);
+            if (interesProductoExistente == null)
+            {
+                uow.InteresProductos.Add(
+                    InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
+                return;
+            }
+
+            var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
+            if (interesProductoActual == null || interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
+            {
+                return;
+            }
+
+            interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
+            interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
+            interesProductoActual.FechaInteresProd = fechaActual;
+            interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
+            interesProductoActual.FechaModifInteresProd = fechaActual;
+            interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
+            uow.InteresProductos.Update(interesProductoActual);
+        }
+
+        private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)
+        {
+            var personaAdmite = uow.PersonaAdmites.GetByKey(codigoPersona);
+            if (personaAdmite == null)
+            {
+                uow.PersonaAdmites.Add(
+                    InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
+                return;
+            }
+
+            if (!personaAdmite.FechaFrescoPersonaAdmite.HasValue)
+            {
+                personaAdmite.FechaFrescoPersonaAdmite = fechaActual;
+                uow.PersonaAdmites.Update(personaAdmite);
+            }
+        }
+        private static OperationResult<bool> ActualizarEncuestaInicial(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso)
+        {
+            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
+            if (encuesta == null)
+            {
+                return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
+            }
+
+            var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(idProducto, idProceso);
+            if (!idComienzo.HasValue || idComienzo.Value == 0)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_IP_06",
+                    nameof(RegistrarInteresProducto),
+                    $"No existe comienzo activo, producto:{idProducto} proceso:{idProceso}.",
+                    400);
+            }
+
+            encuesta.IdProceso = idProceso;
+            encuesta.IdComienzo = idComienzo.Value;
+            return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
+        }
+
+        #endregion PASO 1 - REGISTRAR INTERES POR PRODUCTO
+
+        #region PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
         public OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona)
         {
@@ -229,73 +323,6 @@ namespace AppLogic.Services.Inscripciones
                 entidad.ToDto(),
                 nameof(RegistrarAceptacionReglamentoEstudiantil));
         }
-
-        #endregion ENCUESTA INICIAL ADMISION
-
-        #region METODOS PRIVADOS
-
-        private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)
-        {
-            foreach (var interes in intereses)
-            {
-                foreach (var interesProducto in interes.InteresProductos)
-                {
-                    var interesProductoActual = uow.InteresProductos.GetByKey(interesProducto.IdInteres, interesProducto.IdProducto);
-                    if (interesProductoActual == null)
-                    {
-                        continue;
-                    }
-
-                    if (interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
-                    {
-                        continue;
-                    }
-
-                    interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
-                    interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
-                    interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
-                    interesProductoActual.FechaModifInteresProd = fechaActual;
-                    interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
-                    uow.InteresProductos.Update(interesProductoActual);
-                }
-            }
-        }
-
-        private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso)
-        {
-            var interes = InteresProductoEntityFactoryHelper.CrearInteres(
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
-                codigoPersona,
-                idProceso);
-            uow.Interes.Add(interes);
-            return interes;
-        }
-
-        private static void ActivarInteresProducto(IUnitOfWork uow, Intere interes, long idProducto, DateTime fechaActual)
-        {
-            var interesProductoExistente = interes.InteresProductos.FirstOrDefault(ip => ip.IdProducto == idProducto);
-            if (interesProductoExistente == null)
-            {
-                uow.InteresProductos.Add(
-                    InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
-                return;
-            }
-
-            var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
-            if (interesProductoActual == null || interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
-            {
-                return;
-            }
-
-            interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
-            interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
-            interesProductoActual.FechaInteresProd = fechaActual;
-            interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
-            interesProductoActual.FechaModifInteresProd = fechaActual;
-            interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
-            uow.InteresProductos.Update(interesProductoActual);
-        }
-
         private static bool TieneDerechoAEncuestaInicial(string tipoDocumento, string documento, IUnitOfWork uow)
         {
             if (uow.VdEsFrescoAdmisions.ExistePorDocumento(tipoDocumento, documento))
@@ -310,65 +337,10 @@ namespace AppLogic.Services.Inscripciones
             return true;
         }
 
-        private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)
-        {
-            var personaAdmite = uow.PersonaAdmites.GetByKey(codigoPersona);
-            if (personaAdmite == null)
-            {
-                uow.PersonaAdmites.Add(
-                    InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
-                return;
-            }
+        #endregion PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
-            if (!personaAdmite.FechaFrescoPersonaAdmite.HasValue)
-            {
-                personaAdmite.FechaFrescoPersonaAdmite = fechaActual;
-                uow.PersonaAdmites.Update(personaAdmite);
-            }
-        }
+        #region PASO 3 - PAGOS
 
-        private static OperationResult<bool> ActualizarEncuestaInicial(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso)
-        {
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
-            {
-                return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
-            }
-
-            var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(idProducto, idProceso);
-            if (!idComienzo.HasValue || idComienzo.Value == 0)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "GEN_IP_06",
-                    nameof(RegistrarInteresProducto),
-                    $"No existe comienzo activo, producto:{idProducto} proceso:{idProceso}.",
-                    400);
-            }
-
-            encuesta.IdProceso = idProceso;
-            encuesta.IdComienzo = idComienzo.Value;
-            return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
-        }
-
-        private static DtoProductoAdmisiones MapProductoAdmisiones(BusinessLogic.Entities.Producto p)
-        {
-            var proceso = p.ProcesoProductos?.FirstOrDefault()?.Proceso;
-            return new DtoProductoAdmisiones
-            {
-                IdProducto = p.IdProducto,
-                NombreProducto = p.NombreProducto,
-                NombreExtensoProducto = p.NombreExtensoProducto,
-                IdNivelProducto = p.IdNivelProducto,
-                NombreNivelProducto = p.NivelProducto?.NombreNivelProducto,
-                AliasProducto = p.AliasProducto,
-                InscribibleProducto = p.InscribibleProducto,
-                IntermedioProducto = p.IntermedioProducto,
-                VisibleAdmisionesProducto = p.VisibleAdmisionesProducto,
-                IdProceso = proceso?.IdProceso ?? 0,
-                NombreProceso = proceso?.NombreProceso,
-            };
-        }
-
-        #endregion METODOS PRIVADOS
+        #endregion PASO 3 - PAGOS
     }
 }

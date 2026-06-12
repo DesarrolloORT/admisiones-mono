@@ -49,7 +49,8 @@ namespace DataAccess.DevartRepositories
                 e.TipoDocumento != null
                 && e.Documento != null
                 && e.TipoDocumento.Trim() == normalizedTipoDocumento
-                && e.Documento.Trim() == normalizedDocumento) > 0;
+                && e.Documento.Trim() == normalizedDocumento
+                && e.EstadoEncuestaIniAdmision == "COMPLETA") > 0;
         }
 
     }

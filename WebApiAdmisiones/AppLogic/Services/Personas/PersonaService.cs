@@ -1,5 +1,5 @@
-using System.Globalization;
 using AppLogic.Constants;
+using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices.Personas;
@@ -8,6 +8,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using System.Globalization;
 using Utilities;
 
 namespace AppLogic.Services.Personas
@@ -94,6 +95,15 @@ namespace AppLogic.Services.Personas
             uow.Save();
 
             return OperationResult<bool>.Ok(true, nameof(ActualizarDatosPersona));
+        }
+
+        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
+        {
+
+            using var uow = uowFactory.Create();
+            var dtos = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
+
+            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
         }
 
         public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)

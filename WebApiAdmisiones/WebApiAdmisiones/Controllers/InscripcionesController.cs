@@ -19,21 +19,6 @@ namespace WebApiAdmisiones.Controllers
     {
         #region INSCRIPCIONES
 
-        /// <summary>
-        /// Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de inscripciones con todos los campos expuestos por la vista.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        [HttpGet("MisInscripciones")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
-        public IActionResult ObtenerMisInscripciones()
-        {
-            var result = inscripcionesService.ObtenerMisInscripciones(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
         ///// <summary>
         ///// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
         ///// </summary>
