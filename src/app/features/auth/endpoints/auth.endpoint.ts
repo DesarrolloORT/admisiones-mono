@@ -273,6 +273,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'ConfirmarNuevaPersona',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -292,6 +293,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'ConfirmarSolicitudAlta',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -307,7 +309,7 @@ export class AuthEndpoint {
       .requestWithMessage(postRegistroEvaluarDocumentoEndpoint, {
         body: payload,
         withCredentials: true,
-        captchaAction: 'evaluarDocumento',
+        captchaAction: 'EvaluarDocumento',
       })
       .pipe(
         map(({ data, message }) => ({
@@ -334,7 +336,7 @@ export class AuthEndpoint {
     return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
       body: payload,
       withCredentials: true,
-      captchaAction: 'analizarAdjunto',
+      captchaAction: 'AnalizarAdjunto',
     });
   }
 
@@ -353,7 +355,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
-        captchaAction: 'verificarIdentidad',
+        captchaAction: 'VerificarIdentidad',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -369,7 +371,7 @@ export class AuthEndpoint {
       .request(postAuthRecuperarContrasenaEndpoint, {
         body: payload,
         withCredentials: true,
-        captchaAction: 'recuperarContrasena',
+        captchaAction: 'RecuperarPassword',
       })
       .pipe(map(() => undefined));
   }
@@ -399,6 +401,7 @@ export class AuthEndpoint {
       .data(postAuthVerificarCodigo2FaEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'VerificarCodigo2FA',
       })
       .pipe(
         map(response => ({
@@ -420,6 +423,7 @@ export class AuthEndpoint {
       .data(postAuthReenviarCodigo2FaEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'ReenviarCodigo2FA',
         context: suppressGlobalErrorContext(),
       })
       .pipe(
