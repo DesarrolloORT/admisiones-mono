@@ -230,6 +230,10 @@ namespace AppLogic.DevartDTOs
               target.CaracteristicaPai_IdCaracteristicaPaisTel2 = source.CaracteristicaPai_IdCaracteristicaPaisTel2.ToDtoWithRelated(level - 1);
               target.PersonaAdmite = source.PersonaAdmite.ToDtoWithRelated(level - 1);
               target.RefreshTokens = source.RefreshTokens.ToDtosWithRelated(level - 1);
+              target.EmpresaConsideradaAdmisions = source.EmpresaConsideradaAdmisions.ToDtosWithRelated(level - 1);
+              target.EducacionSuperiorAdmisions = source.EducacionSuperiorAdmisions.ToDtosWithRelated(level - 1);
+              target.MotivoEleccionAdmisions = source.MotivoEleccionAdmisions.ToDtosWithRelated(level - 1);
+              target.PublicidadEleccionAdmisions = source.PublicidadEleccionAdmisions.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

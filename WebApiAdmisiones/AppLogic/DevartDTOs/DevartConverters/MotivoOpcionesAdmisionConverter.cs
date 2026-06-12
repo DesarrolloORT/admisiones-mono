@@ -37,6 +37,11 @@ namespace AppLogic.DevartDTOs
             target.IdMotivo = source.IdMotivo;
             target.NombreMotivo = source.NombreMotivo;
 
+            // Navigation Properties
+            if (level > 0) {
+              target.MotivoEleccionAdmisions = source.MotivoEleccionAdmisions.ToDtosWithRelated(level - 1);
+            }
+
             // User-defined partial method
             OnDtoCreating(source, target);
 

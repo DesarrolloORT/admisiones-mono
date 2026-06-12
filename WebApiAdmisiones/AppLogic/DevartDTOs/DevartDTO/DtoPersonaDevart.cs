@@ -533,6 +533,14 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoRefreshTokenDevart> RefreshTokens { get; set; }
 
+        public List<DtoEmpresaConsideradaAdmisionDevart> EmpresaConsideradaAdmisions { get; set; }
+
+        public List<DtoEducacionSuperiorAdmisionDevart> EducacionSuperiorAdmisions { get; set; }
+
+        public List<DtoMotivoEleccionAdmisionDevart> MotivoEleccionAdmisions { get; set; }
+
+        public List<DtoPublicidadEleccionAdmisionDevart> PublicidadEleccionAdmisions { get; set; }
+
         #endregion
     }
 
