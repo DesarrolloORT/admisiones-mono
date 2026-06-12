@@ -369,14 +369,6 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        private static DtoProductoAdmisiones MapProductoConInteresActivo(BusinessLogic.Entities.Producto p, Proceso? procesoInteres)
-        {
-            var dto = MapProductoAdmisiones(p);
-            dto.IdProceso = procesoInteres?.IdProceso ?? 0;
-            dto.NombreProceso = procesoInteres?.NombreProceso;
-            return dto;
-        }
-
         #endregion METODOS PRIVADOS
     }
 }
