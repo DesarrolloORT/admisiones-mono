@@ -1,30 +1,36 @@
-<main class="dashboard-main" id="main-content" tabindex="-1">
-  <section class="dashboard-container">
+@if (hasPendingPayment()) {
+<ort-alert purpose="warning" radius="straight">
+  <ort-alert-title>
+    Inscripción pendiente de pago.
+    <span class="alert-detail--inline">Realiza el pago antes del 04/05/2025</span>
+  </ort-alert-title>
+  <ort-alert-supporting-text class="alert-detail--block">
+    Realiza el pago antes del 04/05/2025
+  </ort-alert-supporting-text>
+</ort-alert>
+}
 
+<main class="dashboard-main" id="main-content" tabindex="-1">
+  <header class="dashboard-greeting">
+    <h1>{{ greeting() }}</h1>
+    <p>Aquí podés gestionar tu inscripción y postulación a becas.</p>
+  </header>
+
+  <section class="dashboard-container">
     <section class="dashboard-actions">
       <app-dashboard-action-card variant="career" />
       <app-dashboard-action-card variant="scholarship" />
     </section>
 
     <section class="mis-carreras" [class.mis-carreras--single]="inscripciones().length === 1">
-      <div class="dashboard-header">
-        <h3 class="dashboard-header__title">Mis carreras</h3>
-        <button
-          aria-label="Inscribirme a carrera"
-          class="dashboard-header__add"
-          ort-icon-button
-          type="button"
-          variant="tonal">
-          <ort-icon name="add" />
-        </button>
-      </div>
+      <app-dashboard-section-header variant="careers" />
 
       @if (inscripciones().length === 1) {
-        <app-dashboard-card [inscripcion]="inscripciones()[0]" />
+      <app-dashboard-card [inscripcion]="inscripciones()[0]" />
       } @else {
       <div class="swiper">
         <div class="swiper-wrapper">
-           @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+          @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
           <div class="swiper-slide">
             <app-dashboard-card [inscripcion]="inscripcion" />
           </div>
