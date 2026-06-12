@@ -318,28 +318,6 @@ public class AuthService : IAuthService
         }
     }
 
-    private static bool CoincidePersonaRecupero(
-        BusinessLogic.Entities.Persona persona,
-        string tipoDocumento,
-        string documento,
-        string? primerApellido)
-    {
-        if (string.IsNullOrWhiteSpace(primerApellido))
-        {
-            return false;
-        }
-
-        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
-        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
-            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
-            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
-
-        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
-            && DocumentUtils.Normalizar(persona.Documento) == documento
-            && apellidoPersona == apellidoEntrada;
-    }
-
-
     /// <summary>
     /// Completa el alta de password inicial usando una sesion temporal de activacion.
     /// </summary>
@@ -559,6 +537,28 @@ public class AuthService : IAuthService
             ResolverNombreArchivo(cara.NombreArchivo, "cara.jpg"),
             nameof(CompletarPasswordAsync));
     }
+
+    private static bool CoincidePersonaRecupero(
+    BusinessLogic.Entities.Persona persona,
+    string tipoDocumento,
+    string documento,
+    string? primerApellido)
+    {
+        if (string.IsNullOrWhiteSpace(primerApellido))
+        {
+            return false;
+        }
+
+        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
+        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
+            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
+
+        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
+            && DocumentUtils.Normalizar(persona.Documento) == documento
+            && apellidoPersona == apellidoEntrada;
+    }
+
 
     private void GuardarImagenesDocumentoReconocido(
         BusinessLogic.IDevartRepositories.IUnitOfWork uow,

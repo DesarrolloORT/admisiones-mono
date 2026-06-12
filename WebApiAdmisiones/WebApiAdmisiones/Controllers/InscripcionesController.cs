@@ -43,7 +43,7 @@ namespace WebApiAdmisiones.Controllers
         ///// <response code="400">Producto o proceso inválido.</response>
         ///// <response code="404">Persona no encontrada.</response>
         ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
-        [HttpPost("RegistrarInteresProducto")]
+        [HttpPost("InteresProducto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
@@ -68,6 +68,26 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ObtenerEncuestaInicialAdmision()
         {
             var result = inscripcionesService.ObtenerEncuestaInicial(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Registra la aceptación del reglamento estudiantil para la persona autenticada.
+        /// Toma el producto y el comienzo desde la encuesta inicial de admisión vigente.
+        /// </summary>
+        /// <returns>Datos de la aceptación registrada.</returns>
+        /// <response code="200">Aceptación registrada correctamente.</response>
+        /// <response code="400">La encuesta no contiene producto o comienzo válidos.</response>
+        /// <response code="404">No se encontró la persona o la encuesta inicial de admisión.</response>
+        /// <response code="409">Ya existe una aceptación registrada para la persona, producto y comienzo.</response>
+        [HttpPost("ReglamentoEstudiantil")]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 409)]
+        public IActionResult RegistrarAceptacionReglamentoEstudiantil()
+        {
+            var result = inscripcionesService.RegistrarAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 

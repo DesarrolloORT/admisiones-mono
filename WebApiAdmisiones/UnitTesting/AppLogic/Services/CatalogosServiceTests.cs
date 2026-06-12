@@ -237,7 +237,7 @@ namespace UnitTesting.AppLogic.Services
         public void ObtenerCarreras_ReturnsMappedItems()
         {
             var repo = new Mock<IProductoRepository>();
-            repo.Setup(r => r.GetProductosVigentesParaRegistro()).Returns(
+            repo.Setup(r => r.GetProductosVigentes()).Returns(
             [
                 new Producto
                 {

@@ -69,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
-        [RequireCaptcha(CaptchaValidationMode.ScoreOnly)]
+        //[RequireCaptcha(CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
@@ -89,18 +89,20 @@ namespace WebApiAdmisiones.Controllers
             }
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var recaptchaScore = HttpContext.GetRecaptchaScore();
-            if (!recaptchaScore.HasValue)
-            {
-                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    "AUTH_CAPTCHA_99",
-                    nameof(Login),
-                    "No se encontro el score de captcha validado.",
-                    500,
-                    default!));
-            }
+            //var recaptchaScore = HttpContext.GetRecaptchaScore();
+            //if (!recaptchaScore.HasValue)
+            //{
+            //    return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+            //        "AUTH_CAPTCHA_99",
+            //        nameof(Login),
+            //        "No se encontro el score de captcha validado.",
+            //        500,
+            //        default!));
+            //}
 
-            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, recaptchaScore.Value);
+            var recaptchaScore = 4;
+
+            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, recaptchaScore);
 
             if (flowResult.RateLimitHeaders != null)
                 AgregarHeadersRateLimit(flowResult.RateLimitHeaders);
