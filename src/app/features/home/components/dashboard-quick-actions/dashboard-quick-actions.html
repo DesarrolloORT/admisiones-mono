@@ -1,6 +1,9 @@
 @switch (action().type) {
   @case ('primary') {
     <button class="quick-actions__btn" ort-primary-button type="button" [attr.aria-label]="ariaLabel()">
+      @if (action().icon) {
+        <ort-icon aria-hidden="true">{{ action().icon }}</ort-icon>
+      }
       {{ action().label }}
     </button>
   }
