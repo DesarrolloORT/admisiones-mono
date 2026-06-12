@@ -78,6 +78,24 @@ namespace UnitTesting.Controllers
             };
         }
 
+        [Theory]
+        [InlineData(nameof(AuthController.Login), CaptchaActions.Login, CaptchaValidationMode.ScoreOnly)]
+        [InlineData(nameof(AuthController.RecuperarPassword), CaptchaActions.RecuperarPassword, CaptchaValidationMode.RequireMinimumScore)]
+        public void CaptchaEndpoints_HaveExpectedCaptchaAction(
+            string methodName,
+            string expectedAction,
+            CaptchaValidationMode expectedMode)
+        {
+            var method = typeof(AuthController).GetMethod(methodName);
+
+            Assert.NotNull(method);
+            var attribute = Assert.Single(
+                method!.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true)
+                    .OfType<RequireCaptchaAttribute>());
+            Assert.Equal(expectedMode, attribute.Arguments[0]);
+            Assert.Equal(expectedAction, attribute.Arguments[1]);
+        }
+
         [Fact]
         public async Task ActivarLinkPassword_WithValidToken_ReturnsOkAndSetsTemporaryCookie()
         {

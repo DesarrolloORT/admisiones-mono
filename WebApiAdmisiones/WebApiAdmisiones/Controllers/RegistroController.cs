@@ -46,7 +46,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Documento evaluado correctamente.</response>
         /// <response code="400">Datos invalidos o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.EvaluarDocumento)]
         [HttpPost("EvaluarDocumento")]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 400)]
@@ -81,7 +81,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Identidad verificada correctamente.</response>
         /// <response code="400">Datos invalidos, verificacion rechazada o sesion de registro expirada.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.VerificarIdentidad)]
         [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -135,7 +135,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="504">Timeout al consultar el proveedor externo de reconocimiento.</response>
         [AllowAnonymous]
         [EnableRateLimiting("ReconocimientoDocumento")]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.AnalizarAdjunto)]
         [HttpPost("AnalizarAdjunto")]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<ReconocimientoDocumentoResponse>), 400)]
@@ -245,7 +245,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Persona nueva confirmada correctamente. Se envió mail de activación.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.ConfirmarNuevaPersona)]
         [HttpPost("ConfirmarNuevaPersona")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
@@ -271,7 +271,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Solicitud de alta confirmada correctamente.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
         [AllowAnonymous]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.ConfirmarSolicitudAlta)]
         [HttpPost("ConfirmarSolicitudAlta")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]

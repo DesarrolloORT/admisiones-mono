@@ -142,6 +142,23 @@ namespace UnitTesting.Controllers
                 attribute => attribute is RequireCaptchaAttribute);
         }
 
+        [Theory]
+        [InlineData(nameof(RegistroController.EvaluarDocumento), CaptchaActions.EvaluarDocumento)]
+        [InlineData(nameof(RegistroController.VerificarIdentidad), CaptchaActions.VerificarIdentidad)]
+        [InlineData(nameof(RegistroController.AnalizarAdjunto), CaptchaActions.AnalizarAdjunto)]
+        [InlineData(nameof(RegistroController.ConfirmarNuevaPersona), CaptchaActions.ConfirmarNuevaPersona)]
+        [InlineData(nameof(RegistroController.ConfirmarSolicitudAlta), CaptchaActions.ConfirmarSolicitudAlta)]
+        public void PublicCaptchaEndpoints_HaveExpectedCaptchaAction(string methodName, string expectedAction)
+        {
+            var method = typeof(RegistroController).GetMethod(methodName);
+
+            Assert.NotNull(method);
+            var attribute = Assert.Single(
+                method!.GetCustomAttributes(typeof(RequireCaptchaAttribute), inherit: true)
+                    .OfType<RequireCaptchaAttribute>());
+            Assert.Equal(expectedAction, attribute.Arguments[1]);
+        }
+
         [Fact]
         public async Task EvaluarDocumento_DelegatesToServiceAndReturnsOk()
         {

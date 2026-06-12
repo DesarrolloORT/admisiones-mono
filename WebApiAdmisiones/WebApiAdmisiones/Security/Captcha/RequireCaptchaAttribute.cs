@@ -8,12 +8,34 @@ namespace WebApiAdmisiones.Security.Captcha
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public sealed class RequireCaptchaAttribute : TypeFilterAttribute
     {
+        public RequireCaptchaAttribute()
+            : this(CaptchaActions.Login, CaptchaValidationMode.RequireMinimumScore)
+        {
+        }
+
+        public RequireCaptchaAttribute(CaptchaValidationMode mode)
+            : this(CaptchaActions.Login, mode)
+        {
+        }
+
         public RequireCaptchaAttribute(
+            string expectedAction,
             CaptchaValidationMode mode = CaptchaValidationMode.RequireMinimumScore)
             : base(typeof(RequireCaptchaFilter))
         {
-            Arguments = [mode];
+            Arguments = [mode, expectedAction];
         }
+    }
+
+    public static class CaptchaActions
+    {
+        public const string Login = "login";
+        public const string RecuperarPassword = "RecuperarPassword";
+        public const string EvaluarDocumento = "EvaluarDocumento";
+        public const string VerificarIdentidad = "VerificarIdentidad";
+        public const string AnalizarAdjunto = "AnalizarAdjunto";
+        public const string ConfirmarNuevaPersona = "ConfirmarNuevaPersona";
+        public const string ConfirmarSolicitudAlta = "ConfirmarSolicitudAlta";
     }
 
     public sealed class RequireCaptchaFilter : IAsyncActionFilter
@@ -22,17 +44,24 @@ namespace WebApiAdmisiones.Security.Captcha
 
         private readonly IRecaptchaService _recaptchaService;
         private readonly CaptchaValidationMode _mode;
+        private readonly string _expectedAction;
 
-        public RequireCaptchaFilter(IRecaptchaService recaptchaService, CaptchaValidationMode mode)
+        public RequireCaptchaFilter(
+            IRecaptchaService recaptchaService,
+            CaptchaValidationMode mode,
+            string expectedAction = CaptchaActions.Login)
         {
             _recaptchaService = recaptchaService;
             _mode = mode;
+            _expectedAction = string.IsNullOrWhiteSpace(expectedAction)
+                ? CaptchaActions.Login
+                : expectedAction;
         }
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var token = context.HttpContext.Request.Headers[HeaderName].FirstOrDefault();
-            var validation = await _recaptchaService.ValidarConScoreAsync(token ?? string.Empty, "login");
+            var validation = await _recaptchaService.ValidarConScoreAsync(token ?? string.Empty, _expectedAction);
             if (!validation.Success)
             {
                 var errorCode = _mode == CaptchaValidationMode.RequireMinimumScore
