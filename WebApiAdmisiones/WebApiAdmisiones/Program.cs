@@ -38,7 +38,6 @@ builder.Services.AddApiControllers();
 // Swagger + JWT Security
 builder.Services.AddSwaggerGen(static options =>
 {
-    const string schemeId = "Bearer";
     var xmlCommentsPath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
 
     if (File.Exists(xmlCommentsPath))
@@ -46,22 +45,14 @@ builder.Services.AddSwaggerGen(static options =>
         options.IncludeXmlComments(xmlCommentsPath);
     }
 
-    options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Por favor ingrese el token JWT en el formato: Bearer {token}"
+        Title = "Mi API",
+        Version = "v1",
+        Description = "La autenticación se realiza mediante cookies HttpOnly generadas al iniciar sesión."
     });
 
-    options.AddSecurityRequirement(document =>
-        new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>()
-        }
-    );
+    options.OperationFilter<AuthDescriptionOperationFilter>();
 });
 
 // --------------------------------------------------------------------------
