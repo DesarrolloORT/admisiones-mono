@@ -180,7 +180,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual({ tipoDocumento: 'CI', documento: '12345' });
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('evaluarDocumento');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('EvaluarDocumento');
 
       req.flush({
         success: true,
@@ -311,7 +311,7 @@ describe('AuthEndpoint', () => {
       expect(req.request.body).toEqual(payload);
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-existing-person');
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('verificarIdentidad');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerificarIdentidad');
 
       req.flush({ success: true, httpCode: 200, data: null });
     });
@@ -334,7 +334,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual(payload);
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('analizarAdjunto');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('AnalizarAdjunto');
 
       req.flush({ success: true, httpCode: 200, data: { requiereRevision: false } });
     });
@@ -379,7 +379,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual(payload);
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('recuperarContrasena');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('RecuperarPassword');
 
       req.flush({ success: true, httpCode: 200, data: null });
     });
