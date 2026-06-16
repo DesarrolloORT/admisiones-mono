@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
-import { expectNoAxeViolations } from './support/a11y';
+import { expectNoAxeViolations, ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES } from './support/a11y';
 import { mockApi } from './support/api-mocks';
 import { HomePage } from './support/pages/home-page';
 import { InscripcionPage } from './support/pages/inscripcion-page';
@@ -43,7 +43,7 @@ test.describe('WCAG axe coverage @a11y', () => {
     test(`has no axe violations on ${pageCase.path} @a11y`, async ({ page }) => {
       await addAuthenticatedSession(page);
       await page.goto(pageCase.path);
-      await expect(page.getByRole('heading', { name: pageCase.heading })).toBeVisible();
+      await expect(getHeading(page, pageCase.heading)).toBeVisible();
 
       await expectNoAxeViolations(page);
     });
@@ -125,12 +125,16 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await inscription.goto('encuesta-completa');
     await inscription.fillAcademicProposal();
 
-    await expectNoAxeViolations(page);
+    await expectNoAxeViolations(page, {
+      knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
+    });
 
     await inscription.fillIdentity();
     await inscription.acceptRegulation();
 
-    await expectNoAxeViolations(page);
+    await expectNoAxeViolations(page, {
+      knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
+    });
 
     await inscription.selectPayment('cuenta-bancaria');
 
@@ -145,3 +149,10 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeFocused();
   });
 });
+
+function getHeading(page: Page, heading: string | RegExp) {
+  return page.getByRole('heading', {
+    name: heading,
+    exact: typeof heading === 'string',
+  });
+}

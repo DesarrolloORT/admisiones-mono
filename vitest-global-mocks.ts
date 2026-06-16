@@ -20,6 +20,7 @@ const mockStorage = () => {
 
 Object.defineProperty(window, 'localStorage', { value: mockStorage() });
 Object.defineProperty(window, 'sessionStorage', { value: mockStorage() });
+Object.defineProperty(window, 'scrollTo', { value: vi.fn(), writable: true });
 
 window.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
