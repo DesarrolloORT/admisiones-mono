@@ -1,0 +1,33 @@
+<section class="mis-becas" [class.mis-becas--single]="becas().length === 1 && !singleRow()">
+  @if (becas().length > 0) {
+  <div class="section-header">
+    <h3 class="section-header__title">Mis becas</h3>
+    <button
+      class="section-header__add"
+      ort-icon-button
+      type="button"
+      variant="tonal"
+      [attr.aria-label]="'Postularme a beca'">
+      <ort-icon name="add" />
+    </button>
+  </div>
+  } @if (becas().length === 0) {
+  <div class="mis-becas__empty">
+    <app-dashboard-action-card variant="scholarship" />
+  </div>
+  } @else if (becas().length === 1) {
+  <app-dashboard-card variant="scholarships" [beca]="becas()[0]" />
+  } @else{
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      @for (beca of becas(); track beca.id) {
+      <div class="swiper-slide">
+        <app-dashboard-card variant="scholarships" [beca]="beca" />
+      </div>
+      }
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+  }
+</section>
+
