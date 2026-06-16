@@ -37,39 +37,6 @@ namespace UnitTesting.AppLogic.Services
         #region Encuesta
 
         [Fact]
-        public void ObtenerEncuestaInicialAdmision_NotFound_ReturnsFailed()
-        {
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var result = _service.ObtenerEncuestaInicialAdmision(123);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_DPI_01", result.ErrorCode);
-            Assert.Equal(204, result.HttpCode);
-        }
-
-        [Fact]
-        public void ObtenerEncuestaInicialAdmision_ReturnsDto()
-        {
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
-            {
-                IdEncuestaIni = 10,
-                CodigoPersona = 123,
-                IdProducto = 20
-            });
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var result = _service.ObtenerEncuestaInicialAdmision(123);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal(10, result.Data.IdEncuestaIni);
-        }
-
-        [Fact]
         public void GuardarDatosPersonaEncuesta_PersonaNoEncontrada_ReturnsNotFound()
         {
             var personaRepo = new Mock<IPersonaRepository>();

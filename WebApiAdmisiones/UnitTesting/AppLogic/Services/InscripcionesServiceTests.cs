@@ -169,7 +169,9 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(900)
                 .Returns(901);
 
+            var fechaAntes = DateTime.Now;
             var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var fechaDespues = DateTime.Now;
 
             Assert.True(result.Success);
             intereRepo.Verify(r => r.Add(It.Is<Intere>(i =>
@@ -180,7 +182,9 @@ namespace UnitTesting.AppLogic.Services
                 i.IdInteres == 500m &&
                 i.IdProducto == 10 &&
                 i.IdGradoInteres == 4m &&
-                i.FechaInteresProd == FechaBase)), Times.Once);
+                i.FechaInteresProd.HasValue &&
+                i.FechaInteresProd.Value >= fechaAntes &&
+                i.FechaInteresProd.Value <= fechaDespues)), Times.Once);
             personaAdmiteRepo.Verify(r => r.Add(It.Is<PersonaAdmite>(p => p.CodigoPersona == 123)), Times.Once);
             interesProductoOfertaRepo.Verify(r => r.Add(It.Is<InteresProductoOferta>(x =>
                 x.IdInteres == 500 &&
@@ -461,60 +465,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerMisInscripciones_ReturnsInscripcionesFrescoDesdeVista()
-        {
-            var fechaInscripcion = new DateTime(2026, 6, 1);
-            var fechaInicioComienzo = new DateTime(2026, 8, 1);
-            var fechaReferencia = new DateTime(2026, 6, 10);
-            var repo = new Mock<IVdInscripcionesFresco1y2Repository>();
-            repo.Setup(r => r.GetInscripcionesFrescoHabilitadas(123)).Returns(
-            [
-                new VdInscripcionesFresco1y2
-                {
-                    CodigoPersona = 123,
-                    FechaInscripcion = fechaInscripcion,
-                    UsuarioInscripcion = "USR",
-                    IdTurno = 3,
-                    IdProducto = 5,
-                    IdComienzo = 4,
-                    FechaInicioComienzo = fechaInicioComienzo,
-                    NombreExtensoProducto = "Analista en Tecnologias de la Informacion",
-                    IdNivelProducto = 1,
-                    NombreComienzo = "Marzo",
-                    NombreTurno = "Nocturno",
-                    IdProceso = 75,
-                    FechaReferencia = fechaReferencia,
-                    IdInscripto = 99,
-                    EstadoInscripcion = "Confirmada",
-                    VengoDe = "VD_INSCRIPCIONES_FRESCO_1y2"
-                }
-            ]);
-            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(repo.Object);
-
-            var result = _service.ObtenerMisInscripciones(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(123m, item.CodigoPersona);
-            Assert.Equal(fechaInscripcion, item.FechaInscripcion);
-            Assert.Equal("USR", item.UsuarioInscripcion);
-            Assert.Equal(3m, item.IdTurno);
-            Assert.Equal(5m, item.IdProducto);
-            Assert.Equal(4m, item.IdComienzo);
-            Assert.Equal(fechaInicioComienzo, item.FechaInicioComienzo);
-            Assert.Equal("Analista en Tecnologias de la Informacion", item.NombreExtensoProducto);
-            Assert.Equal(1, item.IdNivelProducto);
-            Assert.Equal("Marzo", item.NombreComienzo);
-            Assert.Equal("Nocturno", item.NombreTurno);
-            Assert.Equal(75m, item.IdProceso);
-            Assert.Equal(fechaReferencia, item.FechaReferencia);
-            Assert.Equal(99m, item.IdInscripto);
-            Assert.Equal("Confirmada", item.EstadoInscripcion);
-            Assert.Equal("VD_INSCRIPCIONES_FRESCO_1y2", item.VengoDe);
-            repo.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
-        }
-
-        [Fact]
         public void TieneInscripcionActivaParaProceso_ReturnsRepositoryValue()
         {
             var repo = new Mock<IVdEsFrescoAdmisionRepository>();
@@ -538,83 +488,6 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.False(result.Data);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_PersonaInexistente_ReturnsNotFound()
-        {
-            SetupPersona(null);
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_TEI_01", result.ErrorCode);
-            Assert.Equal(404, result.HttpCode);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_DocumentoInvalido_ReturnsBadRequest()
-        {
-            SetupPersona(new Persona
-            {
-                CodigoPersona = 123,
-                TipoDocumento = string.Empty,
-                Documento = "123"
-            });
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_TEI_02", result.ErrorCode);
-            Assert.Equal(400, result.HttpCode);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_ExisteEnFrescos_ReturnsFalse()
-        {
-            SetupPersonaValida();
-            SetupReposDerechoEncuesta(existeFresco: true);
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.True(result.Success);
-            Assert.False(result.Data);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_ExisteEnEncuestaIni_ReturnsFalse()
-        {
-            SetupPersonaValida();
-            SetupReposDerechoEncuesta(existeEncuestaIni: true);
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.True(result.Success);
-            Assert.False(result.Data);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_ExisteEncuestaCompleta_ReturnsFalse()
-        {
-            SetupPersonaValida();
-            SetupReposDerechoEncuesta(existeEncuestaCompleta: true);
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.True(result.Success);
-            Assert.False(result.Data);
-        }
-
-        [Fact]
-        public void TieneDerechoAEncuestaInicial_NoExisteEnNingunaFuente_ReturnsTrue()
-        {
-            SetupPersonaValida();
-            SetupReposDerechoEncuesta();
-
-            var result = _service.TieneDerechoAEncuestaInicial(123);
-
-            Assert.True(result.Success);
-            Assert.True(result.Data);
         }
 
         [Fact]

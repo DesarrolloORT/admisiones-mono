@@ -305,9 +305,9 @@ namespace AppLogic.Services.Inscripciones
                 return validacionConsistencia;
             }
 
-            var encuesta = ObtenerEncuestaParaGuardar(uow, codigoPersona, request)
-                ?? CrearEncuestaInicial(persona, codigoPersona);
-            var esNueva = encuesta.IdEncuestaIni == 0;
+            var encuesta = ObtenerEncuestaParaGuardar(uow, codigoPersona, request);
+            var esNueva = encuesta == null;
+            encuesta ??= CrearEncuestaInicial(persona, codigoPersona);
 
             var idProducto = request.IdProducto ?? encuesta.IdProducto;
             var idProceso = request.IdProceso ?? encuesta.IdProceso;
