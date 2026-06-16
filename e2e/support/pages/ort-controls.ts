@@ -21,7 +21,7 @@ export async function selectOrtOption(
 }
 
 export async function clickRadioByName(page: Page, name: string | RegExp): Promise<void> {
-  const radioCard = page.locator('ort-radio-card-button').filter({ hasText: name }).first();
+  const radioCard = page.locator('ort-radio-button').filter({ hasText: name }).first();
 
   if ((await radioCard.count()) > 0) {
     await radioCard.click();
