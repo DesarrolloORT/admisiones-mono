@@ -57,6 +57,9 @@ describe('Home', () => {
       fixture.nativeElement.querySelectorAll('a.home-action-card__primary')
     ) as HTMLAnchorElement[];
 
-    expect(primaryLinks.map(link => link.getAttribute('href'))).toEqual(['/inscripciones', '/becas']);
+    expect(primaryLinks.map(link => link.getAttribute('href'))).toEqual([
+      '/inscripciones',
+      '/becas',
+    ]);
   });
 });
