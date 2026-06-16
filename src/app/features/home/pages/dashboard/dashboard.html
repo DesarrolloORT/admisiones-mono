@@ -16,8 +16,6 @@
     <p>Aquí podés gestionar tu inscripción y postulación a becas.</p>
   </header>
 
-
-
   <section class="dashboard-container">
     <section class="dashboard-actions">
       <app-dashboard-action-card variant="career" />
@@ -25,44 +23,40 @@
     </section>
 
     <div class="dashboard-cards" [class.dashboard-cards--row]="singleRow()">
-    <section class="mis-carreras" [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
-      <app-dashboard-section-header variant="careers" />
+      <section
+        class="mis-carreras"
+        [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
 
-      @if (inscripciones().length === 1) {
-      <app-dashboard-card [inscripcion]="inscripciones()[0]" />
-      } @else {
-      <div class="swiper">
-        <div class="swiper-wrapper">
-          @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
-          <div class="swiper-slide">
-            <app-dashboard-card [inscripcion]="inscripcion" />
-          </div>
-          }
+        <div class="section-header">
+          <h3 class="section-header__title">Mis carreras</h3>
+          <button
+            class="section-header__add"
+            ort-icon-button
+            type="button"
+            variant="tonal"
+            [attr.aria-label]="'Inscribirme a carrera'">
+            <ort-icon name="add" />
+          </button>
         </div>
-        <div class="swiper-pagination"></div>
-      </div>
-      }
-    </section>
 
-    <section class="mis-becas" [class.mis-becas--single]="becas().length === 1 && !singleRow()">
-      <app-dashboard-section-header variant="scholarships" />
-
-      @if (becas().length === 1) {
-      <app-dashboard-card variant="scholarships" [beca]="becas()[0]" />
-      } @else {
-      <div class="swiper">
-        <div class="swiper-wrapper">
-          @for (beca of becas(); track beca.id) {
-          <div class="swiper-slide">
-            <app-dashboard-card variant="scholarships" [beca]="beca" />
-          </div>
+        @if (inscripciones().length === 1) {
+        <app-dashboard-card [inscripcion]="inscripciones()[0]" />
+        } @else {
+        <div class="swiper">
+          <div class="swiper-wrapper">
+            @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+            <div class="swiper-slide">
+              <app-dashboard-card [inscripcion]="inscripcion" />
+            </div>
           }
+          </div>
+          <div class="swiper-pagination"></div>
         </div>
-        <div class="swiper-pagination"></div>
-      </div>
-      }
-    </section>
+        }
+      </section>
+      <app-dashboard-scholarships-section class="mis-becas" [becas]="becas()" [singleRow]="singleRow()" />
+
+
     </div>
   </section>
 </main>
-

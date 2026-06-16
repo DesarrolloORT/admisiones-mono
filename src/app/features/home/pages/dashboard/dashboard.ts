@@ -15,7 +15,8 @@ import { Navigation, Pagination } from 'swiper/modules';
 import { AuthSessionService } from '../../../auth/services/auth-session';
 import { DashboardActionCard } from '../../components/dashboard-action-card/dashboard-action-card';
 import { DashboardCard } from '../../components/dashboard-card/dashboard-card';
-import { DashboardSectionHeader } from '../../components/dashboard-section-header/dashboard-section-header';
+import { DashboardScholarshipsSection } from "../../components/dashboard-scholarships-section/dashboard-scholarships-section";
+import { ScholarshipGrantedCard } from "../../components/scholarship-granted-card/scholarship-granted-card";
 import { MiBeca } from '../../models/mi-beca';
 import { MiInscripcion } from '../../models/mi-inscripcion';
 import { DashboardService } from '../../services/dashboard';
@@ -32,8 +33,9 @@ import { DashboardService } from '../../services/dashboard';
     OrtIconModule,
     DashboardActionCard,
     OrtAlertModule,
-    DashboardSectionHeader,
-  ],
+    DashboardScholarshipsSection,
+    ScholarshipGrantedCard
+],
 })
 export class Dashboard implements OnInit, AfterViewInit {
   private readonly service = inject(DashboardService);
@@ -52,7 +54,7 @@ export class Dashboard implements OnInit, AfterViewInit {
       beneficio: '',
       fechaResultados: '',
     },
-    {
+     {
       id: 2,
       nombreBeca: 'Fondo de Becas Concursables',
       nombreCarrera: 'Contador público',
@@ -84,7 +86,8 @@ export class Dashboard implements OnInit, AfterViewInit {
       resultadoPrueba: '',
       beneficio: '',
       fechaResultados: 'Lunes 24/07/2026',
-    },
+    }
+
   ]);
   protected readonly greeting = computed(() => {
     const name = this.authSession.session()?.primerNombre?.trim();
@@ -93,13 +96,14 @@ export class Dashboard implements OnInit, AfterViewInit {
   protected readonly hasPendingPayment = computed(() =>
     this.inscripciones().some(i => i.estado === 'Pago pendiente')
   );
+
   protected readonly singleRow = computed(
     () => this.inscripciones().length === 1 && this.becas().length === 1
   );
 
   ngOnInit(): void {
     this.service.getMisInscripciones().subscribe(data => {
-      this.inscripciones.set(data.slice());
+      this.inscripciones.set(data);
       console.log('Mis inscripciones:', this.inscripciones());
     });
   }
