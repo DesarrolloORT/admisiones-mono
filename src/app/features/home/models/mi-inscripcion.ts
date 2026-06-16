@@ -9,4 +9,3 @@ export interface MiInscripcion {
   nombreTurno: string;
   estado: InscripcionEstado;
 }
-

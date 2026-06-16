@@ -1,6 +1,16 @@
-<app-auth-form description="Ingresá el código que enviamos a tu correo para confirmar tu identidad."
-  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="lock"
-  heroTitle="Tu seguridad es prioridad." title="Autenticación requerida" [centerContent]="true" [hideHeader]="true">
-  <app-two-factor-validation [canResend]="facade.canResend()" [email]="facade.email()" [error]="facade.error()"
-    [isSubmitting]="facade.isSubmitting()" (confirm)="facade.verify($event)" (resend)="facade.resend()" />
+<app-auth-form
+  description="Ingresá el código que enviamos a tu correo para confirmar tu identidad."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
+  heroIcon="lock"
+  heroTitle="Tu seguridad es prioridad."
+  title="Autenticación requerida"
+  [centerContent]="true"
+  [hideHeader]="true">
+  <app-two-factor-validation
+    [canResend]="canResend()"
+    [email]="email()"
+    [error]="error()"
+    [isSubmitting]="isSubmitting()"
+    (confirm)="verify($event)"
+    (resend)="resend()" />
 </app-auth-form>

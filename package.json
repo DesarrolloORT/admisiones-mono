@@ -31,11 +31,12 @@
     "test:only-changed": "npm run test:ci",
     "generate-tests": "node ./scripts/testing/generate-missing-tests.js",
     "check-missing-tests": "node ./scripts/testing/check-missing-tests.js",
+    "prepare": "husky",
     "api:endpoints": "node ./scripts/codegen/list-endpoints.js",
     "update-models": "node ./scripts/codegen/update-models.js",
     "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
     "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
-    "update-api": "npm run update-models && npm run update-endpoints"
+    "update-api": "node ./scripts/codegen/update-api.js"
   },
   "private": true,
   "dependencies": {

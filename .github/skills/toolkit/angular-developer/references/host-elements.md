@@ -10,7 +10,7 @@ Use the `host` property in the `@Component` decorator to bind properties, attrib
 @Component({
   selector: 'custom-slider',
   host: {
-    'role': 'slider', // Static attribute
+    role: 'slider', // Static attribute
     '[attr.aria-valuenow]': 'value', // Attribute binding
     '[class.active]': 'isActive()', // Class binding
     '[style.color]': 'color()', // Style binding
@@ -61,11 +61,13 @@ If both the component (host binding) and the consumer (template binding) bind to
 Use `HostAttributeToken` with the `inject` function to read static attributes from the host element at construction time.
 
 ```ts
-import {Component, HostAttributeToken, inject} from '@angular/core';
+import { Component, HostAttributeToken, inject } from '@angular/core';
 
 @Component({
   selector: 'app-btn',
-  template: `<ng-content />`,
+  template: `
+    <ng-content />
+  `,
 })
 export class AppButton {
   // Throws error if 'type' is missing unless injected with { optional: true }

@@ -5,9 +5,9 @@
   heroIcon="school"
   heroTitle="Tu red profesional comienza hoy."
   title="Comenzá tu camino en ORT">
-  <form class="auth-form-body" novalidate [formGroup]="facade.form" (ngSubmit)="facade.submit()">
+  <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <section class="auth-form-section">
-      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentType.value">
+      <ort-form-field [hideRequiredMarker]="!!form.controls.documentType.value">
         <ort-label>Tipo de documento</ort-label>
         <ort-select
           aria-label="Tipo de documento"
@@ -17,15 +17,15 @@
           <ort-option value="PS">Pasaporte</ort-option>
           <ort-option value="DE">Documento extranjero</ort-option>
         </ort-select>
-        @if ( facade.form.controls.documentType.touched &&
-        facade.form.controls.documentType.hasError('required') ) {
+        @if ( form.controls.documentType.touched && form.controls.documentType.hasError('required')
+        ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
-      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.documentNumber.value">
+      <ort-form-field [hideRequiredMarker]="!!form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
-        @if (facade.isCedulaInput()) {
+        @if (isCedulaInput()) {
         <input
           autocomplete="username"
           formControlName="documentNumber"
@@ -39,21 +39,21 @@
           ortInput
           type="text"
           [id]="'login-document-number'" />
-        } @if (!facade.isCedulaInput()) {
+        } @if (!isCedulaInput()) {
         <ort-hint>Sin puntos ni guiones</ort-hint>
-        } @if ( facade.form.controls.documentNumber.touched &&
-        facade.form.controls.documentNumber.hasError('required') ) {
+        } @if ( form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>
-        } @if ( facade.form.controls.documentNumber.touched &&
-        facade.form.controls.documentNumber.hasError('cedula') ) {
+        } @if ( form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('cedula') ) {
         <ort-error>Ingresá un número de cédula válido</ort-error>
-        } @if ( !facade.isCedulaInput() && facade.form.controls.documentNumber.touched &&
-        facade.form.controls.documentNumber.hasError('pattern') ) {
+        } @if ( !isCedulaInput() && form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('pattern') ) {
         <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
         }
       </ort-form-field>
 
-      <ort-form-field [hideRequiredMarker]="!!facade.form.controls.password.value">
+      <ort-form-field [hideRequiredMarker]="!!form.controls.password.value">
         <ort-label>Contraseña</ort-label>
         <input
           #passwordInput
@@ -61,17 +61,16 @@
           ortInput
           [attr.autocomplete]="'current-password'"
           [id]="'login-password'"
-          [type]="facade.passwordInputType()" />
+          [type]="passwordInputType()" />
         <button
           ort-icon-button
           ortSuffix
           type="button"
-          [attr.aria-label]="facade.passwordToggleLabel()"
-          (click)="facade.togglePasswordVisibility()">
-          <ort-icon aria-hidden="true">{{ facade.passwordIcon() }}</ort-icon>
+          [attr.aria-label]="passwordToggleLabel()"
+          (click)="togglePasswordVisibility()">
+          <ort-icon aria-hidden="true">{{ passwordIcon() }}</ort-icon>
         </button>
-        @if ( facade.form.controls.password.touched &&
-        facade.form.controls.password.hasError('required') ) {
+        @if ( form.controls.password.touched && form.controls.password.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
@@ -79,19 +78,19 @@
       <a
         class="auth-link"
         routerLink="/recuperar-acceso"
-        [queryParams]="{ tipoDoc: facade.form.controls.documentType.value, doc: facade.form.controls.documentNumber.value }">
+        [queryParams]="{ tipoDoc: form.controls.documentType.value, doc: form.controls.documentNumber.value }">
         ¿Olvidaste tu usuario o contraseña?
       </a>
     </section>
 
-    <ort-error-summary [errors]="facade.errorSummary()" />
+    <ort-error-summary [errors]="errorSummary()" />
 
-    @if (facade.error()) {
-    <p class="auth-error" role="alert">{{ facade.error() }}</p>
+    @if (error()) {
+    <p class="auth-error" role="alert">{{ error() }}</p>
     }
 
-    <button ort-primary-button type="submit" [disabled]="facade.isSubmitting()">
-      {{ facade.isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
+    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
     </button>
 
     <section aria-label="Opciones de cuenta" class="auth-stack">

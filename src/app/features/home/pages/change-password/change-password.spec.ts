@@ -1,75 +1,78 @@
-import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 import { AccountService } from '../../../auth/services/account';
-import { ChangePasswordFacade } from './change-password.facade';
+import { ChangePassword } from './change-password';
 
-describe('ChangePasswordFacade', () => {
-  let facade: ChangePasswordFacade;
+describe('ChangePassword', () => {
+  let fixture: ComponentFixture<ChangePassword>;
+  let component: ChangePassword;
   let account: { changePassword: ReturnType<typeof vi.fn> };
-  let router: { navigate: ReturnType<typeof vi.fn> };
+  let navigateSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     account = {
       changePassword: vi.fn().mockReturnValue(of(null)),
     };
-    router = {
-      navigate: vi.fn(),
-    };
 
     TestBed.configureTestingModule({
-      providers: [
-        ChangePasswordFacade,
-        { provide: AccountService, useValue: account },
-        { provide: Router, useValue: router },
-      ],
+      imports: [ChangePassword],
+      providers: [provideRouter([]), { provide: AccountService, useValue: account }],
     });
 
-    facade = TestBed.inject(ChangePasswordFacade);
+    navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fixture = TestBed.createComponent(ChangePassword);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should submit a valid password change through AccountService', () => {
-    facade.form.setValue({
+    component['form'].setValue({
       currentPassword: 'ActualPassword1!',
       password: 'NuevaPassword1!',
       confirmPassword: 'NuevaPassword1!',
     });
 
-    facade.submit();
+    component['submit']();
 
     expect(account.changePassword).toHaveBeenCalledWith({
       currentPassword: 'ActualPassword1!',
       password: 'NuevaPassword1!',
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/inicio']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/inicio']);
   });
 
   it('should not submit invalid forms', () => {
-    facade.form.setValue({
+    component['form'].setValue({
       currentPassword: '',
       password: '',
       confirmPassword: '',
     });
 
-    facade.submit();
+    component['submit']();
 
     expect(account.changePassword).not.toHaveBeenCalled();
   });
 
   it('should expose a friendly error when password change fails', () => {
     account.changePassword.mockReturnValue(throwError(() => new Error('invalid password')));
-    facade.form.setValue({
+    component['form'].setValue({
       currentPassword: 'ActualPassword1!',
       password: 'NuevaPassword1!',
       confirmPassword: 'NuevaPassword1!',
     });
 
-    facade.submit();
+    component['submit']();
 
-    expect(facade.error()).toBe(
+    expect(component['error']()).toBe(
       'No se pudo cambiar la contraseña. Verificá que la actual sea correcta.'
     );
-    expect(router.navigate).not.toHaveBeenCalled();
+    expect(navigateSpy).not.toHaveBeenCalled();
   });
 });

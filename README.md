@@ -190,7 +190,7 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
 - `update-endpoints`: actualiza constantes tipadas de endpoints desde Swagger.
-- `update-api`: ejecuta `update-models` y `update-endpoints`.
+- `update-api`: actualiza modelos y endpoints, y valida que Angular siga compilando.
 - `check-endpoints`: regenera contratos de endpoints y falla si quedan diferencias en Git.
 
 ## Pre-commit hook

@@ -1,61 +1,13 @@
-<div class="inscription-shell">
-  <div class="inscription-shell__top">
-    <header class="inscription-header">
-      <div class="inscription-header__content">
-        <div class="inscription-header__action">
-          @if (showBack()) {
-          <button
-            aria-label="Volver al paso anterior"
-            class="inscription-header__icon-button"
-            type="button"
-            (click)="backClick()">
-            <ort-icon aria-hidden="true">arrow_back_ios</ort-icon>
-          </button>
-          }
-        </div>
-
-        <div class="inscription-brand">
-          <img
-            alt="ORT"
-            class="inscription-brand__logo"
-            height="36"
-            ngSrc="/assets/auth/ort-logo-white.svg"
-            width="53" />
-          <span aria-hidden="true" class="inscription-brand__divider"></span>
-          <span class="inscription-brand__name">Admisiones</span>
-        </div>
-
-        <div class="inscription-header__action">
-          <a
-            aria-label="Cerrar inscripción"
-            class="inscription-header__icon-button"
-            routerLink="/inicio">
-            <ort-icon aria-hidden="true">close</ort-icon>
-          </a>
-        </div>
-      </div>
-    </header>
-
-    @if (showStepper()) {
-    <section aria-label="Progreso de inscripción" class="inscription-stepper">
-      <div class="inscription-stepper__titles">
-        <p>Inscripción a carrera</p>
-        <span>{{ stepLabel() }}</span>
-      </div>
-      <ort-icon aria-hidden="true" class="inscription-stepper__chevron">expand_less</ort-icon>
-      <div class="inscription-stepper__progress">
-        @for (progressStep of progressSteps; track progressStep) {
-        <span
-          aria-hidden="true"
-          class="inscription-stepper__bar"
-          [class.inscription-stepper__bar--active]="progressStep <= stepNumber()"></span>
-        }
-      </div>
-    </section>
-    }
-  </div>
-
-  <main class="inscription-shell__main" id="main-content" tabindex="-1">
-    <ng-content />
-  </main>
-</div>
+<app-process-layout
+  closeLabel="Cerrar inscripción"
+  processTitle="Inscripción a carrera"
+  stepperAriaLabel="Progreso de inscripción"
+  [currentStepId]="currentStepId()"
+  [showBack]="showBack()"
+  [showStepper]="showStepper()"
+  [stepperSubtitle]="stepLabel()"
+  [steps]="processSteps()"
+  (back)="backClick()"
+  (closeFlow)="closeFlow.emit()">
+  <ng-content />
+</app-process-layout>

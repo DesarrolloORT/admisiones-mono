@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
@@ -31,9 +31,6 @@ import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step
 import { DocumentPrefillResult, DocumentPrefillService } from '../services/document-prefill';
 import { RegistrationService } from '../services/registration';
 
-@Injectable({
-  providedIn: 'root',
-})
 export class RegisterFlowFacade {
   private readonly catalogs = inject(Catalogs);
   private readonly documentPrefill = inject(DocumentPrefillService);

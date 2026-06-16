@@ -40,7 +40,12 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
    Este comando ejecuta `update-models` y `update-endpoints`. Ambos leen `API_URL`
    desde el environment indicado, toman su origen y descargan
-   `/swagger/v1/swagger.json` por defecto. Si el Swagger vive en otra ruta:
+   `/swagger/v1/swagger.json` por defecto. Al terminar, compila la configuracion
+   usada por `ng serve`; si el contrato nuevo rompe la aplicacion, informa los
+   archivos y lineas afectados antes de que se ejecute `npm start`. Si el Swagger
+   no esta disponible, conserva los modelos generados anteriores.
+
+   Si el Swagger vive en otra ruta:
 
    ```bash
    npm run update-models -- --swagger-path /swagger/v2/swagger.json

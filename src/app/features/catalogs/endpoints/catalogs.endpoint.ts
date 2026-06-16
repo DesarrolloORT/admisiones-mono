@@ -154,4 +154,3 @@ export class CatalogsEndpoint {
     return (Array.isArray(data) ? data : [data]).map(mapper);
   }
 }
-

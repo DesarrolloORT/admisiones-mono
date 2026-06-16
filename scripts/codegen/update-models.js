@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-import { resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
+import { downloadJson, resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
@@ -42,63 +42,75 @@ Options:
 // Main
 // ---------------------------------------------------------------------------
 
-const output = flags.output;
+await main();
 
-let swaggerSource;
-try {
-  swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
-} catch (error) {
-  console.error(`✗ ${error.message}`);
-  process.exit(1);
+async function main() {
+  const output = flags.output;
+  const outputAbs = resolve(ROOT, output);
+  const outputRel = toProjectPath(output);
+  const tempOutputAbs = resolve(ROOT, `${output}.tmp-${process.pid}`);
+  const backupOutputAbs = resolve(ROOT, `${output}.backup-${process.pid}`);
+  const hadExistingModels = hasFiles(outputAbs);
+  let stage = 'resolving Swagger source';
+  let swaggerSource;
+
+  try {
+    swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
+
+    console.log(`  env       : src/environments/${flags.env}`);
+    console.log(`  origin    : ${swaggerSource.origin}`);
+    console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
+    console.log(`  output    : ${outputRel}/\n`);
+
+    stage = 'downloading Swagger contract';
+    await downloadJson(swaggerSource.swaggerUrl);
+
+    stage = 'generating TypeScript models';
+    rmSync(tempOutputAbs, { recursive: true, force: true });
+    mkdirSync(tempOutputAbs, { recursive: true });
+
+    const tempOutputRel = toProjectPath(tempOutputAbs);
+    const cmd = [
+      'npx --yes @openapitools/openapi-generator-cli generate',
+      '--global-property models',
+      `-i "${swaggerSource.swaggerUrl}"`,
+      '-g typescript-angular',
+      `-o "${tempOutputRel}"`,
+      '--additional-properties modelPropertyNaming=original',
+    ].join(' ');
+
+    console.log(`> ${cmd}\n`);
+
+    execSync(cmd, {
+      cwd: ROOT,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        // Skip SSL cert validation for self-signed dev certs
+        JAVA_OPTS: '-Dio.swagger.v3.parser.util.RemoteUrl.trustAll=true',
+      },
+    });
+
+    stage = 'preparing generated models';
+    flattenModels(tempOutputAbs);
+
+    stage = 'replacing generated models';
+    replaceDirectory(tempOutputAbs, outputAbs, backupOutputAbs);
+
+    console.log('\n✓ Models updated successfully.');
+  } catch (error) {
+    rmSync(tempOutputAbs, { recursive: true, force: true });
+    printFailure({ error, stage, swaggerSource, outputRel, hadExistingModels });
+    process.exit(error.status || 1);
+  }
 }
 
-const outputRel = toProjectPath(output);
+function flattenModels(outputDir) {
+  const modelSubdir = resolve(outputDir, 'model');
 
-console.log(`  env       : src/environments/${flags.env}`);
-console.log(`  origin    : ${swaggerSource.origin}`);
-console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
-console.log(`  output    : ${outputRel}/\n`);
-
-// Clean previous generation to avoid stale models
-if (existsSync(resolve(ROOT, output))) {
-  rmSync(resolve(ROOT, output), { recursive: true });
-}
-mkdirSync(resolve(ROOT, output), { recursive: true });
-
-const cmd = [
-  'npx --yes @openapitools/openapi-generator-cli generate',
-  '--global-property models',
-  `-i "${swaggerSource.swaggerUrl}"`,
-  '-g typescript-angular',
-  `-o ${output}`,
-  '--additional-properties modelPropertyNaming=original',
-].join(' ');
-
-console.log(`> ${cmd}\n`);
-
-try {
-  execSync(cmd, {
-    cwd: ROOT,
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      // Skip SSL cert validation for self-signed dev certs
-      JAVA_OPTS: '-Dio.swagger.v3.parser.util.RemoteUrl.trustAll=true',
-    },
-  });
-  console.log('\n✓ Models updated successfully.');
-} catch (error) {
-  process.exit(error.status || 1);
-}
-
-// ---------------------------------------------------------------------------
-// Flatten: move files from model/ subdirectory up to the output directory
-// ---------------------------------------------------------------------------
-
-const modelSubdir = resolve(ROOT, output, 'model');
-
-if (existsSync(modelSubdir)) {
-  const outputDir = resolve(ROOT, output);
+  if (!existsSync(modelSubdir)) {
+    return;
+  }
 
   for (const file of readdirSync(modelSubdir)) {
     renameSync(join(modelSubdir, file), join(outputDir, file));
@@ -106,4 +118,63 @@ if (existsSync(modelSubdir)) {
 
   rmSync(modelSubdir, { recursive: true });
   console.log('✓ Flattened model/ into models/.');
+}
+
+function replaceDirectory(source, target, backup) {
+  const hadTarget = existsSync(target);
+
+  if (hadTarget) {
+    renameSync(target, backup);
+  }
+
+  try {
+    cpSync(source, target, { recursive: true, errorOnExist: true });
+    rmSync(source, { recursive: true, force: true });
+  } catch (error) {
+    rmSync(target, { recursive: true, force: true });
+    if (hadTarget && existsSync(backup)) {
+      renameSync(backup, target);
+    }
+    throw error;
+  }
+
+  rmSync(backup, { recursive: true, force: true });
+}
+
+function hasFiles(directory) {
+  return existsSync(directory) && readdirSync(directory).length > 0;
+}
+
+function printFailure({ error, stage, swaggerSource, outputRel, hadExistingModels }) {
+  console.error('\n✗ No se pudieron actualizar los modelos de API.');
+  console.error(`  Etapa    : ${stage}`);
+  console.error(`  Ubicacion: ${outputRel}/`);
+  if (swaggerSource) {
+    console.error(`  Swagger  : ${swaggerSource.swaggerUrl}`);
+  }
+  console.error(`  Causa    : ${describeError(error)}`);
+  console.error(
+    hadExistingModels
+      ? '  Estado   : se conservaron los modelos generados anteriores.'
+      : '  Estado   : no habia modelos anteriores para conservar.'
+  );
+  console.error(
+    '  Accion   : verifica que el backend y su Swagger esten disponibles, y vuelve a ejecutar npm run update-api.'
+  );
+}
+
+function describeError(error) {
+  if (error?.code === 'ECONNREFUSED') {
+    return 'el servidor Swagger rechazo la conexion.';
+  }
+  if (error?.code === 'ENOTFOUND') {
+    return 'no se pudo resolver el host del servidor Swagger.';
+  }
+  if (error?.code === 'ETIMEDOUT' || error?.message?.includes('timed out')) {
+    return 'la descarga de Swagger supero el tiempo de espera.';
+  }
+  if (error?.status) {
+    return `OpenAPI Generator termino con codigo ${error.status}.`;
+  }
+  return error?.message || String(error);
 }

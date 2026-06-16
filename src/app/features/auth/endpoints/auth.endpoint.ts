@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { CUSTOM_ERROR_MESSAGES, suppressGlobalErrorContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
@@ -9,6 +10,7 @@ import {
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
   postAuthRecuperarContrasenaEndpoint,
+  postAuthReenviarCodigo2FaEndpoint,
   postAuthVerificarCodigo2FaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
@@ -25,6 +27,11 @@ import type {
 } from '../models/document-recognition.interface';
 
 export const AUTH_FLOW_ID_HEADER = 'X-Flow-Id';
+
+const LOGIN_ERROR_MESSAGES: Record<number, string> = {
+  401: 'Credenciales inválidas.',
+  429: 'Demasiados intentos. Intentá nuevamente más tarde.',
+};
 
 // ---------------------------------------------------------------------------
 // Stable public types — these are the contract that the rest of the feature
@@ -136,6 +143,18 @@ export interface VerifyTwoFactorCodePayload {
   codigo: string;
 }
 
+/** Input for resending the two-factor authentication code. */
+export interface ResendTwoFactorCodePayload {
+  sessionId: string;
+}
+
+/** Stable output of resending the two-factor authentication code. */
+export interface ResendTwoFactorCodeResult {
+  sessionId: string;
+  maskedEmail: string;
+  message: string;
+}
+
 /** Stable output of 2FA verification. Same shape as authenticated login. */
 export interface VerifyTwoFactorCodeResult {
   documento: string;
@@ -180,7 +199,12 @@ export class AuthEndpoint {
     };
 
     return this.api
-      .data(postAuthLoginEndpoint, { body, withCredentials: true, captchaAction: 'login' })
+      .data(postAuthLoginEndpoint, {
+        body,
+        withCredentials: true,
+        captchaAction: 'login',
+        context: suppressGlobalErrorContext().set(CUSTOM_ERROR_MESSAGES, LOGIN_ERROR_MESSAGES),
+      })
       .pipe(
         map(response => {
           const twoFactor = response as unknown as {
@@ -249,6 +273,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'ConfirmarNuevaPersona',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -268,6 +293,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'ConfirmarSolicitudAlta',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -283,6 +309,7 @@ export class AuthEndpoint {
       .requestWithMessage(postRegistroEvaluarDocumentoEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'EvaluarDocumento',
       })
       .pipe(
         map(({ data, message }) => ({
@@ -309,6 +336,7 @@ export class AuthEndpoint {
     return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
       body: payload,
       withCredentials: true,
+      captchaAction: 'AnalizarAdjunto',
     });
   }
 
@@ -327,6 +355,7 @@ export class AuthEndpoint {
         body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
+        captchaAction: 'VerificarIdentidad',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -342,6 +371,7 @@ export class AuthEndpoint {
       .request(postAuthRecuperarContrasenaEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'RecuperarPassword',
       })
       .pipe(map(() => undefined));
   }
@@ -371,6 +401,7 @@ export class AuthEndpoint {
       .data(postAuthVerificarCodigo2FaEndpoint, {
         body: payload,
         withCredentials: true,
+        captchaAction: 'VerificarCodigo2FA',
       })
       .pipe(
         map(response => ({
@@ -380,8 +411,31 @@ export class AuthEndpoint {
       );
   }
 
+  /**
+   * Resend the two-factor code for an active 2FA session.
+   *
+   * Behind the scenes: POST /Auth/ReenviarCodigo2FA using generated endpoint.
+   */
+  public resendTwoFactorCode(
+    payload: ResendTwoFactorCodePayload
+  ): Observable<ResendTwoFactorCodeResult> {
+    return this.api
+      .data(postAuthReenviarCodigo2FaEndpoint, {
+        body: payload,
+        withCredentials: true,
+        captchaAction: 'ReenviarCodigo2FA',
+        context: suppressGlobalErrorContext(),
+      })
+      .pipe(
+        map(response => ({
+          sessionId: response.sessionId ?? payload.sessionId,
+          maskedEmail: response.maskedEmail ?? '',
+          message: response.message ?? '',
+        }))
+      );
+  }
+
   private getFlowHeaders(flowId: string): Record<string, string> {
     return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
   }
 }
-

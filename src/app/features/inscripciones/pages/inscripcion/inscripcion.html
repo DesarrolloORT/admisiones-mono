@@ -1,16 +1,60 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <app-inscripcion-shell
   [showBack]="facade.canGoBack()"
-  [showStepper]="!facade.isFinished()"
+  [showStepper]="facade.showStepper()"
   [stepLabel]="facade.stepSupportLabel()"
   [stepNumber]="facade.stepNumber()"
-  (back)="facade.back()">
-  @switch (facade.step()) { @case ('propuesta') {
-  <app-inscripcion-academic-step />
-  } @case ('personal') {
-  <app-inscripcion-personal-step />
-  } @case ('confirmacion') {
+  [steps]="facade.stepperSteps()"
+  (back)="facade.back()"
+  (closeFlow)="facade.requestExit()">
+  @if (facade.screen() === 'pago' || facade.screen() === 'confirmacion-pago') {
   <app-inscripcion-confirmation-step />
-  } @case ('finalizada') {
+  } @else { @switch (facade.screen()) { @case ('propuesta') {
+  <app-inscripcion-academic-step />
+  } @case ('encuesta') {
+  <app-inscripcion-personal-step />
+  } @case ('lector-reglamento') {
+  <app-inscripcion-regulation-reader />
+  } @case ('procesando') {
+  <section aria-labelledby="processing-title" class="inscription-screen inscription-terminal">
+    <ort-spinner aria-label="Procesando inscripción" />
+    <h1 id="processing-title">Estamos procesando el pago</h1>
+    <p>No cierres esta pantalla. La operación puede demorar unos segundos.</p>
+  </section>
+  } @case ('reserva') {
+  <app-inscripcion-reservation-step />
+  } @case ('inscripcion-confirmada') {
   <app-inscripcion-success-step />
-  } }
+  } @case ('inscripcion-en-proceso') {
+  <section aria-labelledby="in-process-title" class="inscription-screen inscription-terminal">
+    <span aria-hidden="true" class="inscription-success-heading__icon">
+      <ort-icon>pending_actions</ort-icon>
+    </span>
+    <h1 id="in-process-title">Inscripción en proceso</h1>
+    <p>Estamos procesando tu inscripción.</p>
+    <p>Nos comunicaremos contigo a la brevedad para continuar con el proceso.</p>
+    <footer class="inscription-footer">
+      <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
+    </footer>
+  </section>
+  } } }
 </app-inscripcion-shell>
+
+<app-inscripcion-dialog
+  closeLabel="Continuar con la inscripción"
+  title="¿Querés salir de la inscripción?"
+  helperText="Guardaremos tus avances para que puedas continuar más tarde."
+  [open]="facade.exitConfirmationOpen()"
+  (closed)="facade.cancelExit()">
+  <p>Los archivos de identidad deberán adjuntarse nuevamente cuando retomes el proceso.</p>
+  <div inscripcionDialogActions>
+    <button
+      data-dialog-initial-focus
+      ort-secondary-button
+      type="button"
+      (click)="facade.cancelExit()">
+      Continuar aquí
+    </button>
+    <button ort-primary-button type="button" (click)="facade.confirmExit()">Guardar y salir</button>
+  </div>
+</app-inscripcion-dialog>

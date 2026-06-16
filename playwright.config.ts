@@ -4,7 +4,7 @@ import { loadE2eEnv } from './e2e/support/env';
 
 loadE2eEnv();
 
-const localBaseURL = 'http://127.0.0.1:4200';
+const localBaseURL = 'http://localhost:4200';
 const baseURL = process.env['E2E_BASE_URL'] ?? localBaseURL;
 const shouldStartLocalServer = baseURL === localBaseURL;
 
@@ -25,7 +25,7 @@ export default defineConfig({
   },
   webServer: shouldStartLocalServer
     ? {
-        command: 'npm run start -- --host 127.0.0.1 --port 4200',
+        command: 'npm start',
         reuseExistingServer: !process.env['CI'],
         timeout: 120_000,
         url: baseURL,

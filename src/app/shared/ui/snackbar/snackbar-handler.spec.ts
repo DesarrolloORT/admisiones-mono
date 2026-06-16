@@ -13,6 +13,7 @@ describe('SnackbarHandler', () => {
   beforeEach(() => {
     dismissMock = vi.fn();
     openMock = vi.fn().mockReturnValue({
+      afterDismissed: () => EMPTY,
       dismiss: dismissMock,
       onAction: () => EMPTY,
     });
@@ -36,8 +37,12 @@ describe('SnackbarHandler', () => {
 
     expect(openMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        autoDismiss: true,
+        durationMs: 5000,
+        horizontalPosition: 'center',
         message: 'Guardado',
         variant: 'success',
+        verticalPosition: 'top',
       })
     );
   });

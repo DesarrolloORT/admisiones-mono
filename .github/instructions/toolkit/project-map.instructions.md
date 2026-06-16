@@ -158,4 +158,3 @@ admisiones/
 ├── CLAUDE.md
 └── CONTRIBUTING.md
 ```
-

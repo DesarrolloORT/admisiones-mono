@@ -47,15 +47,16 @@ export class ApiHttpClient {
   ): Observable<EndpointData<TEndpoint>> {
     const url = this.resolveUrl(buildApiPath(endpoint.path, options.pathParams));
     const params = this.buildHttpParams(options.queryParams);
+    const withCredentials = this.resolveWithCredentials(endpoint, options);
     const requestOptions = {
       context: this.resolveContext(options),
       headers: this.buildHttpHeaders(options.headers),
       params,
-      withCredentials: options.withCredentials,
+      withCredentials,
     };
 
     if (this.shouldCache(endpoint, options, params)) {
-      const cacheKey = this.getCacheKey(url, options.withCredentials);
+      const cacheKey = this.getCacheKey(url, withCredentials);
       const cached = this.getCache.get(cacheKey) as Observable<EndpointData<TEndpoint>> | undefined;
 
       if (cached) {
@@ -83,7 +84,7 @@ export class ApiHttpClient {
       context: this.resolveContext({ ...options, unwrapOperationResult: false }),
       headers: this.buildHttpHeaders(options.headers),
       params: this.buildHttpParams(options.queryParams),
-      withCredentials: options.withCredentials,
+      withCredentials: this.resolveWithCredentials(endpoint, options),
     };
 
     return this.executeRaw(endpoint, url, requestOptions, options.body).pipe(
@@ -268,6 +269,16 @@ export class ApiHttpClient {
 
   private getCacheKey(url: string, withCredentials: boolean | undefined): string {
     return `${withCredentials ? 'credentials' : 'default'} ${url}`;
+  }
+
+  private resolveWithCredentials<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
+    endpoint: TEndpoint,
+    options: ApiRequestOptions<TEndpoint>
+  ): boolean | undefined {
+    if (options.withCredentials !== undefined) {
+      return options.withCredentials;
+    }
+    return endpoint.requiresAuth ? true : undefined;
   }
 
   private unwrapOperationResult<TResponse>(response: TResponse): ApiResponseData<TResponse> {

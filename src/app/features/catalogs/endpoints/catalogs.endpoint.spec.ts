@@ -107,4 +107,3 @@ describe('CatalogsEndpoint', () => {
     expect(apiMock.clearCache).toHaveBeenCalled();
   });
 });
-

@@ -1,6 +1,6 @@
 ---
 description: Estandar documental canonico para decidir que documentar, donde hacerlo y con que nivel de detalle.
-applyTo: "**/*.md, README.md, CONTRIBUTING.md, CHANGELOG.md, docs/**"
+applyTo: '**/*.md, README.md, CONTRIBUTING.md, CHANGELOG.md, docs/**'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/documentation-strategy.instructions.md -->
