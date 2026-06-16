@@ -1,6 +1,6 @@
 ---
 description: Reglas de redaccion para documentacion tecnica del equipo.
-applyTo: "**/*.md, docs/**, README.md, CONTRIBUTING.md"
+applyTo: '**/*.md, docs/**, README.md, CONTRIBUTING.md'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/documentation-writing.instructions.md -->

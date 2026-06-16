@@ -45,4 +45,3 @@ Si ninguna condicion matchea, la pantalla muestra un error funcional y no avanza
 `POST /Registro/AnalizarAdjunto` solo precarga campos del formulario. No decide el
 flujo funcional ni reemplaza `POST /Registro/EvaluarDocumento`; el usuario siempre
 debe continuar desde identidad para que el backend indique el caso real.
-

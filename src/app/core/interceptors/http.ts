@@ -138,4 +138,3 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
     finalize(() => services.loader.hide())
   );
 };
-

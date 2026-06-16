@@ -1,34 +1,31 @@
 ---
-applyTo: "**"
+applyTo: '**'
 ---
 
-<!-- ai-toolkit:toolkit profile=base path=.github/copilot-instructions.md -->
+<!-- ai-toolkit:toolkit profile=core path=.github/copilot-instructions.md -->
 
 # DesarrolloORT AI Baseline
 
 ## Prioridades globales
 
-1. Aplica economia de respuesta: resuelve con el menor contexto, cantidad de pasos y salida posibles para completar bien la tarea.
-2. Si la tarea exige exploracion amplia, analisis profundo o una respuesta extensa, consulta al usuario antes de seguir.
-3. El codigo generado debe seguir clean code basico y alinearse con patrones, convenciones y arquitectura del proyecto.
-4. Todo artefacto identificable del design system del repo es la fuente de verdad para UI; si hay drift, prevalece el design system y se explicita el gap.
-5. La seguridad es obligatoria; ahorrar tokens nunca justifica omitir validacion, controles o una variante segura.
-6. Si el pedido es ambiguo, asume el escenario mas comun y comunicalo; si el escenario no es claro, pregunta antes de seguir.
+1. Aplica economia de respuesta: resuelve con el menor contexto, pasos y salida posibles para completar bien la tarea.
+2. Si la tarea exige exploracion amplia o una respuesta extensa, consulta antes de seguir.
+3. El codigo generado debe seguir clean code basico y los patrones del repo.
+4. Reutiliza convenciones existentes antes de introducir una abstraccion nueva.
+5. La seguridad es obligatoria; ahorrar tokens nunca justifica omitir validacion o controles.
+6. Si el pedido es ambiguo, asume el escenario comun y dilo; pregunta solo cuando seguir seria riesgoso.
 
-- Trabaja con cambios pequenos y verificables.
-- Reutiliza el patron actual del repo antes de introducir uno nuevo.
-- Carga instructions, prompts y skills solo cuando aporten contexto real.
-- Si el pedido cambia diseno, contrato publico o una decision tecnica compartida, aclara el supuesto antes de expandir.
-- Prioriza codigo, tests y verificacion por encima de reportes largos.
+## Reglas siempre disponibles
 
-Consulta las reglas especificas por stack:
+- Ponytail (lazy senior dev): `.github/instructions/toolkit/ponytail.instructions.md`
+- Respuesta breve: `.github/instructions/toolkit/response-economy.instructions.md`
+- Markdown: `.github/instructions/toolkit/markdown.instructions.md`
+- Seguridad: `.github/instructions/toolkit/secure-code.instructions.md`
 
-- [Response Economy](./instructions/toolkit/response-economy.instructions.md)
-- [Markdown](./instructions/toolkit/markdown.instructions.md)
-- [Frontend UI](./instructions/toolkit/frontend-ui.instructions.md)
-- [Secure Code](./instructions/toolkit/secure-code.instructions.md)
+## Perfiles
 
-Para cambios con impacto documental, aplica este baseline:
+- Common: siempre disponible; incluye response economy, Markdown, seguridad y CodeGraph.
+- Front: solo en repos frontend; usa `.github/instructions/toolkit/angular-cli.instructions.md`, `.github/instructions/toolkit/angular-reactivity.instructions.md`, `.github/instructions/toolkit/frontend-ui.instructions.md` y `.github/skills/toolkit/angular-developer/SKILL.md`.
+- Back: solo en repos backend; usa `.github/instructions/toolkit/dotnet-backend.instructions.md`.
 
-- [Documentation Strategy](./instructions/toolkit/documentation-strategy.instructions.md)
-- [Documentation Writing](./instructions/toolkit/documentation-writing.instructions.md)
+No mezcles front y back en el mismo repo consumidor.

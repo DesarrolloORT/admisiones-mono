@@ -1,0 +1,83 @@
+<div class="process-layout" [class.process-layout--without-stepper]="!showStepper()">
+  <div class="process-layout__top">
+    <header class="process-layout__header">
+      <div class="process-layout__header-content">
+        <div class="process-layout__header-action">
+          @if (showBack()) {
+          <button
+            aria-label="Volver al paso anterior"
+            class="process-layout__icon-button"
+            type="button"
+            (click)="backClick()">
+            <ort-icon aria-hidden="true">arrow_back_ios</ort-icon>
+          </button>
+          }
+        </div>
+
+        <div class="process-layout__brand">
+          <img
+            class="process-layout__logo"
+            height="36"
+            width="53"
+            [alt]="logoAlt()"
+            [ngSrc]="logoSrc()" />
+          <span aria-hidden="true" class="process-layout__brand-divider"></span>
+          <span class="process-layout__brand-name">{{ brandName() }}</span>
+        </div>
+
+        <div class="process-layout__header-action">
+          @if (closeVisible()) {
+          <button
+            class="process-layout__icon-button"
+            type="button"
+            [attr.aria-label]="closeLabel()"
+            (click)="closeFlow.emit()">
+            <ort-icon aria-hidden="true">close</ort-icon>
+          </button>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (showStepper()) {
+    <div class="process-layout__mobile-stepper">
+      <ort-expandable-stepper
+        [allowStepNavigation]="false"
+        [ariaLabel]="stepperAriaLabel()"
+        [currentStepId]="currentStepId()"
+        [expanded]="stepperExpanded()"
+        [interactiveSteps]="false"
+        [linear]="true"
+        [processTitle]="processTitle()"
+        [steps]="steps()"
+        [subtitle]="stepperSubtitle()" />
+    </div>
+    }
+  </div>
+
+  <div class="process-layout__body">
+    @if (showStepper()) {
+    <aside aria-label="Progreso del proceso" class="process-layout__rail">
+      <div class="process-layout__rail-inner">
+        <ort-expandable-stepper
+          [allowStepNavigation]="false"
+          [ariaLabel]="stepperAriaLabel()"
+          [currentStepId]="currentStepId()"
+          [expanded]="true"
+          [interactiveSteps]="false"
+          [linear]="true"
+          [processTitle]="processTitle()"
+          [showProgressIndicator]="false"
+          [steps]="steps()"
+          [subtitle]="stepperSubtitle()" />
+      </div>
+    </aside>
+    }
+
+    <main class="process-layout__main" id="main-content" tabindex="-1">
+      <div class="process-layout__content">
+        <ng-content />
+      </div>
+    </main>
+  </div>
+</div>

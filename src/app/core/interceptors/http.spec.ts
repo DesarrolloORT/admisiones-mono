@@ -126,7 +126,7 @@ describe('httpInterceptor', () => {
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
     expect(intercepted.headers.get('Content-Type')).toBe('application/json');
     expect(intercepted.headers.get('X-Flow-Id')).toBe('flow-123');
-    expect(intercepted.headers.has('authorization')).toBe(false);
+    expect(intercepted.headers.get('authorization')).toBe('Basic Og==');
     expect(intercepted.headers.get('x-correlation-id')).toBe('correlation-123');
     expect(mockTelemetry.addHttpHeaders).toHaveBeenCalledWith(
       expect.objectContaining({

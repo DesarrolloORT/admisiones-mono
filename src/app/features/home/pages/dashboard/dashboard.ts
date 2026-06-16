@@ -17,4 +17,3 @@ export class Dashboard implements OnInit {
     });
   }
 }
-

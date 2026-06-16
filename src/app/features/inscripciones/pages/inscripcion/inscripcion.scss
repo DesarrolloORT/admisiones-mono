@@ -39,51 +39,37 @@
   gap: var(--ort-sys-spacing-16);
 }
 
-.inscription-fieldset {
-  display: grid;
-  gap: var(--ort-sys-radio-label-gap);
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.inscription-fieldset legend {
-  margin: 0 0 var(--ort-sys-spacing-6);
-  color: var(--ort-sys-radio-label-color);
-  font-weight: 600;
-  font-size: var(--ort-sys-body-text-size);
-  line-height: var(--ort-sys-body-line-height);
-}
-
-.inscription-fieldset--compact legend {
-  font-size: var(--ort-sys-body-sm-text-size);
-  line-height: var(--ort-sys-body-sm-line-height);
-}
-
-.inscription-fieldset--sr-legend legend {
-  position: absolute;
-  overflow: hidden;
-  width: 1rem;
-  height: 1rem;
-  white-space: nowrap;
-  opacity: 0;
-}
-
 .inscription-radio-list,
 .inscription-choice-list {
   display: grid;
   gap: var(--ort-sys-spacing-8);
 }
 
+.inscription-radio-option__label {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+}
+
+.inscription-radio-option__label ort-icon {
+  flex: 0 0 auto;
+  color: var(--ort-sys-base-icon-primary-color);
+}
+
 .inscription-choice-list {
   gap: 0;
 }
 
+[inscripcionDialogActions] {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+}
+
+[inscripcionDialogActions] button {
+  width: 100%;
+}
+
 .inscription-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: grid;
   gap: var(--ort-sys-spacing-8);
   margin-inline: calc(var(--ort-sys-spacing-16) * -1);
@@ -97,55 +83,6 @@
 .inscription-card button,
 .inscription-services button {
   width: 100%;
-}
-
-.inscription-accordion-list {
-  display: grid;
-  gap: var(--ort-sys-accordeon-group-gap);
-}
-
-.inscription-accordion {
-  border: var(--ort-sys-accordeon-border-width) solid var(--ort-sys-accordeon-border-color);
-  border-radius: var(--ort-sys-accordeon-border-radius);
-  background: var(--ort-sys-base-surface-background);
-}
-
-.inscription-accordion summary {
-  display: flex;
-  gap: var(--ort-sys-accordeon-gap);
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--ort-sys-accordeon-padding-block) var(--ort-sys-accordeon-padding-inline);
-  list-style: none;
-  cursor: pointer;
-}
-
-.inscription-accordion summary::-webkit-details-marker {
-  display: none;
-}
-
-.inscription-accordion summary:focus-visible {
-  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
-  outline-offset: -2px;
-}
-
-.inscription-accordion summary span {
-  display: flex;
-  gap: var(--ort-sys-accordeon-gap);
-  align-items: center;
-  color: var(--ort-sys-accordeon-title-color);
-  font-weight: 600;
-  font-size: var(--ort-sys-accordeon-title-font-size);
-  font-family: var(--ort-sys-font-family-display);
-  line-height: var(--ort-sys-accordeon-title-line-height);
-}
-
-.inscription-accordion summary ort-icon {
-  color: var(--ort-sys-base-icon-color-subtle);
-}
-
-.inscription-accordion[open] summary > ort-icon {
-  transform: rotate(180deg);
 }
 
 .inscription-accordion__content {
@@ -169,31 +106,6 @@
   font-size: var(--ort-sys-heading-level5-text-size);
   font-family: var(--ort-sys-font-family-display);
   line-height: var(--ort-sys-heading-level5-line-height);
-}
-
-.inscription-status,
-.inscription-checkbox {
-  display: flex;
-  gap: var(--ort-sys-spacing-8);
-  align-items: center;
-  margin: 0;
-  color: var(--ort-sys-base-text-color-body);
-  font-size: var(--ort-sys-body-text-size);
-  line-height: var(--ort-sys-body-line-height);
-}
-
-.inscription-status ort-icon {
-  color: var(--ort-sys-color-success);
-}
-
-.inscription-checkbox {
-  cursor: pointer;
-}
-
-.inscription-checkbox input {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: var(--ort-sys-base-surface-primary-background);
 }
 
 .inscription-card {
@@ -433,4 +345,36 @@
 .inscription-services button {
   display: inline-flex;
   gap: var(--ort-sys-spacing-8);
+}
+
+@media (width >= 52.5rem) {
+  .inscription-screen {
+    gap: var(--ort-sys-spacing-40);
+    padding: 0;
+  }
+
+  .inscription-screen__header {
+    gap: var(--ort-sys-spacing-8);
+  }
+
+  .inscription-form,
+  .inscription-form__stack {
+    gap: var(--ort-sys-spacing-24);
+  }
+
+  .inscription-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-inline: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .inscription-footer button,
+  .inscription-footer a,
+  .inscription-card button,
+  .inscription-services button {
+    width: auto;
+    min-width: 7.5rem;
+  }
 }

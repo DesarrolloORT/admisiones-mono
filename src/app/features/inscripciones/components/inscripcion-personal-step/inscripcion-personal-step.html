@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="inscription-personal-title" class="inscription-screen">
   <header class="inscription-screen__header">
     <h1 id="inscription-personal-title">Información personal</h1>
@@ -8,12 +9,342 @@
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
-  <form class="inscription-form" [formGroup]="facade.personalForm" (ngSubmit)="facade.continue()">
-    <div class="inscription-accordion-list">
-      <app-inscripcion-personal-education-section />
-      <app-inscripcion-personal-decision-section />
-      <app-inscripcion-personal-work-section />
-    </div>
+  <form class="inscription-form" novalidate (submit)="onSubmit($event)">
+    <ort-accordion [multi]="false">
+      @if (facade.visibleSections().includes('educacion')) {
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'educacion'"
+        (opened)="facade.openSection('educacion')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('educacion') === 'completa' ? 'check_circle' : 'menu_book'
+              }}
+            </ort-icon>
+            Educación
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.educationForm">
+            <section aria-labelledby="secondary-education-title" class="inscription-subsection">
+              <h2 id="secondary-education-title">Educación media</h2>
+              <ort-radio-group
+                class="inscription-choice-list"
+                formControlName="cursaSecundaria"
+                legend="¿Cursás secundaria actualmente?"
+                name="secondary-status"
+                orientation="vertical"
+                [required]="true">
+                @for (option of facade.secondaryStatusOptions; track option.value) {
+                <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                  {{ option.label }}
+                </ort-radio-button>
+                }
+              </ort-radio-group>
+
+              <ort-radio-group
+                class="inscription-choice-list"
+                formControlName="lugarSecundaria"
+                legend="¿Dónde cursaste el último año de secundaria?"
+                name="secondary-place"
+                orientation="vertical"
+                [required]="true">
+                @for (option of facade.secondaryPlaceOptions; track option.value) {
+                <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                  {{ option.label }}
+                </ort-radio-button>
+                }
+              </ort-radio-group>
+            </section>
+
+            <section aria-labelledby="higher-education-title" class="inscription-subsection">
+              <h2 id="higher-education-title">Educación superior</h2>
+              <ort-radio-group
+                class="inscription-choice-list"
+                formControlName="estadoEducacionSuperior"
+                legend="Estado de educación superior"
+                name="previous-career"
+                orientation="vertical"
+                [required]="true">
+                @for (option of facade.previousCareerOptions(); track option.value) {
+                <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                  {{ option.label }}
+                </ort-radio-button>
+                }
+              </ort-radio-group>
+            </section>
+
+            <section aria-labelledby="parents-education-title" class="inscription-subsection">
+              <h2 id="parents-education-title">Educación de padres o tutores</h2>
+              <p>Indicá el nivel de formación máximo alcanzado.</p>
+              <ort-form-field
+                [hideRequiredMarker]="!!facade.educationForm.controls.formacionMadre.value">
+                <ort-label>Madre o tutor</ort-label>
+                <ort-select
+                  aria-label="Nivel máximo alcanzado de madre o tutor"
+                  formControlName="formacionMadre">
+                  <ort-option value="">Seleccioná...</ort-option>
+                  @for (option of facade.educationLevelOptions(); track option.value) {
+                  <ort-option [value]="option.value">{{ option.label }}</ort-option>
+                  }
+                </ort-select>
+              </ort-form-field>
+              <ort-form-field
+                [hideRequiredMarker]="!!facade.educationForm.controls.formacionPadre.value">
+                <ort-label>Padre o tutor</ort-label>
+                <ort-select
+                  aria-label="Nivel máximo alcanzado de padre o tutor"
+                  formControlName="formacionPadre">
+                  <ort-option value="">Seleccioná...</ort-option>
+                  @for (option of facade.educationLevelOptions(); track option.value) {
+                  <ort-option [value]="option.value">{{ option.label }}</ort-option>
+                  }
+                </ort-select>
+              </ort-form-field>
+            </section>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('decision-academica')) {
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'decision-academica'"
+        (opened)="facade.openSection('decision-academica')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('decision-academica') === 'completa' ? 'check_circle' :
+              'schema' }}
+            </ort-icon>
+            Decisión académica
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.academicDecisionForm">
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="anioDecisionCarrera"
+              legend="¿En qué año de secundaria decidiste qué carrera estudiar?"
+              name="decision-career-year"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.decisionYearOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+
+            <ort-form-field
+              [hideRequiredMarker]="!!facade.academicDecisionForm.controls.apoyoDecision.value">
+              <ort-label>¿Quiénes te apoyaron en la decisión?</ort-label>
+              <ort-select aria-label="Apoyo en la decisión" formControlName="apoyoDecision">
+                <ort-option value="">Seleccioná...</ort-option>
+                @for (option of facade.supportOptions(); track option.value) {
+                <ort-option [value]="option.value">{{ option.label }}</ort-option>
+                }
+              </ort-select>
+            </ort-form-field>
+
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="anioDecisionOrt"
+              legend="¿En qué año decidiste estudiar en ORT?"
+              name="decision-ort-year"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.decisionYearOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="otrasUniversidades"
+              legend="¿Te informaste en otras universidades?"
+              name="other-universities"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.yesNoOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="certezaDecision"
+              legend="¿Qué tan decidido estabas al inscribirte?"
+              name="decision-certainty"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.certaintyOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+
+            <ort-form-field
+              [hideRequiredMarker]="!!facade.academicDecisionForm.controls.motivosOrt.value">
+              <ort-label>Motivos para elegir ORT</ort-label>
+              <ort-select aria-label="Motivos para elegir ORT" formControlName="motivosOrt">
+                <ort-option value="">Seleccioná...</ort-option>
+                @for (option of facade.motivesOptions(); track option.value) {
+                <ort-option [value]="option.value">{{ option.label }}</ort-option>
+                }
+              </ort-select>
+            </ort-form-field>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('experiencia-ort')) {
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'experiencia-ort'"
+        (opened)="facade.openSection('experiencia-ort')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('experiencia-ort') === 'completa' ? 'check_circle' :
+              'domain' }}
+            </ort-icon>
+            Experiencia con ORT
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.ortExperienceForm">
+            @for ( question of [ { control: 'reunionAsesoramiento', legend: '¿Tuviste una reunión de
+            asesoramiento?' }, { control: 'visitoWeb', legend: '¿Visitaste el sitio web de ORT?' },
+            { control: 'visitoSede', legend: '¿Visitaste las instalaciones de ORT?' }, { control:
+            'recuerdaPublicidad', legend: '¿Recordás haber visto publicidad de ORT?' } ]; track
+            question.control ) {
+            <ort-radio-group
+              class="inscription-choice-list"
+              orientation="vertical"
+              [formControlName]="question.control"
+              [legend]="question.legend"
+              [name]="question.control"
+              [required]="true">
+              @for (option of facade.yesNoOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+            }
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('situacion-laboral')) {
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'situacion-laboral'"
+        (opened)="facade.openSection('situacion-laboral')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('situacion-laboral') === 'completa' ? 'check_circle' :
+              'business_center' }}
+            </ort-icon>
+            Situación laboral
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.workForm">
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="situacionLaboral"
+              legend="¿Trabajás actualmente?"
+              name="work-status"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.workStatusOptions; track option.value) {
+              <ort-radio-button class="inscription-radio-option" [value]="option.value">
+                {{ option.label }}
+              </ort-radio-button>
+              }
+            </ort-radio-group>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+      }
+
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'identidad'"
+        (opened)="facade.openSection('identidad')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('identidad') === 'completa' ? 'check_circle' : 'verified' }}
+            </ort-icon>
+            Verificación de identidad
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.identityForm">
+            <section aria-labelledby="identity-document-title" class="inscription-subsection">
+              <h2 id="identity-document-title">Documento de identidad</h2>
+              <p>Subí una imagen clara del frente y dorso de tu documento de identidad.</p>
+              <!-- TODO(a11y-ort-component): OrtFileUploader tiene contraste mobile interno pendiente en la libreria; no se parchean clases internas desde la app. -->
+              <ort-file-uploader
+                label="Frente del documento *"
+                [acceptedTypes]="facade.acceptedImageTypes"
+                (filesChanged)="facade.updateIdentityFile('frente', $event)" />
+              <ort-file-uploader
+                label="Dorso del documento *"
+                [acceptedTypes]="facade.acceptedImageTypes"
+                (filesChanged)="facade.updateIdentityFile('dorso', $event)" />
+              <ort-form-field
+                [hideRequiredMarker]="!!facade.identityForm.controls.vencimientoDocumento.value">
+                <ort-label>Vencimiento</ort-label>
+                <input
+                  formControlName="vencimientoDocumento"
+                  format="DD/MM/YYYY"
+                  ortDateInput
+                  placeholder="dd/mm/aaaa"
+                  valueType="date" />
+              </ort-form-field>
+            </section>
+
+            <section aria-labelledby="identity-selfie-title" class="inscription-subsection">
+              <h2 id="identity-selfie-title">Adjuntá una foto tuya</h2>
+              <p>Tomá una foto clara de tu rostro para validar tu identidad.</p>
+              <ort-file-uploader
+                label="Foto del rostro *"
+                [acceptedTypes]="facade.acceptedImageTypes"
+                (filesChanged)="facade.updateIdentityFile('selfie', $event)" />
+            </section>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+
+      <ort-accordion-item
+        [expanded]="facade.activeSection() === 'reglamento'"
+        (opened)="facade.openSection('reglamento')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('reglamento') === 'completa' ? 'check_circle' : 'article' }}
+            </ort-icon>
+            Reglamento estudiantil
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.regulationForm">
+            <p>Leé el reglamento estudiantil antes de aceptar sus condiciones.</p>
+            <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
+              Ver reglamento
+            </button>
+            <ort-checkbox formControlName="aceptaReglamento">
+              Acepto el reglamento estudiantil.
+            </ort-checkbox>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
+    </ort-accordion>
+
+    <ort-error-summary [errors]="facade.activeSectionErrors()" />
 
     <footer class="inscription-footer">
       <button ort-primary-button type="submit">Continuar</button>

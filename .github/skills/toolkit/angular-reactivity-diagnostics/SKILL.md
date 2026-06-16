@@ -1,8 +1,9 @@
 ---
 name: angular-reactivity-diagnostics
 description: Diagnostica errores runtime de reactividad Angular con signals, zoneless change detection, timing y diferencias entre navegadores como Safari Mobile.
-argument-hint: "[ruta o componente] [errores opcionales]"
+argument-hint: '[ruta o componente] [errores opcionales]'
 ---
+
 <!-- ai-toolkit:toolkit profile=angular path=.github/skills/toolkit/angular-reactivity-diagnostics/SKILL.md -->
 
 # Angular Reactivity Diagnostics

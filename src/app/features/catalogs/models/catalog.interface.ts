@@ -92,4 +92,3 @@ export interface InitialSurveyCatalogs {
   formacionTutores: CatalogItem[];
   nivelConocimiento: CatalogItem[];
 }
-

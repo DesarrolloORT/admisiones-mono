@@ -121,7 +121,7 @@ Retrieve animations directly using standard Web APIs:
 
 ```ts
 const animations = element.getAnimations();
-animations.forEach((anim) => anim.pause());
+animations.forEach(anim => anim.pause());
 ```
 
 ## 3. Legacy Animations DSL (Deprecated)
@@ -141,18 +141,20 @@ bootstrapApplication(App, {
 ### Defining Transitions
 
 ```ts
-import {signal} from '@angular/core';
-import {trigger, state, style, animate, transition} from '@angular/animations';
+import { signal } from '@angular/core';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   animations: [
     trigger('openClose', [
-      state('open', style({opacity: 1})),
-      state('closed', style({opacity: 0})),
+      state('open', style({ opacity: 1 })),
+      state('closed', style({ opacity: 0 })),
       transition('open <=> closed', [animate('0.5s')]),
     ]),
   ],
-  template: `<div [@openClose]="isOpen() ? 'open' : 'closed'">...</div>`,
+  template: `
+    <div [@openClose]="isOpen() ? 'open' : 'closed'">...</div>
+  `,
 })
 export class OpenClose {
   protected readonly isOpen = signal(true);

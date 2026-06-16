@@ -4,7 +4,11 @@
     <p>Para confirmar tu inscripción, realizá el pago de la seña antes de la fecha indicada.</p>
   </header>
 
-  <form class="inscription-form" [formGroup]="facade.paymentForm" (ngSubmit)="facade.continue()">
+  <form
+    class="inscription-form"
+    novalidate
+    [formGroup]="facade.paymentForm"
+    (ngSubmit)="facade.continue()">
     <section aria-labelledby="summary-title" class="inscription-card">
       <h2 id="summary-title">Resumen de inscripción</h2>
       <dl class="inscription-summary-list">
@@ -41,23 +45,54 @@
 
       <ort-radio-group
         class="inscription-radio-list"
-        formControlName="paymentMethod"
-        indicatorPosition="right"
+        formControlName="metodoPago"
         legend="Medio de pago"
         name="payment-method"
         orientation="vertical">
         @for (option of facade.paymentOptions; track option.value) {
-        <ort-radio-card-button [value]="option.value">
+        <ort-radio-button class="inscription-radio-option" [value]="option.value">
           {{ option.label }} @if (option.hint) {
           <span ortRadioSupportingText>{{ option.hint }}</span>
           }
-        </ort-radio-card-button>
+        </ort-radio-button>
         }
       </ort-radio-group>
     </section>
+
+    <ort-error-summary [errors]="facade.paymentErrors()" />
 
     <footer class="inscription-footer">
       <button ort-primary-button type="submit">Continuar</button>
     </footer>
   </form>
+
+  <app-inscripcion-dialog
+    closeLabel="Volver al pago"
+    title="Confirmar inscripción"
+    helperText="Revisá la propuesta y el medio de pago antes de continuar."
+    [open]="facade.screen() === 'confirmacion-pago'"
+    (closed)="facade.cancelPaymentConfirmation()">
+    <dl class="inscription-summary-list">
+      @for (item of facade.summaryItems(); track item.label) {
+      <div class="inscription-summary-list__item">
+        <dt>{{ item.label }}</dt>
+        <dd>{{ item.value }}</dd>
+      </div>
+      }
+    </dl>
+    <p>
+      Seña de inscripción:
+      <strong>{{ facade.inscriptionAmount }}</strong>
+    </p>
+    <div inscripcionDialogActions>
+      <button
+        data-dialog-initial-focus
+        ort-secondary-button
+        type="button"
+        (click)="facade.cancelPaymentConfirmation()">
+        Volver
+      </button>
+      <button ort-primary-button type="button" (click)="facade.confirmPayment()">Confirmar</button>
+    </div>
+  </app-inscripcion-dialog>
 </section>

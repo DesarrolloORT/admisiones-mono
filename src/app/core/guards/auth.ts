@@ -9,4 +9,3 @@ export const authGuard: CanActivateFn = () => {
 
   return authSession.isAuthenticated() ? true : router.createUrlTree(['/iniciar-sesion']);
 };
-

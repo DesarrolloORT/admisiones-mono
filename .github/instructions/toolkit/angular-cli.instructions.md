@@ -1,7 +1,7 @@
 ---
 name: angular-cli
-description: "Implementacion Angular alineada con Angular CLI y patrones del workspace."
-applyTo: "**/*.ts, **/*.html, **/*.scss, **/*.sass, **/*.css, **/*.routes.ts, **/*.route.ts, **/*.config.ts"
+description: 'Implementacion Angular alineada con Angular CLI y patrones del workspace.'
+applyTo: '**/*.ts, **/*.html, **/*.scss, **/*.sass, **/*.css, **/*.routes.ts, **/*.route.ts, **/*.config.ts'
 ---
 
 <!-- ai-toolkit:toolkit profile=angular path=.github/instructions/toolkit/angular-cli.instructions.md -->

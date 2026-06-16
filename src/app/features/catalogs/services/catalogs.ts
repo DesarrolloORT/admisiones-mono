@@ -57,4 +57,3 @@ export class Catalogs {
     this.endpoint.clearCache();
   }
 }
-

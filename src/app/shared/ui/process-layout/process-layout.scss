@@ -1,0 +1,185 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--ort-sys-base-surface-background-dim);
+  color: var(--ort-sys-base-text-color-headline);
+  font-family: var(--ort-sys-font-family-open-sans);
+}
+
+.process-layout {
+  width: min(100%, 26.25rem);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout__top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout__header {
+  background: var(--ort-sys-base-surface-primary-background);
+  color: var(--ort-sys-base-text-on-color-header);
+}
+
+.process-layout__header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 4rem;
+  padding: var(--ort-sys-spacing-8) var(--ort-sys-spacing-16);
+}
+
+.process-layout__header-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 3rem;
+  height: 3rem;
+}
+
+.process-layout__icon-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--ort-sys-border-radius-round);
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.process-layout__icon-button:focus-visible {
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
+
+.process-layout__icon-button ort-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.process-layout__brand {
+  display: flex;
+  gap: var(--ort-sys-spacing-16);
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  height: 3rem;
+}
+
+.process-layout__logo {
+  object-fit: contain;
+  width: 3.3125rem;
+  height: 2.25rem;
+}
+
+.process-layout__brand-divider {
+  width: 0.0625rem;
+  height: 1.75rem;
+  border-radius: var(--ort-sys-border-radius-round);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.process-layout__brand-name {
+  overflow: hidden;
+  color: var(--ort-sys-base-text-on-color-header);
+  font-weight: 700;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.process-layout__mobile-stepper {
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout__rail {
+  display: none;
+}
+
+.process-layout__main {
+  min-height: calc(100dvh - 4rem);
+  outline: none;
+}
+
+.process-layout__content {
+  min-width: 0;
+}
+
+@media (width >= 30rem) and (width < 52.5rem) {
+  .process-layout {
+    box-shadow: 0 12px 32px rgb(13 13 28 / 14%);
+  }
+}
+
+@media (width >= 52.5rem) {
+  .process-layout {
+    width: 100%;
+    margin: 0;
+    background: var(--ort-sys-base-surface-background-page);
+  }
+
+  .process-layout__top {
+    position: static;
+  }
+
+  .process-layout__header-content {
+    min-height: 4.5rem;
+    padding-inline: var(--ort-sys-spacing-32, 2rem);
+  }
+
+  .process-layout__header-action:first-child {
+    display: none;
+  }
+
+  .process-layout__brand {
+    margin-right: auto;
+  }
+
+  .process-layout__mobile-stepper {
+    display: none;
+  }
+
+  .process-layout__body {
+    display: grid;
+    grid-template-columns: minmax(18rem, 22.375rem) minmax(0, 1fr);
+    min-height: calc(100dvh - 4.5rem);
+  }
+
+  .process-layout--without-stepper .process-layout__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .process-layout__rail {
+    display: block;
+    border-right: 1px solid var(--ort-sys-base-border-subtle-color);
+    background: var(--ort-sys-base-surface-background);
+  }
+
+  .process-layout__rail-inner {
+    position: sticky;
+    top: 0;
+    display: grid;
+    align-content: space-between;
+    min-height: calc(100dvh - 4.5rem);
+    padding: var(--ort-sys-spacing-48, 3rem);
+  }
+
+  .process-layout__main {
+    min-height: auto;
+    padding: var(--ort-sys-spacing-32, 2rem) var(--ort-sys-spacing-48, 3rem);
+  }
+
+  .process-layout__content {
+    width: min(100%, 40.875rem);
+  }
+}

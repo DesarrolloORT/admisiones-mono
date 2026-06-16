@@ -1,12 +1,25 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { OrtButtonModule, OrtIconModule, OrtRadioModule } from '@desarrolloort/components';
+import {
+  OrtButtonModule,
+  OrtFormFieldModule,
+  OrtIconModule,
+  OrtRadioModule,
+} from '@desarrolloort/components';
 
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
 
 @Component({
   selector: 'app-inscripcion-confirmation-step',
-  imports: [OrtButtonModule, OrtIconModule, OrtRadioModule, ReactiveFormsModule],
+  imports: [
+    InscripcionDialog,
+    OrtButtonModule,
+    OrtFormFieldModule,
+    OrtIconModule,
+    OrtRadioModule,
+    ReactiveFormsModule,
+  ],
   templateUrl: './inscripcion-confirmation-step.html',
   styleUrl: '../../pages/inscripcion/inscripcion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

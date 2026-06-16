@@ -1,7 +1,7 @@
 ---
-name: "Response Economy"
-description: "Reglas always-on para respuestas breves en Copilot sin perder precision."
-applyTo: "**"
+name: 'Response Economy'
+description: 'Reglas always-on para respuestas breves en Copilot sin perder precision.'
+applyTo: '**'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/response-economy.instructions.md -->

@@ -22,6 +22,10 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     const url = new URL(request.url());
     const path = decodeURIComponent(url.pathname);
 
+    if (isRecaptchaScript(url)) {
+      return fulfillRecaptchaScript(route);
+    }
+
     if (!isApiPath(path)) {
       return route.continue();
     }
@@ -62,12 +66,45 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, countryLocations());
     }
 
+    if (path === '/Catalogos/Carreras') {
+      return fulfillOperation(route, [
+        {
+          idProducto: 20,
+          idNivelProducto: 1,
+          nombreProducto: 'Licenciatura en Diseño Gráfico',
+          nombreNivelProducto: 'Carrera universitaria',
+        },
+      ]);
+    }
+
+    if (path === '/Catalogos/Comienzos') {
+      return fulfillOperation(route, [{ idProceso: 200, nombreProceso: 'Marzo 2027' }]);
+    }
+
+    if (path === '/Catalogos/Turnos') {
+      return fulfillOperation(route, [
+        {
+          idOferta: 300,
+          horarioReferencia: '08:00 a 12:00',
+          turno: { idTurno: 10, nombreTurno: 'Matutino' },
+        },
+      ]);
+    }
+
+    if (path === '/Catalogos/EncuestaInicial') {
+      return fulfillOperation(route, initialSurveyCatalogs());
+    }
+
     if (path === '/Persona/DatosPersona' && request.method() === 'GET') {
       return fulfillOperation(route, profileData());
     }
 
     if (path === '/Persona/DatosPersona' && request.method() === 'PUT') {
       return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/MisInscripciones') {
+      return fulfillOperation(route, []);
     }
 
     if (path === '/Registro/EvaluarDocumento') {
@@ -103,9 +140,33 @@ function isApiPath(path: string): boolean {
   return (
     path.startsWith('/Auth/') ||
     path.startsWith('/Catalogos/') ||
+    path.startsWith('/Inscripciones/') ||
     path.startsWith('/Persona/') ||
     path.startsWith('/Registro/')
   );
+}
+
+function isRecaptchaScript(url: URL): boolean {
+  return (
+    (url.hostname === 'www.google.com' || url.hostname === 'www.recaptcha.net') &&
+    url.pathname === '/recaptcha/api.js'
+  );
+}
+
+function fulfillRecaptchaScript(route: Route): Promise<void> {
+  return route.fulfill({
+    contentType: 'application/javascript',
+    body: `
+      window.grecaptcha = {
+        ready: callback => callback(),
+        execute: () => Promise.resolve('e2e-captcha-token'),
+        render: () => 0,
+        reset: () => {},
+        getResponse: () => 'e2e-captcha-token'
+      };
+      window.ng2recaptchaloaded?.();
+    `,
+  });
 }
 
 function fulfillRegisterEvaluation(route: Route, scenario: RegisterScenario): Promise<void> {
@@ -209,5 +270,17 @@ function profileData(): unknown {
     telefono1: '99123456',
     mail: 'gabrielaortiz@example.com',
     verificacionMail: 'gabrielaortiz@example.com',
+  };
+}
+
+function initialSurveyCatalogs(): unknown {
+  return {
+    aniosAprobadosEducacionSuperior: [{ value: 1, label: 'Un año' }],
+    compartidoCon: [{ value: 1, label: 'Familia' }],
+    decisionCarrera: [{ value: 1, label: 'Durante secundaria' }],
+    decisionUniversidad: [{ value: 1, label: 'Propuesta académica' }],
+    estadoEducacionSuperior: [{ value: 3, label: 'No cursé estudios superiores' }],
+    formacionTutores: [{ value: 4, label: 'Universitaria completa' }],
+    nivelConocimiento: [{ value: 1, label: 'Conocía bien la propuesta' }],
   };
 }

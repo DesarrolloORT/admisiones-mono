@@ -150,4 +150,3 @@ export class TwoFactorValidation {
     target?.select();
   }
 }
-
