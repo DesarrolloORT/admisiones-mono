@@ -9,6 +9,7 @@ const VARIANT_MAP: Record<string, ChipVariant> = {
   'A la espera': 'information',
   'Confirmada': 'success',
   'Dada de baja': 'error',
+  'Aceptada': 'success',
 };
 
 const DEFAULT_VARIANT: ChipVariant = 'information';
@@ -26,4 +27,3 @@ export class DashboardCareerStatusChip {
   protected readonly variant = computed<ChipVariant>(() => VARIANT_MAP[this.status()] ?? DEFAULT_VARIANT);
 }
 
- 
