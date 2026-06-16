@@ -1,18 +1,10 @@
-<app-process-layout
-  closeLabel="Cerrar becas"
-  currentStepId="oportunidades"
-  processTitle="Postulación a becas"
-  stepperAriaLabel="Progreso de postulación a becas"
-  stepperSubtitle="Paso 1 de 3 - Oportunidades"
-  [steps]="steps"
+<app-process-layout closeLabel="Cerrar becas" currentStepId="oportunidades" processTitle="Postulación a becas"
+  stepperAriaLabel="Progreso de postulación a becas" stepperSubtitle="Paso 1 de 3 - Inicio" [steps]="steps"
   (closeFlow)="goHome()">
   <section aria-labelledby="scholarships-title" class="inscription-screen">
     <header class="inscription-screen__header">
       <h1 id="scholarships-title">Postulación a becas</h1>
-      <p>
-        Este shell base prepara el flujo para publicar oportunidades, completar la postulación y ver
-        el resultado.
-      </p>
+
     </header>
   </section>
 </app-process-layout>

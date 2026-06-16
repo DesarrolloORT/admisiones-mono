@@ -9,7 +9,7 @@ const SCHOLARSHIP_STEPS: ExpandableStepperStep[] = [
     id: 'oportunidades',
     overline: 'Paso 1',
     status: 'current',
-    title: 'Oportunidades',
+    title: 'Inicio',
   },
   {
     id: 'postulacion',
@@ -40,3 +40,4 @@ export class Becas {
     void this.router.navigate(['/inicio']);
   }
 }
+
