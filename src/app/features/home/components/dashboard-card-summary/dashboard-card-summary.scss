@@ -26,12 +26,18 @@
 
 .card-summary__label {
   color: var(--ort-sys-base-text-color-body);
-  font-size: var(--ort-sys-caption-text-size, 14px);
-  line-height: var(--ort-sys-caption-line-height, 20px);
+ font-size: var(--ort-sys-font-size-14);
+  line-height: var(--ort-sys-line-height-20);
 }
 
 .card-summary__value {
-  font-weight: 500;
+  font-weight: var(--ort-sys-font-weight-semibold);
   font-size: var(--ort-sys-body-text-size);
   line-height: var(--ort-sys-body-line-height);
+}
+
+@media (width >= 768px) {
+  .card-summary{
+    gap: var(--ort-sys-spacing-16 );
+  }
 }

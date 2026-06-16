@@ -52,7 +52,8 @@ export class DashboardCardSummary {
           { icon: 'today', label: 'Cierre de postulación', value: this.applicationDeadline() },
           { icon: 'event', label: 'Fecha de prueba', value: this.examDate() },
         ];
-      case 'Finalizada':
+      case 'Consulta':
+      case 'Aceptada':
         return [
           { icon: 'school', label: 'Carrera', value: this.careerName() },
           { icon: 'fact_check', label: 'Resultado de prueba', value: this.examResult() },
