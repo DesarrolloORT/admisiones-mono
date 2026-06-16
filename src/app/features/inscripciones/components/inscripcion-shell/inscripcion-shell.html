@@ -26,31 +26,37 @@
         </div>
 
         <div class="inscription-header__action">
-          <a
+          <button
             aria-label="Cerrar inscripción"
             class="inscription-header__icon-button"
-            routerLink="/inicio">
+            type="button"
+            (click)="closeFlow.emit()">
             <ort-icon aria-hidden="true">close</ort-icon>
-          </a>
+          </button>
         </div>
       </div>
     </header>
 
     @if (showStepper()) {
-    <section aria-label="Progreso de inscripción" class="inscription-stepper">
-      <div class="inscription-stepper__titles">
-        <p>Inscripción a carrera</p>
-        <span>{{ stepLabel() }}</span>
-      </div>
-      <ort-icon aria-hidden="true" class="inscription-stepper__chevron">expand_less</ort-icon>
-      <div class="inscription-stepper__progress">
-        @for (progressStep of progressSteps; track progressStep) {
-        <span
-          aria-hidden="true"
-          class="inscription-stepper__bar"
-          [class.inscription-stepper__bar--active]="progressStep <= stepNumber()"></span>
+    <section aria-label="Progreso de inscripción" class="inscription-progress">
+      <p class="inscription-progress__title">Inscripción a carrera</p>
+      <ort-stepper
+        [animationEnabled]="false"
+        [linear]="true"
+        [selectedIndex]="stepNumber() - 1">
+        @for (step of steps(); track step.id) {
+        <ort-step
+          [attr.id]="'ort-step-panel-' + step.id"
+          [completed]="step.status === 'completo'"
+          [disabled]="step.status === 'pendiente'"
+          [editable]="false"
+          [id]="step.id"
+          [label]="step.title">
+          <span ortStepSupportingText>{{ step.overline }}</span>
+        </ort-step>
         }
-      </div>
+      </ort-stepper>
+      <p aria-live="polite" class="sr-only">{{ stepLabel() }}</p>
     </section>
     }
   </div>

@@ -96,58 +96,18 @@
   white-space: nowrap;
 }
 
-.inscription-stepper {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--ort-sys-spacing-8) var(--ort-sys-spacing-12);
-  padding: var(--ort-sys-spacing-16);
-  background: var(--ort-sys-stepper-expandable-header-background-color);
-  box-shadow: 0 4px 10px rgb(13 13 28 / 8%);
+.inscription-progress {
+  padding: var(--ort-sys-spacing-8) var(--ort-sys-spacing-16) 0;
+  border-bottom: 1px solid var(--ort-sys-base-border-subtle-color);
+  background: var(--ort-sys-base-surface-background-page-default);
 }
 
-.inscription-stepper__titles {
-  display: grid;
-  gap: var(--ort-sys-spacing-2);
-  min-width: 0;
-}
-
-.inscription-stepper__titles p {
+.inscription-progress__title {
   margin: 0;
-  color: var(--ort-sys-stepper-title-color);
+  color: var(--ort-sys-base-text-color-headline);
   font-weight: 700;
   font-size: var(--ort-sys-body-text-size);
   line-height: var(--ort-sys-body-line-height);
-}
-
-.inscription-stepper__titles span {
-  color: var(--ort-sys-stepper-title-supporting-color);
-  font-weight: 600;
-  font-size: var(--ort-sys-body-sm-text-size);
-  line-height: var(--ort-sys-body-sm-line-height);
-}
-
-.inscription-stepper__chevron {
-  align-self: start;
-  color: var(--ort-sys-base-icon-color-subtle);
-  font-size: 1.5rem;
-}
-
-.inscription-stepper__progress {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-column: 1 / -1;
-  gap: var(--ort-sys-spacing-10);
-}
-
-.inscription-stepper__bar {
-  height: 0.3125rem;
-  border-radius: var(--ort-sys-border-radius-round);
-  background: var(--ort-sys-base-border-subtle-color);
-}
-
-.inscription-stepper__bar--active {
-  background: var(--ort-sys-base-surface-primary-background);
 }
 
 .inscription-shell__main {
