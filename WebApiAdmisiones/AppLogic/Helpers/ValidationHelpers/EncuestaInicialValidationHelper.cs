@@ -26,6 +26,11 @@ namespace AppLogic.Helpers.ValidationHelpers
 
             if (request.IdProducto.HasValue)
             {
+                if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto.Value))
+                {
+                    return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
+                }
+
                 var producto = uow.Productos.GetByKey(request.IdProducto.Value);
                 if (producto == null)
                 {
@@ -107,7 +112,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             }
 
             var producto = uow.Productos.GetByKey(encuesta.IdProducto!.Value);
-            if (producto == null)
+            if (producto == null || !uow.Productos.EsProductoValidoParaInteres(encuesta.IdProducto.Value))
             {
                 return OperationResult<bool>.IsFailed("INS_EI_28", methodName, "El producto indicado es invalido.", 400);
             }
@@ -141,6 +146,11 @@ namespace AppLogic.Helpers.ValidationHelpers
             encuesta.CodigoTitulo = datosAcademicos.Data.CodigoTitulo;
             encuesta.UltimoAnioSextoEncuestaIni = datosAcademicos.Data.UltimoAnioSexto.ToString();
 
+            if (ultimoAnioResult.Value == 6 && string.IsNullOrWhiteSpace(encuesta.TieneEducacionSuperiorEncuestaIni))
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
             if (encuesta.InforOtrasAntesEncuestaIni == CommonConstants.Booleanos.Si
                 && !uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).Any())
             {
@@ -160,6 +170,24 @@ namespace AppLogic.Helpers.ValidationHelpers
 
             if (encuesta.TieneEducacionSuperiorEncuestaIni == CommonConstants.Booleanos.Si
                 && !uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).Any())
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            if (encuesta.AsesoramientoOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionAsesoramientoOrtEncuestaIni.HasValue)
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            if (encuesta.VistaSitioWebOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionSitioWebOrtEncuestaIni.HasValue)
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            if (encuesta.VistaInstalacionesOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionInstalacionesOrtEncuestaIni.HasValue)
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
