@@ -1,9 +1,6 @@
+import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
-import {
-  OrtSnackbarRef,
-  OrtSnackbarService,
-  SnackbarVariant as OrtVariant,
-} from '@desarrolloort/components';
+import { OrtSnackbarRef, OrtSnackbarService } from '@desarrolloort/components';
 
 export type SnackbarVariant = 'error' | 'information' | 'success' | 'warning';
 
@@ -23,30 +20,41 @@ const DEFAULT_DURATION_MS = 5000;
   providedIn: 'root',
 })
 export class SnackbarHandler {
-  private readonly ortSnackbar = inject(OrtSnackbarService);
+  private readonly document = inject(DOCUMENT);
+  private readonly snackBar = inject(OrtSnackbarService);
   private currentRef: OrtSnackbarRef | null = null;
-  private readonly fontsReady = document.fonts?.ready ?? Promise.resolve();
+  private readonly fontsReady = this.document.fonts?.ready ?? Promise.resolve();
 
   public show(config: SnackbarConfig): void {
     void this.fontsReady.then(() => this.showImmediate(config));
   }
 
   private showImmediate(config: SnackbarConfig): void {
-    const variant: OrtVariant = config.variant ?? 'information';
+    const variant = config.variant ?? 'information';
+    const supportingText = config.hint ?? config.title;
 
-    this.currentRef = this.ortSnackbar.open({
-      message: config.message,
-      supportingText: config.hint ?? config.title,
-      variant,
+    const ref = this.snackBar.open({
       actionLabel: config.actionLabel,
-      closeable: true,
       autoDismiss: true,
       durationMs: config.duration ?? DEFAULT_DURATION_MS,
+      horizontalPosition: 'center',
+      message: config.message,
+      supportingText,
+      variant,
+      verticalPosition: 'top',
+    });
+
+    this.currentRef = ref;
+
+    ref.afterDismissed().subscribe(() => {
+      if (this.currentRef === ref) {
+        this.currentRef = null;
+      }
     });
 
     if (config.action) {
       const action = config.action;
-      this.currentRef.onAction().subscribe(() => action());
+      ref.onAction().subscribe(() => action());
     }
   }
 
@@ -74,4 +82,3 @@ export class SnackbarHandler {
     this.currentRef = null;
   }
 }
-
