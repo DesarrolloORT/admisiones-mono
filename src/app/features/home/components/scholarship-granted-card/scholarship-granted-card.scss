@@ -1,0 +1,59 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ort-sys-spacing-16);
+  align-items: center;
+  height: 100%;
+  padding: var(--ort-sys-spacing-24);
+  border-radius: var(--ort-sys-border-radius-12);
+  background: var(--ort-sys-card-background);
+  box-shadow: var(--ort-sys-elevation-md-x) var(--ort-sys-elevation-md-y)
+    var(--ort-sys-elevation-md-blur) var(--ort-sys-elevation-md-spread)
+    var(--ort-sys-elevation-md-color);
+}
+
+.dashboard-card__title {
+  margin: 0;
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-font-size-24 );
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-line-height-24);
+}
+
+.dashboard-card__text{
+  text-align: center;
+  margin: auto;
+  width: 80%;
+}
+
+img{
+  width: 15%;
+  height: auto;
+}
+
+.action-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+}
+
+.dashboard-card__actions{
+  display: flex;
+  flex-direction: column;
+  gap: var(--ort-sys-spacing-8);
+  width: 100%;
+}
+
+@media (width >= 768px) {
+  .dashboard-card__actions{
+    flex-direction: row;
+    justify-content: center;
+  }
+}
