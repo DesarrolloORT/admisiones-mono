@@ -1,22 +1,37 @@
 
 <article class="dashboard-card" [attr.aria-labelledby]="'dashboard-card-title'">
-  <ort-icon aria-hidden="true" class="dashboard-card__icon" size="lg">school</ort-icon>
+  <ort-icon aria-hidden="true" class="dashboard-card__icon" size="lg">{{ icon() }}</ort-icon>
 
+  @if (showChip()) {
   <div class="dashboard-card__chip">
-    <app-dashboard-career-status-chip [status]="inscripcion().estado" />
-  </div>
+    <app-dashboard-career-status-chip [status]="estado()" />
+  </div> 
+  }
 
-  <h3 class="dashboard-card__title" id="dashboard-card-title">{{ inscripcion().nombreProducto }}</h3>
+  <h3 class="dashboard-card__title" id="dashboard-card-title">{{ title() }}</h3>
 
   <div class="dashboard-card__meta">
-    <ort-icon aria-hidden="true" class="dashboard-card__meta-icon" size="md">calendar_today</ort-icon>
-    <p class="dashboard-card__meta-text">
-      <span class="dashboard-card__meta-label">Comienzo</span>
-      <span class="dashboard-card__meta-value">{{ inscripcion().nombreComienzo }}</span>
-    </p>
+    @if (variant() === 'careers') {
+      <app-dashboard-card-summary variant="careers" [startDate]="inscripcion()?.nombreComienzo ?? ''" />
+    } @else {
+      <app-dashboard-card-summary
+        variant="scholarships"
+        [applicationDeadline]="beca()?.cierrePostulacion ?? ''"
+        [benefit]="beca()?.beneficio ?? ''"
+        [careerName]="beca()?.nombreCarrera ?? ''"
+        [examDate]="beca()?.fechaPrueba ?? ''"
+        [examResult]="beca()?.resultadoPrueba ?? ''"
+        [resultsDate]="beca()?.fechaResultados ?? ''"
+        [status]="estado()" />
+    }
   </div>
 
+  @if (showActions()) {
   <div class="dashboard-card__actions">
-    <app-dashboard-quick-actions [careerName]="inscripcion().nombreProducto" [status]="inscripcion().estado" />
+    <app-dashboard-quick-actions
+      [cardType]="variant()"
+      [careerName]="title()"
+      [status]="estado()" />
   </div>
+  }
 </article>
