@@ -62,4 +62,3 @@ export class Home implements OnInit {
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });
 }
-

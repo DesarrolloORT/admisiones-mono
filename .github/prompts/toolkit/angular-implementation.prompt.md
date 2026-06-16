@@ -1,13 +1,14 @@
 ---
 name: angular-implementation
-description: "Implementa cambios Angular de happy path usando patrones del workspace, design system e instrucciones del perfil."
+description: 'Implementa cambios Angular de happy path usando patrones del workspace, design system e instrucciones del perfil.'
 agent: ask
 tools:
   - search/codebase
   - search/usages
   - edit
-argument-hint: "[ruta, flujo o feature] [alcance opcional]"
+argument-hint: '[ruta, flujo o feature] [alcance opcional]'
 ---
+
 <!-- ai-toolkit:toolkit profile=angular path=.github/prompts/toolkit/angular-implementation.prompt.md -->
 
 Implementa el cambio Angular indicado con el menor alcance coherente.

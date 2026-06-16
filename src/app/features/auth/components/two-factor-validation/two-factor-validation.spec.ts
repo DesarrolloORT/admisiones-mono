@@ -60,4 +60,3 @@ describe('TwoFactorValidation', () => {
     expect(emitSpy).not.toHaveBeenCalled();
   });
 });
-

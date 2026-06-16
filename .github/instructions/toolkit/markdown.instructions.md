@@ -1,8 +1,9 @@
 ---
-name: "Markdown Documentation Standards"
-description: "Convenciones para prompts, instrucciones y documentacion Markdown."
-applyTo: ".github/**/*.md"
+name: 'Markdown Documentation Standards'
+description: 'Convenciones para prompts, instrucciones y documentacion Markdown.'
+applyTo: '.github/**/*.md'
 ---
+
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/markdown.instructions.md -->
 
 # Markdown y customizaciones

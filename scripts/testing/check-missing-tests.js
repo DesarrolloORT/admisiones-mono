@@ -19,10 +19,14 @@ if (missingTests.length === 0) {
   });
   console.log('─'.repeat(80));
   if (shouldGenerate) {
-    const generation = spawnSync(process.execPath, ['./scripts/testing/generate-missing-tests.js'], {
-      cwd: process.cwd(),
-      stdio: 'inherit'
-    });
+    const generation = spawnSync(
+      process.execPath,
+      ['./scripts/testing/generate-missing-tests.js'],
+      {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+      }
+    );
 
     if (generation.status !== 0) {
       console.log('⚠️  Fallo la generación automática de tests.');

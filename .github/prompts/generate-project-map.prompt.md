@@ -42,4 +42,3 @@ applyTo: '**'
 
 - Archivo `.github/instructions/toolkit/project-map.instructions.md` creado/actualizado.
 - Si existen `AGENTS.md` y/o `CLAUDE.md`, la seccion `## Codegraph` sincronizada.
-

@@ -14,4 +14,3 @@ export const routes: Routes = [
   { path: 'recuperar-acceso', component: RecoverAccess },
   { path: 'verificar-codigo', component: TwoFactorValidationPage },
 ];
-

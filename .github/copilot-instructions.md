@@ -1,5 +1,5 @@
 ---
-applyTo: "**"
+applyTo: '**'
 ---
 
 <!-- ai-toolkit:toolkit profile=core path=.github/copilot-instructions.md -->

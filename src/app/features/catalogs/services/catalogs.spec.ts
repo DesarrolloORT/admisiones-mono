@@ -132,4 +132,3 @@ describe('Catalogs', () => {
     expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });
-

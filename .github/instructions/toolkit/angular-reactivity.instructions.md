@@ -1,7 +1,7 @@
 ---
 name: angular-reactivity
-description: "Reactividad Angular predecible con signals, computed(), effect() y timing estable."
-applyTo: "**/*.ts, **/*.routes.ts, **/*.route.ts, **/*.config.ts"
+description: 'Reactividad Angular predecible con signals, computed(), effect() y timing estable.'
+applyTo: '**/*.ts, **/*.routes.ts, **/*.route.ts, **/*.config.ts'
 ---
 
 <!-- ai-toolkit:toolkit profile=angular path=.github/instructions/toolkit/angular-reactivity.instructions.md -->

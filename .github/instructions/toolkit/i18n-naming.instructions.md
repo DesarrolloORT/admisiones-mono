@@ -1,7 +1,7 @@
 ---
 name: i18n-naming
-description: "Convencion de idioma: rutas y texto visible en español, codigo e identificadores en ingles."
-applyTo: "**/*.ts, **/*.html, **/*.routes.ts, **/*.route.ts"
+description: 'Convencion de idioma: rutas y texto visible en español, codigo e identificadores en ingles.'
+applyTo: '**/*.ts, **/*.html, **/*.routes.ts, **/*.route.ts'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/i18n-naming.instructions.md -->

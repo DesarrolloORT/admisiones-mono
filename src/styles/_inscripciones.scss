@@ -7,7 +7,10 @@ app-inscripcion-shell .inscription-progress .ort-stepper-content {
   padding: 0;
 }
 
-app-inscripcion-shell .inscription-progress .ort-step-header-disabled :is(.ort-step-label, .ort-step-supporting-label) {
+app-inscripcion-shell
+  .inscription-progress
+  .ort-step-header-disabled
+  :is(.ort-step-label, .ort-step-supporting-label) {
   color: var(--ort-sys-base-text-color-body);
 }
 

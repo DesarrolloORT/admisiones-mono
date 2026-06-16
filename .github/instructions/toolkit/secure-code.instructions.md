@@ -1,7 +1,7 @@
 ---
 name: secure-code
-description: "Baseline secure-by-default para codigo nuevo o modificado."
-applyTo: "**/*.ts, **/*.tsx, **/*.js, **/*.jsx, **/*.mjs, **/*.cjs, **/*.cts, **/*.mts, **/*.py, **/*.rb, **/*.go, **/*.rs, **/*.java, **/*.cs, **/*.php"
+description: 'Baseline secure-by-default para codigo nuevo o modificado.'
+applyTo: '**/*.ts, **/*.tsx, **/*.js, **/*.jsx, **/*.mjs, **/*.cjs, **/*.cts, **/*.mts, **/*.py, **/*.rb, **/*.go, **/*.rs, **/*.java, **/*.cs, **/*.php'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/secure-code.instructions.md -->

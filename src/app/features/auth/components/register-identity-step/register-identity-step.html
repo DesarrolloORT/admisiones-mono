@@ -91,13 +91,14 @@
 
   @if (error()) {
   <p class="auth-error" role="alert">{{ error() }}</p>
-  }
-
-  @if (showLoginAction()) {
+  } @if (showLoginAction()) {
   <button ort-primary-button type="button" (click)="loginAction.emit()">Iniciar sesión</button>
   }
 
-  <button ort-primary-button type="submit" [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()">
+  <button
+    ort-primary-button
+    type="submit"
+    [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()">
     {{ isSubmitting() ? 'Verificando...' : 'Continuar' }}
   </button>
 

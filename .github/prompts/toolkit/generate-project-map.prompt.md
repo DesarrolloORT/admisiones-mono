@@ -1,11 +1,11 @@
 ---
 name: generate-project-map
-description: "Genera un mapa estructural del repositorio optimizado para agentes AI. Fallback ligero cuando no se usa CodeGraph MCP."
+description: 'Genera un mapa estructural del repositorio optimizado para agentes AI. Fallback ligero cuando no se usa CodeGraph MCP.'
 agent: ask
 tools:
   - search/codebase
   - edit
-argument-hint: "[profundidad: shallow | deep]"
+argument-hint: '[profundidad: shallow | deep]'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/prompts/toolkit/generate-project-map.prompt.md -->
@@ -19,8 +19,8 @@ Genera un mapa estructural (project map) para este repositorio y escribelo como 
 ```markdown
 ---
 name: project-map
-description: "Mapa estructural del repositorio para navegacion rapida del agente."
-applyTo: "**"
+description: 'Mapa estructural del repositorio para navegacion rapida del agente.'
+applyTo: '**'
 ---
 
 # Project Map

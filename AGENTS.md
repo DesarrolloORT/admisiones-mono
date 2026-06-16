@@ -20,4 +20,3 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - common: baseline comun y CodeGraph.
 - front: reglas Angular/UI, si fueron instaladas.
 - back: reglas .NET backend, si fueron instaladas.
-

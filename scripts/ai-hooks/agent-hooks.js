@@ -1,5 +1,5 @@
 // ai-toolkit:toolkit profile=agent-hooks path=scripts/ai-hooks/agent-hooks.js
-import { cwd, stdin, stdout } from "node:process";
+import { cwd, stdin, stdout } from 'node:process';
 import {
   buildCompactSummary,
   buildFullGuardrailContext,
@@ -24,23 +24,23 @@ import {
   setActiveGoal,
   updateSessionFiles,
   updateToolCounters,
-} from "./agent-hooks-shared.js";
+} from './agent-hooks-shared.js';
 
 function readInput() {
-  return new Promise((resolvePromise) => {
-    let input = "";
-    stdin.setEncoding("utf8");
-    stdin.on("data", (chunk) => {
+  return new Promise(resolvePromise => {
+    let input = '';
+    stdin.setEncoding('utf8');
+    stdin.on('data', chunk => {
       input += chunk;
     });
-    stdin.on("end", () => {
+    stdin.on('end', () => {
       resolvePromise(input);
     });
   });
 }
 
 function parseInput(raw) {
-  if (!raw || raw.trim() === "") {
+  if (!raw || raw.trim() === '') {
     return {};
   }
 
@@ -67,65 +67,65 @@ function writeJson(value) {
 }
 
 async function main() {
-  const eventName = process.argv[2] ?? "";
+  const eventName = process.argv[2] ?? '';
   const root = cwd();
   const parsed = parseInput(await readInput());
   const sessionIdDefaults = {
-    SessionStart: "session-start",
-    UserPromptSubmit: "prompt-submit",
-    PreToolUse: "pre-tool-use",
-    PostToolUse: "post-tool-use",
-    SubagentStart: "subagent-start",
-    PreCompact: "pre-compact",
-    Stop: "stop",
+    SessionStart: 'session-start',
+    UserPromptSubmit: 'prompt-submit',
+    PreToolUse: 'pre-tool-use',
+    PostToolUse: 'post-tool-use',
+    SubagentStart: 'subagent-start',
+    PreCompact: 'pre-compact',
+    Stop: 'stop',
   };
   const sessionId =
-    typeof parsed.sessionId === "string" && parsed.sessionId.trim() !== ""
+    typeof parsed.sessionId === 'string' && parsed.sessionId.trim() !== ''
       ? parsed.sessionId
-      : (sessionIdDefaults[eventName] ?? "agent-hooks");
+      : (sessionIdDefaults[eventName] ?? 'agent-hooks');
 
   switch (eventName) {
-    case "SessionStart": {
+    case 'SessionStart': {
       cleanupExpiredState();
       const state = loadSessionState(root, sessionId);
       const signals = resolveToolkitSignals(root);
       ensureSessionMetadata(root, state, signals);
-      setActiveGoal(state, typeof parsed.initialPrompt === "string" ? parsed.initialPrompt : "");
-      state.lastGuardrailClass = "general";
+      setActiveGoal(state, typeof parsed.initialPrompt === 'string' ? parsed.initialPrompt : '');
+      state.lastGuardrailClass = 'general';
       saveSessionState(root, sessionId, state);
 
       writeJson({
         hookSpecificOutput: {
-          hookEventName: "SessionStart",
+          hookEventName: 'SessionStart',
           additionalContext: buildInitialContext(state, signals),
         },
       });
       return;
     }
 
-    case "UserPromptSubmit": {
+    case 'UserPromptSubmit': {
       const state = loadSessionState(root, sessionId);
       const signals = resolveToolkitSignals(root);
       ensureSessionMetadata(root, state, signals);
-      const prompt = typeof parsed.prompt === "string" ? parsed.prompt : "";
+      const prompt = typeof parsed.prompt === 'string' ? parsed.prompt : '';
       const currentClass = classifyPromptGuardrail(prompt);
       const previousClass = state.lastGuardrailClass;
       const messages = [];
 
       setActiveGoal(state, prompt);
 
-      if (currentClass !== "general" && currentClass !== previousClass) {
+      if (currentClass !== 'general' && currentClass !== previousClass) {
         messages.push(buildFullGuardrailContext(signals, currentClass));
       }
 
       if (
-        currentClass === "general" &&
-        signals.mode === "standard" &&
-        prompt.trim() !== "" &&
+        currentClass === 'general' &&
+        signals.mode === 'standard' &&
+        prompt.trim() !== '' &&
         !isConcretePrompt(prompt)
       ) {
         messages.push(
-          "Antes de expandir el contexto, fija archivo, path, workflow, job o feature concreto y reutiliza el estado ya explorado.",
+          'Antes de expandir el contexto, fija archivo, path, workflow, job o feature concreto y reutiliza el estado ya explorado.'
         );
       }
 
@@ -134,12 +134,12 @@ async function main() {
 
       writeJson({
         continue: true,
-        ...(messages.length > 0 ? { systemMessage: messages.join(" ") } : {}),
+        ...(messages.length > 0 ? { systemMessage: messages.join(' ') } : {}),
       });
       return;
     }
 
-    case "PreToolUse": {
+    case 'PreToolUse': {
       cleanupExpiredState();
       const state = loadSessionState(root, sessionId);
       const signals = resolveToolkitSignals(root);
@@ -147,22 +147,22 @@ async function main() {
       const currentClass = classifyToolGuardrail(parsed);
       const previousClass = state.lastGuardrailClass;
       const guardrailContext =
-        currentClass !== "general" && currentClass !== previousClass
+        currentClass !== 'general' && currentClass !== previousClass
           ? buildFullGuardrailContext(signals, currentClass)
-          : "";
+          : '';
       const evaluation = evaluatePreToolUse(state, parsed);
 
-      if (evaluation.kind === "search" && evaluation.searchPreview?.isGlobal) {
+      if (evaluation.kind === 'search' && evaluation.searchPreview?.isGlobal) {
         state.toolCounters.globalSearches = Number(state.toolCounters.globalSearches ?? 0) + 1;
-        if (evaluation.warningLevel === "ask") {
+        if (evaluation.warningLevel === 'ask') {
           state.toolCounters.searchPrompts = Number(state.toolCounters.searchPrompts ?? 0) + 1;
         }
-        if (evaluation.warningLevel === "notice" || evaluation.warningLevel === "strong") {
+        if (evaluation.warningLevel === 'notice' || evaluation.warningLevel === 'strong') {
           state.toolCounters.searchWarnings = Number(state.toolCounters.searchWarnings ?? 0) + 1;
         }
       }
 
-      if (evaluation.kind === "edit" && evaluation.shouldAsk) {
+      if (evaluation.kind === 'edit' && evaluation.shouldAsk) {
         state.toolCounters.editPrompts = Number(state.toolCounters.editPrompts ?? 0) + 1;
       }
 
@@ -172,7 +172,7 @@ async function main() {
       return;
     }
 
-    case "PostToolUse": {
+    case 'PostToolUse': {
       const state = loadSessionState(root, sessionId);
       ensureSessionMetadata(root, state);
       const kind = classifyToolUse(parsed);
@@ -182,34 +182,34 @@ async function main() {
       updateSessionFiles(state, targets, kind);
       noteCheckExecution(state, parsed);
 
-      if (kind === "search") {
+      if (kind === 'search') {
         recordSearchFingerprint(state, parsed);
       }
 
       saveSessionState(root, sessionId, state);
       writeJson({
         hookSpecificOutput: {
-          hookEventName: "PostToolUse",
+          hookEventName: 'PostToolUse',
         },
       });
       return;
     }
 
-    case "SubagentStart": {
+    case 'SubagentStart': {
       const state = loadSessionState(root, sessionId);
       ensureSessionMetadata(root, state);
       state.toolCounters.subagents = Number(state.toolCounters.subagents ?? 0) + 1;
       saveSessionState(root, sessionId, state);
       writeJson({
         hookSpecificOutput: {
-          hookEventName: "SubagentStart",
+          hookEventName: 'SubagentStart',
           additionalContext: buildSubagentContext(state),
         },
       });
       return;
     }
 
-    case "PreCompact": {
+    case 'PreCompact': {
       const state = loadSessionState(root, sessionId);
       ensureSessionMetadata(root, state);
       state.toolCounters.compactions = Number(state.toolCounters.compactions ?? 0) + 1;
@@ -219,7 +219,7 @@ async function main() {
       return;
     }
 
-    case "Stop": {
+    case 'Stop': {
       const state = loadSessionState(root, sessionId);
       ensureSessionMetadata(root, state);
       saveSessionSummary(root, sessionId, state);

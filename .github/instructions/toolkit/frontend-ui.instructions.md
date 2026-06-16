@@ -1,7 +1,7 @@
 ---
 name: frontend-ui
-description: "Implementacion de UI guiada por design system, accesibilidad y patrones existentes."
-applyTo: "**/*.tsx, **/*.jsx, **/*.vue, **/*.svelte, **/*.astro, **/*.html, **/*.css, **/*.scss, **/*.less"
+description: 'Implementacion de UI guiada por design system, accesibilidad y patrones existentes.'
+applyTo: '**/*.tsx, **/*.jsx, **/*.vue, **/*.svelte, **/*.astro, **/*.html, **/*.css, **/*.scss, **/*.less'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/frontend-ui.instructions.md -->

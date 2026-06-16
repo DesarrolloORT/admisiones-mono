@@ -1,7 +1,7 @@
 ---
-name: "Ponytail"
-description: "Lazy senior dev mode: el mejor codigo es el que nunca se escribe."
-applyTo: "**"
+name: 'Ponytail'
+description: 'Lazy senior dev mode: el mejor codigo es el que nunca se escribe.'
+applyTo: '**'
 ---
 
 <!-- ai-toolkit:toolkit profile=base path=.github/instructions/toolkit/ponytail.instructions.md -->

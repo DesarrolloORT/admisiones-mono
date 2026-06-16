@@ -41,4 +41,3 @@ export type EndpointData<TEndpoint> = ApiResponseData<EndpointResponse<TEndpoint
 
 export type EndpointListItem<TEndpoint> =
   EndpointData<TEndpoint> extends ReadonlyArray<infer TItem> ? TItem : EndpointData<TEndpoint>;
-

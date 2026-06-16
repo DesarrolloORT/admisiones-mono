@@ -115,8 +115,7 @@ describe('InscripcionFlowFacade', () => {
     facade.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     facade.updateIdentityFile('frente', fileChange('frente.png'));
 
-    const storedDraft =
-      sessionStorage.getItem('inscripcion-borrador:v1:anonimo:primera-vez') ?? '';
+    const storedDraft = sessionStorage.getItem('inscripcion-borrador:v1:anonimo:primera-vez') ?? '';
 
     expect(storedDraft).toContain('"vencimientoDocumento":"2030-02-04"');
     expect(storedDraft).not.toContain('frente.png');

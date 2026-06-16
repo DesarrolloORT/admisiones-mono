@@ -81,4 +81,3 @@ jobs:
             -D "sonar.javascript.lcov.reportPaths=coverage/admisiones/lcov.info" ^
             -D "sonar.test.inclusions=**/*.spec.ts" ^
             -D "sonar.sourceEncoding=UTF-8"
-

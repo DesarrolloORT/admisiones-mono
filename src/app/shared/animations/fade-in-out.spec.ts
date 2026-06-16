@@ -50,4 +50,3 @@ describe('fadeInOut Animation', () => {
     expect(animationStr).toContain('ease-out');
   });
 });
-
