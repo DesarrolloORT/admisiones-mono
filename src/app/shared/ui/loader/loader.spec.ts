@@ -34,6 +34,7 @@ describe('Loader', () => {
   it('should match snapshot when loading = true', () => {
     createComponent(true);
     fixture.nativeElement.removeAttribute('id');
+    fixture.nativeElement.querySelector('ort-spinner')?.removeAttribute('id');
     expect(fixture.nativeElement).toMatchSnapshot();
   });
 

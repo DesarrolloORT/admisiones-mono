@@ -19,7 +19,6 @@ exports[`Loader > should match snapshot when loading = true 1`] = `
         class="ort-spinner spinner-loader ort-spinner-indeterminate"
         data-size="md"
         data-type="indeterminate"
-        id="ort-spinner-0"
         role="progressbar"
       >
         <svg
