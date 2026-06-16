@@ -69,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
         [HttpPost("Login")]
-        [RequireCaptcha(CaptchaValidationMode.ScoreOnly)]
+        [RequireCaptcha(CaptchaActions.Login, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
@@ -461,7 +461,7 @@ namespace WebApiAdmisiones.Controllers
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
-        [RequireCaptcha]
+        [RequireCaptcha(CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)

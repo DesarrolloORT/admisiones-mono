@@ -52,9 +52,6 @@ builder.Services.AddSwaggerGen(static options =>
     });
 
     options.OperationFilter<AuthDescriptionOperationFilter>();
-
-    // No agregar AddSecurityDefinition
-    // No agregar AddSecurityRequirement
 });
 
 // --------------------------------------------------------------------------
