@@ -1,0 +1,47 @@
+/* Inscription styles are global because they override ORT lib classes (ort-stepper, ort-radio-button)
+   rendered outside Angular component encapsulation. */
+
+app-inscripcion-shell .inscription-progress .ort-stepper-content {
+  display: none;
+  min-height: 0;
+  padding: 0;
+}
+
+app-inscripcion-shell .inscription-progress .ort-step-header-disabled :is(.ort-step-label, .ort-step-supporting-label) {
+  color: var(--ort-sys-base-text-color-body);
+}
+
+.inscription-radio-option.ort-radio-button {
+  box-sizing: border-box;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+  width: 100%;
+  min-height: var(--ort-sys-size-56, 3.5rem);
+  padding: var(--ort-sys-spacing-4) var(--ort-sys-spacing-8);
+  border: var(--ort-sys-border-width-1) solid var(--ort-sys-base-border-subtle-color);
+  border-radius: var(--ort-sys-border-radius-8);
+  background: var(--ort-sys-base-surface-background);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.inscription-radio-option.ort-radio-button .ort-radio-container {
+  order: 2;
+}
+
+.inscription-radio-option.ort-radio-button .ort-radio-label {
+  order: 1;
+  align-self: center;
+  padding-top: 0;
+}
+
+.inscription-radio-option.ort-radio-button.ort-radio-checked {
+  border-color: var(--ort-sys-base-border-primary-color);
+  background: var(--ort-sys-base-surface-subtle-primary-background);
+}
+
+.inscription-radio-option.ort-radio-button:has(.ort-radio-input:focus-visible) {
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
