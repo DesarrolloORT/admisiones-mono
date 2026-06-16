@@ -2,12 +2,10 @@
   display: block;
 }
 
-
 .dashboard-greeting {
   display: grid;
   gap: var(--ort-sys-spacing-8);
 }
-
 
 .dashboard-greeting h1 {
   font-size: var(--ort-sys-heading-level4-text-size);
@@ -18,7 +16,7 @@
   letter-spacing: 0;
 }
 
-.dashboard-greeting  p {
+.dashboard-greeting p {
   margin: 0;
   color: var(--home-body);
   font-size: var(--ort-sys-body-text-size);
@@ -58,22 +56,27 @@
 
 .dashboard-container {
   display: grid;
-  gap: var(--ort-sys-spacing-64);
+  gap: var(--ort-sys-spacing-24);
+}
 
+.dashboard-cards {
+  display: grid;
+  gap: var(--ort-sys-spacing-36);
 }
 
 .dashboard-actions {
-  display: none
+  display: none;
 }
 
-.mis-carreras{
+.mis-carreras,
+.mis-becas {
   display: grid;
+  align-content: start;
 }
 
 .alert-detail--inline {
   display: none;
 }
-
 
 @media (width <=760px) {
   .dashboard-main {
@@ -97,11 +100,19 @@
   }
 
   .dashboard-actions {
-  display: flex;
-  gap: var(--ort-sys-spacing-36);
-}
+    display: flex;
+    gap: var(--ort-sys-spacing-36);
+  }
 
-  .mis-carreras--single {
+  .mis-carreras--single, .mis-becas--single {
     max-width: 40%;
   }
+  .dashboard-cards--row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-container {
+    gap: var(--ort-sys-spacing-48);
+  }
 }
+

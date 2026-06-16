@@ -16,13 +16,16 @@
     <p>Aquí podés gestionar tu inscripción y postulación a becas.</p>
   </header>
 
+
+
   <section class="dashboard-container">
     <section class="dashboard-actions">
       <app-dashboard-action-card variant="career" />
       <app-dashboard-action-card variant="scholarship" />
     </section>
 
-    <section class="mis-carreras" [class.mis-carreras--single]="inscripciones().length === 1">
+    <div class="dashboard-cards" [class.dashboard-cards--row]="singleRow()">
+    <section class="mis-carreras" [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
       <app-dashboard-section-header variant="careers" />
 
       @if (inscripciones().length === 1) {
@@ -40,6 +43,26 @@
       </div>
       }
     </section>
+
+    <section class="mis-becas" [class.mis-becas--single]="becas().length === 1 && !singleRow()">
+      <app-dashboard-section-header variant="scholarships" />
+
+      @if (becas().length === 1) {
+      <app-dashboard-card variant="scholarships" [beca]="becas()[0]" />
+      } @else {
+      <div class="swiper">
+        <div class="swiper-wrapper">
+          @for (beca of becas(); track beca.id) {
+          <div class="swiper-slide">
+            <app-dashboard-card variant="scholarships" [beca]="beca" />
+          </div>
+          }
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+      }
+    </section>
+    </div>
   </section>
 </main>
 
