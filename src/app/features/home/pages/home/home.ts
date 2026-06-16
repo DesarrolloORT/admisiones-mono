@@ -25,7 +25,7 @@ const ACTION_CARDS: HomeActionCard[] = [
     icon: 'workspace_premium',
     ctaLabel: 'Postularme a beca',
     imageSrc: 'assets/home/becas-card.png',
-    disabledReason: 'Disponible próximamente.',
+    route: '/becas',
   },
 ];
 

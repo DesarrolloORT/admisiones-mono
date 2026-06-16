@@ -53,10 +53,10 @@ describe('Home', () => {
     expect(text).not.toContain('Mis carreras');
     expect(text).not.toContain('Mis becas');
 
-    const primaryLink = fixture.nativeElement.querySelector(
-      'a.home-action-card__primary'
-    ) as HTMLAnchorElement | null;
+    const primaryLinks = Array.from(
+      fixture.nativeElement.querySelectorAll('a.home-action-card__primary')
+    ) as HTMLAnchorElement[];
 
-    expect(primaryLink?.getAttribute('href')).toBe('/inscripciones');
+    expect(primaryLinks.map(link => link.getAttribute('href'))).toEqual(['/inscripciones', '/becas']);
   });
 });
