@@ -346,3 +346,35 @@
   display: inline-flex;
   gap: var(--ort-sys-spacing-8);
 }
+
+@media (width >= 52.5rem) {
+  .inscription-screen {
+    gap: var(--ort-sys-spacing-40);
+    padding: 0;
+  }
+
+  .inscription-screen__header {
+    gap: var(--ort-sys-spacing-8);
+  }
+
+  .inscription-form,
+  .inscription-form__stack {
+    gap: var(--ort-sys-spacing-24);
+  }
+
+  .inscription-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-inline: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .inscription-footer button,
+  .inscription-footer a,
+  .inscription-card button,
+  .inscription-services button {
+    width: auto;
+    min-width: 7.5rem;
+  }
+}
