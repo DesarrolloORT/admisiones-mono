@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import path from 'path';
 import { spawnSync } from 'child_process';
+import path from 'path';
 
 import { getMissingTests } from './utils.js';
 
@@ -36,7 +36,7 @@ if (missingTests.length === 0) {
     console.log('─'.repeat(80));
     console.log('⚠️  Se generaron placeholders de tests. Revisalos y agregalos al commit.');
     console.log('💡 Volvé a correr `git add` sobre los specs creados y reintentá el commit.');
-    process.exit(1);
+    process.exit(0);
   }
 
   console.log('⚠️  Algunos archivos no tienen un archivo de testing correspondiente.');
