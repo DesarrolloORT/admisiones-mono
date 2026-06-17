@@ -61,15 +61,15 @@ export class TwoFactorValidationPage {
       })
       .subscribe({
         next: () => {
-          this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
+          this.snackbar.success('Código validado correctamente.');
+          void this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
+          const message = isNormalizedApiError(error)
+            ? error.message
+            : 'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.';
           this.isSubmitting.set(false);
-          this.error.set(
-            isNormalizedApiError(error)
-              ? error.message
-              : 'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.'
-          );
+          this.snackbar.error(message);
         },
       });
   }
@@ -96,12 +96,11 @@ export class TwoFactorValidationPage {
         this.snackbar.success(result.message || 'Te enviamos un nuevo código a tu correo.');
       },
       error: error => {
+        const message = isNormalizedApiError(error)
+          ? error.message
+          : 'No pudimos reenviar el código. Intentá nuevamente.';
         this.isSubmitting.set(false);
-        this.error.set(
-          isNormalizedApiError(error)
-            ? error.message
-            : 'No pudimos reenviar el código. Intentá nuevamente.'
-        );
+        this.snackbar.error(message);
       },
     });
   }

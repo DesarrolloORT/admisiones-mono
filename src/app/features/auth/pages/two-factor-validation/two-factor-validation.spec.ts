@@ -15,7 +15,7 @@ describe('TwoFactorValidationPage', () => {
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
-  let snackbarMock: { success: ReturnType<typeof vi.fn> };
+  let snackbarMock: { error: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn> };
 
   function setup(state: unknown = { email: 'a@b.com', sessionId: 'abc-123' }): void {
     history.replaceState(state, '');
@@ -31,7 +31,7 @@ describe('TwoFactorValidationPage', () => {
         })
       ),
     };
-    snackbarMock = { success: vi.fn() };
+    snackbarMock = { error: vi.fn(), success: vi.fn() };
     TestBed.configureTestingModule({
       imports: [TwoFactorValidationPage],
       providers: [
@@ -90,13 +90,15 @@ describe('TwoFactorValidationPage', () => {
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/inicio');
   });
 
-  it('sets a friendly error message when verification fails', () => {
+  it('shows a snackbar when verification fails', () => {
     setup({ email: 'a@b.com', sessionId: 'abc-123' });
     authSessionMock.completeTwoFactor.mockReturnValue(throwError(() => new Error('boom')));
 
     component['verify']('111111');
 
-    expect(component['error']()).toContain('No pudimos validar el código');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.'
+    );
     expect(component['isSubmitting']()).toBe(false);
   });
 
@@ -111,13 +113,15 @@ describe('TwoFactorValidationPage', () => {
     expect(snackbarMock.success).toHaveBeenCalledWith('Código reenviado.');
   });
 
-  it('shows an inline error when resending fails', () => {
+  it('shows a snackbar when resending fails', () => {
     setup({ email: 'a@b.com', sessionId: 'abc-123' });
     authSessionMock.resendTwoFactorCode.mockReturnValue(throwError(() => new Error('boom')));
 
     component['resend']();
 
-    expect(component['error']()).toBe('No pudimos reenviar el código. Intentá nuevamente.');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'No pudimos reenviar el código. Intentá nuevamente.'
+    );
     expect(component['isSubmitting']()).toBe(false);
   });
 });
