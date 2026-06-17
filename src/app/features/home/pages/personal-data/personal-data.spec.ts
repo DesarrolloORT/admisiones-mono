@@ -140,6 +140,8 @@ describe('PersonalData', () => {
       emailVerification: 'gabrielaortiz@gmail.com',
     });
     expect(snackbar.success).toHaveBeenCalledWith('Datos personales actualizados.');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Datos personales actualizados.');
   });
 
   it('should submit international phone numbers with their prefix', () => {

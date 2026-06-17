@@ -115,8 +115,6 @@ export class PersonalData implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
-  protected readonly error = signal<string | null>(null);
-  protected readonly successMessage = signal<string | null>(null);
 
   protected readonly states = computed<LocationState[]>(() => {
     const countryCode = this.selectedCountryCode();
@@ -170,11 +168,9 @@ export class PersonalData implements OnInit {
     this.submitted.set(true);
     this.form.markAllAsTouched();
     this.form.updateValueAndValidity();
-    this.successMessage.set(null);
-    this.error.set(null);
 
     if (this.form.invalid) {
-      this.error.set('Completá todos los datos obligatorios con un formato válido.');
+      this.snackbar.error('Completá todos los datos obligatorios con un formato válido.');
       return;
     }
 
@@ -199,15 +195,14 @@ export class PersonalData implements OnInit {
       .subscribe({
         next: success => {
           if (!success) {
-            this.error.set('No se pudieron guardar los datos personales.');
+            this.snackbar.error('No se pudieron guardar los datos personales.');
             return;
           }
 
-          this.successMessage.set('Datos personales actualizados.');
           this.snackbar.success('Datos personales actualizados.');
         },
         error: () => {
-          this.error.set('No se pudieron guardar los datos personales.');
+          this.snackbar.error('No se pudieron guardar los datos personales.');
         },
       });
   }
@@ -218,7 +213,6 @@ export class PersonalData implements OnInit {
 
   private loadData(): void {
     this.isLoading.set(true);
-    this.error.set(null);
 
     forkJoin({
       data: this.account.getPersonalData(),
@@ -231,7 +225,7 @@ export class PersonalData implements OnInit {
           this.patchForm(data);
         },
         error: () => {
-          this.error.set('No se pudieron cargar los datos personales.');
+          this.snackbar.error('No se pudieron cargar los datos personales.');
         },
       });
   }
@@ -282,7 +276,7 @@ export class PersonalData implements OnInit {
       const country = this.findPhoneCountryByPrefix(digits);
 
       if (country) {
-        const number = digits.slice(country.prefix);
+        const number = digits.slice(country.prefix.toString().length);
         return { iso2: country.iso2, number, numberE164: `+${digits}` };
       }
     }
@@ -308,7 +302,7 @@ export class PersonalData implements OnInit {
       .map(iso2 => findCountryByIso2(iso2))
       .filter(country => !!country)
       .sort((a, b) => b.prefix - a.prefix)
-      .find(country => digits.startsWith(country.iso2));
+      .find(country => digits.startsWith(country.prefix.toString()));
   }
 
   private formatDocumentType(value: string): string {
@@ -362,4 +356,3 @@ export class PersonalData implements OnInit {
     return labels[value] ?? value;
   }
 }
-
