@@ -18,9 +18,7 @@ namespace AppLogic.Services.Inscripciones
     public class InscripcionesService : IInscripcionesService
     {
         private const string EstadoTemporal = "TEMPORAL";
-        private const string EstadoCompleta = "COMPLETA";
-        private const string SecuenciaEmpresaConsideradaAdmision = "TO_EMPRESA_CONSIDERADA_ADMISION";
-        private const string SecuenciaEducacionSuperiorAdmision = "TO_EDUCACION_SUPERIOR_ADMISION";
+        private const string EstadoCompleta = "DEFINITIVO";
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
@@ -725,7 +723,7 @@ namespace AppLogic.Services.Inscripciones
             {
                 uow.EmpresaConsideradaAdmisions.Add(new EmpresaConsideradaAdmision
                 {
-                    IdEmpresaConsiderada = uow.EmpresaConsideradaAdmisions.NextId(SecuenciaEmpresaConsideradaAdmision),
+                    IdEmpresaConsiderada = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION),
                     CodigoPersona = codigoPersona,
                     CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
                     NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
@@ -743,7 +741,7 @@ namespace AppLogic.Services.Inscripciones
             {
                 uow.EducacionSuperiorAdmisions.Add(new EducacionSuperiorAdmision
                 {
-                    IdEducacionSuperior = uow.EducacionSuperiorAdmisions.NextId(SecuenciaEducacionSuperiorAdmision),
+                    IdEducacionSuperior = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION),
                     CodigoPersona = codigoPersona,
                     CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
                     NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
