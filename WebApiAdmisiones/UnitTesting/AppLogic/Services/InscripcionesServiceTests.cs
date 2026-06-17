@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices.Catalogos;
@@ -5,8 +6,12 @@ using AppLogic.Services.Inscripciones;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using Xunit;
 
 namespace UnitTesting.AppLogic.Services
@@ -32,10 +37,133 @@ namespace UnitTesting.AppLogic.Services
             _generalServiceMock
                 .Setup(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()))
                 .Returns(global::Utilities.OperationResult<DateTime>.Ok(FechaBase.AddDays(5), nameof(IGeneralService.CalcularFechaVencimientoAdmisiones)));
-            _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object);
+            var apiClient = new InscripcionesyPagosApiClient(
+                new HttpClient { BaseAddress = new Uri("https://internal.test/") },
+                NullLogger<InscripcionesyPagosApiClient>.Instance);
+            _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object, apiClient);
         }
 
         private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenReglamentoNotAccepted_ReturnsBadRequest()
+        {
+            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = false,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenEncuestaIsNotDefinitivo_ReturnsConflict()
+        {
+            SetupPersona(123);
+            SetupEncuesta(123, new EncuestaIniAdmision
+            {
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "TEMPORAL",
+                IdProducto = 20,
+                IdProceso = 30,
+                IdComienzo = 40
+            });
+
+            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_07", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenDocumentoFrenteMissing_ReturnsNotFound()
+        {
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var imagenRepo = new Mock<IImagenTemporalRepository>();
+            imagenRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_09", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WithValidData_CreatesAcceptanceAndReturnsApiResponse()
+        {
+            AceptacionReglamentoEst? aceptacionAgregada = null;
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "confirmada": true,
+                  "idInscripcion": 77,
+                  "seniaInscripcion": 2500,
+                  "fechaVencimientoPago": "2026-07-01T00:00:00",
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Analista Programador",
+                    "idComienzo": 40,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 1,
+                    "turno": "Nocturno"
+                  }
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
+                .Returns(999);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.Add(It.IsAny<AceptacionReglamentoEst>()))
+                .Callback<AceptacionReglamentoEst>(a => aceptacionAgregada = a);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(77, result.Data.IdInscripcion);
+            Assert.Equal(2500, result.Data.SeniaInscripcion);
+            Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
+            Assert.NotNull(aceptacionAgregada);
+            Assert.Equal(999, aceptacionAgregada!.IdAceptacionReglamentoEst);
+            Assert.Contains("\"tipoInscripcion\":\"ONLINE\"", Assert.Single(handler.Requests).Body);
+        }
 
         [Fact]
         public void ObtenerUltimaInscripcionActiva_NotFound_ReturnsFailed()
@@ -559,6 +687,94 @@ namespace UnitTesting.AppLogic.Services
             personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
         }
+
+        private void SetupPersona(long codigoPersona)
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(codigoPersona)).Returns(new Persona { CodigoPersona = codigoPersona });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+        }
+
+        private void SetupEncuesta(long codigoPersona, EncuestaIniAdmision encuesta)
+        {
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(codigoPersona)).Returns(encuesta);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+        }
+
+        private void SetupDocumentosValidos(long codigoPersona)
+        {
+            var imagenRepo = new Mock<IImagenTemporalRepository>();
+            imagenRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, 1))
+                .Returns(new ImagenTemporal
+                {
+                    CodigoPersona = codigoPersona,
+                    TipoImagen = "1",
+                    BlobImagen = [1],
+                    FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
+                });
+            imagenRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, 2))
+                .Returns(new ImagenTemporal
+                {
+                    CodigoPersona = codigoPersona,
+                    TipoImagen = "2",
+                    BlobImagen = [1],
+                    FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
+                });
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenRepo.Object);
+        }
+
+        private static EncuestaIniAdmision EncuestaDefinitiva(long codigoPersona)
+        {
+            return new EncuestaIniAdmision
+            {
+                CodigoPersona = codigoPersona,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                IdProducto = 20,
+                IdProceso = 30,
+                IdComienzo = 40,
+                FechaVtoAdmision = DateTime.Today.AddDays(10)
+            };
+        }
+
+        private InscripcionesService CrearServiceConApi(HttpMessageHandler handler)
+        {
+            var apiClient = new InscripcionesyPagosApiClient(
+                new HttpClient(handler) { BaseAddress = new Uri("https://internal.test/") },
+                NullLogger<InscripcionesyPagosApiClient>.Instance);
+
+            return new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object, apiClient);
+        }
+
+        private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
+        {
+            return new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+        }
+
+        private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
+            : HttpMessageHandler
+        {
+            public List<CapturedRequest> Requests { get; } = [];
+
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                Requests.Add(new CapturedRequest(
+                    request.Method,
+                    request.RequestUri?.ToString() ?? string.Empty,
+                    request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken)));
+
+                return handler(request);
+            }
+        }
+
+        private sealed record CapturedRequest(HttpMethod Method, string RequestUri, string Body);
 
         private void SetupReposDerechoEncuesta(
             bool existeFresco = false,

@@ -1,3 +1,4 @@
+using AppLogic.ApiClients;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
@@ -18,20 +19,23 @@ namespace AppLogic.Services.Inscripciones
     public class InscripcionesService : IInscripcionesService
     {
         private const string EstadoTemporal = "TEMPORAL";
-        private const string EstadoCompleta = "DEFINITIVO";
+        private const string EstadoDefinitivo = "DEFINITIVO";
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly IGeneralService _generalService;
+        private readonly InscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
-            IGeneralService generalService)
+            IGeneralService generalService,
+            InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _generalService = generalService;
+            _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
         public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
@@ -349,7 +353,7 @@ namespace AppLogic.Services.Inscripciones
                         completitud.HttpCode);
                 }
 
-                encuesta.EstadoEncuestaIniAdmision = completitud.Data ? EstadoCompleta : EstadoTemporal;
+                encuesta.EstadoEncuestaIniAdmision = completitud.Data ? EstadoDefinitivo : EstadoTemporal;
                 if (encuesta.IdProceso.HasValue && encuesta.IdProducto.HasValue)
                 {
                     var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
@@ -381,48 +385,108 @@ namespace AppLogic.Services.Inscripciones
             }
         }
 
-        public OperationResult<DtoAceptacionReglamentoEstDevart> RegistrarAceptacionReglamentoEstudiantil(long codigoPersona)
+        public async Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, ConfirmarPreInscripcionRequest request)
         {
+            const string methodName = nameof(ConfirmarPreInscripcion);
+
+            if (request == null)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_01", methodName, "Request invalido.", 400);
+            }
+
+            if (!request.AceptoReglamento)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_02", methodName, "Debe aceptar el reglamento estudiantil para confirmar la preinscripcion.", 400);
+            }
+
+            if (request.IdOfertaSeleccionada <= 0)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_03", methodName, "La oferta seleccionada es invalida.", 400);
+            }
+
+            if (request.IdTurno <= 0)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_04", methodName, "El turno seleccionado es invalido.", 400);
+            }
+
             using var uow = _uowFactory.Create();
 
             var persona = uow.Personas.GetByKey(codigoPersona);
             if (persona == null)
             {
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
-                    "GEN_RARE_01",
-                    nameof(RegistrarAceptacionReglamentoEstudiantil),
-                    "Persona no encontrada.",
-                    404);
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
             var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuesta == null)
             {
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
-                    "GEN_RARE_02",
-                    nameof(RegistrarAceptacionReglamentoEstudiantil),
-                    "No se encontró una encuesta inicial de admisión vigente para la persona.",
-                    404);
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_06", methodName, "No se encontro una encuesta inicial de admision vigente para la persona.", 404);
+            }
+
+            if (!string.Equals(encuesta.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_07", methodName, "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.", 409);
+            }
+
+            if (encuesta.FechaVtoAdmision.HasValue && encuesta.FechaVtoAdmision.Value.Date < DateTime.Today)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_12", methodName, "La encuesta inicial de admision se encuentra vencida.", 409);
             }
 
             if (!encuesta.IdProducto.HasValue || encuesta.IdProducto.Value <= 0
+                || !encuesta.IdProceso.HasValue || encuesta.IdProceso.Value <= 0
                 || !encuesta.IdComienzo.HasValue || encuesta.IdComienzo.Value <= 0)
             {
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
-                    "GEN_RARE_03",
-                    nameof(RegistrarAceptacionReglamentoEstudiantil),
-                    "La encuesta inicial de admisión no contiene producto o comienzo válidos.",
-                    400);
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_08", methodName, "La encuesta inicial de admision no contiene producto, proceso o comienzo validos.", 400);
             }
 
-            var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, encuesta.IdProducto.Value, encuesta.IdComienzo.Value);
+            var validacionDocumentos = ValidarDocumentosIdentidad(uow, codigoPersona, methodName);
+            if (!validacionDocumentos.Success)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
+            }
+
+            var aceptacion = AsegurarAceptacionReglamentoEstudiantil(uow, codigoPersona, encuesta, methodName);
+            if (!aceptacion.Success)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
+            }
+
+            var apiRequest = new ConfirmarPreInscripcionApiRequest
+            {
+                IdProducto = encuesta.IdProducto.Value,
+                IdProceso = encuesta.IdProceso.Value,
+                IdOfertaSeleccionada = request.IdOfertaSeleccionada,
+                TipoInscripcion = string.IsNullOrWhiteSpace(request.TipoInscripcion) ? "ONLINE" : request.TipoInscripcion.Trim(),
+                Turno = new DtoTurno { IdTurno = request.IdTurno }
+            };
+
+            var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
+            if (!apiResult.Success)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
+            }
+
+            if (apiResult.Data == null)
+            {
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_13", methodName, "La API interna no devolvio datos de confirmacion.", 502);
+            }
+
+            return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
+                MapearConfirmacionPreInscripcion(apiResult.Data, encuesta, request.IdTurno),
+                methodName);
+        }
+
+        private OperationResult<DtoAceptacionReglamentoEstDevart> AsegurarAceptacionReglamentoEstudiantil(
+            IUnitOfWork uow,
+            long codigoPersona,
+            EncuestaIniAdmision encuesta,
+            string methodName)
+        {
+            var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, encuesta.IdProducto!.Value, encuesta.IdComienzo!.Value);
             if (existente != null)
             {
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
-                    "GEN_RARE_04",
-                    nameof(RegistrarAceptacionReglamentoEstudiantil),
-                    "Ya existe una aceptación del reglamento estudiantil para la persona, producto y comienzo indicados.",
-                    409);
+                return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(existente.ToDto(), methodName);
             }
 
             var entidad = new AceptacionReglamentoEst
@@ -434,12 +498,82 @@ namespace AppLogic.Services.Inscripciones
                 IdSistema = CommonConstants.IdSistemaAdmisiones
             };
 
-            uow.AceptacionReglamentoEsts.Add(entidad);
-            uow.Save();
+            uow.BeginTransaction();
+            try
+            {
+                uow.AceptacionReglamentoEsts.Add(entidad);
+                uow.Save();
+                uow.Commit();
+            }
+            catch
+            {
+                uow.Rollback();
+                throw;
+            }
 
-            return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(
-                entidad.ToDto(),
-                nameof(RegistrarAceptacionReglamentoEstudiantil));
+            return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
+        }
+
+        private static OperationResult<bool> ValidarDocumentosIdentidad(IUnitOfWork uow, long codigoPersona, string methodName)
+        {
+            var frente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, PersonaConstants.DocumentoPersona.Frente);
+            var validacionFrente = ValidarDocumentoIdentidad(frente, "frente", methodName);
+            if (!validacionFrente.Success)
+            {
+                return validacionFrente;
+            }
+
+            var dorso = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, PersonaConstants.DocumentoPersona.Dorso);
+            var validacionDorso = ValidarDocumentoIdentidad(dorso, "dorso", methodName);
+            if (!validacionDorso.Success)
+            {
+                return validacionDorso;
+            }
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static OperationResult<bool> ValidarDocumentoIdentidad(ImagenTemporal? documento, string lado, string methodName)
+        {
+            if (documento == null)
+            {
+                return OperationResult<bool>.IsFailed("INS_CPI_09", methodName, $"Debe subir el documento de identidad ({lado}).", 404);
+            }
+
+            if (documento.FechaVtoDocumentoPersona.HasValue && documento.FechaVtoDocumentoPersona.Value.Date < DateTime.Today)
+            {
+                return OperationResult<bool>.IsFailed("INS_CPI_10", methodName, "El documento de identidad se encuentra vencido.", 409);
+            }
+
+            if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
+            {
+                return OperationResult<bool>.IsFailed("INS_CPI_11", methodName, $"El documento de identidad ({lado}) no contiene imagen.", 404);
+            }
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static ConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
+            ConfirmarPreInscripcionApiResponse source,
+            EncuestaIniAdmision encuesta,
+            long idTurno)
+        {
+            return new ConfirmarPreInscripcionResponse
+            {
+                Confirmada = source.Confirmada || source.Success,
+                IdInscripcion = source.IdInscripcion,
+                SeniaInscripcion = source.SeniaInscripcion,
+                FechaVencimientoPago = source.FechaVencimientoPago,
+                Resumen = new ResumenInscripcionDto
+                {
+                    IdProducto = source.Resumen?.IdProducto ?? encuesta.IdProducto ?? 0,
+                    Carrera = source.Resumen?.Carrera ?? encuesta.Producto?.NombreExtensoProducto ?? encuesta.Producto?.NombreProducto,
+                    IdComienzo = source.Resumen?.IdComienzo ?? encuesta.IdComienzo ?? 0,
+                    Comienzo = source.Resumen?.Comienzo ?? encuesta.Comienzo?.NombreComienzo,
+                    IdTurno = source.Resumen?.IdTurno ?? idTurno,
+                    Turno = source.Resumen?.Turno
+                }
+            };
         }
 
         private static EncuestaIniAdmision? ObtenerEncuestaParaGuardar(

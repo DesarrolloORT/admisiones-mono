@@ -75,22 +75,23 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Registra la aceptación del reglamento estudiantil para la persona autenticada.
-        /// Toma el producto y el comienzo desde la encuesta inicial de admisión vigente.
+        /// Confirma la preinscripcion de la persona autenticada como cierre del paso 2.
+        /// Valida encuesta definitiva, documentos frente y dorso, aceptacion del reglamento y confirma contra la API interna.
         /// </summary>
-        /// <returns>Datos de la aceptación registrada.</returns>
-        /// <response code="200">Aceptación registrada correctamente.</response>
-        /// <response code="400">La encuesta no contiene producto o comienzo válidos.</response>
-        /// <response code="404">No se encontró la persona o la encuesta inicial de admisión.</response>
-        /// <response code="409">Ya existe una aceptación registrada para la persona, producto y comienzo.</response>
-        [HttpPost("ReglamentoEstudiantil")]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
-        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 409)]
-        public IActionResult RegistrarAceptacionReglamentoEstudiantil()
+        /// <param name="request">Oferta, turno, tipo de inscripcion y aceptacion del reglamento.</param>
+        /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
+        /// <response code="200">Preinscripcion confirmada correctamente.</response>
+        /// <response code="400">Solicitud invalida o datos incompletos para confirmar.</response>
+        /// <response code="404">No se encontro la persona, encuesta o documento requerido.</response>
+        /// <response code="409">La encuesta o el documento no estan vigentes o en estado valido.</response>
+        [HttpPost("ConfirmarPreInscripcion")]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ConfirmarPreInscripcion([FromBody] ConfirmarPreInscripcionRequest request)
         {
-            var result = inscripcionesService.RegistrarAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
+            var result = await inscripcionesService.ConfirmarPreInscripcion(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 
