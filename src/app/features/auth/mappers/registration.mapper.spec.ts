@@ -21,7 +21,12 @@ describe('registration mapper', () => {
   };
 
   it('should map personal form values to registration data', () => {
-    expect(toAuthRegisterPersonalData(personal)).toEqual({
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        fechaNacimiento: new Date(2000, 0, 1),
+      })
+    ).toEqual({
       primerNombre: 'Ana',
       segundoNombre: '',
       primerApellido: 'Silva',

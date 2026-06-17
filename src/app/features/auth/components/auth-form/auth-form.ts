@@ -10,7 +10,7 @@ import { OrtIconModule } from '@desarrolloort/components';
 })
 export class AuthForm {
   public readonly title = input.required<string>();
-  public readonly description = input.required<string>();
+  public readonly description = input<string>();
   public readonly heroTitle = input.required<string>();
   public readonly heroDescription = input.required<string>();
   public readonly heroIcon = input.required<string>();

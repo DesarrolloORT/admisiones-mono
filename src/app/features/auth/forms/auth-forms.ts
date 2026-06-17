@@ -24,7 +24,7 @@ export interface PersonalForm {
   segundoNombre: FormControl<string>;
   primerApellido: FormControl<string>;
   segundoApellido: FormControl<string>;
-  fechaNacimiento: FormControl<string>;
+  fechaNacimiento: FormControl<string | Date | null>;
   sexo: FormControl<string>;
   location: FormControl<LocationValue>;
   direccion: FormControl<string>;
@@ -100,8 +100,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
       segundoNombre: new FormControl('', { nonNullable: true }),
       primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       segundoApellido: new FormControl('', { nonNullable: true }),
-      fechaNacimiento: new FormControl('', {
-        nonNullable: true,
+      fechaNacimiento: new FormControl<string | Date | null>(null, {
         validators: [Validators.required],
       }),
       sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),

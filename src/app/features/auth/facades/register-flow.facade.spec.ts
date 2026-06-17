@@ -16,6 +16,11 @@ describe('RegisterFlowFacade', () => {
     verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
     confirmRegistration: ReturnType<typeof vi.fn>;
   };
+  let snackbarMock: {
+    show: ReturnType<typeof vi.fn>;
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     registrationMock = {
@@ -32,6 +37,11 @@ describe('RegisterFlowFacade', () => {
       ),
       verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
       confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
+    };
+    snackbarMock = {
+      show: vi.fn(),
+      success: vi.fn(),
+      error: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -50,11 +60,7 @@ describe('RegisterFlowFacade', () => {
         },
         {
           provide: SnackbarHandler,
-          useValue: {
-            show: vi.fn(),
-            success: vi.fn(),
-            error: vi.fn(),
-          },
+          useValue: snackbarMock,
         },
         {
           provide: Router,
@@ -81,7 +87,13 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('user-exists');
-    expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
+    expect(facade.error()).toBeNull();
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Ya existe un usuario registrado con este documento.',
+        variant: 'warning',
+      })
+    );
   });
 
   it('should block identity step when application already exists', async () => {
@@ -95,7 +107,13 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('application-exists');
-    expect(facade.error()).toBe('Ya existe una solicitud de alta pendiente para este documento.');
+    expect(facade.error()).toBeNull();
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Ya existe una solicitud de alta pendiente para este documento.',
+        variant: 'warning',
+      })
+    );
   });
 
   it('should verify an existing CI person from the personal step', async () => {
@@ -154,7 +172,10 @@ describe('RegisterFlowFacade', () => {
     await facade.continueToPersonalData();
 
     expect(facade.step()).toBe('identity');
-    expect(facade.error()).toBe('No se pudo iniciar el flujo de registro. Intentá nuevamente.');
+    expect(facade.error()).toBeNull();
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'No se pudo iniciar el flujo de registro. Intentá nuevamente.'
+    );
     expect(facade.registrationFlow()).toBe('new-person');
     expect(facade.registrationFlowId()).toBeNull();
   });
@@ -186,7 +207,8 @@ describe('RegisterFlowFacade', () => {
 
     facade.submitPersonalData();
 
-    expect(facade.error()).toBe('Primero evaluá el documento para continuar.');
+    expect(facade.error()).toBeNull();
+    expect(snackbarMock.error).toHaveBeenCalledWith('Primero evaluá el documento para continuar.');
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
   });
 

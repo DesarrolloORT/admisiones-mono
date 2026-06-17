@@ -329,7 +329,6 @@ export class RegisterFlowFacade {
   }
 
   private showError(message: string): void {
-    this.error.set(message);
     this.snackbar.error(message);
   }
 
@@ -339,7 +338,6 @@ export class RegisterFlowFacade {
     documentNumber: string
   ): void {
     const message = backendMessage ?? 'Ya existe un registro con este documento.';
-    this.error.set(message);
     this.snackbar.show({
       message,
       variant: 'warning',

@@ -12,7 +12,7 @@ export interface RegisterPersonalFormValue {
   segundoNombre: string;
   primerApellido: string;
   segundoApellido: string;
-  fechaNacimiento: string;
+  fechaNacimiento: string | Date | null;
   sexo: string;
   location: LocationValue;
   direccion: string;
@@ -35,7 +35,7 @@ export function toAuthRegisterPersonalData(
     segundoNombre: value.segundoNombre,
     primerApellido: value.primerApellido,
     segundoApellido: value.segundoApellido,
-    fechaNacimiento: value.fechaNacimiento,
+    fechaNacimiento: toIsoDateOnly(value.fechaNacimiento),
     sexo: value.sexo,
     codigoPais: value.location.codigoPais,
     codigoEstado: value.location.codigoEstado,
@@ -45,6 +45,37 @@ export function toAuthRegisterPersonalData(
     mail: value.mail,
     verificacionMail: value.verificacionMail,
   };
+}
+
+function toIsoDateOnly(value: string | Date | null): string {
+  if (value instanceof Date) {
+    return formatDateOnly(value);
+  }
+
+  if (!value) {
+    return '';
+  }
+
+  const trimmed = value.trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
+  if (isoMatch) {
+    return isoMatch[0];
+  }
+
+  const displayMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+  if (!displayMatch) {
+    return trimmed;
+  }
+
+  const [, day, month, year] = displayMatch;
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateOnly(value: Date): string {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, '0');
+  const day = `${value.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function toRegisterPayload(payload: AuthRegisterRequest): RegisterPayload {
