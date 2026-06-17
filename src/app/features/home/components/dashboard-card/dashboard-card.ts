@@ -21,12 +21,18 @@ export class DashboardCard {
   readonly inscripcion = input<MiInscripcion | null>(null);
   readonly beca = input<MiBeca | null>(null);
 
-  protected readonly icon = computed(() => this.variant() === 'scholarships' ? 'workspace_premium' : 'school');
+  protected readonly icon = computed(() =>
+    this.variant() === 'scholarships' ? 'workspace_premium' : 'school'
+  );
   protected readonly title = computed(() =>
-    this.variant() === 'scholarships' ? this.beca()?.nombreBeca ?? '' : this.inscripcion()?.nombreProducto ?? ''
+    this.variant() === 'scholarships'
+      ? (this.beca()?.nombreBeca ?? '')
+      : (this.inscripcion()?.nombreProducto ?? '')
   );
   protected readonly estado = computed(() =>
-    this.variant() === 'scholarships' ? this.beca()?.estado ?? '' : this.inscripcion()?.estado ?? ''
+    this.variant() === 'scholarships'
+      ? (this.beca()?.estado ?? '')
+      : (this.inscripcion()?.estado ?? '')
   );
 
   protected readonly showChip = computed(() => {

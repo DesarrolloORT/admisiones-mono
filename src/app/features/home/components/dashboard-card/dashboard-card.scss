@@ -5,13 +5,12 @@
 
 .dashboard-card {
   display: grid;
-  grid-template-areas:
-    'icon chip'
-    'title title'
-    'meta meta'
-    'actions actions';
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template:
+    'icon chip' auto
+    'title title' auto
+    'meta meta' 1fr
+    'actions actions' auto
+    / auto 1fr;
   gap: var(--ort-sys-spacing-16);
   align-items: start;
   height: 100%;
@@ -37,7 +36,7 @@
   grid-area: title;
   margin: 0;
   font-weight: var(--ort-sys-font-weight-bold);
-  font-size: var(--ort-sys-font-size-16 );
+  font-size: var(--ort-sys-font-size-16);
   font-family: var(--ort-sys-font-family-display);
   line-height: var(--ort-sys-line-height-24);
 }
