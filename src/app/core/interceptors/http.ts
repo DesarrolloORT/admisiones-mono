@@ -9,7 +9,8 @@ import {
 import { inject } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
 import { asyncScheduler, Observable, of, throwError } from 'rxjs';
-import { catchError, finalize, map, observeOn, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, map, observeOn, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { environment } from 'src/environments/environment';
 
 import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
@@ -88,15 +89,34 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
       );
   };
 
-  const handleResponse = (event: HttpEvent<unknown>): void => {
+  const handleResponse = (req: HttpRequest<unknown>, event: HttpEvent<unknown>): void => {
     if (
       event instanceof HttpResponse &&
-      CacheUtils.canCacheRequest(request) &&
-      request.context.get(CACHING_ENABLED)
+      CacheUtils.canCacheRequest(req) &&
+      req.context.get(CACHING_ENABLED)
     ) {
-      const cacheKey = CacheUtils.createCacheKey(request.urlWithParams, request.body);
+      const cacheKey = CacheUtils.createCacheKey(req.urlWithParams, req.body);
       services.cacheHandler.set(cacheKey, event, 300000);
     }
+  };
+
+  const sendRequest = (req: HttpRequest<unknown>): Observable<HttpEvent<unknown>> => {
+    const telemetryStartedAt = services.telemetry.startHttpRequest(req);
+
+    return next(req).pipe(
+      tap({
+        next: event => {
+          handleResponse(req, event);
+
+          if (event instanceof HttpResponse) {
+            services.telemetry.trackHttpResponse(req, event, telemetryStartedAt);
+          }
+        },
+        error: error => {
+          services.telemetry.trackHttpError(req, error, telemetryStartedAt);
+        },
+      })
+    );
   };
 
   //* Check cache first
@@ -114,27 +134,55 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
 
   return addCaptchaHeader(processedRequest).pipe(
     switchMap(processedRequest => {
-      request = services.telemetry.addHttpHeaders(processedRequest);
-      const telemetryStartedAt = services.telemetry.startHttpRequest(request);
+      const telemetryRequest = services.telemetry.addHttpHeaders(processedRequest);
 
-      return next(request).pipe(
-        tap({
-          next: event => {
-            handleResponse(event);
-
-            if (event instanceof HttpResponse) {
-              services.telemetry.trackHttpResponse(request, event, telemetryStartedAt);
-            }
-          },
-          error: (error: HttpErrorResponse) => {
-            services.telemetry.trackHttpError(request, error, telemetryStartedAt);
-          },
-        })
-      );
-    }),
-    catchError(error => {
-      return throwError(() => error);
+      return sendRequest(telemetryRequest);
     }),
     finalize(() => services.loader.hide())
+  );
+};
+
+const AUTH_API_URL_PATTERN = /\/Auth\//i;
+let activeRefreshRequest$: Observable<void> | null = null;
+
+function shouldRefreshAccessToken(request: HttpRequest<unknown>, error: unknown): boolean {
+  return (
+    error instanceof HttpErrorResponse &&
+    error.status === 401 &&
+    request.withCredentials &&
+    !AUTH_API_URL_PATTERN.test(request.url)
+  );
+}
+
+function getSharedRefreshRequest(authSession: AuthSessionService): Observable<void> {
+  if (activeRefreshRequest$) {
+    return activeRefreshRequest$;
+  }
+
+  activeRefreshRequest$ = authSession.refreshAccessToken().pipe(
+    catchError(error => {
+      authSession.clearSession();
+      return throwError(() => error);
+    }),
+    finalize(() => {
+      activeRefreshRequest$ = null;
+    }),
+    shareReplay({ bufferSize: 1, refCount: false })
+  );
+
+  return activeRefreshRequest$;
+}
+
+export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
+  const authSession = inject(AuthSessionService);
+
+  return next(request).pipe(
+    catchError(error => {
+      if (!shouldRefreshAccessToken(request, error)) {
+        return throwError(() => error);
+      }
+
+      return getSharedRefreshRequest(authSession).pipe(switchMap(() => next(request)));
+    })
   );
 };

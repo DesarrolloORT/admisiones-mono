@@ -2,13 +2,14 @@ import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CacheService } from '@desarrolloort/ngx-utils';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { storageKeys } from 'src/app/core/storage/keys';
 
 import { AuthEndpoint, LoginResult, ResendTwoFactorCodeResult } from '../endpoints/auth.endpoint';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
+import { AccountService } from './account';
 
 /**
  * Outcome of `AuthSessionService.login`.
@@ -24,6 +25,7 @@ export type LoginOutcome =
 })
 export class AuthSessionService {
   private readonly endpoint = inject(AuthEndpoint);
+  private readonly account = inject(AccountService);
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly cache = inject(CacheService);
@@ -70,16 +72,45 @@ export class AuthSessionService {
     return this.endpoint.resendTwoFactorCode({ sessionId });
   }
 
+  public hydrateAuthenticatedSession(): Observable<AuthSession> {
+    return this.account.getPersonalData().pipe(
+      map(personalData => ({
+        token: null,
+        documentType: personalData.documentType,
+        documentNumber: personalData.documentNumber,
+        primerNombre: personalData.firstName,
+        expiresAt: null,
+      })),
+      tap(session => this.storeSession(session))
+    );
+  }
+
+  public ensureAuthenticatedSession(): Observable<boolean> {
+    return this.hydrateAuthenticatedSession().pipe(
+      map(() => true),
+      catchError(() => {
+        this.clearSession();
+        return of(false);
+      })
+    );
+  }
+
+  public refreshAccessToken(): Observable<void> {
+    return this.endpoint.refreshToken();
+  }
+
+  public clearSession(): void {
+    this.clearLocalSession();
+    this.cache.clear();
+  }
+
   public logout(): void {
     this.endpoint
       .logout()
       .pipe(
         catchError(() => EMPTY),
         finalize(() => {
-          this.sessionState.set(null);
-          this.storage?.removeItem(storageKeys.token);
-          this.storage?.removeItem(storageKeys.session);
-          this.cache.clear();
+          this.clearSession();
           this.router.navigateByUrl('/iniciar-sesion');
         })
       )
@@ -121,6 +152,12 @@ export class AuthSessionService {
     if (session.token) {
       this.storage?.setItem(storageKeys.token, session.token);
     }
+  }
+
+  private clearLocalSession(): void {
+    this.sessionState.set(null);
+    this.storage?.removeItem(storageKeys.token);
+    this.storage?.removeItem(storageKeys.session);
   }
 
   private restoreSession(): AuthSession | null {

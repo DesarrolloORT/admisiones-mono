@@ -385,6 +385,28 @@ describe('AuthEndpoint', () => {
     });
   });
 
+  describe('refreshToken', () => {
+    it('should POST to /Auth/RefreshToken without body and suppress global errors', () => {
+      endpoint.refreshToken().subscribe(result => {
+        expect(result).toBeUndefined();
+      });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Auth/RefreshToken') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toBeNull();
+      expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+      });
+    });
+  });
+
   describe('resendTwoFactorCode', () => {
     it('should POST to /Auth/ReenviarCodigo2FA and return the refreshed session', () => {
       endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe(result => {
