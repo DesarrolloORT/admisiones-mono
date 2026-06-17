@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DoCheck,
   forwardRef,
   inject,
+  Injector,
   OnInit,
   signal,
 } from '@angular/core';
@@ -13,6 +15,7 @@ import {
   FormControl,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
+  NgControl,
   ReactiveFormsModule,
   ValidationErrors,
   Validator,
@@ -42,8 +45,9 @@ import { LocationValue } from '../../models/location-value';
     },
   ],
 })
-export class LocationSelect implements ControlValueAccessor, OnInit, Validator {
+export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Validator {
   private readonly catalogs = inject(Catalogs);
+  private readonly injector = inject(Injector);
 
   protected readonly countries = signal<LocationCountry[]>([]);
   protected readonly isDisabled = signal(false);
@@ -86,6 +90,10 @@ export class LocationSelect implements ControlValueAccessor, OnInit, Validator {
 
   ngOnInit(): void {
     this.loadCountries();
+  }
+
+  ngDoCheck(): void {
+    this.syncFieldVisualState();
   }
 
   writeValue(value: LocationValue | null): void {
@@ -212,5 +220,29 @@ export class LocationSelect implements ControlValueAccessor, OnInit, Validator {
 
       this.onValidatorChange();
     });
+  }
+
+  private syncFieldVisualState(): void {
+    const controlToSync = this.injector.get(NgControl, null, { self: true, optional: true })?.control;
+    if (!controlToSync) {
+      return;
+    }
+
+    const touched = controlToSync.touched;
+    this.syncFieldError(this.countryControl, touched && controlToSync.hasError('locationRequired'));
+    this.syncFieldError(this.stateControl, touched && controlToSync.hasError('locationStateRequired'));
+    this.syncFieldError(this.cityControl, touched && controlToSync.hasError('locationCityRequired'));
+  }
+
+  private syncFieldError(control: FormControl<string>, hasError: boolean): void {
+    if (hasError) {
+      control.markAsTouched({ onlySelf: true });
+      control.setErrors({ required: true });
+      return;
+    }
+
+    if (control.hasError('required')) {
+      control.setErrors(null);
+    }
   }
 }

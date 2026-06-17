@@ -1,10 +1,25 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../../catalogs/services/catalogs';
 import { LocationSelect } from './location-select';
+
+@Component({
+  imports: [LocationSelect, ReactiveFormsModule],
+  selector: 'app-test-host',
+  template: `
+    <form [formGroup]="form"><app-location-select formControlName="location" /></form>
+  `,
+})
+class TestHostComponent {
+  public readonly form = new FormGroup({
+    location: new FormControl(null),
+  });
+}
 
 describe('LocationSelect', () => {
   let fixture: ComponentFixture<LocationSelect>;
@@ -63,6 +78,29 @@ describe('LocationSelect', () => {
     fixture = TestBed.createComponent(LocationSelect);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('should mirror parent touched invalid state into the country control', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [TestHostComponent],
+      providers: [{ provide: Catalogs, useValue: catalogsMock }],
+    });
+
+    const hostFixture = TestBed.createComponent(TestHostComponent);
+    hostFixture.detectChanges();
+
+    const hostComponent = hostFixture.componentInstance;
+    const locationControl = hostComponent.form.controls.location;
+    const locationSelect = hostFixture.debugElement.query(By.directive(LocationSelect))
+      .componentInstance as LocationSelect;
+
+    locationControl.markAsTouched();
+    locationControl.setErrors({ locationRequired: true });
+    hostFixture.detectChanges();
+
+    expect(locationSelect['countryControl'].touched).toBe(true);
+    expect(locationSelect['countryControl'].hasError('required')).toBe(true);
   });
 
   it('should create', () => {
