@@ -2,7 +2,7 @@ export type RegisterStep = 'identity' | 'personal';
 
 export interface RegisterStepViewModel {
   title: string;
-  description: string;
+  description?: string;
   heroIcon: string;
   heroTitle: string;
   heroDescription: string;
@@ -24,7 +24,6 @@ export const REGISTER_STEP_VIEW_MODELS: Record<RegisterStep, RegisterStepViewMod
   },
   personal: {
     title: 'Datos personales',
-    description: 'Completá tus datos para crear la cuenta.',
     heroIcon: 'public',
     heroTitle: 'Proyección global.',
     heroDescription: 'Validá tu talento con una formación alineada a estándares internacionales.',
@@ -33,3 +32,4 @@ export const REGISTER_STEP_VIEW_MODELS: Record<RegisterStep, RegisterStepViewMod
     cardSize: 'long',
   },
 };
+
