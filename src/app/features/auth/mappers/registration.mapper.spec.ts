@@ -15,7 +15,11 @@ describe('registration mapper', () => {
     sexo: 'F',
     location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
     direccion: 'Mercedes 1234',
-    telefono1: '099123456',
+    telefono1: {
+      iso2: 'UY',
+      number: '099123456',
+      numberE164: '+59899123456',
+    },
     mail: 'ana@example.com',
     verificacionMail: 'ana@example.com',
   };
@@ -77,5 +81,18 @@ describe('registration mapper', () => {
       primerApellido: 'Silva',
       mail: 'ana@example.com',
     });
+  });
+
+  it('should preserve the international prefix for non-Uruguayan phones', () => {
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        telefono1: {
+          iso2: 'AR',
+          number: '1123456789',
+          numberE164: '+541123456789',
+        },
+      }).telefono1
+    ).toBe('+541123456789');
   });
 });

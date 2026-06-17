@@ -1,80 +1,45 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <main class="personal-data-shell" id="main-content" tabindex="-1">
   <form class="personal-data-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-    <h1 class="personal-data-sr-only">Datos personales</h1>
+    <h2 class="personal-data-sr-only">Datos personales</h2>
 
     @if (isLoading()) {
-    <p class="personal-data-status" role="status">Cargando datos...</p>
+    <output class="personal-data-status">Cargando datos...</output>
     } @else {
     <section aria-label="Datos personales" class="personal-data-section">
       <ort-form-field>
         <ort-label>Tipo de documento</ort-label>
-        <input
-          formControlName="documentType"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-document-type'" />
+        <input formControlName="documentType" ortInput readonly type="text" [id]="'profile-document-type'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Nro. de documento</ort-label>
-        <input
-          formControlName="documentNumber"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-document-number'" />
+        <input formControlName="documentNumber" ortInput readonly type="text" [id]="'profile-document-number'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Primer nombre</ort-label>
-        <input
-          formControlName="firstName"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-first-name'" />
+        <input formControlName="firstName" ortInput readonly type="text" [id]="'profile-first-name'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Segundo nombre</ort-label>
-        <input
-          formControlName="secondName"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-second-name'" />
+        <input formControlName="secondName" ortInput readonly type="text" [id]="'profile-second-name'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Primer apellido</ort-label>
-        <input
-          formControlName="firstLastName"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-first-last-name'" />
+        <input formControlName="firstLastName" ortInput readonly type="text" [id]="'profile-first-last-name'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Segundo apellido</ort-label>
-        <input
-          formControlName="secondLastName"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-second-last-name'" />
+        <input formControlName="secondLastName" ortInput readonly type="text" [id]="'profile-second-last-name'" />
       </ort-form-field>
 
       <ort-form-field>
         <ort-label>Fecha de nacimiento</ort-label>
-        <input
-          formControlName="birthDate"
-          ortInput
-          readonly
-          type="text"
-          [id]="'profile-birth-date'" />
+        <input formControlName="birthDate" ortInput readonly type="text" [id]="'profile-birth-date'" />
       </ort-form-field>
 
       <ort-form-field>
@@ -84,10 +49,7 @@
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.countryCode.value">
         <ort-label>País de residencia</ort-label>
-        <ort-select
-          formControlName="countryCode"
-          [id]="'profile-country'"
-          (selectionChange)="onCountryChange()">
+        <ort-select formControlName="countryCode" [id]="'profile-country'" (selectionChange)="onCountryChange()">
           <ort-option value="">Seleccioná...</ort-option>
           @for (country of locations(); track country.codigoPais) {
           <ort-option [value]="country.codigoPais.toString()">{{ country.nombre }}</ort-option>
@@ -100,10 +62,7 @@
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.stateCode.value">
         <ort-label>Departamento</ort-label>
-        <ort-select
-          formControlName="stateCode"
-          [id]="'profile-state'"
-          (selectionChange)="onStateChange()">
+        <ort-select formControlName="stateCode" [id]="'profile-state'" (selectionChange)="onStateChange()">
           <ort-option value="">Seleccioná...</ort-option>
           @for (state of states(); track state.codigoEstado) {
           <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
@@ -128,33 +87,26 @@
     <section aria-labelledby="profile-contact-title" class="personal-data-section">
       <h2 class="personal-data-section__title" id="profile-contact-title">Datos de contacto</h2>
 
-      <ort-form-field [hideRequiredMarker]="!!form.controls.phone.value">
-        <ort-label>Celular con prefijo +598</ort-label>
-        <span aria-hidden="true" class="personal-data-phone-prefix" ortTextPrefix>
-          <span class="personal-data-phone-flag"></span>
-          +598
-        </span>
-        <input
-          autocomplete="tel"
+      <ort-form-field [hideRequiredMarker]="!!form.controls.phone.value?.number">
+        <ort-label>Celular</ort-label>
+        <ort-phone-input
+          countryAriaLabel="País del celular"
           formControlName="phone"
-          inputmode="tel"
-          ortInput
-          type="tel"
-          [id]="'profile-phone'" />
-        <ort-hint>Ingresá el número sin el prefijo nacional.</ort-hint>
+          numberAriaLabel="Número de celular"
+          placeholderText="00 000 000"
+          [defaultCountry]="'UY'"
+          [required]="true" />
+        <ort-hint>Seleccioná el país e ingresá el número sin el prefijo internacional.</ort-hint>
         @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
+        } @if (form.controls.phone.touched && form.controls.phone.hasError('phone')) {
+        <ort-error>Ingresá un celular válido</ort-error>
         }
       </ort-form-field>
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.email.value">
         <ort-label>E-mail</ort-label>
-        <input
-          autocomplete="email"
-          formControlName="email"
-          ortInput
-          type="email"
-          [id]="'profile-email'" />
+        <input autocomplete="email" formControlName="email" ortInput type="email" [id]="'profile-email'" />
         @if (form.controls.email.touched && form.controls.email.hasError('required')) {
         <ort-error>Este campo es obligatorio</ort-error>
         } @if (form.controls.email.touched && form.controls.email.hasError('email')) {
@@ -164,11 +116,7 @@
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.emailConfirmation.value">
         <ort-label>Confirmar e-mail</ort-label>
-        <input
-          autocomplete="email"
-          formControlName="emailConfirmation"
-          ortInput
-          type="email"
+        <input autocomplete="email" formControlName="emailConfirmation" ortInput type="email"
           [id]="'profile-email-confirmation'" />
         @if (form.controls.emailConfirmation.touched &&
         form.controls.emailConfirmation.hasError('required')) {
@@ -188,9 +136,9 @@
     @if (error()) {
     <p class="personal-data-message personal-data-message--error" role="alert">{{ error() }}</p>
     } @if (successMessage()) {
-    <p class="personal-data-message personal-data-message--success" role="status">
+    <output class="personal-data-message personal-data-message--success">
       {{ successMessage() }}
-    </p>
+    </output>
     }
 
     <div class="personal-data-actions">

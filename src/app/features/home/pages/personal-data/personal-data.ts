@@ -8,11 +8,15 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import type { PhoneInputValue } from '@desarrolloort/components';
 import {
+  findCountryByIso2,
+  getIso2Codes,
   OrtButtonModule,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  ortPhoneValidator,
   OrtSelectModule,
 } from '@desarrolloort/components';
 import { forkJoin } from 'rxjs';
@@ -44,7 +48,7 @@ interface PersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<string>;
+  phone: FormControl<PhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }
@@ -83,7 +87,9 @@ export class PersonalData implements OnInit {
       stateCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       cityCode: new FormControl('', { nonNullable: true }),
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      phone: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      phone: new FormControl<PhoneInputValue | null>(null, {
+        validators: [Validators.required, ortPhoneValidator],
+      }),
       email: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.email],
@@ -185,7 +191,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toNullableNumber(value.stateCode),
         cityCode: this.toNullableNumber(value.cityCode),
         address: value.address,
-        phone: value.phone,
+        phone: this.toBackendPhone(value.phone),
         email: value.email,
         emailVerification: value.emailConfirmation,
       })
@@ -248,7 +254,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toControlValue(data.stateCode),
         cityCode: this.toControlValue(data.cityCode),
         address: data.address,
-        phone: data.phone,
+        phone: this.toPhoneInputValue(data.phone),
         email: data.email,
         emailConfirmation: data.emailVerification,
       },
@@ -262,6 +268,47 @@ export class PersonalData implements OnInit {
 
   private toNullableNumber(value: string): number | null {
     return value ? Number(value) : null;
+  }
+
+  private toPhoneInputValue(value: string): PhoneInputValue | null {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    if (trimmed.startsWith('+')) {
+      const digits = trimmed.replace(/\D/g, '');
+      const country = this.findPhoneCountryByPrefix(digits);
+
+      if (country) {
+        const number = digits.slice(country.prefix);
+        return { iso2: country.iso2, number, numberE164: `+${digits}` };
+      }
+    }
+
+    const number = trimmed.replace(/\D/g, '');
+    return { iso2: 'UY', number, numberE164: `+598${number}` };
+  }
+
+  private toBackendPhone(value: PhoneInputValue | null): string {
+    if (!value) {
+      return '';
+    }
+
+    if (value.iso2 === 'UY') {
+      return value.number.trim();
+    }
+
+    return (value.numberE164 || value.number).trim();
+  }
+
+  private findPhoneCountryByPrefix(digits: string) {
+    return getIso2Codes()
+      .map(iso2 => findCountryByIso2(iso2))
+      .filter(country => !!country)
+      .sort((a, b) => b.prefix - a.prefix)
+      .find(country => digits.startsWith(country.iso2));
   }
 
   private formatDocumentType(value: string): string {
@@ -315,3 +362,4 @@ export class PersonalData implements OnInit {
     return labels[value] ?? value;
   }
 }
+

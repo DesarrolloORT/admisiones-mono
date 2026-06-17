@@ -1,3 +1,5 @@
+import type { PhoneInputValue } from '@desarrolloort/components';
+
 import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
 import {
   AuthIdentityData,
@@ -16,7 +18,7 @@ export interface RegisterPersonalFormValue {
   sexo: string;
   location: LocationValue;
   direccion: string;
-  telefono1: string;
+  telefono1: PhoneInputValue | null;
   mail: string;
   verificacionMail: string;
 }
@@ -41,10 +43,18 @@ export function toAuthRegisterPersonalData(
     codigoEstado: value.location.codigoEstado,
     codigoCiudad: value.location.codigoCiudad,
     direccion: value.direccion,
-    telefono1: value.telefono1,
+    telefono1: toBackendPhone(value.telefono1),
     mail: value.mail,
     verificacionMail: value.verificacionMail,
   };
+}
+
+function toBackendPhone(value: PhoneInputValue | null): string {
+  if (!value) {
+    return '';
+  }
+
+  return (value.iso2 === 'UY' ? value.number : value.numberE164 || value.number).trim();
 }
 
 function toIsoDateOnly(value: string | Date | null): string {
