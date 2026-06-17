@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -22,9 +23,11 @@ import {
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 
 import {
-  buildFormErrorSummary,
-  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+  focusFieldById,
+  FormErrorField,
+  getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { createLoginForm, syncDocumentNumberValidators } from '../../forms/auth-forms';
 import { cleanDocumentNumber, isCedulaDocumentType } from '../../models/document-number';
@@ -47,17 +50,38 @@ import { AuthSessionService } from '../../services/auth-session';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login {
+  private readonly document = inject(DOCUMENT);
   private readonly authSession = inject(AuthSessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly snackbar = inject(SnackbarHandler);
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   protected readonly form = createLoginForm();
   protected readonly isSubmitting = signal(false);
   protected readonly showPassword = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly successMessage = signal<string | null>(null);
   protected readonly submitted = signal(false);
+  private readonly errorFields: FormErrorField[] = [
+    {
+      controlName: 'documentType',
+      fieldId: 'login-document-type',
+      label: 'Tipo de documento',
+    },
+    {
+      controlName: 'documentNumber',
+      fieldId: 'login-document-number',
+      label: 'Nro. de documento',
+      messages: {
+        pattern: 'Ingresá solo caracteres alfanuméricos.',
+      },
+    },
+    {
+      controlName: 'password',
+      fieldId: 'login-password',
+      label: 'Contraseña',
+    },
+  ];
   protected readonly passwordInputType = computed(() =>
     this.showPassword() ? 'text' : 'password'
   );
@@ -67,35 +91,6 @@ export class Login {
   protected readonly passwordToggleLabel = computed(() =>
     this.showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'
   );
-  protected readonly errorSummary = computed(() =>
-    this.submitted()
-      ? buildFormErrorSummary(
-          this.form,
-          [
-            {
-              controlName: 'documentType',
-              fieldId: 'login-document-type',
-              label: 'Tipo de documento',
-            },
-            {
-              controlName: 'documentNumber',
-              fieldId: 'login-document-number',
-              label: 'Nro. de documento',
-              messages: {
-                pattern: 'Ingresá solo caracteres alfanuméricos.',
-              },
-            },
-            {
-              controlName: 'password',
-              fieldId: 'login-password',
-              label: 'Contraseña',
-            },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
-
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
@@ -123,11 +118,12 @@ export class Login {
 
   protected submit(): void {
     this.submitted.set(true);
-    this.error.set(null);
     this.successMessage.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.snackbar.error('Revisá los campos marcados.');
+      focusFieldById(this.document, getFirstInvalidFieldId(this.form, this.errorFields));
       return;
     }
 
@@ -164,8 +160,9 @@ export class Login {
           this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
+          const message = this.getApiErrorMessage(error, 'No se pudo iniciar sesión.');
           this.isSubmitting.set(false);
-          this.error.set(this.getApiErrorMessage(error, 'No se pudo iniciar sesión.'));
+          this.snackbar.error(message);
         },
       });
   }

@@ -15,11 +15,9 @@
   --auth-layout-padding-inline: clamp(var(--ort-sys-spacing-24), 3.34vw, var(--ort-sys-spacing-48));
   --auth-card-padding-block: clamp(28px, calc((100dvh - 760px) / 2), var(--ort-sys-spacing-120));
   --auth-card-padding-inline: clamp(var(--ort-sys-spacing-64), 8.34vw, var(--ort-sys-spacing-120));
-  --auth-long-card-padding-block: clamp(
-    var(--ort-sys-spacing-80),
-    11.12dvh,
-    var(--ort-sys-spacing-120)
-  );
+  --auth-long-card-padding-block: clamp(var(--ort-sys-spacing-80),
+      11.12dvh,
+      var(--ort-sys-spacing-120));
 
   position: relative;
   overflow: hidden;
@@ -41,10 +39,8 @@
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(
-      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent),
-      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent)
-    ),
+    linear-gradient(color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent),
+      color-mix(in sRGB, var(--ort-sys-base-surface-primary-background) 74%, transparent)),
     url('/assets/auth/auth-background.png') center / cover no-repeat;
 }
 
@@ -112,8 +108,7 @@
 
   h2 {
     font:
-      var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-24) / var(--ort-sys-line-height-36)
-        var(--ort-sys-font-family-display),
+      var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-24) / var(--ort-sys-line-height-36) var(--ort-sys-font-family-display),
       sans-serif;
     letter-spacing: 0;
   }
@@ -136,9 +131,7 @@
   max-height: calc(100dvh - (var(--auth-layout-padding-block) * 2));
   border-radius: var(--ort-sys-border-radius-12);
   background: var(--auth-surface);
-  box-shadow: var(--ort-sys-elevation-lg-x) var(--ort-sys-elevation-lg-y)
-    var(--ort-sys-elevation-lg-blur) var(--ort-sys-elevation-lg-spread)
-    var(--ort-sys-elevation-lg-color);
+  box-shadow: var(--ort-sys-elevation-lg-x) var(--ort-sys-elevation-lg-y) var(--ort-sys-elevation-lg-blur) var(--ort-sys-elevation-lg-spread) var(--ort-sys-elevation-lg-color);
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
@@ -176,8 +169,7 @@
 
 .auth-card__header h1 {
   font:
-    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-24) / var(--ort-sys-line-height-36)
-      var(--ort-sys-font-family-display),
+    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-24) / var(--ort-sys-line-height-36) var(--ort-sys-font-family-display),
     sans-serif;
   letter-spacing: 0;
 }
@@ -197,8 +189,7 @@
 
 .auth-card__stepper h1 {
   font:
-    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30)
-      var(--ort-sys-font-family-display),
+    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30) var(--ort-sys-font-family-display),
     sans-serif;
   letter-spacing: 0;
 }
@@ -331,8 +322,7 @@
 
   h2 {
     font:
-      var(--ort-sys-font-weight-semibold) var(--ort-sys-font-size-16) /
-        var(--ort-sys-line-height-24) var(--ort-sys-font-family-plain),
+      var(--ort-sys-font-weight-semibold) var(--ort-sys-font-size-16) / var(--ort-sys-line-height-24) var(--ort-sys-font-family-plain),
       sans-serif;
     letter-spacing: 0;
   }
@@ -368,10 +358,9 @@
 }
 
 .auth-contact-title {
-  margin: 0;
+  margin: var(--ort-sys-spacing-24) 0 var(--ort-sys-spacing-16);
   font:
-    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30)
-      var(--ort-sys-font-family-display),
+    var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30) var(--ort-sys-font-family-display),
     sans-serif;
   letter-spacing: 0;
 }
@@ -390,18 +379,16 @@
   height: 18px;
   border: 1px solid var(--ort-sys-color-secondary-300);
   border-radius: 50%;
-  background: linear-gradient(
-    to bottom,
-    var(--ort-sys-color-white) 0 11%,
-    #2f80ed 11% 22%,
-    var(--ort-sys-color-white) 22% 33%,
-    #2f80ed 33% 44%,
-    var(--ort-sys-color-white) 44% 55%,
-    #2f80ed 55% 66%,
-    var(--ort-sys-color-white) 66% 77%,
-    #2f80ed 77% 88%,
-    var(--ort-sys-color-white) 88% 100%
-  );
+  background: linear-gradient(to bottom,
+      var(--ort-sys-color-white) 0 11%,
+      #2f80ed 11% 22%,
+      var(--ort-sys-color-white) 22% 33%,
+      #2f80ed 33% 44%,
+      var(--ort-sys-color-white) 44% 55%,
+      #2f80ed 55% 66%,
+      var(--ort-sys-color-white) 66% 77%,
+      #2f80ed 77% 88%,
+      var(--ort-sys-color-white) 88% 100%);
 }
 
 @media (width <=760px) {
@@ -493,8 +480,7 @@
     h1 {
       color: var(--ort-sys-base-text-on-color-header);
       font:
-        var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30)
-          var(--ort-sys-font-family-display),
+        var(--ort-sys-font-weight-bold) var(--ort-sys-font-size-20) / var(--ort-sys-line-height-30) var(--ort-sys-font-family-display),
         sans-serif;
       letter-spacing: 0;
     }

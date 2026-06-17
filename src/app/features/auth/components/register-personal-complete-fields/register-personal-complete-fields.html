@@ -5,7 +5,7 @@
     <input formControlName="primerNombre" ortInput type="text" [id]="'first-name'" />
     @if (form().controls.primerNombre.touched && form().controls.primerNombre.hasError('required'))
     {
-    <ort-error>Este campo es obligatorio</ort-error>
+    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -19,7 +19,7 @@
     <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
     @if (form().controls.primerApellido.touched &&
     form().controls.primerApellido.hasError('required')) {
-    <ort-error>Este campo es obligatorio</ort-error>
+    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -30,10 +30,12 @@
 
   <ort-form-field [hideRequiredMarker]="!!form().controls.fechaNacimiento.value">
     <ort-label>Fecha de nacimiento</ort-label>
-    <input formControlName="fechaNacimiento" ortInput type="date" [id]="'birth-date'" />
+    <input formControlName="fechaNacimiento" format="DD/MM/YYYY" ortDateInput placeholder="dd/mm/aaaa" valueType="date"
+      [id]="'birth-date'" [maxDate]="maxBirthDate" />
+    <ort-datepicker-toggle ortSuffix [maxDate]="maxBirthDate" [selectedDate]="maxBirthDate"></ort-datepicker-toggle>
     @if (form().controls.fechaNacimiento.touched &&
     form().controls.fechaNacimiento.hasError('required')) {
-    <ort-error>Este campo es obligatorio</ort-error>
+    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -45,23 +47,21 @@
       <ort-option value="M">Masculino</ort-option>
     </ort-select>
     @if (form().controls.sexo.touched && form().controls.sexo.hasError('required')) {
-    <ort-error>Este campo es obligatorio</ort-error>
+    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
   <app-location-select class="auth-field--wide" formControlName="location" />
-  @if (form().controls.location.touched && form().controls.location.hasError('locationRequired')) {
-  <p class="auth-error auth-field--wide" id="location-country-error" role="alert">
+  @if (submitted() && form().controls.location.hasError('locationRequired')) {
+  <p class="sr-only" id="location-country-error" role="alert">
     Seleccioná el país de residencia
   </p>
-  } @if (form().controls.location.touched &&
-  form().controls.location.hasError('locationStateRequired')) {
-  <p class="auth-error auth-field--wide" id="location-state-error" role="alert">
+  } @if (submitted() && form().controls.location.hasError('locationStateRequired')) {
+  <p class="sr-only" id="location-state-error" role="alert">
     Seleccioná el departamento o estado
   </p>
-  } @if (form().controls.location.touched &&
-  form().controls.location.hasError('locationCityRequired')) {
-  <p class="auth-error auth-field--wide" id="location-city-error" role="alert">
+  } @if (submitted() && form().controls.location.hasError('locationCityRequired')) {
+  <p class="sr-only" id="location-city-error" role="alert">
     Seleccioná la ciudad
   </p>
   }
@@ -70,7 +70,7 @@
     <ort-label>Dirección</ort-label>
     <input formControlName="direccion" ortInput type="text" [id]="'address'" />
     @if (form().controls.direccion.touched && form().controls.direccion.hasError('required')) {
-    <ort-error>Este campo es obligatorio</ort-error>
+    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 </section>

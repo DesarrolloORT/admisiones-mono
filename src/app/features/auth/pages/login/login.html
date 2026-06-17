@@ -83,13 +83,12 @@
       </a>
     </section>
 
-    <ort-error-summary [errors]="errorSummary()" />
-
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    }
-
-    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+    <button
+      loadingLabel="Validando credenciales"
+      ort-primary-button
+      type="submit"
+      [disabled]="isSubmitting()"
+      [loading]="isSubmitting()">
       {{ isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
     </button>
 

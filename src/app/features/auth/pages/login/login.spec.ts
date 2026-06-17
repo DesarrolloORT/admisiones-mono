@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthSessionService } from '../../services/auth-session';
 import { Login } from './login';
 
@@ -14,6 +15,7 @@ describe('Login', () => {
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
   let navigateSpy: ReturnType<typeof vi.spyOn>;
+  let snackbarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     authMock = {
@@ -30,10 +32,15 @@ describe('Login', () => {
         })
       ),
     };
+    snackbarMock = { error: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [Login],
-      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthSessionService, useValue: authMock },
+        { provide: SnackbarHandler, useValue: snackbarMock },
+      ],
     });
 
     navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
@@ -76,16 +83,7 @@ describe('Login', () => {
     expect(authMock.login).not.toHaveBeenCalled();
   });
 
-  it('should clear a previous API error before validating a new submission', () => {
-    component['error'].set('Credenciales inválidas.');
-
-    component['submit']();
-
-    expect(component['error']()).toBeNull();
-    expect(authMock.login).not.toHaveBeenCalled();
-  });
-
-  it('should expose auth errors in UI state', () => {
+  it('should show auth errors in snackbar', () => {
     authMock.login.mockReturnValue(
       throwError(() => ({
         status: 401,
@@ -103,7 +101,7 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(component['error']()).toBe('Credenciales inválidas.');
+    expect(snackbarMock.error).toHaveBeenCalledWith('Credenciales inválidas.');
   });
 
   it('should navigate to /verificar-codigo with state when 2FA is required', () => {
