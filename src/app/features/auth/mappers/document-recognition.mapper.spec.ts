@@ -6,6 +6,8 @@ import {
 } from './document-recognition.mapper';
 
 describe('document recognition mapper', () => {
+  const birthDate = new Date(2000, 0, 1);
+
   it('should map recognized fields to form patches', () => {
     expect(
       toRecognizedFormPatch({
@@ -17,7 +19,7 @@ describe('document recognition mapper', () => {
       })
     ).toEqual({
       identity: { documentType: 'CI', documentNumber: '12345678' },
-      personal: { primerNombre: 'Ana', fechaNacimiento: '2000-01-01' },
+      personal: { primerNombre: 'Ana', fechaNacimiento: birthDate },
       countryCode: 1,
       birthplace: 'Montevideo / URY',
     });
@@ -25,7 +27,7 @@ describe('document recognition mapper', () => {
 
   it('should resolve country, state and date values', () => {
     expect(getCountryCodeFromBirthplace('Buenos Aires / ARG')).toBe(9);
-    expect(toDateInputValue('2000-01-01T00:00:00')).toBe('2000-01-01');
+    expect(toDateInputValue('2000-01-01T00:00:00')).toEqual(birthDate);
     expect(
       resolveStateCodeFromBirthplace(
         [
