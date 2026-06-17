@@ -2,10 +2,43 @@
 import { spawnSync } from 'child_process';
 import path from 'path';
 
-import { getMissingTests } from './utils.js';
+import { getMissingTests, isExcludedFile } from './utils.js';
 
 const shouldGenerate = process.argv.includes('--generate');
-const missingTests = getMissingTests();
+const stagedOnly = process.argv.includes('--staged');
+
+function getStagedSourceFiles() {
+  const srcAppRoot = path.resolve('src/app') + path.sep;
+  const git = spawnSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR'], {
+    cwd: process.cwd(),
+    encoding: 'utf-8',
+  });
+
+  if (git.error) {
+    console.error('❗ No se pudo leer el index de Git:', git.error.message);
+    process.exit(1);
+  }
+
+  if (git.status !== 0) {
+    console.error(git.stderr || '❗ No se pudo leer el index de Git.');
+    process.exit(git.status ?? 1);
+  }
+
+  return git.stdout
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map(file => path.resolve(file))
+    .filter(
+      file =>
+        file.startsWith(srcAppRoot) &&
+        file.endsWith('.ts') &&
+        !file.endsWith('.spec.ts') &&
+        !isExcludedFile(file)
+    );
+}
+
+const sourceFiles = stagedOnly ? getStagedSourceFiles() : undefined;
+const missingTests = getMissingTests(sourceFiles);
 
 if (missingTests.length === 0) {
   console.log('✅ Todos los archivos tienen sus archivos de testing correspondientes.');

@@ -34,10 +34,11 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 - [`.husky/pre-commit`](../.husky/pre-commit) ejecuta:
 
   ```bash
-  node scripts/testing/check-missing-tests.js && npx lint-staged
+  node scripts/testing/check-missing-tests.js --staged && npx lint-staged
   ```
 
 - `lint-staged` aplica `eslint --cache --fix .`, `prettier --write .` y `stylelint --fix **/*.scss` segun el tipo de archivo.
+- El check de missing tests del hook revisa solo archivos fuente staged.
 - `test:a11y` ejecuta Playwright + axe con mocks de API en desktop y mobile.
 - `test:e2e:smoke` ejecuta la suite rapida de flujos criticos con mocks.
 - `test:e2e:regression` se corre manualmente antes de releases, hotfixes

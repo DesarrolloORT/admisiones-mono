@@ -90,8 +90,7 @@ function getLegacyTestPath(tsFilePath) {
 /**
  * Retrieves a list of source files (with their expected test file paths) that lack tests.
  */
-function getMissingTests() {
-  const tsFiles = getAllTsFiles(path.resolve('src/app'));
+function getMissingTests(tsFiles = getAllTsFiles(path.resolve('src/app'))) {
   const missing = [];
   tsFiles.forEach(tsFile => {
     const expectedTestPath = getExpectedTestPath(tsFile);

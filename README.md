@@ -195,17 +195,18 @@ Estos son algunos de los scripts disponibles para el proyecto:
 
 ## Pre-commit hook
 
-Al realizar un commit, se ejecuta el hook de pre-commit para validar formato y estilo, y para ejecutar `npm run check-missing-tests`.
+Al realizar un commit, el hook de pre-commit valida formato y estilo con
+`lint-staged`, y revisa tests faltantes solo para archivos fuente staged.
 
 ## Generacion de archivos de testing
 
 Este conjunto de scripts garantiza que cada archivo fuente en `src/app/` tenga su test correspondiente, usando Vitest y reglas de convencion del proyecto.
 
 - `scripts/testing/check-missing-tests.js`
-  Lista archivos `*.ts` (excluyendo tests) en `src/app/` que no tienen test asociado.
+  Lista archivos `*.ts` (excluyendo tests) en `src/app/` que no tienen test asociado. Por defecto revisa todo `src/app/`; con `--staged` revisa solo archivos staged.
 
 - `scripts/testing/generate-missing-tests.js`
-  Mueve tests ubicados erroneamente y genera placeholders para los faltantes.
+  Genera placeholders para los faltantes.
 
 Todos los scripts utilizan `scripts/testing/utils.js` para recorrido de archivos, exclusiones y resolucion de rutas esperadas.
 
