@@ -26,7 +26,6 @@
       <section
         class="mis-carreras"
         [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
-
         <div class="section-header">
           <h3 class="section-header__title">Mis carreras</h3>
           <button
@@ -48,15 +47,16 @@
             <div class="swiper-slide">
               <app-dashboard-card [inscripcion]="inscripcion" />
             </div>
-          }
+            }
           </div>
           <div class="swiper-pagination"></div>
         </div>
         }
       </section>
-      <app-dashboard-scholarships-section class="mis-becas" [becas]="becas()" [singleRow]="singleRow()" />
-
-
+      <app-dashboard-scholarships-section
+        class="mis-becas"
+        [becas]="becas()"
+        [singleRow]="singleRow()" />
     </div>
   </section>
 </main>

@@ -39,9 +39,7 @@ export class DashboardCardSummary {
   });
 
   private buildCareerItems(): SummaryItem[] {
-    return [
-      { icon: 'calendar_today', label: 'Comienzo', value: this.startDate() },
-    ];
+    return [{ icon: 'calendar_today', label: 'Comienzo', value: this.startDate() }];
   }
 
   private buildScholarshipItems(): SummaryItem[] {
@@ -66,9 +64,7 @@ export class DashboardCardSummary {
           { icon: 'event', label: 'Fecha de resultados', value: this.resultsDate() },
         ];
       default:
-        return [
-          { icon: 'school', label: 'Carrera', value: this.careerName() },
-        ];
+        return [{ icon: 'school', label: 'Carrera', value: this.careerName() }];
     }
   }
 }

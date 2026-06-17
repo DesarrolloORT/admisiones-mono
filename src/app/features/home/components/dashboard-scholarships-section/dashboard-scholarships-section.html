@@ -14,7 +14,6 @@
   } @if (becas().length === 0) {
   <div class="mis-becas__empty">
     <app-dashboard-action-card variant="scholarship" />
-
   </div>
   } @else if (becas().length === 1) {
   <app-dashboard-card variant="scholarships" [beca]="becas()[0]" />
@@ -35,4 +34,3 @@
   </div>
   }
 </section>
-

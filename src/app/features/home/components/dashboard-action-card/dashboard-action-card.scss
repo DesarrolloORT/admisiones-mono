@@ -36,8 +36,8 @@
 .action-card__description {
   margin: 0;
   color: var(--ort-sys-base-text-color-body);
-  font-family: var(--ort-sys-font-family-plain);
   font-size: var(--ort-sys-font-size-14);
+  font-family: var(--ort-sys-font-family-plain);
   line-height: var(--ort-sys-line-height-16);
 }
 
@@ -53,8 +53,8 @@
 @media (width >= 768px) {
   .action-card__header {
     flex-direction: row;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
   }
 
   .action-card__title {

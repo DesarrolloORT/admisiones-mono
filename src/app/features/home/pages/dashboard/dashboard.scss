@@ -8,11 +8,11 @@
 }
 
 .dashboard-greeting h1 {
-  font-size: var(--ort-sys-heading-level4-text-size);
-  line-height: var(--ort-sys-heading-level4-line-height);
   margin: 0;
   font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-heading-level4-text-size);
   font-family: var(--home-display);
+  line-height: var(--ort-sys-heading-level4-line-height);
   letter-spacing: 0;
 }
 
@@ -25,10 +25,10 @@
 
 .dashboard-main {
   display: grid;
+  gap: var(--ort-sys-spacing-48);
   width: 95%;
   max-width: 1200px;
   margin: 0 auto;
-  gap: var(--ort-sys-spacing-48);
   padding-block: var(--ort-sys-spacing-64);
 }
 
@@ -36,6 +36,7 @@
   width: 100%;
   padding-bottom: var(--ort-sys-spacing-32);
 }
+
 .swiper-slide {
   height: auto;
   padding: var(--ort-sys-spacing-8);
@@ -87,16 +88,16 @@
 
 .section-header__title {
   margin: 0;
-  font-weight: 700;
+  font-weight: var(--ort-sys-font-weight-bold);
   font-size: var(--ort-sys-heading-level5-text-size);
   line-height: var(--ort-sys-heading-level5-line-height);
 }
 
 @media (width <=760px) {
   .dashboard-main {
-    gap: 24px;
+    gap: var(--ort-sys-spacing-24);
     width: 100%;
-    padding: 24px 16px;
+    padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
   }
 
   .dashboard-greeting {
@@ -122,7 +123,8 @@
     display: none;
   }
 
-  .mis-carreras--single, .mis-becas--single {
+  .mis-carreras--single,
+  .mis-becas--single {
     max-width: 40%;
   }
 
@@ -135,7 +137,7 @@
     max-width: 85%;
   }
 
-  .dashboard-cards{
+  .dashboard-cards {
     gap: 0;
   }
 
@@ -151,4 +153,3 @@
     margin-bottom: var(--ort-sys-spacing-16);
   }
 }
-

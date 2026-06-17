@@ -26,7 +26,7 @@
 
 .card-summary__label {
   color: var(--ort-sys-base-text-color-body);
- font-size: var(--ort-sys-font-size-14);
+  font-size: var(--ort-sys-font-size-14);
   line-height: var(--ort-sys-line-height-20);
 }
 
@@ -37,7 +37,7 @@
 }
 
 @media (width >= 768px) {
-  .card-summary{
-    gap: var(--ort-sys-spacing-16 );
+  .card-summary {
+    gap: var(--ort-sys-spacing-16);
   }
 }
