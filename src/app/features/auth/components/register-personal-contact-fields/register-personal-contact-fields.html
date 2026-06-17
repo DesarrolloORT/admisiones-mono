@@ -2,17 +2,20 @@
 <section aria-labelledby="contact-title" class="auth-form-section" [formGroup]="form()">
   <h2 class="auth-contact-title mt-2" id="contact-title">Datos de contacto</h2>
 
-  <ort-form-field [hideRequiredMarker]="!!form().controls.telefono1.value">
-    <ort-label>Celular con prefijo +598</ort-label>
-    <span aria-hidden="true" class="auth-phone-prefix" ortTextPrefix>
-      <span class="auth-phone-flag"></span>
-      +598
-    </span>
-    <input autocomplete="tel" formControlName="telefono1" inputmode="tel" ortInput placeholder="00 000 000" type="tel"
-      [id]="'phone'" />
-    <ort-hint>Ingresá el número sin el prefijo nacional.</ort-hint>
+  <ort-form-field [hideRequiredMarker]="!!form().controls.telefono1.value?.number">
+    <ort-label>Celular</ort-label>
+    <ort-phone-input
+      countryAriaLabel="Código de país"
+      formControlName="telefono1"
+      numberAriaLabel="Número de teléfono"
+      placeholderText="Número"
+      [defaultCountry]="'UY'"
+      [required]="true" />
+    <ort-hint>Seleccione país y luego ingrese solo dígitos.</ort-hint>
     @if (form().controls.telefono1.touched && form().controls.telefono1.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>El teléfono es obligatorio.</ort-error>
+    } @if (form().controls.telefono1.touched && form().controls.telefono1.hasError('phone')) {
+    <ort-error>Ingrese un teléfono válido.</ort-error>
     }
   </ort-form-field>
 
@@ -28,7 +31,12 @@
 
   <ort-form-field [hideRequiredMarker]="!!form().controls.verificacionMail.value">
     <ort-label>Confirmar e-mail</ort-label>
-    <input autocomplete="email" formControlName="verificacionMail" ortInput type="email" [id]="'confirm-email'" />
+    <input
+      autocomplete="email"
+      formControlName="verificacionMail"
+      ortInput
+      type="email"
+      [id]="'confirm-email'" />
     @if (form().controls.verificacionMail.touched &&
     form().controls.verificacionMail.hasError('required')) {
     <ort-error class="sr-only">Este campo es obligatorio</ort-error>

@@ -22,5 +22,6 @@ describe('RegisterPersonalContactFields', () => {
     expect(text).toContain('Datos de contacto');
     expect(text).toContain('Celular');
     expect(text).toContain('Confirmar e-mail');
+    expect(fixture.nativeElement.querySelector('ort-phone-input')).not.toBeNull();
   });
 });
