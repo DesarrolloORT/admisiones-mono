@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,11 +10,11 @@ import {
   OrtInputModule,
 } from '@desarrolloort/components';
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
-import { finalize } from 'rxjs/operators';
 
 import {
-  buildFormErrorSummary,
-  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+  focusFieldById,
+  FormErrorField,
+  getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
 import {
   buildOrtPasswordRequirements,
@@ -21,6 +22,7 @@ import {
   ORT_PASSWORD_ERROR_MESSAGES,
   ORT_PASSWORD_VALIDATORS,
 } from '../../../../shared/forms/password-validation';
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { PasswordActivationService } from '../../services/password-activation';
 
@@ -45,9 +47,11 @@ interface SetPasswordForm {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SetPassword {
+  private readonly document = inject(DOCUMENT);
   private readonly passwordActivation = inject(PasswordActivationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly snackbar = inject(SnackbarHandler);
 
   protected readonly isRecovery = this.route.snapshot.queryParamMap.get('flow') === 'recovery';
 
@@ -83,6 +87,24 @@ export class SetPassword {
   private readonly errorState = signal<string | null>(null);
   protected readonly error = this.errorState.asReadonly();
   protected readonly submitted = signal(false);
+  private readonly errorFields: FormErrorField[] = [
+    {
+      controlName: 'password',
+      fieldId: 'crear-password',
+      label: 'Contraseña',
+      messages: {
+        ...ORT_PASSWORD_ERROR_MESSAGES,
+      },
+    },
+    {
+      controlName: 'confirmPassword',
+      fieldId: 'crear-password-confirm',
+      label: 'Confirmar contraseña',
+      messages: {
+        confirmPasswordMismatch: 'Las contraseñas no coinciden.',
+      },
+    },
+  ];
 
   private readonly tokenErrorState = signal<string | null>(null);
   protected readonly tokenError = this.tokenErrorState.asReadonly();
@@ -110,35 +132,11 @@ export class SetPassword {
       ? 'Ocultar confirmación de contraseña'
       : 'Mostrar confirmación de contraseña'
   );
-  protected readonly errorSummary = computed(() =>
-    this.submitted()
-      ? buildFormErrorSummary(
-          this.form,
-          [
-            {
-              controlName: 'password',
-              fieldId: 'crear-password',
-              label: 'Contraseña',
-              messages: {
-                ...ORT_PASSWORD_ERROR_MESSAGES,
-              },
-            },
-            {
-              controlName: 'confirmPassword',
-              fieldId: 'crear-password-confirm',
-              label: 'Confirmar contraseña',
-              messages: {
-                confirmPasswordMismatch: 'Las contraseñas no coinciden.',
-              },
-            },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
-
   private readonly password = toSignal(this.form.controls.password.valueChanges, {
     initialValue: this.form.controls.password.value,
+  });
+  private readonly formStatus = toSignal(this.form.statusChanges, {
+    initialValue: this.form.status,
   });
 
   protected readonly requirements = computed(() => {
@@ -147,6 +145,10 @@ export class SetPassword {
   });
 
   protected readonly strength = computed(() => buildOrtPasswordStrength(this.password()));
+  protected readonly canSubmit = computed(() => {
+    this.formStatus();
+    return this.form.valid && !this.isSubmittingState();
+  });
 
   constructor() {
     this.activateToken();
@@ -164,19 +166,30 @@ export class SetPassword {
     this.submitted.set(true);
     this.form.markAllAsTouched();
     if (this.form.invalid || this.isSubmittingState()) {
+      this.snackbar.error('Revisá los campos marcados.');
+      focusFieldById(this.document, getFirstInvalidFieldId(this.form, this.errorFields));
       return;
     }
 
     this.isSubmittingState.set(true);
     this.errorState.set(null);
 
-    this.passwordActivation
-      .completePassword(this.form.controls.password.value)
-      .pipe(finalize(() => this.isSubmittingState.set(false)))
-      .subscribe({
-        next: () => this.router.navigate(['/iniciar-sesion']),
-        error: () => this.errorState.set('No se pudo crear la contraseña. Intentá de nuevo.'),
-      });
+    this.passwordActivation.completePassword(this.form.controls.password.value).subscribe({
+      next: () => {
+        const message = this.isRecovery
+          ? 'Contraseña actualizada correctamente.'
+          : 'Cuenta activada correctamente.';
+        this.snackbar.success(message);
+        void this.router
+          .navigate(['/iniciar-sesion'])
+          .finally(() => this.isSubmittingState.set(false));
+      },
+      error: () => {
+        this.isSubmittingState.set(false);
+        this.errorState.set('No se pudo crear la contraseña. Intentá de nuevo.');
+        this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
+      },
+    });
   }
 
   private activateToken(): void {

@@ -77,6 +77,23 @@ describe('SetPassword', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/iniciar-sesion']);
   });
 
+  it('should enable submit only when the password form is valid', () => {
+    setup();
+
+    expect(component['canSubmit']()).toBe(false);
+
+    component['form'].setValue({
+      password: 'NuevaPassword1!',
+      confirmPassword: 'OtraPassword1!',
+    });
+
+    expect(component['canSubmit']()).toBe(false);
+
+    component['form'].controls.confirmPassword.setValue('NuevaPassword1!');
+
+    expect(component['canSubmit']()).toBe(true);
+  });
+
   it('should surface password creation errors', () => {
     setup();
     passwordActivationMock.completePassword.mockReturnValue(
