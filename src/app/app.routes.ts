@@ -1,19 +1,23 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from './core/guards/auth';
+import { authGuard, authMatchGuard } from './core/guards/auth';
 
 export const routes: Routes = [
   {
     path: 'inicio',
+    canMatch: [authMatchGuard],
+    canActivate: [authGuard],
     loadChildren: () => import('./features/home/home.routes').then(m => m.routes),
   },
   {
     path: 'inscripciones',
+    canMatch: [authMatchGuard],
     canActivate: [authGuard],
     loadChildren: () => import('./features/inscripciones/inscripciones.routes').then(m => m.routes),
   },
   {
     path: 'becas',
+    canMatch: [authMatchGuard],
     canActivate: [authGuard],
     loadChildren: () => import('./features/becas/becas.routes').then(m => m.routes),
   },
