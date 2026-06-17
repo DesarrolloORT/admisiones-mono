@@ -68,15 +68,12 @@
       </ort-form-field>
     </section>
 
-    <ort-error-summary [errors]="errorSummary()" />
-
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    } @if (successMessage()) {
-    <output class="auth-success" role="status">{{ successMessage() }}</output>
-    }
-
-    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+    <button
+      loadingLabel="Enviando solicitud"
+      ort-primary-button
+      type="submit"
+      [disabled]="isSubmitting()"
+      [loading]="isSubmitting()">
       {{ isSubmitting() ? 'Enviando...' : 'Enviar' }}
     </button>
 
