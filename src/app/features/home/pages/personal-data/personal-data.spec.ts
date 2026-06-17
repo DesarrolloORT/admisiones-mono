@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import type { PhoneInputValue } from '@desarrolloort/components';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { AccountService } from 'src/app/features/auth/services/account';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
@@ -115,6 +115,7 @@ describe('PersonalData', () => {
     expect(text).toContain('Tipo de documento');
     expect(text).toContain('Datos de contacto');
     expect(text).toContain('Guardar');
+    expect(service.getPersonalData).toHaveBeenCalledWith(true);
     expect(component.form.controls.firstName.value).toBe('Gabriela');
     expect(component.form.controls.documentNumber.value).toBe('4.123.456-9');
     expect(component.form.controls.phone.value).toEqual({
@@ -122,6 +123,14 @@ describe('PersonalData', () => {
       number: '99123456',
       numberE164: '+59899123456',
     });
+  });
+
+  it('should render skeletons while personal data is loading', () => {
+    service.getPersonalData.mockReturnValue(NEVER);
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('ort-skeleton')).toHaveLength(6);
   });
 
   it('should submit editable fields to the backend service', () => {

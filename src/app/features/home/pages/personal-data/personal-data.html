@@ -4,7 +4,15 @@
     <h2 class="personal-data-sr-only">Datos personales</h2>
 
     @if (isLoading()) {
-    <output class="personal-data-status">Cargando datos...</output>
+    <section aria-busy="true" aria-label="Cargando datos personales" class="personal-data-loading">
+      <span class="personal-data-sr-only">Cargando datos personales</span>
+      <ort-skeleton height="56px" variant="rectangular" width="100%" />
+      <ort-skeleton height="56px" variant="rectangular" width="100%" />
+      <ort-skeleton height="56px" variant="rectangular" width="100%" />
+      <ort-skeleton height="56px" variant="rectangular" width="100%" />
+      <ort-skeleton height="56px" variant="rectangular" width="100%" />
+      <ort-skeleton height="48px" variant="rectangular" width="100%" />
+    </section>
     } @else {
     <section aria-label="Datos personales" class="personal-data-section">
       <ort-form-field>
@@ -17,14 +25,34 @@
           [id]="'profile-document-type'" />
       </ort-form-field>
 
-      <ort-form-field>
+      <ort-form-field [hideRequiredMarker]="!!form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
+        @if (isCedulaInput()) {
         <input
+          autocomplete="username"
+          formControlName="documentNumber"
+          ortCedulaInput
+          type="text"
+          [id]="'login-document-number'" />
+        } @else {
+        <input
+          autocomplete="username"
           formControlName="documentNumber"
           ortInput
-          readonly
           type="text"
-          [id]="'profile-document-number'" />
+          [id]="'login-document-number'" />
+        } @if (!isCedulaInput()) {
+        <ort-hint>Sin puntos ni guiones</ort-hint>
+        } @if ( form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('required') ) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        } @if ( form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('cedula') ) {
+        <ort-error>Ingresá un número de cédula válido</ort-error>
+        } @if ( !isCedulaInput() && form.controls.documentNumber.touched &&
+        form.controls.documentNumber.hasError('pattern') ) {
+        <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
+        }
       </ort-form-field>
 
       <ort-form-field>
@@ -184,7 +212,12 @@
     <ort-error-summary [errors]="errorSummary()" />
 
     <div class="personal-data-actions">
-      <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+      <button
+        loadingLabel="Guardando datos"
+        ort-primary-button
+        type="submit"
+        [disabled]="isSubmitting()"
+        [loading]="isSubmitting()">
         {{ isSubmitting() ? 'Guardando...' : 'Guardar' }}
       </button>
       <button ort-secondary-button type="button" [disabled]="isSubmitting()" (click)="cancel()">

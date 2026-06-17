@@ -70,15 +70,9 @@
   width: 100%;
 }
 
-.personal-data-status {
-  margin: 0;
-  padding-inline: 4px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.personal-data-status {
-  color: var(--personal-data-body);
+.personal-data-loading {
+  display: grid;
+  gap: 16px;
 }
 
 .personal-data-sr-only {

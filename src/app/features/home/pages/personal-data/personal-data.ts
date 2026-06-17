@@ -6,6 +6,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { PhoneInputValue } from '@desarrolloort/components';
@@ -18,9 +19,11 @@ import {
   OrtInputModule,
   ortPhoneValidator,
   OrtSelectModule,
+  OrtSkeletonModule,
 } from '@desarrolloort/components';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
   buildFormErrorSummary,
@@ -61,6 +64,7 @@ interface PersonalDataForm {
     OrtIconModule,
     OrtInputModule,
     OrtSelectModule,
+    OrtSkeletonModule,
     ReactiveFormsModule,
   ],
   templateUrl: './personal-data.html',
@@ -115,6 +119,10 @@ export class PersonalData implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
+  private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
+    initialValue: this.form.controls.documentType.value,
+  });
+  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
 
   protected readonly states = computed<LocationState[]>(() => {
     const countryCode = this.selectedCountryCode();
@@ -215,8 +223,8 @@ export class PersonalData implements OnInit {
     this.isLoading.set(true);
 
     forkJoin({
-      data: this.account.getPersonalData(),
-      locations: this.catalogs.getCountryLocations(),
+      data: this.account.getPersonalData(true),
+      locations: this.catalogs.getCountryLocations(true),
     })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
