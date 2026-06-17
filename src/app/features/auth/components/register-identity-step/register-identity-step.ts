@@ -57,9 +57,6 @@ export class RegisterIdentityStep {
   public readonly selectedFileName = input<string | null>(null);
   public readonly isSubmitting = input(false);
   public readonly isRecognizingDocument = input(false);
-  public readonly error = input<string | null>(null);
-  public readonly recognitionError = input<string | null>(null);
-  public readonly recognitionSuccessMessage = input<string | null>(null);
   public readonly showLoginAction = input(false);
 
   public readonly documentSelected = output<Event>();

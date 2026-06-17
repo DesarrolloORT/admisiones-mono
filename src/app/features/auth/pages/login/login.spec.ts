@@ -72,7 +72,6 @@ describe('Login', () => {
       documentNumber: '11111111',
       password: 'secret',
     });
-    expect(component['successMessage']()).toBe('Sesión iniciada correctamente.');
     expect(component['form'].controls.password.value).toBe('');
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/inicio');
   });

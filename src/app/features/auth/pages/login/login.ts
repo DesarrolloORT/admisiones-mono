@@ -60,7 +60,6 @@ export class Login {
   protected readonly form = createLoginForm();
   protected readonly isSubmitting = signal(false);
   protected readonly showPassword = signal(false);
-  protected readonly successMessage = signal<string | null>(null);
   protected readonly submitted = signal(false);
   private readonly errorFields: FormErrorField[] = [
     {
@@ -118,7 +117,6 @@ export class Login {
 
   protected submit(): void {
     this.submitted.set(true);
-    this.successMessage.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -155,7 +153,6 @@ export class Login {
             return;
           }
 
-          this.successMessage.set('Sesión iniciada correctamente.');
           this.form.controls.password.reset('');
           this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },

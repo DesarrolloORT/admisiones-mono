@@ -9,21 +9,15 @@
     <ort-error-summary [errors]="errorSummary()" />
   </div>
 
-  @if (error()) {
-  <p class="auth-error" role="alert">{{ error() }}</p>
-  } @if (successMessage()) {
-  <output class="auth-success" role="status">{{ successMessage() }}</output>
-  }
-
   <div class="auth-actions">
     <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
     <button
       loadingLabel="Creando cuenta"
       ort-primary-button
       type="submit"
-      [disabled]="isSubmitting() || !!successMessage()"
+      [disabled]="isSubmitting() || isCompleted()"
       [loading]="isSubmitting()">
-      {{ successMessage() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
+      {{ isCompleted() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
     </button>
   </div>
 </form>

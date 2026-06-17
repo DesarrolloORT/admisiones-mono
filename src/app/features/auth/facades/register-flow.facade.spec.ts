@@ -87,7 +87,6 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('user-exists');
-    expect(facade.error()).toBeNull();
     expect(snackbarMock.show).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Ya existe un usuario registrado con este documento.',
@@ -107,7 +106,6 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('application-exists');
-    expect(facade.error()).toBeNull();
     expect(snackbarMock.show).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Ya existe una solicitud de alta pendiente para este documento.',
@@ -134,7 +132,8 @@ describe('RegisterFlowFacade', () => {
     });
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
     );
   });
@@ -160,7 +159,8 @@ describe('RegisterFlowFacade', () => {
       }),
     });
     expect(facade.step()).toBe('personal');
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
@@ -172,7 +172,6 @@ describe('RegisterFlowFacade', () => {
     await facade.continueToPersonalData();
 
     expect(facade.step()).toBe('identity');
-    expect(facade.error()).toBeNull();
     expect(snackbarMock.error).toHaveBeenCalledWith(
       'No se pudo iniciar el flujo de registro. Intentá nuevamente.'
     );
@@ -196,7 +195,8 @@ describe('RegisterFlowFacade', () => {
         identity: { documentType: 'PS', documentNumber: 'AB123456' },
       })
     );
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
@@ -207,7 +207,6 @@ describe('RegisterFlowFacade', () => {
 
     facade.submitPersonalData();
 
-    expect(facade.error()).toBeNull();
     expect(snackbarMock.error).toHaveBeenCalledWith('Primero evaluá el documento para continuar.');
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
   });
@@ -227,7 +226,9 @@ describe('RegisterFlowFacade', () => {
 
     await facade.continueToPersonalData();
 
-    expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'Ya existe un usuario registrado con este documento.'
+    );
   });
 
   function mockEvaluation(
@@ -266,7 +267,11 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     sexo: 'F',
     location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
     direccion: 'Mercedes 1234',
-    telefono1: '099123456',
+    telefono1: {
+      iso2: 'UY',
+      number: '099123456',
+      numberE164: '+59899123456',
+    },
     mail: 'ana@example.com',
     verificacionMail: 'ana@example.com',
   });

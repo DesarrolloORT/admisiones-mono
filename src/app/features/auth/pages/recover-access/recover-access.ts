@@ -53,7 +53,6 @@ export class RecoverAccess {
 
   protected readonly form = createRecoverAccessForm();
   protected readonly isSubmitting = signal(false);
-  protected readonly successMessage = signal<string | null>(null);
   protected readonly submitted = signal(false);
   private readonly errorFields: FormErrorField[] = [
     {
@@ -101,7 +100,6 @@ export class RecoverAccess {
       return;
     }
 
-    this.successMessage.set(null);
     this.isSubmitting.set(true);
 
     const { documentType, documentNumber, primerApellido } = this.form.getRawValue();
@@ -117,7 +115,6 @@ export class RecoverAccess {
         next: () => {
           const message =
             'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
-          this.successMessage.set(message);
           this.snackbar.success(message);
         },
         error: error => {

@@ -1,20 +1,32 @@
-<app-auth-form [cardSize]="facade.stepViewModel().cardSize" [description]="facade.stepViewModel().description"
-  [heroDescription]="facade.stepViewModel().heroDescription" [heroIcon]="facade.stepViewModel().heroIcon"
-  [heroTitle]="facade.stepViewModel().heroTitle" [stepLabel]="facade.stepViewModel().stepLabel"
-  [stepTitle]="facade.stepViewModel().stepTitle" [title]="facade.stepViewModel().title">
+<app-auth-form
+  [cardSize]="facade.stepViewModel().cardSize"
+  [description]="facade.stepViewModel().description"
+  [heroDescription]="facade.stepViewModel().heroDescription"
+  [heroIcon]="facade.stepViewModel().heroIcon"
+  [heroTitle]="facade.stepViewModel().heroTitle"
+  [stepLabel]="facade.stepViewModel().stepLabel"
+  [stepTitle]="facade.stepViewModel().stepTitle"
+  [title]="facade.stepViewModel().title">
   @if (facade.step() === 'identity') {
-  <app-register-identity-step [documentNumberLabel]="facade.documentNumberLabel()"
-    [documentTypes]="facade.documentTypes$" [error]="facade.error()" [form]="facade.identityForm"
-    [isCedulaInput]="facade.isCedulaInput()" [isRecognizingDocument]="facade.isRecognizingDocument()"
-    [isSubmitting]="facade.isSubmitting()" [recognitionError]="facade.recognitionError()"
-    [recognitionSuccessMessage]="facade.recognitionSuccessMessage()" [selectedFileName]="facade.selectedFileName()"
+  <app-register-identity-step
+    [documentNumberLabel]="facade.documentNumberLabel()"
+    [documentTypes]="facade.documentTypes$"
+    [form]="facade.identityForm"
+    [isCedulaInput]="facade.isCedulaInput()"
+    [isRecognizingDocument]="facade.isRecognizingDocument()"
+    [isSubmitting]="facade.isSubmitting()"
+    [selectedFileName]="facade.selectedFileName()"
     [showLoginAction]="facade.registrationFlow() === 'user-exists' || facade.registrationFlow() === 'application-exists'"
-    (continueStep)="facade.continueToPersonalData()" (documentSelected)="facade.onDocumentSelected($event)"
+    (continueStep)="facade.continueToPersonalData()"
+    (documentSelected)="facade.onDocumentSelected($event)"
     (loginAction)="facade.navigateToLogin()" />
   } @else if (facade.step() === 'personal') {
-  <app-register-personal-step [error]="facade.error()" [form]="facade.personalForm"
-    [isSubmitting]="facade.isSubmitting()" [personalMode]="facade.personalMode()"
-    [successMessage]="facade.successMessage()" (back)="facade.backToIdentity()"
+  <app-register-personal-step
+    [form]="facade.personalForm"
+    [isCompleted]="facade.isCompleted()"
+    [isSubmitting]="facade.isSubmitting()"
+    [personalMode]="facade.personalMode()"
+    (back)="facade.backToIdentity()"
     (submitStep)="facade.submitPersonalData()" />
   }
 </app-auth-form>

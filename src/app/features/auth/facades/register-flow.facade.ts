@@ -45,10 +45,7 @@ export class RegisterFlowFacade {
   public readonly selectedFileName = signal<string | null>(null);
   public readonly isSubmitting = signal(false);
   public readonly isRecognizingDocument = signal(false);
-  public readonly error = signal<string | null>(null);
-  public readonly recognitionError = signal<string | null>(null);
-  public readonly recognitionSuccessMessage = signal<string | null>(null);
-  public readonly successMessage = signal<string | null>(null);
+  public readonly isCompleted = signal(false);
   public readonly registrationFlow = signal<RegisterFlowKind | null>(null);
   public readonly registrationFlowId = signal<string | null>(null);
 
@@ -81,9 +78,6 @@ export class RegisterFlowFacade {
     const selectedFile = input?.files?.item(0) ?? null;
 
     this.selectedFileName.set(selectedFile?.name ?? null);
-    this.recognitionError.set(null);
-    this.recognitionSuccessMessage.set(null);
-    this.error.set(null);
     this.clearRegistrationFlow();
     this.clearRecognizedFields();
 
@@ -110,8 +104,7 @@ export class RegisterFlowFacade {
       return;
     }
 
-    this.error.set(null);
-    this.successMessage.set(null);
+    this.isCompleted.set(false);
     this.clearRegistrationFlow();
     this.isSubmitting.set(true);
 
@@ -140,15 +133,14 @@ export class RegisterFlowFacade {
 
       this.step.set('personal');
     } catch (error) {
-      this.setError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+      this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
   public backToIdentity(): void {
-    this.error.set(null);
-    this.successMessage.set(null);
+    this.isCompleted.set(false);
     this.clearRegistrationFlow();
     this.step.set('identity');
   }
@@ -192,8 +184,7 @@ export class RegisterFlowFacade {
       return;
     }
 
-    this.error.set(null);
-    this.successMessage.set(null);
+    this.isCompleted.set(false);
     this.isSubmitting.set(true);
 
     this.registration
@@ -211,7 +202,7 @@ export class RegisterFlowFacade {
           );
         },
         error: error => {
-          this.setError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+          this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
         },
       });
   }
@@ -233,8 +224,7 @@ export class RegisterFlowFacade {
       return;
     }
 
-    this.error.set(null);
-    this.successMessage.set(null);
+    this.isCompleted.set(false);
     this.isSubmitting.set(true);
 
     this.registration
@@ -277,7 +267,7 @@ export class RegisterFlowFacade {
     try {
       const result = await this.documentPrefill.preload(file);
       this.applyRecognizedFields(result);
-      this.showRecognitionSuccess('Datos precargados. Revisalos antes de continuar.');
+      this.snackbar.success('Datos precargados. Revisalos antes de continuar.');
     } catch (error) {
       this.handleDocumentRecognitionError(error);
     } finally {
@@ -315,10 +305,6 @@ export class RegisterFlowFacade {
     });
   }
 
-  private setError(message: string): void {
-    this.error.set(message);
-  }
-
   private clearRegistrationFlow(): void {
     this.registrationFlow.set(null);
     this.registrationFlowId.set(null);
@@ -352,31 +338,17 @@ export class RegisterFlowFacade {
   }
 
   private showSuccess(message: string): void {
-    this.successMessage.set(message);
-    this.snackbar.success(message);
-  }
-
-  private showRecognitionError(message: string): void {
-    this.recognitionError.set(message);
-    this.snackbar.error(message);
-  }
-
-  private setRecognitionError(message: string): void {
-    this.recognitionError.set(message);
-  }
-
-  private showRecognitionSuccess(message: string): void {
-    this.recognitionSuccessMessage.set(message);
+    this.isCompleted.set(true);
     this.snackbar.success(message);
   }
 
   private handleDocumentRecognitionError(error: unknown): void {
     if (error instanceof DocumentRecognitionFileError) {
-      this.showRecognitionError(this.getDocumentRecognitionFileErrorMessage(error));
+      this.showError(this.getDocumentRecognitionFileErrorMessage(error));
       return;
     }
 
-    this.setRecognitionError(this.getApiErrorMessage(error, 'No se pudo precargar el documento.'));
+    this.showError(this.getApiErrorMessage(error, 'No se pudo precargar el documento.'));
   }
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {

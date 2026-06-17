@@ -43,8 +43,7 @@ export class RegisterPersonalStep {
   public readonly form = input.required<FormGroup<PersonalForm>>();
   public readonly personalMode = input<RegisterPersonalMode>('complete');
   public readonly isSubmitting = input(false);
-  public readonly error = input<string | null>(null);
-  public readonly successMessage = input<string | null>(null);
+  public readonly isCompleted = input(false);
 
   public readonly back = output<void>();
   public readonly submitStep = output<void>();
