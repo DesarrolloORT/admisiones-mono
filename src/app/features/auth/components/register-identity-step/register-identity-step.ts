@@ -1,9 +1,19 @@
-import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { AsyncPipe, DOCUMENT } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
+  type OrtErrorItem,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
@@ -12,6 +22,9 @@ import {
 import { Observable } from 'rxjs';
 import {
   buildFormErrorSummary,
+  focusFieldById,
+  FormErrorField,
+  getFirstInvalidFieldId,
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
 } from 'src/app/shared/forms/form-error-summary';
 
@@ -34,6 +47,9 @@ import { IdentityForm } from '../../forms/auth-forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterIdentityStep {
+  private readonly document = inject(DOCUMENT);
+  private readonly errorSummaryAnchor = viewChild<ElementRef<HTMLElement>>('errorSummaryAnchor');
+
   public readonly form = input.required<FormGroup<IdentityForm>>();
   public readonly documentTypes = input.required<Observable<DocumentType[]>>();
   public readonly isCedulaInput = input(false);
@@ -51,31 +67,65 @@ export class RegisterIdentityStep {
   public readonly loginAction = output<void>();
 
   public readonly submitted = signal(false);
-  public readonly errorSummary = computed(() => {
+  public readonly errorSummary = signal<OrtErrorItem[]>([]);
+
+  public refreshErrorSummary(): void {
     if (!this.submitted()) {
-      return [];
+      return;
     }
 
-    return buildFormErrorSummary(
-      this.form(),
-      [
-        {
-          controlName: 'documentType',
-          fieldId: 'register-document-type',
-          label: 'Tipo de documento',
-        },
-        {
-          controlName: 'documentNumber',
-          fieldId: 'register-document-number',
-          label: this.documentNumberLabel(),
-        },
-      ],
-      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    this.errorSummary.set(
+      buildFormErrorSummary(
+        this.form(),
+        this.currentErrorFields(),
+        ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+      )
     );
-  });
+  }
 
   public onSubmit(): void {
     this.submitted.set(true);
+    this.form().markAllAsTouched();
+    this.refreshErrorSummary();
+
+    if (this.form().invalid) {
+      this.focusSummaryThenFirstInvalidField();
+      return;
+    }
+
     this.continueStep.emit();
+  }
+
+  private currentErrorFields(): FormErrorField[] {
+    return [
+      {
+        controlName: 'documentType',
+        fieldId: 'register-document-type',
+        label: 'Tipo de documento',
+      },
+      {
+        controlName: 'documentNumber',
+        fieldId: 'register-document-number',
+        label: this.documentNumberLabel(),
+      },
+    ];
+  }
+
+  private focusSummaryThenFirstInvalidField(): void {
+    setTimeout(() => {
+      const errorSummaryAnchor = this.errorSummaryAnchor()?.nativeElement;
+
+      errorSummaryAnchor?.focus();
+      setTimeout(() => {
+        if (errorSummaryAnchor && this.document.activeElement !== errorSummaryAnchor) {
+          return;
+        }
+
+        focusFieldById(
+          this.document,
+          getFirstInvalidFieldId(this.form(), this.currentErrorFields())
+        );
+      }, 700);
+    });
   }
 }

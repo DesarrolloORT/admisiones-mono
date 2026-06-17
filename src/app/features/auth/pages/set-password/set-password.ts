@@ -24,6 +24,7 @@ import {
 } from '../../../../shared/forms/password-validation';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthSessionService } from '../../services/auth-session';
 import { PasswordActivationService } from '../../services/password-activation';
 
 interface SetPasswordForm {
@@ -49,6 +50,7 @@ interface SetPasswordForm {
 export class SetPassword {
   private readonly document = inject(DOCUMENT);
   private readonly passwordActivation = inject(PasswordActivationService);
+  private readonly authSession = inject(AuthSessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
@@ -84,8 +86,6 @@ export class SetPassword {
   private readonly isSubmittingState = signal(false);
   protected readonly isSubmitting = this.isSubmittingState.asReadonly();
 
-  private readonly errorState = signal<string | null>(null);
-  protected readonly error = this.errorState.asReadonly();
   protected readonly submitted = signal(false);
   private readonly errorFields: FormErrorField[] = [
     {
@@ -172,7 +172,6 @@ export class SetPassword {
     }
 
     this.isSubmittingState.set(true);
-    this.errorState.set(null);
 
     this.passwordActivation.completePassword(this.form.controls.password.value).subscribe({
       next: () => {
@@ -180,13 +179,20 @@ export class SetPassword {
           ? 'Contraseña actualizada correctamente.'
           : 'Cuenta activada correctamente.';
         this.snackbar.success(message);
-        void this.router
-          .navigate(['/iniciar-sesion'])
-          .finally(() => this.isSubmittingState.set(false));
+        this.authSession.hydrateAuthenticatedSession().subscribe({
+          next: () => {
+            void this.router
+              .navigateByUrl('/inicio')
+              .finally(() => this.isSubmittingState.set(false));
+          },
+          error: () => {
+            this.isSubmittingState.set(false);
+            this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
+          },
+        });
       },
       error: () => {
         this.isSubmittingState.set(false);
-        this.errorState.set('No se pudo crear la contraseña. Intentá de nuevo.');
         this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
       },
     });

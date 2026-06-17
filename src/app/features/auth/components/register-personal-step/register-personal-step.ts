@@ -1,8 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { OrtButtonModule, OrtFormFieldModule } from '@desarrolloort/components';
+import { OrtButtonModule, type OrtErrorItem, OrtFormFieldModule } from '@desarrolloort/components';
 import {
   buildFormErrorSummary,
+  focusFieldById,
+  FormErrorField,
+  getFirstInvalidFieldId,
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
 } from 'src/app/shared/forms/form-error-summary';
 
@@ -24,6 +37,9 @@ import { RegisterPersonalVerificationFields } from '../register-personal-verific
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterPersonalStep {
+  private readonly document = inject(DOCUMENT);
+  private readonly errorSummaryAnchor = viewChild<ElementRef<HTMLElement>>('errorSummaryAnchor');
+
   public readonly form = input.required<FormGroup<PersonalForm>>();
   public readonly personalMode = input<RegisterPersonalMode>('complete');
   public readonly isSubmitting = input(false);
@@ -34,7 +50,38 @@ export class RegisterPersonalStep {
   public readonly submitStep = output<void>();
 
   public readonly submitted = signal(false);
-  public readonly hasSubmittedInvalidFields = computed(() => {
+  public readonly errorSummary = signal<OrtErrorItem[]>([]);
+  private readonly verificationFields: FormErrorField[] = [
+    { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
+    { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
+  ];
+  private readonly completeFields: FormErrorField[] = [
+    { controlName: 'primerNombre', fieldId: 'first-name', label: 'Primer nombre' },
+    { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
+    { controlName: 'fechaNacimiento', fieldId: 'birth-date', label: 'Fecha de nacimiento' },
+    { controlName: 'sexo', fieldId: 'sex', label: 'Sexo' },
+    {
+      controlName: 'location',
+      fieldId: (control: AbstractControl) => {
+        if (control.hasError('locationStateRequired')) {
+          return 'location-state';
+        }
+
+        if (control.hasError('locationCityRequired')) {
+          return 'location-city';
+        }
+
+        return 'location-country';
+      },
+      label: 'Ubicación',
+    },
+    { controlName: 'direccion', fieldId: 'address', label: 'Dirección' },
+    { controlName: 'telefono1', fieldId: 'phone', label: 'Celular' },
+    { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
+    { controlName: 'verificacionMail', fieldId: 'confirm-email', label: 'Confirmar e-mail' },
+  ];
+
+  public hasSubmittedInvalidFields(): boolean {
     if (!this.submitted()) {
       return false;
     }
@@ -46,52 +93,54 @@ export class RegisterPersonalStep {
     }
 
     return this.form().invalid;
-  });
-  public readonly errorSummary = computed(() => {
+  }
+
+  public refreshErrorSummary(): void {
     if (!this.submitted()) {
-      return [];
+      return;
     }
 
-    const verificationFields = [
-      { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
-      { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
-    ];
-
-    const completeFields = [
-      { controlName: 'primerNombre', fieldId: 'first-name', label: 'Primer nombre' },
-      { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
-      { controlName: 'fechaNacimiento', fieldId: 'birth-date', label: 'Fecha de nacimiento' },
-      { controlName: 'sexo', fieldId: 'sex', label: 'Sexo' },
-      {
-        controlName: 'location',
-        fieldId: (control: AbstractControl) => {
-          if (control.hasError('locationStateRequired')) {
-            return 'location-state';
-          }
-
-          if (control.hasError('locationCityRequired')) {
-            return 'location-city';
-          }
-
-          return 'location-country';
-        },
-        label: 'Ubicación',
-      },
-      { controlName: 'direccion', fieldId: 'address', label: 'Dirección' },
-      { controlName: 'telefono1', fieldId: 'phone', label: 'Celular' },
-      { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
-      { controlName: 'verificacionMail', fieldId: 'confirm-email', label: 'Confirmar e-mail' },
-    ];
-
-    return buildFormErrorSummary(
-      this.form(),
-      this.personalMode() === 'verification' ? verificationFields : completeFields,
-      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    this.errorSummary.set(
+      buildFormErrorSummary(
+        this.form(),
+        this.currentErrorFields(),
+        ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+      )
     );
-  });
+  }
 
   public onSubmit(): void {
     this.submitted.set(true);
+    this.form().markAllAsTouched();
+    this.refreshErrorSummary();
+
+    if (this.hasSubmittedInvalidFields()) {
+      this.focusSummaryThenFirstInvalidField();
+      return;
+    }
+
     this.submitStep.emit();
+  }
+
+  private currentErrorFields(): FormErrorField[] {
+    return this.personalMode() === 'verification' ? this.verificationFields : this.completeFields;
+  }
+
+  private focusSummaryThenFirstInvalidField(): void {
+    setTimeout(() => {
+      const errorSummaryAnchor = this.errorSummaryAnchor()?.nativeElement;
+
+      errorSummaryAnchor?.focus();
+      setTimeout(() => {
+        if (errorSummaryAnchor && this.document.activeElement !== errorSummaryAnchor) {
+          return;
+        }
+
+        focusFieldById(
+          this.document,
+          getFirstInvalidFieldId(this.form(), this.currentErrorFields())
+        );
+      }, 700);
+    });
   }
 }

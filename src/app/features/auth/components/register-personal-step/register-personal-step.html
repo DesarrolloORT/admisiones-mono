@@ -2,10 +2,12 @@
   @if (personalMode() === 'verification') {
   <app-register-personal-verification-fields [form]="form()" />
   } @else {
-  <app-register-personal-complete-fields [form]="form()" />
+  <app-register-personal-complete-fields [form]="form()" [submitted]="submitted()" />
   }
 
-  <ort-error-summary [errors]="errorSummary()" />
+  <div #errorSummaryAnchor tabindex="-1">
+    <ort-error-summary [errors]="errorSummary()" />
+  </div>
 
   @if (error()) {
   <p class="auth-error" role="alert">{{ error() }}</p>
@@ -15,7 +17,12 @@
 
   <div class="auth-actions">
     <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
-    <button ort-primary-button type="submit" [disabled]="isSubmitting() || !!successMessage()">
+    <button
+      loadingLabel="Creando cuenta"
+      ort-primary-button
+      type="submit"
+      [disabled]="isSubmitting() || !!successMessage()"
+      [loading]="isSubmitting()">
       {{ successMessage() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
     </button>
   </div>
