@@ -1,5 +1,6 @@
 // ai-toolkit:toolkit profile=agent-hooks path=scripts/ai-hooks/agent-hooks.js
 import { cwd, stdin, stdout } from 'node:process';
+
 import {
   buildCompactSummary,
   buildFullGuardrailContext,
@@ -9,8 +10,8 @@ import {
   buildSubagentContext,
   classifyPromptGuardrail,
   classifyToolGuardrail,
-  cleanupExpiredState,
   classifyToolUse,
+  cleanupExpiredState,
   collectToolTargets,
   evaluatePreToolUse,
   isConcretePrompt,
