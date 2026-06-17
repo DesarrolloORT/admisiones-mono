@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getExpectedTestPath, getMissingTests } from './utils.js';
+import { getMissingTests } from './utils.js';
 
 /**
  * Ensures that the directory for the given file exists.
@@ -30,76 +30,13 @@ function getExportName(fileContent, filePath) {
 
 /**
  * Determines the appropriate test template based on file content.
- * Adjust scaffolding based on Angular decorators.
  */
-function getTestTemplate(sourcePath, fileContent, exportName) {
-  const relativeImportPath = path
-    .relative(path.dirname(getExpectedTestPath(sourcePath)), path.resolve(sourcePath))
-    .replace(/\\/g, '/')
-    .replace(/\.ts$/, '');
-
-  // Default failing test (Vitest style)
-  const failTest = `
+function getTestTemplate(exportName) {
+  return `describe('${exportName}', () => {
   it('should have tests', () => {
     throw new Error('Test suite not implemented.');
-  });`;
-
-  // Standalone component, directive, or pipe
-  if (
-    fileContent.includes('@Component') ||
-    fileContent.includes('@Directive') ||
-    fileContent.includes('@Pipe')
-  ) {
-    const importStatement = `import { ${exportName} } from '${relativeImportPath}';`;
-    const testBedConfig = `imports: [${exportName}],`;
-    return `import { ComponentFixture, TestBed } from '@angular/core/testing';
-${importStatement}
-
-describe('${exportName}', () => {
-  let component: ${exportName};
-  let fixture: ComponentFixture<${exportName}>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      ${testBedConfig}
-    }).compileComponents();
   });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(${exportName});
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  ${failTest}
 });`;
-  }
-  // Injectable
-  else if (fileContent.includes('@Injectable')) {
-    return `import { TestBed } from '@angular/core/testing';
-import { ${exportName} } from '${relativeImportPath}';
-
-describe('${exportName}', () => {
-  let service: ${exportName};
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [${exportName}],
-    });
-    service = TestBed.inject(${exportName});
-  });
-
-  ${failTest}
-});`;
-  }
-  // Generic fallback
-  else {
-    return `import { ${exportName} } from '${relativeImportPath}';
-
-describe('${exportName}', () => {
-  ${failTest}
-});`;
-  }
 }
 
 /**
@@ -111,7 +48,7 @@ function generateMissingTests() {
     try {
       const fileContent = fs.readFileSync(source, 'utf-8');
       const exportName = getExportName(fileContent, source);
-      const template = getTestTemplate(source, fileContent, exportName);
+      const template = getTestTemplate(exportName);
       ensureDirectoryExistence(test);
       fs.writeFileSync(test, template);
       console.log(`🧪 Archivo de testing creado: ${test}`);
