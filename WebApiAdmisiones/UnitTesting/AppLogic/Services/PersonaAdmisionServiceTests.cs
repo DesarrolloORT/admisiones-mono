@@ -750,6 +750,9 @@ namespace UnitTesting.AppLogic.Services
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((Imagen)null);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
 
             var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
@@ -809,6 +812,36 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal(new byte[] { 1, 2, 3 }, result.Data);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WhenTemporalMissing_ReturnsDefinitiveDocument()
+        {
+            var temporalRepo = new Mock<IImagenTemporalRepository>();
+            temporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(temporalRepo.Object);
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new Imagen
+            {
+                CodigoPersona = 1,
+                TipoImagen = "1",
+                BlobImagen = new byte[] { 4, 5, 6 }
+            });
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona
+            {
+                CodigoPersona = 1,
+                FechaVtoDocumentoPersona = DateTime.Today.AddDays(10)
+            });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
+
+            Assert.True(result.Success);
+            Assert.Equal(new byte[] { 4, 5, 6 }, result.Data);
         }
 
         [Fact]

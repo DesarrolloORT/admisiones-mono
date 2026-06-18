@@ -6,6 +6,7 @@ using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
+using AppLogic.Services.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -417,36 +418,32 @@ namespace AppLogic.Services.Inscripciones
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
+            var contextoResult = ObtenerContextoConfirmacion(uow, codigoPersona, request.IdOfertaSeleccionada, methodName);
+            if (!contextoResult.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_06", methodName, "No se encontro una encuesta inicial de admision vigente para la persona.", 404);
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                    contextoResult.ErrorCode,
+                    methodName,
+                    contextoResult.Message,
+                    contextoResult.HttpCode);
             }
 
-            if (!string.Equals(encuesta.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_07", methodName, "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.", 409);
-            }
-
-            if (encuesta.FechaVtoAdmision.HasValue && encuesta.FechaVtoAdmision.Value.Date < DateTime.Today)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_12", methodName, "La encuesta inicial de admision se encuentra vencida.", 409);
-            }
-
-            if (!encuesta.IdProducto.HasValue || encuesta.IdProducto.Value <= 0
-                || !encuesta.IdProceso.HasValue || encuesta.IdProceso.Value <= 0
-                || !encuesta.IdComienzo.HasValue || encuesta.IdComienzo.Value <= 0)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_08", methodName, "La encuesta inicial de admision no contiene producto, proceso o comienzo validos.", 400);
-            }
-
-            var validacionDocumentos = ValidarDocumentosIdentidad(uow, codigoPersona, methodName);
+            var contexto = contextoResult.Data!;
+            var validacionDocumentos = DocumentoIdentidadPersonaService.ValidarDocumentosIdentidadParaConfirmacion(
+                uow,
+                persona,
+                methodName);
             if (!validacionDocumentos.Success)
             {
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
             }
 
-            var aceptacion = AsegurarAceptacionReglamentoEstudiantil(uow, codigoPersona, encuesta, methodName);
+            var aceptacion = AsegurarAceptacionReglamentoEstudiantil(
+                uow,
+                codigoPersona,
+                contexto.IdProducto,
+                contexto.IdComienzo,
+                methodName);
             if (!aceptacion.Success)
             {
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
@@ -454,8 +451,8 @@ namespace AppLogic.Services.Inscripciones
 
             var apiRequest = new ConfirmarPreInscripcionApiRequest
             {
-                IdProducto = encuesta.IdProducto.Value,
-                IdProceso = encuesta.IdProceso.Value,
+                IdProducto = contexto.IdProducto,
+                IdProceso = contexto.IdProceso,
                 IdOfertaSeleccionada = request.IdOfertaSeleccionada,
                 TipoInscripcion = string.IsNullOrWhiteSpace(request.TipoInscripcion) ? "ONLINE" : request.TipoInscripcion.Trim(),
                 Turno = new DtoTurno { IdTurno = request.IdTurno }
@@ -473,17 +470,116 @@ namespace AppLogic.Services.Inscripciones
             }
 
             return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
-                MapearConfirmacionPreInscripcion(apiResult.Data, encuesta, request.IdTurno),
+                MapearConfirmacionPreInscripcion(apiResult.Data, contexto, request.IdTurno),
                 methodName);
+        }
+
+        private static OperationResult<ContextoConfirmacionPreInscripcion> ObtenerContextoConfirmacion(
+            IUnitOfWork uow,
+            long codigoPersona,
+            long idOfertaSeleccionada,
+            string methodName)
+        {
+            var encuestaAdmision = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
+            if (encuestaAdmision != null
+                && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
+            {
+                if (encuestaAdmision.FechaVtoAdmision.HasValue && encuestaAdmision.FechaVtoAdmision.Value.Date < DateTime.Today)
+                {
+                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                        "INS_CPI_12",
+                        methodName,
+                        "La encuesta inicial de admision se encuentra vencida.",
+                        409);
+                }
+
+                if (!TieneDatosConfirmacionValidos(encuestaAdmision.IdProducto, encuestaAdmision.IdProceso, encuestaAdmision.IdComienzo))
+                {
+                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                        "INS_CPI_08",
+                        methodName,
+                        "La encuesta inicial de admision no contiene producto, proceso o comienzo validos.",
+                        400);
+                }
+
+                return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
+                    new ContextoConfirmacionPreInscripcion(
+                        encuestaAdmision.IdProducto!.Value,
+                        encuestaAdmision.IdProceso!.Value,
+                        encuestaAdmision.IdComienzo!.Value,
+                        encuestaAdmision.Producto,
+                        encuestaAdmision.Comienzo),
+                    methodName);
+            }
+
+            var encuestaHistorica = uow.EncuestaInis.GetByPersona(codigoPersona);
+            if (encuestaHistorica == null)
+            {
+                var errorCode = encuestaAdmision == null ? "INS_CPI_06" : "INS_CPI_07";
+                var message = encuestaAdmision == null
+                    ? "No se encontro una encuesta inicial de admision vigente para la persona."
+                    : "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.";
+                var httpCode = encuestaAdmision == null ? 404 : 409;
+
+                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                    errorCode,
+                    methodName,
+                    message,
+                    httpCode);
+            }
+
+            var oferta = uow.Ofertas.GetByKeyWithRelated(idOfertaSeleccionada);
+            var idProducto = oferta?.Supraoferta?.Paquete?.IdProducto;
+            var idComienzo = oferta?.Supraoferta?.IdComienzo;
+            if (!TieneValorPositivo(idProducto) || !TieneValorPositivo(idComienzo))
+            {
+                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                    "INS_CPI_08",
+                    methodName,
+                    "La oferta seleccionada no contiene producto o comienzo validos.",
+                    400);
+            }
+
+            var proceso = uow.Interes.GetProcesoPorInteresActivo(codigoPersona, idProducto!.Value);
+            if (proceso == null || proceso.IdProceso <= 0)
+            {
+                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                    "INS_CPI_08",
+                    methodName,
+                    "No se pudo determinar un proceso valido para confirmar la preinscripcion.",
+                    400);
+            }
+
+            return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
+                new ContextoConfirmacionPreInscripcion(
+                    idProducto.Value,
+                    proceso.IdProceso,
+                    idComienzo!.Value,
+                    oferta!.Supraoferta.Paquete.Producto,
+                    oferta.Supraoferta.Comienzo),
+                methodName);
+        }
+
+        private static bool TieneDatosConfirmacionValidos(long? idProducto, long? idProceso, long? idComienzo)
+        {
+            return TieneValorPositivo(idProducto)
+                && TieneValorPositivo(idProceso)
+                && TieneValorPositivo(idComienzo);
+        }
+
+        private static bool TieneValorPositivo(long? valor)
+        {
+            return valor.HasValue && valor.Value > 0;
         }
 
         private OperationResult<DtoAceptacionReglamentoEstDevart> AsegurarAceptacionReglamentoEstudiantil(
             IUnitOfWork uow,
             long codigoPersona,
-            EncuestaIniAdmision encuesta,
+            long idProducto,
+            long idComienzo,
             string methodName)
         {
-            var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, encuesta.IdProducto!.Value, encuesta.IdComienzo!.Value);
+            var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, idProducto, idComienzo);
             if (existente != null)
             {
                 return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(existente.ToDto(), methodName);
@@ -493,8 +589,8 @@ namespace AppLogic.Services.Inscripciones
             {
                 IdAceptacionReglamentoEst = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST),
                 CodigoPersona = codigoPersona,
-                IdProducto = encuesta.IdProducto.Value,
-                IdComienzo = encuesta.IdComienzo.Value,
+                IdProducto = idProducto,
+                IdComienzo = idComienzo,
                 IdSistema = CommonConstants.IdSistemaAdmisiones
             };
 
@@ -514,48 +610,9 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
         }
 
-        private static OperationResult<bool> ValidarDocumentosIdentidad(IUnitOfWork uow, long codigoPersona, string methodName)
-        {
-            var frente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, PersonaConstants.DocumentoPersona.Frente);
-            var validacionFrente = ValidarDocumentoIdentidad(frente, "frente", methodName);
-            if (!validacionFrente.Success)
-            {
-                return validacionFrente;
-            }
-
-            var dorso = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, PersonaConstants.DocumentoPersona.Dorso);
-            var validacionDorso = ValidarDocumentoIdentidad(dorso, "dorso", methodName);
-            if (!validacionDorso.Success)
-            {
-                return validacionDorso;
-            }
-
-            return OperationResult<bool>.Ok(true, methodName);
-        }
-
-        private static OperationResult<bool> ValidarDocumentoIdentidad(ImagenTemporal? documento, string lado, string methodName)
-        {
-            if (documento == null)
-            {
-                return OperationResult<bool>.IsFailed("INS_CPI_09", methodName, $"Debe subir el documento de identidad ({lado}).", 404);
-            }
-
-            if (documento.FechaVtoDocumentoPersona.HasValue && documento.FechaVtoDocumentoPersona.Value.Date < DateTime.Today)
-            {
-                return OperationResult<bool>.IsFailed("INS_CPI_10", methodName, "El documento de identidad se encuentra vencido.", 409);
-            }
-
-            if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
-            {
-                return OperationResult<bool>.IsFailed("INS_CPI_11", methodName, $"El documento de identidad ({lado}) no contiene imagen.", 404);
-            }
-
-            return OperationResult<bool>.Ok(true, methodName);
-        }
-
         private static ConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
             ConfirmarPreInscripcionApiResponse source,
-            EncuestaIniAdmision encuesta,
+            ContextoConfirmacionPreInscripcion contexto,
             long idTurno)
         {
             return new ConfirmarPreInscripcionResponse
@@ -566,15 +623,22 @@ namespace AppLogic.Services.Inscripciones
                 FechaVencimientoPago = source.FechaVencimientoPago,
                 Resumen = new ResumenInscripcionDto
                 {
-                    IdProducto = source.Resumen?.IdProducto ?? encuesta.IdProducto ?? 0,
-                    Carrera = source.Resumen?.Carrera ?? encuesta.Producto?.NombreExtensoProducto ?? encuesta.Producto?.NombreProducto,
-                    IdComienzo = source.Resumen?.IdComienzo ?? encuesta.IdComienzo ?? 0,
-                    Comienzo = source.Resumen?.Comienzo ?? encuesta.Comienzo?.NombreComienzo,
+                    IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,
+                    Carrera = source.Resumen?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
+                    IdComienzo = source.Resumen?.IdComienzo ?? contexto.IdComienzo,
+                    Comienzo = source.Resumen?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
                     IdTurno = source.Resumen?.IdTurno ?? idTurno,
                     Turno = source.Resumen?.Turno
                 }
             };
         }
+
+        private sealed record ContextoConfirmacionPreInscripcion(
+            long IdProducto,
+            long IdProceso,
+            long IdComienzo,
+            Producto? Producto,
+            Comienzo? Comienzo);
 
         private static EncuestaIniAdmision? ObtenerEncuestaParaGuardar(
             IUnitOfWork uow,

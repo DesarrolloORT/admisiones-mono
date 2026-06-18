@@ -12,5 +12,15 @@ namespace DataAccess.DevartRepositories
 {
     public partial class OfertaRepository
     {
+        public virtual BusinessLogic.Entities.Oferta GetByKeyWithRelated(long idOferta)
+        {
+            return objectSet
+                .Include(o => o.Supraoferta)
+                    .ThenInclude(s => s.Paquete)
+                        .ThenInclude(p => p.Producto)
+                .Include(o => o.Supraoferta)
+                    .ThenInclude(s => s.Comienzo)
+                .FirstOrDefault(o => o.IdOferta == idOferta);
+        }
     }
 }

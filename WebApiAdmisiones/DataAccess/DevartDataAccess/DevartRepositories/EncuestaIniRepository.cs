@@ -13,6 +13,14 @@ namespace DataAccess.DevartRepositories
 {
     public partial class EncuestaIniRepository
     {
+        public virtual BusinessLogic.Entities.EncuestaIni GetByPersona(long codigoPersona)
+        {
+            return objectSet
+                .Where(e => e.CodigoPersona == codigoPersona)
+                .OrderByDescending(e => e.FechaIngreso)
+                .FirstOrDefault();
+        }
+
         public virtual bool ExistePorDocumento(string tipoDocumento, string documento)
         {
             var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;

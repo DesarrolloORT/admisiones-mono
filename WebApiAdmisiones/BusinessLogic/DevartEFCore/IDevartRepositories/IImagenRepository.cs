@@ -9,5 +9,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IImagenRepository
     {
         Imagen? GetFotoByPersona(long codigoPersona);
+        Imagen? GetDocumentoByPersonaAndTipo(long codigoPersona, int tipo);
     }
 }

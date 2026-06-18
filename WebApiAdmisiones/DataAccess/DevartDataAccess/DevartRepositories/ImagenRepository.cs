@@ -15,5 +15,12 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault(i => i.CodigoPersona == codigoPersona
                                   && i.TipoImagen == "3");
         }
+
+        public Imagen? GetDocumentoByPersonaAndTipo(long codigoPersona, int tipo)
+        {
+            return Context.Set<Imagen>()
+                .FirstOrDefault(i => i.CodigoPersona == codigoPersona
+                                  && i.TipoImagen == tipo.ToString());
+        }
     }
 }

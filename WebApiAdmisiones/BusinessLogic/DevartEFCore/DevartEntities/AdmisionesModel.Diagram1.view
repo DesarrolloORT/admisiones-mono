@@ -38102,7 +38102,7 @@
                     <Children />
                     <Size>
                       <Width>144 px</Width>
-                      <Height>17.9999999999998 px</Height>
+                      <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
                       <Path>46af0fe8-4e50-4b97-912f-e7d923bead8b</Path>
@@ -38117,7 +38117,7 @@
                     <Children />
                     <Location>
                       <X>0 px</X>
-                      <Y>17.9999999999998 px</Y>
+                      <Y>18 px</Y>
                     </Location>
                     <Size>
                       <Width>144 px</Width>
@@ -38135,11 +38135,11 @@
                 </Location>
                 <Size>
                   <Width>145 px</Width>
-                  <Height>54.9999999999998 px</Height>
+                  <Height>55 px</Height>
                 </Size>
                 <MaxSize>
                   <Width>0 px</Width>
-                  <Height>54.9999999999998 px</Height>
+                  <Height>55 px</Height>
                 </MaxSize>
                 <Hidden>false</Hidden>
               </Model>
@@ -38293,10 +38293,10 @@
         <GridSize>8 px</GridSize>
         <ViewPort>
           <ScaleMode>Free</ScaleMode>
-          <Scale>0.8</Scale>
+          <Scale>0.520329</Scale>
           <Location>
-            <X>2244.99994779006 px</X>
-            <Y>1357.49997155741 px</Y>
+            <X>344.220703125 px</X>
+            <Y>1311.40625 px</Y>
           </Location>
         </ViewPort>
         <Oid xsi:type="SchemaModelOID">

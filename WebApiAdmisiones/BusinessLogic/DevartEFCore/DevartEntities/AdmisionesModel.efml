@@ -4772,11 +4772,11 @@
       </end2>
     </association>
     <association name="Comienzo_EncuestaIniAdmision" cardinality="OneToMany" p1:Guid="3076f0f3-cd24-4ca3-8df2-aefbe25ef16c">
-      <end1 multiplicity="One" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="9c99afe3-024e-4f28-961c-a46ce00ae40e">
+      <end1 multiplicity="ZeroOrOne" name="Comienzo" class="EncuestaIniAdmision" relation-class="Comienzo" constrained="True" lazy="False" p1:Guid="9c99afe3-024e-4f28-961c-a46ce00ae40e">
         <property name="IdComienzo" />
       </end1>
       <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Comienzo" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="b4fca5d4-d812-4376-af68-d785a9b97218">
-        <property name="IdEncuestaIni" />
+        <property name="IdComienzo" />
       </end2>
     </association>
     <association name="Persona_EmpresaConsideradaAdmision" cardinality="OneToMany" p1:Guid="00c1c98e-399b-4802-ac3e-de24ddfacd80">

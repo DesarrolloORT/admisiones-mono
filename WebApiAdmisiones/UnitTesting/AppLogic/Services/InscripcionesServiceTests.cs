@@ -37,6 +37,11 @@ namespace UnitTesting.AppLogic.Services
             _generalServiceMock
                 .Setup(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()))
                 .Returns(global::Utilities.OperationResult<DateTime>.Ok(FechaBase.AddDays(5), nameof(IGeneralService.CalcularFechaVencimientoAdmisiones)));
+            var encuestaIniRepo = new Mock<IEncuestaIniRepository>();
+            encuestaIniRepo
+                .Setup(r => r.GetByPersona(It.IsAny<long>()))
+                .Returns((EncuestaIni)null);
+            _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
             var apiClient = new InscripcionesyPagosApiClient(
                 new HttpClient { BaseAddress = new Uri("https://internal.test/") },
                 NullLogger<InscripcionesyPagosApiClient>.Instance);
@@ -96,6 +101,11 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
                 .Returns((ImagenTemporal)null);
             _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenRepo.Object);
+            var imagenDefinitivaRepo = new Mock<IImagenRepository>();
+            imagenDefinitivaRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, It.IsAny<int>()))
+                .Returns((Imagen)null);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenDefinitivaRepo.Object);
 
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
@@ -163,6 +173,138 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(999, aceptacionAgregada!.IdAceptacionReglamentoEst);
             Assert.Contains("\"tipoInscripcion\":\"ONLINE\"", Assert.Single(handler.Requests).Body);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WithDefinitiveDocuments_Confirms()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "confirmada": true,
+                  "idInscripcion": 78
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosDefinitivosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst
+                {
+                    IdAceptacionReglamentoEst = 999,
+                    CodigoPersona = 123,
+                    IdProducto = 20,
+                    IdComienzo = 40
+                });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(78, result.Data.IdInscripcion);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WithEncuestaIniHistorica_ConfirmsWithoutDefinitiveEncuestaAdmision()
+        {
+            AceptacionReglamentoEst? aceptacionAgregada = null;
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "success": true,
+                  "seniaInscripcion": 1500
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, new EncuestaIniAdmision
+            {
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "TEMPORAL"
+            });
+            SetupEncuestaIni(123, new EncuestaIni
+            {
+                CodigoPersona = 123,
+                IdProducto = 99,
+                IdComienzo = 88
+            });
+            SetupDocumentosValidos(123);
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo
+                .Setup(r => r.GetByKeyWithRelated(10))
+                .Returns(new Oferta
+                {
+                    IdOferta = 10,
+                    Supraoferta = new Supraoferta
+                    {
+                        IdComienzo = 40,
+                        Comienzo = new Comienzo { IdComienzo = 40, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete
+                        {
+                            IdProducto = 20,
+                            Producto = new Producto
+                            {
+                                IdProducto = 20,
+                                NombreProducto = "ATI",
+                                NombreExtensoProducto = "Analista en TI"
+                            }
+                        }
+                    }
+                });
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
+            intereRepo
+                .Setup(r => r.GetProcesoPorInteresActivo(123, 20))
+                .Returns(new Proceso { IdProceso = 30 });
+            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
+
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
+                .Returns(999);
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.Add(It.IsAny<AceptacionReglamentoEst>()))
+                .Callback<AceptacionReglamentoEst>(a => aceptacionAgregada = a);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                IdTurno = 1
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(20, result.Data.Resumen.IdProducto);
+            Assert.Equal(40, result.Data.Resumen.IdComienzo);
+            Assert.Equal("Analista en TI", result.Data.Resumen.Carrera);
+            Assert.Equal("Marzo 2026", result.Data.Resumen.Comienzo);
+            Assert.NotNull(aceptacionAgregada);
+            Assert.Equal(20, aceptacionAgregada!.IdProducto);
+            Assert.Equal(40, aceptacionAgregada.IdComienzo);
+
+            var body = Assert.Single(handler.Requests).Body;
+            Assert.Contains("\"idProducto\":20", body);
+            Assert.Contains("\"idProceso\":30", body);
+            Assert.Contains("\"idOfertaSeleccionada\":10", body);
         }
 
         [Fact]
@@ -691,7 +833,11 @@ namespace UnitTesting.AppLogic.Services
         private void SetupPersona(long codigoPersona)
         {
             var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(codigoPersona)).Returns(new Persona { CodigoPersona = codigoPersona });
+            personaRepo.Setup(r => r.GetByKey(codigoPersona)).Returns(new Persona
+            {
+                CodigoPersona = codigoPersona,
+                FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
+            });
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
         }
 
@@ -700,6 +846,13 @@ namespace UnitTesting.AppLogic.Services
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
             encuestaRepo.Setup(r => r.GetByPersona(codigoPersona)).Returns(encuesta);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+        }
+
+        private void SetupEncuestaIni(long codigoPersona, EncuestaIni encuesta)
+        {
+            var encuestaRepo = new Mock<IEncuestaIniRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(codigoPersona)).Returns(encuesta);
+            _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaRepo.Object);
         }
 
         private void SetupDocumentosValidos(long codigoPersona)
@@ -724,6 +877,34 @@ namespace UnitTesting.AppLogic.Services
                     FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
                 });
             _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenRepo.Object);
+        }
+
+        private void SetupDocumentosDefinitivosValidos(long codigoPersona)
+        {
+            var temporalRepo = new Mock<IImagenTemporalRepository>();
+            temporalRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, It.IsAny<int>()))
+                .Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(temporalRepo.Object);
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, 1))
+                .Returns(new Imagen
+                {
+                    CodigoPersona = codigoPersona,
+                    TipoImagen = "1",
+                    BlobImagen = [1]
+                });
+            imagenRepo
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(codigoPersona, 2))
+                .Returns(new Imagen
+                {
+                    CodigoPersona = codigoPersona,
+                    TipoImagen = "2",
+                    BlobImagen = [1]
+                });
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
         }
 
         private static EncuestaIniAdmision EncuestaDefinitiva(long codigoPersona)
