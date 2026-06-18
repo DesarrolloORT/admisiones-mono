@@ -1,7 +1,8 @@
-import { ORT_PASSWORD_VALIDATORS } from 'password-validation';
+/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
+import { OrtPasswordErrorKey } from 'password-validation';
 
-describe('ORT_PASSWORD_VALIDATORS', () => {
-  it('should be importable', () => {
-    expect(ORT_PASSWORD_VALIDATORS).toBeDefined();
+describe('OrtPasswordErrorKey', () => {
+  it('should have tests', () => {
+    throw new Error('Test suite not implemented.');
   });
 });

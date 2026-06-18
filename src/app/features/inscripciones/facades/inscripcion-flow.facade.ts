@@ -1,5 +1,5 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { OrtErrorItem, OrtFileUploaderChange } from '@desarrolloort/components';
@@ -64,6 +64,7 @@ import {
   YES_NO_OPTIONS,
 } from '../models/inscripcion-static-data';
 import { InscripcionDraft } from '../services/inscripcion-draft';
+import { Inscripciones } from '../services/inscripciones';
 
 interface SectionConfig {
   label: string;
@@ -72,9 +73,38 @@ interface SectionConfig {
   errorFields: FormErrorField[];
 }
 
+interface ProposalOptionConfig extends OpcionInscripcion {
+  levelIds: readonly number[];
+}
+
+const PROPOSAL_OPTIONS: readonly ProposalOptionConfig[] = [
+  {
+    value: '1',
+    label: 'Carrera universitaria',
+    icon: 'school',
+    hint: 'Formación de grado con enfoque práctico y salida laboral',
+    levelIds: [1],
+  },
+  {
+    value: '2',
+    label: 'Tecnicatura',
+    icon: 'list_alt',
+    hint: 'Carreras cortas, prácticas y orientadas al mercado',
+    levelIds: [2],
+  },
+  {
+    value: '3',
+    label: 'Actualización profesional',
+    icon: 'how_to_reg',
+    hint: 'Cursos cortos para actualizar habilidades',
+    levelIds: [3, 4],
+  },
+];
+
 export class InscripcionFlowFacade {
   private readonly catalogs = inject(Catalogs);
   private readonly draftStorage = inject(InscripcionDraft);
+  private readonly inscripciones = inject(Inscripciones);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -257,14 +287,12 @@ export class InscripcionFlowFacade {
   };
 
   private readonly careers = signal<readonly Career[]>([]);
-  private readonly proposalTypeValue = toSignal(
-    this.academicForm.controls.tipoPropuesta.valueChanges,
-    { initialValue: this.academicForm.controls.tipoPropuesta.value }
-  );
+  private readonly proposalTypeValue = signal(this.academicForm.controls.tipoPropuesta.value);
   private readonly completedSections = signal<readonly SeccionEncuestaId[]>([]);
   private readonly submittedSections = signal<readonly SeccionEncuestaId[]>([]);
   private readonly submittedAcademic = signal(false);
   private readonly submittedPayment = signal(false);
+  private readonly productInterestError = signal<string | null>(null);
 
   public readonly scenario = parseEscenario(this.route.snapshot.queryParamMap.get('escenario'));
   public readonly forcedResult = parseResultadoForzado(
@@ -288,9 +316,11 @@ export class InscripcionFlowFacade {
   public readonly previousCareerOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly educationLevelOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly supportOptions = signal<readonly OpcionInscripcion[]>([]);
+  public readonly careerDecisionOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly knowledgeOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly catalogError = signal<string | null>(null);
+  public readonly registeringProductInterest = signal(false);
 
   public readonly visibleSections = computed(() => getSeccionesVisibles(this.scenario));
   public readonly surveyState = computed<EstadoEncuestaInicial>(() => {
@@ -309,25 +339,17 @@ export class InscripcionFlowFacade {
     }))
   );
   public readonly proposalOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const levels = new Map<number, string>();
+    const availableLevelIds = new Set(this.careers().map(career => career.idNivelProducto));
 
-    for (const career of this.careers()) {
-      if (career.idNivelProducto && career.nombreNivelProducto) {
-        levels.set(career.idNivelProducto, career.nombreNivelProducto);
-      }
-    }
-
-    return Array.from(levels, ([value, label]) => ({
-      value: value.toString(),
-      label,
-      icon: this.getProposalIcon(label),
-    }));
+    return PROPOSAL_OPTIONS.filter(option =>
+      option.levelIds.some(levelId => availableLevelIds.has(levelId))
+    ).map(({ value, label, icon, hint }) => ({ value, label, icon, hint }));
   });
   public readonly careerOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const proposalType = this.proposalTypeValue();
+    const proposalLevelIds = this.getProposalLevelIds(this.proposalTypeValue());
 
     return this.careers()
-      .filter(career => !proposalType || career.idNivelProducto.toString() === proposalType)
+      .filter(career => proposalLevelIds.includes(career.idNivelProducto))
       .map(career => ({
         value: career.idProducto.toString(),
         label: career.nombreProducto,
@@ -419,20 +441,23 @@ export class InscripcionFlowFacade {
       ? RESERVATION_INSTRUCTIONS[method]
       : RESERVATION_INSTRUCTIONS.abitab;
   });
-  public readonly academicErrors = computed<OrtErrorItem[]>(() =>
-    this.submittedAcademic()
-      ? buildFormErrorSummary(
-          this.academicForm,
-          [
-            { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
-            { controlName: 'carrera', fieldId: '', label: 'Carrera' },
-            { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
-            { controlName: 'turno', fieldId: '', label: 'Turno' },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
+  public readonly academicErrors = computed<OrtErrorItem[]>(() => {
+    if (!this.submittedAcademic()) return [];
+
+    const formErrors = buildFormErrorSummary(
+      this.academicForm,
+      [
+        { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
+        { controlName: 'carrera', fieldId: '', label: 'Carrera' },
+        { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
+        { controlName: 'turno', fieldId: '', label: 'Turno' },
+      ],
+      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    );
+    const productInterestError = this.productInterestError();
+
+    return productInterestError ? [...formErrors, { message: productInterestError }] : formErrors;
+  });
   public readonly activeSectionErrors = computed<OrtErrorItem[]>(() => {
     const section = this.activeSection();
     if (!this.submittedSections().includes(section)) return [];
@@ -517,6 +542,18 @@ export class InscripcionFlowFacade {
     if (!this.visibleSections().includes(section)) return;
     this.activeSection.set(section);
     this.saveDraft();
+  }
+
+  public canSelectCareer(): boolean {
+    return this.getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0;
+  }
+
+  public canSelectStart(): boolean {
+    return !!this.academicForm.controls.carrera.value;
+  }
+
+  public canSelectTurno(): boolean {
+    return !!this.academicForm.controls.comienzo.value;
   }
 
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
@@ -632,12 +669,47 @@ export class InscripcionFlowFacade {
   }
 
   private submitAcademic(): void {
+    if (this.registeringProductInterest()) return;
+
     this.submittedAcademic.set(true);
+    this.productInterestError.set(null);
     if (this.academicForm.invalid) {
       this.academicForm.markAllAsTouched();
       return;
     }
 
+    const payload = this.buildProductInterestPayload();
+    if (!payload) {
+      this.productInterestError.set('Seleccioná una propuesta válida para continuar.');
+      return;
+    }
+
+    this.registeringProductInterest.set(true);
+    this.inscripciones
+      .registerProductInterest(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: registered => {
+          this.registeringProductInterest.set(false);
+          if (!registered) {
+            this.productInterestError.set(
+              'No se pudo registrar el interés por la propuesta seleccionada.'
+            );
+            return;
+          }
+
+          this.advanceToSurvey();
+        },
+        error: () => {
+          this.registeringProductInterest.set(false);
+          this.productInterestError.set(
+            'No se pudo registrar el interés por la propuesta seleccionada.'
+          );
+        },
+      });
+  }
+
+  private advanceToSurvey(): void {
     this.screen.set('encuesta');
     this.activeSection.set(
       findFirstIncompleteSection(this.visibleSections(), this.completedSections())
@@ -705,6 +777,7 @@ export class InscripcionFlowFacade {
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        this.productInterestError.set(null);
         for (const section of this.visibleSections()) {
           this.invalidateSectionIfNeeded(section);
         }
@@ -726,6 +799,7 @@ export class InscripcionFlowFacade {
 
   private applyDraft(draft: BorradorInscripcion): void {
     this.academicForm.patchValue(draft.propuesta, { emitEvent: false });
+    this.proposalTypeValue.set(draft.propuesta.tipoPropuesta);
     this.educationForm.patchValue(draft.encuesta.educacion, { emitEvent: false });
     this.academicDecisionForm.patchValue(draft.encuesta.decisionAcademica, {
       emitEvent: false,
@@ -932,7 +1006,8 @@ export class InscripcionFlowFacade {
   private resetAcademicSelectionOnProposalChange(): void {
     this.academicForm.controls.tipoPropuesta.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
+      .subscribe(value => {
+        this.proposalTypeValue.set(value);
         this.academicForm.patchValue(
           { carrera: '', comienzo: '', turno: '' },
           { emitEvent: false }
@@ -1008,8 +1083,23 @@ export class InscripcionFlowFacade {
     this.previousCareerOptions.set(this.toCatalogOptions(catalogs.estadoEducacionSuperior));
     this.educationLevelOptions.set(this.toCatalogOptions(catalogs.formacionTutores));
     this.supportOptions.set(this.toCatalogOptions(catalogs.compartidoCon));
+    this.careerDecisionOptions.set(this.toCatalogOptions(catalogs.decisionCarrera));
     this.motivesOptions.set(this.toCatalogOptions(catalogs.decisionUniversidad));
     this.knowledgeOptions.set(this.toCatalogOptions(catalogs.nivelConocimiento));
+  }
+
+  private buildProductInterestPayload(): {
+    idOferta: number;
+    idProcesoSeleccionado: number;
+    idProducto: number;
+  } | null {
+    const idProducto = this.toNullableNumber(this.academicForm.controls.carrera.value);
+    const idProcesoSeleccionado = this.toNullableNumber(this.academicForm.controls.comienzo.value);
+    const idOferta = this.toNullableNumber(this.academicForm.controls.turno.value);
+
+    return idProducto === null || idProcesoSeleccionado === null || idOferta === null
+      ? null
+      : { idOferta, idProcesoSeleccionado, idProducto };
   }
 
   private toCatalogOptions(items: CatalogItem[]): OpcionInscripcion[] {
@@ -1035,15 +1125,8 @@ export class InscripcionFlowFacade {
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  private getProposalIcon(label: string): string {
-    const normalized = label
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-
-    if (normalized.includes('tecn')) return 'list_alt';
-    if (normalized.includes('actualizacion')) return 'how_to_reg';
-    return 'school';
+  private getProposalLevelIds(value: string): readonly number[] {
+    return PROPOSAL_OPTIONS.find(option => option.value === value)?.levelIds ?? [];
   }
 
   private getOptionLabel(

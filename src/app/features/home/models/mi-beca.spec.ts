@@ -1,9 +1,8 @@
-import type { BecaEstado } from 'mi-beca';
+/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
+import { BecaEstado } from 'mi-beca';
 
 describe('BecaEstado', () => {
-  it('should be importable as a type', () => {
-    const value: BecaEstado | undefined = undefined;
-
-    expect(value).toBeUndefined();
+  it('should have tests', () => {
+    throw new Error('Test suite not implemented.');
   });
 });

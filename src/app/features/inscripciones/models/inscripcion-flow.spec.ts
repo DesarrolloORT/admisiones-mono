@@ -1,7 +1,8 @@
-import { SECCIONES_ENCUESTA } from 'inscripcion-flow';
+/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
+import { EscenarioInscripcion } from 'inscripcion-flow';
 
-describe('SECCIONES_ENCUESTA', () => {
-  it('should be importable', () => {
-    expect(SECCIONES_ENCUESTA).toBeDefined();
+describe('EscenarioInscripcion', () => {
+  it('should have tests', () => {
+    throw new Error('Test suite not implemented.');
   });
 });

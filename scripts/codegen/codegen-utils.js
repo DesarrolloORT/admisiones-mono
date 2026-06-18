@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const ENV_DIR = resolve(ROOT, 'src/environments');
+export const DEFAULT_ENVIRONMENT_FILE = 'generated-environment.ts';
 
 export function toProjectPath(path) {
   return relative(ROOT, resolve(ROOT, path)).replaceAll('\\', '/');

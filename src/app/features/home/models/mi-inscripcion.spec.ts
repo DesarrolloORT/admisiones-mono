@@ -1,9 +1,8 @@
-import type { InscripcionEstado } from 'mi-inscripcion';
+/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
+import { InscripcionEstado } from 'mi-inscripcion';
 
 describe('InscripcionEstado', () => {
-  it('should be importable as a type', () => {
-    const value: InscripcionEstado | undefined = undefined;
-
-    expect(value).toBeUndefined();
+  it('should have tests', () => {
+    throw new Error('Test suite not implemented.');
   });
 });

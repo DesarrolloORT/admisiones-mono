@@ -3,11 +3,17 @@ import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from '
 import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-import { downloadJson, resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
+import {
+  DEFAULT_ENVIRONMENT_FILE,
+  downloadJson,
+  resolveSwaggerSource,
+  ROOT,
+  toProjectPath,
+} from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
-  env: 'environment.generated.ts',
+  env: DEFAULT_ENVIRONMENT_FILE,
   output: 'src/app/shared/api/generated/models',
 };
 

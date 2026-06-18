@@ -63,7 +63,7 @@ export class InscripcionPage {
   }
 
   public async fillAcademicDecision(): Promise<void> {
-    await this.chooseRadio('anioDecisionCarrera', '1º EMS (4º año)');
+    await this.chooseRadio('anioDecisionCarrera', 'Durante secundaria');
     await this.select('apoyoDecision', 'Familia');
     await this.chooseRadio('anioDecisionOrt', '2º EMS (5º año)');
     await this.chooseRadio('otrasUniversidades', 'Sí');

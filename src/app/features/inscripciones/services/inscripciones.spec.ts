@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
 import { TestBed } from '@angular/core/testing';
-import { CAPTCHA_HEADER } from 'captcha-token';
+import { Inscripciones } from 'inscripciones';
 
-describe('CAPTCHA_HEADER', () => {
-  let service: CAPTCHA_HEADER;
+describe('Inscripciones', () => {
+  let service: Inscripciones;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [CAPTCHA_HEADER],
+      providers: [Inscripciones],
     });
-    service = TestBed.inject(CAPTCHA_HEADER);
+    service = TestBed.inject(Inscripciones);
   });
 
   it('should have tests', () => {
