@@ -75,6 +75,15 @@ describe('SetPassword', () => {
     expect(component['tokenError']()).toBeNull();
   });
 
+  it('should render accessible visibility toggles for both password fields', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('.password-visibility-toggle');
+
+    expect(buttons).toHaveLength(2);
+    expect([...buttons].every(button => button.getAttribute('aria-pressed') === 'false')).toBe(
+      true
+    );
+  });
+
   it('should complete password creation, hydrate the session and navigate home', () => {
     setup();
     const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);

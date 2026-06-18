@@ -48,6 +48,15 @@ describe('ChangePassword', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/inicio']);
   });
 
+  it('should render accessible visibility toggles for all password fields', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('.password-visibility-toggle');
+
+    expect(buttons).toHaveLength(3);
+    expect([...buttons].every(button => button.getAttribute('aria-pressed') === 'false')).toBe(
+      true
+    );
+  });
+
   it('should not submit invalid forms', () => {
     component['form'].setValue({
       currentPassword: '',

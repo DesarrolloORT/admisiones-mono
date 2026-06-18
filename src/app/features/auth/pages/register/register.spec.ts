@@ -121,6 +121,8 @@ describe('Register', () => {
       documentNumber: '11111111',
     });
     expect(facade.step()).toBe('personal');
+    expect(facade.stepViewModel().title).toBe('Verificación de identidad');
+    expect(facade.stepViewModel().stepTitle).toBe('Verificación de identidad');
   });
 
   it('should preload returned document fields', async () => {

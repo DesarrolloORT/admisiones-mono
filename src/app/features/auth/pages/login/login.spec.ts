@@ -58,6 +58,19 @@ describe('Login', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should expose the password visibility toggle as a pressed button', async () => {
+    const button = fixture.nativeElement.querySelector(
+      '.password-visibility-toggle'
+    ) as HTMLButtonElement;
+
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+
+    button.click();
+    await fixture.whenStable();
+
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('should submit document credentials and redirect to home', () => {
     component['form'].setValue({
       documentType: 'CI',

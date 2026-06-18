@@ -78,9 +78,9 @@ export class ChangePassword {
   private readonly errorState = signal<string | null>(null);
   protected readonly error = this.errorState.asReadonly();
 
-  private readonly currentPasswordVisible = signal(false);
-  private readonly passwordVisible = signal(false);
-  private readonly confirmPasswordVisible = signal(false);
+  protected readonly currentPasswordVisible = signal(false);
+  protected readonly passwordVisible = signal(false);
+  protected readonly confirmPasswordVisible = signal(false);
 
   protected readonly currentPasswordInputType = computed(() =>
     this.currentPasswordVisible() ? 'text' : 'password'

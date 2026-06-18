@@ -109,8 +109,8 @@ export class SetPassword {
   private readonly tokenErrorState = signal<string | null>(null);
   protected readonly tokenError = this.tokenErrorState.asReadonly();
 
-  private readonly passwordVisible = signal(false);
-  private readonly confirmPasswordVisible = signal(false);
+  protected readonly passwordVisible = signal(false);
+  protected readonly confirmPasswordVisible = signal(false);
 
   protected readonly passwordInputType = computed(() =>
     this.passwordVisible() ? 'text' : 'password'
