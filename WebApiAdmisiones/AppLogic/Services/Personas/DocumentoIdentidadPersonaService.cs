@@ -10,6 +10,8 @@ namespace AppLogic.Services.Personas
 {
     public static class DocumentoIdentidadPersonaService
     {
+        private const string TipoImagenDocumentoIdentidadPersistido = "1";
+
         public static bool EsTipoDocumentoValido(int tipo)
         {
             return tipo == PersonaConstants.DocumentoPersona.Frente
@@ -109,7 +111,7 @@ namespace AppLogic.Services.Personas
                         codigoPersona,
                         tipo,
                         ResolverExtensionPersistida(fileName, ".pdf")),
-                    TipoImagen = tipo.ToString(),
+                    TipoImagen = TipoImagenDocumentoIdentidadPersistido,
                     BlobImagen = fileContent,
                     FechaVtoDocumentoPersona = fecha
                 },
@@ -138,7 +140,7 @@ namespace AppLogic.Services.Personas
                 existente.CodigoPersona ?? 0,
                 tipo,
                 ResolverExtensionPersistida(fileName, ".pdf"));
-            existente.TipoImagen = tipo.ToString();
+            existente.TipoImagen = TipoImagenDocumentoIdentidadPersistido;
             existente.BlobImagen = fileContent;
             existente.FechaVtoDocumentoPersona = fecha;
 
@@ -203,7 +205,7 @@ namespace AppLogic.Services.Personas
                         persona.CodigoPersona,
                         PersonaConstants.DocumentoPersona.Frente,
                         ResolverExtensionPersistida(documento.NombreArchivo, ".pdf")),
-                    TipoImagen = PersonaConstants.DocumentoPersona.Frente.ToString(),
+                    TipoImagen = TipoImagenDocumentoIdentidadPersistido,
                     BlobImagen = documento.Archivo,
                     FechaVtoDocumentoPersona = fechaVencimiento
                 });
@@ -214,7 +216,7 @@ namespace AppLogic.Services.Personas
                     persona.CodigoPersona,
                     PersonaConstants.DocumentoPersona.Frente,
                     ResolverExtensionPersistida(documento.NombreArchivo, ".pdf"));
-                documentoExistente.TipoImagen = PersonaConstants.DocumentoPersona.Frente.ToString();
+                documentoExistente.TipoImagen = TipoImagenDocumentoIdentidadPersistido;
                 documentoExistente.BlobImagen = documento.Archivo;
                 documentoExistente.FechaVtoDocumentoPersona = fechaVencimiento;
                 uow.ImagenTemporals.Update(documentoExistente);

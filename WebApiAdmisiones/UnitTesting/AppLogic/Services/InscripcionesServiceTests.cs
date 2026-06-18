@@ -872,7 +872,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new ImagenTemporal
                 {
                     CodigoPersona = codigoPersona,
-                    TipoImagen = "2",
+                    TipoImagen = "1",
                     BlobImagen = [1],
                     FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
                 });
@@ -901,7 +901,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Imagen
                 {
                     CodigoPersona = codigoPersona,
-                    TipoImagen = "2",
+                    TipoImagen = "1",
                     BlobImagen = [1]
                 });
             _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);

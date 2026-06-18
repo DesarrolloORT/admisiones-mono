@@ -154,9 +154,14 @@ namespace UnitTesting.AppLogic.ApiClients
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
-            Assert.Contains("\"idOfertaSeleccionada\":40", request.Body);
+            Assert.Contains("tipoInscripcion=WEB", request.RequestUri);
+            Assert.Contains("idProducto=20", request.RequestUri);
+            Assert.Contains("idProceso=30", request.RequestUri);
+            Assert.Contains("idOfertaSeleccionada=40", request.RequestUri);
+            Assert.DoesNotContain("\"idOfertaSeleccionada\":40", request.Body);
+            Assert.DoesNotContain("\"idProducto\":20", request.Body);
             Assert.Contains("\"idTurno\":7", request.Body);
-            Assert.Contains("\"tipoInscripcion\":\"WEB\"", request.Body);
+            Assert.DoesNotContain("\"tipoInscripcion\":\"WEB\"", request.Body);
         }
 
         private static InscripcionesyPagosApiClient CrearClient(HttpMessageHandler handler)

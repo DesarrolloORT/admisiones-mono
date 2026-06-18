@@ -1106,6 +1106,36 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirDocumentoPersona_Dorso_PersisteTipoImagenDocumentoLegacy()
+        {
+            var fechaVencimiento = new DateTime(2030, 12, 31);
+            var persona = new Persona { CodigoPersona = 1 };
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            imagenTemporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 2)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL)).Returns(456);
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _personaService.SubirDocumentoPersona(1, 2, fechaVencimiento, pdfContent, "cedula.pdf");
+
+            Assert.True(result.Success);
+            imagenTemporalRepo.Verify(r => r.Add(It.Is<ImagenTemporal>(i =>
+                i.CodigoPersona == 1 &&
+                i.NombreImagen == "1_2.pdf" &&
+                i.TipoImagen == "1" &&
+                i.FechaVtoDocumentoPersona == fechaVencimiento &&
+                i.BlobImagen == pdfContent)), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
         public void SubirDocumentoPersona_Existente_ModificaDocumento()
         {
             var fechaVencimiento = new DateTime(2031, 1, 15);

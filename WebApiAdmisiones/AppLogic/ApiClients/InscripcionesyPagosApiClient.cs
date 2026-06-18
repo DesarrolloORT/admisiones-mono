@@ -211,7 +211,13 @@ namespace AppLogic.ApiClients
                     );
                 }
 
-                var response = await _httpClient.PostAsJsonAsync("ORTSecure/Inscripciones/ConfirmarPreInscripcion", request);
+                var url = "ORTSecure/Inscripciones/ConfirmarPreInscripcion"
+                    + $"?tipoInscripcion={Uri.EscapeDataString(request.TipoInscripcion)}"
+                    + $"&idProducto={request.IdProducto}"
+                    + $"&idProceso={request.IdProceso}"
+                    + $"&idOfertaSeleccionada={request.IdOfertaSeleccionada}";
+
+                var response = await _httpClient.PostAsJsonAsync(url, request.Turno);
 
                 if (response.IsSuccessStatusCode)
                 {
