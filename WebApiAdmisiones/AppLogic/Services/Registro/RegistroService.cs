@@ -32,7 +32,6 @@ namespace AppLogic.Services.Registro
 
         public RegistroService(
             ICatalogosService catalogosService,
-            IPreinscripcionService preinscripcionService,
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ILdap ldap,

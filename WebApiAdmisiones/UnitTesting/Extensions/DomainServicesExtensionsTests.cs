@@ -326,8 +326,6 @@ namespace UnitTesting.Extensions
 
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPreinscripcionService) && sd.ImplementationType == typeof(PreinscripcionService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaAdmisionService) && sd.ImplementationType == typeof(PersonaAdmisionService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));
         }
 
@@ -544,8 +542,6 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBandejaService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPreinscripcionService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IPersonaAdmisionService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService)));
             
         }
@@ -614,10 +610,6 @@ namespace UnitTesting.Extensions
                 sd.ServiceType == typeof(ICatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(IInscripcionesService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IPreinscripcionService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IPersonaAdmisionService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(IBecasService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 

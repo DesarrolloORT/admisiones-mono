@@ -21,7 +21,6 @@ namespace UnitTesting.AppLogic.Services
     public class RegistroServiceTests
     {
         private readonly Mock<ICatalogosService> _catalogosServiceMock;
-        private readonly Mock<IPreinscripcionService> _preinscripcionServiceMock;
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
@@ -32,7 +31,6 @@ namespace UnitTesting.AppLogic.Services
         public RegistroServiceTests()
         {
             _catalogosServiceMock = new Mock<ICatalogosService>();
-            _preinscripcionServiceMock = new Mock<IPreinscripcionService>();
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
@@ -41,7 +39,6 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new RegistroService(
                 _catalogosServiceMock.Object,
-                _preinscripcionServiceMock.Object,
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
                 _ldapMock.Object,
