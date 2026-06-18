@@ -68,8 +68,8 @@
 
   <app-inscripcion-dialog
     closeLabel="Volver al pago"
-    title="Confirmar inscripción"
     helperText="Revisá la propuesta y el medio de pago antes de continuar."
+    title="Confirmar inscripción"
     [open]="facade.screen() === 'confirmacion-pago'"
     (closed)="facade.cancelPaymentConfirmation()">
     <dl class="inscription-summary-list">
