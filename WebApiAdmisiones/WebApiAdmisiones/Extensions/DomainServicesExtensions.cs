@@ -111,8 +111,6 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ICatalogosService, CatalogosService>();
             services.AddScoped<IRegistroService, RegistroService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
-            services.AddScoped<IPreinscripcionService, PreinscripcionService>();
-            services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
             services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
@@ -126,9 +124,6 @@ namespace WebApiAdmisiones.Extensions
             services.AddHttpClient<IRecaptchaService, RecaptchaService>();
             services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
-
-            // Servicio de ejemplo: integración con API de Inscripciones y Pagos
-            services.AddScoped<IOfertasInscripcionService, OfertasInscripcionService>();
 
             // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>

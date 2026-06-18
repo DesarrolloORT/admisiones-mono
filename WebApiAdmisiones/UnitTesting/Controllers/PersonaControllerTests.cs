@@ -78,6 +78,19 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public void ObtenerMisBecas_ReturnsMockBecas()
+        {
+            var response = _controller.ObtenerMisBecas();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<IEnumerable<DtoBecaPersona>>>(okResult.Value);
+            Assert.True(operationResult.Success);
+            var becas = Assert.IsAssignableFrom<IEnumerable<DtoBecaPersona>>(operationResult.Data);
+            Assert.Equal(2, becas.Count());
+        }
+
+        [Fact]
         public async Task CambiarPassword_UsesAuthenticatedUserAndReturnsOk()
         {
             var request = new DtoCambiarPasswordRequest

@@ -380,6 +380,7 @@ namespace WebApiAdmisiones.Controllers
         /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
         /// </remarks>
         [HttpPost("Logout")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         public IActionResult Logout()
@@ -461,6 +462,7 @@ namespace WebApiAdmisiones.Controllers
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
         [HttpPost("RecuperarContraseña")]
+        [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]

@@ -71,6 +71,51 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Obtiene las becas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista mock de becas para la vista del front.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("Becas")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 400)]
+        public IActionResult ObtenerMisBecas()
+        {
+            var becas = new List<DtoBecaPersona>
+            {
+                new()
+                {
+                    IdBeca = 1,
+                    IdPostulacion = 1001,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseno Grafico",
+                    Estado = "En proceso",
+                    FechaCierrePostulacion = new DateTime(2026, 5, 26),
+                    FechaPrueba = new DateTime(2026, 6, 13),
+                    AccionPrincipal = "Continuar postulacion",
+                    PuedeContinuarPostulacion = true,
+                    PuedeDescargarMaterialEstudio = false
+                },
+                new()
+                {
+                    IdBeca = 2,
+                    IdPostulacion = 1002,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseno Grafico",
+                    FechaPrueba = new DateTime(2026, 6, 13),
+                    FechaResultados = new DateTime(2025, 7, 24),
+                    AccionPrincipal = "Descargar material de estudio",
+                    PuedeContinuarPostulacion = false,
+                    PuedeDescargarMaterialEstudio = true,
+                    UrlMaterialEstudio = "#"
+                }
+            };
+
+            var result = OperationResult<IEnumerable<DtoBecaPersona>>.Ok(becas, nameof(ObtenerMisBecas));
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Cambia la contraseña del usuario autenticado.
         /// </summary>
         /// <param name="request">Password actual y nueva password.</param>
@@ -101,42 +146,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        ///// <summary>
-        ///// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
-        ///// </summary>
-        ///// <returns>Datos de preinscripción.</returns>
-        ///// <response code="200">Datos obtenidos correctamente.</response>
-        ///// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
-        ///// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("EncuestaInicialAdmision")]
-        //[ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 400)]
-        //[ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 404)]
-        //public IActionResult ObtenerEncuestaInicialAdmision()
-        //{
-        //    var result = personaAdmisionService.ObtenerEncuestaInicialAdmision(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Guarda los datos de la persona y registra la encuesta inicial de admisión.
-        ///// </summary>
-        ///// <param name="request">Datos de persona y encuesta a registrar.</param>
-        ///// <returns><c>true</c> si la encuesta se guardó correctamente.</returns>
-        ///// <response code="200">Encuesta guardada correctamente.</response>
-        ///// <response code="400">Los datos enviados son inválidos.</response>
-        ///// <response code="404">No se encontró la persona, el producto o el proceso indicado.</response>
-        ///// <response code="409">Ya existe una encuesta para la misma persona, producto y comienzo.</response>
-        //[HttpPost("DatosPersonaEncuesta")]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        //[ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        //public IActionResult GuardarDatosPersonaEncuesta([FromBody] GuardarDatosPersonaEncuestaRequest request)
-        //{
-        //    var result = personaAdmisionService.GuardarDatosPersonaEncuesta(_currentUser.GetUserId(), request);
-        //    return ValidateResponse(result);
-        //}
         /// <summary>
         /// Obtiene la foto de perfil de la persona autenticada.
         /// </summary>
