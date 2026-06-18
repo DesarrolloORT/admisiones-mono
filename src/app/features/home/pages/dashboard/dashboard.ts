@@ -8,6 +8,7 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { OrtAlertModule, OrtIconButtonComponent, OrtIconModule } from '@desarrolloort/components';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -35,6 +36,7 @@ import { DashboardService } from '../../services/dashboard';
     OrtAlertModule,
     DashboardScholarshipsSection,
     ScholarshipGrantedCard,
+    RouterLink,
   ],
 })
 export class Dashboard implements OnInit, AfterViewInit {

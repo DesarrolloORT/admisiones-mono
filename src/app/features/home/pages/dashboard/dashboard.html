@@ -28,14 +28,14 @@
         [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
         <div class="section-header">
           <h3 class="section-header__title">Mis carreras</h3>
-          <button
+          <a
             class="section-header__add"
             ort-icon-button
-            type="button"
             variant="tonal"
-            [attr.aria-label]="'Inscribirme a carrera'">
+            [attr.aria-label]="'Inscribirme a carrera'"
+            [routerLink]="'/inscripciones'">
             <ort-icon name="add" />
-          </button>
+          </a>
         </div>
 
         @if (inscripciones().length === 1) {
