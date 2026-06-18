@@ -6,11 +6,12 @@ namespace AppLogic.IServices.Inscripciones
 {
     public interface IInscripcionesService
     {
-        OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona);
         OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona);
         OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request);
         OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso);
         OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso);
-        OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicial(long codigoPersona);
+        OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona);
+        OperationResult<bool> GuardarEncuestaInicial(long codigoPersona, GuardarEncuestaInicialRequest request);
+        Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, ConfirmarPreInscripcionRequest request);
     }
 }

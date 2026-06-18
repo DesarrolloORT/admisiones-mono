@@ -85,7 +85,7 @@ namespace WebApiAdmisiones.Controllers
         /// Lista todos los combos estaticos necesarios para la encuesta inicial de admision.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico para poblar la encuesta inicial con los valores canonicos que valida y persiste backend.
+        /// Endpoint para poblar la encuesta inicial con los valores canonicos que valida y persiste backend.
         /// </remarks>
         /// <returns>Catalogos de encuesta inicial agrupados por campo.</returns>
         /// <response code="200">Catalogos obtenidos correctamente.</response>
@@ -120,7 +120,7 @@ namespace WebApiAdmisiones.Controllers
         /// Lista las carreras vigentes para el registro de admision.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico para poblar la seleccion inicial de carrera/producto. Devuelve identificadores y nombres necesarios para que el front luego consulte comienzos.
+        /// Endpoint para poblar la seleccion inicial de carrera/producto. Devuelve identificadores y nombres necesarios para que el front luego consulte comienzos.
         /// </remarks>
         /// <returns>Carreras vigentes disponibles para admision.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
@@ -138,7 +138,7 @@ namespace WebApiAdmisiones.Controllers
         /// Lista los comienzos habilitados para una carrera.
         /// </summary>
         /// <remarks>
-        /// Endpoint publico para poblar el combo de comienzo/proceso luego de seleccionar una carrera. El parametro idCarrera debe ser el IdProducto recibido desde el endpoint de carreras.
+        /// Endpoint para poblar el combo de comienzo/proceso luego de seleccionar una carrera. El parametro idCarrera debe ser el IdProducto recibido desde el endpoint de carreras.
         /// </remarks>
         /// <param name="idCarrera">Identificador de la carrera/producto seleccionado.</param>
         /// <returns>Comienzos habilitados para la carrera indicada.</returns>

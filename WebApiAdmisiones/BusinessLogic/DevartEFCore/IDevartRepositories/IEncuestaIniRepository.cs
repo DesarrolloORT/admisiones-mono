@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
 namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IEncuestaIniRepository
     {
+        EncuestaIni GetByPersona(long codigoPersona);
         bool ExistePorDocumento(string tipoDocumento, string documento);
     }
 }

@@ -1,7 +1,8 @@
 using AppLogic.DTOs;
-using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Registro;
+using AppLogic.Services.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IServices;
@@ -318,28 +319,6 @@ public class AuthService : IAuthService
         }
     }
 
-    private static bool CoincidePersonaRecupero(
-        BusinessLogic.Entities.Persona persona,
-        string tipoDocumento,
-        string documento,
-        string? primerApellido)
-    {
-        if (string.IsNullOrWhiteSpace(primerApellido))
-        {
-            return false;
-        }
-
-        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
-        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
-            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
-            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
-
-        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
-            && DocumentUtils.Normalizar(persona.Documento) == documento
-            && apellidoPersona == apellidoEntrada;
-    }
-
-
     /// <summary>
     /// Completa el alta de password inicial usando una sesion temporal de activacion.
     /// </summary>
@@ -533,32 +512,32 @@ public class AuthService : IAuthService
     private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
         RegistroDocumentoImagenesTemporales? imagenes)
     {
-        if (imagenes is null)
-        {
-            return OperationResult<bool>.Ok(true, nameof(CompletarPasswordAsync));
-        }
-
-        var documento = imagenes.DocumentoFrente;
-        var documentValidation = FileValidationHelper.ValidateIdentityDocumentFile(
-            documento.Archivo,
-            ResolverNombreArchivo(documento.NombreArchivo, "documento.pdf"),
-            nameof(CompletarPasswordAsync));
-        if (!documentValidation.Success)
-        {
-            return documentValidation;
-        }
-
-        if (imagenes.CaraPersona is null)
-        {
-            return OperationResult<bool>.Ok(true, nameof(CompletarPasswordAsync));
-        }
-
-        var cara = imagenes.CaraPersona;
-        return FileValidationHelper.ValidateImageFile(
-            cara.Archivo,
-            ResolverNombreArchivo(cara.NombreArchivo, "cara.jpg"),
+        return DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
+            imagenes,
             nameof(CompletarPasswordAsync));
     }
+
+    private static bool CoincidePersonaRecupero(
+    BusinessLogic.Entities.Persona persona,
+    string tipoDocumento,
+    string documento,
+    string? primerApellido)
+    {
+        if (string.IsNullOrWhiteSpace(primerApellido))
+        {
+            return false;
+        }
+
+        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(primerApellido);
+        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
+            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
+
+        return DocumentUtils.Normalizar(persona.TipoDocumento) == tipoDocumento
+            && DocumentUtils.Normalizar(persona.Documento) == documento
+            && apellidoPersona == apellidoEntrada;
+    }
+
 
     private void GuardarImagenesDocumentoReconocido(
         BusinessLogic.IDevartRepositories.IUnitOfWork uow,
@@ -570,83 +549,12 @@ public class AuthService : IAuthService
             return;
         }
 
-        var documento = imagenes.DocumentoFrente;
-        var fechaVencimiento = imagenes.FechaVencimiento ?? DateTime.Today.AddYears(1);
-        var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(persona.CodigoPersona, 1);
-
-        if (documentoExistente is null)
-        {
-            uow.ImagenTemporals.Add(new ImagenTemporal
-            {
-                IdImagenTemporal = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
-                CodigoPersona = persona.CodigoPersona,
-                NombreImagen = ConstruirNombrePersistido(
-                    persona.CodigoPersona,
-                    1,
-                    ResolverExtensionPersistida(documento.NombreArchivo, ".pdf")),
-                TipoImagen = "1",
-                BlobImagen = documento.Archivo,
-                FechaVtoDocumentoPersona = fechaVencimiento
-            });
-        }
-        else
-        {
-            documentoExistente.NombreImagen = ConstruirNombrePersistido(
-                persona.CodigoPersona,
-                1,
-                ResolverExtensionPersistida(documento.NombreArchivo, ".pdf"));
-            documentoExistente.TipoImagen = "1";
-            documentoExistente.BlobImagen = documento.Archivo;
-            documentoExistente.FechaVtoDocumentoPersona = fechaVencimiento;
-            uow.ImagenTemporals.Update(documentoExistente);
-        }
-
-        persona.FechaVtoDocumentoPersona = fechaVencimiento;
-
-        if (imagenes.CaraPersona is null)
-        {
-            return;
-        }
-
-        var cara = imagenes.CaraPersona;
-        var fotoExistente = uow.Imagens.GetFotoByPersona(persona.CodigoPersona);
-        if (fotoExistente is null)
-        {
-            uow.Imagens.Add(new Imagen
-            {
-                IdImagen = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
-                CodigoPersona = persona.CodigoPersona,
-                NombreImagen = ConstruirNombrePersistido(
-                    persona.CodigoPersona,
-                    3,
-                    ResolverExtensionPersistida(cara.NombreArchivo, ".jpg")),
-                TipoImagen = "3",
-                BlobImagen = cara.Archivo
-            });
-        }
-        else
-        {
-            fotoExistente.NombreImagen = ConstruirNombrePersistido(
-                persona.CodigoPersona,
-                3,
-                ResolverExtensionPersistida(cara.NombreArchivo, ".jpg"));
-            fotoExistente.TipoImagen = "3";
-            fotoExistente.BlobImagen = cara.Archivo;
-            uow.Imagens.Update(fotoExistente);
-        }
+        DocumentoIdentidadPersonaService.GuardarImagenesDocumentoReconocido(
+            uow,
+            _dbConnectionContext,
+            persona,
+            imagenes);
     }
-
-    private static string ResolverNombreArchivo(string? fileName, string defaultFileName)
-        => string.IsNullOrWhiteSpace(fileName) ? defaultFileName : fileName;
-
-    private static string ResolverExtensionPersistida(string? fileName, string defaultExtension)
-    {
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-        return string.IsNullOrWhiteSpace(extension) ? defaultExtension : extension;
-    }
-
-    private static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
-        => $"{codigoPersona}_{tipoImagen}{extension}";
 
     private static string ObtenerCodigoValidacionDocumentoLogin(DocumentUtils.DocumentValidationError error)
     {

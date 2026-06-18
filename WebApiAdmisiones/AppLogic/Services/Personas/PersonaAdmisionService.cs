@@ -4,6 +4,7 @@ using System.Text;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;
@@ -38,16 +39,6 @@ namespace AppLogic.Services.Personas
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _generalService = generalService;
-        }
-
-        public OperationResult<DtoEncuestaIniAdmisionDevart> ObtenerEncuestaInicialAdmision(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
-                return OperationResult<DtoEncuestaIniAdmisionDevart>.IsFailed("GEN_DPI_01", nameof(ObtenerEncuestaInicialAdmision), "No se encontraron datos de pre-inscripción para la persona.", 204);
-
-            return OperationResult<DtoEncuestaIniAdmisionDevart>.Ok(encuesta.ToDtoWithRelated(1), nameof(ObtenerEncuestaInicialAdmision));
         }
 
         public OperationResult<bool> GuardarDatosPersonaEncuesta(long codigoPersona, GuardarDatosPersonaEncuestaRequest request)

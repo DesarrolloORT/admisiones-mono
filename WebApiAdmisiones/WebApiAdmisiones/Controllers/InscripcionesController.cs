@@ -19,21 +19,6 @@ namespace WebApiAdmisiones.Controllers
     {
         #region INSCRIPCIONES
 
-        /// <summary>
-        /// Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de inscripciones con todos los campos expuestos por la vista.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        [HttpGet("MisInscripciones")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
-        public IActionResult ObtenerMisInscripciones()
-        {
-            var result = inscripcionesService.ObtenerMisInscripciones(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
         ///// <summary>
         ///// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
         ///// </summary>
@@ -43,7 +28,7 @@ namespace WebApiAdmisiones.Controllers
         ///// <response code="400">Producto o proceso inválido.</response>
         ///// <response code="404">Persona no encontrada.</response>
         ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
-        [HttpPost("RegistrarInteresProducto")]
+        [HttpPost("InteresProducto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
@@ -51,6 +36,62 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
         {
             var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
+        /// </summary>
+        /// <returns>Datos de preinscripción.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 404)]
+        public IActionResult ObtenerEncuestaInicialAdmision()
+        {
+            var result = inscripcionesService.ObtenerEncuestaInicial(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Guarda parcial o completamente la encuesta inicial de admision.
+        /// </summary>
+        /// <param name="request">Campos de encuesta enviados por el front.</param>
+        /// <returns><c>true</c> si la encuesta se guardo correctamente.</returns>
+        /// <response code="200">Encuesta guardada correctamente.</response>
+        /// <response code="400">Los datos enviados son invalidos.</response>
+        /// <response code="404">No se encontro la persona, producto o proceso indicado.</response>
+        [HttpPost("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        public IActionResult GuardarEncuestaInicial([FromBody] GuardarEncuestaInicialRequest request)
+        {
+            var result = inscripcionesService.GuardarEncuestaInicial(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Confirma la preinscripcion de la persona autenticada como cierre del paso 2.
+        /// Valida encuesta definitiva, documentos frente y dorso, aceptacion del reglamento y confirma contra la API interna.
+        /// </summary>
+        /// <param name="request">Oferta seleccionada y aceptacion del reglamento.</param>
+        /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
+        /// <response code="200">Preinscripcion confirmada correctamente.</response>
+        /// <response code="400">Solicitud invalida o datos incompletos para confirmar.</response>
+        /// <response code="404">No se encontro la persona, encuesta o documento requerido.</response>
+        /// <response code="409">La encuesta o el documento no estan vigentes o en estado valido.</response>
+        [HttpPost("ConfirmarPreInscripcion")]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ConfirmarPreInscripcion([FromBody] ConfirmarPreInscripcionRequest request)
+        {
+            var result = await inscripcionesService.ConfirmarPreInscripcion(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 

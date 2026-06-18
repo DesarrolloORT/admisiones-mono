@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Utilities;
 
-namespace AppLogic.Helpers
+namespace AppLogic.Helpers.ValidationHelpers
 {
     /// <summary>
     /// Helper para validación de archivos subidos por usuarios.

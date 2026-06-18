@@ -156,6 +156,10 @@ namespace AppLogic.DevartDTOs
 
         public List<DtoEncuestaIniDevart> EncuestaInis { get; set; }
 
+        public List<DtoEmpresaConsideradaAdmisionDevart> EmpresaConsideradaAdmisions { get; set; }
+
+        public List<DtoEducacionSuperiorAdmisionDevart> EducacionSuperiorAdmisions { get; set; }
+
         #endregion
     }
 

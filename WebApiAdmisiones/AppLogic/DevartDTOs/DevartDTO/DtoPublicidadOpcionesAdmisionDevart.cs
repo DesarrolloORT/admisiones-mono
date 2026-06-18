@@ -32,6 +32,12 @@ namespace AppLogic.DevartDTOs
         public string NombrePublicidad { get; set; }
 
         #endregion
+
+        #region Navigation Properties
+
+        public List<DtoPublicidadEleccionAdmisionDevart> PublicidadEleccionAdmisions { get; set; }
+
+        #endregion
     }
 
 }

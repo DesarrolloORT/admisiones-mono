@@ -5,10 +5,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
 namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IInteresProductoOfertaRepository
     {
+        Proceso? GetProcesoPorInteresActivoOferta(long codigoPersona, long idProducto, long idOferta);
     }
 }

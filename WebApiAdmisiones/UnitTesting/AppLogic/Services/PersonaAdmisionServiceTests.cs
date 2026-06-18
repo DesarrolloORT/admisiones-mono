@@ -37,39 +37,6 @@ namespace UnitTesting.AppLogic.Services
         #region Encuesta
 
         [Fact]
-        public void ObtenerEncuestaInicialAdmision_NotFound_ReturnsFailed()
-        {
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var result = _service.ObtenerEncuestaInicialAdmision(123);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_DPI_01", result.ErrorCode);
-            Assert.Equal(204, result.HttpCode);
-        }
-
-        [Fact]
-        public void ObtenerEncuestaInicialAdmision_ReturnsDto()
-        {
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
-            {
-                IdEncuestaIni = 10,
-                CodigoPersona = 123,
-                IdProducto = 20
-            });
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var result = _service.ObtenerEncuestaInicialAdmision(123);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal(10, result.Data.IdEncuestaIni);
-        }
-
-        [Fact]
         public void GuardarDatosPersonaEncuesta_PersonaNoEncontrada_ReturnsNotFound()
         {
             var personaRepo = new Mock<IPersonaRepository>();
@@ -783,6 +750,9 @@ namespace UnitTesting.AppLogic.Services
             var repo = new Mock<IImagenTemporalRepository>();
             repo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
             _uowMock.Setup(u => u.ImagenTemporals).Returns(repo.Object);
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((Imagen)null);
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
 
             var result = _personaService.ObtenerDocumentoPersona(1, 1);
 
@@ -842,6 +812,36 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal(new byte[] { 1, 2, 3 }, result.Data);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WhenTemporalMissing_ReturnsDefinitiveDocument()
+        {
+            var temporalRepo = new Mock<IImagenTemporalRepository>();
+            temporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(temporalRepo.Object);
+
+            var imagenRepo = new Mock<IImagenRepository>();
+            imagenRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 1)).Returns(new Imagen
+            {
+                CodigoPersona = 1,
+                TipoImagen = "1",
+                BlobImagen = new byte[] { 4, 5, 6 }
+            });
+            _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(new Persona
+            {
+                CodigoPersona = 1,
+                FechaVtoDocumentoPersona = DateTime.Today.AddDays(10)
+            });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var result = _personaService.ObtenerDocumentoPersona(1, 1);
+
+            Assert.True(result.Success);
+            Assert.Equal(new byte[] { 4, 5, 6 }, result.Data);
         }
 
         [Fact]
@@ -1099,6 +1099,36 @@ namespace UnitTesting.AppLogic.Services
                 i.IdImagenTemporal == 456 &&
                 i.CodigoPersona == 1 &&
                 i.NombreImagen == "1_1.pdf" &&
+                i.TipoImagen == "1" &&
+                i.FechaVtoDocumentoPersona == fechaVencimiento &&
+                i.BlobImagen == pdfContent)), Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_Dorso_PersisteTipoImagenDocumentoLegacy()
+        {
+            var fechaVencimiento = new DateTime(2030, 12, 31);
+            var persona = new Persona { CodigoPersona = 1 };
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(1)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("DBUSER");
+
+            var imagenTemporalRepo = new Mock<IImagenTemporalRepository>();
+            imagenTemporalRepo.Setup(r => r.GetDocumentoByPersonaAndTipo(1, 2)).Returns((ImagenTemporal)null);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(imagenTemporalRepo.Object);
+
+            _dbConnectionContextMock.Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL)).Returns(456);
+            var pdfContent = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+
+            var result = _personaService.SubirDocumentoPersona(1, 2, fechaVencimiento, pdfContent, "cedula.pdf");
+
+            Assert.True(result.Success);
+            imagenTemporalRepo.Verify(r => r.Add(It.Is<ImagenTemporal>(i =>
+                i.CodigoPersona == 1 &&
+                i.NombreImagen == "1_2.pdf" &&
                 i.TipoImagen == "1" &&
                 i.FechaVtoDocumentoPersona == fechaVencimiento &&
                 i.BlobImagen == pdfContent)), Times.Once);

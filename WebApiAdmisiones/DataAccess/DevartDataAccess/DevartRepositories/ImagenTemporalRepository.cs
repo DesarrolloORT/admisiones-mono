@@ -12,6 +12,18 @@ namespace DataAccess.DevartRepositories
     {
         public ImagenTemporal? GetDocumentoByPersonaAndTipo(long codigoPersona, int tipo)
         {
+            var nombreDocumento = $"{codigoPersona}_{tipo}.";
+
+            var documento = Context.Set<ImagenTemporal>()
+                .FirstOrDefault(i => i.CodigoPersona == codigoPersona
+                                  && i.TipoImagen == "1"
+                                  && i.NombreImagen.StartsWith(nombreDocumento));
+
+            if (documento != null || tipo == 1)
+            {
+                return documento;
+            }
+
             return Context.Set<ImagenTemporal>()
                 .FirstOrDefault(i => i.CodigoPersona == codigoPersona
                                   && i.TipoImagen == tipo.ToString());

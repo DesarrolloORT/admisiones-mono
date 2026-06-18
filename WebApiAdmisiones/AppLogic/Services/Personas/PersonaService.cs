@@ -1,13 +1,15 @@
-using System.Globalization;
 using AppLogic.Constants;
+using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Helpers;
+using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using System.Globalization;
 using Utilities;
 
 namespace AppLogic.Services.Personas
@@ -96,6 +98,15 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(ActualizarDatosPersona));
         }
 
+        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
+        {
+
+            using var uow = uowFactory.Create();
+            var dtos = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
+
+            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
+        }
+
         public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)
         {
             try
@@ -164,22 +175,13 @@ namespace AppLogic.Services.Personas
 
         public OperationResult<byte[]> ObtenerDocumentoPersona(long codigoPersona, int tipo)
         {
-            if (tipo != 1 && tipo != 2)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_01", nameof(ObtenerDocumentoPersona), "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).", 400);
-
             using var uow = uowFactory.Create();
-            var imagenTemporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+            return DocumentoIdentidadPersonaService.ObtenerDocumentoParaConsulta(
+                uow,
+                codigoPersona,
+                tipo,
+                nameof(ObtenerDocumentoPersona));
 
-            if (imagenTemporal == null)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_02", nameof(ObtenerDocumentoPersona), "Documento no encontrado.", 404);
-
-            if (imagenTemporal.FechaVtoDocumentoPersona.HasValue && imagenTemporal.FechaVtoDocumentoPersona.Value < DateTime.Now)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_03", nameof(ObtenerDocumentoPersona), "El documento se encuentra vencido.", 409);
-
-            if (imagenTemporal.BlobImagen == null || imagenTemporal.BlobImagen.Length == 0)
-                return OperationResult<byte[]>.IsFailed("GEN_DA_04", nameof(ObtenerDocumentoPersona), "El documento no contiene imagen.", 404);
-
-            return OperationResult<byte[]>.Ok(imagenTemporal.BlobImagen, nameof(ObtenerDocumentoPersona));
         }
 
         public OperationResult<bool> SubirFotoPersona(long codigoPersona, byte[] fileContent, string fileName)
@@ -256,13 +258,14 @@ namespace AppLogic.Services.Personas
 
             if (documentoExistente is null)
             {
-                var resultadoGuardado = GuardarDocumentoPersona(
+                var resultadoGuardado = DocumentoIdentidadPersonaService.CrearDocumentoTemporal(
                     codigoPersona,
                     dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL),
                     tipo,
                     fecha,
                     fileContent,
-                    fileName);
+                    fileName,
+                    nameof(SubirDocumentoPersona));
 
                 if (!resultadoGuardado.Success)
                 {
@@ -277,7 +280,13 @@ namespace AppLogic.Services.Personas
             }
             else
             {
-                var resultadoModificacion = ModificarDocumentoPersona(documentoExistente, tipo, fecha, fileContent, fileName);
+                var resultadoModificacion = DocumentoIdentidadPersonaService.ActualizarDocumentoTemporal(
+                    documentoExistente,
+                    tipo,
+                    fecha,
+                    fileContent,
+                    fileName,
+                    nameof(SubirDocumentoPersona));
                 if (!resultadoModificacion.Success)
                 {
                     return OperationResult<bool>.IsFailed(
@@ -388,50 +397,6 @@ namespace AppLogic.Services.Personas
             existing.TipoImagen = "3";
             existing.BlobImagen = fileContent;
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoPersona));
-        }
-
-        private static OperationResult<ImagenTemporal> GuardarDocumentoPersona(long codigoPersona, int idImagenTemporal, int tipo, DateTime fecha, byte[] fileContent, string fileName)
-        {
-            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, nameof(GuardarDocumentoPersona));
-            if (!validacion.Success)
-            {
-                return OperationResult<ImagenTemporal>.IsFailed(validacion.ErrorCode, nameof(GuardarDocumentoPersona), validacion.Message, validacion.HttpCode);
-            }
-
-            var extension = ResolverExtensionPersistida(fileName, ".pdf");
-            var nombrePersistencia = ConstruirNombrePersistido(codigoPersona, tipo, extension);
-
-            return OperationResult<ImagenTemporal>.Ok(
-                new ImagenTemporal
-                {
-                    IdImagenTemporal = idImagenTemporal,
-                    CodigoPersona = codigoPersona,
-                    NombreImagen = nombrePersistencia,
-                    TipoImagen = tipo.ToString(),
-                    BlobImagen = fileContent,
-                    FechaVtoDocumentoPersona = fecha
-                },
-                nameof(GuardarDocumentoPersona));
-        }
-
-        private static OperationResult<bool> ModificarDocumentoPersona(ImagenTemporal existing, int tipo, DateTime fecha, byte[] fileContent, string fileName)
-        {
-            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, nameof(ModificarDocumentoPersona));
-            if (!validacion.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    validacion.ErrorCode,
-                    nameof(ModificarDocumentoPersona),
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
-
-            var extension = ResolverExtensionPersistida(fileName, ".pdf");
-            existing.NombreImagen = ConstruirNombrePersistido(existing.CodigoPersona ?? 0, tipo, extension);
-            existing.TipoImagen = tipo.ToString();
-            existing.BlobImagen = fileContent;
-            existing.FechaVtoDocumentoPersona = fecha;
-            return OperationResult<bool>.Ok(true, nameof(ModificarDocumentoPersona));
         }
 
         private static string ResolverExtensionPersistida(string fileName, string defaultExtension)

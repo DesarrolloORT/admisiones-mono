@@ -117,23 +117,51 @@ namespace UnitTesting.AppLogic.ApiClients
         public async Task ConfirmarPreInscripcionAsync_WithSuccess_ReturnsResponse()
         {
             var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """{"success":true,"message":"confirmada","idInscripcion":55}"""));
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "confirmada": true,
+                  "message": "confirmada",
+                  "idInscripcion": 55,
+                  "seniaInscripcion": 1234.50,
+                  "fechaVencimientoPago": "2026-06-30T00:00:00",
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Analista en TI",
+                    "idComienzo": 30,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 7,
+                    "turno": "Nocturno"
+                  }
+                }
+                """));
             var client = CrearClient(handler);
 
-            var result = await client.ConfirmarPreInscripcionAsync(new ConfirmarPreInscripcionRequest
+            var result = await client.ConfirmarPreInscripcionAsync(new ConfirmarPreInscripcionApiRequest
             {
                 IdProducto = 20,
                 IdProceso = 30,
                 IdOfertaSeleccionada = 40,
-                TipoInscripcion = "WEB"
+                TipoInscripcion = "ONLINE",
+                Turno = new DtoTurno { IdTurno = 7 }
             });
 
             Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
             Assert.Equal(55, result.Data!.IdInscripcion);
+            Assert.Equal(1234.50m, result.Data!.SeniaInscripcion);
+            Assert.Equal(new DateTime(2026, 6, 30), result.Data!.FechaVencimientoPago);
+            Assert.Equal("Analista en TI", result.Data!.Resumen!.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
-            Assert.Contains("\"idOfertaSeleccionada\":40", request.Body);
+            Assert.Contains("tipoInscripcion=ONLINE", request.RequestUri);
+            Assert.Contains("idProducto=20", request.RequestUri);
+            Assert.Contains("idProceso=30", request.RequestUri);
+            Assert.Contains("idOfertaSeleccionada=40", request.RequestUri);
+            Assert.DoesNotContain("\"idOfertaSeleccionada\":40", request.Body);
+            Assert.DoesNotContain("\"idProducto\":20", request.Body);
+            Assert.Contains("\"idTurno\":7", request.Body);
+            Assert.DoesNotContain("\"tipoInscripcion\":\"WEB\"", request.Body);
         }
 
         private static InscripcionesyPagosApiClient CrearClient(HttpMessageHandler handler)

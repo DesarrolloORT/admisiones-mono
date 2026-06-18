@@ -35,7 +35,6 @@ builder.WebHost.ConfigureKestrelSecurity();
 // --------------------------------------------------------------------------
 builder.Services.AddApiControllers();
 
-// Swagger + JWT Security
 builder.Services.AddSwaggerGen(static options =>
 {
     var xmlCommentsPath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");

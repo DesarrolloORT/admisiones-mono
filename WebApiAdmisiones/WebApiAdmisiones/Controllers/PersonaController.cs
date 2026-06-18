@@ -1,6 +1,8 @@
+using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;
+using AppLogic.Services.Inscripciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -50,6 +52,21 @@ namespace WebApiAdmisiones.Controllers
         public IActionResult ActualizarDatosPersona([FromBody] ActualizarDatosPersonaRequest request)
         {
             var result = personaService.ActualizarDatosPersona(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista de inscripciones con todos los campos expuestos por la vista.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("Inscripciones")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
+        public IActionResult ObtenerMisInscripciones()
+        {
+            var result = personaService.ObtenerMisInscripciones(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 

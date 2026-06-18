@@ -23,7 +23,7 @@ namespace AppLogic.ApiClients
     /// Request para confirmar una preinscripción.
     /// Corresponde a: POST /ConfirmarPreInscripcion
     /// </summary>
-    public class ConfirmarPreInscripcionRequest
+    public class ConfirmarPreInscripcionApiRequest
     {
         public DtoTurno Turno { get; set; } = new();
         public string TipoInscripcion { get; set; } = string.Empty;
@@ -35,11 +35,25 @@ namespace AppLogic.ApiClients
     /// <summary>
     /// Response de confirmar preinscripción.
     /// </summary>
-    public class ConfirmarPreInscripcionResponse
+    public class ConfirmarPreInscripcionApiResponse
     {
+        public bool Confirmada { get; set; }
         public bool Success { get; set; }
         public string? Message { get; set; }
         public long? IdInscripcion { get; set; }
+        public decimal SeniaInscripcion { get; set; }
+        public DateTime? FechaVencimientoPago { get; set; }
+        public ResumenInscripcionApiDto? Resumen { get; set; }
+    }
+
+    public class ResumenInscripcionApiDto
+    {
+        public long IdProducto { get; set; }
+        public string? Carrera { get; set; }
+        public long IdComienzo { get; set; }
+        public string? Comienzo { get; set; }
+        public long IdTurno { get; set; }
+        public string? Turno { get; set; }
     }
 
     /// <summary>
@@ -182,8 +196,8 @@ namespace AppLogic.ApiClients
         /// </summary>
         /// <param name="request">Datos de la preinscripción a confirmar</param>
         /// <returns>Resultado de la confirmación</returns>
-        public async Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcionAsync(
-            ConfirmarPreInscripcionRequest request)
+        public async Task<OperationResult<ConfirmarPreInscripcionApiResponse>> ConfirmarPreInscripcionAsync(
+            ConfirmarPreInscripcionApiRequest request)
         {
             try
             {
@@ -197,19 +211,25 @@ namespace AppLogic.ApiClients
                     );
                 }
 
-                var response = await _httpClient.PostAsJsonAsync("ORTSecure/Inscripciones/ConfirmarPreInscripcion", request);
+                var url = "ORTSecure/Inscripciones/ConfirmarPreInscripcion"
+                    + $"?tipoInscripcion={Uri.EscapeDataString(request.TipoInscripcion)}"
+                    + $"&idProducto={request.IdProducto}"
+                    + $"&idProceso={request.IdProceso}"
+                    + $"&idOfertaSeleccionada={request.IdOfertaSeleccionada}";
+
+                var response = await _httpClient.PostAsJsonAsync(url, request.Turno);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ConfirmarPreInscripcionResponse>();
-                    return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
+                    var result = await response.Content.ReadFromJsonAsync<ConfirmarPreInscripcionApiResponse>();
+                    return OperationResult<ConfirmarPreInscripcionApiResponse>.Ok(
                         result!,
                         nameof(ConfirmarPreInscripcionAsync)
                     );
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                return OperationResult<ConfirmarPreInscripcionApiResponse>.IsFailed(
                     "CONFIRMAR_PREINSCRIPCION_01",
                     nameof(ConfirmarPreInscripcionAsync),
                     $"La API rechazó la confirmación: {response.StatusCode} - {errorContent}",
@@ -219,7 +239,7 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<ConfirmarPreInscripcionResponse>(ex, nameof(ConfirmarPreInscripcionAsync));
+                return HandleException<ConfirmarPreInscripcionApiResponse>(ex, nameof(ConfirmarPreInscripcionAsync));
             }
         }
 

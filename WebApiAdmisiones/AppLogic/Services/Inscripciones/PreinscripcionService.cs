@@ -19,21 +19,6 @@ namespace AppLogic.Services.Inscripciones
             _generalService = generalService;
         }
 
-        public OperationResult<DateTime> ObtenerFechaVencimientoAdmisiones(long codigoPersona, long idProceso)
-        {
-            var result = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, idProceso);
-            if (!result.Success)
-            {
-                return OperationResult<DateTime>.IsFailed(
-                    result.ErrorCode,
-                    nameof(ObtenerFechaVencimientoAdmisiones),
-                    result.Message,
-                    result.HttpCode);
-            }
-
-            return OperationResult<DateTime>.Ok(result.Data, nameof(ObtenerFechaVencimientoAdmisiones));
-        }
-
         //public OperationResult<DtoDatosPreInscripcion> ObtenerDatosPreInscripcion(long codigoPersona)
         //{
         //    using var uow = _uowFactory.Create();

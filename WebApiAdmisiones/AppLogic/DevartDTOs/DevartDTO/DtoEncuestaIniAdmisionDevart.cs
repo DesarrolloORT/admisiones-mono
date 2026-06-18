@@ -165,6 +165,9 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? InstruccionPadreOrtEncuestaIni { get; set; }
 
+        [StringLength(100)]
+        public string? EstadoEncuestaIniAdmision { get; set; }
+
         #endregion
 
         #region Navigation Properties
