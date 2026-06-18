@@ -23,8 +23,7 @@ namespace UnitTesting.Controllers
             var request = new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 2
+                IdOfertaSeleccionada = 10
             };
             var responseDto = new ConfirmarPreInscripcionResponse
             {

@@ -15,6 +15,7 @@ namespace DataAccess.DevartRepositories
         public virtual BusinessLogic.Entities.Oferta GetByKeyWithRelated(long idOferta)
         {
             return objectSet
+                .Include(o => o.Turno)
                 .Include(o => o.Supraoferta)
                     .ThenInclude(s => s.Paquete)
                         .ThenInclude(p => p.Producto)

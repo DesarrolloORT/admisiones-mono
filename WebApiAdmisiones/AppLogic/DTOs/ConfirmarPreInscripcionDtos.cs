@@ -4,8 +4,6 @@ namespace AppLogic.DTOs
     {
         public bool AceptoReglamento { get; set; }
         public long IdOfertaSeleccionada { get; set; }
-        public long IdTurno { get; set; }
-        public string? TipoInscripcion { get; set; }
     }
 
     public class ConfirmarPreInscripcionResponse

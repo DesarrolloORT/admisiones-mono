@@ -78,7 +78,7 @@ namespace WebApiAdmisiones.Controllers
         /// Confirma la preinscripcion de la persona autenticada como cierre del paso 2.
         /// Valida encuesta definitiva, documentos frente y dorso, aceptacion del reglamento y confirma contra la API interna.
         /// </summary>
-        /// <param name="request">Oferta, turno, tipo de inscripcion y aceptacion del reglamento.</param>
+        /// <param name="request">Oferta seleccionada y aceptacion del reglamento.</param>
         /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
         /// <response code="200">Preinscripcion confirmada correctamente.</response>
         /// <response code="400">Solicitud invalida o datos incompletos para confirmar.</response>

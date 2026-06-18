@@ -141,7 +141,7 @@ namespace UnitTesting.AppLogic.ApiClients
                 IdProducto = 20,
                 IdProceso = 30,
                 IdOfertaSeleccionada = 40,
-                TipoInscripcion = "WEB",
+                TipoInscripcion = "ONLINE",
                 Turno = new DtoTurno { IdTurno = 7 }
             });
 
@@ -154,7 +154,7 @@ namespace UnitTesting.AppLogic.ApiClients
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
-            Assert.Contains("tipoInscripcion=WEB", request.RequestUri);
+            Assert.Contains("tipoInscripcion=ONLINE", request.RequestUri);
             Assert.Contains("idProducto=20", request.RequestUri);
             Assert.Contains("idProceso=30", request.RequestUri);
             Assert.Contains("idOfertaSeleccionada=40", request.RequestUri);

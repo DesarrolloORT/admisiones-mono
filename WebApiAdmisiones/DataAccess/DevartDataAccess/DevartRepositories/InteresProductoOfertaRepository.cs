@@ -8,10 +8,31 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using BusinessLogic.IDevartRepositories;
+using BusinessLogic.Entities;
 
 namespace DataAccess.DevartRepositories
 {
     public partial class InteresProductoOfertaRepository
     {
+        public virtual Proceso? GetProcesoPorInteresActivoOferta(long codigoPersona, long idProducto, long idOferta)
+        {
+            return
+            (
+                from interesProductoOferta in objectSet.AsNoTracking()
+                join interes in Context.Set<Intere>().AsNoTracking()
+                    on (decimal)interesProductoOferta.IdInteres equals interes.IdInteres
+                join interesProducto in Context.Set<InteresProducto>().AsNoTracking()
+                    on new { interes.IdInteres, interesProductoOferta.IdProducto }
+                    equals new { interesProducto.IdInteres, interesProducto.IdProducto }
+                join proceso in Context.Set<Proceso>().AsNoTracking()
+                    on interes.IdProceso equals proceso.IdProceso
+                where interes.CodigoPersona == codigoPersona
+                    && interesProductoOferta.IdProducto == idProducto
+                    && interesProductoOferta.IdOferta == idOferta
+                    && interesProducto.IdGradoInteres == 4m
+                    && proceso.HabilitadoInteresSitio == "SI"
+                select proceso
+            ).FirstOrDefault();
+        }
     }
 }

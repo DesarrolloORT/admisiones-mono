@@ -56,8 +56,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.False(result.Success);
@@ -69,6 +68,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_WhenEncuestaIsNotDefinitivo_ReturnsConflict()
         {
             SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupEncuesta(123, new EncuestaIniAdmision
             {
                 CodigoPersona = 123,
@@ -81,8 +81,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.False(result.Success);
@@ -94,6 +93,8 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_WhenDocumentoFrenteMissing_ReturnsNotFound()
         {
             SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
             SetupEncuesta(123, EncuestaDefinitiva(123));
 
             var imagenRepo = new Mock<IImagenTemporalRepository>();
@@ -110,8 +111,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.False(result.Success);
@@ -143,6 +143,8 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
             SetupEncuesta(123, EncuestaDefinitiva(123));
             SetupDocumentosValidos(123);
             _dbConnectionContextMock
@@ -161,8 +163,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.True(result.Success);
@@ -172,7 +173,12 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(999, aceptacionAgregada!.IdAceptacionReglamentoEst);
-            Assert.Contains("\"tipoInscripcion\":\"ONLINE\"", Assert.Single(handler.Requests).Body);
+            var requestApi = Assert.Single(handler.Requests);
+            Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
+            Assert.Contains("idProducto=20", requestApi.RequestUri);
+            Assert.Contains("idProceso=30", requestApi.RequestUri);
+            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+            Assert.Contains("\"idTurno\":1", requestApi.Body);
         }
 
         [Fact]
@@ -188,6 +194,8 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
             SetupEncuesta(123, EncuestaDefinitiva(123));
             SetupDocumentosDefinitivosValidos(123);
 
@@ -206,8 +214,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.True(result.Success);
@@ -242,35 +249,8 @@ namespace UnitTesting.AppLogic.Services
             });
             SetupDocumentosValidos(123);
 
-            var ofertaRepo = new Mock<IOfertaRepository>();
-            ofertaRepo
-                .Setup(r => r.GetByKeyWithRelated(10))
-                .Returns(new Oferta
-                {
-                    IdOferta = 10,
-                    Supraoferta = new Supraoferta
-                    {
-                        IdComienzo = 40,
-                        Comienzo = new Comienzo { IdComienzo = 40, NombreComienzo = "Marzo 2026" },
-                        Paquete = new Paquete
-                        {
-                            IdProducto = 20,
-                            Producto = new Producto
-                            {
-                                IdProducto = 20,
-                                NombreProducto = "ATI",
-                                NombreExtensoProducto = "Analista en TI"
-                            }
-                        }
-                    }
-                });
-            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
-
-            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
-            intereRepo
-                .Setup(r => r.GetProcesoPorInteresActivo(123, 20))
-                .Returns(new Proceso { IdProceso = 30 });
-            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
+            SetupOfertaConfirmacion(10, 20, 40, 1, "Analista en TI", "ATI", "Marzo 2026");
+            SetupInteresActivoOferta(123, 20, 10, 30);
 
             _dbConnectionContextMock
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
@@ -287,8 +267,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
-                IdTurno = 1
+                IdOfertaSeleccionada = 10
             });
 
             Assert.True(result.Success);
@@ -301,10 +280,54 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(20, aceptacionAgregada!.IdProducto);
             Assert.Equal(40, aceptacionAgregada.IdComienzo);
 
-            var body = Assert.Single(handler.Requests).Body;
-            Assert.Contains("\"idProducto\":20", body);
-            Assert.Contains("\"idProceso\":30", body);
-            Assert.Contains("\"idOfertaSeleccionada\":10", body);
+            var requestApi = Assert.Single(handler.Requests);
+            Assert.Contains("idProducto=20", requestApi.RequestUri);
+            Assert.Contains("idProceso=30", requestApi.RequestUri);
+            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+            Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
+            Assert.Contains("\"idTurno\":1", requestApi.Body);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenInteresOfertaMissing_ReturnsConflict()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10))
+                .Returns((Proceso)null);
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_14", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenOfertaNoCoincideConEncuesta_ReturnsConflict()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 21, 40, 1);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_15", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
         }
 
         [Fact]
@@ -401,6 +424,7 @@ namespace UnitTesting.AppLogic.Services
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            SetupOfertaValidaParaRegistro();
 
             var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
             intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
@@ -423,10 +447,6 @@ namespace UnitTesting.AppLogic.Services
             var encuesta = new EncuestaIniAdmision { IdEncuestaIni = 77, CodigoPersona = 123 };
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(encuesta);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns(30);
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
             var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
@@ -461,14 +481,14 @@ namespace UnitTesting.AppLogic.Services
                 x.IdProducto == 10 &&
                 x.IdOferta == 30)), Times.Once);
             Assert.Equal(20, encuesta.IdProceso);
-            Assert.Equal(30, encuesta.IdComienzo);
+            Assert.Equal(40, encuesta.IdComienzo);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 
         [Fact]
-        public void RegistrarInteresProducto_ConEncuestaSinComienzoActivo_DevuelveErrorYRollback()
+        public void RegistrarInteresProducto_ConOfertaNoCompatibleConProceso_DevuelveError()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
@@ -489,6 +509,7 @@ namespace UnitTesting.AppLogic.Services
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            SetupOfertaParaRegistro(30, 10, 40);
 
             var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
             intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
@@ -512,15 +533,15 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
 
             var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns((long?)null);
+            procesoComienzoRepo.Setup(r => r.GetByKeyWithRelated(20, 40)).Returns((ProcesoComienzo)null);
             _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
             var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
-            Assert.Equal("GEN_IP_06", result.ErrorCode);
-            _uowMock.Verify(u => u.Rollback(), Times.Once);
+            Assert.Equal("GEN_IP_10", result.ErrorCode);
+            _uowMock.Verify(u => u.Rollback(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Never);
         }
 
@@ -546,6 +567,7 @@ namespace UnitTesting.AppLogic.Services
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            SetupOfertaValidaParaRegistro();
 
             var interesExistente = new Intere
             {
@@ -584,14 +606,19 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
 
             var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.GetByKey(700, 10, 30))
+                .Returns(new InteresProductoOferta
+                {
+                    IdInteres = 700,
+                    IdProducto = 10,
+                    IdOferta = 30
+                });
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
 
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
             var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
@@ -614,6 +641,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(5m, interesProductoProducto12.IdGradoInteres);
             interesProductoRepo.Verify(r => r.Update(It.IsAny<InteresProducto>()), Times.AtLeast(2));
             interesProductoRepo.Verify(r => r.Update(interesProductoProducto12), Times.Never);
+            interesProductoOfertaRepo.Verify(r => r.Add(It.IsAny<InteresProductoOferta>()), Times.Never);
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
         }
 
@@ -639,6 +667,7 @@ namespace UnitTesting.AppLogic.Services
             var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            SetupOfertaValidaParaRegistro();
 
             var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
             intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
@@ -657,9 +686,6 @@ namespace UnitTesting.AppLogic.Services
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
             var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
@@ -811,6 +837,90 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             motivoRepo.Verify(r => r.RemoveByPersona(123), Times.Once);
             motivoRepo.Verify(r => r.Add(It.IsAny<MotivoEleccionAdmision>()), Times.Never);
+        }
+
+        private void SetupOfertaConfirmacion(
+            long idOferta,
+            long idProducto,
+            long idComienzo,
+            long idTurno,
+            string nombreExtenso = "Analista Programador",
+            string nombre = "AP",
+            string nombreComienzo = "Marzo 2026")
+        {
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo
+                .Setup(r => r.GetByKeyWithRelated(idOferta))
+                .Returns(OfertaValida(idOferta, idProducto, idComienzo, idTurno, nombreExtenso, nombre, nombreComienzo));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+        }
+
+        private void SetupOfertaParaRegistro(long idOferta, long idProducto, long idComienzo, long idTurno = 1)
+        {
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo
+                .Setup(r => r.GetByKeyWithRelated(idOferta))
+                .Returns(OfertaValida(idOferta, idProducto, idComienzo, idTurno));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+        }
+
+        private void SetupOfertaValidaParaRegistro(
+            long idOferta = 30,
+            long idProducto = 10,
+            long idProceso = 20,
+            long idComienzo = 40,
+            long idTurno = 1)
+        {
+            SetupOfertaParaRegistro(idOferta, idProducto, idComienzo, idTurno);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo
+                .Setup(r => r.GetByKeyWithRelated(idProceso, idComienzo))
+                .Returns(new ProcesoComienzo { IdProceso = idProceso, IdComienzo = idComienzo });
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+        }
+
+        private void SetupInteresActivoOferta(long codigoPersona, long idProducto, long idOferta, long idProceso)
+        {
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.GetProcesoPorInteresActivoOferta(codigoPersona, idProducto, idOferta))
+                .Returns(new Proceso { IdProceso = idProceso, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+        }
+
+        private static Oferta OfertaValida(
+            long idOferta,
+            long idProducto,
+            long idComienzo,
+            long idTurno,
+            string nombreExtenso = "Analista Programador",
+            string nombre = "AP",
+            string nombreComienzo = "Marzo 2026")
+        {
+            return new Oferta
+            {
+                IdOferta = idOferta,
+                IdTurno = idTurno,
+                InscripcionesAbiertasOferta = "SI",
+                Turno = new Turno { IdTurno = idTurno, NombreTurno = "Nocturno" },
+                Supraoferta = new Supraoferta
+                {
+                    IdComienzo = idComienzo,
+                    EstadoSupraoferta = "D",
+                    Comienzo = new Comienzo { IdComienzo = idComienzo, NombreComienzo = nombreComienzo },
+                    Paquete = new Paquete
+                    {
+                        IdProducto = idProducto,
+                        Producto = new Producto
+                        {
+                            IdProducto = idProducto,
+                            NombreProducto = nombre,
+                            NombreExtensoProducto = nombreExtenso
+                        }
+                    }
+                }
+            };
         }
 
         private void SetupPersonaValida()
