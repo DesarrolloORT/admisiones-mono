@@ -37,7 +37,8 @@
     "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
     "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
     "update-api": "node ./scripts/codegen/update-api.js",
-    "env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io"
+    "env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io",
+    "env:desa:force": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io --force"
   },
   "private": true,
   "dependencies": {
