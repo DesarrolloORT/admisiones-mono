@@ -1,70 +1,96 @@
-<section aria-labelledby="inscription-academic-title" class="inscription-screen">
+<section
+  aria-labelledby="inscription-academic-title"
+  class="inscription-screen inscription-screen--academic">
   <header class="inscription-screen__header">
+    <p class="inscription-screen__eyebrow">Inscripción a carrera</p>
     <h1 id="inscription-academic-title">Inscripción a carrera</h1>
     <p>Completar el proceso toma unos 10-15 minutos.</p>
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
   <form
-    class="inscription-form"
+    class="inscription-form inscription-form--academic"
     novalidate
     [formGroup]="facade.academicForm"
     (ngSubmit)="facade.continue()">
-    <ort-radio-group
-      class="inscription-radio-list"
-      formControlName="tipoPropuesta"
-      legend="Propuesta académica"
-      name="proposal"
-      orientation="vertical"
-      [required]="true">
-      @for (option of facade.proposalOptions(); track option.value) {
-      <ort-radio-button class="inscription-radio-option" [value]="option.value">
-        <span class="inscription-radio-option__label">
-          @if (option.icon) {
-          <ort-icon aria-hidden="true">{{ option.icon }}</ort-icon>
-          }
-          <span>{{ option.label }}</span>
-        </span>
-      </ort-radio-button>
-      }
-    </ort-radio-group>
+    <div class="inscription-form__card">
+      <ort-radio-group
+        class="inscription-radio-list inscription-radio-list--cards"
+        formControlName="tipoPropuesta"
+        indicatorPosition="right"
+        legend="Propuesta académica"
+        name="proposal"
+        orientation="vertical"
+        [required]="true">
+        @for (option of facade.proposalOptions(); track option.value) {
+        <ort-radio-card-button class="inscription-academic-radio-option" [value]="option.value">
+          <ort-icon
+            aria-hidden="true"
+            class="inscription-academic-radio-option__icon"
+            ortRadioCardIcon>
+            {{ option.icon }}
+          </ort-icon>
+          <span class="inscription-academic-radio-option__label">{{ option.label }}</span>
+          <span class="inscription-academic-radio-option__hint" ortRadioSupportingText>
+            {{ option.hint }}
+          </span>
+        </ort-radio-card-button>
+        }
+      </ort-radio-group>
 
-    <div class="inscription-form__stack">
-      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.carrera.value">
-        <ort-label>Carrera</ort-label>
-        <ort-select aria-label="Carrera" formControlName="carrera" id="inscription-career">
-          <ort-option value="">Seleccioná...</ort-option>
-          @for (option of facade.careerOptions(); track option.value) {
-          <ort-option [value]="option.value">{{ option.label }}</ort-option>
-          }
-        </ort-select>
-      </ort-form-field>
+      <div class="inscription-form__stack inscription-form__stack--academic">
+        <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.carrera.value">
+          <ort-label>Carrera</ort-label>
+          <ort-select
+            aria-label="Carrera"
+            formControlName="carrera"
+            id="inscription-career"
+            [disabled]="!facade.canSelectCareer()">
+            <ort-option value="">Seleccioná...</ort-option>
+            @for (option of facade.careerOptions(); track option.value) {
+            <ort-option [value]="option.value">{{ option.label }}</ort-option>
+            }
+          </ort-select>
+        </ort-form-field>
 
-      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.comienzo.value">
-        <ort-label>Comienzo</ort-label>
-        <ort-select aria-label="Comienzo" formControlName="comienzo" id="inscription-start">
-          <ort-option value="">Seleccioná...</ort-option>
-          @for (option of facade.startOptions(); track option.value) {
-          <ort-option [value]="option.value">{{ option.label }}</ort-option>
-          }
-        </ort-select>
-      </ort-form-field>
+        <div class="inscription-form__row">
+          <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.comienzo.value">
+            <ort-label>Comienzo</ort-label>
+            <ort-select
+              aria-label="Comienzo"
+              formControlName="comienzo"
+              id="inscription-start"
+              [disabled]="!facade.canSelectStart()">
+              <ort-option value="">Seleccioná...</ort-option>
+              @for (option of facade.startOptions(); track option.value) {
+              <ort-option [value]="option.value">{{ option.label }}</ort-option>
+              }
+            </ort-select>
+          </ort-form-field>
 
-      <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.turno.value">
-        <ort-label>Turno</ort-label>
-        <ort-select aria-label="Turno" formControlName="turno" id="inscription-turno">
-          <ort-option value="">Seleccioná...</ort-option>
-          @for (option of facade.turnoOptions(); track option.value) {
-          <ort-option [value]="option.value">{{ option.label }}</ort-option>
-          }
-        </ort-select>
-      </ort-form-field>
+          <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.turno.value">
+            <ort-label>Turno</ort-label>
+            <ort-select
+              aria-label="Turno"
+              formControlName="turno"
+              id="inscription-turno"
+              [disabled]="!facade.canSelectTurno()">
+              <ort-option value="">Seleccioná...</ort-option>
+              @for (option of facade.turnoOptions(); track option.value) {
+              <ort-option [value]="option.value">{{ option.label }}</ort-option>
+              }
+            </ort-select>
+          </ort-form-field>
+        </div>
+      </div>
     </div>
 
     <ort-error-summary [errors]="facade.academicErrors()" />
 
     <footer class="inscription-footer">
-      <button ort-primary-button type="submit">Continuar</button>
+      <button ort-primary-button type="submit" [disabled]="facade.registeringProductInterest()">
+        Continuar
+      </button>
     </footer>
   </form>
 </section>

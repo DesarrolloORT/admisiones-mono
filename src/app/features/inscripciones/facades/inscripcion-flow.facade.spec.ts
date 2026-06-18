@@ -3,22 +3,25 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import type { OrtFileUploaderChange } from '@desarrolloort/components';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { BorradorInscripcion } from '../models/inscripcion-flow';
 import { InscripcionDraft } from '../services/inscripcion-draft';
+import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFlowFacade } from './inscripcion-flow.facade';
 
 describe('InscripcionFlowFacade', () => {
   let facade: InscripcionFlowFacade;
   let catalogsMock: ReturnType<typeof createCatalogsMock>;
+  let inscripcionesMock: ReturnType<typeof createInscripcionesMock>;
 
   beforeEach(() => {
     sessionStorage.clear();
     localStorage.clear();
     catalogsMock = createCatalogsMock();
+    inscripcionesMock = createInscripcionesMock();
     facade = createFacade();
   });
 
@@ -50,14 +53,45 @@ describe('InscripcionFlowFacade', () => {
 
   it('loads catalog-backed proposal and survey options', () => {
     expect(facade.proposalOptions()).toEqual([
-      { value: '1', label: 'Carrera universitaria', icon: 'school' },
-      { value: '2', label: 'Tecnicatura', icon: 'list_alt' },
+      {
+        value: '1',
+        label: 'Carrera universitaria',
+        icon: 'school',
+        hint: 'Formación de grado con enfoque práctico y salida laboral',
+      },
+      {
+        value: '2',
+        label: 'Tecnicatura',
+        icon: 'list_alt',
+        hint: 'Carreras cortas, prácticas y orientadas al mercado',
+      },
+      {
+        value: '3',
+        label: 'Actualización profesional',
+        icon: 'how_to_reg',
+        hint: 'Cursos cortos para actualizar habilidades',
+      },
     ]);
     expect(facade.previousCareerOptions()).toEqual([
       { value: '3', label: 'No cursé estudios superiores' },
     ]);
     expect(facade.educationLevelOptions()).toEqual([
       { value: '4', label: 'Universitaria completa' },
+    ]);
+    expect(facade.careerDecisionOptions()).toEqual([{ value: '1', label: 'Durante secundaria' }]);
+  });
+
+  it('filters careers by the selected proposal level group', () => {
+    facade.academicForm.controls.tipoPropuesta.setValue('1');
+    expect(facade.careerOptions()).toEqual([{ value: '20', label: 'Ingeniería en Sistemas' }]);
+
+    facade.academicForm.controls.tipoPropuesta.setValue('2');
+    expect(facade.careerOptions()).toEqual([{ value: '30', label: 'Tecnicatura en Diseño' }]);
+
+    facade.academicForm.controls.tipoPropuesta.setValue('3');
+    expect(facade.careerOptions()).toEqual([
+      { value: '40', label: 'Programa ejecutivo en Data Analytics' },
+      { value: '50', label: 'Curso de actualización profesional' },
     ]);
   });
 
@@ -75,9 +109,28 @@ describe('InscripcionFlowFacade', () => {
     fillAcademicForm();
     facade.continue();
 
+    expect(inscripcionesMock.registerProductInterest).toHaveBeenCalledWith({
+      idOferta: 300,
+      idProcesoSeleccionado: 200,
+      idProducto: 20,
+    });
     expect(facade.screen()).toBe('encuesta');
     expect(facade.activeSection()).toBe('educacion');
     expect(facade.stepNumber()).toBe(2);
+  });
+
+  it('does not advance when product interest registration fails', () => {
+    inscripcionesMock.registerProductInterest.mockReturnValueOnce(
+      throwError(() => new Error('network'))
+    );
+    fillAcademicForm();
+
+    facade.continue();
+
+    expect(facade.screen()).toBe('propuesta');
+    expect(facade.academicErrors()).toContainEqual({
+      message: 'No se pudo registrar el interés por la propuesta seleccionada.',
+    });
   });
 
   it('resumes the partial scenario at the first incomplete section', () => {
@@ -189,6 +242,7 @@ describe('InscripcionFlowFacade', () => {
         InscripcionDraft,
         InscripcionFlowFacade,
         { provide: Catalogs, useValue: catalogsMock },
+        { provide: Inscripciones, useValue: inscripcionesMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -282,6 +336,18 @@ function createCatalogsMock() {
           nombreProducto: 'Tecnicatura en Diseño',
           nombreNivelProducto: 'Tecnicatura',
         },
+        {
+          idProducto: 40,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa ejecutivo en Data Analytics',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+        {
+          idProducto: 50,
+          idNivelProducto: 4,
+          nombreProducto: 'Curso de actualización profesional',
+          nombreNivelProducto: 'Cursos',
+        },
       ])
     ),
     getComienzos: vi.fn().mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }])),
@@ -289,7 +355,7 @@ function createCatalogsMock() {
       of({
         aniosAprobadosEducacionSuperior: [],
         compartidoCon: [{ id: 5, label: 'Familia' }],
-        decisionCarrera: [{ id: 1, label: 'Salida laboral' }],
+        decisionCarrera: [{ id: 1, label: 'Durante secundaria' }],
         decisionUniversidad: [{ id: 2, label: 'Prestigio académico' }],
         estadoEducacionSuperior: [{ id: 3, label: 'No cursé estudios superiores' }],
         formacionTutores: [{ id: 4, label: 'Universitaria completa' }],
@@ -306,6 +372,12 @@ function createCatalogsMock() {
         },
       ])
     ),
+  };
+}
+
+function createInscripcionesMock() {
+  return {
+    registerProductInterest: vi.fn().mockReturnValue(of(true)),
   };
 }
 
