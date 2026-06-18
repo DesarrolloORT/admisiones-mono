@@ -68,7 +68,7 @@ export class RegisterPage {
       data.city
     );
     await this.page.getByRole('textbox', { name: 'Dirección' }).fill(data.address);
-    await this.page.getByRole('textbox', { name: 'Celular con prefijo +598' }).fill(data.phone);
+    await this.page.getByRole('textbox', { name: 'Número de teléfono' }).fill(data.phone);
     await this.page.getByRole('textbox', { exact: true, name: 'E-mail' }).fill(data.email);
     await this.page.getByRole('textbox', { name: 'Confirmar e-mail' }).fill(data.email);
   }
@@ -83,14 +83,16 @@ export class RegisterPage {
   }
 
   public async expectCreatedAccount(): Promise<void> {
-    await expect(this.page.getByRole('status').first()).toContainText(
-      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-    );
+    const message = 'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.';
+
+    await expect(this.page.getByRole('status').filter({ hasText: message })).toBeVisible();
+    await expect(this.page.locator('form')).not.toContainText(message);
   }
 
   public async expectVerifiedIdentity(): Promise<void> {
-    await expect(this.page.getByRole('status').first()).toContainText(
-      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
-    );
+    const message = 'Datos verificados correctamente. Revisá tu correo para activar la contraseña.';
+
+    await expect(this.page.getByRole('status').filter({ hasText: message })).toBeVisible();
+    await expect(this.page.locator('form')).not.toContainText(message);
   }
 }

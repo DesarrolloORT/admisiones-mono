@@ -6,6 +6,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 export interface MockApiOptions {
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
+  delayMsByPath?: Record<string, number>;
 }
 
 const authenticatedPerson = {
@@ -17,7 +18,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
   const registerScenario = REGISTER_SCENARIOS[options.registerFlow ?? 'new-person'];
   const failPaths = new Set(options.failPaths ?? []);
 
-  await page.route('**/*', route => {
+  await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
     const path = decodeURIComponent(url.pathname);
@@ -32,6 +33,11 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
     if (request.method() === 'OPTIONS') {
       return fulfillCorsPreflight(route);
+    }
+
+    const delayMs = options.delayMsByPath?.[path] ?? 0;
+    if (delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
 
     if (failPaths.has(path)) {
