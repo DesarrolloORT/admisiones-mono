@@ -1,0 +1,19 @@
+<article
+  class="action-card"
+  [class.action-card--career]="variant() === 'career'"
+  [class.action-card--scholarship]="variant() === 'scholarship'">
+  <div class="action-card__header">
+    <ort-icon aria-hidden="true" class="action-card__icon" size="lg">{{ config().icon }}</ort-icon>
+    <h4 class="action-card__title">{{ config().title }}</h4>
+    <button
+      class="action-card__arrow"
+      ort-icon-button
+      type="button"
+      variant="tonal"
+      [aria-label]="config().title">
+      <ort-icon name="chevron_right" />
+    </button>
+  </div>
+  <p class="action-card__description">{{ config().description }}</p>
+  <button class="action-card__cta" ort-primary-button type="button">Postularme a beca</button>
+</article>

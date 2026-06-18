@@ -42,8 +42,8 @@
 
 <app-inscripcion-dialog
   closeLabel="Continuar con la inscripción"
-  title="¿Querés salir de la inscripción?"
   helperText="Guardaremos tus avances para que puedas continuar más tarde."
+  title="¿Querés salir de la inscripción?"
   [open]="facade.exitConfirmationOpen()"
   (closed)="facade.cancelExit()">
   <p>Los archivos de identidad deberán adjuntarse nuevamente cuando retomes el proceso.</p>
