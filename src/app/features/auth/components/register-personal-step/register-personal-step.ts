@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   inject,
   input,
@@ -50,6 +51,12 @@ export class RegisterPersonalStep {
 
   public readonly submitted = signal(false);
   public readonly errorSummary = signal<OrtErrorItem[]>([]);
+  protected readonly submitLabel = computed(() =>
+    this.personalMode() === 'verification' ? 'Confirmar' : 'Crear cuenta'
+  );
+  protected readonly submittingLabel = computed(() =>
+    this.personalMode() === 'verification' ? 'Confirmando...' : 'Creando...'
+  );
   private readonly verificationFields: FormErrorField[] = [
     { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
     { controlName: 'mail', fieldId: 'email', label: 'E-mail' },

@@ -235,9 +235,7 @@ describe('HTTP interceptors', () => {
     const next = vi.fn().mockReturnValue(throwError(() => httpErr));
 
     const req = new HttpRequest('GET', '/api/fail', null, {
-      context: new HttpContext()
-        .set(CACHING_ENABLED, false)
-        .set(SHOW_GLOBAL_LOADER, true),
+      context: new HttpContext().set(CACHING_ENABLED, false).set(SHOW_GLOBAL_LOADER, true),
     });
 
     await expect(firstValueFrom(invoke(req, next))).rejects.toBe(httpErr);

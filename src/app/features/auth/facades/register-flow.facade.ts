@@ -62,7 +62,17 @@ export class RegisterFlowFacade {
 
   public readonly isPersonalStep = computed(() => this.step() === 'personal');
   public readonly personalMode = computed(() => getRegisterPersonalMode(this.registrationFlow()));
-  public readonly stepViewModel = computed(() => REGISTER_STEP_VIEW_MODELS[this.step()]);
+  public readonly stepViewModel = computed(() => {
+    const viewModel = REGISTER_STEP_VIEW_MODELS[this.step()];
+
+    return this.isPersonalStep() && this.personalMode() === 'verification'
+      ? {
+          ...viewModel,
+          title: 'Verificación de identidad',
+          stepTitle: 'Verificación de identidad',
+        }
+      : viewModel;
+  });
 
   constructor() {
     effect(() => {

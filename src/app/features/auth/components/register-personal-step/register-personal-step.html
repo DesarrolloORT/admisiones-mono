@@ -12,12 +12,12 @@
   <div class="auth-actions">
     <button ort-secondary-button type="button" (click)="back.emit()">Volver</button>
     <button
-      loadingLabel="Creando cuenta"
       ort-primary-button
       type="submit"
       [disabled]="isSubmitting() || isCompleted()"
-      [loading]="isSubmitting()">
-      {{ isCompleted() ? 'Enviado' : isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
+      [loading]="isSubmitting()"
+      [loadingLabel]="submittingLabel()">
+      {{ isCompleted() ? 'Enviado' : isSubmitting() ? submittingLabel() : submitLabel() }}
     </button>
   </div>
 </form>
