@@ -25,8 +25,23 @@ body {
   scroll-behavior: smooth;
 }
 
-@media (prefers-reduced-motion: reduce) {
+.password-visibility-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ort-sys-spacing-4);
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
 
+.password-visibility-toggle:focus-visible {
+  border-radius: var(--ort-sys-border-radius-4);
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
   html,
   body {
     scroll-behavior: auto;
