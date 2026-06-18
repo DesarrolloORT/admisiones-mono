@@ -7,13 +7,12 @@ import {
   ElementRef,
   inject,
   OnDestroy,
+  output,
   signal,
   ViewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtIconModule } from '@desarrolloort/components';
-
-import { AuthSessionService } from '../../../auth/services/auth-session';
 
 const DRAWER_CLOSE_THRESHOLD_PX = 96;
 const DRAWER_EXPANDED_OFFSET_PX = 104;
@@ -29,8 +28,9 @@ type DrawerState = 'collapsed' | 'expanded';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeHeader implements OnDestroy {
-  private readonly authSession = inject(AuthSessionService);
   private readonly document = inject(DOCUMENT);
+
+  readonly logoutRequested = output<void>();
 
   protected readonly profileMenuOpen = signal(false);
   protected readonly drawerDragOffset = signal(0);
@@ -136,7 +136,7 @@ export class HomeHeader implements OnDestroy {
 
   protected logout(): void {
     this.closeProfileMenu();
-    this.authSession.logout();
+    this.logoutRequested.emit();
   }
 
   private restoreProfileButtonFocus(): void {

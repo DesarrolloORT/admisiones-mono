@@ -1,5 +1,7 @@
 /* stylelint-disable declaration-property-unit-allowed-list -- Header and drawer follow Figma px measurements and ORT token fallbacks. */
 :host {
+  --header-primary: var(--home-primary, var(--ort-sys-base-surface-primary-background, #0055b8));
+
   display: block;
 }
 
@@ -7,7 +9,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--home-primary);
+  background: var(--header-primary);
 }
 
 .home-header__content {
@@ -71,7 +73,7 @@
   border: 0;
   border-radius: var(--ort-sys-avatar-border-radius);
   background: var(--ort-sys-avatar-background);
-  color: var(--home-primary);
+  color: var(--header-primary);
   cursor: pointer;
 
   ort-icon {

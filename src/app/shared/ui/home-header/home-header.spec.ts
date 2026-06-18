@@ -1,9 +1,6 @@
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { AuthSession } from '../../../auth/models/auth.interface';
-import { AuthSessionService } from '../../../auth/services/auth-session';
 import { HomeHeader } from './home-header';
 
 interface TouchLike {
@@ -24,26 +21,11 @@ type TestHomeHeader = HomeHeader & {
 describe('HomeHeader', () => {
   let fixture: ComponentFixture<HomeHeader>;
   let component: TestHomeHeader;
-  let authMock: {
-    logout: ReturnType<typeof vi.fn>;
-    session: ReturnType<typeof signal<AuthSession | null>>;
-  };
 
   beforeEach(() => {
-    authMock = {
-      logout: vi.fn(),
-      session: signal<AuthSession | null>({
-        token: null,
-        documentType: 'CI',
-        documentNumber: '12345678',
-        primerNombre: 'Ana',
-        expiresAt: null,
-      }),
-    };
-
     TestBed.configureTestingModule({
       imports: [HomeHeader],
-      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
+      providers: [provideRouter([])],
     });
 
     fixture = TestBed.createComponent(HomeHeader);
@@ -137,14 +119,17 @@ describe('HomeHeader', () => {
     expect(component.profileMenuOpen()).toBe(false);
   });
 
-  it('should delegate logout to the auth session service', () => {
+  it('should emit logout from the user menu', () => {
+    const logoutRequested = vi.fn();
+    component.logoutRequested.subscribe(logoutRequested);
+
     fixture.detectChanges();
 
     fixture.nativeElement.querySelector('.home-avatar').click();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.home-profile-menu__item:last-child').click();
 
-    expect(authMock.logout).toHaveBeenCalledOnce();
+    expect(logoutRequested).toHaveBeenCalledOnce();
     expect(component.profileMenuOpen()).toBe(false);
   });
 });
