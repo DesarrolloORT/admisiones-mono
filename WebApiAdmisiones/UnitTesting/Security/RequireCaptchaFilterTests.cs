@@ -38,6 +38,30 @@ namespace UnitTesting.Security
         }
 
         [Fact]
+        public async Task OnActionExecutionAsync_WithExpectedAction_ValidatesUsingConfiguredAction()
+        {
+            using var scope = new UnitTesting.AppLogic.Services.EnvironmentVariableScope(("RECAPTCHA_SCORE", "0.5"));
+            var recaptchaMock = new Mock<IRecaptchaService>();
+            recaptchaMock
+                .Setup(s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluarDocumento))
+                .ReturnsAsync(OperationResult<double>.Ok(0.8, nameof(IRecaptchaService.ValidarConScoreAsync)));
+
+            var context = CreateContext("token");
+            var filter = new RequireCaptchaFilter(
+                recaptchaMock.Object,
+                CaptchaValidationMode.RequireMinimumScore,
+                CaptchaActions.EvaluarDocumento);
+
+            await filter.OnActionExecutionAsync(context, () =>
+                Task.FromResult(CreateExecutedContext(context)));
+
+            Assert.Null(context.Result);
+            recaptchaMock.Verify(
+                s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluarDocumento),
+                Times.Once);
+        }
+
+        [Fact]
         public async Task OnActionExecutionAsync_RequireMinimumScoreWithMissingCaptcha_ReturnsRegistrationFailure()
         {
             var recaptchaMock = new Mock<IRecaptchaService>();
