@@ -115,7 +115,7 @@ describe('PersonalData', () => {
     expect(text).toContain('Tipo de documento');
     expect(text).toContain('Datos de contacto');
     expect(text).toContain('Guardar');
-    expect(service.getPersonalData).toHaveBeenCalledWith(true);
+    expect(service.getPersonalData).toHaveBeenCalled();
     expect(component.form.controls.firstName.value).toBe('Gabriela');
     expect(component.form.controls.documentNumber.value).toBe('4.123.456-9');
     expect(component.form.controls.phone.value).toEqual({

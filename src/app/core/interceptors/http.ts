@@ -11,15 +11,13 @@ import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-util
 import { asyncScheduler, Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, map, observeOn, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
+import { SHOW_GLOBAL_LOADER } from 'src/app/shared/api/core/api-http-client';
 import { environment } from 'src/environments/environment';
 
 import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
 import { TelemetryService } from '../services/telemetry';
 
 export const CACHING_ENABLED = new HttpContextToken<boolean>(() => environment.CACHING_ENABLED);
-const IGNORED_LOADER_URLS: string[] = [
-  // * TODO: add URLs to ignore
-];
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -36,16 +34,6 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
     cacheHandler: inject(CacheService),
     loader: inject(LoaderService),
     telemetry: inject(TelemetryService),
-  };
-
-  const handleLoader = (url: string): void => {
-    const { loader } = services;
-    const isURLToIgnore = IGNORED_LOADER_URLS.some(pattern => url.includes(pattern));
-    if (isURLToIgnore) {
-      loader.hide();
-    } else {
-      loader.show();
-    }
   };
 
   const setHeaders = (req: HttpRequest<unknown>): HttpRequest<unknown> => {
@@ -129,7 +117,10 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   //* Process request
-  handleLoader(request.url);
+  const showLoader = request.context.get(SHOW_GLOBAL_LOADER);
+  if (showLoader) {
+    services.loader.show();
+  }
   const processedRequest = processRequest(setHeaders(request));
 
   return addCaptchaHeader(processedRequest).pipe(
@@ -138,7 +129,11 @@ export const httpInterceptor: HttpInterceptorFn = (request, next) => {
 
       return sendRequest(telemetryRequest);
     }),
-    finalize(() => services.loader.hide())
+    finalize(() => {
+      if (showLoader) {
+        services.loader.hide();
+      }
+    })
   );
 };
 

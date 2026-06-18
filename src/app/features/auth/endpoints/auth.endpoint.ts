@@ -242,6 +242,7 @@ export class AuthEndpoint {
       .request(postAuthActivarLinkPasswordEndpoint, {
         body: payload,
         withCredentials: true,
+        showLoader: true,
       })
       .pipe(map(() => undefined));
   }

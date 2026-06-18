@@ -11,6 +11,7 @@ import {
 } from '@desarrolloort/ngx-utils';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
+import { SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
 import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
 
 describe('AuthEndpoint', () => {
@@ -136,6 +137,7 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.body).toEqual({ token: 'token-123' });
       expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(SHOW_GLOBAL_LOADER)).toBe(true);
 
       req.flush({ success: true, httpCode: 200, data: { codigoPersona: 1 } });
     });

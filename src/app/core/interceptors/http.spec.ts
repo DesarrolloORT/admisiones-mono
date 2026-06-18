@@ -15,6 +15,7 @@ import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-util
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 
 import { AuthSessionService } from '../../features/auth/services/auth-session';
+import { SHOW_GLOBAL_LOADER } from '../../shared/api/core/api-http-client';
 import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
 import { TelemetryService } from '../services/telemetry';
 import { authRefreshInterceptor, CACHING_ENABLED, httpInterceptor } from './http';
@@ -121,7 +122,7 @@ describe('HTTP interceptors', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('sets headers and shows/hides loader for a normal GET', async () => {
+  it('sets headers without showing the loader by default', async () => {
     mockCacheService.get.mockReturnValue(undefined);
     const resp = new HttpResponse({ status: 200, body: { ok: true } });
     const next = vi.fn().mockReturnValue(of(resp));
@@ -133,9 +134,8 @@ describe('HTTP interceptors', () => {
 
     const result = await firstValueFrom(invoke(req, next));
 
-    // loader
-    expect(mockLoader.show).toHaveBeenCalled();
-    expect(mockLoader.hide).toHaveBeenCalled();
+    expect(mockLoader.show).not.toHaveBeenCalled();
+    expect(mockLoader.hide).not.toHaveBeenCalled();
 
     // headers
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
@@ -153,6 +153,20 @@ describe('HTTP interceptors', () => {
 
     // response unchanged
     expect(result).toBe(resp);
+  });
+
+  it('shows and hides the loader when the request opts in', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const response = new HttpResponse({ status: 200 });
+    const next = vi.fn().mockReturnValue(of(response));
+    const request = new HttpRequest('POST', '/Auth/Login', null, {
+      context: new HttpContext().set(SHOW_GLOBAL_LOADER, true),
+    });
+
+    await firstValueFrom(invoke(request, next));
+
+    expect(mockLoader.show).toHaveBeenCalledOnce();
+    expect(mockLoader.hide).toHaveBeenCalledOnce();
   });
 
   it('adds a captcha token header when the request declares a captcha action', async () => {
@@ -221,7 +235,9 @@ describe('HTTP interceptors', () => {
     const next = vi.fn().mockReturnValue(throwError(() => httpErr));
 
     const req = new HttpRequest('GET', '/api/fail', null, {
-      context: new HttpContext().set(CACHING_ENABLED, false),
+      context: new HttpContext()
+        .set(CACHING_ENABLED, false)
+        .set(SHOW_GLOBAL_LOADER, true),
     });
 
     await expect(firstValueFrom(invoke(req, next))).rejects.toBe(httpErr);

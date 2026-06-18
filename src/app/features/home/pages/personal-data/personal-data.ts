@@ -223,8 +223,8 @@ export class PersonalData implements OnInit {
     this.isLoading.set(true);
 
     forkJoin({
-      data: this.account.getPersonalData(true),
-      locations: this.catalogs.getCountryLocations(true),
+      data: this.account.getPersonalData(),
+      locations: this.catalogs.getCountryLocations(),
     })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
