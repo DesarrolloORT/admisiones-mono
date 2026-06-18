@@ -1,11 +1,19 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 
 import { AuthSessionService } from '../../features/auth/services/auth-session';
 
-export const authGuard: CanActivateFn = () => {
+function checkAuthenticated() {
   const authSession = inject(AuthSessionService);
   const router = inject(Router);
 
-  return authSession.isAuthenticated() ? true : router.createUrlTree(['/iniciar-sesion']);
-};
+  return authSession
+    .ensureAuthenticatedSession()
+    .pipe(
+      map(isAuthenticated => (isAuthenticated ? true : router.createUrlTree(['/iniciar-sesion'])))
+    );
+}
+
+export const authGuard: CanActivateFn = () => checkAuthenticated();
+export const authMatchGuard: CanMatchFn = () => checkAuthenticated();

@@ -52,6 +52,29 @@ export function buildFormErrorSummary(
   return errors;
 }
 
+export function getFirstInvalidFieldId(form: FormGroup, fields: FormErrorField[]): string | null {
+  for (const field of fields) {
+    const control = form.get(field.controlName);
+
+    if (control?.invalid) {
+      return resolveFieldId(field.fieldId, control);
+    }
+  }
+
+  return null;
+}
+
+export function focusFieldById(document: Document, fieldId: string | null): void {
+  if (!fieldId) {
+    return;
+  }
+
+  setTimeout(() => {
+    const target = document.getElementById(fieldId);
+    target?.focus();
+  });
+}
+
 function resolveFieldId(fieldId: FormErrorField['fieldId'], control: AbstractControl): string {
   return typeof fieldId === 'function' ? fieldId(control) : fieldId;
 }

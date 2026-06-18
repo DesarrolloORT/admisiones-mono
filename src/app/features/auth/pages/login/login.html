@@ -1,18 +1,12 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
-<app-auth-form
-  description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
-  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
-  heroIcon="school"
-  heroTitle="Tu red profesional comienza hoy."
-  title="Comenzá tu camino en ORT">
+<app-auth-form description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país." heroIcon="school"
+  heroTitle="Tu red profesional comienza hoy." title="Comenzá tu camino en ORT">
   <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <section class="auth-form-section">
       <ort-form-field [hideRequiredMarker]="!!form.controls.documentType.value">
         <ort-label>Tipo de documento</ort-label>
-        <ort-select
-          aria-label="Tipo de documento"
-          formControlName="documentType"
-          [id]="'login-document-type'">
+        <ort-select aria-label="Tipo de documento" formControlName="documentType" [id]="'login-document-type'">
           <ort-option value="CI">Cédula</ort-option>
           <ort-option value="PS">Pasaporte</ort-option>
           <ort-option value="DE">Documento extranjero</ort-option>
@@ -26,18 +20,10 @@
       <ort-form-field [hideRequiredMarker]="!!form.controls.documentNumber.value">
         <ort-label>Nro. de documento</ort-label>
         @if (isCedulaInput()) {
-        <input
-          autocomplete="username"
-          formControlName="documentNumber"
-          ortCedulaInput
-          type="text"
+        <input autocomplete="username" formControlName="documentNumber" ortCedulaInput type="text"
           [id]="'login-document-number'" />
         } @else {
-        <input
-          autocomplete="username"
-          formControlName="documentNumber"
-          ortInput
-          type="text"
+        <input autocomplete="username" formControlName="documentNumber" ortInput type="text"
           [id]="'login-document-number'" />
         } @if (!isCedulaInput()) {
         <ort-hint>Sin puntos ni guiones</ort-hint>
@@ -55,41 +41,25 @@
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.password.value">
         <ort-label>Contraseña</ort-label>
-        <input
-          #passwordInput
-          formControlName="password"
-          ortInput
-          [attr.autocomplete]="'current-password'"
-          [id]="'login-password'"
-          [type]="passwordInputType()" />
-        <button
-          ort-icon-button
-          ortSuffix
-          type="button"
-          [attr.aria-label]="passwordToggleLabel()"
-          (click)="togglePasswordVisibility()">
-          <ort-icon aria-hidden="true">{{ passwordIcon() }}</ort-icon>
+        <input #passwordInput formControlName="password" ortInput [attr.autocomplete]="'current-password'"
+          [id]="'login-password'" [type]="passwordInputType()" />
+        <button class="password-visibility-toggle" ortSuffix type="button" [attr.aria-label]="passwordToggleLabel()"
+          [attr.aria-pressed]="showPassword()" (click)="togglePasswordVisibility()">
+          <ort-icon aria-hidden="true" [name]="passwordIcon()" />
         </button>
         @if ( form.controls.password.touched && form.controls.password.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>
 
-      <a
-        class="auth-link"
-        routerLink="/recuperar-acceso"
+      <a class="auth-link" routerLink="/recuperar-acceso"
         [queryParams]="{ tipoDoc: form.controls.documentType.value, doc: form.controls.documentNumber.value }">
         ¿Olvidaste tu usuario o contraseña?
       </a>
     </section>
 
-    <ort-error-summary [errors]="errorSummary()" />
-
-    @if (error()) {
-    <p class="auth-error" role="alert">{{ error() }}</p>
-    }
-
-    <button ort-primary-button type="submit" [disabled]="isSubmitting()">
+    <button loadingLabel="Validando credenciales" ort-primary-button type="submit" [disabled]="isSubmitting()"
+      [loading]="isSubmitting()">
       {{ isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
     </button>
 

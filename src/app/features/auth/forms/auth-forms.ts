@@ -1,5 +1,6 @@
 import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { ortCedulaValidator } from '@desarrolloort/components';
+import type { PhoneInputValue } from '@desarrolloort/components';
+import { ortCedulaValidator, ortPhoneValidator } from '@desarrolloort/components';
 import {
   matchingFieldsValidator,
   normalizeEmailValue,
@@ -24,11 +25,11 @@ export interface PersonalForm {
   segundoNombre: FormControl<string>;
   primerApellido: FormControl<string>;
   segundoApellido: FormControl<string>;
-  fechaNacimiento: FormControl<string>;
+  fechaNacimiento: FormControl<string | Date | null>;
   sexo: FormControl<string>;
   location: FormControl<LocationValue>;
   direccion: FormControl<string>;
-  telefono1: FormControl<string>;
+  telefono1: FormControl<PhoneInputValue | null>;
   mail: FormControl<string>;
   verificacionMail: FormControl<string>;
 }
@@ -100,8 +101,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
       segundoNombre: new FormControl('', { nonNullable: true }),
       primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       segundoApellido: new FormControl('', { nonNullable: true }),
-      fechaNacimiento: new FormControl('', {
-        nonNullable: true,
+      fechaNacimiento: new FormControl<string | Date | null>(null, {
         validators: [Validators.required],
       }),
       sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -110,7 +110,9 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
         { nonNullable: true }
       ),
       direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      telefono1: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      telefono1: new FormControl<PhoneInputValue | null>(null, {
+        validators: [Validators.required, ortPhoneValidator],
+      }),
       mail: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.email],

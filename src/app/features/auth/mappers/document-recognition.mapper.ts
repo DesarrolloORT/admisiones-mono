@@ -11,7 +11,7 @@ export interface RecognizedPersonalPatch {
   segundoNombre?: string;
   primerApellido?: string;
   segundoApellido?: string;
-  fechaNacimiento?: string;
+  fechaNacimiento?: Date;
   sexo?: string;
 }
 
@@ -81,13 +81,18 @@ export function getCountryCodeFromBirthplace(birthplace: string | null | undefin
   return null;
 }
 
-export function toDateInputValue(value: string | null): string | null {
+export function toDateInputValue(value: string | null): Date | null {
   if (!value) {
     return null;
   }
 
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
-  return match ? match[1] : null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 export function getStringValue(value: unknown): string | null {
@@ -108,16 +113,18 @@ function getBirthplaceDepartmentName(birthplace: string | null | undefined): str
   return departmentName || null;
 }
 
-function withoutEmptyValues<T extends Record<string, string | null>>(
-  value: T
-): Partial<Record<keyof T, string>> {
-  const result: Partial<Record<keyof T, string>> = {};
+type NonNullPatch<T extends Record<string, unknown>> = Partial<{
+  [K in keyof T]: Exclude<T[K], null>;
+}>;
+
+function withoutEmptyValues<T extends Record<string, unknown>>(value: T): NonNullPatch<T> {
+  const result: NonNullPatch<T> = {};
 
   (Object.keys(value) as Array<keyof T>).forEach(key => {
     const fieldValue = value[key];
 
-    if (fieldValue) {
-      result[key] = fieldValue;
+    if (fieldValue !== null && fieldValue !== '') {
+      result[key] = fieldValue as Exclude<T[typeof key], null>;
     }
   });
 

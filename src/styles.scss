@@ -2,10 +2,15 @@
 @use './styles/auth';
 @use './styles/inscripciones';
 
+// Global cascade:
+// 1. angular.json loads @desarrolloort/design-system/index.min.css first.
+// 2. This file only keeps app-level bridges and overrides that must come after it.
+// 3. Domain globals in src/styles/_*.scss are for projected content or ORT library overrides.
+// Do not re-import design-system SCSS here; utilities like .sr-only come from index.min.css.
+
 @include mat.elevation-classes();
 @include mat.app-background();
 
-/* stylelint-disable declaration-property-unit-allowed-list -- Screen-reader utility uses conventional 1px clipping dimensions. */
 :root {
   --mat-sys-primary: var(--ort-sys-base-surface-primary-background);
   --mat-sys-on-surface: var(--ort-sys-base-text-color-headline);
@@ -20,16 +25,20 @@ body {
   scroll-behavior: smooth;
 }
 
-.sr-only {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
+.password-visibility-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ort-sys-spacing-4);
   border: 0;
-  white-space: nowrap;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.password-visibility-toggle:focus-visible {
+  border-radius: var(--ort-sys-border-radius-4);
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

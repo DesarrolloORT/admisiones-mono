@@ -15,7 +15,8 @@ personales y cambio de contrasenia.
 - Dialogos y menus: usar `aria-expanded`, `aria-controls`, `aria-modal`, cierre
   con `Escape`, trap de foco y restauracion del foco al disparador.
 - Formularios: cada campo debe tener label visible, hints claros si el valor
-  visual no alcanza, errores por campo y resumen con `OrtErrorSummary`.
+  visual no alcanza y errores por campo. Usar `OrtErrorSummary` en formularios
+  largos; en formularios cortos alcanza con snackbar mas errores inline.
 - Errores: no depender solo de color. Los errores deben anunciarse con
   `role="alert"` o el mecanismo accesible del componente ORT.
 - Contrasenias: los toggles deben anunciar accion dinamica, por ejemplo
@@ -205,9 +206,12 @@ UI revisar:
 - Foco inicial y restauracion de foco en menus, dialogos y drawers.
 - Zoom del navegador al 200% y viewport mobile.
 - Contraste real en estados normal, hover, focus, disabled, error y success.
-- Formularios incompletos: el resumen de errores debe recibir foco y anunciar
-  los campos invalidos. Los links desde el resumen al campo solo se habilitan
-  cuando el componente expone un target publico y estable.
+- Formularios incompletos: en formularios largos el resumen de errores debe
+  recibir foco y anunciar los campos invalidos; luego el foco debe avanzar al
+  primer campo invalido usando un target publico del control. En formularios
+  cortos se puede usar snackbar y enfocar directamente el primer campo invalido.
+  Los links desde el resumen al campo solo se habilitan cuando el componente
+  expone un target publico y estable.
 
 ## ORT Components
 
@@ -228,7 +232,9 @@ En esos casos:
   target publico estable para que `OrtErrorSummary` pueda renderizar links que
   lleven el foco al campo invalido. En la app se usa
   `ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED`, que mantiene el resumen
-  anunciado y enfocado pero omite anchors rotos. El gap queda marcado en
+  anunciado y enfocado pero omite anchors rotos. Cuando hace falta mover foco,
+  la app usa ids publicos definidos en el punto de uso, sin depender del DOM
+  interno de ORT. El gap queda marcado en
   `src/app/shared/forms/form-error-summary.ts` con
   `TODO(a11y-ort-component)`.
 - `OrtInput` en el paso de identidad del registro: al alternar dinamicamente

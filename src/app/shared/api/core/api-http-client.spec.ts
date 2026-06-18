@@ -10,7 +10,7 @@ import { environment } from 'src/environments/environment';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import { defineEndpoint } from './api-endpoint';
-import { ApiHttpClient } from './api-http-client';
+import { ApiHttpClient, SHOW_GLOBAL_LOADER } from './api-http-client';
 
 describe('ApiHttpClient', () => {
   let api: ApiHttpClient;
@@ -98,6 +98,26 @@ describe('ApiHttpClient', () => {
 
     expect(request.request.context.get(CAPTCHA_ACTION)).toBe('login');
 
+    request.flush({ ok: true });
+  });
+
+  it('should enable the global loader when requested', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: { ok: boolean };
+    }>({
+      operationId: 'GuardarPersona',
+      method: 'POST',
+      path: '/persona',
+    });
+
+    api.request(endpoint, { showLoader: true }).subscribe();
+
+    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+
+    expect(request.request.context.get(SHOW_GLOBAL_LOADER)).toBe(true);
     request.flush({ ok: true });
   });
 

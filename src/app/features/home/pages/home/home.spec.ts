@@ -1,11 +1,9 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { HomeEndpoint } from '../../endpoints/home.endpoint';
 import { Home } from './home';
 
 describe('Home', () => {
@@ -30,11 +28,7 @@ describe('Home', () => {
 
     TestBed.configureTestingModule({
       imports: [Home],
-      providers: [
-        provideRouter([]),
-        { provide: AuthSessionService, useValue: authMock },
-        { provide: HomeEndpoint, useValue: { getMisInscripciones: () => of([]) } },
-      ],
+      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
     });
 
     fixture = TestBed.createComponent(Home);

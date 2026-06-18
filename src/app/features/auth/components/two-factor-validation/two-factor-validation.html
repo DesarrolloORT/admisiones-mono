@@ -36,7 +36,13 @@
     }
 
     <footer class="footer">
-      <button class="confirm" ort-primary-button type="submit" [disabled]="isSubmitting()">
+      <button
+        class="confirm"
+        loadingLabel="Validando código"
+        ort-primary-button
+        type="submit"
+        [disabled]="isSubmitting()"
+        [loading]="isSubmitting()">
         {{ isSubmitting() ? 'Validando' : 'Confirmar' }}
       </button>
       <p class="resend">

@@ -11,6 +11,7 @@ import {
   postAuthLogoutEndpoint,
   postAuthRecuperarContrasenaEndpoint,
   postAuthReenviarCodigo2FaEndpoint,
+  postAuthRefreshTokenEndpoint,
   postAuthVerificarCodigo2FaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
@@ -241,6 +242,7 @@ export class AuthEndpoint {
       .request(postAuthActivarLinkPasswordEndpoint, {
         body: payload,
         withCredentials: true,
+        showLoader: true,
       })
       .pipe(map(() => undefined));
   }
@@ -384,6 +386,22 @@ export class AuthEndpoint {
   public logout(): Observable<void> {
     return this.api
       .request(postAuthLogoutEndpoint, { withCredentials: true })
+      .pipe(map(() => undefined));
+  }
+
+  /**
+   * Refresh the access token using the HttpOnly refresh-token cookie.
+   *
+   * Behind the scenes: POST /Auth/RefreshToken using generated endpoint.
+   * The frontend intentionally sends no body; the API validates the refresh
+   * cookie and updates authentication cookies on success.
+   */
+  public refreshToken(): Observable<void> {
+    return this.api
+      .request(postAuthRefreshTokenEndpoint, {
+        withCredentials: true,
+        context: suppressGlobalErrorContext(),
+      })
       .pipe(map(() => undefined));
   }
 

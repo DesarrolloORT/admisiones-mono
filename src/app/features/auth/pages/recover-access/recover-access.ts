@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,8 +20,9 @@ import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
 import {
-  buildFormErrorSummary,
-  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+  focusFieldById,
+  FormErrorField,
+  getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
@@ -44,49 +46,40 @@ import { PasswordActivationService } from '../../services/password-activation';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecoverAccess {
+  private readonly document = inject(DOCUMENT);
   private readonly passwordService = inject(PasswordActivationService);
   private readonly route = inject(ActivatedRoute);
   private readonly snackbar = inject(SnackbarHandler);
 
   protected readonly form = createRecoverAccessForm();
   protected readonly isSubmitting = signal(false);
-  protected readonly error = signal<string | null>(null);
-  protected readonly successMessage = signal<string | null>(null);
   protected readonly submitted = signal(false);
+  private readonly errorFields: FormErrorField[] = [
+    {
+      controlName: 'documentType',
+      fieldId: 'recover-document-type',
+      label: 'Tipo de documento',
+    },
+    {
+      controlName: 'documentNumber',
+      fieldId: 'recover-document-number',
+      label: 'Nro. de documento',
+      messages: {
+        pattern: 'Ingresá solo caracteres alfanuméricos.',
+      },
+    },
+    {
+      controlName: 'primerApellido',
+      fieldId: 'recover-primer-apellido',
+      label: 'Primer apellido',
+    },
+  ];
 
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
 
   protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
-  protected readonly errorSummary = computed(() =>
-    this.submitted()
-      ? buildFormErrorSummary(
-          this.form,
-          [
-            {
-              controlName: 'documentType',
-              fieldId: 'recover-document-type',
-              label: 'Tipo de documento',
-            },
-            {
-              controlName: 'documentNumber',
-              fieldId: 'recover-document-number',
-              label: 'Nro. de documento',
-              messages: {
-                pattern: 'Ingresá solo caracteres alfanuméricos.',
-              },
-            },
-            {
-              controlName: 'primerApellido',
-              fieldId: 'recover-primer-apellido',
-              label: 'Primer apellido',
-            },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
 
   constructor() {
     effect(() => {
@@ -102,11 +95,11 @@ export class RecoverAccess {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.snackbar.error('Revisá los campos marcados.');
+      focusFieldById(this.document, getFirstInvalidFieldId(this.form, this.errorFields));
       return;
     }
 
-    this.error.set(null);
-    this.successMessage.set(null);
     this.isSubmitting.set(true);
 
     const { documentType, documentNumber, primerApellido } = this.form.getRawValue();
@@ -122,7 +115,6 @@ export class RecoverAccess {
         next: () => {
           const message =
             'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
-          this.successMessage.set(message);
           this.snackbar.success(message);
         },
         error: error => {
@@ -130,7 +122,6 @@ export class RecoverAccess {
             error,
             'No se pudo procesar la solicitud. Intentá nuevamente.'
           );
-          this.error.set(message);
           this.snackbar.error(message);
         },
       });

@@ -12,11 +12,13 @@ import {
 } from '@angular/common/http';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { CacheService, CacheUtils, LoaderService } from '@desarrolloort/ngx-utils';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 
+import { AuthSessionService } from '../../features/auth/services/auth-session';
+import { SHOW_GLOBAL_LOADER } from '../../shared/api/core/api-http-client';
 import { CAPTCHA_ACTION, CAPTCHA_HEADER, CaptchaTokenService } from '../services/captcha-token';
 import { TelemetryService } from '../services/telemetry';
-import { CACHING_ENABLED, httpInterceptor } from './http';
+import { authRefreshInterceptor, CACHING_ENABLED, httpInterceptor } from './http';
 
 type CacheServiceMock = {
   get: ReturnType<typeof vi.fn>;
@@ -29,6 +31,10 @@ type LoaderServiceMock = {
 type CaptchaTokenServiceMock = {
   execute: ReturnType<typeof vi.fn>;
 };
+type AuthSessionServiceMock = {
+  clearSession: ReturnType<typeof vi.fn>;
+  refreshAccessToken: ReturnType<typeof vi.fn>;
+};
 type TelemetryServiceMock = {
   addHttpHeaders: ReturnType<typeof vi.fn>;
   startHttpRequest: ReturnType<typeof vi.fn>;
@@ -37,9 +43,10 @@ type TelemetryServiceMock = {
   trackCacheHit: ReturnType<typeof vi.fn>;
 };
 
-describe('httpInterceptor', () => {
+describe('HTTP interceptors', () => {
   let mockCacheService: CacheServiceMock;
   let mockCaptcha: CaptchaTokenServiceMock;
+  let mockAuthSession: AuthSessionServiceMock;
   let mockLoader: LoaderServiceMock;
   let mockTelemetry: TelemetryServiceMock;
   let injector: Injector;
@@ -51,6 +58,10 @@ describe('httpInterceptor', () => {
     };
     mockCaptcha = {
       execute: vi.fn((action: string) => of(`${action}-captcha-token`)),
+    };
+    mockAuthSession = {
+      clearSession: vi.fn(),
+      refreshAccessToken: vi.fn().mockReturnValue(of(undefined)),
     };
     mockLoader = {
       show: vi.fn(),
@@ -72,6 +83,7 @@ describe('httpInterceptor', () => {
 
     injector = Injector.create({
       providers: [
+        { provide: AuthSessionService, useValue: mockAuthSession as unknown as AuthSessionService },
         { provide: CacheService, useValue: mockCacheService as unknown as CacheService },
         { provide: CaptchaTokenService, useValue: mockCaptcha as unknown as CaptchaTokenService },
         { provide: LoaderService, useValue: mockLoader as unknown as LoaderService },
@@ -87,6 +99,10 @@ describe('httpInterceptor', () => {
   function invoke(req: HttpRequest<unknown>, next: HttpHandlerFn) {
     // wrap call in Angular's DI context
     return runInInjectionContext(injector, () => httpInterceptor(req, next));
+  }
+
+  function invokeAuthRefresh(req: HttpRequest<unknown>, next: HttpHandlerFn) {
+    return runInInjectionContext(injector, () => authRefreshInterceptor(req, next));
   }
 
   it('returns cached response immediately when caching is enabled and cache hits', async () => {
@@ -106,7 +122,7 @@ describe('httpInterceptor', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('sets headers and shows/hides loader for a normal GET', async () => {
+  it('sets headers without showing the loader by default', async () => {
     mockCacheService.get.mockReturnValue(undefined);
     const resp = new HttpResponse({ status: 200, body: { ok: true } });
     const next = vi.fn().mockReturnValue(of(resp));
@@ -118,9 +134,8 @@ describe('httpInterceptor', () => {
 
     const result = await firstValueFrom(invoke(req, next));
 
-    // loader
-    expect(mockLoader.show).toHaveBeenCalled();
-    expect(mockLoader.hide).toHaveBeenCalled();
+    expect(mockLoader.show).not.toHaveBeenCalled();
+    expect(mockLoader.hide).not.toHaveBeenCalled();
 
     // headers
     const intercepted = next.mock.calls[0][0] as HttpRequest<unknown>;
@@ -138,6 +153,20 @@ describe('httpInterceptor', () => {
 
     // response unchanged
     expect(result).toBe(resp);
+  });
+
+  it('shows and hides the loader when the request opts in', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const response = new HttpResponse({ status: 200 });
+    const next = vi.fn().mockReturnValue(of(response));
+    const request = new HttpRequest('POST', '/Auth/Login', null, {
+      context: new HttpContext().set(SHOW_GLOBAL_LOADER, true),
+    });
+
+    await firstValueFrom(invoke(request, next));
+
+    expect(mockLoader.show).toHaveBeenCalledOnce();
+    expect(mockLoader.hide).toHaveBeenCalledOnce();
   });
 
   it('adds a captcha token header when the request declares a captcha action', async () => {
@@ -206,7 +235,7 @@ describe('httpInterceptor', () => {
     const next = vi.fn().mockReturnValue(throwError(() => httpErr));
 
     const req = new HttpRequest('GET', '/api/fail', null, {
-      context: new HttpContext().set(CACHING_ENABLED, false),
+      context: new HttpContext().set(CACHING_ENABLED, false).set(SHOW_GLOBAL_LOADER, true),
     });
 
     await expect(firstValueFrom(invoke(req, next))).rejects.toBe(httpErr);
@@ -216,5 +245,137 @@ describe('httpInterceptor', () => {
       httpErr,
       100
     );
+  });
+
+  it('refreshes the access token and retries a credentialed request once after 401', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const unauthorized = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const resp = new HttpResponse({ status: 200, body: { ok: true } });
+    const next = vi
+      .fn()
+      .mockReturnValueOnce(throwError(() => unauthorized))
+      .mockReturnValueOnce(of(resp));
+
+    const req = new HttpRequest('GET', '/api/private', null, {
+      context: new HttpContext().set(CACHING_ENABLED, false),
+      withCredentials: true,
+    });
+
+    const result = await firstValueFrom(invokeAuthRefresh(req, next));
+
+    expect(result).toBe(resp);
+    expect(mockAuthSession.refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledTimes(2);
+    expect((next.mock.calls[1][0] as HttpRequest<unknown>).url).toBe('/api/private');
+    expect(mockAuthSession.clearSession).not.toHaveBeenCalled();
+  });
+
+  it('shares one refresh call across concurrent 401 responses', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const unauthorized = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const refresh$ = new Subject<void>();
+    const firstResp = new HttpResponse({ status: 200, body: { id: 1 } });
+    const secondResp = new HttpResponse({ status: 200, body: { id: 2 } });
+    const next = vi
+      .fn()
+      .mockReturnValueOnce(throwError(() => unauthorized))
+      .mockReturnValueOnce(throwError(() => unauthorized))
+      .mockReturnValueOnce(of(firstResp))
+      .mockReturnValueOnce(of(secondResp));
+
+    mockAuthSession.refreshAccessToken.mockReturnValue(refresh$.asObservable());
+
+    const firstReq = new HttpRequest('GET', '/api/private/1', null, {
+      context: new HttpContext().set(CACHING_ENABLED, false),
+      withCredentials: true,
+    });
+    const secondReq = new HttpRequest('GET', '/api/private/2', null, {
+      context: new HttpContext().set(CACHING_ENABLED, false),
+      withCredentials: true,
+    });
+
+    const firstResult = firstValueFrom(invokeAuthRefresh(firstReq, next));
+    const secondResult = firstValueFrom(invokeAuthRefresh(secondReq, next));
+
+    expect(mockAuthSession.refreshAccessToken).toHaveBeenCalledTimes(1);
+
+    refresh$.next();
+    refresh$.complete();
+
+    await expect(firstResult).resolves.toBe(firstResp);
+    await expect(secondResult).resolves.toBe(secondResp);
+    expect(next).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not refresh non-credentialed or auth endpoint 401 responses', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const unauthorized = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+
+    const publicNext = vi.fn().mockReturnValue(throwError(() => unauthorized));
+    const publicReq = new HttpRequest('GET', '/api/public', null, {
+      context: new HttpContext().set(CACHING_ENABLED, false),
+    });
+
+    await expect(firstValueFrom(invokeAuthRefresh(publicReq, publicNext))).rejects.toBe(
+      unauthorized
+    );
+
+    const loginNext = vi.fn().mockReturnValue(throwError(() => unauthorized));
+    const loginReq = new HttpRequest(
+      'POST',
+      '/Auth/Login',
+      { user: 'ana' },
+      {
+        context: new HttpContext().set(CACHING_ENABLED, false),
+        withCredentials: true,
+      }
+    );
+
+    await expect(firstValueFrom(invokeAuthRefresh(loginReq, loginNext))).rejects.toBe(unauthorized);
+    expect(mockAuthSession.refreshAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('clears the local session when refresh fails', async () => {
+    mockCacheService.get.mockReturnValue(undefined);
+    const unauthorized = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const refreshError = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const next = vi.fn().mockReturnValue(throwError(() => unauthorized));
+
+    mockAuthSession.refreshAccessToken.mockReturnValue(throwError(() => refreshError));
+
+    const req = new HttpRequest('GET', '/api/private', null, {
+      context: new HttpContext().set(CACHING_ENABLED, false),
+      withCredentials: true,
+    });
+
+    await expect(firstValueFrom(invokeAuthRefresh(req, next))).rejects.toBe(refreshError);
+    expect(mockAuthSession.clearSession).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears the local session once when a shared refresh fails', async () => {
+    const unauthorized = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const refreshError = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const refresh$ = new Subject<void>();
+    const next = vi.fn().mockReturnValue(throwError(() => unauthorized));
+
+    mockAuthSession.refreshAccessToken.mockReturnValue(refresh$.asObservable());
+
+    const firstRequest = new HttpRequest('GET', '/api/private/1', null, {
+      withCredentials: true,
+    });
+    const secondRequest = new HttpRequest('GET', '/api/private/2', null, {
+      withCredentials: true,
+    });
+
+    const firstResult = firstValueFrom(invokeAuthRefresh(firstRequest, next));
+    const secondResult = firstValueFrom(invokeAuthRefresh(secondRequest, next));
+
+    refresh$.error(refreshError);
+
+    await expect(firstResult).rejects.toBe(refreshError);
+    await expect(secondResult).rejects.toBe(refreshError);
+    expect(mockAuthSession.refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(mockAuthSession.clearSession).toHaveBeenCalledTimes(1);
   });
 });

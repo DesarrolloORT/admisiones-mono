@@ -21,6 +21,11 @@ describe('Register', () => {
   let documentPrefillMock: {
     preload: ReturnType<typeof vi.fn>;
   };
+  let snackbarMock: {
+    show: ReturnType<typeof vi.fn>;
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     registrationMock = {
@@ -60,6 +65,11 @@ describe('Register', () => {
         },
       }),
     };
+    snackbarMock = {
+      show: vi.fn(),
+      success: vi.fn(),
+      error: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       imports: [Register],
@@ -80,14 +90,7 @@ describe('Register', () => {
           },
         },
         { provide: DocumentPrefillService, useValue: documentPrefillMock },
-        {
-          provide: SnackbarHandler,
-          useValue: {
-            show: vi.fn(),
-            success: vi.fn(),
-            error: vi.fn(),
-          },
-        },
+        { provide: SnackbarHandler, useValue: snackbarMock },
       ],
     });
 
@@ -118,6 +121,8 @@ describe('Register', () => {
       documentNumber: '11111111',
     });
     expect(facade.step()).toBe('personal');
+    expect(facade.stepViewModel().title).toBe('Verificación de identidad');
+    expect(facade.stepViewModel().stepTitle).toBe('Verificación de identidad');
   });
 
   it('should preload returned document fields', async () => {
@@ -147,7 +152,7 @@ describe('Register', () => {
       codigoEstado: 10,
       codigoCiudad: null,
     });
-    expect(facade.recognitionSuccessMessage()).toBe(
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Datos precargados. Revisalos antes de continuar.'
     );
   });
@@ -171,7 +176,8 @@ describe('Register', () => {
     });
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
     );
   });
@@ -224,7 +230,12 @@ describe('Register', () => {
       identity: { documentType: 'CI', documentNumber: '11111111' },
       personal: expect.objectContaining({ primerNombre: 'Ana' }),
     });
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
+      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
+    );
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
@@ -240,7 +251,11 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     sexo: 'F',
     location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
     direccion: 'Mercedes 1234',
-    telefono1: '099123456',
+    telefono1: {
+      iso2: 'UY',
+      number: '099123456',
+      numberE164: '+59899123456',
+    },
     mail: 'ana@example.com',
     verificacionMail: 'ana@example.com',
   });

@@ -16,6 +16,11 @@ describe('RegisterFlowFacade', () => {
     verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
     confirmRegistration: ReturnType<typeof vi.fn>;
   };
+  let snackbarMock: {
+    show: ReturnType<typeof vi.fn>;
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     registrationMock = {
@@ -32,6 +37,11 @@ describe('RegisterFlowFacade', () => {
       ),
       verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
       confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
+    };
+    snackbarMock = {
+      show: vi.fn(),
+      success: vi.fn(),
+      error: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -50,11 +60,7 @@ describe('RegisterFlowFacade', () => {
         },
         {
           provide: SnackbarHandler,
-          useValue: {
-            show: vi.fn(),
-            success: vi.fn(),
-            error: vi.fn(),
-          },
+          useValue: snackbarMock,
         },
         {
           provide: Router,
@@ -81,7 +87,12 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('user-exists');
-    expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Ya existe un usuario registrado con este documento.',
+        variant: 'warning',
+      })
+    );
   });
 
   it('should block identity step when application already exists', async () => {
@@ -95,7 +106,12 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.step()).toBe('identity');
     expect(facade.registrationFlow()).toBe('application-exists');
-    expect(facade.error()).toBe('Ya existe una solicitud de alta pendiente para este documento.');
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Ya existe una solicitud de alta pendiente para este documento.',
+        variant: 'warning',
+      })
+    );
   });
 
   it('should verify an existing CI person from the personal step', async () => {
@@ -116,7 +132,8 @@ describe('RegisterFlowFacade', () => {
     });
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
     );
   });
@@ -142,7 +159,8 @@ describe('RegisterFlowFacade', () => {
       }),
     });
     expect(facade.step()).toBe('personal');
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
@@ -154,7 +172,9 @@ describe('RegisterFlowFacade', () => {
     await facade.continueToPersonalData();
 
     expect(facade.step()).toBe('identity');
-    expect(facade.error()).toBe('No se pudo iniciar el flujo de registro. Intentá nuevamente.');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'No se pudo iniciar el flujo de registro. Intentá nuevamente.'
+    );
     expect(facade.registrationFlow()).toBe('new-person');
     expect(facade.registrationFlowId()).toBeNull();
   });
@@ -175,7 +195,8 @@ describe('RegisterFlowFacade', () => {
         identity: { documentType: 'PS', documentNumber: 'AB123456' },
       })
     );
-    expect(facade.successMessage()).toBe(
+    expect(facade.isCompleted()).toBe(true);
+    expect(snackbarMock.success).toHaveBeenCalledWith(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
     );
   });
@@ -186,7 +207,7 @@ describe('RegisterFlowFacade', () => {
 
     facade.submitPersonalData();
 
-    expect(facade.error()).toBe('Primero evaluá el documento para continuar.');
+    expect(snackbarMock.error).toHaveBeenCalledWith('Primero evaluá el documento para continuar.');
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
   });
 
@@ -205,7 +226,9 @@ describe('RegisterFlowFacade', () => {
 
     await facade.continueToPersonalData();
 
-    expect(facade.error()).toBe('Ya existe un usuario registrado con este documento.');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'Ya existe un usuario registrado con este documento.'
+    );
   });
 
   function mockEvaluation(
@@ -244,7 +267,11 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     sexo: 'F',
     location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
     direccion: 'Mercedes 1234',
-    telefono1: '099123456',
+    telefono1: {
+      iso2: 'UY',
+      number: '099123456',
+      numberE164: '+59899123456',
+    },
     mail: 'ana@example.com',
     verificacionMail: 'ana@example.com',
   });

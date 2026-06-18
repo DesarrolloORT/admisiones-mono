@@ -70,24 +70,9 @@
   width: 100%;
 }
 
-.personal-data-message,
-.personal-data-status {
-  margin: 0;
-  padding-inline: 4px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.personal-data-status {
-  color: var(--personal-data-body);
-}
-
-.personal-data-message--error {
-  color: var(--ort-sys-base-text-error-color, #85211d);
-}
-
-.personal-data-message--success {
-  color: var(--ort-sys-color-success, #16a34a);
+.personal-data-loading {
+  display: grid;
+  gap: 16px;
 }
 
 .personal-data-sr-only {

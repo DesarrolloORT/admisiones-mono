@@ -3,6 +3,8 @@ import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
+import { AuthSessionService } from '../../services/auth-session';
 import { PasswordActivationService } from '../../services/password-activation';
 import { SetPassword } from './set-password';
 
@@ -13,18 +15,28 @@ describe('SetPassword', () => {
     activateLink: ReturnType<typeof vi.fn>;
     completePassword: ReturnType<typeof vi.fn>;
   };
+  let authSessionMock: {
+    hydrateAuthenticatedSession: ReturnType<typeof vi.fn>;
+  };
+  let snackbarMock: { error: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn> };
 
   function setup(queryParams: Record<string, string | null> = { token: 'token-123' }) {
     passwordActivationMock = {
       activateLink: vi.fn().mockReturnValue(of(undefined)),
       completePassword: vi.fn().mockReturnValue(of(undefined)),
     };
+    authSessionMock = {
+      hydrateAuthenticatedSession: vi.fn().mockReturnValue(of(undefined)),
+    };
+    snackbarMock = { error: vi.fn(), success: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [SetPassword],
       providers: [
         provideRouter([]),
         { provide: PasswordActivationService, useValue: passwordActivationMock },
+        { provide: AuthSessionService, useValue: authSessionMock },
+        { provide: SnackbarHandler, useValue: snackbarMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -63,9 +75,18 @@ describe('SetPassword', () => {
     expect(component['tokenError']()).toBeNull();
   });
 
-  it('should complete password creation and navigate to login', () => {
+  it('should render accessible visibility toggles for both password fields', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('.password-visibility-toggle');
+
+    expect(buttons).toHaveLength(2);
+    expect([...buttons].every(button => button.getAttribute('aria-pressed') === 'false')).toBe(
+      true
+    );
+  });
+
+  it('should complete password creation, hydrate the session and navigate home', () => {
     setup();
-    const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
     component['form'].setValue({
       password: 'NuevaPassword1!',
@@ -74,10 +95,28 @@ describe('SetPassword', () => {
     component['submit']();
 
     expect(passwordActivationMock.completePassword).toHaveBeenCalledWith('NuevaPassword1!');
-    expect(navigateSpy).toHaveBeenCalledWith(['/iniciar-sesion']);
+    expect(authSessionMock.hydrateAuthenticatedSession).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith('/inicio');
   });
 
-  it('should surface password creation errors', () => {
+  it('should enable submit only when the password form is valid', () => {
+    setup();
+
+    expect(component['canSubmit']()).toBe(false);
+
+    component['form'].setValue({
+      password: 'NuevaPassword1!',
+      confirmPassword: 'OtraPassword1!',
+    });
+
+    expect(component['canSubmit']()).toBe(false);
+
+    component['form'].controls.confirmPassword.setValue('NuevaPassword1!');
+
+    expect(component['canSubmit']()).toBe(true);
+  });
+
+  it('should show password creation errors in snackbar', () => {
     setup();
     passwordActivationMock.completePassword.mockReturnValue(
       throwError(() => new Error('request failed'))
@@ -89,7 +128,9 @@ describe('SetPassword', () => {
     });
     component['submit']();
 
-    expect(component['error']()).toBe('No se pudo crear la contraseña. Intentá de nuevo.');
+    expect(snackbarMock.error).toHaveBeenCalledWith(
+      'No se pudo crear la contraseña. Intentá de nuevo.'
+    );
   });
 
   it('should expose password strength only when there is input', () => {

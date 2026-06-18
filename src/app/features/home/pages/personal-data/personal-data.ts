@@ -6,17 +6,24 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import type { PhoneInputValue } from '@desarrolloort/components';
 import {
+  findCountryByIso2,
+  getIso2Codes,
   OrtButtonModule,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  ortPhoneValidator,
   OrtSelectModule,
+  OrtSkeletonModule,
 } from '@desarrolloort/components';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
   buildFormErrorSummary,
@@ -44,7 +51,7 @@ interface PersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<string>;
+  phone: FormControl<PhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }
@@ -57,6 +64,7 @@ interface PersonalDataForm {
     OrtIconModule,
     OrtInputModule,
     OrtSelectModule,
+    OrtSkeletonModule,
     ReactiveFormsModule,
   ],
   templateUrl: './personal-data.html',
@@ -83,7 +91,9 @@ export class PersonalData implements OnInit {
       stateCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       cityCode: new FormControl('', { nonNullable: true }),
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      phone: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      phone: new FormControl<PhoneInputValue | null>(null, {
+        validators: [Validators.required, ortPhoneValidator],
+      }),
       email: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.email],
@@ -109,8 +119,10 @@ export class PersonalData implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
-  protected readonly error = signal<string | null>(null);
-  protected readonly successMessage = signal<string | null>(null);
+  private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
+    initialValue: this.form.controls.documentType.value,
+  });
+  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
 
   protected readonly states = computed<LocationState[]>(() => {
     const countryCode = this.selectedCountryCode();
@@ -164,11 +176,9 @@ export class PersonalData implements OnInit {
     this.submitted.set(true);
     this.form.markAllAsTouched();
     this.form.updateValueAndValidity();
-    this.successMessage.set(null);
-    this.error.set(null);
 
     if (this.form.invalid) {
-      this.error.set('Completá todos los datos obligatorios con un formato válido.');
+      this.snackbar.error('Completá todos los datos obligatorios con un formato válido.');
       return;
     }
 
@@ -185,7 +195,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toNullableNumber(value.stateCode),
         cityCode: this.toNullableNumber(value.cityCode),
         address: value.address,
-        phone: value.phone,
+        phone: this.toBackendPhone(value.phone),
         email: value.email,
         emailVerification: value.emailConfirmation,
       })
@@ -193,15 +203,14 @@ export class PersonalData implements OnInit {
       .subscribe({
         next: success => {
           if (!success) {
-            this.error.set('No se pudieron guardar los datos personales.');
+            this.snackbar.error('No se pudieron guardar los datos personales.');
             return;
           }
 
-          this.successMessage.set('Datos personales actualizados.');
           this.snackbar.success('Datos personales actualizados.');
         },
         error: () => {
-          this.error.set('No se pudieron guardar los datos personales.');
+          this.snackbar.error('No se pudieron guardar los datos personales.');
         },
       });
   }
@@ -212,7 +221,6 @@ export class PersonalData implements OnInit {
 
   private loadData(): void {
     this.isLoading.set(true);
-    this.error.set(null);
 
     forkJoin({
       data: this.account.getPersonalData(),
@@ -225,7 +233,7 @@ export class PersonalData implements OnInit {
           this.patchForm(data);
         },
         error: () => {
-          this.error.set('No se pudieron cargar los datos personales.');
+          this.snackbar.error('No se pudieron cargar los datos personales.');
         },
       });
   }
@@ -248,7 +256,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toControlValue(data.stateCode),
         cityCode: this.toControlValue(data.cityCode),
         address: data.address,
-        phone: data.phone,
+        phone: this.toPhoneInputValue(data.phone),
         email: data.email,
         emailConfirmation: data.emailVerification,
       },
@@ -262,6 +270,47 @@ export class PersonalData implements OnInit {
 
   private toNullableNumber(value: string): number | null {
     return value ? Number(value) : null;
+  }
+
+  private toPhoneInputValue(value: string): PhoneInputValue | null {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    if (trimmed.startsWith('+')) {
+      const digits = trimmed.replace(/\D/g, '');
+      const country = this.findPhoneCountryByPrefix(digits);
+
+      if (country) {
+        const number = digits.slice(country.prefix.toString().length);
+        return { iso2: country.iso2, number, numberE164: `+${digits}` };
+      }
+    }
+
+    const number = trimmed.replace(/\D/g, '');
+    return { iso2: 'UY', number, numberE164: `+598${number}` };
+  }
+
+  private toBackendPhone(value: PhoneInputValue | null): string {
+    if (!value) {
+      return '';
+    }
+
+    if (value.iso2 === 'UY') {
+      return value.number.trim();
+    }
+
+    return (value.numberE164 || value.number).trim();
+  }
+
+  private findPhoneCountryByPrefix(digits: string) {
+    return getIso2Codes()
+      .map(iso2 => findCountryByIso2(iso2))
+      .filter(country => !!country)
+      .sort((a, b) => b.prefix - a.prefix)
+      .find(country => digits.startsWith(country.prefix.toString()));
   }
 
   private formatDocumentType(value: string): string {

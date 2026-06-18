@@ -1,4 +1,10 @@
-import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpContext,
+  HttpContextToken,
+  HttpHeaders,
+  HttpParams,
+} from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { isOperationResult, unwrapOperationResultContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
@@ -19,6 +25,8 @@ import {
 } from './api-endpoint';
 import { buildApiPath } from './api-path-builder';
 
+export const SHOW_GLOBAL_LOADER = new HttpContextToken<boolean>(() => false);
+
 export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>> = {
   pathParams?: EndpointPathParams<TEndpoint>;
   queryParams?: EndpointQueryParams<TEndpoint>;
@@ -27,6 +35,7 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   withCredentials?: boolean;
   cache?: boolean;
   captchaAction?: string;
+  showLoader?: boolean;
   context?: HttpContext;
   unwrapOperationResult?: boolean;
 };
@@ -182,6 +191,10 @@ export class ApiHttpClient {
 
     if (captchaAction) {
       context = context.set(CAPTCHA_ACTION, captchaAction);
+    }
+
+    if (options.showLoader) {
+      context = context.set(SHOW_GLOBAL_LOADER, true);
     }
 
     if (options.unwrapOperationResult === false) {

@@ -17,9 +17,11 @@
         (change)="documentSelected.emit($event)" />
 
       <button
+        loadingLabel="Procesando documento"
         ort-tonal-button
         type="button"
         [disabled]="isRecognizingDocument()"
+        [loading]="isRecognizingDocument()"
         (click)="documentFile.click()">
         <ort-icon aria-hidden="true">center_focus_weak</ort-icon>
         {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
@@ -28,12 +30,6 @@
       <p class="auth-selected-file" role="status" [hidden]="!selectedFileName()">
         Archivo seleccionado: {{ selectedFileName() }}
       </p>
-
-      @if (recognitionSuccessMessage()) {
-      <output class="auth-success" role="status">{{ recognitionSuccessMessage() }}</output>
-      } @if (recognitionError()) {
-      <p class="auth-error" role="alert">{{ recognitionError() }}</p>
-      }
     </section>
 
     <div class="auth-divider">O ingresá tus datos manualmente</div>
@@ -87,18 +83,20 @@
     </ort-form-field>
   </section>
 
-  <ort-error-summary [errors]="errorSummary()" />
+  <div #errorSummaryAnchor tabindex="-1">
+    <ort-error-summary [errors]="errorSummary()" />
+  </div>
 
-  @if (error()) {
-  <p class="auth-error" role="alert">{{ error() }}</p>
-  } @if (showLoginAction()) {
+  @if (showLoginAction()) {
   <button ort-primary-button type="button" (click)="loginAction.emit()">Iniciar sesión</button>
   }
 
   <button
+    loadingLabel="Verificando documento"
     ort-primary-button
     type="submit"
-    [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()">
+    [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()"
+    [loading]="isSubmitting()">
     {{ isSubmitting() ? 'Verificando...' : 'Continuar' }}
   </button>
 

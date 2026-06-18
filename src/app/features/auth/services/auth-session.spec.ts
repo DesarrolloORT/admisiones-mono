@@ -6,6 +6,7 @@ import { storageKeys } from 'src/app/core/storage/keys';
 import { vi } from 'vitest';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
+import { AccountService } from './account';
 import { AuthSessionService } from './auth-session';
 
 describe('AuthSessionService', () => {
@@ -13,10 +14,12 @@ describe('AuthSessionService', () => {
   let endpointMock: {
     login: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
+    refreshToken: ReturnType<typeof vi.fn>;
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
   };
   let routerMock: { navigateByUrl: ReturnType<typeof vi.fn> };
   let cacheMock: { clear: ReturnType<typeof vi.fn> };
+  let accountMock: { getPersonalData: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     window.localStorage.clear();
@@ -25,6 +28,7 @@ describe('AuthSessionService', () => {
         .fn()
         .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
       logout: vi.fn().mockReturnValue(of(undefined)),
+      refreshToken: vi.fn().mockReturnValue(of(undefined)),
       resendTwoFactorCode: vi.fn().mockReturnValue(
         of({
           sessionId: 'session-456',
@@ -35,11 +39,33 @@ describe('AuthSessionService', () => {
     };
     routerMock = { navigateByUrl: vi.fn() };
     cacheMock = { clear: vi.fn() };
+    accountMock = {
+      getPersonalData: vi.fn().mockReturnValue(
+        of({
+          documentType: 'CI',
+          documentNumber: '12345678',
+          firstName: 'Ana',
+          secondName: '',
+          firstLastName: 'Pérez',
+          secondLastName: '',
+          birthDate: '',
+          sex: '',
+          countryCode: null,
+          stateCode: null,
+          cityCode: null,
+          address: '',
+          phone: '',
+          email: '',
+          emailVerification: '',
+        })
+      ),
+    };
 
     TestBed.configureTestingModule({
       providers: [
         AuthSessionService,
         { provide: AuthEndpoint, useValue: endpointMock },
+        { provide: AccountService, useValue: accountMock },
         { provide: Router, useValue: routerMock },
         { provide: CacheService, useValue: cacheMock },
       ],
@@ -110,6 +136,47 @@ describe('AuthSessionService', () => {
     expect(endpointMock.resendTwoFactorCode).toHaveBeenCalledWith({
       sessionId: 'session-123',
     });
+  });
+
+  it('should hydrate and persist an authenticated cookie session from personal data', () => {
+    service.hydrateAuthenticatedSession().subscribe(session => {
+      expect(session.documentNumber).toBe('12345678');
+      expect(session.primerNombre).toBe('Ana');
+    });
+
+    expect(accountMock.getPersonalData).toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBe(true);
+    expect(window.localStorage.getItem(storageKeys.session)).toContain('12345678');
+  });
+
+  it('should validate an authenticated cookie session through personal data', () => {
+    service.ensureAuthenticatedSession().subscribe(isAuthenticated => {
+      expect(isAuthenticated).toBe(true);
+    });
+
+    expect(accountMock.getPersonalData).toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBe(true);
+  });
+
+  it('should clear stale local session when cookie validation fails', () => {
+    service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
+    accountMock.getPersonalData.mockReturnValue(throwError(() => new Error('unauthorized')));
+
+    service.ensureAuthenticatedSession().subscribe(isAuthenticated => {
+      expect(isAuthenticated).toBe(false);
+    });
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
+    expect(cacheMock.clear).toHaveBeenCalled();
+  });
+
+  it('should delegate access token refresh without changing local session', () => {
+    service.refreshAccessToken().subscribe(result => {
+      expect(result).toBeUndefined();
+    });
+
+    expect(endpointMock.refreshToken).toHaveBeenCalled();
   });
 
   it('should clear session locally after logout', () => {

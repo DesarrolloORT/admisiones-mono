@@ -25,7 +25,7 @@ import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
 import { environment } from 'src/environments/environment';
 
 import { routes } from './app.routes';
-import { httpInterceptor } from './core/interceptors/http';
+import { authRefreshInterceptor, httpInterceptor } from './core/interceptors/http';
 import { AppApiErrorNotifier } from './core/services/api-error-notifier';
 import { TelemetryService } from './core/services/telemetry';
 
@@ -41,7 +41,12 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => UiUtils.initializeMaterialSymbols()),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
     provideHttpClient(
-      withInterceptors([httpInterceptor, ortApiErrorInterceptor, operationResultInterceptor])
+      withInterceptors([
+        httpInterceptor,
+        ortApiErrorInterceptor,
+        authRefreshInterceptor,
+        operationResultInterceptor,
+      ])
     ),
     importProvidersFrom(RecaptchaV3Module),
     { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.RECAPTCHA_KEY },
