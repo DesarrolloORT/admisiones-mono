@@ -99,7 +99,7 @@ namespace AppLogic.Services.Inscripciones
                 return validacion;
             }
 
-            var validacionOferta = ObtenerOfertaValidaParaInteres(
+            var validacionOferta = InteresProductoValidationHelper.ObtenerOfertaValidaParaInteres(
                 uow,
                 request.IdOferta,
                 request.IdProducto,
@@ -116,35 +116,23 @@ namespace AppLogic.Services.Inscripciones
 
             var oferta = validacionOferta.Data!;
             var fechaActual = DateTime.Now;
-            var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
             uow.BeginTransaction();
 
             try
             {
-                ResetearInteresesProductos(uow, intereses, fechaActual);
-
-                var interesExistente = intereses.FirstOrDefault(i => i.IdProceso == request.IdProcesoSeleccionado);
-                if (interesExistente == null)
-                {
-                    interesExistente = CrearInteres(uow, codigoPersona, request.IdProcesoSeleccionado);
-                }
-
-                ActivarInteresProducto(uow, interesExistente, request.IdProducto, fechaActual);
-                // TODO Tivenos: encolar AltaInteresXSeleccionEnSitio para el interes producto registrado.
-                AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
-                AsegurarInteresProductoOferta(uow, interesExistente, request.IdProducto, request.IdOferta);
-
-                var resultadoEncuesta = ActualizarEncuestaInicial(
+                var resultado = InteresProductoRegistroHelper.RegistrarInteresProducto(
                     uow,
+                    _dbConnectionContext,
                     codigoPersona,
-                    request.IdProducto,
-                    request.IdProcesoSeleccionado,
-                    oferta.Supraoferta.IdComienzo);
-                if (!resultadoEncuesta.Success)
+                    request,
+                    oferta,
+                    fechaActual,
+                    nameof(RegistrarInteresProducto));
+                if (!resultado.Success)
                 {
                     uow.Rollback();
-                    return resultadoEncuesta;
+                    return resultado;
                 }
 
                 uow.Commit();
@@ -156,153 +144,6 @@ namespace AppLogic.Services.Inscripciones
                 uow.Rollback();
                 throw;
             }
-        }
-
-        private static OperationResult<Oferta> ObtenerOfertaValidaParaInteres(
-            IUnitOfWork uow,
-            long idOferta,
-            long idProducto,
-            long idProceso,
-            string methodName)
-        {
-            if (idOferta <= 0)
-            {
-                return OperationResult<Oferta>.IsFailed("GEN_IP_07", methodName, "La oferta indicada es invalida.", 400);
-            }
-
-            var oferta = uow.Ofertas.GetByKeyWithRelated(idOferta);
-            if (oferta == null)
-            {
-                return OperationResult<Oferta>.IsFailed("GEN_IP_07", methodName, "No se encontro la oferta indicada.", 404);
-            }
-
-            var idProductoOferta = oferta.Supraoferta?.Paquete?.IdProducto;
-            if (!TieneValorPositivo(idProductoOferta)
-                || idProductoOferta.Value != idProducto
-                || !TieneValorPositivo(oferta.Supraoferta?.IdComienzo))
-            {
-                return OperationResult<Oferta>.IsFailed("GEN_IP_08", methodName, "La oferta indicada no corresponde al producto seleccionado.", 400);
-            }
-
-            if (!string.Equals(oferta.InscripcionesAbiertasOferta, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(oferta.Supraoferta?.EstadoSupraoferta, "D", StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<Oferta>.IsFailed("GEN_IP_09", methodName, "La oferta indicada no se encuentra abierta para inscripcion.", 409);
-            }
-
-            var procesoComienzo = uow.ProcesoComienzos.GetByKeyWithRelated(idProceso, oferta.Supraoferta.IdComienzo);
-            if (procesoComienzo == null)
-            {
-                return OperationResult<Oferta>.IsFailed("GEN_IP_10", methodName, "La oferta indicada no corresponde al proceso seleccionado.", 400);
-            }
-
-            return OperationResult<Oferta>.Ok(oferta, methodName);
-        }
-
-        private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)
-        {
-            foreach (var interes in intereses)
-            {
-                foreach (var interesProducto in interes.InteresProductos)
-                {
-                    var interesProductoActual = uow.InteresProductos.GetByKey(interesProducto.IdInteres, interesProducto.IdProducto);
-                    if (interesProductoActual == null)
-                    {
-                        continue;
-                    }
-
-                    if (interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
-                    {
-                        continue;
-                    }
-
-                    interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
-                    interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
-                    interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
-                    interesProductoActual.FechaModifInteresProd = fechaActual;
-                    interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
-                    uow.InteresProductos.Update(interesProductoActual);
-                }
-            }
-        }
-
-        private Intere CrearInteres(IUnitOfWork uow, long codigoPersona, long idProceso)
-        {
-            var interes = InteresProductoEntityFactoryHelper.CrearInteres(
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
-                codigoPersona,
-                idProceso);
-            uow.Interes.Add(interes);
-            return interes;
-        }
-
-        private static void ActivarInteresProducto(IUnitOfWork uow, Intere interes, long idProducto, DateTime fechaActual)
-        {
-            var interesProductoExistente = interes.InteresProductos.FirstOrDefault(ip => ip.IdProducto == idProducto);
-            if (interesProductoExistente == null)
-            {
-                uow.InteresProductos.Add(
-                    InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
-                return;
-            }
-
-            var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
-            if (interesProductoActual == null || interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
-            {
-                return;
-            }
-
-            interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
-            interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_ALTO;
-            interesProductoActual.FechaInteresProd = fechaActual;
-            interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
-            interesProductoActual.FechaModifInteresProd = fechaActual;
-            interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
-            uow.InteresProductos.Update(interesProductoActual);
-        }
-
-        private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)
-        {
-            var personaAdmite = uow.PersonaAdmites.GetByKey(codigoPersona);
-            if (personaAdmite == null)
-            {
-                uow.PersonaAdmites.Add(
-                    InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
-                return;
-            }
-
-            if (!personaAdmite.FechaFrescoPersonaAdmite.HasValue)
-            {
-                personaAdmite.FechaFrescoPersonaAdmite = fechaActual;
-                uow.PersonaAdmites.Update(personaAdmite);
-            }
-        }
-
-        private static void AsegurarInteresProductoOferta(IUnitOfWork uow, Intere interes, long idProducto, long idOferta)
-        {
-            var idInteres = (long)interes.IdInteres;
-            var existente = uow.InteresProductoOfertas.GetByKey(idInteres, idProducto, idOferta);
-            if (existente != null)
-            {
-                return;
-            }
-
-            uow.InteresProductoOfertas.Add(
-                InteresProductoEntityFactoryHelper.CrearInteresProductoOferta(idInteres, idProducto, idOferta));
-        }
-
-        private static OperationResult<bool> ActualizarEncuestaInicial(IUnitOfWork uow, long codigoPersona, long idProducto, long idProceso, long idComienzo)
-        {
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
-            {
-                return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
-            }
-
-            encuesta.IdProducto = idProducto;
-            encuesta.IdProceso = idProceso;
-            encuesta.IdComienzo = idComienzo;
-            return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
         }
 
         #endregion PASO 1 - REGISTRAR INTERES POR PRODUCTO
@@ -462,19 +303,14 @@ namespace AppLogic.Services.Inscripciones
         {
             const string methodName = nameof(ConfirmarPreInscripcion);
 
-            if (request == null)
+            var validacionRequest = ConfirmarPreInscripcionHelper.ValidarRequest(request, methodName);
+            if (!validacionRequest.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_01", methodName, "Request invalido.", 400);
-            }
-
-            if (!request.AceptoReglamento)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_02", methodName, "Debe aceptar el reglamento estudiantil para confirmar la preinscripcion.", 400);
-            }
-
-            if (request.IdOfertaSeleccionada <= 0)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_03", methodName, "La oferta seleccionada es invalida.", 400);
+                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                    validacionRequest.ErrorCode,
+                    methodName,
+                    validacionRequest.Message,
+                    validacionRequest.HttpCode);
             }
 
             using var uow = _uowFactory.Create();
@@ -491,7 +327,7 @@ namespace AppLogic.Services.Inscripciones
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, "No se encontro la oferta seleccionada.", 404);
             }
 
-            var contextoResult = ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
+            var contextoResult = ConfirmarPreInscripcionHelper.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
             if (!contextoResult.Success)
             {
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
@@ -511,8 +347,9 @@ namespace AppLogic.Services.Inscripciones
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
             }
 
-            var aceptacion = AsegurarAceptacionReglamentoEstudiantil(
+            var aceptacion = ConfirmarPreInscripcionHelper.AsegurarAceptacionReglamentoEstudiantil(
                 uow,
+                _dbConnectionContext,
                 codigoPersona,
                 contexto.IdProducto,
                 contexto.IdComienzo,
@@ -522,248 +359,10 @@ namespace AppLogic.Services.Inscripciones
                 return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
             }
 
-            var apiRequest = new ConfirmarPreInscripcionApiRequest
-            {
-                IdProducto = contexto.IdProducto,
-                IdProceso = contexto.IdProceso,
-                IdOfertaSeleccionada = request.IdOfertaSeleccionada,
-                TipoInscripcion = "ONLINE",
-                Turno = new DtoTurno { IdTurno = contexto.IdTurno }
-            };
-
+            var apiRequest = ConfirmarPreInscripcionHelper.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
-            if (!apiResult.Success)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
-            }
-
-            if (apiResult.Data == null)
-            {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_13", methodName, "La API interna no devolvio datos de confirmacion.", 502);
-            }
-
-            return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
-                MapearConfirmacionPreInscripcion(apiResult.Data, contexto),
-                methodName);
+            return ConfirmarPreInscripcionHelper.MapearResultadoApi(apiResult, contexto, methodName);
         }
-
-        private static OperationResult<ContextoConfirmacionPreInscripcion> ObtenerContextoConfirmacion(
-            IUnitOfWork uow,
-            long codigoPersona,
-            Oferta oferta,
-            string methodName)
-        {
-            var idOfertaSeleccionada = oferta.IdOferta;
-            var idProductoOferta = oferta.Supraoferta?.Paquete?.IdProducto;
-            var idComienzoOferta = oferta.Supraoferta?.IdComienzo;
-            if (!TieneValorPositivo(idProductoOferta)
-                || !TieneValorPositivo(idComienzoOferta)
-                || oferta.IdTurno <= 0)
-            {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    "INS_CPI_08",
-                    methodName,
-                    "La oferta seleccionada no contiene producto, comienzo o turno validos.",
-                    400);
-            }
-
-            if (!string.Equals(oferta.InscripcionesAbiertasOferta, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(oferta.Supraoferta?.EstadoSupraoferta, "D", StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    "INS_CPI_16",
-                    methodName,
-                    "La oferta seleccionada no se encuentra abierta para inscripcion.",
-                    409);
-            }
-
-            var encuestaAdmision = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuestaAdmision != null
-                && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
-            {
-                if (encuestaAdmision.FechaVtoAdmision.HasValue && encuestaAdmision.FechaVtoAdmision.Value.Date < DateTime.Today)
-                {
-                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                        "INS_CPI_12",
-                        methodName,
-                        "La encuesta inicial de admision se encuentra vencida.",
-                        409);
-                }
-
-                if (!TieneDatosConfirmacionValidos(encuestaAdmision.IdProducto, encuestaAdmision.IdProceso, encuestaAdmision.IdComienzo))
-                {
-                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                        "INS_CPI_08",
-                        methodName,
-                        "La encuesta inicial de admision no contiene producto, proceso o comienzo validos.",
-                        400);
-                }
-
-                if (encuestaAdmision.IdProducto!.Value != idProductoOferta.Value
-                    || encuestaAdmision.IdComienzo!.Value != idComienzoOferta.Value)
-                {
-                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                        "INS_CPI_15",
-                        methodName,
-                        "La oferta seleccionada no coincide con la encuesta inicial de admision.",
-                        409);
-                }
-
-                var procesoInteres = uow.InteresProductoOfertas.GetProcesoPorInteresActivoOferta(
-                    codigoPersona,
-                    idProductoOferta.Value,
-                    idOfertaSeleccionada);
-                if (procesoInteres == null || procesoInteres.IdProceso <= 0)
-                {
-                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                        "INS_CPI_14",
-                        methodName,
-                        "No existe interes activo para la oferta seleccionada.",
-                        409);
-                }
-
-                if (procesoInteres.IdProceso != encuestaAdmision.IdProceso!.Value)
-                {
-                    return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                        "INS_CPI_15",
-                        methodName,
-                        "La oferta seleccionada no coincide con el proceso de la encuesta inicial de admision.",
-                        409);
-                }
-
-                return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
-                    new ContextoConfirmacionPreInscripcion(
-                        idProductoOferta.Value,
-                        procesoInteres.IdProceso,
-                        idComienzoOferta.Value,
-                        oferta.IdTurno,
-                        oferta.Supraoferta!.Paquete!.Producto ?? encuestaAdmision.Producto,
-                        oferta.Supraoferta.Comienzo ?? encuestaAdmision.Comienzo,
-                        oferta.Turno),
-                    methodName);
-            }
-
-            var encuestaHistorica = uow.EncuestaInis.GetByPersona(codigoPersona);
-            if (encuestaHistorica == null)
-            {
-                var errorCode = encuestaAdmision == null ? "INS_CPI_06" : "INS_CPI_07";
-                var message = encuestaAdmision == null
-                    ? "No se encontro una encuesta inicial de admision vigente para la persona."
-                    : "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.";
-                var httpCode = encuestaAdmision == null ? 404 : 409;
-
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    errorCode,
-                    methodName,
-                    message,
-                    httpCode);
-            }
-
-            var proceso = uow.InteresProductoOfertas.GetProcesoPorInteresActivoOferta(
-                codigoPersona,
-                idProductoOferta.Value,
-                idOfertaSeleccionada);
-            if (proceso == null || proceso.IdProceso <= 0)
-            {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    "INS_CPI_14",
-                    methodName,
-                    "No existe interes activo para la oferta seleccionada.",
-                    409);
-            }
-
-            return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
-                new ContextoConfirmacionPreInscripcion(
-                    idProductoOferta.Value,
-                    proceso.IdProceso,
-                    idComienzoOferta.Value,
-                    oferta.IdTurno,
-                    oferta.Supraoferta!.Paquete!.Producto,
-                    oferta.Supraoferta.Comienzo,
-                    oferta.Turno),
-                methodName);
-        }
-
-        private static bool TieneDatosConfirmacionValidos(long? idProducto, long? idProceso, long? idComienzo)
-        {
-            return TieneValorPositivo(idProducto)
-                && TieneValorPositivo(idProceso)
-                && TieneValorPositivo(idComienzo);
-        }
-
-        private static bool TieneValorPositivo(long? valor)
-        {
-            return valor.HasValue && valor.Value > 0;
-        }
-
-        private OperationResult<DtoAceptacionReglamentoEstDevart> AsegurarAceptacionReglamentoEstudiantil(
-            IUnitOfWork uow,
-            long codigoPersona,
-            long idProducto,
-            long idComienzo,
-            string methodName)
-        {
-            var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, idProducto, idComienzo);
-            if (existente != null)
-            {
-                return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(existente.ToDto(), methodName);
-            }
-
-            var entidad = new AceptacionReglamentoEst
-            {
-                IdAceptacionReglamentoEst = _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST),
-                CodigoPersona = codigoPersona,
-                IdProducto = idProducto,
-                IdComienzo = idComienzo,
-                IdSistema = CommonConstants.IdSistemaAdmisiones
-            };
-
-            uow.BeginTransaction();
-            try
-            {
-                uow.AceptacionReglamentoEsts.Add(entidad);
-                uow.Save();
-                uow.Commit();
-            }
-            catch
-            {
-                uow.Rollback();
-                throw;
-            }
-
-            return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
-        }
-
-        private static ConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
-            ConfirmarPreInscripcionApiResponse source,
-            ContextoConfirmacionPreInscripcion contexto)
-        {
-            return new ConfirmarPreInscripcionResponse
-            {
-                Confirmada = source.Confirmada || source.Success,
-                IdInscripcion = source.IdInscripcion,
-                SeniaInscripcion = source.SeniaInscripcion,
-                FechaVencimientoPago = source.FechaVencimientoPago,
-                Resumen = new ResumenInscripcionDto
-                {
-                    IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,
-                    Carrera = source.Resumen?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
-                    IdComienzo = source.Resumen?.IdComienzo ?? contexto.IdComienzo,
-                    Comienzo = source.Resumen?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
-                    IdTurno = source.Resumen?.IdTurno ?? contexto.IdTurno,
-                    Turno = source.Resumen?.Turno ?? contexto.Turno?.NombreTurno
-                }
-            };
-        }
-
-        private sealed record ContextoConfirmacionPreInscripcion(
-            long IdProducto,
-            long IdProceso,
-            long IdComienzo,
-            long IdTurno,
-            Producto? Producto,
-            Comienzo? Comienzo,
-            Turno? Turno);
 
         private static EncuestaIniAdmision? ObtenerEncuestaParaGuardar(
             IUnitOfWork uow,
