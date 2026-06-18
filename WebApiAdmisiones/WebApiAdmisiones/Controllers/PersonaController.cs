@@ -71,6 +71,51 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Obtiene las becas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista mock de becas para la vista del front.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("Becas")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 400)]
+        public IActionResult ObtenerMisBecas()
+        {
+            var becas = new List<DtoBecaPersona>
+            {
+                new()
+                {
+                    IdBeca = 1,
+                    IdPostulacion = 1001,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseno Grafico",
+                    Estado = "En proceso",
+                    FechaCierrePostulacion = new DateTime(2026, 5, 26),
+                    FechaPrueba = new DateTime(2026, 6, 13),
+                    AccionPrincipal = "Continuar postulacion",
+                    PuedeContinuarPostulacion = true,
+                    PuedeDescargarMaterialEstudio = false
+                },
+                new()
+                {
+                    IdBeca = 2,
+                    IdPostulacion = 1002,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseno Grafico",
+                    FechaPrueba = new DateTime(2026, 6, 13),
+                    FechaResultados = new DateTime(2025, 7, 24),
+                    AccionPrincipal = "Descargar material de estudio",
+                    PuedeContinuarPostulacion = false,
+                    PuedeDescargarMaterialEstudio = true,
+                    UrlMaterialEstudio = "#"
+                }
+            };
+
+            var result = OperationResult<IEnumerable<DtoBecaPersona>>.Ok(becas, nameof(ObtenerMisBecas));
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Cambia la contraseña del usuario autenticado.
         /// </summary>
         /// <param name="request">Password actual y nueva password.</param>
