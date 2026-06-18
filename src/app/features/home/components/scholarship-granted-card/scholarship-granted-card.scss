@@ -20,18 +20,18 @@
 .dashboard-card__title {
   margin: 0;
   font-weight: var(--ort-sys-font-weight-bold);
-  font-size: var(--ort-sys-font-size-24 );
+  font-size: var(--ort-sys-font-size-24);
   font-family: var(--ort-sys-font-family-display);
   line-height: var(--ort-sys-line-height-24);
 }
 
-.dashboard-card__text{
-  text-align: center;
-  margin: auto;
+.dashboard-card__text {
   width: 80%;
+  margin: auto;
+  text-align: center;
 }
 
-img{
+img {
   width: 15%;
   height: auto;
 }
@@ -44,7 +44,7 @@ img{
   min-height: 48px;
 }
 
-.dashboard-card__actions{
+.dashboard-card__actions {
   display: flex;
   flex-direction: column;
   gap: var(--ort-sys-spacing-8);
@@ -52,7 +52,7 @@ img{
 }
 
 @media (width >= 768px) {
-  .dashboard-card__actions{
+  .dashboard-card__actions {
     flex-direction: row;
     justify-content: center;
   }
