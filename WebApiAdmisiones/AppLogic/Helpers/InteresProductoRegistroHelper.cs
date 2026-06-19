@@ -1,5 +1,6 @@
 using AppLogic.Constants;
 using AppLogic.DTOs;
+using AppLogic.IServices.Tivenos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -9,7 +10,7 @@ namespace AppLogic.Helpers
 {
     internal static class InteresProductoRegistroHelper
     {
-        public static OperationResult<bool> RegistrarInteresProducto(
+        public static OperationResult<TivenosAltaInteresRequest?> RegistrarInteresProducto(
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
@@ -22,20 +23,32 @@ namespace AppLogic.Helpers
 
             ResetearInteresesProductos(uow, intereses, fechaActual);
 
-            var interes = intereses.FirstOrDefault(i => i.IdProceso == request.IdProcesoSeleccionado)
-                ?? CrearInteres(uow, dbConnectionContext, codigoPersona, request.IdProcesoSeleccionado);
+            var interes = intereses.FirstOrDefault(i => i.IdProceso == request.IdProcesoSeleccionado);
+            var esInteresNuevo = interes == null;
+            interes ??= CrearInteres(uow, dbConnectionContext, codigoPersona, request.IdProcesoSeleccionado);
 
-            ActivarInteresProducto(uow, interes, request.IdProducto, fechaActual);
-            // TODO Tivenos: encolar AltaInteresXSeleccionEnSitio para el interes producto registrado.
+            var operacionTivenos = ActivarInteresProducto(uow, interes, request.IdProducto, fechaActual, esInteresNuevo);
             AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
             AsegurarInteresProductoOferta(uow, interes, request.IdProducto, request.IdOferta);
 
-            return ActualizarEncuestaInicial(
+            var resultadoEncuesta = ActualizarEncuestaInicial(
                 uow,
                 codigoPersona,
                 request.IdProducto,
                 request.IdProcesoSeleccionado,
                 oferta.Supraoferta.IdComienzo,
+                methodName);
+            if (!resultadoEncuesta.Success)
+            {
+                return OperationResult<TivenosAltaInteresRequest?>.IsFailed(
+                    resultadoEncuesta.ErrorCode,
+                    methodName,
+                    resultadoEncuesta.Message,
+                    resultadoEncuesta.HttpCode);
+            }
+
+            return OperationResult<TivenosAltaInteresRequest?>.Ok(
+                CrearRequestTivenos(codigoPersona, request, operacionTivenos),
                 methodName);
         }
 
@@ -80,20 +93,27 @@ namespace AppLogic.Helpers
             return interes;
         }
 
-        private static void ActivarInteresProducto(IUnitOfWork uow, Intere interes, long idProducto, DateTime fechaActual)
+        private static TivenosAltaInteresOperacion? ActivarInteresProducto(
+            IUnitOfWork uow,
+            Intere interes,
+            long idProducto,
+            DateTime fechaActual,
+            bool esInteresNuevo)
         {
             var interesProductoExistente = interes.InteresProductos.FirstOrDefault(ip => ip.IdProducto == idProducto);
             if (interesProductoExistente == null)
             {
                 uow.InteresProductos.Add(
                     InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
-                return;
+                return esInteresNuevo
+                    ? TivenosAltaInteresOperacion.AltaInteresProducto()
+                    : TivenosAltaInteresOperacion.AltaActualizarInteres();
             }
 
             var interesProductoActual = uow.InteresProductos.GetByKey(interes.IdInteres, idProducto);
             if (interesProductoActual == null || interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
             {
-                return;
+                return null;
             }
 
             interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
@@ -103,6 +123,26 @@ namespace AppLogic.Helpers
             interesProductoActual.FechaModifInteresProd = fechaActual;
             interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
             uow.InteresProductos.Update(interesProductoActual);
+            return TivenosAltaInteresOperacion.ModificarActualizarInteres();
+        }
+
+        private static TivenosAltaInteresRequest? CrearRequestTivenos(
+            long codigoPersona,
+            InteresProductoRequest request,
+            TivenosAltaInteresOperacion? operacion)
+        {
+            if (operacion == null)
+            {
+                return null;
+            }
+
+            return new TivenosAltaInteresRequest
+            {
+                CodigoPersona = codigoPersona,
+                IdProducto = request.IdProducto,
+                IdProceso = request.IdProcesoSeleccionado,
+                Operacion = operacion,
+            };
         }
 
         private static void AsegurarPersonaAdmite(IUnitOfWork uow, long codigoPersona, DateTime fechaActual)

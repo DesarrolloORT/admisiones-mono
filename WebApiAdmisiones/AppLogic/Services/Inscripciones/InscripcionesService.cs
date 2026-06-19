@@ -5,6 +5,7 @@ using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
+using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.IDevartRepositories;
@@ -18,17 +19,20 @@ namespace AppLogic.Services.Inscripciones
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly IGeneralService _generalService;
+        private readonly ITivenosEnvioService _tivenosEnvioService;
         private readonly InscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             IGeneralService generalService,
+            ITivenosEnvioService tivenosEnvioService,
             InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _generalService = generalService;
+            _tivenosEnvioService = tivenosEnvioService;
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
@@ -125,7 +129,29 @@ namespace AppLogic.Services.Inscripciones
                 if (!resultado.Success)
                 {
                     uow.Rollback();
-                    return resultado;
+                    return OperationResult<bool>.IsFailed(
+                        resultado.ErrorCode,
+                        nameof(RegistrarInteresProducto),
+                        resultado.Message,
+                        resultado.HttpCode);
+                }
+
+                if (resultado.Data != null)
+                {
+                    var resultadoTivenos = _tivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio(
+                        uow,
+                        resultado.Data,
+                        _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
+                        nameof(RegistrarInteresProducto));
+                    if (!resultadoTivenos.Success)
+                    {
+                        uow.Rollback();
+                        return OperationResult<bool>.IsFailed(
+                            resultadoTivenos.ErrorCode,
+                            nameof(RegistrarInteresProducto),
+                            resultadoTivenos.Message,
+                            resultadoTivenos.HttpCode);
+                    }
                 }
 
                 uow.Commit();
