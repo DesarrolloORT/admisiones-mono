@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
@@ -26,6 +26,7 @@ describe('Register', () => {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
   };
+  let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     registrationMock = {
@@ -94,6 +95,7 @@ describe('Register', () => {
       ],
     });
 
+    navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     fixture = TestBed.createComponent(Register);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -177,9 +179,8 @@ describe('Register', () => {
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
-    expect(snackbarMock.success).toHaveBeenCalledWith(
-      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
-    );
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
   it('should still call verifyIdentity even if verificacionMail differs', async () => {
@@ -231,9 +232,8 @@ describe('Register', () => {
       personal: expect.objectContaining({ primerNombre: 'Ana' }),
     });
     expect(facade.isCompleted()).toBe(true);
-    expect(snackbarMock.success).toHaveBeenCalledWith(
-      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-    );
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.success).not.toHaveBeenCalled();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).not.toContain(
       'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'

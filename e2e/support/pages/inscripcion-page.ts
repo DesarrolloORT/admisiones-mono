@@ -107,9 +107,9 @@ export class InscripcionPage {
     await fileInputs.nth(0).setInputFiles({ ...image, name: 'frente.png' });
     await fileInputs.nth(1).setInputFiles({ ...image, name: 'dorso.png' });
     await fileInputs.nth(2).setInputFiles({ ...image, name: 'rostro.png' });
-    await expect(this.page.getByText('frente.png')).toBeVisible();
-    await expect(this.page.getByText('dorso.png')).toBeVisible();
-    await expect(this.page.getByText('rostro.png')).toBeVisible();
+    await expect(this.page.getByText('frente.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('dorso.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('rostro.png', { exact: true })).toBeVisible();
 
     const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
     await expiration.fill('04/02/2030');
@@ -149,8 +149,7 @@ export class InscripcionPage {
 
   private async continue(): Promise<void> {
     const button = this.page.getByRole('button', { name: 'Continuar', exact: true });
-    await button.focus();
-    await button.press('Enter');
+    await button.click();
   }
 
   private async select(controlName: string, option: string): Promise<void> {
@@ -163,9 +162,11 @@ export class InscripcionPage {
     const group = this.radioGroup(controlName);
     await expect(group).toBeVisible();
 
-    const option = group.locator('ort-radio-button').filter({ hasText: label });
-    await expect(option).toBeVisible();
-    const radio = option.getByRole('radio');
+    const radio = group.getByRole('radio', {
+      name: new RegExp(`^${escapeRegExp(label)}(?:\\s|$)`),
+    });
+    await expect(radio).toBeAttached();
+    await expect(radio).toBeEnabled();
     await radio.evaluate((element: HTMLInputElement) => element.click());
     await expect(radio).toBeChecked();
   }
@@ -178,4 +179,8 @@ export class InscripcionPage {
 
     return this.page.locator(`ort-radio-group[formcontrolname="${controlName}"]`);
   }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

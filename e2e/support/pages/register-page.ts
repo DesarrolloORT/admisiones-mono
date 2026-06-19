@@ -50,7 +50,7 @@ export class RegisterPage {
     await this.page.getByRole('textbox', { name: 'Segundo nombre' }).fill(data.secondName);
     await this.page.getByRole('textbox', { name: 'Primer apellido' }).fill(data.firstLastName);
     await this.page.getByRole('textbox', { name: 'Segundo apellido' }).fill(data.secondLastName);
-    await this.page.getByLabel('Fecha de nacimiento').fill(data.birthDate);
+    await this.page.getByLabel('Fecha de nacimiento').fill(toDisplayDate(data.birthDate));
     await selectOrtOption(this.page, this.page.getByRole('combobox', { name: 'Sexo' }), data.sex);
     await selectOrtOption(
       this.page,
@@ -68,7 +68,7 @@ export class RegisterPage {
       data.city
     );
     await this.page.getByRole('textbox', { name: 'Dirección' }).fill(data.address);
-    await this.page.getByRole('textbox', { name: 'Número de teléfono' }).fill(data.phone);
+    await this.page.getByRole('textbox', { exact: true, name: 'Número' }).fill(data.phone);
     await this.page.getByRole('textbox', { exact: true, name: 'E-mail' }).fill(data.email);
     await this.page.getByRole('textbox', { name: 'Confirmar e-mail' }).fill(data.email);
   }
@@ -79,7 +79,7 @@ export class RegisterPage {
   }
 
   public async continueFromPersonalData(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Crear cuenta' }).click();
+    await this.page.getByRole('button', { name: /^(Crear cuenta|Confirmar)$/ }).click();
   }
 
   public async expectCreatedAccount(): Promise<void> {
@@ -95,4 +95,14 @@ export class RegisterPage {
     await expect(this.page.getByRole('status').filter({ hasText: message })).toBeVisible();
     await expect(this.page.locator('form')).not.toContainText(message);
   }
+}
+
+function toDisplayDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
+    throw new Error(`Fecha de prueba inválida: ${value}`);
+  }
+
+  return `${match[3]}/${match[2]}/${match[1]}`;
 }

@@ -21,6 +21,10 @@ describe('RegisterFlowFacade', () => {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
   };
+  let routerMock: {
+    navigate: ReturnType<typeof vi.fn>;
+    navigateByUrl: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     registrationMock = {
@@ -43,6 +47,10 @@ describe('RegisterFlowFacade', () => {
       success: vi.fn(),
       error: vi.fn(),
     };
+    routerMock = {
+      navigate: vi.fn(),
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -64,7 +72,7 @@ describe('RegisterFlowFacade', () => {
         },
         {
           provide: Router,
-          useValue: { navigate: vi.fn() },
+          useValue: routerMock,
         },
       ],
     });
@@ -133,9 +141,8 @@ describe('RegisterFlowFacade', () => {
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
-    expect(snackbarMock.success).toHaveBeenCalledWith(
-      'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
-    );
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
   it('should collect full data and register a new CI person from the personal step', async () => {
@@ -160,9 +167,8 @@ describe('RegisterFlowFacade', () => {
     });
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
-    expect(snackbarMock.success).toHaveBeenCalledWith(
-      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-    );
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
   it('should block continuable registration when backend omits flowId', async () => {
@@ -196,9 +202,8 @@ describe('RegisterFlowFacade', () => {
       })
     );
     expect(facade.isCompleted()).toBe(true);
-    expect(snackbarMock.success).toHaveBeenCalledWith(
-      'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-    );
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
   it('should reject personal submit when no flow was evaluated', () => {

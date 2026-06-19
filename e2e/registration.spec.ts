@@ -54,12 +54,9 @@ test.describe('Registration flow guardrails', () => {
       await register.continueFromIdentity();
 
       await expect(
-        page
-          .locator('#main-content')
-          .getByRole('alert')
-          .filter({
-            hasText: scenario.terminalMessage ?? '',
-          })
+        page.getByRole('alert').filter({
+          hasText: scenario.terminalMessage ?? '',
+        })
       ).toBeVisible();
       await page.locator('#main-content').getByRole('button', { name: 'Iniciar sesión' }).click();
       await expect(page).toHaveURL(/\/iniciar-sesion/);

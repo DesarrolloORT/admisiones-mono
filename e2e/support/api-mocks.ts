@@ -113,7 +113,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, []);
     }
 
-    if (path === '/Inscripciones/RegistrarInteresProducto') {
+    if (path === '/Inscripciones/InteresProducto') {
       return fulfillOperation(route, true);
     }
 

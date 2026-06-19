@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
   OrtFormFieldModule,
@@ -49,6 +49,7 @@ export class RecoverAccess {
   private readonly document = inject(DOCUMENT);
   private readonly passwordService = inject(PasswordActivationService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
   protected readonly form = createRecoverAccessForm();
@@ -113,9 +114,7 @@ export class RecoverAccess {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          const message =
-            'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
-          this.snackbar.success(message);
+          void this.router.navigateByUrl('/confirmacion-correo/recuperar-acceso');
         },
         error: error => {
           const message = this.getApiErrorMessage(
