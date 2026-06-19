@@ -121,7 +121,7 @@ namespace WebApiAdmisiones.Security.Middleware
                 return;
             }
 
-                    context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/json";
             context.Response.StatusCode = statusCode;
 
             var result = OperationResult<string>.IsFailed(

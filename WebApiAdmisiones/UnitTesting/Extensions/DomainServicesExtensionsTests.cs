@@ -29,6 +29,8 @@ using AppLogic.IServices.Becas;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Personas;
+using AppLogic.IServices.Tivenos;
+using AppLogic.Services.Tivenos;
 
 namespace UnitTesting.Extensions
 {
@@ -326,6 +328,7 @@ namespace UnitTesting.Extensions
 
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITivenosEnvioService) && sd.ImplementationType == typeof(TivenosEnvioService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));
         }
 

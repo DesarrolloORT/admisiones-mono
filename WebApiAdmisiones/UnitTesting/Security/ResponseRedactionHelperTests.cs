@@ -160,6 +160,19 @@ namespace UnitTesting.Security
         }
 
         [Fact]
+        public void Redact_ByteArrayWithoutAttribute_ReturnsBinaryLength()
+        {
+            // Arrange
+            var bytes = new byte[] { 1, 2, 3, 4, 5 };
+
+            // Act
+            var result = ResponseRedactionHelper.Redact(bytes);
+
+            // Assert
+            Assert.Equal("<bin:5>", result);
+        }
+
+        [Fact]
         public void Redact_ObjectWithoutRedactAttributes_ReturnsDictionary()
         {
             // Arrange

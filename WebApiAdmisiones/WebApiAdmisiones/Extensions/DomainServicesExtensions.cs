@@ -32,6 +32,8 @@ using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Personas;
 using AppLogic.IServices.Registro;
+using AppLogic.IServices.Tivenos;
+using AppLogic.Services.Tivenos;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -110,6 +112,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IGeneralService, GeneralService>();
             services.AddScoped<ICatalogosService, CatalogosService>();
             services.AddScoped<IRegistroService, RegistroService>();
+            services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
             services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
