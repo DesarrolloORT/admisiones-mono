@@ -1,6 +1,16 @@
 <header aria-label="Navegación principal" class="home-header">
   <div class="home-header__content">
-    <span aria-hidden="true" class="home-header__spacer"></span>
+    <div class="home-header__action">
+      @if (showBack()) {
+      <button
+        aria-label="Volver al inicio"
+        class="home-header__back"
+        type="button"
+        (click)="goBack()">
+        <ort-icon aria-hidden="true">arrow_back_ios</ort-icon>
+      </button>
+      }
+    </div>
     <div class="home-brand">
       <img alt="ORT" class="home-brand__logo" src="assets/auth/ort-logo-white.svg" />
       <span aria-hidden="true" class="home-brand__divider"></span>
@@ -9,10 +19,10 @@
     <div class="home-profile">
       <button
         #profileButton
-        aria-controls="home-profile-menu"
         aria-haspopup="dialog"
         class="home-avatar"
         type="button"
+        [attr.aria-controls]="isMobile() ? null : 'home-profile-menu'"
         [attr.aria-expanded]="profileMenuOpen()"
         [attr.aria-label]="
           profileMenuOpen() ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'
@@ -21,7 +31,7 @@
         <ort-icon aria-hidden="true">person</ort-icon>
       </button>
 
-      @if (profileMenuOpen()) {
+      @if (profileMenuOpen() && !isMobile()) {
       <div
         aria-labelledby="home-profile-menu-title"
         aria-modal="true"
@@ -31,48 +41,46 @@
         role="dialog"
         [cdkTrapFocusAutoCapture]="true"
         (keydown.escape)="closeProfileMenu(true)">
-        <button
-          aria-label="Cerrar menú de usuario"
-          class="home-profile-menu__backdrop-button"
-          tabindex="-1"
-          type="button"
-          (click)="closeProfileMenu(true)"></button>
-
-        <div
-          class="home-profile-menu__sheet"
-          tabindex="-1"
-          [class.home-profile-menu__sheet--dragging]="isDraggingDrawer()"
-          [style.transform]="drawerTransform()"
-          (touchend)="onDrawerTouchEnd()"
-          (touchmove)="onDrawerTouchMove($event)"
-          (touchstart)="onDrawerTouchStart($event)">
+        <div class="home-profile-menu__sheet" tabindex="-1">
           <h2 class="home-profile-menu__title" id="home-profile-menu-title">Menú de usuario</h2>
-          <span aria-hidden="true" class="home-profile-menu__tracker"></span>
-          <nav aria-labelledby="home-profile-menu-title" class="home-profile-menu__list">
-            <a
-              #firstProfileMenuItem
-              cdkFocusInitial
-              class="home-profile-menu__item"
-              routerLink="/inicio/datos-personales"
-              (click)="closeProfileMenu()">
-              <ort-icon aria-hidden="true">person</ort-icon>
-              Editar perfil
-            </a>
-            <a
-              class="home-profile-menu__item"
-              routerLink="/inicio/cambiar-contrasena"
-              (click)="closeProfileMenu()">
-              <ort-icon aria-hidden="true">lock</ort-icon>
-              Cambiar contraseña
-            </a>
-            <button class="home-profile-menu__item" type="button" (click)="logout()">
-              <ort-icon aria-hidden="true">logout</ort-icon>
-              Cerrar sesión
-            </button>
-          </nav>
+          <ng-container [ngTemplateOutlet]="profileMenuItems" />
         </div>
       </div>
       }
     </div>
   </div>
 </header>
+
+<ort-drawer
+  aria-label="Menú de usuario"
+  [open]="profileMenuOpen() && isMobile()"
+  [showTracker]="true"
+  (closed)="onDrawerClosed($event)"
+  (openChange)="profileMenuOpen.set($event)">
+  <ng-container [ngTemplateOutlet]="profileMenuItems" />
+</ort-drawer>
+
+<ng-template #profileMenuItems>
+  <nav aria-label="Opciones de usuario" class="home-profile-menu__list">
+    <a
+      #firstProfileMenuItem
+      cdkFocusInitial
+      class="home-profile-menu__item"
+      routerLink="/inicio/datos-personales"
+      (click)="closeProfileMenu()">
+      <ort-icon aria-hidden="true">person</ort-icon>
+      Editar perfil
+    </a>
+    <a
+      class="home-profile-menu__item"
+      routerLink="/inicio/cambiar-contrasena"
+      (click)="closeProfileMenu()">
+      <ort-icon aria-hidden="true">lock</ort-icon>
+      Cambiar contraseña
+    </a>
+    <button class="home-profile-menu__item" type="button" (click)="logout()">
+      <ort-icon aria-hidden="true">logout</ort-icon>
+      Cerrar sesión
+    </button>
+  </nav>
+</ng-template>

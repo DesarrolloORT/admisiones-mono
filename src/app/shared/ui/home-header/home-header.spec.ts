@@ -1,31 +1,41 @@
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
+import { Location } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 import { HomeHeader } from './home-header';
 
-interface TouchLike {
-  touches: Array<{ clientY: number }>;
-  cancelable?: boolean;
-  preventDefault?: () => void;
-}
-
 type TestHomeHeader = HomeHeader & {
   closeProfileMenu: (restoreFocus?: boolean) => void;
-  drawerTransform: () => string;
-  onDrawerTouchEnd: () => void;
-  onDrawerTouchMove: (event: TouchEvent) => void;
-  onDrawerTouchStart: (event: TouchEvent) => void;
+  onDrawerClosed: (reason: 'backdrop' | 'escape' | 'drag' | 'programmatic') => void;
   profileMenuOpen: () => boolean;
 };
 
 describe('HomeHeader', () => {
   let fixture: ComponentFixture<HomeHeader>;
   let component: TestHomeHeader;
+  let location: { back: ReturnType<typeof vi.fn> };
+  let viewport: BehaviorSubject<BreakpointState>;
 
   beforeEach(() => {
+    location = { back: vi.fn() };
+    viewport = new BehaviorSubject<BreakpointState>({
+      matches: false,
+      breakpoints: {},
+    });
+
     TestBed.configureTestingModule({
       imports: [HomeHeader],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: Location, useValue: location },
+        {
+          provide: BreakpointObserver,
+          useValue: { observe: vi.fn(() => viewport.asObservable()) },
+        },
+      ],
     });
 
     fixture = TestBed.createComponent(HomeHeader);
@@ -34,7 +44,6 @@ describe('HomeHeader', () => {
 
   afterEach(() => {
     component.closeProfileMenu();
-    document.body.style.overflow = '';
   });
 
   it('should keep the menu button and logo visible in the shared header', () => {
@@ -50,6 +59,22 @@ describe('HomeHeader', () => {
     expect(profileButton?.getAttribute('aria-label')).toBe('Abrir menú de usuario');
     expect(profileButton?.getAttribute('aria-haspopup')).toBe('dialog');
     expect(profileButton?.getAttribute('aria-controls')).toBe('home-profile-menu');
+    expect(fixture.nativeElement.querySelector('.home-header__back')).toBeNull();
+  });
+
+  it('should navigate back when the optional action is enabled', async () => {
+    fixture.componentRef.setInput('showBack', true);
+    await fixture.whenStable();
+
+    const backButton = fixture.nativeElement.querySelector(
+      '.home-header__back'
+    ) as HTMLButtonElement;
+
+    expect(backButton?.getAttribute('aria-label')).toBe('Volver al inicio');
+
+    backButton.click();
+
+    expect(location.back).toHaveBeenCalledOnce();
   });
 
   it('should expose profile links through the user menu', async () => {
@@ -64,10 +89,7 @@ describe('HomeHeader', () => {
       'a[routerLink="/inicio/datos-personales"]'
     );
     const dialog = fixture.nativeElement.querySelector('.home-profile-menu');
-    const backdrop = fixture.nativeElement.querySelector('.home-profile-menu__backdrop-button');
-    const nav = fixture.nativeElement.querySelector(
-      'nav[aria-labelledby="home-profile-menu-title"]'
-    );
+    const nav = fixture.nativeElement.querySelector('nav[aria-label="Opciones de usuario"]');
 
     expect(text).toContain('Editar perfil');
     expect(text).toContain('Cambiar contraseña');
@@ -75,48 +97,36 @@ describe('HomeHeader', () => {
     expect(dialog?.getAttribute('role')).toBe('dialog');
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
     expect(dialog?.getAttribute('aria-labelledby')).toBe('home-profile-menu-title');
-    expect(backdrop?.getAttribute('aria-label')).toBe('Cerrar menú de usuario');
-    expect(backdrop?.getAttribute('tabindex')).toBe('-1');
     expect(nav).toBeTruthy();
     expect(document.activeElement).toBe(profileLink);
   });
 
-  it('should restore focus when closing the profile drawer from backdrop', async () => {
-    fixture.detectChanges();
+  it('should open the ORT drawer on mobile', async () => {
+    viewport.next({ matches: true, breakpoints: {} });
+    await fixture.whenStable();
 
     const profileButton = fixture.nativeElement.querySelector('.home-avatar') as HTMLButtonElement;
     profileButton.click();
-    fixture.detectChanges();
-    await waitForTimers();
+    await fixture.whenStable();
 
-    fixture.nativeElement.querySelector('.home-profile-menu__backdrop-button').click();
-    fixture.detectChanges();
+    const drawer = fixture.debugElement.query(By.css('ort-drawer')).componentInstance as {
+      open: () => boolean;
+    };
+
+    expect(drawer.open()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.home-profile-menu')).toBeNull();
+  });
+
+  it('should restore focus when the ORT drawer closes interactively', async () => {
+    await fixture.whenStable();
+
+    const profileButton = fixture.nativeElement.querySelector('.home-avatar') as HTMLButtonElement;
+
+    component.onDrawerClosed('backdrop');
     await waitForTimers();
 
     expect(component.profileMenuOpen()).toBe(false);
     expect(document.activeElement).toBe(profileButton);
-  });
-
-  it('should expand, collapse and close the profile drawer with touch gestures', () => {
-    fixture.detectChanges();
-
-    fixture.nativeElement.querySelector('.home-avatar').click();
-    fixture.detectChanges();
-
-    component.onDrawerTouchStart(touchEvent(420));
-    component.onDrawerTouchMove(touchEvent(330));
-    component.onDrawerTouchEnd();
-    expect(component.drawerTransform()).toBe('translateY(-104px)');
-
-    component.onDrawerTouchStart(touchEvent(330));
-    component.onDrawerTouchMove(touchEvent(390));
-    component.onDrawerTouchEnd();
-    expect(component.drawerTransform()).toBe('translateY(0px)');
-
-    component.onDrawerTouchStart(touchEvent(390));
-    component.onDrawerTouchMove(touchEvent(510));
-    component.onDrawerTouchEnd();
-    expect(component.profileMenuOpen()).toBe(false);
   });
 
   it('should emit logout from the user menu', () => {
@@ -133,16 +143,6 @@ describe('HomeHeader', () => {
     expect(component.profileMenuOpen()).toBe(false);
   });
 });
-
-function touchEvent(clientY: number): TouchEvent {
-  const event: TouchLike = {
-    touches: [{ clientY }],
-    cancelable: true,
-    preventDefault: vi.fn(),
-  };
-
-  return event as unknown as TouchEvent;
-}
 
 function waitForTimers(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve));
