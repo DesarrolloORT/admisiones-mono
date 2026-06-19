@@ -207,9 +207,7 @@ export class RegisterFlowFacade {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.showSuccess(
-            'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.'
-          );
+          this.navigateToEmailConfirmation();
         },
         error: error => {
           this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
@@ -248,9 +246,7 @@ export class RegisterFlowFacade {
       .subscribe({
         next: result => {
           if (result.success) {
-            this.showSuccess(
-              'Datos verificados correctamente. Revisá tu correo para activar la contraseña.'
-            );
+            this.navigateToEmailConfirmation();
           } else {
             this.snackbar.error('No se pudo verificar la identidad.');
           }
@@ -347,9 +343,9 @@ export class RegisterFlowFacade {
     });
   }
 
-  private showSuccess(message: string): void {
+  private navigateToEmailConfirmation(): void {
     this.isCompleted.set(true);
-    this.snackbar.success(message);
+    void this.router.navigateByUrl('/confirmacion-correo/registro');
   }
 
   private handleDocumentRecognitionError(error: unknown): void {

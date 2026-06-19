@@ -141,7 +141,7 @@ export class Login {
           if (outcome.kind === 'twoFactorRequired') {
             this.form.controls.password.reset('');
             this.router
-              .navigate(['/verificar-codigo'], {
+              .navigate(['/confirmacion-correo/verificar-codigo'], {
                 state: {
                   email: outcome.maskedEmail,
                   sessionId: outcome.sessionId,

@@ -1,0 +1,50 @@
+<main class="email-confirmation-page" id="main-content" tabindex="-1">
+  <header class="email-confirmation-header">
+    <div aria-hidden="true" class="email-confirmation-statusbar">
+      <span>9:41</span>
+      <span class="email-confirmation-statusbar__icons">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </div>
+
+    <div class="email-confirmation-header__content">
+      <div class="email-confirmation-brand">
+        <img
+          alt="ORT"
+          class="email-confirmation-brand__logo"
+          height="36"
+          src="/assets/auth/ort-logo-white.svg"
+          width="53" />
+        <span aria-hidden="true" class="email-confirmation-brand__divider"></span>
+        <span class="email-confirmation-brand__name">Admisiones</span>
+      </div>
+    </div>
+  </header>
+
+  <section aria-labelledby="email-confirmation-title" class="email-confirmation">
+    <div class="email-confirmation__content">
+      <div aria-hidden="true" class="email-confirmation__icon">
+        <span class="email-confirmation__icon-inner">
+          <ort-icon>{{ confirmation.icon }}</ort-icon>
+        </span>
+      </div>
+
+      <h1 class="email-confirmation__title" id="email-confirmation-title">
+        {{ confirmation.title }}
+      </h1>
+
+      <div class="email-confirmation__copy">
+        <p class="email-confirmation__description">{{ confirmation.description }}</p>
+        @if (confirmation.secondaryDescription) {
+        <p class="email-confirmation__secondary">{{ confirmation.secondaryDescription }}</p>
+        }
+      </div>
+    </div>
+
+    <button ort-primary-button type="button" (click)="continue()">
+      {{ confirmation.actionLabel }}
+    </button>
+  </section>
+</main>

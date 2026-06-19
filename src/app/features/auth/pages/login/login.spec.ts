@@ -116,7 +116,7 @@ describe('Login', () => {
     expect(snackbarMock.error).toHaveBeenCalledWith('Credenciales inválidas.');
   });
 
-  it('should navigate to /verificar-codigo with state when 2FA is required', () => {
+  it('should navigate to email confirmation with state when 2FA is required', () => {
     authMock.login.mockReturnValue(
       of({
         kind: 'twoFactorRequired',
@@ -133,7 +133,7 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/verificar-codigo'], {
+    expect(navigateSpy).toHaveBeenCalledWith(['/confirmacion-correo/verificar-codigo'], {
       state: {
         email: 'c******a@gmail.******',
         sessionId: 'ab4df653422a4c19be2867c08355fa27',

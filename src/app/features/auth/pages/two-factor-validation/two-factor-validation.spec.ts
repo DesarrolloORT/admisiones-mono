@@ -102,15 +102,29 @@ describe('TwoFactorValidationPage', () => {
     expect(component['isSubmitting']()).toBe(false);
   });
 
-  it('resends the code and shows the backend message', () => {
-    setup({ email: 'a@b.com', sessionId: 'abc-123' });
+  it('resends the code and navigates to email confirmation', async () => {
+    setup({
+      email: 'a@b.com',
+      sessionId: 'abc-123',
+      documentType: 'CI',
+      documentNumber: '12345678',
+    });
 
     component['resend']();
+    await fixture.whenStable();
 
     expect(authSessionMock.resendTwoFactorCode).toHaveBeenCalledWith('abc-123');
     expect(component['email']()).toBe('a***@example.com');
     expect(component['isSubmitting']()).toBe(false);
-    expect(snackbarMock.success).toHaveBeenCalledWith('Código reenviado.');
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/verificar-codigo', {
+      state: {
+        email: 'a***@example.com',
+        sessionId: 'session-456',
+        documentType: 'CI',
+        documentNumber: '12345678',
+      },
+    });
+    expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
   it('shows a snackbar when resending fails', () => {

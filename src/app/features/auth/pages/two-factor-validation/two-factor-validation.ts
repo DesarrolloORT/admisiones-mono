@@ -92,8 +92,16 @@ export class TwoFactorValidationPage {
           this.email.set(result.maskedEmail);
         }
 
-        this.isSubmitting.set(false);
-        this.snackbar.success(result.message || 'Te enviamos un nuevo código a tu correo.');
+        void this.router
+          .navigateByUrl('/confirmacion-correo/verificar-codigo', {
+            state: {
+              email: this.email(),
+              sessionId: this.sessionId(),
+              documentType: this.documentType(),
+              documentNumber: this.documentNumber(),
+            },
+          })
+          .finally(() => this.isSubmitting.set(false));
       },
       error: error => {
         const message = isNormalizedApiError(error)
