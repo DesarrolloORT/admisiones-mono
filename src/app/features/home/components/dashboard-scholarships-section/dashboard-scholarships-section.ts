@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { OrtIconButtonComponent, OrtIconModule } from '@desarrolloort/components';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { MiBeca } from '../../models/mi-beca';
 import { DashboardActionCard } from '../dashboard-action-card/dashboard-action-card';
@@ -10,26 +9,17 @@ import { ScholarshipGrantedCard } from '../scholarship-granted-card/scholarship-
 @Component({
   selector: 'app-dashboard-scholarships-section',
   imports: [
-    OrtIconButtonComponent,
+    OrtButtonModule,
     OrtIconModule,
     DashboardCard,
     DashboardActionCard,
     ScholarshipGrantedCard,
-    RouterLink,
   ],
   templateUrl: './dashboard-scholarships-section.html',
   styleUrl: './dashboard-scholarships-section.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardScholarshipsSection {
-  becas = input.required<MiBeca[]>();
-  singleRow = input.required<boolean>();
-
-  hasBecas = computed(() => this.becas().length > 0);
-
-  isSingle = computed(() => this.becas().length === 1);
-
-  isSingleLayout = computed(() => {
-    return this.isSingle() && !this.singleRow();
-  });
+  readonly becas = input.required<MiBeca[]>();
+  readonly singleRow = input.required<boolean>();
 }

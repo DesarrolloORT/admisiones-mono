@@ -27,8 +27,8 @@ describe('HomeLayout', () => {
     fixture = TestBed.createComponent(HomeLayout);
   });
 
-  it('should render the shared header and the routed content outlet', () => {
-    fixture.detectChanges();
+  it('should render the shared header and the routed content outlet', async () => {
+    await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('app-home-header')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();

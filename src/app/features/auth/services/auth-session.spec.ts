@@ -14,6 +14,7 @@ describe('AuthSessionService', () => {
   let endpointMock: {
     login: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
+    clearCache: ReturnType<typeof vi.fn>;
     refreshToken: ReturnType<typeof vi.fn>;
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
   };
@@ -23,11 +24,13 @@ describe('AuthSessionService', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     endpointMock = {
       login: vi
         .fn()
         .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
       logout: vi.fn().mockReturnValue(of(undefined)),
+      clearCache: vi.fn(),
       refreshToken: vi.fn().mockReturnValue(of(undefined)),
       resendTwoFactorCode: vi.fn().mockReturnValue(
         of({
@@ -77,6 +80,7 @@ describe('AuthSessionService', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it('should delegate login and persist the returned session', () => {
@@ -181,13 +185,23 @@ describe('AuthSessionService', () => {
 
   it('should clear session locally after logout', () => {
     service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
+    window.sessionStorage.setItem(
+      `${storageKeys.inscriptionDraft}:12345678:primera-vez`,
+      '{"draft":true}'
+    );
+    window.sessionStorage.setItem('telemetry-run-id', 'keep');
 
     service.logout();
 
     expect(endpointMock.logout).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
+    expect(
+      window.sessionStorage.getItem(`${storageKeys.inscriptionDraft}:12345678:primera-vez`)
+    ).toBeNull();
+    expect(window.sessionStorage.getItem('telemetry-run-id')).toBe('keep');
     expect(cacheMock.clear).toHaveBeenCalled();
+    expect(endpointMock.clearCache).toHaveBeenCalled();
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 

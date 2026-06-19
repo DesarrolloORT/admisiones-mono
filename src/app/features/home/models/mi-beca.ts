@@ -1,4 +1,4 @@
-export type BecaEstado = 'En proceso' | 'Consulta' | 'Aceptada' | 'Estudio';
+export type BecaEstado = 'En proceso' | 'Consulta' | 'Aceptada' | 'Estudio' | string;
 
 export interface MiBeca {
   id: number;

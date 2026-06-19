@@ -1,0 +1,34 @@
+<section
+  class="mis-carreras"
+  [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
+  @if (inscripciones().length > 0) {
+  <div class="section-header">
+    <h3 class="section-header__title">Mis carreras</h3>
+    <button
+      aria-label="Inscribirme a carrera"
+      class="section-header__add"
+      ort-icon-button
+      type="button"
+      variant="tonal">
+      <ort-icon name="add" />
+    </button>
+  </div>
+  } @if (inscripciones().length === 0) {
+  <div class="mis-carreras__empty">
+    <app-dashboard-action-card variant="career" />
+  </div>
+  } @else if (inscripciones().length === 1) {
+  <app-dashboard-card [inscripcion]="inscripciones()[0]" />
+  } @else {
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+      <div class="swiper-slide">
+        <app-dashboard-card [inscripcion]="inscripcion" />
+      </div>
+      }
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+  }
+</section>

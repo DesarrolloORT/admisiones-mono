@@ -1,44 +1,34 @@
+@if (homeData() === null) {
+<main class="home-status" id="main-content" role="alert">
+  <h1>No pudimos cargar tu información</h1>
+  <p>Intentá nuevamente en unos minutos.</p>
+</main>
+} @else if (hasActivity()) {
+<app-dashboard [becas]="homeData()!.becas" [inscripciones]="homeData()!.inscripciones" />
+} @else {
 <main aria-labelledby="home-title" class="home-main" id="main-content" tabindex="-1">
   <header class="home-welcome">
     <h1 id="home-title">{{ greeting() }}</h1>
-    <p>{{ dashboard().description }}</p>
+    <p>{{ description }}</p>
   </header>
 
   <section aria-label="Acciones principales" class="home-actions">
-    @for (card of dashboard().actionCards; track card.id) {
+    @for (card of actionCards; track card.id) {
     <article
-      class="home-action-card"
-      [attr.aria-labelledby]="'home-action-' + card.id + '-title'"
-      [class.home-action-card--career]="card.id === 'career'"
-      [class.home-action-card--image]="card.imageSrc"
-      [class.home-action-card--scholarship]="card.id === 'scholarship'">
-      @if (card.imageSrc) {
+      class="home-action-card home-action-card--image"
+      [attr.aria-labelledby]="'home-action-' + card.id + '-title'">
       <img alt="" class="home-action-card__image" [src]="card.imageSrc" />
-      }
       <div class="home-action-card__content">
         <ort-icon aria-hidden="true" class="home-action-card__icon">{{ card.icon }}</ort-icon>
         <h2 [id]="'home-action-' + card.id + '-title'">{{ card.title }}</h2>
         <p>{{ card.description }}</p>
 
-        @if (card.route) {
         <a class="home-action-card__primary" ort-primary-button [routerLink]="card.route">
           {{ card.ctaLabel }}
         </a>
-        } @else {
-        <button
-          aria-disabled="true"
-          class="home-action-card__primary"
-          ort-primary-button
-          type="button"
-          [attr.aria-describedby]="'home-action-' + card.id + '-status'">
-          {{ card.ctaLabel }}
-        </button>
-        <p class="home-action-card__status" [id]="'home-action-' + card.id + '-status'">
-          {{ card.disabledReason || 'Acción no disponible.' }}
-        </p>
-        }
       </div>
     </article>
     }
   </section>
 </main>
+}

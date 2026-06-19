@@ -15,5 +15,7 @@
     </a>
   </div>
   <p class="action-card__description">{{ config().description }}</p>
-  <a class="action-card__cta" ort-primary-button [routerLink]="config().route">Postularme a beca</a>
+  <a class="action-card__cta" ort-primary-button [routerLink]="config().route">
+    {{config().buttonText}}
+  </a>
 </article>

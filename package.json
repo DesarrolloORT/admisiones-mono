@@ -52,8 +52,8 @@
     "@angular/platform-browser": "^21.2.4",
     "@angular/platform-browser-dynamic": "^21.2.4",
     "@angular/router": "^21.2.4",
-    "@desarrolloort/components": "^2.1.0-rc.18",
-    "@desarrolloort/design-system": "^1.2.0-rc.18",
+    "@desarrolloort/components": "^2.1.0-rc.19",
+    "@desarrolloort/design-system": "^1.2.0-rc.19",
     "@desarrolloort/front-env": "^0.1.0",
     "@desarrolloort/ngx-utils": "^2.2.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
@@ -100,7 +100,7 @@
     "lint-staged": "^15.2.10",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.3.3",
-    "prettier-eslint": "^16.4.2",
+    "prettier-eslint": "^17.1.1",
     "stylelint": "^16.20.0",
     "stylelint-config-recommended": "^16.0.0",
     "stylelint-config-standard": "^38.0.0",
@@ -124,4 +124,3 @@
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
-

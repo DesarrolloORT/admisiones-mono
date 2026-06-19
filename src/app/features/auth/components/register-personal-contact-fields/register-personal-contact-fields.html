@@ -11,7 +11,7 @@
       placeholderText="Número"
       [defaultCountry]="'UY'"
       [required]="true" />
-    <ort-hint>Seleccione país y luego ingrese solo dígitos.</ort-hint>
+    <ort-hint>Seleccione prefijo y luego ingrese solo dígitos.</ort-hint>
     @if (form().controls.telefono1.touched && form().controls.telefono1.hasError('required')) {
     <ort-error>El teléfono es obligatorio.</ort-error>
     } @if (form().controls.telefono1.touched && form().controls.telefono1.hasError('phone')) {

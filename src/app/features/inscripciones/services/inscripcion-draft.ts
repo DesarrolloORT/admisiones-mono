@@ -78,7 +78,7 @@ export class InscripcionDraft {
   }
 
   private getKey(scenario: EscenarioInscripcion): string {
-    return `inscripcion-borrador:v1:${this.getUserKey()}:${scenario}`;
+    return `${storageKeys.inscriptionDraft}:${this.getUserKey()}:${scenario}`;
   }
 
   private getUserKey(): string {

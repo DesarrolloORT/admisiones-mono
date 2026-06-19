@@ -4,7 +4,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { OrtErrorItem, OrtFileUploaderChange } from '@desarrolloort/components';
 import { merge, of } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import {
   buildFormErrorSummary,
   type FormErrorField,
@@ -320,6 +320,10 @@ export class InscripcionFlowFacade {
   public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly knowledgeOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly catalogError = signal<string | null>(null);
+  public readonly loadingCareers = signal(false);
+  public readonly loadingInitialSurveyCatalogs = signal(false);
+  public readonly loadingStarts = signal(false);
+  public readonly loadingTurnos = signal(false);
   public readonly registeringProductInterest = signal(false);
 
   public readonly visibleSections = computed(() => getSeccionesVisibles(this.scenario));
@@ -354,6 +358,29 @@ export class InscripcionFlowFacade {
         value: career.idProducto.toString(),
         label: career.nombreProducto,
       }));
+  });
+  public readonly careersLoadingMessage = computed(() =>
+    this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
+  );
+  public readonly startsLoadingMessage = computed(() => {
+    if (!this.loadingStarts()) return '';
+
+    const career = this.getOptionLabel(
+      this.careerOptions(),
+      this.academicForm.controls.carrera.value,
+      'la carrera seleccionada'
+    );
+    return `Estamos cargando los comienzos para "${career}".`;
+  });
+  public readonly turnosLoadingMessage = computed(() => {
+    if (!this.loadingTurnos()) return '';
+
+    const start = this.getOptionLabel(
+      this.startOptions(),
+      this.academicForm.controls.comienzo.value,
+      'el comienzo seleccionado'
+    );
+    return `Estamos cargando los turnos para "${start}".`;
   });
   public readonly isTerminal = computed(() =>
     ['reserva', 'inscripcion-confirmada', 'inscripcion-en-proceso'].includes(this.screen())
@@ -545,18 +572,31 @@ export class InscripcionFlowFacade {
   }
 
   public canSelectCareer(): boolean {
-    return this.getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0;
+    return (
+      !this.loadingCareers() &&
+      this.getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0 &&
+      this.careerOptions().length > 0
+    );
   }
 
   public canSelectStart(): boolean {
-    return !!this.academicForm.controls.carrera.value;
+    return (
+      !!this.academicForm.controls.carrera.value &&
+      !this.loadingStarts() &&
+      this.startOptions().length > 0
+    );
   }
 
   public canSelectTurno(): boolean {
-    return !!this.academicForm.controls.comienzo.value;
+    return (
+      !!this.academicForm.controls.comienzo.value &&
+      !this.loadingTurnos() &&
+      this.turnoOptions().length > 0
+    );
   }
 
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
+    if (this.isSectionValid(section)) return 'completa';
     if (this.activeSection() === section) return 'activa';
     return this.completedSections().includes(section) ? 'completa' : 'pendiente';
   }
@@ -564,7 +604,7 @@ export class InscripcionFlowFacade {
   public updateIdentityFile(target: keyof ArchivosIdentidad, event: OrtFileUploaderChange): void {
     const selectedFile = event.value.find(file => file.isValid)?.file ?? null;
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
-    this.invalidateSectionIfNeeded('identidad');
+    this.syncSectionCompletion('identidad');
     this.saveDraft();
   }
 
@@ -748,8 +788,12 @@ export class InscripcionFlowFacade {
     );
   }
 
-  private invalidateSectionIfNeeded(section: SeccionEncuestaId): void {
-    if (this.isSectionValid(section)) return;
+  private syncSectionCompletion(section: SeccionEncuestaId): void {
+    if (this.isSectionValid(section)) {
+      this.completeSection(section);
+      return;
+    }
+
     this.completedSections.update(sections => sections.filter(item => item !== section));
   }
 
@@ -779,7 +823,7 @@ export class InscripcionFlowFacade {
       .subscribe(() => {
         this.productInterestError.set(null);
         for (const section of this.visibleSections()) {
-          this.invalidateSectionIfNeeded(section);
+          this.syncSectionCompletion(section);
         }
         this.saveDraft();
       });
@@ -970,9 +1014,13 @@ export class InscripcionFlowFacade {
   }
 
   private loadCareers(): void {
+    this.loadingCareers.set(true);
     this.catalogs
       .getCareers()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.loadingCareers.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: careers => this.careers.set(careers),
         error: () => {
@@ -983,9 +1031,13 @@ export class InscripcionFlowFacade {
   }
 
   private loadInitialSurveyCatalogs(): void {
+    this.loadingInitialSurveyCatalogs.set(true);
     this.catalogs
       .getInitialSurveyCatalogs()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.loadingInitialSurveyCatalogs.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: catalogs => this.applyInitialSurveyCatalogs(catalogs),
         error: () => {
@@ -1008,10 +1060,7 @@ export class InscripcionFlowFacade {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(value => {
         this.proposalTypeValue.set(value);
-        this.academicForm.patchValue(
-          { carrera: '', comienzo: '', turno: '' },
-          { emitEvent: false }
-        );
+        this.academicForm.controls.carrera.setValue('');
         this.startOptions.set([]);
         this.turnoOptions.set([]);
       });
@@ -1021,15 +1070,22 @@ export class InscripcionFlowFacade {
     this.academicForm.controls.carrera.valueChanges
       .pipe(
         tap(() => {
-          this.academicForm.patchValue({ comienzo: '', turno: '' }, { emitEvent: false });
+          this.academicForm.controls.comienzo.setValue('');
           this.startOptions.set([]);
           this.turnoOptions.set([]);
         }),
         switchMap(value => {
           const careerId = this.toNullableNumber(value);
-          return careerId === null
-            ? of<Comienzo[]>([])
-            : this.catalogs.getComienzos(careerId).pipe(catchError(() => of<Comienzo[]>([])));
+          if (careerId === null) {
+            this.loadingStarts.set(false);
+            return of<Comienzo[]>([]);
+          }
+
+          this.loadingStarts.set(true);
+          return this.catalogs.getComienzos(careerId).pipe(
+            catchError(() => of<Comienzo[]>([])),
+            finalize(() => this.loadingStarts.set(false))
+          );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -1047,9 +1103,16 @@ export class InscripcionFlowFacade {
           const careerId = this.toNullableNumber(this.academicForm.controls.carrera.value);
           const startId = this.toNullableNumber(value);
 
-          return careerId === null || startId === null
-            ? of<Turno[]>([])
-            : this.catalogs.getTurnos(careerId, startId).pipe(catchError(() => of<Turno[]>([])));
+          if (careerId === null || startId === null) {
+            this.loadingTurnos.set(false);
+            return of<Turno[]>([]);
+          }
+
+          this.loadingTurnos.set(true);
+          return this.catalogs.getTurnos(careerId, startId).pipe(
+            catchError(() => of<Turno[]>([])),
+            finalize(() => this.loadingTurnos.set(false))
+          );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
