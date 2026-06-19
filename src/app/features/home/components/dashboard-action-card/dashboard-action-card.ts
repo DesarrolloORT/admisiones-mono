@@ -7,6 +7,7 @@ interface ActionCardConfig {
   icon: string;
   title: string;
   description: string;
+  buttonText: string;
 }
 
 const VARIANT_CONFIG: Record<ActionCardVariant, ActionCardConfig> = {
@@ -14,11 +15,13 @@ const VARIANT_CONFIG: Record<ActionCardVariant, ActionCardConfig> = {
     icon: 'school',
     title: 'Inscripción a carrera',
     description: 'Iniciá tu inscripción y reservá tu lugar.',
+    buttonText: 'Comenzar inscripción',
   },
   scholarship: {
     icon: 'workspace_premium',
     title: 'Postulación a becas',
     description: 'Seleccioná la beca más adecuada a tu perfil.',
+    buttonText: 'Postularme a beca',
   },
 };
 
