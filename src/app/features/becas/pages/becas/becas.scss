@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: var(--ort-sys-base-surface-background-page);
+}
+
+.header {
+  background-color: var(--ort-sys-color-primary-500);
+}
+
+.becas-main {
+  display: grid;
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.scholarships-title {
+  margin: 0;
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-font-size-24);
+  line-height: var(--ort-sys-spacing-40);
+}
+
+.scholarships-screen {
+  display: grid;
+  gap: var(--ort-sys-spacing-24);
+  margin: var(--ort-sys-spacing-24) 0;
+}
+
+.scholarship-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  align-items: stretch;
+}
+
+.scholarship-list > li {
+  display: flex;
+}
+
+.scholarship-list > li > app-scholarship-card {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.scholarships-description {
+  color: var(--ort-sys-base-text-color-body);
+  font-weight: var(--ort-sys-font-weight-regular);
+  font-size: var(--ort-sys-font-size-16);
+  font-family: var(--ort-sys-font-family-body);
+  line-height: var(--ort-sys-spacing-24);
+}
+
+.inscription-separation {
+  display: flex;
+  align-items: center;
+  gap: var(--ort-sys-spacing-8);
+  color: var(--ort-sys-color-primary-500);
+  font-weight: var(--ort-sys-font-weight-semibold);
+  font-size: var(--ort-sys-font-size-14);
+  text-align: center;
+}
+
+.inscription-separation__container {
+  gap: var(--ort-sys-spacing-8);
+  display: grid;
+  margin-bottom: var(--ort-sys-spacing-24);
+}
+
+.inscription-separation::before,
+.inscription-separation::after {
+  content: '';
+  flex: 1;
+  // stylelint-disable-next-line
+  height: 1px;
+  background-color: var(--ort-sys-color-primary-500);
+}
+
+.inscription-separation span {
+  white-space: nowrap;
+}
+
+.inscription-separation__text {
+  font-weight: var(--ort-sys-font-weight-semibold);
+  color: var(--ort-sys-base-text-color-body);
+}
+
+@media (width >= 1024px) {
+  .scholarship-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ort-sys-spacing-36);
+  }
+
+  .scholarships-screen {
+    gap: var(--ort-sys-spacing-48);
+    margin-top: var(--ort-sys-spacing-64);
+  }
+
+  .inscription-separation {
+    font-size: var(--ort-sys-font-size-20);
+    justify-content: flex-start;
+    margin-top: var(--ort-sys-spacing-24);
+  }
+
+  .inscription-separation::before {
+    display: none;
+  }
+
+  .inscription-separation::after {
+    flex: 1;
+  }
+
+  .inscription-separation__container {
+    margin-bottom: 0;
+  }
+
+  .scholarship-list__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--ort-sys-spacing-16);
+  }
+
+  .with-inscription__container {
+    display: grid;
+    gap: var(--ort-sys-spacing-32);
+  }
+}
+
+@media (width >= 1920px) {
+  .becas-main {
+    width: 55%;
+  }
+}
