@@ -102,6 +102,8 @@ export class AuthSessionService {
   public clearSession(): void {
     this.clearLocalSession();
     this.cache.clear();
+    this.endpoint.clearCache();
+    this.clearUserSessionStorage();
   }
 
   public logout(): void {
@@ -158,6 +160,22 @@ export class AuthSessionService {
     this.sessionState.set(null);
     this.storage?.removeItem(storageKeys.token);
     this.storage?.removeItem(storageKeys.session);
+  }
+
+  private clearUserSessionStorage(): void {
+    const storage = this.document.defaultView?.sessionStorage;
+
+    if (!storage) {
+      return;
+    }
+
+    for (let index = storage.length - 1; index >= 0; index--) {
+      const key = storage.key(index);
+
+      if (key?.startsWith(`${storageKeys.inscriptionDraft}:`)) {
+        storage.removeItem(key);
+      }
+    }
   }
 
   private restoreSession(): AuthSession | null {
