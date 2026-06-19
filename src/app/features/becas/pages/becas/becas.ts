@@ -1,30 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ExpandableStepperStep } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
+import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
-import { ProcessLayout } from '../../../../shared/ui/process-layout/process-layout';
 import { ScholarshipCard } from '../../components/scholarship-card/scholarship-card';
-
-const SCHOLARSHIP_STEPS: ExpandableStepperStep[] = [
-  {
-    id: 'oportunidades',
-    overline: 'Paso 1',
-    status: 'current',
-    title: 'Inicio',
-  },
-  {
-    id: 'postulacion',
-    overline: 'Paso 2',
-    status: 'pending',
-    title: 'Postulación',
-  },
-  {
-    id: 'resultado',
-    overline: 'Paso 3',
-    status: 'pending',
-    title: 'Resultado',
-  },
-];
 
 const SCHOLARSHIPS = [
   {
@@ -59,7 +38,7 @@ const SCHOLARSHIPS = [
 
 @Component({
   selector: 'app-becas',
-  imports: [ProcessLayout, ScholarshipCard],
+  imports: [ScholarshipCard, HomeHeader],
   templateUrl: './becas.html',
   styleUrl: './becas.scss',
 
@@ -68,13 +47,15 @@ const SCHOLARSHIPS = [
 export class Becas {
   private readonly router = inject(Router);
 
-  protected readonly steps = SCHOLARSHIP_STEPS;
-
   protected readonly becas = signal(SCHOLARSHIPS);
 
   protected inscripto = signal(false);
 
-  protected goHome(): void {
-    void this.router.navigate(['/inicio']);
-  }
+  private readonly breakpointService = inject(BreakpointService);
+
+  readonly showBack = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
+  });
 }
