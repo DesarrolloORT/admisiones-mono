@@ -23,6 +23,8 @@ public static class ResponseRedactionHelper
     private static object? RedactInternal(object? obj, HashSet<object> visited)
     {
         if (obj == null) return null;
+        if (obj is byte[] bytes) return FormatBinaryLength(bytes);
+
         var type = obj.GetType();
         if (IsSimple(type)) return obj;
         if (!visited.Add(obj)) return null; // evitar ciclos
@@ -56,6 +58,8 @@ public static class ResponseRedactionHelper
 
     private static bool IsSimple(Type t) => t.IsPrimitive || t.IsEnum || t == typeof(string) || t == typeof(decimal) || t == typeof(DateTime) || t == typeof(DateTimeOffset) || t == typeof(Guid);
 
+    private static string FormatBinaryLength(byte[] bytes) => $"<bin:{bytes.Length}>";
+
     private static string? ApplyMode(object? val, object? modeObj)
     {
         if (val == null) return null;
@@ -75,7 +79,7 @@ public static class ResponseRedactionHelper
             "PreserveLength" => new string('*', str.Length),
             "First4Last4" => str.Length <= 8 ? token : str[..4] + token + str[^4..],
             "HashSha256" => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(str))),
-            "BinaryLength" => val is byte[] b ? $"<bin:{b.Length}>" : $"<len:{str.Length}>",
+            "BinaryLength" => val is byte[] b ? FormatBinaryLength(b) : $"<len:{str.Length}>",
             _ => token
         };
     }

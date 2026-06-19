@@ -2,6 +2,7 @@ using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Inscripciones;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -22,6 +23,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<IGeneralService> _generalServiceMock;
+        private readonly Mock<ITivenosEnvioService> _tivenosEnvioServiceMock;
         private readonly InscripcionesService _service;
 
         public InscripcionesServiceTests()
@@ -30,6 +32,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _generalServiceMock = new Mock<IGeneralService>();
+            _tivenosEnvioServiceMock = new Mock<ITivenosEnvioService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _dbConnectionContextMock
                 .Setup(d => d.CurrentDateTime())
@@ -42,10 +45,22 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetByPersona(It.IsAny<long>()))
                 .Returns((EncuestaIni)null);
             _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
+            _tivenosEnvioServiceMock
+                .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
+                    It.IsAny<IUnitOfWork>(),
+                    It.IsAny<TivenosAltaInteresRequest>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>()))
+                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio)));
             var apiClient = new InscripcionesyPagosApiClient(
                 new HttpClient { BaseAddress = new Uri("https://internal.test/") },
                 NullLogger<InscripcionesyPagosApiClient>.Instance);
-            _service = new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object, apiClient);
+            _service = new InscripcionesService(
+                _uowFactoryMock.Object,
+                _dbConnectionContextMock.Object,
+                _generalServiceMock.Object,
+                _tivenosEnvioServiceMock.Object,
+                apiClient);
         }
 
         private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
@@ -482,9 +497,87 @@ namespace UnitTesting.AppLogic.Services
                 x.IdOferta == 30)), Times.Once);
             Assert.Equal(20, encuesta.IdProceso);
             Assert.Equal(40, encuesta.IdComienzo);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaInteresXSeleccionEnSitio(
+                _uowMock.Object,
+                It.Is<TivenosAltaInteresRequest>(r =>
+                    r.CodigoPersona == 123 &&
+                    r.IdProducto == 10 &&
+                    r.IdProceso == 20 &&
+                    r.Operacion.TipoProcesoLlamador == "Alta" &&
+                    r.Operacion.Disparador == "AltaInteresProducto" &&
+                    r.Operacion.OrigenLlamador == null),
+                It.IsAny<int>(),
+                nameof(InscripcionesService.RegistrarInteresProducto)), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public void RegistrarInteresProducto_CuandoFallaEncolarTivenos_HaceRollbackYNoCommit()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoRepo = new Mock<IProcesoRepository>();
+            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(false);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
+            workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
+            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            SetupOfertaValidaParaRegistro();
+
+            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
+            intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
+            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES))
+                .Returns(500);
+
+            var interesProductoRepo = new Mock<BusinessLogic.IDevartRepositories.IInteresProductoRepository>();
+            _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
+
+            var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
+            personaAdmiteRepo.Setup(r => r.GetByKey(123)).Returns((PersonaAdmite)null);
+            _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
+            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
+
+            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
+            accionRepo.Setup(r => r.ExisteAccionParaProcesoPersona(123, 20)).Returns(true);
+            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
+
+            _tivenosEnvioServiceMock
+                .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
+                    It.IsAny<IUnitOfWork>(),
+                    It.IsAny<TivenosAltaInteresRequest>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>()))
+                .Throws(new InvalidOperationException("No se pudo encolar Tivenos."));
+
+            Assert.Throws<InvalidOperationException>(() =>
+                _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 }));
+
+            _uowMock.Verify(u => u.Rollback(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
         }
 
         [Fact]
@@ -643,6 +736,17 @@ namespace UnitTesting.AppLogic.Services
             interesProductoRepo.Verify(r => r.Update(interesProductoProducto12), Times.Never);
             interesProductoOfertaRepo.Verify(r => r.Add(It.IsAny<InteresProductoOferta>()), Times.Never);
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaInteresXSeleccionEnSitio(
+                _uowMock.Object,
+                It.Is<TivenosAltaInteresRequest>(r =>
+                    r.CodigoPersona == 123 &&
+                    r.IdProducto == 10 &&
+                    r.IdProceso == 20 &&
+                    r.Operacion.TipoProcesoLlamador == "Modificar" &&
+                    r.Operacion.Disparador == "ActualizarInteres" &&
+                    r.Operacion.OrigenLlamador == null),
+                It.IsAny<int>(),
+                nameof(InscripcionesService.RegistrarInteresProducto)), Times.Once);
         }
 
         [Fact]
@@ -1036,7 +1140,12 @@ namespace UnitTesting.AppLogic.Services
                 new HttpClient(handler) { BaseAddress = new Uri("https://internal.test/") },
                 NullLogger<InscripcionesyPagosApiClient>.Instance);
 
-            return new InscripcionesService(_uowFactoryMock.Object, _dbConnectionContextMock.Object, _generalServiceMock.Object, apiClient);
+            return new InscripcionesService(
+                _uowFactoryMock.Object,
+                _dbConnectionContextMock.Object,
+                _generalServiceMock.Object,
+                _tivenosEnvioServiceMock.Object,
+                apiClient);
         }
 
         private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
