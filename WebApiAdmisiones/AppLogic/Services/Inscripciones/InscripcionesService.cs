@@ -349,7 +349,7 @@ namespace AppLogic.Services.Inscripciones
             }
 
             var datosBachillerato = datos.Data!;
-            var fechaActual = _dbConnectionContext.CurrentDateTime();
+            var fechaActual = DateTime.Now;
             var existente = uow.BachilleratoPersonas.GetByKey(codigoPersona);
             if (existente == null)
             {
