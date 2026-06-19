@@ -1,9 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { HomeActionCard, HomeDashboard } from '../../models/home-dashboard';
+import { HomeData } from '../../models/home-data';
+import { Dashboard } from '../dashboard/dashboard';
+
+interface HomeActionCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  ctaLabel: string;
+  imageSrc: string;
+  route: string;
+}
 
 const HOME_DESCRIPTION = 'Aquí podés gestionar tu inscripción y postulación a becas.';
 
@@ -30,7 +41,7 @@ const ACTION_CARDS: HomeActionCard[] = [
 
 @Component({
   selector: 'app-home',
-  imports: [OrtButtonModule, OrtIconModule, RouterLink],
+  imports: [Dashboard, OrtButtonModule, OrtIconModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,18 +49,17 @@ const ACTION_CARDS: HomeActionCard[] = [
 export class Home {
   private readonly authSession = inject(AuthSessionService);
 
-  protected readonly dashboard = computed<HomeDashboard>(() => {
-    const session = this.authSession.session();
+  readonly homeData = input.required<HomeData | null>();
 
-    return {
-      userName: session?.primerNombre?.trim() || '',
-      description: HOME_DESCRIPTION,
-      actionCards: ACTION_CARDS,
-    };
+  protected readonly hasActivity = computed(() => {
+    const data = this.homeData();
+    return !!data && (data.inscripciones.length > 0 || data.becas.length > 0);
   });
+  protected readonly description = HOME_DESCRIPTION;
+  protected readonly actionCards = ACTION_CARDS;
 
   protected readonly greeting = computed(() => {
-    const userName = this.dashboard().userName;
+    const userName = this.authSession.session()?.primerNombre?.trim();
 
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });
