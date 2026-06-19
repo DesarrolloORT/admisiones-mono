@@ -2,11 +2,11 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-import { ROOT } from './codegen-utils.js';
+import { DEFAULT_ENVIRONMENT_FILE, ROOT } from './codegen-utils.js';
 
 const { values: flags } = nodeParseArgs({
   options: {
-    env: { type: 'string' },
+    env: { type: 'string', default: DEFAULT_ENVIRONMENT_FILE },
     'swagger-path': { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
   },
@@ -17,7 +17,7 @@ if (flags.help) {
 Usage: node scripts/codegen/update-api.js [options]
 
 Options:
-  --env <file>            Environment file inside src/environments/
+  --env <file>            Environment file inside src/environments/ (default: ${DEFAULT_ENVIRONMENT_FILE})
   --swagger-path <path>   Swagger doc path appended to the API origin
   -h, --help              Show this help
 
@@ -27,10 +27,7 @@ configuration to report API incompatibilities before npm start.
   process.exit(0);
 }
 
-const sharedArgs = [];
-if (flags.env) {
-  sharedArgs.push('--env', flags.env);
-}
+const sharedArgs = ['--env', flags.env];
 if (flags['swagger-path']) {
   sharedArgs.push('--swagger-path', flags['swagger-path']);
 }

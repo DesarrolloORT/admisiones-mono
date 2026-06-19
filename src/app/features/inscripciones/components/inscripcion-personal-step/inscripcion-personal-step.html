@@ -13,11 +13,18 @@
     <ort-accordion [multi]="false">
       @if (facade.visibleSections().includes('educacion')) {
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('educacion') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'educacion'"
         (opened)="facade.openSection('educacion')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('educacion') === 'completa' ? 'check_circle' : 'menu_book'
               }}
             </ort-icon>
@@ -82,7 +89,8 @@
                 <ort-label>Madre o tutor</ort-label>
                 <ort-select
                   aria-label="Nivel máximo alcanzado de madre o tutor"
-                  formControlName="formacionMadre">
+                  formControlName="formacionMadre"
+                  [disabled]="facade.loadingInitialSurveyCatalogs()">
                   <ort-option value="">Seleccioná...</ort-option>
                   @for (option of facade.educationLevelOptions(); track option.value) {
                   <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -94,7 +102,8 @@
                 <ort-label>Padre o tutor</ort-label>
                 <ort-select
                   aria-label="Nivel máximo alcanzado de padre o tutor"
-                  formControlName="formacionPadre">
+                  formControlName="formacionPadre"
+                  [disabled]="facade.loadingInitialSurveyCatalogs()">
                   <ort-option value="">Seleccioná...</ort-option>
                   @for (option of facade.educationLevelOptions(); track option.value) {
                   <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -107,11 +116,18 @@
       </ort-accordion-item>
       } @if (facade.visibleSections().includes('decision-academica')) {
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('decision-academica') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'decision-academica'"
         (opened)="facade.openSection('decision-academica')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('decision-academica') === 'completa' ? 'check_circle' :
               'schema' }}
             </ort-icon>
@@ -127,7 +143,7 @@
               name="decision-career-year"
               orientation="vertical"
               [required]="true">
-              @for (option of facade.decisionYearOptions; track option.value) {
+              @for (option of facade.careerDecisionOptions(); track option.value) {
               <ort-radio-button class="inscription-radio-option" [value]="option.value">
                 {{ option.label }}
               </ort-radio-button>
@@ -137,7 +153,10 @@
             <ort-form-field
               [hideRequiredMarker]="!!facade.academicDecisionForm.controls.apoyoDecision.value">
               <ort-label>¿Quiénes te apoyaron en la decisión?</ort-label>
-              <ort-select aria-label="Apoyo en la decisión" formControlName="apoyoDecision">
+              <ort-select
+                aria-label="Apoyo en la decisión"
+                formControlName="apoyoDecision"
+                [disabled]="facade.loadingInitialSurveyCatalogs()">
                 <ort-option value="">Seleccioná...</ort-option>
                 @for (option of facade.supportOptions(); track option.value) {
                 <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -176,7 +195,7 @@
             <ort-radio-group
               class="inscription-choice-list"
               formControlName="certezaDecision"
-              legend="¿Qué tan decidido estabas al inscribirte?"
+              legend="Grado de decisión al momento de inscribirte a la carrera"
               name="decision-certainty"
               orientation="vertical"
               [required]="true">
@@ -190,7 +209,10 @@
             <ort-form-field
               [hideRequiredMarker]="!!facade.academicDecisionForm.controls.motivosOrt.value">
               <ort-label>Motivos para elegir ORT</ort-label>
-              <ort-select aria-label="Motivos para elegir ORT" formControlName="motivosOrt">
+              <ort-select
+                aria-label="Motivos para elegir ORT"
+                formControlName="motivosOrt"
+                [disabled]="facade.loadingInitialSurveyCatalogs()">
                 <ort-option value="">Seleccioná...</ort-option>
                 @for (option of facade.motivesOptions(); track option.value) {
                 <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -202,11 +224,18 @@
       </ort-accordion-item>
       } @if (facade.visibleSections().includes('experiencia-ort')) {
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('experiencia-ort') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'experiencia-ort'"
         (opened)="facade.openSection('experiencia-ort')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('experiencia-ort') === 'completa' ? 'check_circle' :
               'domain' }}
             </ort-icon>
@@ -239,11 +268,18 @@
       </ort-accordion-item>
       } @if (facade.visibleSections().includes('situacion-laboral')) {
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('situacion-laboral') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'situacion-laboral'"
         (opened)="facade.openSection('situacion-laboral')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('situacion-laboral') === 'completa' ? 'check_circle' :
               'business_center' }}
             </ort-icon>
@@ -271,11 +307,18 @@
       }
 
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('identidad') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'identidad'"
         (opened)="facade.openSection('identidad')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('identidad') === 'completa' ? 'check_circle' : 'verified' }}
             </ort-icon>
             Verificación de identidad
@@ -320,11 +363,18 @@
       </ort-accordion-item>
 
       <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('reglamento') === 'completa'
+        "
         [expanded]="facade.activeSection() === 'reglamento'"
         (opened)="facade.openSection('reglamento')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon aria-hidden="true" ortAccordionTitleLeadingIcon>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
               {{ facade.getSectionState('reglamento') === 'completa' ? 'check_circle' : 'article' }}
             </ort-icon>
             Reglamento estudiantil
@@ -347,6 +397,9 @@
     <ort-error-summary [errors]="facade.activeSectionErrors()" />
 
     <footer class="inscription-footer">
+      <button ort-secondary-button type="button" (click)="facade.back()">
+        Volver al paso anterior
+      </button>
       <button ort-primary-button type="submit">Continuar</button>
     </footer>
   </form>

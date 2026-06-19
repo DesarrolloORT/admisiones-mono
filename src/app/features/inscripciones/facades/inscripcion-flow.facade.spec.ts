@@ -3,22 +3,25 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import type { OrtFileUploaderChange } from '@desarrolloort/components';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { BorradorInscripcion } from '../models/inscripcion-flow';
 import { InscripcionDraft } from '../services/inscripcion-draft';
+import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFlowFacade } from './inscripcion-flow.facade';
 
 describe('InscripcionFlowFacade', () => {
   let facade: InscripcionFlowFacade;
   let catalogsMock: ReturnType<typeof createCatalogsMock>;
+  let inscripcionesMock: ReturnType<typeof createInscripcionesMock>;
 
   beforeEach(() => {
     sessionStorage.clear();
     localStorage.clear();
     catalogsMock = createCatalogsMock();
+    inscripcionesMock = createInscripcionesMock();
     facade = createFacade();
   });
 
@@ -41,23 +44,50 @@ describe('InscripcionFlowFacade', () => {
     ]);
   });
 
-  it('does not advance while the proposal is invalid', () => {
-    facade.continue();
-
-    expect(facade.screen()).toBe('propuesta');
-    expect(facade.academicErrors()).toHaveLength(4);
-  });
-
   it('loads catalog-backed proposal and survey options', () => {
     expect(facade.proposalOptions()).toEqual([
-      { value: '1', label: 'Carrera universitaria', icon: 'school' },
-      { value: '2', label: 'Tecnicatura', icon: 'list_alt' },
+      {
+        value: '1',
+        label: 'Carrera universitaria',
+        icon: 'school',
+        hint: 'Formación de grado con enfoque práctico y salida laboral',
+      },
+      {
+        value: '2',
+        label: 'Tecnicatura',
+        icon: 'list_alt',
+        hint: 'Carreras cortas, prácticas y orientadas al mercado',
+      },
+      {
+        value: '3',
+        label: 'Actualización profesional',
+        icon: 'how_to_reg',
+        hint: 'Cursos cortos para actualizar habilidades',
+      },
     ]);
     expect(facade.previousCareerOptions()).toEqual([
       { value: '3', label: 'No cursé estudios superiores' },
     ]);
     expect(facade.educationLevelOptions()).toEqual([
       { value: '4', label: 'Universitaria completa' },
+    ]);
+    expect(facade.careerDecisionOptions()).toEqual([{ value: '1', label: 'Durante secundaria' }]);
+    expect(facade.supportOptions()).toEqual([{ value: '5', label: 'Familia' }]);
+    expect(facade.motivesOptions()).toEqual([{ value: '2', label: 'Prestigio académico' }]);
+    expect(facade.knowledgeOptions()).toEqual([{ value: '6', label: 'Conocía bien la propuesta' }]);
+  });
+
+  it('filters careers by the selected proposal level group', () => {
+    facade.academicForm.controls.tipoPropuesta.setValue('1');
+    expect(facade.careerOptions()).toEqual([{ value: '20', label: 'Ingeniería en Sistemas' }]);
+
+    facade.academicForm.controls.tipoPropuesta.setValue('2');
+    expect(facade.careerOptions()).toEqual([{ value: '30', label: 'Tecnicatura en Diseño' }]);
+
+    facade.academicForm.controls.tipoPropuesta.setValue('3');
+    expect(facade.careerOptions()).toEqual([
+      { value: '40', label: 'Programa ejecutivo en Data Analytics' },
+      { value: '50', label: 'Curso de actualización profesional' },
     ]);
   });
 
@@ -71,13 +101,105 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.turnoOptions()).toEqual([{ value: '300', label: 'Nocturno (19:00 a 23:00)' }]);
   });
 
+  it('reports dependent catalog loading and keeps unavailable selects disabled', () => {
+    const careers$ = new Subject<
+      Array<{
+        idProducto: number;
+        idNivelProducto: number;
+        nombreProducto: string;
+        nombreNivelProducto: string;
+      }>
+    >();
+    const starts$ = new Subject<Array<{ idProceso: number; nombreProceso: string }>>();
+    const turnos$ = new Subject<
+      Array<{
+        idOferta: number;
+        idTurno: number;
+        nombreTurno: string;
+        horarioReferencia: string;
+      }>
+    >();
+    catalogsMock.getCareers.mockReturnValueOnce(careers$);
+    catalogsMock.getComienzos.mockReturnValueOnce(starts$);
+    catalogsMock.getTurnos.mockReturnValueOnce(turnos$);
+    facade = createFacade();
+
+    expect(facade.loadingCareers()).toBe(true);
+    expect(facade.careersLoadingMessage()).toBe('Estamos cargando las carreras.');
+
+    careers$.next([
+      {
+        idProducto: 20,
+        idNivelProducto: 1,
+        nombreProducto: 'Ingeniería en Sistemas',
+        nombreNivelProducto: 'Carrera universitaria',
+      },
+    ]);
+    careers$.complete();
+
+    expect(facade.loadingCareers()).toBe(false);
+
+    facade.academicForm.controls.tipoPropuesta.setValue('1');
+    facade.academicForm.controls.carrera.setValue('20');
+
+    expect(facade.loadingStarts()).toBe(true);
+    expect(facade.canSelectStart()).toBe(false);
+    expect(facade.startsLoadingMessage()).toBe(
+      'Estamos cargando los comienzos para "Ingeniería en Sistemas".'
+    );
+
+    starts$.next([{ idProceso: 200, nombreProceso: 'Agosto 2026' }]);
+    starts$.complete();
+
+    expect(facade.loadingStarts()).toBe(false);
+    expect(facade.canSelectStart()).toBe(true);
+
+    facade.academicForm.controls.comienzo.setValue('200');
+
+    expect(facade.loadingTurnos()).toBe(true);
+    expect(facade.canSelectTurno()).toBe(false);
+    expect(facade.turnosLoadingMessage()).toBe('Estamos cargando los turnos para "Agosto 2026".');
+
+    turnos$.next([
+      {
+        idOferta: 300,
+        idTurno: 10,
+        nombreTurno: 'Nocturno',
+        horarioReferencia: '19:00 a 23:00',
+      },
+    ]);
+    turnos$.complete();
+
+    expect(facade.loadingTurnos()).toBe(false);
+    expect(facade.canSelectTurno()).toBe(true);
+  });
+
   it('advances to the first survey section after a valid proposal', () => {
     fillAcademicForm();
     facade.continue();
 
+    expect(inscripcionesMock.registerProductInterest).toHaveBeenCalledWith({
+      idOferta: 300,
+      idProcesoSeleccionado: 200,
+      idProducto: 20,
+    });
     expect(facade.screen()).toBe('encuesta');
     expect(facade.activeSection()).toBe('educacion');
     expect(facade.stepNumber()).toBe(2);
+  });
+
+  it('does not advance when product interest registration fails', () => {
+    inscripcionesMock.registerProductInterest.mockReturnValueOnce(
+      throwError(() => new Error('network'))
+    );
+    fillAcademicForm();
+
+    facade.continue();
+
+    expect(facade.screen()).toBe('propuesta');
+    expect(facade.academicErrors()).toContainEqual({
+      message: 'No se pudo registrar el interés por la propuesta seleccionada.',
+    });
   });
 
   it('resumes the partial scenario at the first incomplete section', () => {
@@ -102,6 +224,10 @@ describe('InscripcionFlowFacade', () => {
     fillAcademicForm();
     facade.continue();
     fillEducationForm();
+
+    expect(facade.getSectionState('educacion')).toBe('completa');
+    expect(facade.activeSection()).toBe('educacion');
+
     facade.continue();
 
     expect(facade.getSectionState('educacion')).toBe('completa');
@@ -189,6 +315,7 @@ describe('InscripcionFlowFacade', () => {
         InscripcionDraft,
         InscripcionFlowFacade,
         { provide: Catalogs, useValue: catalogsMock },
+        { provide: Inscripciones, useValue: inscripcionesMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -282,6 +409,18 @@ function createCatalogsMock() {
           nombreProducto: 'Tecnicatura en Diseño',
           nombreNivelProducto: 'Tecnicatura',
         },
+        {
+          idProducto: 40,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa ejecutivo en Data Analytics',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+        {
+          idProducto: 50,
+          idNivelProducto: 4,
+          nombreProducto: 'Curso de actualización profesional',
+          nombreNivelProducto: 'Cursos',
+        },
       ])
     ),
     getComienzos: vi.fn().mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }])),
@@ -289,7 +428,7 @@ function createCatalogsMock() {
       of({
         aniosAprobadosEducacionSuperior: [],
         compartidoCon: [{ id: 5, label: 'Familia' }],
-        decisionCarrera: [{ id: 1, label: 'Salida laboral' }],
+        decisionCarrera: [{ id: 1, label: 'Durante secundaria' }],
         decisionUniversidad: [{ id: 2, label: 'Prestigio académico' }],
         estadoEducacionSuperior: [{ id: 3, label: 'No cursé estudios superiores' }],
         formacionTutores: [{ id: 4, label: 'Universitaria completa' }],
@@ -306,6 +445,12 @@ function createCatalogsMock() {
         },
       ])
     ),
+  };
+}
+
+function createInscripcionesMock() {
+  return {
+    registerProductInterest: vi.fn().mockReturnValue(of(true)),
   };
 }
 

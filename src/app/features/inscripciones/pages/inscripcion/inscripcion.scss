@@ -13,6 +13,10 @@
   gap: var(--ort-sys-spacing-4);
 }
 
+.inscription-screen__eyebrow {
+  display: none;
+}
+
 .inscription-screen__header h1,
 .inscription-success-heading h1 {
   margin: 0;
@@ -24,6 +28,7 @@
 }
 
 .inscription-screen__header p,
+.inscription-screen__header span,
 .inscription-success-heading p,
 .inscription-card p,
 .inscription-payment-method p {
@@ -33,8 +38,24 @@
   line-height: var(--ort-sys-body-line-height);
 }
 
-.inscription-form,
+.inscription-screen__header span {
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+  letter-spacing: 0;
+}
+
+.inscription-form {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
 .inscription-form__stack {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
+.inscription-form__card,
+.inscription-form__row {
   display: grid;
   gap: var(--ort-sys-spacing-16);
 }
@@ -54,6 +75,25 @@
 .inscription-radio-option__label ort-icon {
   flex: 0 0 auto;
   color: var(--ort-sys-base-icon-primary-color);
+}
+
+.inscription-radio-list--cards {
+  gap: var(--ort-sys-radio-label-gap);
+}
+
+.inscription-academic-radio-option__icon {
+  width: var(--ort-sys-size-28);
+  height: var(--ort-sys-size-28);
+  color: var(--ort-sys-base-icon-color);
+  font-size: var(--ort-sys-size-28);
+}
+
+.inscription-academic-radio-option__label {
+  font-weight: var(--ort-sys-radio-label-font-weight);
+}
+
+.inscription-academic-radio-option__hint {
+  display: none;
 }
 
 .inscription-choice-list {
@@ -89,6 +129,10 @@
   display: grid;
   gap: var(--ort-sys-accordeon-content-gap);
   padding: 0 var(--ort-sys-accordeon-padding-inline) var(--ort-sys-accordeon-padding-block);
+}
+
+.inscription-accordion-item--complete .inscription-accordion__state-icon {
+  color: var(--ort-sys-color-success, #079455);
 }
 
 .inscription-subsection {
@@ -357,9 +401,41 @@
     gap: var(--ort-sys-spacing-8);
   }
 
-  .inscription-form,
+  .inscription-screen__eyebrow {
+    display: block;
+    color: var(--ort-sys-base-text-color-headline);
+    font-weight: 700;
+  }
+
+  .inscription-form {
+    gap: var(--ort-sys-spacing-32);
+  }
+
   .inscription-form__stack {
     gap: var(--ort-sys-spacing-24);
+  }
+
+  .inscription-form__card {
+    gap: var(--ort-sys-spacing-24);
+    padding: var(--ort-sys-accordeon-padding-block) var(--ort-sys-accordeon-padding-inline);
+    border-radius: var(--ort-sys-accordeon-border-radius);
+    background: var(--ort-sys-base-surface-background);
+    box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
+      var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
+      var(--ort-sys-elevation-sm-color);
+  }
+
+  .inscription-form__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ort-sys-spacing-24);
+  }
+
+  .inscription-academic-radio-option__icon {
+    display: none;
+  }
+
+  .inscription-academic-radio-option__hint {
+    display: inline;
   }
 
   .inscription-footer {
@@ -368,6 +444,10 @@
     margin-inline: 0;
     padding: 0;
     background: transparent;
+  }
+
+  .inscription-footer:has(> :not(:only-child)) {
+    justify-content: space-between;
   }
 
   .inscription-footer button,

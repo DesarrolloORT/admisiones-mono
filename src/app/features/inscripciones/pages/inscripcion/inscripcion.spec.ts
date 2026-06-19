@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import { Catalogs } from '../../../catalogs/services/catalogs';
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { Inscripciones } from '../../services/inscripciones';
 import { Inscripcion } from './inscripcion';
 
 describe('Inscripcion', () => {
@@ -54,6 +55,12 @@ describe('Inscripcion', () => {
                 },
               ])
             ),
+          },
+        },
+        {
+          provide: Inscripciones,
+          useValue: {
+            registerProductInterest: vi.fn().mockReturnValue(of(true)),
           },
         },
       ],

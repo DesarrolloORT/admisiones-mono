@@ -3,6 +3,19 @@
   display: block;
 }
 
+.home-status {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  width: min(55.25rem, calc(100% - 6rem));
+  margin: 0 auto;
+  padding-block: var(--ort-sys-spacing-64);
+
+  h1,
+  p {
+    margin: 0;
+  }
+}
+
 .home-main {
   display: grid;
   gap: var(--ort-sys-spacing-48);
@@ -62,27 +75,12 @@
   grid-area: description;
 }
 
-.home-action-card__status {
-  position: absolute;
-  grid-area: status;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  color: var(--home-body);
-  font-size: var(--ort-sys-caption-text-size, 14px);
-  line-height: var(--ort-sys-caption-line-height, 20px);
-  white-space: nowrap;
-}
-
 .home-action-card__content {
   display: grid;
   grid-template-areas:
     'icon title'
     '. description'
-    '. button'
-    '. status';
+    '. button';
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 4px var(--ort-sys-spacing-16);
   align-items: center;
@@ -114,8 +112,7 @@
     'icon'
     'title'
     'description'
-    'button'
-    'status' / 1fr;
+    'button' / 1fr;
   gap: var(--ort-sys-spacing-8);
   align-content: end;
   background: linear-gradient(to bottom, rgb(255 255 255 / 0%) 0%, var(--home-surface) 57%);
@@ -164,8 +161,7 @@
       'icon'
       'title'
       'description'
-      'button'
-      'status' / 1fr;
+      'button' / 1fr;
     gap: 8px;
     align-content: start;
     min-height: 240px;

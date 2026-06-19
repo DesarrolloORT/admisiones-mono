@@ -2,17 +2,25 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { relative, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
-import { downloadJson, resolveSwaggerSource, ROOT, toProjectPath } from './codegen-utils.js';
+import {
+  DEFAULT_ENVIRONMENT_FILE,
+  downloadJson,
+  resolveSwaggerSource,
+  ROOT,
+  toProjectPath,
+} from './codegen-utils.js';
 
 const DEFAULTS = {
   swaggerPath: '/swagger/v1/swagger.json',
-  env: 'environment.generated.ts',
+  env: DEFAULT_ENVIRONMENT_FILE,
   output: 'src/app/shared/api/generated/endpoints',
   models: 'src/app/shared/api/generated/models',
 };
 
 const SUPPORTED_HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 const METHODS_WITH_BODY = new Set(['post', 'put', 'patch']);
+// ponytail: EF navigation graphs can expand exponentially; raise only with a bounded Swagger fixture.
+const MAX_INLINE_SCHEMA_DEPTH = 4;
 const GENERATED_HEADER = `// -----------------------------------------------------------------------------
 // AUTO-GENERATED FILE.
 // Do not edit manually.
@@ -328,6 +336,7 @@ function detectStaleImports(outputDir) {
         .map(n =>
           n
             .trim()
+            .replace(/^type\s+/, '')
             .split(/\s+as\s+/)[0]
             .trim()
         )
@@ -455,7 +464,16 @@ function generateEndpointFiles(swagger, options) {
         continue;
       }
 
-      const endpoint = createEndpoint(path, method, operation, pathLevelParameters, context);
+      let endpoint;
+      try {
+        endpoint = createEndpoint(path, method, operation, pathLevelParameters, context);
+      } catch (error) {
+        const operationId = getOperationId(path, method, operation);
+        throw new Error(
+          `Could not generate ${method.toUpperCase()} ${path} (${operationId}): ${error.message}`,
+          { cause: error }
+        );
+      }
       const group = getOrCreateGroup(groups, endpoint.fileName, endpoint.tagName);
       group.imports.set(
         'defineEndpoint',
@@ -1083,7 +1101,7 @@ function deriveResponseName(constantName, tagName) {
   return `${name}Response`;
 }
 
-function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Set()) {
+function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Set(), depth = 0) {
   const merged = mergeSchemaAllOf(schema, swagger);
   const indent = ' '.repeat(indentSpaces);
   const propIndent = ' '.repeat(indentSpaces + 2);
@@ -1098,26 +1116,35 @@ function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Se
     .map(name => {
       const propSchema = merged.properties[name];
       const optional = required.has(name) ? '' : '?';
-      const type = schemaToInlineFieldType(propSchema, swagger, indentSpaces + 2, visited);
+      const type = schemaToInlineFieldType(
+        propSchema,
+        swagger,
+        indentSpaces + 2,
+        visited,
+        depth + 1
+      );
       return `${propIndent}${formatPropertyName(name)}${optional}: ${type};`;
     });
 
   return `{\n${lines.join('\n')}\n${indent}}`;
 }
 
-function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Set()) {
+function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Set(), depth = 0) {
   if (!schema || typeof schema !== 'object') {
     return 'unknown';
   }
 
   if (schema.$ref) {
+    if (depth > MAX_INLINE_SCHEMA_DEPTH) {
+      return 'unknown';
+    }
     if (visited.has(schema.$ref)) {
       return 'unknown'; // circular ref guard
     }
     visited = new Set(visited);
     visited.add(schema.$ref);
     const resolved = resolveRef(swagger, schema.$ref);
-    return schemaToInlineFieldType(resolved, swagger, indentSpaces, visited);
+    return schemaToInlineFieldType(resolved, swagger, indentSpaces, visited, depth);
   }
 
   const nullable = isNullableSchema(schema);
@@ -1125,14 +1152,17 @@ function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Se
   if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
     const merged = mergeSchemaAllOf(schema, swagger);
     if (merged.properties) {
+      if (depth > MAX_INLINE_SCHEMA_DEPTH) {
+        return withNullable('Record<string, unknown>', nullable);
+      }
       return withNullable(
-        schemaToInlineInterface(merged, swagger, indentSpaces, visited),
+        schemaToInlineInterface(merged, swagger, indentSpaces, visited, depth),
         nullable
       );
     }
     return withNullable(
       schema.allOf
-        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited))
+        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited, depth))
         .join(' & '),
       nullable
     );
@@ -1143,7 +1173,7 @@ function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Se
   if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
     return withNullable(
       unionSchemas
-        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited))
+        .map(item => schemaToInlineFieldType(item, swagger, indentSpaces, visited, depth))
         .join(' | '),
       nullable
     );
@@ -1159,20 +1189,35 @@ function schemaToInlineFieldType(schema, swagger, indentSpaces, visited = new Se
   const type = getSchemaType(schema);
 
   if (type === 'array') {
-    const itemType = schemaToInlineFieldType(schema.items, swagger, indentSpaces, visited);
+    const itemType = schemaToInlineFieldType(
+      schema.items,
+      swagger,
+      indentSpaces,
+      visited,
+      depth + 1
+    );
     return withNullable(`Array<${itemType}>`, nullable);
   }
 
   if (type === 'object' || schema.properties) {
     if (schema.properties && typeof schema.properties === 'object') {
+      if (depth > MAX_INLINE_SCHEMA_DEPTH) {
+        return withNullable('Record<string, unknown>', nullable);
+      }
       return withNullable(
-        schemaToInlineInterface(schema, swagger, indentSpaces, visited),
+        schemaToInlineInterface(schema, swagger, indentSpaces, visited, depth),
         nullable
       );
     }
     if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
       return withNullable(
-        `Record<string, ${schemaToInlineFieldType(schema.additionalProperties, swagger, indentSpaces, visited)}>`,
+        `Record<string, ${schemaToInlineFieldType(
+          schema.additionalProperties,
+          swagger,
+          indentSpaces,
+          visited,
+          depth + 1
+        )}>`,
         nullable
       );
     }

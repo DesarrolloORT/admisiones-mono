@@ -6,6 +6,7 @@ import {
   OrtIconModule,
   OrtRadioModule,
   OrtSelectModule,
+  OrtSpinnerModule,
 } from '@desarrolloort/components';
 
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
@@ -18,10 +19,11 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
     OrtIconModule,
     OrtRadioModule,
     OrtSelectModule,
+    OrtSpinnerModule,
     ReactiveFormsModule,
   ],
   templateUrl: './inscripcion-academic-step.html',
-  styleUrl: '../../pages/inscripcion/inscripcion.scss',
+  styleUrls: ['../../pages/inscripcion/inscripcion.scss', './inscripcion-academic-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionAcademicStep {

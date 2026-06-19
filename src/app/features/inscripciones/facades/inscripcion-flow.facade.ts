@@ -1,10 +1,10 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { OrtErrorItem, OrtFileUploaderChange } from '@desarrolloort/components';
 import { merge, of } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import {
   buildFormErrorSummary,
   type FormErrorField,
@@ -64,6 +64,7 @@ import {
   YES_NO_OPTIONS,
 } from '../models/inscripcion-static-data';
 import { InscripcionDraft } from '../services/inscripcion-draft';
+import { Inscripciones } from '../services/inscripciones';
 
 interface SectionConfig {
   label: string;
@@ -72,9 +73,38 @@ interface SectionConfig {
   errorFields: FormErrorField[];
 }
 
+interface ProposalOptionConfig extends OpcionInscripcion {
+  levelIds: readonly number[];
+}
+
+const PROPOSAL_OPTIONS: readonly ProposalOptionConfig[] = [
+  {
+    value: '1',
+    label: 'Carrera universitaria',
+    icon: 'school',
+    hint: 'Formación de grado con enfoque práctico y salida laboral',
+    levelIds: [1],
+  },
+  {
+    value: '2',
+    label: 'Tecnicatura',
+    icon: 'list_alt',
+    hint: 'Carreras cortas, prácticas y orientadas al mercado',
+    levelIds: [2],
+  },
+  {
+    value: '3',
+    label: 'Actualización profesional',
+    icon: 'how_to_reg',
+    hint: 'Cursos cortos para actualizar habilidades',
+    levelIds: [3, 4],
+  },
+];
+
 export class InscripcionFlowFacade {
   private readonly catalogs = inject(Catalogs);
   private readonly draftStorage = inject(InscripcionDraft);
+  private readonly inscripciones = inject(Inscripciones);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -257,14 +287,12 @@ export class InscripcionFlowFacade {
   };
 
   private readonly careers = signal<readonly Career[]>([]);
-  private readonly proposalTypeValue = toSignal(
-    this.academicForm.controls.tipoPropuesta.valueChanges,
-    { initialValue: this.academicForm.controls.tipoPropuesta.value }
-  );
+  private readonly proposalTypeValue = signal(this.academicForm.controls.tipoPropuesta.value);
   private readonly completedSections = signal<readonly SeccionEncuestaId[]>([]);
   private readonly submittedSections = signal<readonly SeccionEncuestaId[]>([]);
   private readonly submittedAcademic = signal(false);
   private readonly submittedPayment = signal(false);
+  private readonly productInterestError = signal<string | null>(null);
 
   public readonly scenario = parseEscenario(this.route.snapshot.queryParamMap.get('escenario'));
   public readonly forcedResult = parseResultadoForzado(
@@ -288,9 +316,15 @@ export class InscripcionFlowFacade {
   public readonly previousCareerOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly educationLevelOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly supportOptions = signal<readonly OpcionInscripcion[]>([]);
+  public readonly careerDecisionOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly knowledgeOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly catalogError = signal<string | null>(null);
+  public readonly loadingCareers = signal(false);
+  public readonly loadingInitialSurveyCatalogs = signal(false);
+  public readonly loadingStarts = signal(false);
+  public readonly loadingTurnos = signal(false);
+  public readonly registeringProductInterest = signal(false);
 
   public readonly visibleSections = computed(() => getSeccionesVisibles(this.scenario));
   public readonly surveyState = computed<EstadoEncuestaInicial>(() => {
@@ -309,29 +343,44 @@ export class InscripcionFlowFacade {
     }))
   );
   public readonly proposalOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const levels = new Map<number, string>();
+    const availableLevelIds = new Set(this.careers().map(career => career.idNivelProducto));
 
-    for (const career of this.careers()) {
-      if (career.idNivelProducto && career.nombreNivelProducto) {
-        levels.set(career.idNivelProducto, career.nombreNivelProducto);
-      }
-    }
-
-    return Array.from(levels, ([value, label]) => ({
-      value: value.toString(),
-      label,
-      icon: this.getProposalIcon(label),
-    }));
+    return PROPOSAL_OPTIONS.filter(option =>
+      option.levelIds.some(levelId => availableLevelIds.has(levelId))
+    ).map(({ value, label, icon, hint }) => ({ value, label, icon, hint }));
   });
   public readonly careerOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const proposalType = this.proposalTypeValue();
+    const proposalLevelIds = this.getProposalLevelIds(this.proposalTypeValue());
 
     return this.careers()
-      .filter(career => !proposalType || career.idNivelProducto.toString() === proposalType)
+      .filter(career => proposalLevelIds.includes(career.idNivelProducto))
       .map(career => ({
         value: career.idProducto.toString(),
         label: career.nombreProducto,
       }));
+  });
+  public readonly careersLoadingMessage = computed(() =>
+    this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
+  );
+  public readonly startsLoadingMessage = computed(() => {
+    if (!this.loadingStarts()) return '';
+
+    const career = this.getOptionLabel(
+      this.careerOptions(),
+      this.academicForm.controls.carrera.value,
+      'la carrera seleccionada'
+    );
+    return `Estamos cargando los comienzos para "${career}".`;
+  });
+  public readonly turnosLoadingMessage = computed(() => {
+    if (!this.loadingTurnos()) return '';
+
+    const start = this.getOptionLabel(
+      this.startOptions(),
+      this.academicForm.controls.comienzo.value,
+      'el comienzo seleccionado'
+    );
+    return `Estamos cargando los turnos para "${start}".`;
   });
   public readonly isTerminal = computed(() =>
     ['reserva', 'inscripcion-confirmada', 'inscripcion-en-proceso'].includes(this.screen())
@@ -419,20 +468,23 @@ export class InscripcionFlowFacade {
       ? RESERVATION_INSTRUCTIONS[method]
       : RESERVATION_INSTRUCTIONS.abitab;
   });
-  public readonly academicErrors = computed<OrtErrorItem[]>(() =>
-    this.submittedAcademic()
-      ? buildFormErrorSummary(
-          this.academicForm,
-          [
-            { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
-            { controlName: 'carrera', fieldId: '', label: 'Carrera' },
-            { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
-            { controlName: 'turno', fieldId: '', label: 'Turno' },
-          ],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
-      : []
-  );
+  public readonly academicErrors = computed<OrtErrorItem[]>(() => {
+    if (!this.submittedAcademic()) return [];
+
+    const formErrors = buildFormErrorSummary(
+      this.academicForm,
+      [
+        { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
+        { controlName: 'carrera', fieldId: '', label: 'Carrera' },
+        { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
+        { controlName: 'turno', fieldId: '', label: 'Turno' },
+      ],
+      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
+    );
+    const productInterestError = this.productInterestError();
+
+    return productInterestError ? [...formErrors, { message: productInterestError }] : formErrors;
+  });
   public readonly activeSectionErrors = computed<OrtErrorItem[]>(() => {
     const section = this.activeSection();
     if (!this.submittedSections().includes(section)) return [];
@@ -519,7 +571,32 @@ export class InscripcionFlowFacade {
     this.saveDraft();
   }
 
+  public canSelectCareer(): boolean {
+    return (
+      !this.loadingCareers() &&
+      this.getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0 &&
+      this.careerOptions().length > 0
+    );
+  }
+
+  public canSelectStart(): boolean {
+    return (
+      !!this.academicForm.controls.carrera.value &&
+      !this.loadingStarts() &&
+      this.startOptions().length > 0
+    );
+  }
+
+  public canSelectTurno(): boolean {
+    return (
+      !!this.academicForm.controls.comienzo.value &&
+      !this.loadingTurnos() &&
+      this.turnoOptions().length > 0
+    );
+  }
+
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
+    if (this.isSectionValid(section)) return 'completa';
     if (this.activeSection() === section) return 'activa';
     return this.completedSections().includes(section) ? 'completa' : 'pendiente';
   }
@@ -527,7 +604,7 @@ export class InscripcionFlowFacade {
   public updateIdentityFile(target: keyof ArchivosIdentidad, event: OrtFileUploaderChange): void {
     const selectedFile = event.value.find(file => file.isValid)?.file ?? null;
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
-    this.invalidateSectionIfNeeded('identidad');
+    this.syncSectionCompletion('identidad');
     this.saveDraft();
   }
 
@@ -632,12 +709,47 @@ export class InscripcionFlowFacade {
   }
 
   private submitAcademic(): void {
+    if (this.registeringProductInterest()) return;
+
     this.submittedAcademic.set(true);
+    this.productInterestError.set(null);
     if (this.academicForm.invalid) {
       this.academicForm.markAllAsTouched();
       return;
     }
 
+    const payload = this.buildProductInterestPayload();
+    if (!payload) {
+      this.productInterestError.set('Seleccioná una propuesta válida para continuar.');
+      return;
+    }
+
+    this.registeringProductInterest.set(true);
+    this.inscripciones
+      .registerProductInterest(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: registered => {
+          this.registeringProductInterest.set(false);
+          if (!registered) {
+            this.productInterestError.set(
+              'No se pudo registrar el interés por la propuesta seleccionada.'
+            );
+            return;
+          }
+
+          this.advanceToSurvey();
+        },
+        error: () => {
+          this.registeringProductInterest.set(false);
+          this.productInterestError.set(
+            'No se pudo registrar el interés por la propuesta seleccionada.'
+          );
+        },
+      });
+  }
+
+  private advanceToSurvey(): void {
     this.screen.set('encuesta');
     this.activeSection.set(
       findFirstIncompleteSection(this.visibleSections(), this.completedSections())
@@ -676,8 +788,12 @@ export class InscripcionFlowFacade {
     );
   }
 
-  private invalidateSectionIfNeeded(section: SeccionEncuestaId): void {
-    if (this.isSectionValid(section)) return;
+  private syncSectionCompletion(section: SeccionEncuestaId): void {
+    if (this.isSectionValid(section)) {
+      this.completeSection(section);
+      return;
+    }
+
     this.completedSections.update(sections => sections.filter(item => item !== section));
   }
 
@@ -705,8 +821,9 @@ export class InscripcionFlowFacade {
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        this.productInterestError.set(null);
         for (const section of this.visibleSections()) {
-          this.invalidateSectionIfNeeded(section);
+          this.syncSectionCompletion(section);
         }
         this.saveDraft();
       });
@@ -726,6 +843,7 @@ export class InscripcionFlowFacade {
 
   private applyDraft(draft: BorradorInscripcion): void {
     this.academicForm.patchValue(draft.propuesta, { emitEvent: false });
+    this.proposalTypeValue.set(draft.propuesta.tipoPropuesta);
     this.educationForm.patchValue(draft.encuesta.educacion, { emitEvent: false });
     this.academicDecisionForm.patchValue(draft.encuesta.decisionAcademica, {
       emitEvent: false,
@@ -896,9 +1014,13 @@ export class InscripcionFlowFacade {
   }
 
   private loadCareers(): void {
+    this.loadingCareers.set(true);
     this.catalogs
       .getCareers()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.loadingCareers.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: careers => this.careers.set(careers),
         error: () => {
@@ -909,9 +1031,13 @@ export class InscripcionFlowFacade {
   }
 
   private loadInitialSurveyCatalogs(): void {
+    this.loadingInitialSurveyCatalogs.set(true);
     this.catalogs
       .getInitialSurveyCatalogs()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.loadingInitialSurveyCatalogs.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: catalogs => this.applyInitialSurveyCatalogs(catalogs),
         error: () => {
@@ -932,11 +1058,9 @@ export class InscripcionFlowFacade {
   private resetAcademicSelectionOnProposalChange(): void {
     this.academicForm.controls.tipoPropuesta.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.academicForm.patchValue(
-          { carrera: '', comienzo: '', turno: '' },
-          { emitEvent: false }
-        );
+      .subscribe(value => {
+        this.proposalTypeValue.set(value);
+        this.academicForm.controls.carrera.setValue('');
         this.startOptions.set([]);
         this.turnoOptions.set([]);
       });
@@ -946,15 +1070,22 @@ export class InscripcionFlowFacade {
     this.academicForm.controls.carrera.valueChanges
       .pipe(
         tap(() => {
-          this.academicForm.patchValue({ comienzo: '', turno: '' }, { emitEvent: false });
+          this.academicForm.controls.comienzo.setValue('');
           this.startOptions.set([]);
           this.turnoOptions.set([]);
         }),
         switchMap(value => {
           const careerId = this.toNullableNumber(value);
-          return careerId === null
-            ? of<Comienzo[]>([])
-            : this.catalogs.getComienzos(careerId).pipe(catchError(() => of<Comienzo[]>([])));
+          if (careerId === null) {
+            this.loadingStarts.set(false);
+            return of<Comienzo[]>([]);
+          }
+
+          this.loadingStarts.set(true);
+          return this.catalogs.getComienzos(careerId).pipe(
+            catchError(() => of<Comienzo[]>([])),
+            finalize(() => this.loadingStarts.set(false))
+          );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -972,9 +1103,16 @@ export class InscripcionFlowFacade {
           const careerId = this.toNullableNumber(this.academicForm.controls.carrera.value);
           const startId = this.toNullableNumber(value);
 
-          return careerId === null || startId === null
-            ? of<Turno[]>([])
-            : this.catalogs.getTurnos(careerId, startId).pipe(catchError(() => of<Turno[]>([])));
+          if (careerId === null || startId === null) {
+            this.loadingTurnos.set(false);
+            return of<Turno[]>([]);
+          }
+
+          this.loadingTurnos.set(true);
+          return this.catalogs.getTurnos(careerId, startId).pipe(
+            catchError(() => of<Turno[]>([])),
+            finalize(() => this.loadingTurnos.set(false))
+          );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -1008,8 +1146,23 @@ export class InscripcionFlowFacade {
     this.previousCareerOptions.set(this.toCatalogOptions(catalogs.estadoEducacionSuperior));
     this.educationLevelOptions.set(this.toCatalogOptions(catalogs.formacionTutores));
     this.supportOptions.set(this.toCatalogOptions(catalogs.compartidoCon));
+    this.careerDecisionOptions.set(this.toCatalogOptions(catalogs.decisionCarrera));
     this.motivesOptions.set(this.toCatalogOptions(catalogs.decisionUniversidad));
     this.knowledgeOptions.set(this.toCatalogOptions(catalogs.nivelConocimiento));
+  }
+
+  private buildProductInterestPayload(): {
+    idOferta: number;
+    idProcesoSeleccionado: number;
+    idProducto: number;
+  } | null {
+    const idProducto = this.toNullableNumber(this.academicForm.controls.carrera.value);
+    const idProcesoSeleccionado = this.toNullableNumber(this.academicForm.controls.comienzo.value);
+    const idOferta = this.toNullableNumber(this.academicForm.controls.turno.value);
+
+    return idProducto === null || idProcesoSeleccionado === null || idOferta === null
+      ? null
+      : { idOferta, idProcesoSeleccionado, idProducto };
   }
 
   private toCatalogOptions(items: CatalogItem[]): OpcionInscripcion[] {
@@ -1035,15 +1188,8 @@ export class InscripcionFlowFacade {
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  private getProposalIcon(label: string): string {
-    const normalized = label
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-
-    if (normalized.includes('tecn')) return 'list_alt';
-    if (normalized.includes('actualizacion')) return 'how_to_reg';
-    return 'school';
+  private getProposalLevelIds(value: string): readonly number[] {
+    return PROPOSAL_OPTIONS.find(option => option.value === value)?.levelIds ?? [];
   }
 
   private getOptionLabel(

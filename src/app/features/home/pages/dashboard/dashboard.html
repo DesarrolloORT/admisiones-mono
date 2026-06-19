@@ -21,38 +21,11 @@
       <app-dashboard-action-card variant="career" />
       <app-dashboard-action-card variant="scholarship" />
     </section>
-
     <div class="dashboard-cards" [class.dashboard-cards--row]="singleRow()">
-      <section
+      <app-dashboard-careers-section
         class="mis-carreras"
-        [class.mis-carreras--single]="inscripciones().length === 1 && !singleRow()">
-        <div class="section-header">
-          <h3 class="section-header__title">Mis carreras</h3>
-          <button
-            class="section-header__add"
-            ort-icon-button
-            type="button"
-            variant="tonal"
-            [attr.aria-label]="'Inscribirme a carrera'">
-            <ort-icon name="add" />
-          </button>
-        </div>
-
-        @if (inscripciones().length === 1) {
-        <app-dashboard-card [inscripcion]="inscripciones()[0]" />
-        } @else {
-        <div class="swiper">
-          <div class="swiper-wrapper">
-            @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
-            <div class="swiper-slide">
-              <app-dashboard-card [inscripcion]="inscripcion" />
-            </div>
-            }
-          </div>
-          <div class="swiper-pagination"></div>
-        </div>
-        }
-      </section>
+        [inscripciones]="inscripciones()"
+        [singleRow]="singleRow()" />
       <app-dashboard-scholarships-section
         class="mis-becas"
         [becas]="becas()"
