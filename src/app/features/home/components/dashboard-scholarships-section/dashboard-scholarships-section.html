@@ -2,14 +2,14 @@
   @if (becas().length > 0) {
   <div class="section-header">
     <h3 class="section-header__title">Mis becas</h3>
-    <button
+    <a
       class="section-header__add"
       ort-icon-button
-      type="button"
       variant="tonal"
-      [attr.aria-label]="'Postularme a beca'">
+      [attr.aria-label]="'Postularme a beca'"
+      [routerLink]="'/becas'">
       <ort-icon name="add" />
-    </button>
+    </a>
   </div>
   } @if (becas().length === 0) {
   <div class="mis-becas__empty">

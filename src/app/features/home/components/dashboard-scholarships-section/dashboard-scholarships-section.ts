@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { MiBeca } from '../../models/mi-beca';
@@ -14,6 +15,7 @@ import { ScholarshipGrantedCard } from '../scholarship-granted-card/scholarship-
     DashboardCard,
     DashboardActionCard,
     ScholarshipGrantedCard,
+    RouterLink,
   ],
   templateUrl: './dashboard-scholarships-section.html',
   styleUrl: './dashboard-scholarships-section.scss',

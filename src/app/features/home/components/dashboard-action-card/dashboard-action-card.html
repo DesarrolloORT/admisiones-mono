@@ -5,15 +5,17 @@
   <div class="action-card__header">
     <ort-icon aria-hidden="true" class="action-card__icon" size="lg">{{ config().icon }}</ort-icon>
     <h4 class="action-card__title">{{ config().title }}</h4>
-    <button
+    <a
       class="action-card__arrow"
       ort-icon-button
-      type="button"
       variant="tonal"
-      [aria-label]="config().title">
+      [aria-label]="config().title"
+      [routerLink]="config().route">
       <ort-icon name="chevron_right" />
-    </button>
+    </a>
   </div>
   <p class="action-card__description">{{ config().description }}</p>
-  <button class="action-card__cta" ort-primary-button type="button">{{config().buttonText}}</button>
+  <a class="action-card__cta" ort-primary-button [routerLink]="config().route">
+    {{config().buttonText}}
+  </a>
 </article>
