@@ -4,12 +4,9 @@
   "type": "module",
   "frontEnvProject": "admisiones",
   "scripts": {
-    "start": "npm run env:desa && ng serve",
-    "start:local": "envs run local    -- ng serve",
-    "start:preprod": "envs run preprod -- ng serve ",
+    "start": "npm run generate-env:desa && ng serve -o",
     "build:prod": "envs run production -- ng build --configuration production",
     "start:dc": "ng serve --host=0.0.0.0 --disable-host-check",
-    "start:o": "ng serve -o",
     "build": "ng build",
     "build:dev": "ng build --configuration development && npm run copy-web-config",
     "copy-web-config": "cpy src/web.dev.config dist/admisiones/browser --rename=web.config --overwrite --flat",
@@ -32,13 +29,8 @@
     "generate-tests": "node ./scripts/testing/generate-missing-tests.js",
     "check-missing-tests": "node ./scripts/testing/check-missing-tests.js",
     "prepare": "husky",
-    "api:endpoints": "node ./scripts/codegen/list-endpoints.js",
-    "update-models": "node ./scripts/codegen/update-models.js",
-    "update-endpoints": "node ./scripts/codegen/update-endpoints.js",
-    "check-endpoints": "node ./scripts/codegen/update-endpoints.js --check",
     "update-api": "node ./scripts/codegen/update-api.js",
-    "env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io",
-    "env:desa:force": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io --force"
+    "generate-env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io"
   },
   "private": true,
   "dependencies": {
@@ -52,9 +44,8 @@
     "@angular/platform-browser": "^21.2.4",
     "@angular/platform-browser-dynamic": "^21.2.4",
     "@angular/router": "^21.2.4",
-    "@desarrolloort/components": "^2.1.0-rc.19",
-    "@desarrolloort/design-system": "^1.2.0-rc.19",
-    "@desarrolloort/front-env": "^0.1.0",
+    "@desarrolloort/components": "^2.1.0-rc.21",
+    "@desarrolloort/design-system": "^1.2.0-rc.21",
     "@desarrolloort/ngx-utils": "^2.2.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "moment": "^2.30.1",
@@ -124,3 +115,4 @@
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
+
