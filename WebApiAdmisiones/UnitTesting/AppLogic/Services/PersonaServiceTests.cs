@@ -17,6 +17,8 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IPersonaRepository> _personaRepositoryMock;
         private readonly Mock<IInscriptoRepository> _inscriptoRepositoryMock;
+        private readonly Mock<IVdInscripcionesFresco1y2Repository> _vdInscripcionesFresco1y2RepositoryMock;
+        private readonly Mock<IVdInscripcionesFresco3y4Repository> _vdInscripcionesFresco3y4RepositoryMock;
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepositoryMock;
         private readonly Mock<ILdap> _ldapMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
@@ -28,6 +30,8 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _personaRepositoryMock = new Mock<IPersonaRepository>();
             _inscriptoRepositoryMock = new Mock<IInscriptoRepository>();
+            _vdInscripcionesFresco1y2RepositoryMock = new Mock<IVdInscripcionesFresco1y2Repository>();
+            _vdInscripcionesFresco3y4RepositoryMock = new Mock<IVdInscripcionesFresco3y4Repository>();
             _ciudadRepositoryMock = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
             _ldapMock = new Mock<ILdap>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
@@ -35,11 +39,57 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _uowMock.Setup(u => u.Personas).Returns(_personaRepositoryMock.Object);
             _uowMock.Setup(u => u.Inscriptos).Returns(_inscriptoRepositoryMock.Object);
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(_vdInscripcionesFresco1y2RepositoryMock.Object);
+            _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(_vdInscripcionesFresco3y4RepositoryMock.Object);
             _uowMock.Setup(u => u.Ciudads).Returns(_ciudadRepositoryMock.Object);
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
             _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object, _dbConnectionContextMock.Object);
+        }
+
+        [Fact]
+        public void ObtenerMisInscripciones_DevuelveInscripcionesFresco1y2Y3y4()
+        {
+            _vdInscripcionesFresco1y2RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco1y2>
+                {
+                    new()
+                    {
+                        CodigoPersona = 123,
+                        IdProducto = 10,
+                        NombreExtensoProducto = "Carrera nivel 1",
+                        IdNivelProducto = 1,
+                        FechaReferencia = DateTime.Today,
+                        VengoDe = "1y2"
+                    }
+                });
+
+            _vdInscripcionesFresco3y4RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    new()
+                    {
+                        CodigoPersona = 123,
+                        IdProducto = 30,
+                        NombreExtensoProducto = "Curso nivel 3",
+                        IdNivelProducto = 3,
+                        FechaReferencia = DateTime.Today,
+                        VengoDe = "3y4"
+                    }
+                });
+
+            var result = _service.ObtenerMisInscripciones(123);
+
+            Assert.True(result.Success);
+            var inscripciones = Assert.IsAssignableFrom<IEnumerable<global::AppLogic.DevartDTOs.DtoVdInscripcionesFresco1y2Devart>>(result.Data).ToList();
+            Assert.Equal(2, inscripciones.Count);
+            Assert.Contains(inscripciones, x => x.IdProducto == 10 && x.VengoDe == "1y2");
+            Assert.Contains(inscripciones, x => x.IdProducto == 30 && x.VengoDe == "3y4");
+            _vdInscripcionesFresco1y2RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
+            _vdInscripcionesFresco3y4RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
         }
 
         [Fact]

@@ -23,6 +23,10 @@ namespace AppLogic.DevartDTOs
 
         #region Properties
 
+        [Key]
+        [Required()]
+        public decimal IdEnvioParaTivenos { get; set; }
+
         [StringLength(100)]
         public string? Tipodeorigen { get; set; }
 
@@ -411,10 +415,6 @@ namespace AppLogic.DevartDTOs
 
         [StringLength(100)]
         public string? TipoDeIdentificacion { get; set; }
-
-        [Key]
-        [Required()]
-        public decimal IdEnvioParaTivenos { get; set; }
 
         [StringLength(30)]
         public string? UsuarioIngreso { get; set; }

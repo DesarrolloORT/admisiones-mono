@@ -34,6 +34,7 @@ namespace AppLogic.DevartDTOs
             var target = new DtoEnvioParaTivenoDevart();
 
             // Properties
+            target.IdEnvioParaTivenos = source.IdEnvioParaTivenos;
             target.Tipodeorigen = source.Tipodeorigen;
             target.Tipodeparentesco = source.Tipodeparentesco;
             target.Twitter = source.Twitter;
@@ -183,7 +184,6 @@ namespace AppLogic.DevartDTOs
             target.TipoAccionId = source.TipoAccionId;
             target.TipoAccionNombre = source.TipoAccionNombre;
             target.TipoDeIdentificacion = source.TipoDeIdentificacion;
-            target.IdEnvioParaTivenos = source.IdEnvioParaTivenos;
             target.UsuarioIngreso = source.UsuarioIngreso;
             target.FechaIngreso = source.FechaIngreso;
             target.HoraIngreso = source.HoraIngreso;
@@ -260,6 +260,7 @@ namespace AppLogic.DevartDTOs
             var target = new BusinessLogic.Entities.EnvioParaTiveno();
 
             // Properties
+            target.IdEnvioParaTivenos = source.IdEnvioParaTivenos;
             target.Tipodeorigen = source.Tipodeorigen;
             target.Tipodeparentesco = source.Tipodeparentesco;
             target.Twitter = source.Twitter;
@@ -409,7 +410,6 @@ namespace AppLogic.DevartDTOs
             target.TipoAccionId = source.TipoAccionId;
             target.TipoAccionNombre = source.TipoAccionNombre;
             target.TipoDeIdentificacion = source.TipoDeIdentificacion;
-            target.IdEnvioParaTivenos = source.IdEnvioParaTivenos;
             target.UsuarioIngreso = source.UsuarioIngreso;
             target.FechaIngreso = source.FechaIngreso;
             target.HoraIngreso = source.HoraIngreso;
