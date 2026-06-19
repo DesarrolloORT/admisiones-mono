@@ -37,8 +37,12 @@
         </ort-radio-card-button>
         }
       </ort-radio-group>
-
       <div class="inscription-form__stack inscription-form__stack--academic">
+        <output class="inscription-form__loading" [hidden]="!facade.loadingCareers()">
+          <ort-spinner aria-label="Cargando carreras" size="sm" />
+          <span>{{ facade.careersLoadingMessage() }}</span>
+        </output>
+
         <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.carrera.value">
           <ort-label>Carrera</ort-label>
           <ort-select
@@ -53,20 +57,32 @@
           </ort-select>
         </ort-form-field>
 
+        <output class="inscription-form__loading" [hidden]="!facade.loadingStarts()">
+          <ort-spinner aria-label="Cargando comienzos" size="sm" />
+          <span>{{ facade.startsLoadingMessage() }}</span>
+        </output>
+
         <div class="inscription-form__row">
-          <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.comienzo.value">
-            <ort-label>Comienzo</ort-label>
-            <ort-select
-              aria-label="Comienzo"
-              formControlName="comienzo"
-              id="inscription-start"
-              [disabled]="!facade.canSelectStart()">
-              <ort-option value="">Seleccioná...</ort-option>
-              @for (option of facade.startOptions(); track option.value) {
-              <ort-option [value]="option.value">{{ option.label }}</ort-option>
-              }
-            </ort-select>
-          </ort-form-field>
+          <div class="inscription-form__field-stack">
+            <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.comienzo.value">
+              <ort-label>Comienzo</ort-label>
+              <ort-select
+                aria-label="Comienzo"
+                formControlName="comienzo"
+                id="inscription-start"
+                [disabled]="!facade.canSelectStart()">
+                <ort-option value="">Seleccioná...</ort-option>
+                @for (option of facade.startOptions(); track option.value) {
+                <ort-option [value]="option.value">{{ option.label }}</ort-option>
+                }
+              </ort-select>
+            </ort-form-field>
+
+            <output class="inscription-form__loading" [hidden]="!facade.loadingTurnos()">
+              <ort-spinner aria-label="Cargando turnos" size="sm" />
+              <span>{{ facade.turnosLoadingMessage() }}</span>
+            </output>
+          </div>
 
           <ort-form-field [hideRequiredMarker]="!!facade.academicForm.controls.turno.value">
             <ort-label>Turno</ort-label>
@@ -84,8 +100,6 @@
         </div>
       </div>
     </div>
-
-    <ort-error-summary [errors]="facade.academicErrors()" />
 
     <footer class="inscription-footer">
       <button ort-primary-button type="submit" [disabled]="facade.registeringProductInterest()">

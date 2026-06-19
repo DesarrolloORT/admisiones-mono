@@ -89,7 +89,8 @@
                 <ort-label>Madre o tutor</ort-label>
                 <ort-select
                   aria-label="Nivel máximo alcanzado de madre o tutor"
-                  formControlName="formacionMadre">
+                  formControlName="formacionMadre"
+                  [disabled]="facade.loadingInitialSurveyCatalogs()">
                   <ort-option value="">Seleccioná...</ort-option>
                   @for (option of facade.educationLevelOptions(); track option.value) {
                   <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -101,7 +102,8 @@
                 <ort-label>Padre o tutor</ort-label>
                 <ort-select
                   aria-label="Nivel máximo alcanzado de padre o tutor"
-                  formControlName="formacionPadre">
+                  formControlName="formacionPadre"
+                  [disabled]="facade.loadingInitialSurveyCatalogs()">
                   <ort-option value="">Seleccioná...</ort-option>
                   @for (option of facade.educationLevelOptions(); track option.value) {
                   <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -151,7 +153,10 @@
             <ort-form-field
               [hideRequiredMarker]="!!facade.academicDecisionForm.controls.apoyoDecision.value">
               <ort-label>¿Quiénes te apoyaron en la decisión?</ort-label>
-              <ort-select aria-label="Apoyo en la decisión" formControlName="apoyoDecision">
+              <ort-select
+                aria-label="Apoyo en la decisión"
+                formControlName="apoyoDecision"
+                [disabled]="facade.loadingInitialSurveyCatalogs()">
                 <ort-option value="">Seleccioná...</ort-option>
                 @for (option of facade.supportOptions(); track option.value) {
                 <ort-option [value]="option.value">{{ option.label }}</ort-option>
@@ -204,7 +209,10 @@
             <ort-form-field
               [hideRequiredMarker]="!!facade.academicDecisionForm.controls.motivosOrt.value">
               <ort-label>Motivos para elegir ORT</ort-label>
-              <ort-select aria-label="Motivos para elegir ORT" formControlName="motivosOrt">
+              <ort-select
+                aria-label="Motivos para elegir ORT"
+                formControlName="motivosOrt"
+                [disabled]="facade.loadingInitialSurveyCatalogs()">
                 <ort-option value="">Seleccioná...</ort-option>
                 @for (option of facade.motivesOptions(); track option.value) {
                 <ort-option [value]="option.value">{{ option.label }}</ort-option>
