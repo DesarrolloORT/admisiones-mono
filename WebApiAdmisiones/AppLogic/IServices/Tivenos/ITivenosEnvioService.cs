@@ -11,5 +11,17 @@ namespace AppLogic.IServices.Tivenos
             TivenosAltaInteresRequest request,
             int idTivenos,
             string methodName);
+
+        OperationResult<bool> EncolarAltaDatosBachillerato(
+            IUnitOfWork uow,
+            TivenosBachilleratoRequest request,
+            int idTivenos,
+            string methodName);
+
+        OperationResult<bool> EncolarModificacionDatosBachillerato(
+            IUnitOfWork uow,
+            TivenosBachilleratoRequest request,
+            int idTivenos,
+            string methodName);
     }
 }

@@ -52,6 +52,20 @@ namespace UnitTesting.AppLogic.Services
                     It.IsAny<int>(),
                     It.IsAny<string>()))
                 .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio)));
+            _tivenosEnvioServiceMock
+                .Setup(s => s.EncolarAltaDatosBachillerato(
+                    It.IsAny<IUnitOfWork>(),
+                    It.IsAny<TivenosBachilleratoRequest>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>()))
+                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaDatosBachillerato)));
+            _tivenosEnvioServiceMock
+                .Setup(s => s.EncolarModificacionDatosBachillerato(
+                    It.IsAny<IUnitOfWork>(),
+                    It.IsAny<TivenosBachilleratoRequest>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>()))
+                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarModificacionDatosBachillerato)));
             var apiClient = new InscripcionesyPagosApiClient(
                 new HttpClient { BaseAddress = new Uri("https://internal.test/") },
                 NullLogger<InscripcionesyPagosApiClient>.Instance);
@@ -943,6 +957,128 @@ namespace UnitTesting.AppLogic.Services
             motivoRepo.Verify(r => r.Add(It.IsAny<MotivoEleccionAdmision>()), Times.Never);
         }
 
+        [Fact]
+        public void GuardarEncuestaInicial_Parcial_NoSincronizaBachillerato()
+        {
+            SetupPersonaValida();
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(901);
+
+            var bachilleratoRepo = new Mock<BusinessLogic.IDevartRepositories.IBachilleratoPersonaRepository>();
+            _uowMock.Setup(u => u.BachilleratoPersonas).Returns(bachilleratoRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest());
+
+            Assert.True(result.Success);
+            bachilleratoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaSinBachillerato_InsertaYEncolaAlta()
+        {
+            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+
+            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva(ultimoAnioSexto: 5, codigoTitulo: null));
+
+            Assert.True(result.Success);
+            bachilleratoRepo.Verify(r => r.Add(It.Is<BachilleratoPersona>(b =>
+                b.CodigoPersona == 123 &&
+                b.CodigoInstitucion == 50 &&
+                b.AnioBachillerPer == "5" &&
+                b.CodigoOrientacion == 1304 &&
+                b.ActualizacionBachillerPer == FechaBase)), Times.Once);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
+                _uowMock.Object,
+                It.Is<TivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1304),
+                777,
+                nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaConBachilleratoDistinto_ActualizaYEncolaModificacion()
+        {
+            var existente = new BachilleratoPersona
+            {
+                CodigoPersona = 123,
+                CodigoInstitucion = 40,
+                AnioBachillerPer = "5",
+                CodigoOrientacion = 1304,
+                UsuarioIngreso = string.Empty,
+                FechaIngreso = FechaBase.AddDays(-1)
+            };
+            SetupEncuestaDefinitivaParaGuardar(existente, out var bachilleratoRepo);
+
+            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva());
+
+            Assert.True(result.Success);
+            bachilleratoRepo.Verify(r => r.Update(It.Is<BachilleratoPersona>(b =>
+                b.CodigoPersona == 123 &&
+                b.CodigoInstitucion == 50 &&
+                b.AnioBachillerPer == "6" &&
+                b.CodigoOrientacion == 1300 &&
+                b.ActualizacionBachillerPer == FechaBase)), Times.Once);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
+                _uowMock.Object,
+                It.Is<TivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1300),
+                777,
+                nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaConBachilleratoIgual_NoDuplicaEnvio()
+        {
+            var existente = new BachilleratoPersona
+            {
+                CodigoPersona = 123,
+                CodigoInstitucion = 50,
+                AnioBachillerPer = "6",
+                CodigoOrientacion = 1300,
+                UsuarioIngreso = string.Empty,
+                FechaIngreso = FechaBase.AddDays(-1)
+            };
+            SetupEncuestaDefinitivaParaGuardar(existente, out var bachilleratoRepo);
+
+            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva());
+
+            Assert.True(result.Success);
+            bachilleratoRepo.Verify(r => r.Update(It.IsAny<BachilleratoPersona>()), Times.Never);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+            _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<int>(),
+                It.IsAny<string>()), Times.Never);
+        }
+
         private void SetupOfertaConfirmacion(
             long idOferta,
             long idProducto,
@@ -991,6 +1127,141 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetProcesoPorInteresActivoOferta(codigoPersona, idProducto, idOferta))
                 .Returns(new Proceso { IdProceso = idProceso, HabilitadoInteresSitio = "SI" });
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+        }
+
+        private void SetupEncuestaDefinitivaParaGuardar(
+            BachilleratoPersona? bachilleratoExistente,
+            out Mock<BusinessLogic.IDevartRepositories.IBachilleratoPersonaRepository> bachilleratoRepo)
+        {
+            SetupPersonaValida();
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 10, 30)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
+            {
+                IdProducto = 10,
+                IdNivelProducto = 2
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns(30);
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+
+            var procesoRepo = new Mock<IProcesoRepository>();
+            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(new List<Proceso>
+            {
+                new() { IdProceso = 20 }
+            });
+            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(50)).Returns(new Empresa { CodigoEmpresa = 50, Nombre = "Liceo" });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var tituloRepo = new Mock<ITituloRepository>();
+            tituloRepo.Setup(r => r.GetByKey(1300)).Returns(new Titulo
+            {
+                CodigoTitulo = 1300,
+                Nombre = "Sexto",
+                IdAnioBachiller = 6,
+                UsuarioIngreso = string.Empty,
+                FechaIngreso = FechaBase,
+                HoraIngreso = "10:30:00",
+                Bachillerato = "SI"
+            });
+            _uowMock.Setup(u => u.Titulos).Returns(tituloRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAll()).Returns(new List<AnioBachiller>
+            {
+                AnioBachiller(4),
+                AnioBachiller(5),
+                AnioBachiller(6)
+            });
+            anioRepo.Setup(r => r.GetByKey(6)).Returns(AnioBachiller(6));
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var motivoOpcionesRepo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
+            motivoOpcionesRepo.Setup(r => r.GetByKey(1)).Returns(new MotivoOpcionesAdmision { IdMotivo = 1 });
+            _uowMock.Setup(u => u.MotivoOpcionesAdmisions).Returns(motivoOpcionesRepo.Object);
+
+            var empresaConsideradaRepo = new Mock<IEmpresaConsideradaAdmisionRepository>();
+            _uowMock.Setup(u => u.EmpresaConsideradaAdmisions).Returns(empresaConsideradaRepo.Object);
+
+            var educacionSuperiorRepo = new Mock<IEducacionSuperiorAdmisionRepository>();
+            _uowMock.Setup(u => u.EducacionSuperiorAdmisions).Returns(educacionSuperiorRepo.Object);
+
+            var motivoRepo = new Mock<IMotivoEleccionAdmisionRepository>();
+            motivoRepo.Setup(r => r.GetByPersona(123)).Returns(new List<MotivoEleccionAdmision>
+            {
+                new() { CodigoPersona = 123, IdMotivo = 1 }
+            });
+            _uowMock.Setup(u => u.MotivoEleccionAdmisions).Returns(motivoRepo.Object);
+
+            var publicidadRepo = new Mock<IPublicidadEleccionAdmisionRepository>();
+            _uowMock.Setup(u => u.PublicidadEleccionAdmisions).Returns(publicidadRepo.Object);
+
+            bachilleratoRepo = new Mock<BusinessLogic.IDevartRepositories.IBachilleratoPersonaRepository>();
+            bachilleratoRepo.Setup(r => r.GetByKey(123)).Returns(bachilleratoExistente);
+            _uowMock.Setup(u => u.BachilleratoPersonas).Returns(bachilleratoRepo.Object);
+
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(900);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS))
+                .Returns(777);
+        }
+
+        private static GuardarEncuestaInicialRequest RequestEncuestaDefinitiva(
+            long ultimoAnioSexto = 6,
+            long? codigoTitulo = 1300)
+        {
+            return new GuardarEncuestaInicialRequest
+            {
+                IdProducto = 10,
+                IdProceso = 20,
+                CodigoTitulo = codigoTitulo,
+                UltimoAnioSexto = ultimoAnioSexto,
+                InstruccionPadre = 1,
+                InstruccionMadre = 1,
+                DecisionCarrera = 2,
+                DecisionUniversidad = 2,
+                InfoOtrasUniversidadesAntes = "NO",
+                CompartidoCon = 1,
+                CodigoInstitucionBac = 50,
+                InformarEncuesta = "NO",
+                UltimoAnioSecundaria = 1,
+                TieneEducacionSuperior = false,
+                NivelDecision = 1,
+                AsesoramientoOrt = false,
+                VistaSitioWebOrt = false,
+                VistaInstalacionesOrt = false,
+                PublicidadOrt = false,
+                OpcionesMotivosSeleccionados =
+                [
+                    new EncuestaMotivoRequest { IdMotivo = 1 }
+                ]
+            };
+        }
+
+        private static AnioBachiller AnioBachiller(long cantAnios)
+        {
+            return new AnioBachiller
+            {
+                IdAnioBachiller = cantAnios,
+                CantAniosAnioBachiller = cantAnios,
+                NombreAnioBachiller = cantAnios.ToString(),
+                UsuarioIngreso = string.Empty,
+                FechaIngreso = FechaBase,
+                HoraIngreso = "10:30:00"
+            };
         }
 
         private static Oferta OfertaValida(

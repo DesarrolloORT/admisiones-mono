@@ -16,6 +16,8 @@ namespace AppLogic.Services.Inscripciones
 {
     public class InscripcionesService : IInscripcionesService
     {
+        private const long CodigoOrientacionQuintoLegacy = 1304;
+
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly IGeneralService _generalService;
@@ -297,6 +299,24 @@ namespace AppLogic.Services.Inscripciones
                     encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
                 }
 
+                if (completitud.Data)
+                {
+                    var sincronizacionBachillerato = SincronizarBachilleratoPersona(
+                        uow,
+                        encuesta,
+                        codigoPersona,
+                        nameof(GuardarEncuestaInicial));
+                    if (!sincronizacionBachillerato.Success)
+                    {
+                        uow.Rollback();
+                        return OperationResult<bool>.IsFailed(
+                            sincronizacionBachillerato.ErrorCode,
+                            nameof(GuardarEncuestaInicial),
+                            sincronizacionBachillerato.Message,
+                            sincronizacionBachillerato.HttpCode);
+                    }
+                }
+
                 if (!esNueva)
                 {
                     uow.EncuestaIniAdmisions.Update(encuesta);
@@ -311,6 +331,133 @@ namespace AppLogic.Services.Inscripciones
                 throw;
             }
         }
+
+        private OperationResult<bool> SincronizarBachilleratoPersona(
+            IUnitOfWork uow,
+            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
+            long codigoPersona,
+            string methodName)
+        {
+            var datos = ObtenerDatosBachilleratoDefinitivo(encuesta, methodName);
+            if (!datos.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    datos.ErrorCode,
+                    methodName,
+                    datos.Message,
+                    datos.HttpCode);
+            }
+
+            var datosBachillerato = datos.Data!;
+            var fechaActual = _dbConnectionContext.CurrentDateTime();
+            var existente = uow.BachilleratoPersonas.GetByKey(codigoPersona);
+            if (existente == null)
+            {
+                uow.BachilleratoPersonas.Add(new BusinessLogic.Entities.BachilleratoPersona
+                {
+                    CodigoPersona = codigoPersona,
+                    CodigoInstitucion = datosBachillerato.CodigoInstitucion,
+                    AnioBachillerPer = datosBachillerato.AnioBachiller,
+                    CodigoOrientacion = datosBachillerato.CodigoOrientacion,
+                    ActualizacionBachillerPer = fechaActual,
+                    UsuarioIngreso = string.Empty,
+                    FechaIngreso = fechaActual,
+                    HoraIngreso = fechaActual.ToString("HH:mm:ss")
+                });
+
+                return _tivenosEnvioService.EncolarAltaDatosBachillerato(
+                uow,
+                new TivenosBachilleratoRequest
+                {
+                    CodigoPersona = codigoPersona,
+                    CodigoOrientacion = datosBachillerato.CodigoOrientacion
+                },
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
+                methodName);
+            }
+
+            if (!CambioBachillerato(existente, datosBachillerato))
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            existente.CodigoInstitucion = datosBachillerato.CodigoInstitucion;
+            existente.AnioBachillerPer = datosBachillerato.AnioBachiller;
+            existente.CodigoOrientacion = datosBachillerato.CodigoOrientacion;
+            existente.ActualizacionBachillerPer = fechaActual;
+            uow.BachilleratoPersonas.Update(existente);
+
+            return _tivenosEnvioService.EncolarModificacionDatosBachillerato(
+                uow,
+                new TivenosBachilleratoRequest
+                {
+                    CodigoPersona = codigoPersona,
+                    CodigoOrientacion = datosBachillerato.CodigoOrientacion
+                },
+                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
+                methodName);
+        }
+
+        private static OperationResult<DatosBachilleratoPersona> ObtenerDatosBachilleratoDefinitivo(
+            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
+            string methodName)
+        {
+            if (!long.TryParse(encuesta.UltimoAnioSextoEncuestaIni, out var ultimoAnio))
+            {
+                return OperationResult<DatosBachilleratoPersona>.IsFailed(
+                    "INS_EI_36",
+                    methodName,
+                    "No se pudo resolver el anio de bachillerato para la persona.",
+                    400);
+            }
+
+            if (ultimoAnio is < 4 or > 6)
+            {
+                return OperationResult<DatosBachilleratoPersona>.IsFailed(
+                    "INS_EI_37",
+                    methodName,
+                    "Anio de bachillerato invalido para la persona.",
+                    400);
+            }
+
+            var codigoOrientacion = ultimoAnio switch
+            {
+                4 => null,
+                5 => CodigoOrientacionQuintoLegacy,
+                6 => encuesta.CodigoTitulo,
+                _ => null
+            };
+
+            if (ultimoAnio == 6 && (!codigoOrientacion.HasValue || codigoOrientacion.Value <= 0))
+            {
+                return OperationResult<DatosBachilleratoPersona>.IsFailed(
+                    "INS_EI_38",
+                    methodName,
+                    "No se pudo resolver la orientacion de bachillerato para la persona.",
+                    400);
+            }
+
+            return OperationResult<DatosBachilleratoPersona>.Ok(
+                new DatosBachilleratoPersona(
+                    encuesta.CodigoInstitucionBac,
+                    ultimoAnio.ToString(),
+                    codigoOrientacion),
+                methodName);
+        }
+
+        private static bool CambioBachillerato(
+            BusinessLogic.Entities.BachilleratoPersona existente,
+            DatosBachilleratoPersona datos)
+        {
+            return existente.CodigoInstitucion != datos.CodigoInstitucion
+                || !string.Equals(existente.AnioBachillerPer, datos.AnioBachiller, StringComparison.Ordinal)
+                || existente.CodigoOrientacion != datos.CodigoOrientacion;
+        }
+
+        private sealed record DatosBachilleratoPersona(
+            long? CodigoInstitucion,
+            string AnioBachiller,
+            long? CodigoOrientacion);
 
         public async Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, ConfirmarPreInscripcionRequest request)
         {
