@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  postInscripcionesRegistrarInteresProductoEndpoint,
-  type RegistrarInteresProductoPayload,
+  type InteresProductoPayload,
+  postInscripcionesInteresProductoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 
 @Injectable({
@@ -12,8 +12,8 @@ import {
 export class InscripcionesEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public registerProductInterest(payload: RegistrarInteresProductoPayload): Observable<boolean> {
-    return this.api.request(postInscripcionesRegistrarInteresProductoEndpoint, {
+  public registerProductInterest(payload: InteresProductoPayload): Observable<boolean> {
+    return this.api.request(postInscripcionesInteresProductoEndpoint, {
       body: payload,
       showLoader: true,
     });
