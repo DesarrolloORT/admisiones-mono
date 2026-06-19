@@ -12,12 +12,12 @@
   @if (beca().test) {
   <ort-chip label="Requiere rendir prueba" type="status" variant="primary" />
   } @if (inscripto() || beca().title === 'Beca de Reválidas') {
-  <button
+  <a
     class="scholarship-card__btn"
     ort-primary-button
-    type="button"
-    [attr.aria-label]="'Postularme a Fondo ' + beca().title">
+    [attr.aria-label]="'Postularme a Fondo ' + beca().title"
+    [routerLink]="beca().route">
     Postularme
-  </button>
+  </a>
   }
 </article>
