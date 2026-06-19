@@ -1,5 +1,5 @@
 <header aria-label="Navegación principal" class="home-header">
-  <div class="home-header__content">
+  <div class="home-header__content" [class.home-header__content--no-back]="!showBack()">
     <div class="home-header__action">
       @if (showBack()) {
       <button
