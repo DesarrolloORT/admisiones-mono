@@ -14,14 +14,31 @@
 
 .home-header__content {
   display: grid;
-  grid-template-columns: 48px minmax(0, 212px) 48px;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
   gap: 10px;
-  justify-content: space-between;
   align-items: center;
-  width: min(100%, 1440px);
+  width: 100%;
   height: 80px;
-  margin: 0 auto;
-  padding: 8px 16px;
+  margin: 0;
+  padding: 8px;
+}
+
+.home-header__content--no-back {
+  grid-template-columns: minmax(0, 1fr) 48px;
+}
+
+.home-header__content--no-back .home-header__action {
+  display: none;
+}
+
+.home-header__content--no-back .home-brand {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.home-header__content--no-back .home-profile {
+  grid-column: 2;
+  justify-self: end;
 }
 
 .home-brand {
@@ -36,9 +53,12 @@
 }
 
 .home-brand__logo {
+  display: block;
+  flex: 0 0 auto;
   object-fit: contain;
-  width: 53px;
-  height: 36px;
+  aspect-ratio: 70 / 36;
+  inline-size: clamp(52px, 8vw, 64px);
+  block-size: auto;
 }
 
 .home-brand__divider {
@@ -183,8 +203,13 @@
     padding: 47px 16px 0;
   }
 
+  .home-header__content--no-back {
+    grid-template-columns: minmax(0, 1fr) 48px;
+  }
+
   .home-brand {
-    width: 100%;
+    width: fit-content;
+    max-width: 212px;
   }
 
   .home-profile-menu__list {
