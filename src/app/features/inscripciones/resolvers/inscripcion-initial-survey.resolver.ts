@@ -3,14 +3,11 @@ import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
+import type { InscripcionInitialSurveyResponse } from '../models/inscripcion-flow';
 import { Inscripciones } from '../services/inscripciones';
 
-interface InscripcionInitialSurvey {
-  tieneDerechoEncuesta?: boolean | null;
-}
-
 export interface InscripcionInitialSurveyResolved {
-  initialSurvey: InscripcionInitialSurvey | null;
+  initialSurvey: InscripcionInitialSurveyResponse | null;
   loadFailed: boolean;
 }
 
