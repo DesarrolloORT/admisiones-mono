@@ -143,6 +143,30 @@ describe('ApiHttpClient', () => {
     request.flush([]);
   });
 
+  it('should request binary GET responses as blobs', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: Blob;
+    }>({
+      operationId: 'ObtenerFoto',
+      method: 'GET',
+      path: '/persona/foto',
+    });
+    const response = new Blob(['photo'], { type: 'image/png' });
+
+    api.request(endpoint, { cache: false, responseType: 'blob' }).subscribe(blob => {
+      expect(blob.size).toBe(response.size);
+      expect(blob.type).toBe('image/png');
+    });
+
+    const request = httpController.expectOne(
+      new URL('/persona/foto', environment.API_URL).toString()
+    );
+    expect(request.request.responseType).toBe('blob');
+    request.flush(response);
+  });
   it('should cache GET endpoints without params by default', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;

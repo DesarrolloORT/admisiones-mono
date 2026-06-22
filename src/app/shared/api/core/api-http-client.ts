@@ -34,6 +34,7 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   headers?: ApiRequestHeaders;
   withCredentials?: boolean;
   cache?: boolean;
+  responseType?: 'json' | 'blob';
   captchaAction?: string;
   showLoader?: boolean;
   context?: HttpContext;
@@ -72,16 +73,20 @@ export class ApiHttpClient {
         return cached;
       }
 
-      const fresh = this.execute(endpoint, url, requestOptions, options.body).pipe(
-        shareReplay({ bufferSize: 1, refCount: false })
-      );
+      const fresh = this.execute(
+        endpoint,
+        url,
+        requestOptions,
+        options.body,
+        options.responseType
+      ).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.getCache.set(cacheKey, fresh);
 
       return fresh;
     }
 
-    return this.execute(endpoint, url, requestOptions, options.body);
+    return this.execute(endpoint, url, requestOptions, options.body, options.responseType);
   }
 
   public requestWithMessage<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
@@ -96,7 +101,7 @@ export class ApiHttpClient {
       withCredentials: this.resolveWithCredentials(endpoint, options),
     };
 
-    return this.executeRaw(endpoint, url, requestOptions, options.body).pipe(
+    return this.executeRaw(endpoint, url, requestOptions, options.body, options.responseType).pipe(
       map(response => ({
         data: this.unwrapOperationResult(response),
         message: isOperationResult(response) ? (response.message ?? null) : null,
@@ -151,9 +156,10 @@ export class ApiHttpClient {
       params?: HttpParams;
       withCredentials?: boolean;
     },
-    body?: EndpointRequest<TEndpoint>
+    body?: EndpointRequest<TEndpoint>,
+    responseType: 'json' | 'blob' = 'json'
   ): Observable<EndpointData<TEndpoint>> {
-    const response$ = this.executeRaw(endpoint, url, requestOptions, body);
+    const response$ = this.executeRaw(endpoint, url, requestOptions, body, responseType);
 
     return response$.pipe(map(response => this.unwrapOperationResult(response)));
   }
@@ -167,10 +173,18 @@ export class ApiHttpClient {
       params?: HttpParams;
       withCredentials?: boolean;
     },
-    body?: EndpointRequest<TEndpoint>
+    body?: EndpointRequest<TEndpoint>,
+    responseType: 'json' | 'blob' = 'json'
   ): Observable<EndpointResponse<TEndpoint>> {
     switch (endpoint.method) {
       case 'GET':
+        if (responseType === 'blob') {
+          return this.http.get(url, {
+            ...requestOptions,
+            responseType: 'blob',
+          }) as Observable<EndpointResponse<TEndpoint>>;
+        }
+
         return this.http.get<EndpointResponse<TEndpoint>>(url, requestOptions);
       case 'POST':
         return this.http.post<EndpointResponse<TEndpoint>>(url, body, requestOptions);
