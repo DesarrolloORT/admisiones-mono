@@ -170,21 +170,8 @@ namespace AppLogic.Services.Catalogos
 
             if (producto.IdNivelProducto == 3 || producto.IdNivelProducto == 4)
             {
-                var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(idCarrera, idProceso);
-
-                if (!idComienzo.HasValue || idComienzo.Value <= 0)
-                {
-                    return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
-                        "CAT_TURNOS_03",
-                        nameof(ObtenerTurnos),
-                        "No se encontro comienzo activo para el producto y proceso indicados.",
-                        400,
-                        default
-                    );
-                }
-
                 var ofertas = uow.VdOfertasDisponibles3y4s
-                    .GetOfertasDisponibles(idCarrera, idComienzo.Value)
+                    .GetOfertasDisponibles(idCarrera)
                     .GroupBy(o => new { o.IdOferta, o.IdTurno })
                     .Select(g => g.First())
                     .OrderBy(o => o.IdTurno)

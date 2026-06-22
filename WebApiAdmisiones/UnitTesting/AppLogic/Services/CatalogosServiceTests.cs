@@ -318,15 +318,9 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            procesoComienzoRepo
-                .Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20))
-                .Returns(30);
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
-
             var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
             ofertasRepo
-                .Setup(r => r.GetOfertasDisponibles(10, 30))
+                .Setup(r => r.GetOfertasDisponibles(10))
                 .Returns(
                 [
                     new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 1 },
@@ -360,6 +354,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(2, result.Data[1].Turno.IdTurno);
             Assert.Equal("Nocturno", result.Data[1].Turno.NombreTurno);
             Assert.Empty(handler.Requests);
+            _uowMock.Verify(u => u.ProcesoComienzos, Times.Never);
         }
 
         [Fact]
@@ -378,40 +373,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("CAT_TURNOS_02", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
             Assert.Empty(handler.Requests);
-        }
-
-        [Fact]
-        public async Task ObtenerTurnos_Nivel3o4SinComienzoActivo_ReturnsFailureWithoutCallingApi()
-        {
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
-            {
-                IdProducto = 10,
-                IdNivelProducto = 4,
-                NombreProducto = "MAE",
-                NombreExtensoProducto = "Maestria"
-            });
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            procesoComienzoRepo
-                .Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20))
-                .Returns((long?)null);
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
-
-            var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
-            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(ofertasRepo.Object);
-
-            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
-            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
-
-            var result = await service.ObtenerTurnos(10, 20);
-
-            Assert.False(result.Success);
-            Assert.Equal("CAT_TURNOS_03", result.ErrorCode);
-            Assert.Equal(400, result.HttpCode);
-            Assert.Empty(handler.Requests);
-            ofertasRepo.Verify(r => r.GetOfertasDisponibles(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
         }
 
         [Fact]

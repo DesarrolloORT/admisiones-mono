@@ -13,12 +13,16 @@ namespace DataAccess.DevartRepositories
 {
     public partial class VdOfertasDisponibles3y4Repository
     {
-        public virtual ICollection<BusinessLogic.Entities.VdOfertasDisponibles3y4> GetOfertasDisponibles(
-            long idProducto,
-            long idComienzo)
+        public virtual ICollection<BusinessLogic.Entities.VdOfertasDisponibles3y4> GetOfertasDisponibles(long idProducto)
         {
             return objectSet
-                .Where(x => x.IdProducto == idProducto && x.IdComienzo == idComienzo)
+                .Where(x => x.IdProducto == idProducto
+                    && ((x.ConSeminarios != null && x.ConSeminarios != "SI")
+                        || x.FechaReferencia == objectSet
+                            .Where(x2 => x2.IdProducto == x.IdProducto
+                                && x2.IdMateria == x.IdMateria
+                                && x2.ConSeminarios == "SI")
+                            .Min(x2 => x2.FechaReferencia)))
                 .ToList()
                 .GroupBy(x => new { x.IdOferta, x.IdTurno })
                 .Select(g => g.First())
