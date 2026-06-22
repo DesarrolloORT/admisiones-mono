@@ -10,6 +10,7 @@ using WebApiAdmisiones.Controllers;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
 using AppLogic.IServices.Personas;
+using WebApiAdmisiones.Models;
 
 namespace UnitTesting.Controllers
 {
@@ -156,6 +157,75 @@ namespace UnitTesting.Controllers
             _personaServiceMock.Verify(
                 s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
                 Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var fechaVencimiento = DateTime.Today.AddYears(1);
+            var documento = new DocumentoPersonaResponse
+            {
+                Frente = new DocumentoPersonaArchivoDto
+                {
+                    NombreArchivo = "123_1.pdf",
+                    Archivo = new byte[] { 1, 2, 3 }
+                },
+                FechaVencimiento = fechaVencimiento
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerDocumentoPersona(123))
+                .Returns(OperationResult<DocumentoPersonaResponse>.Ok(
+                    documento,
+                    nameof(IPersonaService.ObtenerDocumentoPersona)));
+
+            var response = _controller.ObtenerDocumentoPersona();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<DocumentoPersonaResponse>>(okResult.Value);
+            Assert.Equal(fechaVencimiento, operationResult.Data!.FechaVencimiento);
+            _personaServiceMock.Verify(s => s.ObtenerDocumentoPersona(123), Times.Once);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_MapsFrenteDorsoAndFecha()
+        {
+            var fecha = DateTime.Today.AddYears(1);
+            var request = new UploadDocumentoPersonaRequest
+            {
+                Fecha = fecha,
+                Frente = new ArchivoPayload
+                {
+                    NombreArchivo = "frente.pdf",
+                    Archivo = new byte[] { 1, 2, 3 }
+                },
+                Dorso = new ArchivoPayload
+                {
+                    NombreArchivo = "dorso.pdf",
+                    Archivo = new byte[] { 4, 5, 6 }
+                }
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.SubirDocumentoPersona(
+                    123,
+                    fecha,
+                    It.Is<DocumentoPersonaArchivoDto>(d =>
+                        d.NombreArchivo == "frente.pdf" &&
+                        d.Archivo!.SequenceEqual(new byte[] { 1, 2, 3 })),
+                    It.Is<DocumentoPersonaArchivoDto>(d =>
+                        d.NombreArchivo == "dorso.pdf" &&
+                        d.Archivo!.SequenceEqual(new byte[] { 4, 5, 6 }))))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaService.SubirDocumentoPersona)));
+
+            var response = _controller.SubirDocumentoPersona(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.VerifyAll();
         }
     }
 }

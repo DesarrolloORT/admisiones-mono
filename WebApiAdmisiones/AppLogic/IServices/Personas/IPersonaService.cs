@@ -11,9 +11,13 @@ namespace AppLogic.IServices.Personas
         OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request);
         OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona);
         Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request);
-        OperationResult<byte[]> ObtenerDocumentoPersona(long codigoPersona, int tipo);
+        OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona);
         OperationResult<byte[]> ObtenerFotoPersona(long codigoPersona);
         OperationResult<bool> SubirFotoPersona(long codigoPersona, byte[] fileContent, string fileName);
-        OperationResult<bool> SubirDocumentoPersona(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName);
+        OperationResult<bool> SubirDocumentoPersona(
+            long codigoPersona,
+            DateTime fecha,
+            DocumentoPersonaArchivoDto frente,
+            DocumentoPersonaArchivoDto dorso);
     }
 }

@@ -53,6 +53,80 @@ namespace AppLogic.Services.Personas
             return ValidarDocumentoDefinitivoParaConsulta(definitivo, persona?.FechaVtoDocumentoPersona, methodName);
         }
 
+        public static OperationResult<DocumentoPersonaConsultaDto?> ObtenerDocumentoOpcionalParaConsulta(
+            IUnitOfWork uow,
+            long codigoPersona,
+            int tipo,
+            DateTime? fechaVencimientoDocumentoDefinitivo,
+            string methodName)
+        {
+            if (!EsTipoDocumentoValido(tipo))
+            {
+                return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                    "GEN_DA_01",
+                    methodName,
+                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
+                    400);
+            }
+
+            var temporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+            if (temporal is not null)
+            {
+                var validacionTemporal = ValidarDocumentoTemporalParaConsulta(temporal, methodName);
+                if (!validacionTemporal.Success)
+                {
+                    return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                        validacionTemporal.ErrorCode,
+                        methodName,
+                        validacionTemporal.Message,
+                        validacionTemporal.HttpCode);
+                }
+
+                return OperationResult<DocumentoPersonaConsultaDto?>.Ok(
+                    new DocumentoPersonaConsultaDto
+                    {
+                        Archivo = new DocumentoPersonaArchivoDto
+                        {
+                            NombreArchivo = temporal.NombreImagen,
+                            Archivo = validacionTemporal.Data
+                        },
+                        FechaVencimiento = temporal.FechaVtoDocumentoPersona
+                    },
+                    methodName);
+            }
+
+            var definitivo = uow.Imagens.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
+            if (definitivo is null)
+            {
+                return OperationResult<DocumentoPersonaConsultaDto?>.Ok(null, methodName);
+            }
+
+            var validacionDefinitivo = ValidarDocumentoDefinitivoParaConsulta(
+                definitivo,
+                fechaVencimientoDocumentoDefinitivo,
+                methodName);
+            if (!validacionDefinitivo.Success)
+            {
+                return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                    validacionDefinitivo.ErrorCode,
+                    methodName,
+                    validacionDefinitivo.Message,
+                    validacionDefinitivo.HttpCode);
+            }
+
+            return OperationResult<DocumentoPersonaConsultaDto?>.Ok(
+                new DocumentoPersonaConsultaDto
+                {
+                    Archivo = new DocumentoPersonaArchivoDto
+                    {
+                        NombreArchivo = definitivo.NombreImagen,
+                        Archivo = validacionDefinitivo.Data
+                    },
+                    FechaVencimiento = fechaVencimientoDocumentoDefinitivo
+                },
+                methodName);
+        }
+
         public static OperationResult<bool> ValidarDocumentosIdentidadParaConfirmacion(
             IUnitOfWork uow,
             Persona persona,

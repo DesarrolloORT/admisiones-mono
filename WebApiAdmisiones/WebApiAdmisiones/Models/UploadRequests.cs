@@ -22,12 +22,11 @@ namespace WebApiAdmisiones.Models
     public class UploadDocumentoPersonaRequest
     {
         [JsonRequired]
-        public int Tipo { get; set; }
-
-        [JsonRequired]
         public DateTime Fecha { get; set; }
 
-        public ArchivoPayload ArchivoAdjunto { get; set; } = new();
+        public ArchivoPayload Frente { get; set; } = new();
+
+        public ArchivoPayload Dorso { get; set; } = new();
     }
 
     [ExcludeFromCodeCoverage]

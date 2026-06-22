@@ -174,29 +174,17 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Obtiene el documento de identidad de la persona autenticada.
         /// </summary>
-        /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>
-        /// <returns>Imagen JPEG del documento.</returns>
+        /// <returns>Frente y dorso del documento disponibles.</returns>
         /// <response code="200">Imagen obtenida correctamente.</response>
-        /// <response code="400">Tipo de documento invalido.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
         [HttpGet("Documento")]
-        [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 400)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
-        public IActionResult ObtenerDocumentoPersona([FromQuery] int tipo)
+        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 409)]
+        public IActionResult ObtenerDocumentoPersona()
         {
-            var result = personaService.ObtenerDocumentoPersona(_currentUser.GetUserId(), tipo);
-            if (!result.Success)
-            {
-                return ValidateResponse(result);
-            }
-
-            if (result.Data is null)
-            {
-                return NotFound();
-            }
-
-            return File(result.Data, "image/jpeg");
+            var result = personaService.ObtenerDocumentoPersona(_currentUser.GetUserId());
+            return ValidateResponse(result);
         }
 
         /// <summary>
@@ -223,9 +211,9 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Sube un documento de la persona autenticada para el tipo y fecha de vencimiento indicados.
+        /// Sube frente y dorso del documento de la persona autenticada para la fecha de vencimiento indicada.
         /// </summary>
-        /// <param name="request">JSON con tipo, fecha de vencimiento, nombre del archivo y bytes del documento.</param>
+        /// <param name="request">JSON con fecha de vencimiento, frente y dorso del documento.</param>
         /// <returns><c>true</c> si el documento se guardo correctamente.</returns>
         /// <response code="200">Archivo guardado correctamente.</response>
         /// <response code="400">Request invalido o archivo no permitido.</response>
@@ -236,9 +224,19 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         public IActionResult SubirDocumentoPersona([FromBody] UploadDocumentoPersonaRequest request)
         {
-            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
-            var fileName = request.ArchivoAdjunto.NombreArchivo ?? string.Empty;
-            var result = personaService.SubirDocumentoPersona(_currentUser.GetUserId(), request.Tipo, request.Fecha, fileContent, fileName);
+            var result = personaService.SubirDocumentoPersona(
+                _currentUser.GetUserId(),
+                request.Fecha,
+                new DocumentoPersonaArchivoDto
+                {
+                    NombreArchivo = request.Frente.NombreArchivo,
+                    Archivo = request.Frente.Archivo
+                },
+                new DocumentoPersonaArchivoDto
+                {
+                    NombreArchivo = request.Dorso.NombreArchivo,
+                    Archivo = request.Dorso.Archivo
+                });
             return ValidateResponse(result);
         }
 

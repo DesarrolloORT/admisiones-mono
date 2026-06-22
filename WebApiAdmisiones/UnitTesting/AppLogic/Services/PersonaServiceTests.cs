@@ -20,6 +20,8 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IVdInscripcionesFresco1y2Repository> _vdInscripcionesFresco1y2RepositoryMock;
         private readonly Mock<IVdInscripcionesFresco3y4Repository> _vdInscripcionesFresco3y4RepositoryMock;
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepositoryMock;
+        private readonly Mock<IImagenRepository> _imagenRepositoryMock;
+        private readonly Mock<IImagenTemporalRepository> _imagenTemporalRepositoryMock;
         private readonly Mock<ILdap> _ldapMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly PersonaService _service;
@@ -33,6 +35,8 @@ namespace UnitTesting.AppLogic.Services
             _vdInscripcionesFresco1y2RepositoryMock = new Mock<IVdInscripcionesFresco1y2Repository>();
             _vdInscripcionesFresco3y4RepositoryMock = new Mock<IVdInscripcionesFresco3y4Repository>();
             _ciudadRepositoryMock = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            _imagenRepositoryMock = new Mock<IImagenRepository>();
+            _imagenTemporalRepositoryMock = new Mock<IImagenTemporalRepository>();
             _ldapMock = new Mock<ILdap>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
 
@@ -42,10 +46,231 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(_vdInscripcionesFresco1y2RepositoryMock.Object);
             _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(_vdInscripcionesFresco3y4RepositoryMock.Object);
             _uowMock.Setup(u => u.Ciudads).Returns(_ciudadRepositoryMock.Object);
+            _uowMock.Setup(u => u.Imagens).Returns(_imagenRepositoryMock.Object);
+            _uowMock.Setup(u => u.ImagenTemporals).Returns(_imagenTemporalRepositoryMock.Object);
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
             _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object, _dbConnectionContextMock.Object);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithBothSides_ReturnsFrenteAndDorso()
+        {
+            var fechaFrente = DateTime.Today.AddYears(1);
+            var fechaDorso = DateTime.Today.AddYears(2);
+            _imagenTemporalRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns(new ImagenTemporal
+                {
+                    NombreImagen = "123_1.pdf",
+                    BlobImagen = ValidPdf(),
+                    FechaVtoDocumentoPersona = fechaFrente
+                });
+            _imagenTemporalRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 2))
+                .Returns(new ImagenTemporal
+                {
+                    NombreImagen = "123_2.pdf",
+                    BlobImagen = ValidPdf(),
+                    FechaVtoDocumentoPersona = fechaDorso
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.True(result.Success);
+            Assert.Equal("123_1.pdf", result.Data!.Frente!.NombreArchivo);
+            Assert.Equal("123_2.pdf", result.Data.Dorso!.NombreArchivo);
+            Assert.Equal(ValidPdf(), result.Data.Frente.Archivo);
+            Assert.Equal(ValidPdf(), result.Data.Dorso.Archivo);
+            Assert.Equal(fechaFrente, result.Data.FechaVencimiento);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithOnlyFrente_ReturnsOnlyFrente()
+        {
+            _imagenTemporalRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns(new ImagenTemporal
+                {
+                    NombreImagen = "123_1.pdf",
+                    BlobImagen = ValidPdf(),
+                    FechaVtoDocumentoPersona = DateTime.Today.AddYears(1)
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data!.Frente);
+            Assert.Null(result.Data.Dorso);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithOnlyDorso_ReturnsOnlyDorso()
+        {
+            var fechaDorso = DateTime.Today.AddYears(1);
+            _imagenTemporalRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 2))
+                .Returns(new ImagenTemporal
+                {
+                    NombreImagen = "123_2.pdf",
+                    BlobImagen = ValidPdf(),
+                    FechaVtoDocumentoPersona = fechaDorso
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.True(result.Success);
+            Assert.Null(result.Data!.Frente);
+            Assert.NotNull(result.Data.Dorso);
+            Assert.Equal(fechaDorso, result.Data.FechaVencimiento);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithDefinitiveDocument_UsesPersonaExpirationDate()
+        {
+            var fechaPersona = DateTime.Today.AddYears(3);
+            _personaRepositoryMock
+                .Setup(r => r.GetByKey(123))
+                .Returns(new Persona
+                {
+                    CodigoPersona = 123,
+                    FechaVtoDocumentoPersona = fechaPersona
+                });
+            _imagenRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns(new Imagen
+                {
+                    NombreImagen = "123_1.pdf",
+                    BlobImagen = ValidPdf()
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.True(result.Success);
+            Assert.Equal("123_1.pdf", result.Data!.Frente!.NombreArchivo);
+            Assert.Null(result.Data.Dorso);
+            Assert.Equal(fechaPersona, result.Data.FechaVencimiento);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithDocumentAndNoExpirationDate_ReturnsNullExpirationDate()
+        {
+            _personaRepositoryMock
+                .Setup(r => r.GetByKey(123))
+                .Returns(new Persona
+                {
+                    CodigoPersona = 123,
+                    FechaVtoDocumentoPersona = null
+                });
+            _imagenRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns(new Imagen
+                {
+                    NombreImagen = "123_1.pdf",
+                    BlobImagen = ValidPdf()
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data!.Frente);
+            Assert.Null(result.Data.FechaVencimiento);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithNoSides_ReturnsNotFound()
+        {
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_WithExpiredExistingSide_ReturnsConflict()
+        {
+            _imagenTemporalRepositoryMock
+                .Setup(r => r.GetDocumentoByPersonaAndTipo(123, 1))
+                .Returns(new ImagenTemporal
+                {
+                    NombreImagen = "123_1.pdf",
+                    BlobImagen = ValidPdf(),
+                    FechaVtoDocumentoPersona = DateTime.Today.AddDays(-1)
+                });
+
+            var result = _service.ObtenerDocumentoPersona(123);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_DA_03", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_WithBothSides_CreatesBothAndSavesOnce()
+        {
+            var persona = new Persona { CodigoPersona = 123 };
+            var fecha = DateTime.Today.AddYears(1);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
+            _dbConnectionContextMock
+                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL))
+                .Returns(10)
+                .Returns(11);
+
+            var result = _service.SubirDocumentoPersona(
+                123,
+                fecha,
+                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+
+            Assert.True(result.Success);
+            Assert.Equal(fecha, persona.FechaVtoDocumentoPersona);
+            _imagenTemporalRepositoryMock.Verify(
+                r => r.Add(It.Is<ImagenTemporal>(i =>
+                    i.IdImagenTemporal == 10 &&
+                    i.CodigoPersona == 123 &&
+                    i.NombreImagen == "123_1.pdf" &&
+                    i.TipoImagen == "1")),
+                Times.Once);
+            _imagenTemporalRepositoryMock.Verify(
+                r => r.Add(It.Is<ImagenTemporal>(i =>
+                    i.IdImagenTemporal == 11 &&
+                    i.CodigoPersona == 123 &&
+                    i.NombreImagen == "123_2.pdf" &&
+                    i.TipoImagen == "1")),
+                Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_WhenPersonaDoesNotExist_ReturnsNotFound()
+        {
+            var result = _service.SubirDocumentoPersona(
+                123,
+                DateTime.Today.AddYears(1),
+                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_WhenDorsoIsMissing_ReturnsBadRequest()
+        {
+            var result = _service.SubirDocumentoPersona(
+                123,
+                DateTime.Today.AddYears(1),
+                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = Array.Empty<byte>() });
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_03", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _personaRepositoryMock.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
         }
 
         [Fact]
@@ -557,6 +782,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("Error al cambiar contraseña", result.Message);
             Assert.Contains("LDAP service unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
+        }
+
+        private static byte[] ValidPdf()
+        {
+            return new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D };
         }
     }
 }

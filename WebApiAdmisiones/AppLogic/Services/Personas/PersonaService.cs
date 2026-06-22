@@ -181,13 +181,57 @@ namespace AppLogic.Services.Personas
             return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoPersona));
         }
 
-        public OperationResult<byte[]> ObtenerDocumentoPersona(long codigoPersona, int tipo)
+        public OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona)
         {
             using var uow = uowFactory.Create();
-            return DocumentoIdentidadPersonaService.ObtenerDocumentoParaConsulta(
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            var fechaVencimientoDocumentoDefinitivo = persona?.FechaVtoDocumentoPersona;
+            var frente = DocumentoIdentidadPersonaService.ObtenerDocumentoOpcionalParaConsulta(
                 uow,
                 codigoPersona,
-                tipo,
+                PersonaConstants.DocumentoPersona.Frente,
+                fechaVencimientoDocumentoDefinitivo,
+                nameof(ObtenerDocumentoPersona));
+            if (!frente.Success)
+            {
+                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                    frente.ErrorCode,
+                    nameof(ObtenerDocumentoPersona),
+                    frente.Message,
+                    frente.HttpCode);
+            }
+
+            var dorso = DocumentoIdentidadPersonaService.ObtenerDocumentoOpcionalParaConsulta(
+                uow,
+                codigoPersona,
+                PersonaConstants.DocumentoPersona.Dorso,
+                fechaVencimientoDocumentoDefinitivo,
+                nameof(ObtenerDocumentoPersona));
+            if (!dorso.Success)
+            {
+                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                    dorso.ErrorCode,
+                    nameof(ObtenerDocumentoPersona),
+                    dorso.Message,
+                    dorso.HttpCode);
+            }
+
+            if (frente.Data is null && dorso.Data is null)
+            {
+                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                    "GEN_DA_02",
+                    nameof(ObtenerDocumentoPersona),
+                    "Documento no encontrado.",
+                    404);
+            }
+
+            return OperationResult<DocumentoPersonaResponse>.Ok(
+                new DocumentoPersonaResponse
+                {
+                    Frente = frente.Data?.Archivo,
+                    Dorso = dorso.Data?.Archivo,
+                    FechaVencimiento = frente.Data?.FechaVencimiento ?? dorso.Data?.FechaVencimiento
+                },
                 nameof(ObtenerDocumentoPersona));
 
         }
@@ -243,15 +287,22 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(SubirFotoPersona));
         }
 
-        public OperationResult<bool> SubirDocumentoPersona(long codigoPersona, int tipo, DateTime fecha, byte[] fileContent, string fileName)
+        public OperationResult<bool> SubirDocumentoPersona(
+            long codigoPersona,
+            DateTime fecha,
+            DocumentoPersonaArchivoDto frente,
+            DocumentoPersonaArchivoDto dorso)
         {
-            if (tipo != 1 && tipo != 2)
+            var validacionFrente = ValidarArchivoDocumentoPersona(frente, "frente");
+            if (!validacionFrente.Success)
             {
-                return OperationResult<bool>.IsFailed(
-                    "GEN_SDA_01",
-                    nameof(SubirDocumentoPersona),
-                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
-                    400);
+                return validacionFrente;
+            }
+
+            var validacionDorso = ValidarArchivoDocumentoPersona(dorso, "dorso");
+            if (!validacionDorso.Success)
+            {
+                return validacionDorso;
             }
 
             using var uow = uowFactory.Create();
@@ -262,6 +313,43 @@ namespace AppLogic.Services.Personas
                 return OperationResult<bool>.IsFailed("GEN_SDA_02", nameof(SubirDocumentoPersona), PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
+            var resultadoFrente = GuardarOActualizarDocumentoTemporal(
+                uow,
+                codigoPersona,
+                PersonaConstants.DocumentoPersona.Frente,
+                fecha,
+                frente);
+            if (!resultadoFrente.Success)
+            {
+                return resultadoFrente;
+            }
+
+            var resultadoDorso = GuardarOActualizarDocumentoTemporal(
+                uow,
+                codigoPersona,
+                PersonaConstants.DocumentoPersona.Dorso,
+                fecha,
+                dorso);
+            if (!resultadoDorso.Success)
+            {
+                return resultadoDorso;
+            }
+
+            persona.FechaVtoDocumentoPersona = fecha;
+            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
+        }
+
+        private OperationResult<bool> GuardarOActualizarDocumentoTemporal(
+            IUnitOfWork uow,
+            long codigoPersona,
+            int tipo,
+            DateTime fecha,
+            DocumentoPersonaArchivoDto documento)
+        {
+            var fileContent = documento.Archivo ?? Array.Empty<byte>();
+            var fileName = documento.NombreArchivo ?? string.Empty;
             var documentoExistente = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
 
             if (documentoExistente is null)
@@ -307,9 +395,42 @@ namespace AppLogic.Services.Personas
                 uow.ImagenTemporals.Update(documentoExistente);
             }
 
-            persona.FechaVtoDocumentoPersona = fecha;
-            PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
-            uow.Save();
+            return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
+        }
+
+        private static OperationResult<bool> ValidarArchivoDocumentoPersona(DocumentoPersonaArchivoDto? documento, string lado)
+        {
+            if (documento?.Archivo == null || documento.Archivo.Length == 0)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_SDA_03",
+                    nameof(SubirDocumentoPersona),
+                    $"Debe enviar el documento de identidad ({lado}).",
+                    400);
+            }
+
+            if (string.IsNullOrWhiteSpace(documento.NombreArchivo))
+            {
+                return OperationResult<bool>.IsFailed(
+                    "GEN_SDA_04",
+                    nameof(SubirDocumentoPersona),
+                    $"Debe enviar el nombre del archivo del documento de identidad ({lado}).",
+                    400);
+            }
+
+            var validacion = FileValidationHelper.ValidateDocumentFile(
+                documento.Archivo,
+                documento.NombreArchivo,
+                nameof(SubirDocumentoPersona));
+            if (!validacion.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    validacion.ErrorCode,
+                    nameof(SubirDocumentoPersona),
+                    validacion.Message,
+                    validacion.HttpCode);
+            }
+
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }
 
