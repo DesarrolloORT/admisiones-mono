@@ -4980,6 +4980,15 @@
     <property name="SemestrePaquete" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="587ad21b-f4d8-4252-b67b-c7f6acbd8fd1">
       <column name="SEMESTRE_PAQUETE" not-null="False" precision="18" scale="1" sql-type="NUMBER" p1:unicode="False" />
     </property>
+    <property name="IdProceso" type="Decimal" p1:ValidateRequired="true" p1:Guid="b6ed43d8-3fcc-425c-b2f6-0185b597fd28">
+      <column name="ID_PROCESO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreProceso" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="a9b96b36-166f-420c-93f3-bf8fa2c53617">
+      <column name="NOMBRE_PROCESO" not-null="True" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="NombreOferta" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="8f18361d-f0b6-4cf8-877a-e29ca45ab3ed">
+      <column name="NOMBRE_OFERTA" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
   </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">

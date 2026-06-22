@@ -44,6 +44,16 @@ namespace AppLogic.DevartDTOs
 
         public decimal? SemestrePaquete { get; set; }
 
+        [Required()]
+        public decimal IdProceso { get; set; }
+
+        [StringLength(60)]
+        [Required()]
+        public string NombreProceso { get; set; }
+
+        [StringLength(30)]
+        public string? NombreOferta { get; set; }
+
         #endregion
     }
 

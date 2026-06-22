@@ -75,6 +75,8 @@
         <File Name="PublicidadEleccionAdmision.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="EnvioParaTiveno.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="Parametro.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="VdInscripcionesFresco3y4.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="VdOfertasDisponibles3y4.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
@@ -218,6 +220,10 @@
         <File Name="IEnvioParaTivenoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IParametroRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IParametroRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IVdInscripcionesFresco3y4Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IVdInscripcionesFresco3y4Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IVdOfertasDisponibles3y4Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IVdOfertasDisponibles3y4Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
@@ -361,6 +367,10 @@
         <File Name="EnvioParaTivenoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="ParametroRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="ParametroRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="VdInscripcionesFresco3y4Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="VdInscripcionesFresco3y4Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="VdOfertasDisponibles3y4Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="VdOfertasDisponibles3y4Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -431,6 +441,8 @@
         <File Name="DtoPublicidadEleccionAdmisionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEnvioParaTivenoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoParametroDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoVdInscripcionesFresco3y4Devart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoVdOfertasDisponibles3y4Devart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -501,6 +513,8 @@
         <File Name="PublicidadEleccionAdmisionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EnvioParaTivenoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="ParametroConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="VdInscripcionesFresco3y4Converter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="VdOfertasDisponibles3y4Converter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>
@@ -756,12 +770,12 @@
       <Exclude Name="OBSERVACIONES_ACCION" Table="CREADOR.T_ACCION" Type="Column" />
       <Exclude Name="ID_PRUEBA" Table="CREADOR.T_ACCION" Type="Column" />
       <Exclude Name="ACCION_KEY" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="PERSONA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="ACCIONRESULTADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="PERSONA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
-      <Exclude Name="ACTIVIDAD_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
+      <Exclude Name="PRUEBA_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="ID_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
       <Exclude Name="ID_FORMA_CONTACTO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
       <Exclude Name="ID_TIPO_ACTIVIDAD" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
@@ -786,13 +800,13 @@
       <Exclude Name="ID_PROCESO" Table="CREADOR.T_ACTIVIDAD" Type="Column" />
       <Exclude Name="ACTIVIDAD_KEY" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="ESTADOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="FORMACONTACTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="GRUPOASIGNADO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="PROCESO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="SELECCIONPERSONA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAME_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAMEGENERA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAMERELI_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
@@ -848,14 +862,14 @@
       <Exclude Name="IP_LOCKEADOR_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="RED_SOCIAL_DEPARTAMENTO" Table="CREADOR.T_DEPARTAMENTO" Type="Column" />
       <Exclude Name="DEPARTAMENTO_DUPLICADO_7101" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="ESCUELA_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="NOMBRE_DEPTO_DUPLICADO_7092" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="CODIGO_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="NOMBRE" Table="CREADOR.T_EMPRESA" Type="Column" />
@@ -902,11 +916,72 @@
       <Exclude Name="PARA_SGI_EMPRESA" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="ID_SEGMENTO_LICEO" Table="CREADOR.T_EMPRESA" Type="Column" />
       <Exclude Name="T_EMPRESA_CLAVE_DUPLICADA_0084" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_008" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="NOMBRE_EMPRESA_DUPLICADO_0069" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="ID_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ID_COMIENZO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CLAVE_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ANIOS_INSTRUCCION_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="NOMBRE_INST_SEC_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_TITULO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ULTIMO_ANIO_SEXTO_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VECES_SEXTO_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CANTIDAD_PREVIAS_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ESTUDIOS_TERC_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="NOMBRE_INST_TER_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CARRERA_TER_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ULT_ANIO_TER_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ULT_ANIO_CAL_TER_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CONOCIMIEN_INGLES_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INSTRUCCION_PADRE_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INSTRUCCION_MADRE_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="DECISION_CARRERA_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="DECISION_UNIVER_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INFOR_OTRAS_ANTES_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="COMPAR_PADRES_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="COMPAR_OTROS_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="COMPAR_AMIGO_FAM_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="COMPAR_NADIE_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="COMPAR_AMIGO_PROP_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INFOR_OTRAS_LINEA1_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INFOR_OTRAS_LINEA2_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="TIPO_DOCUMENTO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="DOCUMENTO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_PROCESADO_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_INSTITUCION_BAC" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_VTO_ADMISION" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INFORMAR_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ID_TURNO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ID_PROCESO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="TIPO_INSCRIPCION" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="NUEVAVERSION_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ULTIMOANIO_SECUNDARIA_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="TIENE_EDUCACION_SUPERIOR_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="NIVEL_DECISION_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ASESORAMIENTO_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VALORACION_ASESORAMIENTO_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VISTA_SITIO_WEB_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VALORACION_SITIO_WEB_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VISTA_INSTALACIONES_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="VALORACION_INSTALACIONES_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="PUBLICIDAD_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INSTRUCCION_MADRE_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="INSTRUCCION_PADRE_ORT_ENCUESTA_INI" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ESTADO_ENCUESTA_INI_ADMISION" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Column" />
+      <Exclude Name="ENCUESTA_INI_ADMISION_KEY" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
+      <Exclude Name="INSTBAC_ENCUESINIADMIS_INV" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
+      <Exclude Name="TURNO_ENCSTAINIADM_INV" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
+      <Exclude Name="PRCSO_ENCSTAINIADM_INV" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
+      <Exclude Name="FK_ENCINI_PRODUCTO" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
       <Exclude Name="ID_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
       <Exclude Name="NOMBRE_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
       <Exclude Name="NOMBRE_EXTENSO_ESCUELA" Table="CREADOR.T_ESCUELA" Type="Column" />
@@ -995,16 +1070,16 @@
       <Exclude Name="ID_PRODUCTO_PCOUNTER" Table="CREADOR.T_INSCRIPTO" Type="Column" />
       <Exclude Name="ID_MOTIVO_BAJA_INSCRIPCION" Table="CREADOR.T_INSCRIPTO" Type="Column" />
       <Exclude Name="INSCRIPTO_PRIMARY" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="CAUSAINSCRPAGO_INSCRIPTO_FOREI" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="OFERTA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PERSONA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESA_INSCRIPTO_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PRODUCTO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="PRODPCOUNTER_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESA_INSCRIPTO_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="OFERTA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PERSONA_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CAUSAINSCRPAGO_INSCRIPTO_FOREI" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRODUCTO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="PRODPCOUNTER_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="ID_INSTANCIA_WORKFLOW" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="ID_TURNO" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="ID_COMIENZO" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
@@ -1012,6 +1087,7 @@
       <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="HORA_INGRESO" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
+      <Exclude Name="ID_OFERTA" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="INST_WORKFLOW_INSCRIPCION_KEY" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Constraint" />
       <Exclude Name="ID_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="ID_PROCESO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
@@ -1032,9 +1108,9 @@
       <Exclude Name="ID_DEPARTAMENTO" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="ID_CATEGORIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Column" />
       <Exclude Name="INSTANCIA_WORKFLOW_KEY" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
-      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
-      <Exclude Name="SOLICI_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="SOLICI_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="ID_PROCESO" Table="CREADOR.T_INTERES" Type="Column" />
@@ -1047,12 +1123,12 @@
       <Exclude Name="ID_LUGAR" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="ID_GRADO_PUREZA" Table="CREADOR.T_INTERES" Type="Column" />
       <Exclude Name="INTERES_KEY" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="PROCESO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="PERSONA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PERSONA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="PROCESO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
+      <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="PERSONAPROCESO_INTERES_UNI" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="ID_TIPO_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="ID_INTERES" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
@@ -1070,13 +1146,20 @@
       <Exclude Name="FECHA_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="IDGRADOANT_MODIF_INTERES_PROD" Table="CREADOR.T_INTERES_PRODUCTO" Type="Column" />
       <Exclude Name="INTERES_PRODUCTO_KEY" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
-      <Exclude Name="TURNO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="INTERES_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="PRODUCTO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
-      <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="TURNO_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUAMOD_INTEREPRODUCT_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ID_MOTIVO" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="MOTIVO_MOTIVO_ELECCION_ADMISION_INV" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Constraint" />
+      <Exclude Name="PERSONA_MOTIVO_ELECCION_ADMISION_INV" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Constraint" />
       <Exclude Name="ID_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="NOMBRE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_PAQUETE" Type="Column" />
@@ -1095,9 +1178,72 @@
       <Exclude Name="ESTADO_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="CANT_CUOTAS_AJUSTE_PAQUETE" Table="CREADOR.T_PAQUETE" Type="Column" />
       <Exclude Name="PAQUETE_PRIMARY" Table="CREADOR.T_PAQUETE" Type="Constraint" />
-      <Exclude Name="TITULO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
       <Exclude Name="PRODUCTO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_PAQUETE_INVALID" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="TITULO_PAQUETE_INVALIDO" Table="CREADOR.T_PAQUETE" Type="Constraint" />
+      <Exclude Name="DIAS_PLAZO_PAGO_INTERNET" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="DIAS_PLAZO_PRIMITIVA" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="DIAS_VTO_PASSWORD_PARAMETROS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="VALOR_URO_GENERICO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="MODIFICAR_TNSNAMES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PORC_SENIA_MINIMA_VPP" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PORC_DTO_GRADUADO_TEC" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PORC_DTO_GRADUADO_UNI" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="FEC_DESDE_CTRL_DOC_TITULOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="FEC_DESDE_CTRL_INDUCCION" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PASSWORD_LDAP" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="INVOCAR_WS_PREVIAS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="INVOCAR_WS_GRADUACION" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="INVOCAR_WS_CERT195" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="INVOCAR_PASCAL_PREVIAS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_N_TITULOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PORC_DTO_GRADUADO_TEC_CCG" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="PORC_DTO_GRADUADO_TEC_NO_CCG" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_N_CARGOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="VALOR_UI" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANTIDAD_UI_DGI_3102" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ANIO_DEDUCCION_3102" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ESTA_HABILITADO_6M6" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="RESULTADO_RUTINA_AL_DIA" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_MINIMA_RAQUITICO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ANIOMES_CONTROL3102" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="REFERENCIA_CARTA_RECTOR" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANTMINIMAHORAS_PAGO_CUIDANTES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="COMISION_ABITAB" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="VALOR_UI_DICIEMBRE" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ID_OFERTA_LEGAJOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_DIAS_INSCR_TRADICIONAL" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_DIAS_INSCR_6M6" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_ENCUESTAS_POS_DEPTONIVEL" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_ENCUESTAS_POS_PRODUCTO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_ENCUESTAS_CARRERAS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_RESP_ENCUESTAS_ITEM" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ID_CAJA" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="TOPE_SOBREGIRO" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ID_OFERTA_IMPRESIONES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ID_OFERTA_IMPRESIONES_3D" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="FECHA_INICIO_IMPRESIONES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="FECHA_FIN_IMPRESIONES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CARTEL_3102_ENGESTION" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_DIAS_VENCIMIENTO_IMP3D" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ACTUALIZAR_CODIGO_VIGENCIA" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CONFORME_HABILITA_CREDITOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CHEQUEA_PREREQ_PREVIAS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="APAGAR_PRIMITIVA_3" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ESTA_HABILITADO_POSTULACIONES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="ID_FUNCIONARIO_9000" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_TIVENOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CANT_DIAS_RAS_TIVENOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SGI_ES_READONLY" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_FRESCO_ADMISIONES" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_BECA_FUNCIONARIOS" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_PRECIO_X_PAQUETE" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_INSCR_ANTICIPADA_70" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="SE_LIBERO_NOMBRE_WEB" Table="CREADOR.T_PARAMETROS" Type="Column" />
+      <Exclude Name="CAJA_PARAMETROS_INV" Table="CREADOR.T_PARAMETROS" Type="Constraint" />
       <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_PERSONA" Type="Column" />
       <Exclude Name="PRIMER_APELLIDO" Table="CREADOR.T_PERSONA" Type="Column" />
       <Exclude Name="SEGUNDO_APELLIDO" Table="CREADOR.T_PERSONA" Type="Column" />
@@ -1276,20 +1422,20 @@
       <Exclude Name="EMAIL_ORT_PERSONA" Table="CREADOR.T_PERSONA" Type="Column" />
       <Exclude Name="HASH_TOKEN_PASSWORD" Table="CREADOR.T_PERSONA" Type="Column" />
       <Exclude Name="T_PERSONA_CLAVE_DUPLICADA_0107" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="NACIONALIDAD_SAPEATYRO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="FK_PERSONA_CARAC_PAIS_TEL1" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="FK_PERSONA_CARAC_PAIS_TEL2" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="PAIS_NACIMIENTO_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="CODIGO_BACHILLERATO_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="BUSCATRABAJO_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="PERSONA_TIPOOCUPACIOACTUAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="PAIS_ESTAD_CIUDAD_INVALIDO_010" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="INSTITUCION_BACH_INVALIDA" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="BUSCATRABAJO_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="CODIGO_BACHILLERATO_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="FUENTE_DATOS_PERSONA_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="INSTITUCION_BACH_INVALIDA" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="PAIS_NACIMIENTO_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="SEGUROSALUD_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="PERSONA_SUCURSAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="PERSONA_SUCURSALBANCO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="NACIONALIDAD_SAPEATYRO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="EMPLEADORPERSONA_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="PERSONA_TIPOOCUPACIOACTUAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="FK_PERSONA_CARAC_PAIS_TEL1" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="FK_PERSONA_CARAC_PAIS_TEL2" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="CAUSEGREPERSONA_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="ID_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
       <Exclude Name="NOMBRE_PLAN_PAGO" Table="CREADOR.T_PLAN_PAGO" Type="Column" />
@@ -1394,13 +1540,13 @@
       <Exclude Name="CAJA_PROFESIONAL_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="PROG_CON_SEMINARIOS_PRODUCTO" Table="CREADOR.T_PRODUCTO" Type="Column" />
       <Exclude Name="PRODUCTO_DUPLICADO_7081" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="NIVEL_PRODUCTO_PROD_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="CENTROCOSTOS_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="DEPARTAMENTO_PRODUCTO_INV_7507" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROCOSTOS_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVEL_PRODUCTO_PROD_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="ALIAS_PRODUCTO_UNICA" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
@@ -1432,9 +1578,16 @@
       <Exclude Name="FECHA_DIFUSIONWEB_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
       <Exclude Name="HABILITADO_SITIOADMI_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Column" />
       <Exclude Name="PRUEBA_PRIMARY" Table="CREADOR.T_PRUEBA" Type="Constraint" />
-      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
       <Exclude Name="COMIENZO_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
       <Exclude Name="TIPO_BECA_PRUEBA" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="ID_PUBLICIDAD" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="HORA_INGRESO" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="PUBLICIDAD_PUBLICIDAD_ELECCION_ADMISION_INV" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Constraint" />
+      <Exclude Name="PERSONA__PUBLICIDAD_ELECCION_ADMISION_INV" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Constraint" />
       <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="SISTEMA" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="TOKEN_HASH" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
@@ -1484,18 +1637,18 @@
       <Exclude Name="ID_TIPO_ACCION" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="ID_PRODUCTO" Table="CREADOR.T_SOLICITUD_ALTA" Type="Column" />
       <Exclude Name="SOLICITUD_ALTA_KEY" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="ESTADO_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PAIS_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="OREINT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PROCESO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PERSONA_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="CIUDAD_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="INSTIT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="ANIOBACHILLER_SOLICIALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="PRODUCTO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ESTADO_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PAIS_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="INSTIT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="OREINT_SOLICITUDALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="ANIOBACHILLER_SOLICIALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PERSONA_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PROCESO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
+      <Exclude Name="PRODUCTO_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="ID_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="NOMBRE_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="ID_PAQUETE" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
@@ -1522,10 +1675,10 @@
       <Exclude Name="ID_CALENDARIO_PAGO_6M6" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="MARCA_DESERTOR_6M6_SUPRAOFERTA" Table="CREADOR.T_SUPRAOFERTA" Type="Column" />
       <Exclude Name="SUPRAOFERTA_PRIMARY" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="PAQUETE_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
-      <Exclude Name="COMIENZO_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="COMIENZO_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="PAQUETE_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="ID_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
       <Exclude Name="NOMBRE_TIPO_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
       <Exclude Name="CODIGO_RPG_DESCUENTO" Table="CREADOR.T_TIPO_DESCUENTO" Type="Column" />
@@ -1620,12 +1773,12 @@
       <Exclude Name="PREVIAS_PARCIAL_IGUAL_TOTAL" Table="CREADOR.T_TITULO_ORT" Type="Column" />
       <Exclude Name="GENERICO_FAMILIA" Table="CREADOR.T_TITULO_ORT" Type="Column" />
       <Exclude Name="TITULO_DUPLICADO_7028" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTO_TITULO_INVALIDO_7502" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="CODIGOTITULO_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="PRODUCTO_TITULO_INVALIDO_7502" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="TITULO_NOMBRE_DUPLICADO_9050" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="CODIGO_PERSONA" Table="CREADOR.VD_ES_FRESCO_ADMISION" Type="Column" />
       <Exclude Name="FECHA_INSCR" Table="CREADOR.VD_ES_FRESCO_ADMISION" Type="Column" />
@@ -1640,83 +1793,92 @@
       <Exclude Name="USERRALIZADO_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="USUARIOLOCKEADOR_ACCION_INV" Table="CREADOR.T_ACCION" Type="Constraint" />
       <Exclude Name="ESTADOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="FORMACONTACTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="GRUPOASIGNADO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="SELECCIONPERSONA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
-      <Exclude Name="EVENTO_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACCION_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
+      <Exclude Name="TIPOACTIVIDAD_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAME_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAMEGENERA_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="USERNAMERELI_ACTIVIDAD_INV" Table="CREADOR.T_ACTIVIDAD" Type="Constraint" />
       <Exclude Name="ID_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Column" />
       <Exclude Name="PK_T_COMIENZO" Table="CREADOR.T_COMIENZO" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_COMIENZO_INV" Table="CREADOR.T_COMIENZO" Type="Constraint" />
-      <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERNAMESECRETARIO_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELAREAL_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FK" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="T_DEPARTAMENTO_T_USUARIO_FKV2" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
+      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERRESPONSABLE_DEPTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
       <Exclude Name="USERSECADJ_DEPTO__INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="ESCUELACONTABLE_DEPARTAMENTO_INV" Table="CREADOR.T_DEPARTAMENTO" Type="Constraint" />
-      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
-      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
       <Exclude Name="CODIGO_GIRO_EMPRESA_INVALIDO" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="TIPO_EMPRESA_INVALIDA_0331" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="SEGMENTO_LICEO_INV" Table="CREADOR.T_EMPRESA" Type="Constraint" />
+      <Exclude Name="" Table="CREADOR.T_ENCUESTA_INI_ADMISION" Type="Constraint" />
       <Exclude Name="CG_ESCUELA_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
       <Exclude Name="USERRESP_ESCU_INV" Table="CREADOR.T_ESCUELA" Type="Constraint" />
-      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
-      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="USERNAMEDECSEG_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
       <Exclude Name="PRERECIBO_PERSONA_FOREIGN" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="EMPRESACANJE_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="CONVENIO_INSCRIPTO_INV" Table="CREADOR.T_INSCRIPTO" Type="Constraint" />
+      <Exclude Name="ID_OFERTA" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Column" />
       <Exclude Name="" Table="CREADOR.T_INST_WORKFLOW_INSCRIPCION" Type="Constraint" />
-      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
       <Exclude Name="PROCESO_INSTANCIA_WORKFLOW" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="TRAMIBANDEJ_INSTANCWRKFLW_INV" Table="CREADOR.T_INSTANCIA_WORKFLOW" Type="Constraint" />
+      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="FORMACONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="LUGAR_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="GRADOPUREZA_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
-      <Exclude Name="CONTACTO_INTERES_INV" Table="CREADOR.T_INTERES" Type="Constraint" />
       <Exclude Name="GRADOINTER_INTERESPRODUCTO_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="GRADOINT_INTRESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="IDGRADOANT_INTERESPROD_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUAMOD_INTEREPRODUCT_INV" Table="CREADOR.T_INTERES_PRODUCTO" Type="Constraint" />
+      <Exclude Name="ID_MOTIVO" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="PK_T_MOTIVO_ELECCION_ADMISION" Table="CREADOR.T_MOTIVO_ELECCION_ADMISION" Type="Constraint" />
       <Exclude Name="TIPOPAQUETECOM_PAQUETE_INVALID" Table="CREADOR.T_PAQUETE" Type="Constraint" />
-      <Exclude Name="NACIONALIDAD_SAPEATYRO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="CAJA_PARAMETROS_INV" Table="CREADOR.T_PARAMETROS" Type="Constraint" />
       <Exclude Name="BUSCATRABAJO_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
-      <Exclude Name="PERSONA_TIPOOCUPACIOACTUAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="FUENTE_DATOS_PERSONA_INVALIDO" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="SEGUROSALUD_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="PERSONA_SUCURSAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="PERSONA_SUCURSALBANCO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="NACIONALIDAD_SAPEATYRO_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="EMPLEADORPERSONA_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
+      <Exclude Name="PERSONA_TIPOOCUPACIOACTUAL_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="CAUSEGREPERSONA_PERSONA_INV" Table="CREADOR.T_PERSONA" Type="Constraint" />
       <Exclude Name="REGPLANPAG_PLANPAGO_INV" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
       <Exclude Name="MONEDA_PLAN_PAGO_INVALIDO" Table="CREADOR.T_PLAN_PAGO" Type="Constraint" />
       <Exclude Name="TIPOPROCESO_PROCESO_INV" Table="CREADOR.T_PROCESO" Type="Constraint" />
       <Exclude Name="AGRUPACION_AGRUPPRODCUEST_FORE" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="CENTROGASTO_PRODUCTO_INVALIDO" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
-      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="NIVELPOSTRGRADO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
+      <Exclude Name="WEBPRODUCTO_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USERCOOACAD_PRODUCTO_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="USUARCOOADJ_PROD_INV" Table="CREADOR.T_PRODUCTO" Type="Constraint" />
       <Exclude Name="COMIENZOPRUEBA_PRUEBA_INV" Table="CREADOR.T_PRUEBA" Type="Constraint" />
+      <Exclude Name="ID_PUBLICIDAD" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="CODIGO_PERSONA" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Column" />
+      <Exclude Name="PK_T_PUBLICIDAD_ELECCION_ADMISION" Table="CREADOR.T_PUBLICIDAD_ELECCION_ADMISION" Type="Constraint" />
       <Exclude Name="TOKEN_HASH" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="IS_ACTIVE" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="FECHA_INGRESO" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="HORA_INGRESO" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="USUARIO_INGRESO" Table="CREADOR.T_REFRESH_TOKEN" Type="Column" />
       <Exclude Name="" Table="CREADOR.T_REFRESH_TOKEN" Type="Constraint" />
-      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="ESTADOORDENALTA_ORDENALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="USUARIO_SOLICITUD_ALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
-      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="TIPOACC_SOOLICITALTA_INV" Table="CREADOR.T_SOLICITUD_ALTA" Type="Constraint" />
       <Exclude Name="CALENDARIOPAGO_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
+      <Exclude Name="MONEDA_SUPRAOFERTA_INVALIDO" Table="CREADOR.T_SUPRAOFERTA" Type="Constraint" />
       <Exclude Name="FAMTIPODESC_TIPODESC_INV" Table="CREADOR.T_TIPO_DESCUENTO" Type="Constraint" />
       <Exclude Name="NIVELTITULO_TITULO_FORE" Table="CREADOR.T_TITULO" Type="Constraint" />
       <Exclude Name="NIVELPOSTGRADO_TITULO_INV" Table="CREADOR.T_TITULO" Type="Constraint" />
-      <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
-      <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="UNIDAD_TIEMPO_TIT_INVALIDA_750" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="TIPO_DIPLOMA_TIT_INVALIDO_7504" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="T_TITULO_FOREIGN1" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
+      <Exclude Name="PRODUCTOANIOMESPLAN_TITULO_INV" Table="CREADOR.T_TITULO_ORT" Type="Constraint" />
       <Exclude Name="ID_COMIENZO" Table="CREADOR.VD_ES_FRESCO_ADMISION" Type="Column" />
     </UpdateFromDatabaseExcludes>
   </ModelSettings>
