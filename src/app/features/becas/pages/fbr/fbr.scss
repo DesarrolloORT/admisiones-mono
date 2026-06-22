@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.scholarship-process__main {
+  display: grid;
+  width: 90%;
+  max-width: 1200px;
+  margin: var(--ort-sys-spacing-24) auto;
+}
