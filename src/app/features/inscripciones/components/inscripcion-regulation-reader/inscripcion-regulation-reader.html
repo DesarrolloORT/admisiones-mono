@@ -20,9 +20,11 @@
     </p>
   </section>
 
+  @if (!facade.hasAcceptedStudentRegulation()) {
   <footer class="inscription-footer">
     <button ort-primary-button type="button" (click)="facade.acceptRegulation()">
       Aceptar reglamento
     </button>
   </footer>
+  }
 </article>

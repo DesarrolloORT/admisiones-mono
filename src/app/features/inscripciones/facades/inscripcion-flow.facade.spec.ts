@@ -258,6 +258,18 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.screen()).toBe('pago');
   });
 
+  it('marks regulation as accepted when the backend says it was already signed', () => {
+    inscripcionesMock.getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '2026-06-01' })
+    );
+
+    facade = createFacade();
+
+    expect(facade.hasAcceptedStudentRegulation()).toBe(true);
+    expect(facade.regulationForm.controls.aceptaReglamento.value).toBe(true);
+    expect(facade.getSectionState('reglamento')).toBe('completa');
+  });
+
   it('hides historical survey sections when the survey is already complete', () => {
     inscripcionesMock.getInitialSurvey.mockReturnValueOnce(of(createInitialSurvey('completa')));
     facade = createFacade('encuesta-completa');
@@ -294,7 +306,7 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.identityForm.controls.vencimientoDocumento.value).toEqual(new Date(2030, 1, 4));
   });
 
-  it('requests identity preload even when the initial survey is null', () => {
+  it('requests identity preload even when the initial survey is null', async () => {
     facade = createFacade(undefined, undefined, {
       initialSurvey: { tieneDerechoEncuesta: true },
       loadFailed: false,
@@ -651,6 +663,9 @@ function createInscripcionesMock() {
       .fn()
       .mockReturnValue(of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })),
     getInitialSurvey: vi.fn().mockReturnValue(of({})),
+    getStudentRegulationAcceptance: vi
+      .fn()
+      .mockReturnValue(of({ aceptoReglamentoEstudiantil: false })),
     saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
     registerProductInterest: vi.fn().mockReturnValue(of(true)),
   };

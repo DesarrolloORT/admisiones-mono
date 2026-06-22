@@ -82,7 +82,25 @@ describe('Inscripciones', () => {
   });
 
   it('delegates initial survey loading and saving', () => {
-    const payload = { idProducto: 20, idProceso: 200 };
+    const payload = {
+      idProducto: 20,
+      idProceso: 200,
+      ultimoAnioSecundaria: null,
+      instruccionPadre: null,
+      instruccionMadre: null,
+      decisionCarrera: null,
+      decisionUniversidad: null,
+      infoOtrasUniversidadesAntes: null,
+      compartidoCon: null,
+      tieneEducacionSuperior: null,
+      nivelDecision: null,
+      asesoramientoOrt: null,
+      vistaSitioWebOrt: null,
+      vistaInstalacionesOrt: null,
+      publicidadOrt: null,
+      trabajaActualmente: null,
+      opcionesMotivosSeleccionados: null,
+    };
 
     service.getInitialSurvey().subscribe();
     service.saveInitialSurvey(payload).subscribe();
