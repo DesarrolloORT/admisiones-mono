@@ -931,6 +931,52 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarEncuestaInicial_ParcialSgiConTrabajaActualmente_ActualizaPersonaNormalizado()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "DE",
+                Documento = "123",
+                TipoPersona = "SGI"
+            };
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(900);
+
+            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
+            {
+                TrabajaActualmente = " s "
+            });
+
+            Assert.True(result.Success);
+            personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_TrabajaActualmenteInvalido_ReturnsBadRequest()
+        {
+            SetupPersonaValida();
+
+            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
+            {
+                TrabajaActualmente = "SI"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_39", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
         public void GuardarEncuestaInicial_MotivosVacio_ReemplazaBorrandoSeleccion()
         {
             SetupPersonaValida();
@@ -1012,6 +1058,38 @@ namespace UnitTesting.AppLogic.Services
                 It.IsAny<TivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaSgiSinTrabajaActualmente_QuedaTemporal()
+        {
+            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "DE",
+                Documento = "123",
+                TipoPersona = "SGI"
+            });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 10, 30)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva());
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal("TEMPORAL", encuestaAgregada!.EstadoEncuestaIniAdmision);
+            bachilleratoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
+            personaRepo.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
         [Fact]

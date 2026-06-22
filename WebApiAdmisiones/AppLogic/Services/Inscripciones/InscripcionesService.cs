@@ -257,6 +257,7 @@ namespace AppLogic.Services.Inscripciones
             }
 
             EncuestaInicialAdmisionHelper.AplicarRequestAEncuesta(encuesta, request, persona, idComienzo);
+            var actualizaTrabajaActualmente = AplicarTrabajaActualmente(persona, request);
 
             uow.BeginTransaction();
             try
@@ -267,9 +268,14 @@ namespace AppLogic.Services.Inscripciones
                 }
 
                 EncuestaInicialAdmisionHelper.AplicarListasHijas(uow, _dbConnectionContext, codigoPersona, request);
+                if (actualizaTrabajaActualmente)
+                {
+                    uow.Personas.Update(persona);
+                }
+
                 uow.Save();
 
-                var completitud = EncuestaInicialValidationHelper.ResolverCompletitud(uow, encuesta, codigoPersona, nameof(GuardarEncuestaInicial));
+                var completitud = EncuestaInicialValidationHelper.ResolverCompletitud(uow, encuesta, persona, codigoPersona, nameof(GuardarEncuestaInicial));
                 if (!completitud.Success)
                 {
                     uow.Rollback();
@@ -332,6 +338,23 @@ namespace AppLogic.Services.Inscripciones
             }
         }
 
+        private static bool AplicarTrabajaActualmente(BusinessLogic.Entities.Persona persona, GuardarEncuestaInicialRequest request)
+        {
+            if (!string.Equals(persona.TipoPersona, PersonaConstants.TipoPersonaSgi, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var trabajaActualmente = EncuestaInicialValidationHelper.NormalizarTrabajaActualmente(request.TrabajaActualmente);
+            if (trabajaActualmente == null)
+            {
+                return false;
+            }
+
+            persona.TrabajaActualmente = trabajaActualmente;
+            return true;
+        }
+
         private OperationResult<bool> SincronizarBachilleratoPersona(
             IUnitOfWork uow,
             BusinessLogic.Entities.EncuestaIniAdmision encuesta,
@@ -349,7 +372,7 @@ namespace AppLogic.Services.Inscripciones
             }
 
             var datosBachillerato = datos.Data!;
-            var fechaActual = DateTime.Now;
+            var fechaActual = _dbConnectionContext.CurrentDateTime();
             var existente = uow.BachilleratoPersonas.GetByKey(codigoPersona);
             if (existente == null)
             {

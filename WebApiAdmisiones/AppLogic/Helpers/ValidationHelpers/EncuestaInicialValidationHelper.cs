@@ -8,6 +8,9 @@ namespace AppLogic.Helpers.ValidationHelpers
 {
     public static class EncuestaInicialValidationHelper
     {
+        private const string TrabajaActualmenteSi = "S";
+        private const string TrabajaActualmenteNo = "N";
+
         private sealed record DatosAcademicosEncuesta(
             long? CodigoInstitucionBac,
             string? NombreInstitucion,
@@ -22,6 +25,11 @@ namespace AppLogic.Helpers.ValidationHelpers
             if (request == null)
             {
                 return OperationResult<bool>.IsFailed("INS_EI_02", methodName, "Request invalido.", 400);
+            }
+
+            if (!EsTrabajaActualmenteONulo(request.TrabajaActualmente))
+            {
+                return OperationResult<bool>.IsFailed("INS_EI_39", methodName, "Debe indicar si trabaja actualmente.", 400);
             }
 
             if (request.IdProducto.HasValue)
@@ -95,6 +103,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         public static OperationResult<bool> ResolverCompletitud(
             IUnitOfWork uow,
             EncuestaIniAdmision encuesta,
+            Persona persona,
             long codigoPersona,
             string methodName)
         {
@@ -202,7 +211,17 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
+            if (EsPersonaSgi(persona) && !EsTrabajaActualmenteValido(persona.TrabajaActualmente))
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
             return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        public static string? NormalizarTrabajaActualmente(string? valor)
+        {
+            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
         }
 
         public static OperationResult<long> ObtenerIdComienzoValido(
@@ -459,6 +478,23 @@ namespace AppLogic.Helpers.ValidationHelpers
             return normalizado == null
                 || normalizado == CommonConstants.Booleanos.Si
                 || normalizado == CommonConstants.Booleanos.No;
+        }
+
+        private static bool EsTrabajaActualmenteONulo(string? valor)
+        {
+            var normalizado = NormalizarTrabajaActualmente(valor);
+            return normalizado == null || EsTrabajaActualmenteValido(normalizado);
+        }
+
+        private static bool EsTrabajaActualmenteValido(string? valor)
+        {
+            var normalizado = NormalizarTrabajaActualmente(valor);
+            return normalizado == TrabajaActualmenteSi || normalizado == TrabajaActualmenteNo;
+        }
+
+        private static bool EsPersonaSgi(Persona persona)
+        {
+            return string.Equals(persona.TipoPersona, PersonaConstants.TipoPersonaSgi, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string? NormalizarSiNo(string? valor)
