@@ -1,4 +1,4 @@
-/* Inscription styles are global because they override ORT lib classes (ort-stepper, ort-radio)
+/* Inscription styles are global because they override ORT lib classes (ort-stepper)
    rendered outside Angular component encapsulation. */
 
 app-inscripcion-shell .inscription-progress .ort-stepper-content {
@@ -12,51 +12,4 @@ app-inscripcion-shell
   .ort-step-header-disabled
   :is(.ort-step-label, .ort-step-supporting-label) {
   color: var(--ort-sys-base-text-color-body);
-}
-
-.inscription-radio-option.ort-radio-button {
-  gap: var(--ort-sys-spacing-8);
-  align-items: center;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: var(--ort-sys-size-56, 3.5rem);
-  padding: var(--ort-sys-spacing-4) var(--ort-sys-spacing-8);
-  border: var(--ort-sys-border-width-1) solid var(--ort-sys-base-border-subtle-color);
-  border-radius: var(--ort-sys-border-radius-8);
-  background: var(--ort-sys-base-surface-background);
-}
-
-.inscription-radio-option.ort-radio-button .ort-radio-container {
-  order: 2;
-}
-
-.inscription-radio-option.ort-radio-button .ort-radio-label {
-  align-self: center;
-  order: 1;
-  padding-top: 0;
-}
-
-.inscription-radio-option.ort-radio-button.ort-radio-checked {
-  border-color: var(--ort-sys-base-border-primary-color);
-  background: var(--ort-sys-base-surface-subtle-primary-background);
-}
-
-.inscription-radio-option.ort-radio-button:has(.ort-radio-input:focus-visible) {
-  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
-  outline-offset: 2px;
-}
-
-@media (width >= 52.5rem) {
-  app-inscripcion-academic-step
-    .inscription-academic-radio-option.ort-radio-card-indicator-right
-    .ort-radio-card-container {
-    padding: var(--ort-sys-radio-card-padding-block) var(--ort-sys-radio-card-padding-inline-md)
-      var(--ort-sys-radio-card-padding-block) var(--ort-sys-radio-card-padding-inline-sm);
-  }
-
-  app-inscripcion-academic-step
-    .inscription-academic-radio-option.ort-radio-card-indicator-right
-    .ort-radio-card-indicator {
-    order: -1;
-  }
 }
