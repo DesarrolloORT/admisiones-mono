@@ -60,7 +60,15 @@ describe('Inscripcion', () => {
         {
           provide: Inscripciones,
           useValue: {
+            confirmPreEnrollment: vi.fn().mockReturnValue(of({ confirmada: true })),
+            getIdentityPreload: vi
+              .fn()
+              .mockReturnValue(
+                of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })
+              ),
+            getInitialSurvey: vi.fn().mockReturnValue(of({ tieneDerechoEncuesta: true })),
             registerProductInterest: vi.fn().mockReturnValue(of(true)),
+            saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
           },
         },
       ],
@@ -87,7 +95,7 @@ describe('Inscripcion', () => {
 
     facade.screen.set('pago');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Confirmá tu inscripción');
+    expect(fixture.nativeElement.textContent).toContain('Confirmación');
 
     facade.screen.set('inscripcion-en-proceso');
     fixture.detectChanges();

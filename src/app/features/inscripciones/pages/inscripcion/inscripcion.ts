@@ -12,7 +12,6 @@ import { InscripcionReservationStep } from '../../components/inscripcion-reserva
 import { InscripcionShell } from '../../components/inscripcion-shell/inscripcion-shell';
 import { InscripcionSuccessStep } from '../../components/inscripcion-success-step/inscripcion-success-step';
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
-import { InscripcionDraft } from '../../services/inscripcion-draft';
 
 @Component({
   selector: 'app-inscripcion',
@@ -30,7 +29,7 @@ import { InscripcionDraft } from '../../services/inscripcion-draft';
     OrtSpinnerModule,
     RouterLink,
   ],
-  providers: [InscripcionDraft, InscripcionFlowFacade],
+  providers: [InscripcionFlowFacade],
   templateUrl: './inscripcion.html',
   styleUrl: './inscripcion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +41,7 @@ export class Inscripcion {
   constructor() {
     effect(() => {
       const screen = this.facade.screen();
+      this.facade.activeSection();
       if (screen === 'confirmacion-pago') return;
 
       setTimeout(() => this.focusCurrentScreen());

@@ -7,7 +7,28 @@
   [steps]="facade.stepperSteps()"
   (back)="facade.back()"
   (closeFlow)="facade.requestExit()">
-  @if (facade.screen() === 'pago' || facade.screen() === 'confirmacion-pago') {
+  @if (facade.loadingSurveyState()) {
+  <section aria-labelledby="loading-survey-title" class="inscription-screen inscription-terminal">
+    <ort-spinner aria-label="Cargando estado de la inscripción" />
+    <h1 id="loading-survey-title">Cargando tu inscripción</h1>
+    <p>Estamos consultando el estado de tu encuesta inicial.</p>
+  </section>
+  } @else if (facade.surveyLoadError()) {
+  <section aria-labelledby="survey-error-title" class="inscription-screen inscription-terminal">
+    <span
+      aria-hidden="true"
+      class="inscription-success-heading__icon inscription-error-heading__icon">
+      <ort-icon>error_outline</ort-icon>
+    </span>
+    <h1 id="survey-error-title">No pudimos cargar tu inscripción</h1>
+    <p role="alert">{{ facade.surveyLoadError() }}</p>
+    <footer class="inscription-footer">
+      <button ort-primary-button type="button" (click)="facade.retryInitialSurvey()">
+        Intentar nuevamente
+      </button>
+    </footer>
+  </section>
+  } @else if (facade.screen() === 'pago' || facade.screen() === 'confirmacion-pago') {
   <app-inscripcion-confirmation-step />
   } @else { @switch (facade.screen()) { @case ('propuesta') {
   <app-inscripcion-academic-step />
@@ -47,6 +68,9 @@
   [open]="facade.exitConfirmationOpen()"
   (closed)="facade.cancelExit()">
   <p>Los archivos de identidad deberán adjuntarse nuevamente cuando retomes el proceso.</p>
+  @if (facade.surveySaveError()) {
+  <p class="inscription-dialog-error" role="alert">{{ facade.surveySaveError() }}</p>
+  }
   <div inscripcionDialogActions>
     <button
       data-dialog-initial-focus
@@ -55,6 +79,12 @@
       (click)="facade.cancelExit()">
       Continuar aquí
     </button>
-    <button ort-primary-button type="button" (click)="facade.confirmExit()">Guardar y salir</button>
+    <button
+      ort-primary-button
+      type="button"
+      [disabled]="facade.savingSurvey()"
+      (click)="facade.confirmExit()">
+      {{ facade.savingSurvey() ? 'Guardando…' : 'Guardar y salir' }}
+    </button>
   </div>
 </app-inscripcion-dialog>
