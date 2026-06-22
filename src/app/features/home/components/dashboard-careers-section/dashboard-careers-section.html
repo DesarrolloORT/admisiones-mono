@@ -4,14 +4,14 @@
   @if (inscripciones().length > 0) {
   <div class="section-header">
     <h3 class="section-header__title">Mis carreras</h3>
-    <button
+    <a
       aria-label="Inscribirme a carrera"
       class="section-header__add"
       ort-icon-button
-      type="button"
-      variant="tonal">
+      variant="tonal"
+      [routerLink]="'/inscripciones'">
       <ort-icon name="add" />
-    </button>
+    </a>
   </div>
   } @if (inscripciones().length === 0) {
   <div class="mis-carreras__empty">
