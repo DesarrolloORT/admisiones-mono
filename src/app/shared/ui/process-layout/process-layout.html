@@ -1,7 +1,10 @@
 <div class="process-layout" [class.process-layout--without-stepper]="!showStepper()">
   <div class="process-layout__top">
     <header class="process-layout__header">
-      <div class="process-layout__header-content">
+      <div
+        class="process-layout__header-content"
+        [class.process-layout__header-content--no-back]="!showBack()"
+        [class.process-layout__header-content--no-close]="!closeVisible()">
         <div class="process-layout__header-action">
           @if (showBack()) {
           <button
@@ -25,15 +28,77 @@
           <span class="process-layout__brand-name">{{ brandName() }}</span>
         </div>
 
-        <div class="process-layout__header-action">
+        <div class="process-layout__header-action process-layout__header-action--end">
           @if (closeVisible()) {
           <button
-            class="process-layout__icon-button"
+            class="process-layout__icon-button process-layout__close-button"
             type="button"
             [attr.aria-label]="closeLabel()"
             (click)="closeFlow.emit()">
             <ort-icon aria-hidden="true">close</ort-icon>
           </button>
+
+          <div class="process-layout__profile">
+            <button
+              #profileButton
+              aria-haspopup="dialog"
+              class="process-layout__avatar"
+              type="button"
+              [attr.aria-controls]="'process-profile-menu'"
+              [attr.aria-expanded]="profileMenuOpen()"
+              [attr.aria-label]="
+        profileMenuOpen() ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'
+      "
+              (click)="toggleProfileMenu()">
+              <ort-icon aria-hidden="true">person</ort-icon>
+            </button>
+
+            @if (profileMenuOpen()) {
+            <div
+              aria-labelledby="process-profile-menu-title"
+              aria-modal="true"
+              cdkTrapFocus
+              class="process-layout__profile-menu"
+              id="process-profile-menu"
+              role="dialog"
+              [cdkTrapFocusAutoCapture]="true"
+              (keydown.escape)="closeProfileMenu(true)">
+              <div class="process-layout__profile-menu-sheet" tabindex="-1">
+                <h2 class="process-layout__profile-menu-title" id="process-profile-menu-title">
+                  Menú de usuario
+                </h2>
+
+                <nav aria-label="Opciones de usuario" class="process-layout__profile-menu-list">
+                  <a
+                    #firstProfileMenuItem
+                    cdkFocusInitial
+                    class="process-layout__profile-menu-item"
+                    routerLink="/inicio/datos-personales"
+                    (click)="closeProfileMenu()">
+                    <ort-icon aria-hidden="true">person</ort-icon>
+                    Editar perfil
+                  </a>
+
+                  <a
+                    class="process-layout__profile-menu-item"
+                    routerLink="/inicio/cambiar-contrasena"
+                    (click)="closeProfileMenu()">
+                    <ort-icon aria-hidden="true">lock</ort-icon>
+                    Cambiar contraseña
+                  </a>
+
+                  <button
+                    class="process-layout__profile-menu-item"
+                    type="button"
+                    (click)="logout()">
+                    <ort-icon aria-hidden="true">logout</ort-icon>
+                    Cerrar sesión
+                  </button>
+                </nav>
+              </div>
+            </div>
+            }
+          </div>
           }
         </div>
       </div>
@@ -70,6 +135,9 @@
           [showProgressIndicator]="false"
           [steps]="steps()"
           [subtitle]="stepperSubtitle()" />
+        <button class="process-layout__exit" ort-button type="button" (click)="closeFlow.emit()">
+          Salir del proceso
+        </button>
       </div>
     </aside>
     }
