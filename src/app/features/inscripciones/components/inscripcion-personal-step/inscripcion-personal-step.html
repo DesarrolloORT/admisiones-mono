@@ -280,6 +280,42 @@
           </div>
         </ort-accordion-body>
       </ort-accordion-item>
+      } @if (facade.visibleSections().includes('situacion-laboral')) {
+      <ort-accordion-item
+        class="inscription-accordion-item"
+        [class.inscription-accordion-item--complete]="
+          facade.getSectionState('situacion-laboral') === 'completa'
+        "
+        [expanded]="facade.activeSection() === 'situacion-laboral'"
+        (opened)="facade.openSection('situacion-laboral')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon
+              aria-hidden="true"
+              class="inscription-accordion__state-icon"
+              ortAccordionTitleLeadingIcon>
+              {{ facade.getSectionState('situacion-laboral') === 'completa' ? 'check_circle' :
+              'business_center' }}
+            </ort-icon>
+            Situación laboral
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <div class="inscription-accordion__content" [formGroup]="facade.workForm">
+            <ort-radio-group
+              class="inscription-choice-list"
+              formControlName="situacionLaboral"
+              legend="¿Trabajás actualmente?"
+              name="situacionLaboral"
+              orientation="vertical"
+              [required]="true">
+              @for (option of facade.workStatusOptions; track option.value) {
+              <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
+              }
+            </ort-radio-group>
+          </div>
+        </ort-accordion-body>
+      </ort-accordion-item>
       }
 
       <ort-accordion-item
