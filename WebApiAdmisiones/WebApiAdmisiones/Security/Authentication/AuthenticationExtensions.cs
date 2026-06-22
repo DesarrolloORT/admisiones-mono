@@ -11,7 +11,7 @@ namespace WebApiAdmisiones.Security.Authentication
     /// </summary>
     public static class AuthenticationExtensions
     {
-        private const string IssuerAdmisiones = "https://webapiadmisiones.ort.edu.uy";
+        private const string IssuerAdmisiones = "https://admisiones.ort.edu.uy";
 
         /// <summary>
         /// Agrega y configura la autenticación JWT Bearer al contenedor de servicios.

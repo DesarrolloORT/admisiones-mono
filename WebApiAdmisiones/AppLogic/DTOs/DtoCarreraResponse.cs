@@ -28,7 +28,7 @@ namespace AppLogic.DTOs
             return new DtoCarreraResponse
             {
                 IdProducto = carrera.IdProducto,
-                NombreProducto = carrera.NombreProducto,
+                NombreProducto = carrera.NombreWebProducto,
                 IdNivelProducto = carrera.IdNivelProducto,
                 NombreNivelProducto = carrera.NivelProducto?.NombreNivelProducto
             };
