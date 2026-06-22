@@ -13,6 +13,7 @@ namespace AppLogic.DTOs
         public decimal SeniaInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
         public ResumenInscripcionDto Resumen { get; set; } = new();
+        public EstadoCuentaDto? EstadoCuenta { get; set; }
     }
 
     public class ResumenInscripcionDto
@@ -23,5 +24,10 @@ namespace AppLogic.DTOs
         public string? Comienzo { get; set; }
         public long IdTurno { get; set; }
         public string? Turno { get; set; }
+    }
+
+    public class EstadoCuentaDto
+    {
+        public decimal SaldoActual { get; set; }
     }
 }

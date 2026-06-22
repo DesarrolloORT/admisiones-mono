@@ -559,7 +559,19 @@ namespace AppLogic.Services.Inscripciones
 
             var apiRequest = ConfirmarPreInscripcionHelper.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
-            return ConfirmarPreInscripcionHelper.MapearResultadoApi(apiResult, contexto, methodName);
+            var confirmacionResult = ConfirmarPreInscripcionHelper.MapearResultadoApi(apiResult, contexto, methodName);
+            if (!confirmacionResult.Success)
+            {
+                return confirmacionResult;
+            }
+
+            var estadoCuentaResult = await _inscripcionesyPagosApiClient.ObtenerCtaCteAsync();
+            if (estadoCuentaResult.Success)
+            {
+                confirmacionResult.Data!.EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(estadoCuentaResult.Data);
+            }
+
+            return confirmacionResult;
         }
 
         #endregion PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN

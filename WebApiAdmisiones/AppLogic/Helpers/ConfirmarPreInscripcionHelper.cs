@@ -187,6 +187,19 @@ namespace AppLogic.Helpers
                 methodName);
         }
 
+        public static EstadoCuentaDto? MapearEstadoCuenta(CtaCteResponse? source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            return new EstadoCuentaDto
+            {
+                SaldoActual = source.SaldoActual
+            };
+        }
+
         private static OperationResult<ContextoConfirmacionPreInscripcion> ResolverContextoConEncuestaAdmisionDefinitiva(
             IUnitOfWork uow,
             long codigoPersona,

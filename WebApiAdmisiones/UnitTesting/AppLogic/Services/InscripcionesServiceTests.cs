@@ -194,8 +194,8 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_WithValidData_CreatesAcceptanceAndReturnsApiResponse()
         {
             AceptacionReglamentoEst? aceptacionAgregada = null;
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
                 {
                   "confirmada": true,
                   "idInscripcion": 77,
@@ -210,7 +210,23 @@ namespace UnitTesting.AppLogic.Services
                     "turno": "Nocturno"
                   }
                 }
-                """));
+                """,
+                """
+                {
+                  "saldoActual": 3210.50,
+                  "saldoVencido": 100,
+                  "saldoAVencer": 200,
+                  "movimientos": [
+                    {
+                      "fecha": "2026-07-01T00:00:00",
+                      "concepto": "Inscripcion",
+                      "debe": 3210.50,
+                      "haber": 0,
+                      "saldo": 3210.50
+                    }
+                  ]
+                }
+                """);
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
@@ -242,26 +258,33 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(77, result.Data.IdInscripcion);
             Assert.Equal(2500, result.Data.SeniaInscripcion);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
+            Assert.NotNull(result.Data.EstadoCuenta);
+            Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(999, aceptacionAgregada!.IdAceptacionReglamentoEst);
-            var requestApi = Assert.Single(handler.Requests);
+            Assert.Equal(2, handler.Requests.Count);
+            var requestApi = handler.Requests[0];
             Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
             Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
             Assert.Contains("\"idTurno\":1", requestApi.Body);
+            var requestEstadoCuenta = handler.Requests[1];
+            Assert.Equal(HttpMethod.Get, requestEstadoCuenta.Method);
+            Assert.Contains("Pagos/CtaCte", requestEstadoCuenta.RequestUri);
+            Assert.Contains("estado=SALDO_ACTUAL_Y_MOVIMIENTOS", requestEstadoCuenta.RequestUri);
         }
 
         [Fact]
         public async Task ConfirmarPreInscripcion_WithDefinitiveDocuments_Confirms()
         {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
                 {
                   "confirmada": true,
                   "idInscripcion": 78
                 }
-                """));
+                """);
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
@@ -291,19 +314,68 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(78, result.Data.IdInscripcion);
+            Assert.NotNull(result.Data.EstadoCuenta);
+            Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenEstadoCuentaFails_ReturnsConfirmationWithoutEstadoCuenta()
+        {
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
+                {
+                  "confirmada": true,
+                  "idInscripcion": 79
+                }
+                """,
+                "error",
+                HttpStatusCode.InternalServerError);
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosDefinitivosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst
+                {
+                    IdAceptacionReglamentoEst = 999,
+                    CodigoPersona = 123,
+                    IdProducto = 20,
+                    IdComienzo = 40
+                });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(79, result.Data.IdInscripcion);
+            Assert.Null(result.Data.EstadoCuenta);
+            Assert.Equal(2, handler.Requests.Count);
+            Assert.Contains("ConfirmarPreInscripcion", handler.Requests[0].RequestUri);
+            Assert.Contains("Pagos/CtaCte", handler.Requests[1].RequestUri);
         }
 
         [Fact]
         public async Task ConfirmarPreInscripcion_WithEncuestaIniHistorica_ConfirmsWithoutDefinitiveEncuestaAdmision()
         {
             AceptacionReglamentoEst? aceptacionAgregada = null;
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
                 {
                   "success": true,
                   "seniaInscripcion": 1500
                 }
-                """));
+                """);
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
@@ -350,8 +422,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(20, aceptacionAgregada!.IdProducto);
             Assert.Equal(40, aceptacionAgregada.IdComienzo);
+            Assert.NotNull(result.Data.EstadoCuenta);
+            Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
 
-            var requestApi = Assert.Single(handler.Requests);
+            Assert.Equal(2, handler.Requests.Count);
+            var requestApi = handler.Requests[0];
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
             Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
@@ -1523,6 +1598,36 @@ namespace UnitTesting.AppLogic.Services
                 IdComienzo = 40,
                 FechaVtoAdmision = DateTime.Today.AddDays(10)
             };
+        }
+
+        private static StubHttpMessageHandler ConfirmacionConEstadoCuentaHandler(string confirmacionBody)
+        {
+            return ConfirmacionConEstadoCuentaHandler(
+                confirmacionBody,
+                """
+                {
+                  "saldoActual": 3210.50,
+                  "saldoVencido": 100,
+                  "saldoAVencer": 200,
+                  "movimientos": []
+                }
+                """);
+        }
+
+        private static StubHttpMessageHandler ConfirmacionConEstadoCuentaHandler(
+            string confirmacionBody,
+            string estadoCuentaBody,
+            HttpStatusCode estadoCuentaStatusCode = HttpStatusCode.OK)
+        {
+            return new StubHttpMessageHandler(request =>
+            {
+                if (request.RequestUri?.ToString().Contains("Pagos/CtaCte", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    return JsonResponse(estadoCuentaStatusCode, estadoCuentaBody);
+                }
+
+                return JsonResponse(HttpStatusCode.OK, confirmacionBody);
+            });
         }
 
         private InscripcionesService CrearServiceConApi(HttpMessageHandler handler)
