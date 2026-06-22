@@ -32,6 +32,58 @@ namespace AppLogic.Services.Tivenos
             return OperationResult<bool>.Ok(true, methodName);
         }
 
+        public OperationResult<bool> EncolarAltaDatosBachillerato(
+            IUnitOfWork uow,
+            TivenosBachilleratoRequest request,
+            int idTivenos,
+            string methodName)
+        {
+            ArgumentNullException.ThrowIfNull(uow);
+            ArgumentNullException.ThrowIfNull(request);
+
+            if (!DebeEncolar(uow, request.CodigoPersona))
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            var envio = CrearEnvioBachillerato(
+                request,
+                "Alta",
+                "AltaBachilleratoPersona",
+                "AltaDatosBachillerato");
+            envio.IdEnvioParaTivenos = idTivenos;
+
+            uow.EnvioParaTivenos.Add(envio);
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        public OperationResult<bool> EncolarModificacionDatosBachillerato(
+            IUnitOfWork uow,
+            TivenosBachilleratoRequest request,
+            int idTivenos,
+            string methodName)
+        {
+            ArgumentNullException.ThrowIfNull(uow);
+            ArgumentNullException.ThrowIfNull(request);
+
+            if (!DebeEncolar(uow, request.CodigoPersona))
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
+            var envio = CrearEnvioBachillerato(
+                request,
+                "Modificacion",
+                "ModificacionBachilleratoPersona",
+                "ModificacionDatosBachillerato");
+            envio.IdEnvioParaTivenos = idTivenos;
+
+            uow.EnvioParaTivenos.Add(envio);
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
         private static bool DebeEncolar(IUnitOfWork uow, long codigoPersona)
         {
             var seLiberoTivenos = uow.Parametros.ObtenerSeLiberoTivenos();
@@ -60,6 +112,25 @@ namespace AppLogic.Services.Tivenos
                 InteresProdGradoInteresId = 4,
                 MotivodesinteresId = null,
                 MotivodesinteresNombre = string.Empty,
+            };
+        }
+
+        private static EnvioParaTiveno CrearEnvioBachillerato(
+            TivenosBachilleratoRequest request,
+            string tipoProcesoLlamador,
+            string disparador,
+            string metodo)
+        {
+            return new EnvioParaTiveno
+            {
+                Origen = "ADMISIONES",
+                TipoProcesoLlamador = tipoProcesoLlamador,
+                Disparador = disparador,
+                Modulo = "Bachillerato",
+                Metodo = metodo,
+                Status = "Nuevo",
+                CodigoSape = request.CodigoPersona,
+                BachilleratoOrientacionId = request.CodigoOrientacion,
             };
         }
     }

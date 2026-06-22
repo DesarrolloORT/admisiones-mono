@@ -1,4 +1,5 @@
 using AppLogic.DTOs;
+using AppLogic.DevartDTOs;
 using AppLogic.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -75,6 +76,28 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             _personaServiceMock.Verify(s => s.ActualizarDatosPersona(123, request), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerMisInscripciones_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var inscripciones = new List<DtoVdInscripcionesFresco1y2Devart>
+            {
+                new() { CodigoPersona = 123, IdProducto = 10 }
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerMisInscripciones(123))
+                .Returns(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(
+                    inscripciones,
+                    nameof(IPersonaService.ObtenerMisInscripciones)));
+
+            var response = _controller.ObtenerMisInscripciones();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ObtenerMisInscripciones(123), Times.Once);
         }
 
         [Fact]

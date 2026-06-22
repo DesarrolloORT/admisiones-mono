@@ -132,6 +132,68 @@ namespace UnitTesting.AppLogic.Services
                 e.OrigenLlamador == "SIS")), Times.Once);
         }
 
+        [Fact]
+        public void EncolarAltaDatosBachillerato_ConTivenosLiberado_EncolaPayloadLegacy()
+        {
+            _parametroRepoMock
+                .Setup(r => r.ObtenerSeLiberoTivenos())
+                .Returns("SI");
+
+            var result = _service.EncolarAltaDatosBachillerato(
+                _uowMock.Object,
+                new TivenosBachilleratoRequest
+                {
+                    CodigoPersona = 123,
+                    CodigoOrientacion = 1304
+                },
+                888,
+                "Test");
+
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+            _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
+                e.IdEnvioParaTivenos == 888 &&
+                e.Origen == "ADMISIONES" &&
+                e.TipoProcesoLlamador == "Alta" &&
+                e.Disparador == "AltaBachilleratoPersona" &&
+                e.Modulo == "Bachillerato" &&
+                e.Metodo == "AltaDatosBachillerato" &&
+                e.Status == "Nuevo" &&
+                e.CodigoSape == 123 &&
+                e.BachilleratoOrientacionId == 1304)), Times.Once);
+        }
+
+        [Fact]
+        public void EncolarModificacionDatosBachillerato_ConTivenosLiberado_EncolaPayloadLegacy()
+        {
+            _parametroRepoMock
+                .Setup(r => r.ObtenerSeLiberoTivenos())
+                .Returns("SI");
+
+            var result = _service.EncolarModificacionDatosBachillerato(
+                _uowMock.Object,
+                new TivenosBachilleratoRequest
+                {
+                    CodigoPersona = 123,
+                    CodigoOrientacion = null
+                },
+                889,
+                "Test");
+
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+            _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
+                e.IdEnvioParaTivenos == 889 &&
+                e.Origen == "ADMISIONES" &&
+                e.TipoProcesoLlamador == "Modificacion" &&
+                e.Disparador == "ModificacionBachilleratoPersona" &&
+                e.Modulo == "Bachillerato" &&
+                e.Metodo == "ModificacionDatosBachillerato" &&
+                e.Status == "Nuevo" &&
+                e.CodigoSape == 123 &&
+                e.BachilleratoOrientacionId == null)), Times.Once);
+        }
+
         private static TivenosAltaInteresRequest RequestBase(TivenosAltaInteresOperacion operacion) => new()
         {
             CodigoPersona = 123,

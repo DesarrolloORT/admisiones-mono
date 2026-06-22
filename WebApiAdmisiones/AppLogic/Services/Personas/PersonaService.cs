@@ -102,7 +102,15 @@ namespace AppLogic.Services.Personas
         {
 
             using var uow = uowFactory.Create();
-            var dtos = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona).ToDtos();
+            var dtos = uow.VdInscripcionesFresco1y2s
+                .GetInscripcionesFrescoHabilitadas(codigoPersona)
+                .ToDtos();
+
+            var inscripciones3y4 = uow.VdInscripcionesFresco3y4s
+                .GetInscripcionesFrescoHabilitadas(codigoPersona)
+                .Select(MapearInscripcionFresco3y4);
+
+            dtos.AddRange(inscripciones3y4);
 
             return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
         }
@@ -431,6 +439,29 @@ namespace AppLogic.Services.Personas
                 Mail = mail,
                 VerificacionMail = mail,
                 IdentidadRestringida = identidadRestringida
+            };
+        }
+
+        private static DtoVdInscripcionesFresco1y2Devart MapearInscripcionFresco3y4(VdInscripcionesFresco3y4 source)
+        {
+            return new DtoVdInscripcionesFresco1y2Devart
+            {
+                CodigoPersona = source.CodigoPersona,
+                FechaInscripcion = source.FechaInscripcion,
+                UsuarioInscripcion = source.UsuarioInscripcion,
+                IdTurno = source.IdTurno,
+                IdProducto = source.IdProducto,
+                IdComienzo = source.IdComienzo,
+                FechaInicioComienzo = source.FechaInicioComienzo,
+                NombreExtensoProducto = source.NombreExtensoProducto,
+                IdNivelProducto = source.IdNivelProducto,
+                NombreComienzo = source.NombreComienzo,
+                NombreTurno = source.NombreTurno,
+                IdProceso = source.IdProceso,
+                FechaReferencia = source.FechaReferencia,
+                IdInscripto = source.IdInscripto,
+                EstadoInscripcion = source.EstadoInscripcion,
+                VengoDe = source.VengoDe
             };
         }
 
