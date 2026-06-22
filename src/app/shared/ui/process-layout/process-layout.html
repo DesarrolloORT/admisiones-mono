@@ -1,7 +1,10 @@
 <div class="process-layout" [class.process-layout--without-stepper]="!showStepper()">
   <div class="process-layout__top">
     <header class="process-layout__header">
-      <div class="process-layout__header-content">
+      <div
+        class="process-layout__header-content"
+        [class.process-layout__header-content--no-back]="!showBack()"
+        [class.process-layout__header-content--no-close]="!closeVisible()">
         <div class="process-layout__header-action">
           @if (showBack()) {
           <button
