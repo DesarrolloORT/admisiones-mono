@@ -44,8 +44,8 @@
     "@angular/platform-browser": "^21.2.4",
     "@angular/platform-browser-dynamic": "^21.2.4",
     "@angular/router": "^21.2.4",
-    "@desarrolloort/components": "^2.1.0-rc.21",
-    "@desarrolloort/design-system": "^1.2.0-rc.21",
+    "@desarrolloort/components": "^2.1.0-rc.22",
+    "@desarrolloort/design-system": "^1.2.0-rc.22",
     "@desarrolloort/ngx-utils": "^2.2.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "moment": "^2.30.1",
@@ -115,4 +115,3 @@
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
-
