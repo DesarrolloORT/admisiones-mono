@@ -5,6 +5,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 
 export interface MockApiOptions {
   initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
+  identityPreload?: 'none' | 'complete';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -102,6 +103,40 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, initialSurveyCatalogs());
     }
 
+    if (path === '/Persona/Documento' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.identityPreload === 'complete'
+          ? {
+              frente: {
+                nombreArchivo: 'documento-frente.png',
+                archivo:
+                  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+              },
+              dorso: {
+                nombreArchivo: 'documento-dorso.png',
+                archivo:
+                  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+              },
+              fechaVencimiento: '2030-02-04',
+            }
+          : {}
+      );
+    }
+
+    if (path === '/Persona/Foto' && request.method() === 'GET') {
+      return route.fulfill({
+        contentType: 'image/png',
+        headers: corsHeaders(route),
+        body:
+          options.identityPreload === 'complete'
+            ? Buffer.from(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+                'base64'
+              )
+            : Buffer.alloc(0),
+      });
+    }
     if (path === '/Persona/DatosPersona' && request.method() === 'GET') {
       return fulfillOperation(route, profileData());
     }

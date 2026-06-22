@@ -134,6 +134,21 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByText('Buscá Universidad ORT Uruguay')).toBeVisible();
   });
 
+  test('precarga documento y foto al llegar a verificar identidad @regression', async ({
+    page,
+  }) => {
+    await setup(page, 'complete', 'complete');
+    const documentRequests = collectGetRequests(page, '/Persona/Documento');
+    const photoRequests = collectGetRequests(page, '/Persona/Foto');
+    const inscription = new InscripcionPage(page);
+
+    await inscription.goto();
+    await expect(page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
+    await inscription.continueWithPreloadedIdentity();
+
+    expect(documentRequests).toHaveLength(1);
+    expect(photoRequests).toHaveLength(1);
+  });
   test('muestra el resultado en proceso @regression', async ({ page }) => {
     await setup(page, 'complete');
     const inscription = new InscripcionPage(page);
@@ -148,8 +163,12 @@ test.describe('Inscripción inicial', () => {
   });
 });
 
-async function setup(page: Page, initialSurvey: MockApiOptions['initialSurvey']): Promise<void> {
-  await mockApi(page, { initialSurvey });
+async function setup(
+  page: Page,
+  initialSurvey: MockApiOptions['initialSurvey'],
+  identityPreload: MockApiOptions['identityPreload'] = 'none'
+): Promise<void> {
+  await mockApi(page, { initialSurvey, identityPreload });
   await addAuthenticatedSession(page);
 }
 
@@ -165,6 +184,16 @@ function collectPostRequests(page: Page, path: string): Request[] {
   return requests;
 }
 
+function collectGetRequests(page: Page, path: string): Request[] {
+  const requests: Request[] = [];
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (request.method() === 'GET' && decodeURIComponent(url.pathname) === path) {
+      requests.push(request);
+    }
+  });
+  return requests;
+}
 function isPostTo(request: Request, path: string): boolean {
   const url = new URL(request.url());
   return request.method() === 'POST' && decodeURIComponent(url.pathname) === path;

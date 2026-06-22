@@ -113,6 +113,15 @@ export class InscripcionPage {
     await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
   }
 
+  public async continueWithPreloadedIdentity(): Promise<void> {
+    await expect(this.page.getByText('documento-frente.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('documento-dorso.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('foto-persona.jpg', { exact: true })).toBeVisible();
+    await expect(this.page.getByRole('textbox', { name: 'Vencimiento' })).toHaveValue('04/02/2030');
+
+    await this.continue();
+    await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
+  }
   public async acceptRegulation(): Promise<void> {
     await this.page.getByRole('button', { name: 'Ver reglamento' }).click();
     await expect(this.page.getByRole('heading', { name: 'Reglamento estudiantil' })).toBeVisible();
