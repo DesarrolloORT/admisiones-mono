@@ -5,6 +5,7 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtRadioModule,
+  OrtSelectModule,
 } from '@desarrolloort/components';
 
 import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
@@ -18,10 +19,11 @@ import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
     OrtFormFieldModule,
     OrtIconModule,
     OrtRadioModule,
+    OrtSelectModule,
     ReactiveFormsModule,
   ],
   templateUrl: './inscripcion-confirmation-step.html',
-  styleUrl: '../../pages/inscripcion/inscripcion.scss',
+  styleUrls: ['../../pages/inscripcion/inscripcion.scss', './inscripcion-confirmation-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionConfirmationStep {

@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtAccordionModule,
   OrtButtonModule,
   OrtCheckboxModule,
   OrtDatePickerModule,
-  OrtFileUploaderModule,
+  OrtFileUploader,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
@@ -22,7 +22,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
     OrtButtonModule,
     OrtCheckboxModule,
     OrtDatePickerModule,
-    OrtFileUploaderModule,
+    forwardRef(() => OrtFileUploader),
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,

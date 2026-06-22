@@ -8,7 +8,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   selector: 'app-inscripcion-reservation-step',
   imports: [OrtButtonModule, OrtIconModule, RouterLink],
   templateUrl: './inscripcion-reservation-step.html',
-  styleUrl: '../../pages/inscripcion/inscripcion.scss',
+  styleUrls: ['../../pages/inscripcion/inscripcion.scss', '../inscripcion-result-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionReservationStep {

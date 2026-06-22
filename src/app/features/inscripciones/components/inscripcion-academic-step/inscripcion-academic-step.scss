@@ -17,3 +17,28 @@
 .inscription-form__loading[hidden] {
   display: none;
 }
+
+.inscription-academic-radio-option__icon {
+  width: var(--ort-sys-size-28);
+  height: var(--ort-sys-size-28);
+  color: var(--ort-sys-base-icon-color);
+  font-size: var(--ort-sys-size-28);
+}
+
+.inscription-academic-radio-option__label {
+  font-weight: var(--ort-sys-radio-label-font-weight);
+}
+
+.inscription-academic-radio-option__hint {
+  display: none;
+}
+
+@media (width >= 52.5rem) {
+  .inscription-academic-radio-option__icon {
+    display: none;
+  }
+
+  .inscription-academic-radio-option__hint {
+    display: inline;
+  }
+}
