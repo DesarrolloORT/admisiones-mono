@@ -149,6 +149,7 @@ export class InscripcionFlowFacade {
   public readonly exitConfirmationOpen = signal(false);
   public readonly showAllSubjects = signal(false);
   public readonly selectedPaymentMethod = signal<MetodoPago | null>(null);
+  public readonly hasAcceptedStudentRegulation = signal(false);
 
   public readonly startOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly turnoOptions = signal<readonly OpcionInscripcion[]>([]);
@@ -304,6 +305,7 @@ export class InscripcionFlowFacade {
     this.loadStartsOnCareerChange();
     this.loadTurnosOnStartChange();
     this.observeForms();
+    this.loadStudentRegulationAcceptance();
     this.loadIdentityPreloadOnIdentitySection();
     this.applyResolvedInitialSurveyState();
     this.destroyRef.onDestroy(() => {
@@ -683,6 +685,23 @@ export class InscripcionFlowFacade {
         for (const section of this.visibleSections()) {
           this.syncSectionCompletion(section);
         }
+      });
+  }
+
+  private loadStudentRegulationAcceptance(): void {
+    this.inscripciones
+      .getStudentRegulationAcceptance()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: acceptance => {
+          const accepted = acceptance.aceptoReglamentoEstudiantil === true;
+          this.hasAcceptedStudentRegulation.set(accepted);
+          if (!accepted) return;
+
+          this.regulationForm.controls.aceptaReglamento.setValue(true);
+          this.completeSection('reglamento');
+        },
+        error: () => this.hasAcceptedStudentRegulation.set(false),
       });
   }
 

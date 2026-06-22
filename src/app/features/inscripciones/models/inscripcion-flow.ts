@@ -94,6 +94,12 @@ export interface InscripcionProductInterestPayload {
   idProcesoSeleccionado: number;
   idProducto: number;
 }
+
+export interface InscripcionStudentRegulationAcceptance {
+  aceptoReglamentoEstudiantil?: boolean;
+  fechaAceptacion?: string | null;
+}
+
 export interface InscripcionPreEnrollmentResponse {
   confirmada?: boolean | null;
   fechaVencimientoPago?: string | null;

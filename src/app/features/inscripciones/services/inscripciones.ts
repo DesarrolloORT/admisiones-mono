@@ -9,6 +9,7 @@ import type {
   InscripcionInitialSurveyResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
+  InscripcionStudentRegulationAcceptance,
 } from '../models/inscripcion-flow';
 
 interface IdentityDocumentFile {
@@ -49,6 +50,10 @@ export class Inscripciones {
 
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     return this.endpoint.saveInitialSurvey(payload);
+  }
+
+  public getStudentRegulationAcceptance(): Observable<InscripcionStudentRegulationAcceptance> {
+    return this.endpoint.getStudentRegulationAcceptance();
   }
 
   public confirmPreEnrollment(

@@ -4,6 +4,7 @@ import { tap } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getInscripcionesEncuestaInicialEndpoint,
+  getInscripcionesReglamentoEstudiantilEndpoint,
   type InteresProductoPayload,
   postInscripcionesConfirmarPreInscripcionEndpoint,
   postInscripcionesEncuestaInicialEndpoint,
@@ -13,6 +14,7 @@ import {
   getPersonaDocumentoEndpoint,
   getPersonaFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+import type { AceptacionReglamentoEstudiantilResponse } from 'src/app/shared/api/generated/models/aceptacionReglamentoEstudiantilResponse';
 import type { ConfirmarPreInscripcionRequest } from 'src/app/shared/api/generated/models/confirmarPreInscripcionRequest';
 import type { ConfirmarPreInscripcionResponse } from 'src/app/shared/api/generated/models/confirmarPreInscripcionResponse';
 import type { DocumentoPersonaResponse } from 'src/app/shared/api/generated/models/documentoPersonaResponse';
@@ -44,6 +46,10 @@ export class InscripcionesEndpoint {
         showLoader: true,
       })
       .pipe(tap(() => this.api.clearCache()));
+  }
+
+  public getStudentRegulationAcceptance(): Observable<AceptacionReglamentoEstudiantilResponse> {
+    return this.api.request(getInscripcionesReglamentoEstudiantilEndpoint, { cache: false });
   }
 
   public confirmPreEnrollment(

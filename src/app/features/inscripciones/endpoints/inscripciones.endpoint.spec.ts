@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 import { ApiHttpClient } from '../../../shared/api/core/api-http-client';
 import {
   getInscripcionesEncuestaInicialEndpoint,
+  getInscripcionesReglamentoEstudiantilEndpoint,
   postInscripcionesConfirmarPreInscripcionEndpoint,
   postInscripcionesEncuestaInicialEndpoint,
 } from '../../../shared/api/generated/endpoints/inscripciones.endpoints';
@@ -52,6 +53,16 @@ describe('InscripcionesEndpoint', () => {
     endpoint.getInitialSurvey().subscribe();
 
     expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesEncuestaInicialEndpoint, {
+      cache: false,
+    });
+  });
+
+  it('loads student regulation acceptance without using the GET cache', () => {
+    apiMock.request.mockReturnValue(of({ aceptoReglamentoEstudiantil: true }));
+
+    endpoint.getStudentRegulationAcceptance().subscribe();
+
+    expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesReglamentoEstudiantilEndpoint, {
       cache: false,
     });
   });

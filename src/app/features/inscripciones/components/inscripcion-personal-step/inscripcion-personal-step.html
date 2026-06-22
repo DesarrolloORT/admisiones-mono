@@ -403,13 +403,22 @@
         </ort-accordion-header>
         <ort-accordion-body>
           <div class="inscription-accordion__content" [formGroup]="facade.regulationForm">
-            <p>Leé el reglamento estudiantil antes de aceptar sus condiciones.</p>
+            @if (facade.hasAcceptedStudentRegulation()) {
+            <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
+              Ver reglamento
+            </button>
+            } @else {
+            <p>
+              Te recomendamos leer el Reglamento Estudiantil. En él se detallan los derechos,
+              responsabilidades y condiciones que rigen tu vida académica en la universidad.
+            </p>
             <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
               Ver reglamento
             </button>
             <ort-checkbox formControlName="aceptaReglamento">
               Acepto el reglamento estudiantil.
             </ort-checkbox>
+            }
           </div>
         </ort-accordion-body>
       </ort-accordion-item>

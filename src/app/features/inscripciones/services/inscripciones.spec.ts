@@ -12,6 +12,7 @@ describe('Inscripciones', () => {
     getIdentityDocument: ReturnType<typeof vi.fn>;
     getIdentityPhoto: ReturnType<typeof vi.fn>;
     getInitialSurvey: ReturnType<typeof vi.fn>;
+    getStudentRegulationAcceptance: ReturnType<typeof vi.fn>;
     saveInitialSurvey: ReturnType<typeof vi.fn>;
     registerProductInterest: ReturnType<typeof vi.fn>;
   };
@@ -22,6 +23,9 @@ describe('Inscripciones', () => {
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
       getInitialSurvey: vi.fn().mockReturnValue(of({ tieneDerechoEncuesta: true })),
+      getStudentRegulationAcceptance: vi
+        .fn()
+        .mockReturnValue(of({ aceptoReglamentoEstudiantil: false })),
       saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
       registerProductInterest: vi.fn().mockReturnValue(of(true)),
     };
@@ -85,6 +89,12 @@ describe('Inscripciones', () => {
 
     expect(endpointMock.getInitialSurvey).toHaveBeenCalledOnce();
     expect(endpointMock.saveInitialSurvey).toHaveBeenCalledWith(payload);
+  });
+
+  it('delegates student regulation acceptance loading', () => {
+    service.getStudentRegulationAcceptance().subscribe();
+
+    expect(endpointMock.getStudentRegulationAcceptance).toHaveBeenCalledOnce();
   });
 
   it('delegates pre-enrollment confirmation', () => {
