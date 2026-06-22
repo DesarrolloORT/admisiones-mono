@@ -578,6 +578,49 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 3 - PAGOS
 
+        public async Task<OperationResult<BancosResponseDto>> ObtenerBancos()
+        {
+            const string methodName = nameof(ObtenerBancos);
+
+            var bancosResult = await _inscripcionesyPagosApiClient.ObtenerBancosAsync();
+            if (!bancosResult.Success)
+            {
+                return OperationResult<BancosResponseDto>.IsFailed(
+                    bancosResult.ErrorCode,
+                    methodName,
+                    bancosResult.Message,
+                    bancosResult.HttpCode);
+            }
+
+            if (bancosResult.Data == null)
+            {
+                return OperationResult<BancosResponseDto>.IsFailed(
+                    "INS_BAN_01",
+                    methodName,
+                    "La API interna no devolvio datos de bancos.",
+                    502);
+            }
+
+            return OperationResult<BancosResponseDto>.Ok(MapearBancos(bancosResult.Data), methodName);
+        }
+
+        private static BancosResponseDto MapearBancos(BancosResponse source)
+        {
+            return new BancosResponseDto
+            {
+                TotalCount = source.TotalCount,
+                Bancos = source.Bancos
+                    .Select(b => new AppLogic.DTOs.BancoDto
+                    {
+                        IdBanco = b.IdBanco,
+                        NombreBanco = b.NombreBanco,
+                        Codigo = b.Codigo,
+                        Activo = b.Activo
+                    })
+                    .ToList()
+            };
+        }
+
         #endregion PASO 3 - PAGOS
     }
 }

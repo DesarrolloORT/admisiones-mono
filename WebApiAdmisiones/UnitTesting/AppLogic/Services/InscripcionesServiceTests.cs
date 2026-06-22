@@ -529,6 +529,55 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ObtenerBancos_WithSuccess_ReturnsMappedResponse()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "bancos": [
+                    {
+                      "idBanco": 10,
+                      "nombreBanco": "Banco Uno",
+                      "codigo": "B1",
+                      "activo": true
+                    }
+                  ],
+                  "totalCount": 1
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.ObtenerBancos();
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal(1, result.Data!.TotalCount);
+            var banco = Assert.Single(result.Data.Bancos);
+            Assert.Equal(10, banco.IdBanco);
+            Assert.Equal("Banco Uno", banco.NombreBanco);
+            Assert.Equal("B1", banco.Codigo);
+            Assert.True(banco.Activo);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("ORTSecure/Pagos/Bancos", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerBancos_WhenApiRejects_ReturnsFailure()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.BadRequest, "error bancos"));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.ObtenerBancos();
+
+            Assert.False(result.Success);
+            Assert.Equal("BANCOS_GET_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Contains("error bancos", result.Message);
+        }
+
+        [Fact]
         public void ObtenerUltimaInscripcionActiva_ConOfertaNula_UsaValoresPorDefecto()
         {
             var repo = new Mock<IInscriptoRepository>();
