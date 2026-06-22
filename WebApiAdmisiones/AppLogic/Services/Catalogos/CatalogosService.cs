@@ -154,6 +154,79 @@ namespace AppLogic.Services.Catalogos
 
         public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso)
         {
+            using var uow = _uowFactory.Create();
+            var producto = uow.Productos.GetByKey(idCarrera);
+
+            if (producto == null)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    "CAT_TURNOS_02",
+                    nameof(ObtenerTurnos),
+                    "Producto no encontrado.",
+                    404,
+                    default
+                );
+            }
+
+            if (producto.IdNivelProducto == 3 || producto.IdNivelProducto == 4)
+            {
+                var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(idCarrera, idProceso);
+
+                if (!idComienzo.HasValue || idComienzo.Value <= 0)
+                {
+                    return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                        "CAT_TURNOS_03",
+                        nameof(ObtenerTurnos),
+                        "No se encontro comienzo activo para el producto y proceso indicados.",
+                        400,
+                        default
+                    );
+                }
+
+                var ofertas = uow.VdOfertasDisponibles3y4s
+                    .GetOfertasDisponibles(idCarrera, idComienzo.Value)
+                    .GroupBy(o => new { o.IdOferta, o.IdTurno })
+                    .Select(g => g.First())
+                    .OrderBy(o => o.IdTurno)
+                    .ThenBy(o => o.IdOferta)
+                    .ToList();
+
+                var turnosPorId = uow.Turnos
+                    .GetByKeys(ofertas.Select(o => o.IdTurno))
+                    .ToDictionary(t => t.IdTurno);
+
+                var response = ofertas
+                    .Select(oferta =>
+                    {
+                        turnosPorId.TryGetValue(oferta.IdTurno, out var turno);
+
+                        return new OfertaInscripcionDto
+                        {
+                            IdOferta = oferta.IdOferta,
+                            Turno = new DtoTurno
+                            {
+                                IdTurno = oferta.IdTurno,
+                                NombreTurno = turno?.NombreTurno
+                            },
+                            HorarioReferencia = null
+                        };
+                    })
+                    .ToList();
+
+                return OperationResult<List<OfertaInscripcionDto>>.Ok(response, nameof(ObtenerTurnos));
+            }
+
+            if (producto.IdNivelProducto != 1 && producto.IdNivelProducto != 2)
+            {
+                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
+                    "CAT_TURNOS_04",
+                    nameof(ObtenerTurnos),
+                    "Nivel de producto no soportado para obtener turnos.",
+                    400,
+                    default
+                );
+            }
+
             if (_inscripcionesyPagosApiClient == null)
             {
                 return OperationResult<List<OfertaInscripcionDto>>.IsFailed(

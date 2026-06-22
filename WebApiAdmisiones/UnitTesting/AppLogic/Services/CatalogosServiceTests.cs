@@ -1,9 +1,13 @@
+using System.Net;
+using System.Text;
+using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Collections.Generic;
 using Xunit;
@@ -243,6 +247,7 @@ namespace UnitTesting.AppLogic.Services
                 {
                     IdProducto = 10,
                     NombreProducto = "ATI",
+                    NombreWebProducto = "ATI",
                     NombreExtensoProducto = "Analista en TI",
                     IdNivelProducto = 2,
                     NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
@@ -259,6 +264,154 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("ATI", item.NombreProducto);
             Assert.Equal(2, item.IdNivelProducto);
             Assert.Equal("Carrera", item.NombreNivelProducto);
+        }
+
+        [Fact]
+        public async Task ObtenerTurnos_Nivel1o2_UsesInscripcionesYPagosApi()
+        {
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
+            {
+                IdProducto = 10,
+                IdNivelProducto = 2,
+                NombreProducto = "ATI",
+                NombreExtensoProducto = "Analista en TI"
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {
+                    "idOferta": 57319,
+                    "horarioReferencia": "Lunes 19:00",
+                    "idTurno": 1,
+                    "nombreTurno": "Nocturno"
+                  }
+                ]
+                """));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+
+            var result = await service.ObtenerTurnos(10, 20);
+
+            Assert.True(result.Success);
+            var oferta = Assert.Single(result.Data!);
+            Assert.Equal(57319, oferta.IdOferta);
+            Assert.Equal(1, oferta.Turno.IdTurno);
+            Assert.Equal("Nocturno", oferta.Turno.NombreTurno);
+            Assert.Equal("Lunes 19:00", oferta.HorarioReferencia);
+
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("OfertasParaInscripcionAdmisionesConProceso?idProducto=10&idProceso=20", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerTurnos_Nivel3o4_UsesVistaAndDoesNotCallApi()
+        {
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
+            {
+                IdProducto = 10,
+                IdNivelProducto = 3,
+                NombreProducto = "POS",
+                NombreExtensoProducto = "Postgrado"
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo
+                .Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20))
+                .Returns(30);
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+
+            var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            ofertasRepo
+                .Setup(r => r.GetOfertasDisponibles(10, 30))
+                .Returns(
+                [
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 1 },
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 99 },
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 101, IdTurno = 2, IdMateria = 2 }
+                ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(ofertasRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo
+                .Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()))
+                .Returns(
+                [
+                    new Turno { IdTurno = 1, NombreTurno = "Matutino" },
+                    new Turno { IdTurno = 2, NombreTurno = "Nocturno" }
+                ]);
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+
+            var result = await service.ObtenerTurnos(10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data!.Count);
+            Assert.Equal(100, result.Data[0].IdOferta);
+            Assert.Equal(1, result.Data[0].Turno.IdTurno);
+            Assert.Equal("Matutino", result.Data[0].Turno.NombreTurno);
+            Assert.Null(result.Data[0].HorarioReferencia);
+            Assert.Equal(101, result.Data[1].IdOferta);
+            Assert.Equal(2, result.Data[1].Turno.IdTurno);
+            Assert.Equal("Nocturno", result.Data[1].Turno.NombreTurno);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public async Task ObtenerTurnos_WhenProductoDoesNotExist_ReturnsFailureWithoutCallingApi()
+        {
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(99)).Returns((Producto)null);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+
+            var result = await service.ObtenerTurnos(99, 20);
+
+            Assert.False(result.Success);
+            Assert.Equal("CAT_TURNOS_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public async Task ObtenerTurnos_Nivel3o4SinComienzoActivo_ReturnsFailureWithoutCallingApi()
+        {
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
+            {
+                IdProducto = 10,
+                IdNivelProducto = 4,
+                NombreProducto = "MAE",
+                NombreExtensoProducto = "Maestria"
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
+            procesoComienzoRepo
+                .Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20))
+                .Returns((long?)null);
+            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
+
+            var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(ofertasRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+
+            var result = await service.ObtenerTurnos(10, 20);
+
+            Assert.False(result.Success);
+            Assert.Equal("CAT_TURNOS_03", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Empty(handler.Requests);
+            ofertasRepo.Verify(r => r.GetOfertasDisponibles(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
         }
 
         [Fact]
@@ -455,5 +608,44 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Universidad Ejemplo", item.Nombre);
         }
 
+        private static InscripcionesyPagosApiClient CrearInscripcionesClient(HttpMessageHandler handler)
+        {
+            var httpClient = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://internal.test/")
+            };
+
+            return new InscripcionesyPagosApiClient(
+                httpClient,
+                NullLogger<InscripcionesyPagosApiClient>.Instance);
+        }
+
+        private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
+        {
+            return new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+        }
+
+        private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
+            : HttpMessageHandler
+        {
+            public List<CapturedRequest> Requests { get; } = [];
+
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                Requests.Add(new CapturedRequest(
+                    request.Method,
+                    request.RequestUri?.ToString() ?? string.Empty,
+                    request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken)));
+
+                return handler(request);
+            }
+        }
+
+        private sealed record CapturedRequest(HttpMethod Method, string RequestUri, string Body);
     }
 }
