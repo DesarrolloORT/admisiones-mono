@@ -80,9 +80,20 @@ test.describe('Account to enrollment journey', () => {
     await inscription.fillEducation();
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
-    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
+
+    const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
+    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
     await inscription.acceptRegulation();
+    expect((await surveyRequest).postDataJSON()).toMatchObject({
+      idProducto: 20,
+      idProceso: 200,
+    });
+    expect((await preEnrollmentRequest).postDataJSON()).toEqual({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
+
     await inscription.selectPayment('cuenta-bancaria');
     await inscription.confirmPayment();
 

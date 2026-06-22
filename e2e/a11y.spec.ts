@@ -122,8 +122,11 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await addAuthenticatedSession(page);
 
     const inscription = new InscripcionPage(page);
-    await inscription.goto('encuesta-completa');
+    await inscription.goto();
     await inscription.fillAcademicProposal();
+    await inscription.fillEducation();
+    await inscription.fillAcademicDecision();
+    await inscription.fillOrtExperience();
 
     await expectNoAxeViolations(page, {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
@@ -146,7 +149,20 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await page.keyboard.press('Escape');
 
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Pagar', exact: true })).toBeFocused();
+  });
+
+  test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({
+    page,
+  }) => {
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await inscription.completeInitialEnrollmentWithKeyboard();
+
+    await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 });
 

@@ -83,17 +83,23 @@ export class RegisterPage {
   }
 
   public async expectCreatedAccount(): Promise<void> {
-    const message = 'Cuenta creada correctamente. Revisá tu correo para obtener la contraseña.';
-
-    await expect(this.page.getByRole('status').filter({ hasText: message })).toBeVisible();
-    await expect(this.page.locator('form')).not.toContainText(message);
+    await this.expectEmailConfirmation();
   }
 
   public async expectVerifiedIdentity(): Promise<void> {
-    const message = 'Datos verificados correctamente. Revisá tu correo para activar la contraseña.';
+    await this.expectEmailConfirmation();
+  }
 
-    await expect(this.page.getByRole('status').filter({ hasText: message })).toBeVisible();
-    await expect(this.page.locator('form')).not.toContainText(message);
+  private async expectEmailConfirmation(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/confirmacion-correo\/registro/);
+    await expect(
+      this.page.getByRole('heading', { name: '¡Cuenta creada con éxito!' })
+    ).toBeVisible();
+    await expect(
+      this.page.getByText(
+        'Revisá tu casilla de e-mail. Te enviamos un enlace de activación para crear tu contraseña y finalizar el registro.'
+      )
+    ).toBeVisible();
   }
 }
 

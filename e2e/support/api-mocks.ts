@@ -4,6 +4,7 @@ import type { RegisterFlowKind } from '../../src/app/features/auth/models/regist
 import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scenarios';
 
 export interface MockApiOptions {
+  initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -115,6 +116,31 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
     if (path === '/Inscripciones/InteresProducto') {
       return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'GET') {
+      return fulfillOperation(route, initialSurvey(options.initialSurvey ?? 'empty'));
+    }
+
+    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'POST') {
+      return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/ConfirmarPreInscripcion') {
+      return fulfillOperation(route, {
+        confirmada: true,
+        idInscripcion: 7001,
+        seniaInscripcion: 15500,
+        fechaVencimientoPago: '2027-03-04',
+        resumen: {
+          idProducto: 20,
+          carrera: 'Licenciatura en Diseño Gráfico',
+          idComienzo: 200,
+          comienzo: 'Marzo 2027',
+          idTurno: 10,
+          turno: 'Matutino',
+        },
+      });
     }
 
     if (path === '/Registro/EvaluarDocumento') {
@@ -292,5 +318,49 @@ function initialSurveyCatalogs(): unknown {
     estadoEducacionSuperior: [{ value: 3, label: 'No cursé estudios superiores' }],
     formacionTutores: [{ value: 4, label: 'Universitaria completa' }],
     nivelConocimiento: [{ value: 1, label: 'Conocía bien la propuesta' }],
+  };
+}
+
+function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unknown {
+  if (kind === 'no-right') {
+    return { tieneDerechoEncuesta: false, encuesta: null };
+  }
+
+  if (kind === 'empty') {
+    return { tieneDerechoEncuesta: true, encuesta: null };
+  }
+
+  const encuesta = {
+    idEncuestaIni: 1,
+    idProducto: 20,
+    idProceso: 200,
+    idTurno: 10,
+    estadoEncuestaIniAdmision: kind === 'complete' ? 'completa' : 'decision-academica',
+    fechaProcesadoEncuestaIni: kind === 'complete' ? '2027-02-01T00:00:00' : null,
+    ultimoanioSecundariaEncuestaIni: true,
+    codigoInstitucionBac: 1,
+    tieneEducacionSuperiorEncuestaIni: 'N',
+    instruccionMadreEncuestaIni: '4',
+    instruccionPadreEncuestaIni: '4',
+    ...(kind === 'complete'
+      ? {
+          decisionCarreraEncuestaIni: '1',
+          decisionUniverEncuestaIni: '2-ems',
+          inforOtrasAntesEncuestaIni: 'S',
+          nivelDecisionEncuestaIni: true,
+          asesoramientoOrtEncuestaIni: 'S',
+          vistaSitioWebOrtEncuestaIni: 'S',
+          vistaInstalacionesOrtEncuestaIni: 'S',
+          publicidadOrtEncuestaIni: 'S',
+        }
+      : {}),
+    producto: { idNivelProducto: 1 },
+  };
+
+  return {
+    tieneDerechoEncuesta: true,
+    encuesta,
+    opcionesMotivosSeleccionados:
+      kind === 'complete' ? [{ idMotivo: 1, nombreMotivo: 'Propuesta académica' }] : [],
   };
 }

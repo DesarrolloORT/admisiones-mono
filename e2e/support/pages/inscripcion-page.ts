@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 import { selectOrtOption } from './ort-controls';
 
@@ -81,13 +81,6 @@ export class InscripcionPage {
     await this.chooseRadio('recuerdaPublicidad', 'Sí');
     await this.continue();
 
-    await expect(this.radioGroup('situacionLaboral')).toBeVisible();
-  }
-
-  public async fillWorkStatus(): Promise<void> {
-    await this.chooseRadio('situacionLaboral', 'Sí, trabajo actualmente');
-    await this.continue();
-
     await expect(this.page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
   }
 
@@ -126,18 +119,94 @@ export class InscripcionPage {
     await this.page.getByRole('button', { name: 'Aceptar reglamento' }).click();
     await this.continue();
 
-    await expect(this.page.getByRole('heading', { name: 'Confirmá tu inscripción' })).toBeVisible();
+    await expect(this.page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
   }
 
   public async selectPayment(method: MetodoPago): Promise<void> {
     await this.chooseRadio('metodoPago', paymentLabels[method]);
-    await this.continue();
+    await this.pay();
 
     await expect(this.page.getByText('Confirmar inscripción', { exact: true })).toBeVisible();
   }
 
   public async confirmPayment(): Promise<void> {
     await this.page.getByRole('button', { name: 'Confirmar', exact: true }).click();
+  }
+
+  public async completeInitialEnrollmentWithKeyboard(): Promise<void> {
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('tipoPropuesta', 'Carrera universitaria');
+    await this.selectWithKeyboard('carrera', 'Licenciatura en Diseño Gráfico');
+    await this.selectWithKeyboard('comienzo', 'Marzo 2027');
+    await this.selectWithKeyboard('turno', 'Matutino');
+    await this.continueWithKeyboard();
+
+    await expect(
+      this.page.getByRole('heading', { name: 'Información personal', exact: true })
+    ).toBeVisible();
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('cursaSecundaria', 'Sí, estoy cursando');
+    await this.chooseRadioWithKeyboard('lugarSecundaria', 'Uruguay');
+    await this.chooseRadioWithKeyboard('estadoEducacionSuperior', 'No cursé estudios superiores');
+    await this.selectWithKeyboard('formacionMadre', 'Universitaria completa');
+    await this.selectWithKeyboard('formacionPadre', 'Universitaria completa');
+    await this.continueWithKeyboard();
+
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('anioDecisionCarrera', 'Durante secundaria');
+    await this.selectWithKeyboard('apoyoDecision', 'Familia');
+    await this.chooseRadioWithKeyboard('anioDecisionOrt', '2º EMS (5º año)');
+    await this.chooseRadioWithKeyboard('otrasUniversidades', 'Sí');
+    await this.chooseRadioWithKeyboard('certezaDecision', 'Decidido/a');
+    await this.selectWithKeyboard('motivosOrt', 'Propuesta académica');
+    await this.continueWithKeyboard();
+
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('reunionAsesoramiento', 'Sí');
+    await this.chooseRadioWithKeyboard('visitoWeb', 'Sí');
+    await this.chooseRadioWithKeyboard('visitoSede', 'Sí');
+    await this.chooseRadioWithKeyboard('recuerdaPublicidad', 'Sí');
+    await this.continueWithKeyboard();
+
+    await this.expectMainFocus();
+    await this.uploadIdentityFileWithKeyboard(0, 'frente.png');
+    await this.uploadIdentityFileWithKeyboard(1, 'dorso.png');
+    const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
+    await this.tabTo(expiration);
+    await this.page.keyboard.type('04022030');
+    await expect(expiration).toHaveValue('04/02/2030');
+    await this.uploadIdentityFileWithKeyboard(2, 'rostro.png');
+    await this.continueWithKeyboard();
+
+    await this.expectMainFocus();
+    const regulationButton = this.page.getByRole('button', { name: 'Ver reglamento' });
+    await this.tabTo(regulationButton);
+    await this.page.keyboard.press('Enter');
+
+    await expect(this.page.getByRole('heading', { name: 'Reglamento estudiantil' })).toBeVisible();
+    await this.expectMainFocus();
+    const acceptRegulationButton = this.page.getByRole('button', {
+      name: 'Aceptar reglamento',
+    });
+    await this.tabTo(acceptRegulationButton);
+    await this.page.keyboard.press('Enter');
+
+    await this.expectMainFocus();
+    await expect(
+      this.page.getByRole('checkbox', { name: 'Acepto el reglamento estudiantil.' })
+    ).toBeChecked();
+    await this.continueWithKeyboard();
+
+    await expect(this.page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('metodoPago', paymentLabels['cuenta-bancaria']);
+    await this.payWithKeyboard();
+
+    const confirmButton = this.page.getByRole('button', { name: 'Confirmar', exact: true });
+    await expect(this.page.getByRole('button', { name: 'Volver', exact: true })).toBeFocused();
+    await this.page.keyboard.press('Tab');
+    await expect(confirmButton).toBeFocused();
+    await this.page.keyboard.press('Enter');
   }
 
   public async saveAndExit(): Promise<void> {
@@ -152,10 +221,51 @@ export class InscripcionPage {
     await button.click();
   }
 
+  private async pay(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Pagar', exact: true }).click();
+  }
+
+  private async continueWithKeyboard(): Promise<void> {
+    const button = this.page.getByRole('button', { name: 'Continuar', exact: true });
+    await this.tabTo(button);
+    await this.page.keyboard.press('Enter');
+  }
+
+  private async payWithKeyboard(): Promise<void> {
+    const button = this.page.getByRole('button', { name: 'Pagar', exact: true });
+    await this.tabTo(button);
+    await this.page.keyboard.press('Enter');
+  }
+
   private async select(controlName: string, option: string): Promise<void> {
     const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
     await expect(combobox).toBeEnabled();
     await selectOrtOption(this.page, combobox, option);
+  }
+
+  private async selectWithKeyboard(controlName: string, option: string): Promise<void> {
+    const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
+    await expect(combobox).toBeEnabled();
+    await this.tabTo(combobox);
+    await this.page.keyboard.press('Enter');
+
+    const targetOption = this.page.getByRole('option', { name: option });
+    await expect(targetOption).toBeVisible();
+    const targetId = await targetOption.getAttribute('id');
+    expect(targetId).toBeTruthy();
+
+    await this.page.keyboard.press('Home');
+    for (let index = 0; index < 30; index += 1) {
+      if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
+        await this.page.keyboard.press('Enter');
+        await expect(combobox).toContainText(option);
+        return;
+      }
+
+      await this.page.keyboard.press('ArrowDown');
+    }
+
+    throw new Error(`No se pudo seleccionar "${option}" con teclado.`);
   }
 
   private async chooseRadio(controlName: string, label: string): Promise<void> {
@@ -169,6 +279,72 @@ export class InscripcionPage {
     await expect(radio).toBeEnabled();
     await radio.evaluate((element: HTMLInputElement) => element.click());
     await expect(radio).toBeChecked();
+  }
+
+  private async chooseRadioWithKeyboard(controlName: string, label: string): Promise<void> {
+    const group = this.radioGroup(controlName);
+    await expect(group).toBeVisible();
+
+    const radios = group.getByRole('radio');
+    const target = group.getByRole('radio', {
+      name: new RegExp(`^${escapeRegExp(label)}(?:\\s|$)`),
+    });
+    await expect(target).toBeAttached();
+    await this.tabTo(radios.first());
+
+    const count = await radios.count();
+    for (let index = 0; index < count; index += 1) {
+      if (await target.evaluate(element => element === element.ownerDocument.activeElement)) {
+        if (!(await target.isChecked())) await this.page.keyboard.press('Space');
+        await expect(target).toBeChecked();
+        return;
+      }
+
+      await this.page.keyboard.press('ArrowDown');
+    }
+
+    throw new Error(`No se pudo elegir "${label}" con teclado.`);
+  }
+
+  private async uploadIdentityFileWithKeyboard(index: number, name: string): Promise<void> {
+    const uploader = this.page.locator('ort-file-uploader').nth(index);
+    const button = uploader.getByRole('button').first();
+    await this.tabTo(button);
+
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await this.page.keyboard.press('Enter');
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name,
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+        'base64'
+      ),
+    });
+
+    await expect(this.page.getByText(name, { exact: true })).toBeVisible();
+  }
+
+  private async expectMainFocus(): Promise<void> {
+    await expect(this.page.locator('#main-content')).toBeFocused();
+  }
+
+  private async tabTo(target: Locator): Promise<void> {
+    await expect(target).toBeAttached();
+
+    for (let index = 0; index < 80; index += 1) {
+      const containsFocus = await target.evaluate(
+        element =>
+          element === element.ownerDocument.activeElement ||
+          element.contains(element.ownerDocument.activeElement)
+      );
+      if (containsFocus) return;
+
+      await this.page.keyboard.press('Tab');
+    }
+
+    throw new Error('El control esperado no es alcanzable con Tab.');
   }
 
   private radioGroup(controlName: string) {
