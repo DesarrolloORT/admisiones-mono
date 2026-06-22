@@ -58,6 +58,33 @@ namespace UnitTesting.Controllers
             Assert.DoesNotContain("ReglamentoEstudiantil", postRoutes);
         }
 
+        [Fact]
+        public void ObtenerAceptacionReglamentoEstudiantil_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var responseDto = new AceptacionReglamentoEstudiantilResponse
+            {
+                AceptoReglamentoEstudiantil = true,
+                FechaAceptacion = new DateTime(2026, 6, 1)
+            };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ObtenerAceptacionReglamentoEstudiantil(1))
+                .Returns(OperationResult<AceptacionReglamentoEstudiantilResponse>.Ok(
+                    responseDto,
+                    nameof(IInscripcionesService.ObtenerAceptacionReglamentoEstudiantil)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.ObtenerAceptacionReglamentoEstudiantil();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ObtenerAceptacionReglamentoEstudiantil(1), Times.Once);
+        }
+
         /*
         [Fact]
         public void ObtenerUltimaInscripcionActiva_ReturnsOk()

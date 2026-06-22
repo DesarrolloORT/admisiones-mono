@@ -80,6 +80,48 @@ namespace UnitTesting.AppLogic.Services
         private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
 
         [Fact]
+        public void ObtenerAceptacionReglamentoEstudiantil_WhenNoAcceptance_ReturnsFalseWithoutDate()
+        {
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetPrimeraByPersona(123))
+                .Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = _service.ObtenerAceptacionReglamentoEstudiantil(123);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.False(result.Data!.AceptoReglamentoEstudiantil);
+            Assert.Null(result.Data.FechaAceptacion);
+            aceptacionRepo.Verify(r => r.GetPrimeraByPersona(123), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerAceptacionReglamentoEstudiantil_WhenAcceptanceExists_ReturnsTrueWithFirstDate()
+        {
+            var primeraFecha = new DateTime(2024, 3, 15);
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetPrimeraByPersona(123))
+                .Returns(new AceptacionReglamentoEst
+                {
+                    IdAceptacionReglamentoEst = 10,
+                    CodigoPersona = 123,
+                    FechaIngreso = primeraFecha
+                });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = _service.ObtenerAceptacionReglamentoEstudiantil(123);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.True(result.Data!.AceptoReglamentoEstudiantil);
+            Assert.Equal(primeraFecha, result.Data.FechaAceptacion);
+            aceptacionRepo.Verify(r => r.GetPrimeraByPersona(123), Times.Once);
+        }
+
+        [Fact]
         public async Task ConfirmarPreInscripcion_WhenReglamentoNotAccepted_ReturnsBadRequest()
         {
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest

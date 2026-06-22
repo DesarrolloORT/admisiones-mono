@@ -76,6 +76,21 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
         }
 
+        public OperationResult<AceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var aceptacion = uow.AceptacionReglamentoEsts.GetPrimeraByPersona(codigoPersona);
+            var response = new AceptacionReglamentoEstudiantilResponse
+            {
+                AceptoReglamentoEstudiantil = aceptacion != null,
+                FechaAceptacion = aceptacion?.FechaIngreso
+            };
+
+            return OperationResult<AceptacionReglamentoEstudiantilResponse>.Ok(
+                response,
+                nameof(ObtenerAceptacionReglamentoEstudiantil));
+        }
+
         #region PASO 1 - REGISTRAR INTERES POR PRODUCTO
         public OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request)
         {

@@ -95,6 +95,19 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Indica si la persona autenticada ya aceptó el reglamento estudiantil.
+        /// </summary>
+        /// <returns>Estado de aceptación del reglamento y fecha de primera aceptación.</returns>
+        /// <response code="200">Consulta realizada correctamente.</response>
+        [HttpGet("ReglamentoEstudiantil")]
+        [ProducesResponseType(typeof(OperationResult<AceptacionReglamentoEstudiantilResponse>), 200)]
+        public IActionResult ObtenerAceptacionReglamentoEstudiantil()
+        {
+            var result = inscripcionesService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
         ///// <summary>
         ///// Obtiene la última inscripción activa de la persona autenticada.
         ///// </summary>
