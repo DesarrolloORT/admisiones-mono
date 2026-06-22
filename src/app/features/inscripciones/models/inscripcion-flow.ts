@@ -35,6 +35,75 @@ export type MetodoPago =
 
 export type ResultadoPago = 'confirmada' | 'reservada' | 'en-proceso';
 
+export interface InscripcionBackendSurvey {
+  idProducto?: number | null;
+  idProceso?: number | null;
+  idTurno?: number | null;
+  estadoEncuestaIniAdmision?: string | null;
+  fechaProcesadoEncuestaIni?: string | null;
+  producto?: { idNivelProducto?: number | null } | null;
+  ultimoanioSecundariaEncuestaIni?: boolean | null;
+  codigoInstitucionBac?: number | string | null;
+  nombreInstSecEncuestaIni?: string | null;
+  tieneEducacionSuperiorEncuestaIni?: string | boolean | null;
+  instruccionMadreEncuestaIni?: string | null;
+  instruccionPadreEncuestaIni?: string | null;
+  decisionCarreraEncuestaIni?: string | null;
+  decisionUniverEncuestaIni?: string | null;
+  inforOtrasAntesEncuestaIni?: string | boolean | null;
+  nivelDecisionEncuestaIni?: boolean | null;
+  asesoramientoOrtEncuestaIni?: string | boolean | null;
+  vistaSitioWebOrtEncuestaIni?: string | boolean | null;
+  vistaInstalacionesOrtEncuestaIni?: string | boolean | null;
+  publicidadOrtEncuestaIni?: string | boolean | null;
+}
+
+export interface InscripcionInitialSurveyResponse {
+  tieneDerechoEncuesta?: boolean;
+  encuesta?: InscripcionBackendSurvey | null;
+  opcionesMotivosSeleccionados?: Array<{ idMotivo?: number; nombreMotivo?: string | null }> | null;
+}
+
+export interface InscripcionInitialSurveyPayload {
+  idProducto: number | null;
+  idProceso: number | null;
+  ultimoAnioSecundaria: number | null;
+  instruccionPadre: number | null;
+  instruccionMadre: number | null;
+  decisionCarrera: number | null;
+  decisionUniversidad: number | null;
+  infoOtrasUniversidadesAntes: string | null;
+  compartidoCon: number | null;
+  tieneEducacionSuperior: boolean | null;
+  nivelDecision: number | null;
+  asesoramientoOrt: boolean | null;
+  vistaSitioWebOrt: boolean | null;
+  vistaInstalacionesOrt: boolean | null;
+  publicidadOrt: boolean | null;
+  trabajaActualmente: string | null;
+  opcionesMotivosSeleccionados: Array<{ idMotivo: number; nombreMotivo: string }> | null;
+}
+
+export interface InscripcionConfirmPreEnrollmentPayload {
+  aceptoReglamento: boolean;
+  idOfertaSeleccionada: number;
+}
+
+export interface InscripcionProductInterestPayload {
+  idOferta: number;
+  idProcesoSeleccionado: number;
+  idProducto: number;
+}
+export interface InscripcionPreEnrollmentResponse {
+  confirmada?: boolean | null;
+  fechaVencimientoPago?: string | null;
+  seniaInscripcion?: number | null;
+  resumen?: {
+    carrera?: string | null;
+    comienzo?: string | null;
+    turno?: string | null;
+  } | null;
+}
 export interface OpcionInscripcion {
   value: string;
   label: string;

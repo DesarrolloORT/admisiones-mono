@@ -1,0 +1,210 @@
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import type { OrtPreloadedFile } from '@desarrolloort/components';
+import {
+  buildFormErrorSummary,
+  type FormErrorField,
+  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
+} from 'src/app/shared/forms/form-error-summary';
+
+import type {
+  ArchivosIdentidad,
+  FormularioDecisionAcademica,
+  FormularioEducacion,
+  FormularioExperienciaOrt,
+  FormularioIdentidad,
+  FormularioPago,
+  FormularioPropuesta,
+  FormularioReglamento,
+  FormularioSituacionLaboral,
+  MetodoPago,
+  SeccionEncuestaId,
+} from './inscripcion-flow';
+
+export interface InscripcionForms {
+  academicForm: FormGroup<FormularioPropuesta>;
+  educationForm: FormGroup<FormularioEducacion>;
+  academicDecisionForm: FormGroup<FormularioDecisionAcademica>;
+  ortExperienceForm: FormGroup<FormularioExperienciaOrt>;
+  workForm: FormGroup<FormularioSituacionLaboral>;
+  identityForm: FormGroup<FormularioIdentidad>;
+  regulationForm: FormGroup<FormularioReglamento>;
+  paymentForm: FormGroup<FormularioPago>;
+}
+
+export interface SectionConfig {
+  label: string;
+  icon: string;
+  form: FormGroup;
+  errorFields: FormErrorField[];
+}
+
+export type IdentityFileTarget = keyof ArchivosIdentidad;
+
+export type IdentityPreloadedFileMap = Record<IdentityFileTarget, OrtPreloadedFile | null>;
+
+export function createInscripcionForms(): InscripcionForms {
+  return {
+    academicForm: new FormGroup<FormularioPropuesta>({
+      tipoPropuesta: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    }),
+    educationForm: new FormGroup<FormularioEducacion>({
+      cursaSecundaria: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      lugarSecundaria: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      estadoEducacionSuperior: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      formacionMadre: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      formacionPadre: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+    }),
+    academicDecisionForm: new FormGroup<FormularioDecisionAcademica>({
+      anioDecisionCarrera: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      apoyoDecision: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      anioDecisionOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      otrasUniversidades: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      certezaDecision: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      motivosOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    }),
+    ortExperienceForm: new FormGroup<FormularioExperienciaOrt>({
+      reunionAsesoramiento: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      visitoWeb: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      visitoSede: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      recuerdaPublicidad: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+    }),
+    workForm: new FormGroup<FormularioSituacionLaboral>({
+      situacionLaboral: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+    }),
+    identityForm: new FormGroup<FormularioIdentidad>({
+      vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
+    }),
+    regulationForm: new FormGroup<FormularioReglamento>({
+      aceptaReglamento: new FormControl(false, {
+        nonNullable: true,
+        validators: Validators.requiredTrue,
+      }),
+    }),
+    paymentForm: new FormGroup<FormularioPago>({
+      metodoPago: new FormControl<MetodoPago | ''>('cuenta-bancaria', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+    }),
+  };
+}
+
+export function createSectionConfig(
+  forms: InscripcionForms
+): Record<SeccionEncuestaId, SectionConfig> {
+  return {
+    educacion: {
+      label: 'Educación',
+      icon: 'menu_book',
+      form: forms.educationForm,
+      errorFields: [
+        { controlName: 'cursaSecundaria', fieldId: '', label: 'Situación de secundaria' },
+        { controlName: 'lugarSecundaria', fieldId: '', label: 'Lugar de secundaria' },
+        {
+          controlName: 'estadoEducacionSuperior',
+          fieldId: '',
+          label: 'Estado de educación superior',
+        },
+        { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
+        { controlName: 'formacionPadre', fieldId: '', label: 'Formación de padre o tutor' },
+      ],
+    },
+    'decision-academica': {
+      label: 'Decisión académica',
+      icon: 'schema',
+      form: forms.academicDecisionForm,
+      errorFields: [
+        { controlName: 'anioDecisionCarrera', fieldId: '', label: 'Año de decisión de carrera' },
+        { controlName: 'apoyoDecision', fieldId: '', label: 'Apoyo en la decisión' },
+        { controlName: 'anioDecisionOrt', fieldId: '', label: 'Año de decisión de ORT' },
+        { controlName: 'otrasUniversidades', fieldId: '', label: 'Otras universidades' },
+        { controlName: 'certezaDecision', fieldId: '', label: 'Certeza de la decisión' },
+        { controlName: 'motivosOrt', fieldId: '', label: 'Motivos para elegir ORT' },
+      ],
+    },
+    'experiencia-ort': {
+      label: 'Experiencia con ORT',
+      icon: 'domain',
+      form: forms.ortExperienceForm,
+      errorFields: [
+        {
+          controlName: 'reunionAsesoramiento',
+          fieldId: '',
+          label: 'Reunión de asesoramiento',
+        },
+        { controlName: 'visitoWeb', fieldId: '', label: 'Visita al sitio web' },
+        { controlName: 'visitoSede', fieldId: '', label: 'Visita a instalaciones' },
+        { controlName: 'recuerdaPublicidad', fieldId: '', label: 'Publicidad de ORT' },
+      ],
+    },
+    'situacion-laboral': {
+      label: 'Situación laboral',
+      icon: 'business_center',
+      form: forms.workForm,
+      errorFields: [{ controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' }],
+    },
+    identidad: {
+      label: 'Verificación de identidad',
+      icon: 'verified',
+      form: forms.identityForm,
+      errorFields: [
+        {
+          controlName: 'vencimientoDocumento',
+          fieldId: '',
+          label: 'Vencimiento del documento',
+        },
+      ],
+    },
+    reglamento: {
+      label: 'Reglamento estudiantil',
+      icon: 'article',
+      form: forms.regulationForm,
+      errorFields: [
+        { controlName: 'aceptaReglamento', fieldId: '', label: 'Aceptación del reglamento' },
+      ],
+    },
+  };
+}
+
+export function buildFormErrors(form: FormGroup, fields: FormErrorField[]) {
+  return buildFormErrorSummary(form, fields, ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED);
+}

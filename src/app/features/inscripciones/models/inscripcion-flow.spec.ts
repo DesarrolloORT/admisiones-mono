@@ -1,8 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { EscenarioInscripcion } from 'inscripcion-flow';
+import { type EscenarioInscripcion, SECCIONES_ENCUESTA } from './inscripcion-flow';
 
-describe('EscenarioInscripcion', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+describe('inscripcion flow model', () => {
+  it('keeps the supported inscription scenarios explicit', () => {
+    const scenarios: EscenarioInscripcion[] = ['primera-vez', 'parcial', 'encuesta-completa'];
+
+    expect(scenarios).toEqual(['primera-vez', 'parcial', 'encuesta-completa']);
+  });
+
+  it('includes work status in the full initial survey flow', () => {
+    expect(SECCIONES_ENCUESTA).toContain('situacion-laboral');
   });
 });

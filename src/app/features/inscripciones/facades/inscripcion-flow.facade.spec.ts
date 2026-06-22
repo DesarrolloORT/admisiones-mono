@@ -7,8 +7,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
-import type { BorradorInscripcion } from '../models/inscripcion-flow';
-import { InscripcionDraft } from '../services/inscripcion-draft';
+import type { InscripcionInitialSurveyResolved } from '../resolvers/inscripcion-initial-survey.resolver';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFlowFacade } from './inscripcion-flow.facade';
 
@@ -31,7 +30,7 @@ describe('InscripcionFlowFacade', () => {
   });
 
   it('starts in proposal with the first-time scenario by default', () => {
-    expect(facade.scenario).toBe('primera-vez');
+    expect(facade.surveyState()).toBe('no-iniciada');
     expect(facade.screen()).toBe('propuesta');
     expect(facade.stepNumber()).toBe(1);
     expect(facade.visibleSections()).toEqual([
@@ -74,7 +73,6 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.careerDecisionOptions()).toEqual([{ value: '1', label: 'Durante secundaria' }]);
     expect(facade.supportOptions()).toEqual([{ value: '5', label: 'Familia' }]);
     expect(facade.motivesOptions()).toEqual([{ value: '2', label: 'Prestigio académico' }]);
-    expect(facade.knowledgeOptions()).toEqual([{ value: '6', label: 'Conocía bien la propuesta' }]);
   });
 
   it('filters careers by the selected proposal level group', () => {
@@ -203,23 +201,153 @@ describe('InscripcionFlowFacade', () => {
   });
 
   it('resumes the partial scenario at the first incomplete section', () => {
+    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(
+      of(createInitialSurvey('decision-academica'))
+    );
     facade = createFacade('parcial');
 
     expect(facade.screen()).toBe('encuesta');
     expect(facade.activeSection()).toBe('decision-academica');
     expect(facade.getSectionState('educacion')).toBe('completa');
+    expect(facade.educationForm.getRawValue()).toEqual({
+      cursaSecundaria: 'cursando',
+      lugarSecundaria: '',
+      estadoEducacionSuperior: '3',
+      formacionMadre: '4',
+      formacionPadre: '4',
+    });
+  });
+
+  it('uses the route resolver state without reloading the initial survey', () => {
+    inscripcionesMock.getInitialSurvey.mockClear();
+
+    facade = createFacade(undefined, undefined, {
+      initialSurvey: createInitialSurvey('decision-academica'),
+      loadFailed: false,
+    });
+
+    expect(inscripcionesMock.getInitialSurvey).not.toHaveBeenCalled();
+    expect(facade.screen()).toBe('encuesta');
+    expect(facade.activeSection()).toBe('decision-academica');
+  });
+
+  it('skips survey sections and survey saving when the person has no survey right', () => {
+    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(of({ tieneDerechoEncuesta: false }));
+    facade = createFacade();
+
+    expect(facade.hasInitialSurveyRight()).toBe(false);
+    expect(facade.visibleSections()).toEqual(['identidad', 'reglamento']);
+    expect(facade.screen()).toBe('propuesta');
+
+    fillAcademicForm();
+    facade.continue();
+
+    expect(facade.screen()).toBe('encuesta');
+    expect(facade.activeSection()).toBe('identidad');
+
+    fillIdentityForm();
+    facade.continue();
+    facade.regulationForm.controls.aceptaReglamento.setValue(true);
+    facade.continue();
+
+    expect(inscripcionesMock.saveInitialSurvey).not.toHaveBeenCalled();
+    expect(inscripcionesMock.confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
+    expect(facade.screen()).toBe('pago');
   });
 
   it('hides historical survey sections when the survey is already complete', () => {
+    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(of(createInitialSurvey('completa')));
     facade = createFacade('encuesta-completa');
-    fillAcademicForm();
-    facade.continue();
 
     expect(facade.visibleSections()).toEqual(['identidad', 'reglamento']);
     expect(facade.activeSection()).toBe('identidad');
     expect(facade.surveyState()).toBe('completa');
   });
 
+  it('preloads identity files and expiration when identity verification is reached', async () => {
+    inscripcionesMock.getIdentityPreload.mockReturnValueOnce(
+      of({
+        frente: new File(['front'], 'frente-backend.png', { type: 'image/png' }),
+        dorso: new File(['back'], 'dorso-backend.png', { type: 'image/png' }),
+        selfie: new File(['photo'], 'foto-persona.jpg', { type: 'image/jpeg' }),
+        fechaVencimiento: '2030-02-04',
+      })
+    );
+
+    facade = createFacade(undefined, undefined, {
+      initialSurvey: createInitialSurvey('completa'),
+      loadFailed: false,
+    });
+    TestBed.flushEffects();
+
+    await flushPromises();
+
+    expect(inscripcionesMock.getIdentityPreload).toHaveBeenCalledOnce();
+    expect(facade.identityFiles().frente?.name).toBe('frente-backend.png');
+    expect(facade.identityFiles().dorso?.name).toBe('dorso-backend.png');
+    expect(facade.identityFiles().selfie?.name).toBe('foto-persona.jpg');
+    expect(facade.initialIdentityFiles().frente[0]?.name).toBe('frente-backend.png');
+    expect(facade.initialIdentityFiles().frente[0]?.src).toBeInstanceOf(ArrayBuffer);
+    expect(facade.identityForm.controls.vencimientoDocumento.value).toEqual(new Date(2030, 1, 4));
+  });
+
+  it('requests identity preload even when the initial survey is null', () => {
+    facade = createFacade(undefined, undefined, {
+      initialSurvey: { tieneDerechoEncuesta: true },
+      loadFailed: false,
+    });
+
+    fillAcademicForm();
+    facade.continue();
+    fillEducationForm();
+    facade.continue();
+    fillAcademicDecisionForm();
+    facade.continue();
+    fillOrtExperienceForm();
+    facade.continue();
+    fillWorkForm();
+    facade.continue();
+    TestBed.flushEffects();
+
+    expect(facade.activeSection()).toBe('identidad');
+    await flushPromises();
+
+    expect(inscripcionesMock.getIdentityPreload).toHaveBeenCalledOnce();
+  });
+
+  it('does not overwrite identity values selected while preload is pending', () => {
+    const preload$ = new Subject<{
+      frente: File | null;
+      dorso: File | null;
+      selfie: File | null;
+      fechaVencimiento: string | null;
+    }>();
+    inscripcionesMock.getIdentityPreload.mockReturnValueOnce(preload$);
+    facade = createFacade(undefined, undefined, {
+      initialSurvey: createInitialSurvey('completa'),
+      loadFailed: false,
+    });
+    TestBed.flushEffects();
+
+    const selectedExpiration = new Date(2031, 5, 10);
+    facade.updateIdentityFile('frente', fileChange('frente-usuario.png'));
+    facade.identityForm.controls.vencimientoDocumento.setValue(selectedExpiration);
+    facade.identityForm.controls.vencimientoDocumento.markAsDirty();
+
+    preload$.next({
+      frente: new File(['front'], 'frente-backend.png', { type: 'image/png' }),
+      dorso: new File(['back'], 'dorso-backend.png', { type: 'image/png' }),
+      selfie: null,
+      fechaVencimiento: '2030-02-04',
+    });
+
+    expect(facade.identityFiles().frente?.name).toBe('frente-usuario.png');
+    expect(facade.identityFiles().dorso?.name).toBe('dorso-backend.png');
+    expect(facade.identityForm.controls.vencimientoDocumento.value).toBe(selectedExpiration);
+  });
   it('validates and completes the active survey section', () => {
     fillAcademicForm();
     facade.continue();
@@ -234,18 +362,66 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.activeSection()).toBe('decision-academica');
   });
 
-  it('does not persist identity files in the draft', () => {
+  it('saves the survey in the backend without including identity files', () => {
     fillAcademicForm();
     facade.continue();
     facade.openSection('identidad');
+    facade.workForm.controls.situacionLaboral.setValue('trabaja');
     facade.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     facade.updateIdentityFile('frente', fileChange('frente.png'));
+    facade.requestExit();
+    facade.confirmExit();
 
-    const storedDraft = sessionStorage.getItem('inscripcion-borrador:v1:anonimo:primera-vez') ?? '';
+    const payload = inscripcionesMock.saveInitialSurvey.mock.calls[0]?.[0];
+    const serializedPayload = JSON.stringify(payload);
 
-    expect(storedDraft).toContain('"vencimientoDocumento":"2030-02-04"');
-    expect(storedDraft).not.toContain('frente.png');
-    expect(storedDraft).not.toContain('binary');
+    expect(payload).toMatchObject({
+      idProducto: 20,
+      idProceso: 200,
+      ultimoAnioSecundaria: 1,
+      trabajaActualmente: 'trabaja',
+    });
+    expect(serializedPayload).not.toContain('frente.png');
+    expect(serializedPayload).not.toContain('binary');
+  });
+
+  it('saves the final survey and confirms pre-enrollment before payment', () => {
+    fillAcademicForm();
+    facade.continue();
+    fillEducationForm();
+    facade.continue();
+    fillAcademicDecisionForm();
+    facade.continue();
+    fillOrtExperienceForm();
+    facade.continue();
+    fillWorkForm();
+    facade.continue();
+    fillIdentityForm();
+    facade.continue();
+    facade.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    facade.continue();
+
+    expect(inscripcionesMock.saveInitialSurvey).toHaveBeenCalledWith(
+      expect.objectContaining({
+        idProducto: 20,
+        idProceso: 200,
+        ultimoAnioSecundaria: 1,
+        trabajaActualmente: 'trabaja',
+      })
+    );
+    expect(inscripcionesMock.confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
+    expect(inscripcionesMock.saveInitialSurvey.mock.invocationCallOrder[0]).toBeLessThan(
+      inscripcionesMock.confirmPreEnrollment.mock.invocationCallOrder[0]
+    );
+    expect(facade.screen()).toBe('pago');
+    expect(facade.surveyState()).toBe('completa');
+    expect(facade.inscriptionAmount()).toBe('$ 21.000');
+    expect(facade.paymentDeadline()).toBe('15/04/2027');
+    expect(facade.summaryItems()[0].value).toBe('Licenciatura en Diseño Gráfico');
   });
 
   it('routes offline payments to their reservation result', () => {
@@ -294,12 +470,8 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.screen()).toBe('inscripcion-en-proceso');
   });
 
-  it('returns to identity when a restored draft no longer has its files', () => {
-    sessionStorage.setItem(
-      'inscripcion-borrador:v1:anonimo:encuesta-completa',
-      JSON.stringify(createPaymentDraft())
-    );
-
+  it('returns completed surveys to identity verification', () => {
+    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(of(createInitialSurvey('completa')));
     facade = createFacade('encuesta-completa');
 
     expect(facade.screen()).toBe('encuesta');
@@ -307,12 +479,15 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.getSectionState('identidad')).toBe('activa');
   });
 
-  function createFacade(escenario?: string, resultado?: string): InscripcionFlowFacade {
+  function createFacade(
+    escenario?: string,
+    resultado?: string,
+    initialSurvey?: InscripcionInitialSurveyResolved
+  ): InscripcionFlowFacade {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        InscripcionDraft,
         InscripcionFlowFacade,
         { provide: Catalogs, useValue: catalogsMock },
         { provide: Inscripciones, useValue: inscripcionesMock },
@@ -320,6 +495,7 @@ describe('InscripcionFlowFacade', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
+              data: initialSurvey ? { initialSurvey } : {},
               queryParamMap: convertToParamMap({ escenario, resultado }),
             },
           },
@@ -348,48 +524,57 @@ describe('InscripcionFlowFacade', () => {
       formacionPadre: '4',
     });
   }
+
+  function fillAcademicDecisionForm(): void {
+    facade.academicDecisionForm.setValue({
+      anioDecisionCarrera: '1',
+      apoyoDecision: '5',
+      anioDecisionOrt: '2-ems',
+      otrasUniversidades: 'si',
+      certezaDecision: 'decidido',
+      motivosOrt: '2',
+    });
+  }
+
+  function fillOrtExperienceForm(): void {
+    facade.ortExperienceForm.setValue({
+      reunionAsesoramiento: 'si',
+      visitoWeb: 'si',
+      visitoSede: 'si',
+      recuerdaPublicidad: 'si',
+    });
+  }
+
+  function fillWorkForm(): void {
+    facade.workForm.controls.situacionLaboral.setValue('trabaja');
+  }
+
+  function fillIdentityForm(): void {
+    facade.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+    facade.updateIdentityFile('frente', fileChange('frente.png'));
+    facade.updateIdentityFile('dorso', fileChange('dorso.png'));
+    facade.updateIdentityFile('selfie', fileChange('rostro.png'));
+  }
 });
 
-function createPaymentDraft(): BorradorInscripcion {
+function flushPromises(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve));
+}
+
+function createInitialSurvey(state: string) {
   return {
-    version: 1,
-    escenario: 'encuesta-completa',
-    pantalla: 'pago',
-    seccionActiva: 'reglamento',
-    seccionesCompletas: ['identidad', 'reglamento'],
-    propuesta: {
-      tipoPropuesta: '1',
-      carrera: '20',
-      comienzo: '200',
-      turno: '300',
-    },
+    tieneDerechoEncuesta: true,
     encuesta: {
-      educacion: {
-        cursaSecundaria: '',
-        lugarSecundaria: '',
-        estadoEducacionSuperior: '',
-        formacionMadre: '',
-        formacionPadre: '',
-      },
-      decisionAcademica: {
-        anioDecisionCarrera: '',
-        apoyoDecision: '',
-        anioDecisionOrt: '',
-        otrasUniversidades: '',
-        certezaDecision: '',
-        motivosOrt: '',
-      },
-      experienciaOrt: {
-        reunionAsesoramiento: '',
-        visitoWeb: '',
-        visitoSede: '',
-        recuerdaPublicidad: '',
-      },
-      situacionLaboral: { situacionLaboral: '' },
+      idEncuestaIni: 1,
+      idProducto: 20,
+      idProceso: 200,
+      idTurno: 10,
+      estadoEncuestaIniAdmision: state,
+      ultimoanioSecundariaEncuestaIni: true,
+      tieneEducacionSuperiorEncuestaIni: 'N',
+      instruccionMadreEncuestaIni: '4',
+      instruccionPadreEncuestaIni: '4',
     },
-    identidad: { vencimientoDocumento: '2030-02-04' },
-    reglamento: { aceptaReglamento: true },
-    pago: { metodoPago: '' },
   };
 }
 
@@ -450,6 +635,23 @@ function createCatalogsMock() {
 
 function createInscripcionesMock() {
   return {
+    confirmPreEnrollment: vi.fn().mockReturnValue(
+      of({
+        confirmada: true,
+        fechaVencimientoPago: '2027-04-15',
+        seniaInscripcion: 21000,
+        resumen: {
+          carrera: 'Licenciatura en Diseño Gráfico',
+          comienzo: 'Marzo 2027',
+          turno: 'Matutino',
+        },
+      })
+    ),
+    getIdentityPreload: vi
+      .fn()
+      .mockReturnValue(of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })),
+    getInitialSurvey: vi.fn().mockReturnValue(of({})),
+    saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
     registerProductInterest: vi.fn().mockReturnValue(of(true)),
   };
 }

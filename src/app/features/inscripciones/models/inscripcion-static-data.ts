@@ -5,46 +5,38 @@ import type {
   OpcionInscripcion,
 } from './inscripcion-flow';
 
-export const SECONDARY_STATUS_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: 'cursando', label: 'Sí, estoy cursando' },
-  { value: 'no-cursando', label: 'No' },
-];
-
-export const SECONDARY_PLACE_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: 'uruguay', label: 'Uruguay' },
-  { value: 'exterior', label: 'En el exterior' },
-];
-
 export const WORK_STATUS_OPTIONS: readonly OpcionInscripcion[] = [
   { value: 'trabaja', label: 'Sí, trabajo actualmente' },
   { value: 'buscando', label: 'Estoy buscando trabajo' },
   { value: 'no-trabaja', label: 'No trabajo actualmente' },
 ];
-
-export const YES_NO_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: 'si', label: 'Sí' },
-  { value: 'no', label: 'No' },
-];
-
-export const DECISION_YEAR_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: '1-ems', label: '1º EMS (4º año)' },
-  { value: '2-ems', label: '2º EMS (5º año)' },
-  { value: '3-ems', label: '3º EMS (6º año)' },
-  { value: 'otro', label: 'Otro' },
-];
-
-export const CERTAINTY_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: 'decidido', label: 'Decidido/a' },
-  { value: 'con-dudas', label: 'Con dudas' },
-];
-
 export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & { value: MetodoPago })[] = [
-  { value: 'cuenta-bancaria', label: 'Cuenta bancaria' },
-  { value: 'tarjeta-credito', label: 'Tarjeta de crédito', hint: 'Mastercard y Visa' },
+  {
+    value: 'cuenta-bancaria',
+    label: 'Cuenta bancaria',
+    hint: 'Pagá desde tu banco por Sistarbanc',
+  },
+  {
+    value: 'tarjeta-credito',
+    label: 'Tarjeta de crédito',
+    hint: 'Podrás seleccionar tu tarjeta de crédito dentro de Sistarbanc',
+  },
   { value: 'cuenta-personal', label: 'Cuenta personal', hint: 'Monto disponible $70.000,00' },
-  { value: 'banred', label: 'Banred' },
-  { value: 'abitab', label: 'Abitab' },
-  { value: 'paganza', label: 'Paganza' },
+  {
+    value: 'banred',
+    label: 'Banred',
+    hint: 'Mediante la aplicación ingresando tu número de estudiante',
+  },
+  {
+    value: 'abitab',
+    label: 'Abitab',
+    hint: 'Presencial en red de cobranza presentando tu número de estudiante',
+  },
+  {
+    value: 'paganza',
+    label: 'Paganza',
+    hint: 'Mediante la aplicación ingresando tu número de estudiante',
+  },
 ];
 
 export const RESERVATION_INSTRUCTIONS: Record<

@@ -67,7 +67,7 @@ function createDraft(): BorradorInscripcion {
         visitoSede: '',
         recuerdaPublicidad: '',
       },
-      situacionLaboral: { situacionLaboral: '' },
+      situacionLaboral: { situacionLaboral: 'trabaja' },
     },
     identidad: { vencimientoDocumento: '2030-02-04' },
     reglamento: { aceptaReglamento: false },

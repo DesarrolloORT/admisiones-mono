@@ -1,19 +1,16 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import type { OrtErrorItem, OrtFileUploaderChange } from '@desarrolloort/components';
-import { merge, of } from 'rxjs';
+import type {
+  OrtErrorItem,
+  OrtFileUploaderChange,
+  OrtPreloadedFile,
+} from '@desarrolloort/components';
+import { merge, Observable, of } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
-import {
-  buildFormErrorSummary,
-  type FormErrorField,
-  ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
-} from 'src/app/shared/forms/form-error-summary';
 
 import {
   Career,
-  CatalogItem,
   Comienzo,
   InitialSurveyCatalogs,
   Turno,
@@ -21,270 +18,100 @@ import {
 import { Catalogs } from '../../catalogs/services/catalogs';
 import {
   ArchivosIdentidad,
-  BorradorInscripcion,
   EnvioInscripcion,
   EstadoEncuestaInicial,
   EstadoSeccionEncuesta,
-  FormularioDecisionAcademica,
-  FormularioEducacion,
-  FormularioExperienciaOrt,
-  FormularioIdentidad,
-  FormularioPago,
-  FormularioPropuesta,
-  FormularioReglamento,
-  FormularioSituacionLaboral,
-  ItemResumenInscripcion,
-  METADATOS_PASOS_INSCRIPCION,
+  InscripcionBackendSurvey,
+  InscripcionInitialSurveyResponse,
+  InscripcionPreEnrollmentResponse,
   MetodoPago,
   OpcionInscripcion,
   PantallaInscripcion,
-  PasoInscripcion,
   SeccionEncuestaId,
-  ValoresEncuesta,
-  ValoresPropuesta,
 } from '../models/inscripcion-flow';
+import {
+  buildFormErrors,
+  createInscripcionForms,
+  createSectionConfig,
+  type IdentityFileTarget,
+  type IdentityPreloadedFileMap,
+} from '../models/inscripcion-flow-forms';
+import {
+  buildConfirmPreEnrollmentPayload,
+  buildInitialSurveyPayload,
+  getSurveyValues,
+  isBackendSurveyComplete,
+  parseDate,
+  patchBackendSurveyForms,
+  resolveBackendSection,
+  serializeDate,
+  toNullableNumber,
+} from '../models/inscripcion-flow-mappers';
+import {
+  getAvailableProposalOptions,
+  getCareerOptions,
+  getOptionLabel,
+  getProposalLevelIds,
+  getProposalOptionByLevel,
+  toCatalogOptions,
+  toStartOption,
+  toTurnoOption,
+} from '../models/inscripcion-flow-options';
 import {
   findFirstIncompleteSection,
   getPreviousScreen,
   getResultadoPago,
   getSeccionesVisibles,
-  parseEscenario,
   parseResultadoForzado,
 } from '../models/inscripcion-flow-policy';
 import {
-  CERTAINTY_OPTIONS,
+  buildStepperSteps,
+  buildSummaryItems,
+  formatInscriptionAmount,
+  formatPaymentDeadline,
+  getReservationInstructions,
+  getStepNumber,
+  getStepSupportLabel,
+} from '../models/inscripcion-flow-view';
+import {
   COORDINATORS,
-  DECISION_YEAR_OPTIONS,
   PAYMENT_OPTIONS,
-  RESERVATION_INSTRUCTIONS,
-  SECONDARY_PLACE_OPTIONS,
-  SECONDARY_STATUS_OPTIONS,
   SUBJECTS,
   WORK_STATUS_OPTIONS,
-  YES_NO_OPTIONS,
 } from '../models/inscripcion-static-data';
-import { InscripcionDraft } from '../services/inscripcion-draft';
-import { Inscripciones } from '../services/inscripciones';
-
-interface SectionConfig {
-  label: string;
-  icon: string;
-  form: FormGroup;
-  errorFields: FormErrorField[];
-}
-
-interface ProposalOptionConfig extends OpcionInscripcion {
-  levelIds: readonly number[];
-}
-
-const PROPOSAL_OPTIONS: readonly ProposalOptionConfig[] = [
-  {
-    value: '1',
-    label: 'Carrera universitaria',
-    icon: 'school',
-    hint: 'Formación de grado con enfoque práctico y salida laboral',
-    levelIds: [1],
-  },
-  {
-    value: '2',
-    label: 'Tecnicatura',
-    icon: 'list_alt',
-    hint: 'Carreras cortas, prácticas y orientadas al mercado',
-    levelIds: [2],
-  },
-  {
-    value: '3',
-    label: 'Actualización profesional',
-    icon: 'how_to_reg',
-    hint: 'Cursos cortos para actualizar habilidades',
-    levelIds: [3, 4],
-  },
-];
+import type { InscripcionInitialSurveyResolved } from '../resolvers/inscripcion-initial-survey.resolver';
+import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscripciones';
 
 export class InscripcionFlowFacade {
   private readonly catalogs = inject(Catalogs);
-  private readonly draftStorage = inject(InscripcionDraft);
   private readonly inscripciones = inject(Inscripciones);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private processingTimer: ReturnType<typeof setTimeout> | null = null;
-  private restoring = true;
+  private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
+  private identityPreloadRequested = false;
+  private readonly identityFileTouched = new Set<IdentityFileTarget>();
+  private readonly preEnrollmentResponse = signal<InscripcionPreEnrollmentResponse | null>(null);
 
-  public readonly secondaryStatusOptions = SECONDARY_STATUS_OPTIONS;
-  public readonly secondaryPlaceOptions = SECONDARY_PLACE_OPTIONS;
-  public readonly workStatusOptions = WORK_STATUS_OPTIONS;
-  public readonly yesNoOptions = YES_NO_OPTIONS;
-  public readonly decisionYearOptions = DECISION_YEAR_OPTIONS;
-  public readonly certaintyOptions = CERTAINTY_OPTIONS;
   public readonly paymentOptions = PAYMENT_OPTIONS;
   public readonly coordinators = COORDINATORS;
-  public readonly paymentDeadline = '04/03/2027';
   public readonly studentNumber = '397654';
-  public readonly inscriptionAmount = '$ 15.500';
   public readonly acceptedImageTypes = ['image/jpeg', 'image/png'];
+  public readonly workStatusOptions = WORK_STATUS_OPTIONS;
 
-  public readonly academicForm = new FormGroup<FormularioPropuesta>({
-    tipoPropuesta: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
-  });
+  private readonly forms = createInscripcionForms();
 
-  public readonly educationForm = new FormGroup<FormularioEducacion>({
-    cursaSecundaria: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    lugarSecundaria: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    estadoEducacionSuperior: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    formacionMadre: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    formacionPadre: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-  });
+  public readonly academicForm = this.forms.academicForm;
+  public readonly educationForm = this.forms.educationForm;
+  public readonly academicDecisionForm = this.forms.academicDecisionForm;
+  public readonly ortExperienceForm = this.forms.ortExperienceForm;
+  public readonly workForm = this.forms.workForm;
+  public readonly identityForm = this.forms.identityForm;
+  public readonly regulationForm = this.forms.regulationForm;
+  public readonly paymentForm = this.forms.paymentForm;
 
-  public readonly academicDecisionForm = new FormGroup<FormularioDecisionAcademica>({
-    anioDecisionCarrera: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    apoyoDecision: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    anioDecisionOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    otrasUniversidades: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    certezaDecision: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    motivosOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
-  });
-
-  public readonly ortExperienceForm = new FormGroup<FormularioExperienciaOrt>({
-    reunionAsesoramiento: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    visitoWeb: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    visitoSede: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    recuerdaPublicidad: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-  });
-
-  public readonly workForm = new FormGroup<FormularioSituacionLaboral>({
-    situacionLaboral: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-  });
-
-  public readonly identityForm = new FormGroup<FormularioIdentidad>({
-    vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
-  });
-
-  public readonly regulationForm = new FormGroup<FormularioReglamento>({
-    aceptaReglamento: new FormControl(false, {
-      nonNullable: true,
-      validators: Validators.requiredTrue,
-    }),
-  });
-
-  public readonly paymentForm = new FormGroup<FormularioPago>({
-    metodoPago: new FormControl<MetodoPago | ''>('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-  });
-
-  private readonly sectionConfig: Record<SeccionEncuestaId, SectionConfig> = {
-    educacion: {
-      label: 'Educación',
-      icon: 'menu_book',
-      form: this.educationForm,
-      errorFields: [
-        { controlName: 'cursaSecundaria', fieldId: '', label: 'Situación de secundaria' },
-        { controlName: 'lugarSecundaria', fieldId: '', label: 'Lugar de secundaria' },
-        {
-          controlName: 'estadoEducacionSuperior',
-          fieldId: '',
-          label: 'Estado de educación superior',
-        },
-        { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
-        { controlName: 'formacionPadre', fieldId: '', label: 'Formación de padre o tutor' },
-      ],
-    },
-    'decision-academica': {
-      label: 'Decisión académica',
-      icon: 'schema',
-      form: this.academicDecisionForm,
-      errorFields: [
-        { controlName: 'anioDecisionCarrera', fieldId: '', label: 'Año de decisión de carrera' },
-        { controlName: 'apoyoDecision', fieldId: '', label: 'Apoyo en la decisión' },
-        { controlName: 'anioDecisionOrt', fieldId: '', label: 'Año de decisión de ORT' },
-        { controlName: 'otrasUniversidades', fieldId: '', label: 'Otras universidades' },
-        { controlName: 'certezaDecision', fieldId: '', label: 'Certeza de la decisión' },
-        { controlName: 'motivosOrt', fieldId: '', label: 'Motivos para elegir ORT' },
-      ],
-    },
-    'experiencia-ort': {
-      label: 'Experiencia con ORT',
-      icon: 'domain',
-      form: this.ortExperienceForm,
-      errorFields: [
-        {
-          controlName: 'reunionAsesoramiento',
-          fieldId: '',
-          label: 'Reunión de asesoramiento',
-        },
-        { controlName: 'visitoWeb', fieldId: '', label: 'Visita al sitio web' },
-        { controlName: 'visitoSede', fieldId: '', label: 'Visita a instalaciones' },
-        { controlName: 'recuerdaPublicidad', fieldId: '', label: 'Publicidad de ORT' },
-      ],
-    },
-    'situacion-laboral': {
-      label: 'Situación laboral',
-      icon: 'business_center',
-      form: this.workForm,
-      errorFields: [{ controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' }],
-    },
-    identidad: {
-      label: 'Verificación de identidad',
-      icon: 'verified',
-      form: this.identityForm,
-      errorFields: [
-        {
-          controlName: 'vencimientoDocumento',
-          fieldId: '',
-          label: 'Vencimiento del documento',
-        },
-      ],
-    },
-    reglamento: {
-      label: 'Reglamento estudiantil',
-      icon: 'article',
-      form: this.regulationForm,
-      errorFields: [
-        { controlName: 'aceptaReglamento', fieldId: '', label: 'Aceptación del reglamento' },
-      ],
-    },
-  };
+  private readonly sectionConfig = createSectionConfig(this.forms);
 
   private readonly careers = signal<readonly Career[]>([]);
   private readonly proposalTypeValue = signal(this.academicForm.controls.tipoPropuesta.value);
@@ -294,18 +121,30 @@ export class InscripcionFlowFacade {
   private readonly submittedPayment = signal(false);
   private readonly productInterestError = signal<string | null>(null);
 
-  public readonly scenario = parseEscenario(this.route.snapshot.queryParamMap.get('escenario'));
   public readonly forcedResult = parseResultadoForzado(
     this.route.snapshot.queryParamMap.get('resultado')
   );
   public readonly screen = signal<PantallaInscripcion>('propuesta');
-  public readonly activeSection = signal<SeccionEncuestaId>(
-    this.scenario === 'encuesta-completa' ? 'identidad' : 'educacion'
-  );
+  public readonly activeSection = signal<SeccionEncuestaId>('educacion');
+  public readonly surveyState = signal<EstadoEncuestaInicial>('no-iniciada');
+  public readonly hasInitialSurveyRight = signal(true);
   public readonly identityFiles = signal<ArchivosIdentidad>({
     frente: null,
     dorso: null,
     selfie: null,
+  });
+  private readonly preloadedIdentityFiles = signal<IdentityPreloadedFileMap>({
+    frente: null,
+    dorso: null,
+    selfie: null,
+  });
+  public readonly initialIdentityFiles = computed(() => {
+    const files = this.preloadedIdentityFiles();
+    return {
+      frente: files.frente ? [files.frente] : [],
+      dorso: files.dorso ? [files.dorso] : [],
+      selfie: files.selfie ? [files.selfie] : [],
+    };
   });
   public readonly exitConfirmationOpen = signal(false);
   public readonly showAllSubjects = signal(false);
@@ -318,22 +157,26 @@ export class InscripcionFlowFacade {
   public readonly supportOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly careerDecisionOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly knowledgeOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly catalogError = signal<string | null>(null);
+  public readonly surveyLoadError = signal<string | null>(null);
+  public readonly surveySaveError = signal<string | null>(null);
+  public readonly preEnrollmentError = signal<string | null>(null);
   public readonly loadingCareers = signal(false);
   public readonly loadingInitialSurveyCatalogs = signal(false);
+  public readonly loadingSurveyState = signal(false);
   public readonly loadingStarts = signal(false);
   public readonly loadingTurnos = signal(false);
   public readonly registeringProductInterest = signal(false);
+  public readonly savingSurvey = signal(false);
+  public readonly finalizingPreEnrollment = signal(false);
 
-  public readonly visibleSections = computed(() => getSeccionesVisibles(this.scenario));
-  public readonly surveyState = computed<EstadoEncuestaInicial>(() => {
-    if (this.scenario === 'encuesta-completa') {
-      return 'completa';
-    }
-
-    return this.completedSections().length === 0 ? 'no-iniciada' : 'en-progreso';
-  });
+  public readonly visibleSections = computed(() =>
+    getSeccionesVisibles(
+      !this.hasInitialSurveyRight() || this.surveyState() === 'completa'
+        ? 'encuesta-completa'
+        : 'primera-vez'
+    )
+  );
   public readonly sectionItems = computed(() =>
     this.visibleSections().map(section => ({
       id: section,
@@ -342,30 +185,19 @@ export class InscripcionFlowFacade {
       state: this.getSectionState(section),
     }))
   );
-  public readonly proposalOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const availableLevelIds = new Set(this.careers().map(career => career.idNivelProducto));
-
-    return PROPOSAL_OPTIONS.filter(option =>
-      option.levelIds.some(levelId => availableLevelIds.has(levelId))
-    ).map(({ value, label, icon, hint }) => ({ value, label, icon, hint }));
-  });
-  public readonly careerOptions = computed<readonly OpcionInscripcion[]>(() => {
-    const proposalLevelIds = this.getProposalLevelIds(this.proposalTypeValue());
-
-    return this.careers()
-      .filter(career => proposalLevelIds.includes(career.idNivelProducto))
-      .map(career => ({
-        value: career.idProducto.toString(),
-        label: career.nombreProducto,
-      }));
-  });
+  public readonly proposalOptions = computed<readonly OpcionInscripcion[]>(() =>
+    getAvailableProposalOptions(this.careers())
+  );
+  public readonly careerOptions = computed<readonly OpcionInscripcion[]>(() =>
+    getCareerOptions(this.careers(), this.proposalTypeValue())
+  );
   public readonly careersLoadingMessage = computed(() =>
     this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
   );
   public readonly startsLoadingMessage = computed(() => {
     if (!this.loadingStarts()) return '';
 
-    const career = this.getOptionLabel(
+    const career = getOptionLabel(
       this.careerOptions(),
       this.academicForm.controls.carrera.value,
       'la carrera seleccionada'
@@ -375,7 +207,7 @@ export class InscripcionFlowFacade {
   public readonly turnosLoadingMessage = computed(() => {
     if (!this.loadingTurnos()) return '';
 
-    const start = this.getOptionLabel(
+    const start = getOptionLabel(
       this.startOptions(),
       this.academicForm.controls.comienzo.value,
       'el comienzo seleccionado'
@@ -385,102 +217,57 @@ export class InscripcionFlowFacade {
   public readonly isTerminal = computed(() =>
     ['reserva', 'inscripcion-confirmada', 'inscripcion-en-proceso'].includes(this.screen())
   );
-  public readonly showStepper = computed(() =>
-    ['propuesta', 'encuesta', 'lector-reglamento', 'pago', 'confirmacion-pago'].includes(
-      this.screen()
-    )
+  public readonly showStepper = computed(
+    () =>
+      !this.loadingSurveyState() &&
+      !this.surveyLoadError() &&
+      ['propuesta', 'encuesta', 'lector-reglamento', 'pago', 'confirmacion-pago'].includes(
+        this.screen()
+      )
   );
   public readonly canGoBack = computed(
     () =>
       getPreviousScreen(this.screen(), this.activeSection(), this.visibleSections()) !== null &&
       this.screen() !== 'confirmacion-pago'
   );
-  public readonly stepNumber = computed<1 | 2 | 3>(() => {
-    const screen = this.screen();
-    if (screen === 'propuesta') return 1;
-    if (screen === 'encuesta' || screen === 'lector-reglamento') return 2;
-    return 3;
-  });
-  public readonly stepSupportLabel = computed(() => {
-    const number = this.stepNumber();
-    if (number === 1) return METADATOS_PASOS_INSCRIPCION.propuesta.supportLabel;
-    if (number === 2) return METADATOS_PASOS_INSCRIPCION.encuesta.supportLabel;
-    return METADATOS_PASOS_INSCRIPCION.pago.supportLabel;
-  });
-  public readonly stepperSteps = computed<PasoInscripcion[]>(() => [
-    {
-      id: 'propuesta',
-      title: 'Propuesta académica',
-      overline: 'Paso 1',
-      status: this.stepNumber() > 1 ? 'completo' : 'actual',
-    },
-    {
-      id: 'encuesta',
-      title: 'Información personal',
-      overline: 'Paso 2',
-      status: this.stepNumber() > 2 ? 'completo' : this.stepNumber() === 2 ? 'actual' : 'pendiente',
-    },
-    {
-      id: 'pago',
-      title: 'Confirmación',
-      overline: 'Paso 3',
-      status: this.stepNumber() === 3 ? 'actual' : 'pendiente',
-    },
-  ]);
-  public readonly summaryItems = computed<ItemResumenInscripcion[]>(() => [
-    {
-      icon: 'school',
-      label: 'Carrera',
-      value: this.getOptionLabel(
-        this.careerOptions(),
-        this.academicForm.controls.carrera.value,
-        'Sin seleccionar'
-      ),
-    },
-    {
-      icon: 'calendar_today',
-      label: 'Comienzo',
-      value: this.getOptionLabel(
-        this.startOptions(),
-        this.academicForm.controls.comienzo.value,
-        'Sin seleccionar'
-      ),
-    },
-    {
-      icon: 'schedule',
-      label: 'Turno',
-      value: this.getOptionLabel(
-        this.turnoOptions(),
-        this.academicForm.controls.turno.value,
-        'Sin seleccionar'
-      ),
-    },
-  ]);
+  public readonly stepNumber = computed<1 | 2 | 3>(() => getStepNumber(this.screen()));
+  public readonly stepSupportLabel = computed(() => getStepSupportLabel(this.stepNumber()));
+  public readonly stepperSteps = computed(() => buildStepperSteps(this.stepNumber()));
+  public readonly summaryItems = computed(() =>
+    buildSummaryItems({
+      response: this.preEnrollmentResponse(),
+      selectedCareer: this.academicForm.controls.carrera.value,
+      selectedStart: this.academicForm.controls.comienzo.value,
+      selectedTurno: this.academicForm.controls.turno.value,
+      careerOptions: this.careerOptions(),
+      startOptions: this.startOptions(),
+      turnoOptions: this.turnoOptions(),
+    })
+  );
+  public readonly paymentDeadline = computed(() =>
+    formatPaymentDeadline(this.preEnrollmentResponse()?.fechaVencimientoPago)
+  );
+  public readonly inscriptionAmount = computed(() =>
+    formatInscriptionAmount(this.preEnrollmentResponse()?.seniaInscripcion)
+  );
   public readonly visibleSubjects = computed(() =>
     this.showAllSubjects() ? SUBJECTS : SUBJECTS.slice(0, 4)
   );
   public readonly subjectsToggleLabel = computed(() =>
     this.showAllSubjects() ? 'Ver menos materias' : 'Ver todas las materias'
   );
-  public readonly reservationInstructions = computed(() => {
-    const method = this.selectedPaymentMethod();
-    return method === 'paganza' || method === 'banred' || method === 'abitab'
-      ? RESERVATION_INSTRUCTIONS[method]
-      : RESERVATION_INSTRUCTIONS.abitab;
-  });
+  public readonly reservationInstructions = computed(() =>
+    getReservationInstructions(this.selectedPaymentMethod())
+  );
   public readonly academicErrors = computed<OrtErrorItem[]>(() => {
     if (!this.submittedAcademic()) return [];
 
-    const formErrors = buildFormErrorSummary(
-      this.academicForm,
-      [
-        { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
-        { controlName: 'carrera', fieldId: '', label: 'Carrera' },
-        { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
-        { controlName: 'turno', fieldId: '', label: 'Turno' },
-      ],
-      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-    );
+    const formErrors = buildFormErrors(this.academicForm, [
+      { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
+      { controlName: 'carrera', fieldId: '', label: 'Carrera' },
+      { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
+      { controlName: 'turno', fieldId: '', label: 'Turno' },
+    ]);
     const productInterestError = this.productInterestError();
 
     return productInterestError ? [...formErrors, { message: productInterestError }] : formErrors;
@@ -490,11 +277,7 @@ export class InscripcionFlowFacade {
     if (!this.submittedSections().includes(section)) return [];
     const config = this.sectionConfig[section];
 
-    const formErrors = buildFormErrorSummary(
-      config.form,
-      config.errorFields,
-      ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-    );
+    const formErrors = buildFormErrors(config.form, config.errorFields);
 
     if (section !== 'identidad') return formErrors;
 
@@ -508,11 +291,9 @@ export class InscripcionFlowFacade {
   });
   public readonly paymentErrors = computed<OrtErrorItem[]>(() =>
     this.submittedPayment()
-      ? buildFormErrorSummary(
-          this.paymentForm,
-          [{ controlName: 'metodoPago', fieldId: '', label: 'Medio de pago' }],
-          ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED
-        )
+      ? buildFormErrors(this.paymentForm, [
+          { controlName: 'metodoPago', fieldId: '', label: 'Medio de pago' },
+        ])
       : []
   );
 
@@ -522,8 +303,9 @@ export class InscripcionFlowFacade {
     this.resetAcademicSelectionOnProposalChange();
     this.loadStartsOnCareerChange();
     this.loadTurnosOnStartChange();
-    this.restoreDraft();
     this.observeForms();
+    this.loadIdentityPreloadOnIdentitySection();
+    this.applyResolvedInitialSurveyState();
     this.destroyRef.onDestroy(() => {
       if (this.processingTimer) clearTimeout(this.processingTimer);
     });
@@ -561,20 +343,17 @@ export class InscripcionFlowFacade {
     } else {
       this.screen.set(previousScreen);
     }
-
-    this.saveDraft();
   }
 
   public openSection(section: SeccionEncuestaId): void {
     if (!this.visibleSections().includes(section)) return;
     this.activeSection.set(section);
-    this.saveDraft();
   }
 
   public canSelectCareer(): boolean {
     return (
       !this.loadingCareers() &&
-      this.getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0 &&
+      getProposalLevelIds(this.academicForm.controls.tipoPropuesta.value).length > 0 &&
       this.careerOptions().length > 0
     );
   }
@@ -601,16 +380,16 @@ export class InscripcionFlowFacade {
     return this.completedSections().includes(section) ? 'completa' : 'pendiente';
   }
 
-  public updateIdentityFile(target: keyof ArchivosIdentidad, event: OrtFileUploaderChange): void {
+  public updateIdentityFile(target: IdentityFileTarget, event: OrtFileUploaderChange): void {
     const selectedFile = event.value.find(file => file.isValid)?.file ?? null;
+    this.identityFileTouched.add(target);
+    this.preloadedIdentityFiles.update(files => ({ ...files, [target]: null }));
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
     this.syncSectionCompletion('identidad');
-    this.saveDraft();
   }
 
   public openRegulationReader(): void {
     this.screen.set('lector-reglamento');
-    this.saveDraft();
   }
 
   public acceptRegulation(): void {
@@ -618,7 +397,6 @@ export class InscripcionFlowFacade {
     this.completeSection('reglamento');
     this.screen.set('encuesta');
     this.activeSection.set('reglamento');
-    this.saveDraft();
   }
 
   public requestPaymentConfirmation(): void {
@@ -629,14 +407,12 @@ export class InscripcionFlowFacade {
     }
 
     this.screen.set('confirmacion-pago');
-    this.saveDraft();
   }
 
   public cancelPaymentConfirmation(): void {
     if (this.screen() !== 'confirmacion-pago') return;
 
     this.screen.set('pago');
-    this.saveDraft();
   }
 
   public confirmPayment(): void {
@@ -666,17 +442,49 @@ export class InscripcionFlowFacade {
   }
 
   public requestExit(): void {
+    this.surveySaveError.set(null);
     this.exitConfirmationOpen.set(true);
   }
 
   public cancelExit(): void {
+    this.surveySaveError.set(null);
     this.exitConfirmationOpen.set(false);
   }
 
   public confirmExit(): void {
-    this.saveDraft();
-    this.exitConfirmationOpen.set(false);
-    void this.router.navigateByUrl('/inicio');
+    if (this.savingSurvey()) return;
+
+    if (!this.hasInitialSurveyRight()) {
+      this.exitConfirmationOpen.set(false);
+      void this.router.navigateByUrl('/inicio');
+      return;
+    }
+
+    this.surveySaveError.set(null);
+    this.savingSurvey.set(true);
+    this.inscripciones
+      .saveInitialSurvey(this.getInitialSurveyPayload())
+      .pipe(
+        finalize(() => this.savingSurvey.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: saved => {
+          if (!saved) {
+            this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.');
+            return;
+          }
+
+          this.exitConfirmationOpen.set(false);
+          void this.router.navigateByUrl('/inicio');
+        },
+        error: () =>
+          this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.'),
+      });
+  }
+
+  public retryInitialSurvey(): void {
+    this.loadInitialSurveyState();
   }
 
   public toggleSubjects(): void {
@@ -690,15 +498,19 @@ export class InscripcionFlowFacade {
     }
 
     const files = this.identityFiles();
+    const surveyState = this.surveyState();
     return {
-      escenario: this.scenario,
-      estadoEncuestaInicial: this.surveyState(),
+      escenario:
+        surveyState === 'completa'
+          ? 'encuesta-completa'
+          : surveyState === 'en-progreso'
+            ? 'parcial'
+            : 'primera-vez',
+      estadoEncuestaInicial: surveyState,
       propuesta: this.academicForm.getRawValue(),
-      encuesta: this.scenario === 'encuesta-completa' ? null : this.getSurveyValues(),
+      encuesta: surveyState === 'completa' ? null : getSurveyValues(this.forms),
       identidad: {
-        vencimientoDocumento: this.serializeDate(
-          this.identityForm.controls.vencimientoDocumento.value
-        ),
+        vencimientoDocumento: serializeDate(this.identityForm.controls.vencimientoDocumento.value),
         frenteAdjunto: files.frente !== null,
         dorsoAdjunto: files.dorso !== null,
         selfieAdjunta: files.selfie !== null,
@@ -754,10 +566,11 @@ export class InscripcionFlowFacade {
     this.activeSection.set(
       findFirstIncompleteSection(this.visibleSections(), this.completedSections())
     );
-    this.saveDraft();
   }
 
   private submitActiveSection(): void {
+    if (this.finalizingPreEnrollment()) return;
+
     const section = this.activeSection();
     this.submittedSections.update(sections =>
       sections.includes(section) ? sections : [...sections, section]
@@ -776,10 +589,54 @@ export class InscripcionFlowFacade {
     if (nextSection) {
       this.activeSection.set(nextSection);
     } else {
-      this.screen.set('pago');
+      this.finishSurveyStep();
+    }
+  }
+
+  private finishSurveyStep(): void {
+    const confirmPayload = buildConfirmPreEnrollmentPayload(this.forms);
+    if (!confirmPayload) {
+      this.preEnrollmentError.set(
+        'No se pudo confirmar la preinscripción con la oferta seleccionada.'
+      );
+      return;
     }
 
-    this.saveDraft();
+    this.preEnrollmentError.set(null);
+    this.finalizingPreEnrollment.set(true);
+    this.saveFinalSurvey()
+      .pipe(
+        switchMap(saved => {
+          if (!saved) throw new Error('No se pudo guardar la encuesta inicial final.');
+          return this.inscripciones.confirmPreEnrollment(confirmPayload);
+        }),
+        finalize(() => this.finalizingPreEnrollment.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: response => {
+          if (response.confirmada === false) {
+            this.preEnrollmentError.set(
+              'No se pudo confirmar la preinscripción. Intentá nuevamente.'
+            );
+            return;
+          }
+
+          this.preEnrollmentResponse.set(response);
+          this.surveyState.set('completa');
+          this.screen.set('pago');
+        },
+        error: () =>
+          this.preEnrollmentError.set(
+            'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+          ),
+      });
+  }
+
+  private saveFinalSurvey(): Observable<boolean> {
+    if (!this.hasInitialSurveyRight()) return of(true);
+
+    return this.inscripciones.saveInitialSurvey(this.getInitialSurveyPayload());
   }
 
   private completeSection(section: SeccionEncuestaId): void {
@@ -822,169 +679,219 @@ export class InscripcionFlowFacade {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.productInterestError.set(null);
+        this.preEnrollmentError.set(null);
         for (const section of this.visibleSections()) {
           this.syncSectionCompletion(section);
         }
-        this.saveDraft();
       });
   }
 
-  private restoreDraft(): void {
-    const draft = this.draftStorage.load(this.scenario);
+  private loadIdentityPreloadOnIdentitySection(): void {
+    effect(() => {
+      if (
+        this.identityPreloadRequested ||
+        this.surveyLoadError() ||
+        this.screen() !== 'encuesta' ||
+        this.activeSection() !== 'identidad'
+      ) {
+        return;
+      }
 
-    if (draft) {
-      this.applyDraft(draft);
-    } else if (this.scenario === 'parcial') {
-      this.applyDraft(this.getPartialScenarioDraft());
+      this.identityPreloadRequested = true;
+      this.inscripciones
+        .getIdentityPreload()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: preload => this.applyIdentityPreload(preload),
+          error: () => undefined,
+        });
+    });
+  }
+
+  private applyIdentityPreload(preload: InscripcionIdentityPreload): void {
+    this.applyPreloadedIdentityFile('frente', preload.frente);
+    this.applyPreloadedIdentityFile('dorso', preload.dorso);
+    this.applyPreloadedIdentityFile('selfie', preload.selfie);
+
+    const expiration = parseDate(preload.fechaVencimiento);
+    const expirationControl = this.identityForm.controls.vencimientoDocumento;
+    if (expiration && !expirationControl.value && !expirationControl.dirty) {
+      expirationControl.setValue(expiration);
     }
 
-    this.restoring = false;
+    this.syncSectionCompletion('identidad');
   }
 
-  private applyDraft(draft: BorradorInscripcion): void {
-    this.academicForm.patchValue(draft.propuesta, { emitEvent: false });
-    this.proposalTypeValue.set(draft.propuesta.tipoPropuesta);
-    this.educationForm.patchValue(draft.encuesta.educacion, { emitEvent: false });
-    this.academicDecisionForm.patchValue(draft.encuesta.decisionAcademica, {
-      emitEvent: false,
-    });
-    this.ortExperienceForm.patchValue(draft.encuesta.experienciaOrt, { emitEvent: false });
-    this.workForm.patchValue(draft.encuesta.situacionLaboral, { emitEvent: false });
-    this.identityForm.patchValue(
-      {
-        vencimientoDocumento: this.parseDate(draft.identidad.vencimientoDocumento),
-      },
-      { emitEvent: false }
-    );
-    this.regulationForm.patchValue(draft.reglamento, { emitEvent: false });
-    this.paymentForm.patchValue(draft.pago, { emitEvent: false });
-    const completedSections = draft.seccionesCompletas.filter(
-      section => this.visibleSections().includes(section) && section !== 'identidad'
-    );
-    const requiresIdentityReattachment =
-      draft.seccionesCompletas.includes('identidad') &&
-      (draft.pantalla === 'lector-reglamento' ||
-        draft.pantalla === 'pago' ||
-        draft.pantalla === 'confirmacion-pago' ||
-        draft.seccionActiva === 'reglamento');
+  private applyPreloadedIdentityFile(target: IdentityFileTarget, file: File | null): void {
+    if (!file || this.identityFileTouched.has(target) || this.identityFiles()[target]) return;
 
-    this.completedSections.set(completedSections);
-    this.screen.set(requiresIdentityReattachment ? 'encuesta' : draft.pantalla);
-    this.activeSection.set(
-      requiresIdentityReattachment
-        ? 'identidad'
-        : this.visibleSections().includes(draft.seccionActiva)
-          ? draft.seccionActiva
-          : findFirstIncompleteSection(this.visibleSections(), completedSections)
-    );
-    this.loadAcademicOptionsForDraft(draft.propuesta);
+    this.identityFiles.update(files => ({ ...files, [target]: file }));
+    void file
+      .arrayBuffer()
+      .then(src => {
+        if (this.identityFileTouched.has(target) || this.identityFiles()[target] !== file) return;
+
+        this.preloadedIdentityFiles.update(files => ({
+          ...files,
+          [target]: this.toIdentityPreloadedFile(target, file, src),
+        }));
+      })
+      .catch(() => undefined);
   }
 
-  private getPartialScenarioDraft(): BorradorInscripcion {
+  private toIdentityPreloadedFile(
+    target: IdentityFileTarget,
+    file: File,
+    src: ArrayBuffer
+  ): OrtPreloadedFile {
     return {
-      version: 1,
-      escenario: 'parcial',
-      pantalla: 'encuesta',
-      seccionActiva: 'decision-academica',
-      seccionesCompletas: ['educacion'],
-      propuesta: {
-        tipoPropuesta: '1',
-        carrera: '20',
-        comienzo: '200',
-        turno: '300',
-      },
-      encuesta: {
-        educacion: {
-          cursaSecundaria: 'cursando',
-          lugarSecundaria: 'uruguay',
-          estadoEducacionSuperior: '3',
-          formacionMadre: '4',
-          formacionPadre: '4',
-        },
-        decisionAcademica: {
-          anioDecisionCarrera: '',
-          apoyoDecision: '',
-          anioDecisionOrt: '',
-          otrasUniversidades: '',
-          certezaDecision: '',
-          motivosOrt: '',
-        },
-        experienciaOrt: {
-          reunionAsesoramiento: '',
-          visitoWeb: '',
-          visitoSede: '',
-          recuerdaPublicidad: '',
-        },
-        situacionLaboral: { situacionLaboral: '' },
-      },
-      identidad: { vencimientoDocumento: '' },
-      reglamento: { aceptaReglamento: false },
-      pago: { metodoPago: '' },
+      id: `identity-preload-${target}`,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      src,
     };
   }
+  private loadInitialSurveyState(): void {
+    if (this.loadingSurveyState()) return;
 
-  private saveDraft(): void {
-    if (this.restoring || this.isTerminal() || this.screen() === 'procesando') return;
+    this.surveyLoadError.set(null);
+    this.loadingSurveyState.set(true);
+    this.inscripciones
+      .getInitialSurvey()
+      .pipe(
+        finalize(() => this.loadingSurveyState.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: response => this.applyInitialSurvey(response),
+        error: error => {
+          if (isNotFoundError(error)) {
+            this.initializeEmptySurvey();
+            return;
+          }
 
-    const currentScreen = this.screen();
-    const draftScreen: BorradorInscripcion['pantalla'] =
-      currentScreen === 'lector-reglamento' ||
-      currentScreen === 'confirmacion-pago' ||
-      currentScreen === 'pago' ||
-      currentScreen === 'encuesta'
-        ? currentScreen
-        : 'propuesta';
+          this.surveyLoadError.set(
+            'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+          );
+        },
+      });
+  }
 
-    this.draftStorage.save({
-      version: 1,
-      escenario: this.scenario,
-      pantalla: draftScreen,
-      seccionActiva: this.activeSection(),
-      seccionesCompletas: [...this.completedSections()],
-      propuesta: this.academicForm.getRawValue(),
-      encuesta: this.getSurveyValues(),
-      identidad: {
-        vencimientoDocumento: this.serializeDate(
-          this.identityForm.controls.vencimientoDocumento.value
-        ),
-      },
-      reglamento: this.regulationForm.getRawValue(),
-      pago: this.paymentForm.getRawValue(),
+  private applyResolvedInitialSurveyState(): void {
+    const resolved = this.route.snapshot.data['initialSurvey'] as
+      | InscripcionInitialSurveyResolved
+      | undefined;
+
+    if (!resolved) {
+      this.loadInitialSurveyState();
+      return;
+    }
+
+    if (resolved.loadFailed) {
+      this.surveyLoadError.set(
+        'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+      );
+      return;
+    }
+
+    this.applyInitialSurvey(resolved.initialSurvey ?? { tieneDerechoEncuesta: true });
+  }
+
+  private initializeEmptySurvey(): void {
+    this.hasInitialSurveyRight.set(true);
+    this.surveyState.set('no-iniciada');
+    this.completedSections.set([]);
+    this.activeSection.set('educacion');
+    this.screen.set('propuesta');
+  }
+
+  private initializeIdentityOnlySurvey(): void {
+    this.hasInitialSurveyRight.set(false);
+    this.surveyState.set('completa');
+    this.completedSections.set([]);
+    this.activeSection.set('identidad');
+    this.screen.set('propuesta');
+  }
+
+  private applyInitialSurvey(response: InscripcionInitialSurveyResponse): void {
+    this.initialSurveyResponse = response;
+    if (response.tieneDerechoEncuesta === false) {
+      this.initializeIdentityOnlySurvey();
+      return;
+    }
+
+    this.hasInitialSurveyRight.set(true);
+    const survey = response.encuesta;
+    if (!survey) {
+      this.initializeEmptySurvey();
+      return;
+    }
+
+    const isComplete = isBackendSurveyComplete(survey);
+    const state: EstadoEncuestaInicial = isComplete ? 'completa' : 'en-progreso';
+    this.surveyState.set(state);
+    this.applyBackendSurvey(survey, response);
+
+    const activeSection = isComplete
+      ? 'identidad'
+      : (resolveBackendSection(survey.estadoEncuestaIniAdmision) ?? 'educacion');
+    const visibleSections = getSeccionesVisibles(isComplete ? 'encuesta-completa' : 'primera-vez');
+    const activeIndex = visibleSections.indexOf(activeSection);
+
+    this.completedSections.set(activeIndex > 0 ? visibleSections.slice(0, activeIndex) : []);
+    this.activeSection.set(activeSection);
+    this.screen.set('encuesta');
+    this.loadAcademicOptionsForSurvey(survey);
+  }
+
+  private applyBackendSurvey(
+    survey: InscripcionBackendSurvey,
+    response: InscripcionInitialSurveyResponse
+  ): void {
+    const proposalType = patchBackendSurveyForms(survey, response, {
+      forms: this.forms,
+      careers: this.careers(),
+      previousCareerOptions: this.previousCareerOptions(),
+    });
+    this.proposalTypeValue.set(proposalType);
+  }
+  private loadAcademicOptionsForSurvey(survey: InscripcionBackendSurvey): void {
+    const careerId = survey.idProducto ?? null;
+    const processId = survey.idProceso ?? null;
+    if (careerId === null) return;
+
+    this.catalogs
+      .getComienzos(careerId)
+      .pipe(
+        catchError(() => of<Comienzo[]>([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(starts => this.startOptions.set(starts.map(start => toStartOption(start))));
+
+    if (processId === null) return;
+    this.catalogs
+      .getTurnos(careerId, processId)
+      .pipe(
+        catchError(() => of<Turno[]>([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(turnos => {
+        this.turnoOptions.set(turnos.map(turno => toTurnoOption(turno)));
+        const selectedTurno = turnos.find(turno => turno.idTurno === survey.idTurno);
+        this.academicForm.controls.turno.setValue(selectedTurno?.idOferta.toString() ?? '', {
+          emitEvent: false,
+        });
+      });
+  }
+
+  private getInitialSurveyPayload() {
+    return buildInitialSurveyPayload({
+      forms: this.forms,
+      previousCareerOptions: this.previousCareerOptions(),
+      motivesOptions: this.motivesOptions(),
     });
   }
-
-  private getSurveyValues(): ValoresEncuesta {
-    return {
-      educacion: this.educationForm.getRawValue(),
-      decisionAcademica: this.academicDecisionForm.getRawValue(),
-      experienciaOrt: this.ortExperienceForm.getRawValue(),
-      situacionLaboral: this.workForm.getRawValue(),
-    };
-  }
-
-  private serializeDate(value: Date | null): string {
-    if (!value) return '';
-
-    const year = value.getFullYear();
-    const month = `${value.getMonth() + 1}`.padStart(2, '0');
-    const day = `${value.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private parseDate(value: string): Date | null {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) return null;
-
-    const year = Number(match[1]);
-    const month = Number(match[2]) - 1;
-    const day = Number(match[3]);
-    const date = new Date(year, month, day);
-
-    return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day
-      ? date
-      : null;
-  }
-
   private finishAt(
     screen: Extract<
       PantallaInscripcion,
@@ -992,7 +899,6 @@ export class InscripcionFlowFacade {
     >
   ): void {
     this.screen.set(screen);
-    this.draftStorage.clear(this.scenario);
   }
 
   private logSubmission(submission: EnvioInscripcion): void {
@@ -1022,7 +928,19 @@ export class InscripcionFlowFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: careers => this.careers.set(careers),
+        next: careers => {
+          this.careers.set(careers);
+          const selectedCareer = careers.find(
+            career => career.idProducto.toString() === this.academicForm.controls.carrera.value
+          );
+          if (selectedCareer && !this.academicForm.controls.tipoPropuesta.value) {
+            const proposalType = getProposalOptionByLevel(selectedCareer.idNivelProducto)?.value;
+            if (proposalType) {
+              this.academicForm.controls.tipoPropuesta.setValue(proposalType, { emitEvent: false });
+              this.proposalTypeValue.set(proposalType);
+            }
+          }
+        },
         error: () => {
           this.catalogError.set('No se pudieron cargar las carreras.');
           this.careers.set([]);
@@ -1039,7 +957,11 @@ export class InscripcionFlowFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: catalogs => this.applyInitialSurveyCatalogs(catalogs),
+        next: catalogs => {
+          this.applyInitialSurveyCatalogs(catalogs);
+          const response = this.initialSurveyResponse;
+          if (response?.encuesta) this.applyBackendSurvey(response.encuesta, response);
+        },
         error: () => {
           this.catalogError.set('No se pudieron cargar los catálogos de encuesta inicial.');
           this.applyInitialSurveyCatalogs({
@@ -1075,7 +997,7 @@ export class InscripcionFlowFacade {
           this.turnoOptions.set([]);
         }),
         switchMap(value => {
-          const careerId = this.toNullableNumber(value);
+          const careerId = toNullableNumber(value);
           if (careerId === null) {
             this.loadingStarts.set(false);
             return of<Comienzo[]>([]);
@@ -1089,7 +1011,7 @@ export class InscripcionFlowFacade {
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe(starts => this.startOptions.set(starts.map(start => this.toStartOption(start))));
+      .subscribe(starts => this.startOptions.set(starts.map(start => toStartOption(start))));
   }
 
   private loadTurnosOnStartChange(): void {
@@ -1100,8 +1022,8 @@ export class InscripcionFlowFacade {
           this.turnoOptions.set([]);
         }),
         switchMap(value => {
-          const careerId = this.toNullableNumber(this.academicForm.controls.carrera.value);
-          const startId = this.toNullableNumber(value);
+          const careerId = toNullableNumber(this.academicForm.controls.carrera.value);
+          const startId = toNullableNumber(value);
 
           if (careerId === null || startId === null) {
             this.loadingTurnos.set(false);
@@ -1116,39 +1038,15 @@ export class InscripcionFlowFacade {
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe(turnos => this.turnoOptions.set(turnos.map(turno => this.toTurnoOption(turno))));
-  }
-
-  private loadAcademicOptionsForDraft(values: ValoresPropuesta): void {
-    const careerId = this.toNullableNumber(values.carrera);
-    const startId = this.toNullableNumber(values.comienzo);
-    if (careerId === null) return;
-
-    this.catalogs
-      .getComienzos(careerId)
-      .pipe(
-        catchError(() => of<Comienzo[]>([])),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(starts => this.startOptions.set(starts.map(start => this.toStartOption(start))));
-
-    if (startId === null) return;
-    this.catalogs
-      .getTurnos(careerId, startId)
-      .pipe(
-        catchError(() => of<Turno[]>([])),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(turnos => this.turnoOptions.set(turnos.map(turno => this.toTurnoOption(turno))));
+      .subscribe(turnos => this.turnoOptions.set(turnos.map(turno => toTurnoOption(turno))));
   }
 
   private applyInitialSurveyCatalogs(catalogs: InitialSurveyCatalogs): void {
-    this.previousCareerOptions.set(this.toCatalogOptions(catalogs.estadoEducacionSuperior));
-    this.educationLevelOptions.set(this.toCatalogOptions(catalogs.formacionTutores));
-    this.supportOptions.set(this.toCatalogOptions(catalogs.compartidoCon));
-    this.careerDecisionOptions.set(this.toCatalogOptions(catalogs.decisionCarrera));
-    this.motivesOptions.set(this.toCatalogOptions(catalogs.decisionUniversidad));
-    this.knowledgeOptions.set(this.toCatalogOptions(catalogs.nivelConocimiento));
+    this.previousCareerOptions.set(toCatalogOptions(catalogs.estadoEducacionSuperior));
+    this.educationLevelOptions.set(toCatalogOptions(catalogs.formacionTutores));
+    this.supportOptions.set(toCatalogOptions(catalogs.compartidoCon));
+    this.careerDecisionOptions.set(toCatalogOptions(catalogs.decisionCarrera));
+    this.motivesOptions.set(toCatalogOptions(catalogs.decisionUniversidad));
   }
 
   private buildProductInterestPayload(): {
@@ -1156,47 +1054,15 @@ export class InscripcionFlowFacade {
     idProcesoSeleccionado: number;
     idProducto: number;
   } | null {
-    const idProducto = this.toNullableNumber(this.academicForm.controls.carrera.value);
-    const idProcesoSeleccionado = this.toNullableNumber(this.academicForm.controls.comienzo.value);
-    const idOferta = this.toNullableNumber(this.academicForm.controls.turno.value);
+    const idProducto = toNullableNumber(this.academicForm.controls.carrera.value);
+    const idProcesoSeleccionado = toNullableNumber(this.academicForm.controls.comienzo.value);
+    const idOferta = toNullableNumber(this.academicForm.controls.turno.value);
 
     return idProducto === null || idProcesoSeleccionado === null || idOferta === null
       ? null
       : { idOferta, idProcesoSeleccionado, idProducto };
   }
-
-  private toCatalogOptions(items: CatalogItem[]): OpcionInscripcion[] {
-    return items.map(item => ({ value: item.id.toString(), label: item.label }));
-  }
-
-  private toStartOption(start: Comienzo): OpcionInscripcion {
-    return { value: start.idProceso.toString(), label: start.nombreProceso };
-  }
-
-  private toTurnoOption(turno: Turno): OpcionInscripcion {
-    return {
-      value: turno.idOferta.toString(),
-      label: turno.horarioReferencia
-        ? `${turno.nombreTurno} (${turno.horarioReferencia})`
-        : turno.nombreTurno,
-    };
-  }
-
-  private toNullableNumber(value: string): number | null {
-    if (!value) return null;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  private getProposalLevelIds(value: string): readonly number[] {
-    return PROPOSAL_OPTIONS.find(option => option.value === value)?.levelIds ?? [];
-  }
-
-  private getOptionLabel(
-    options: readonly OpcionInscripcion[],
-    value: string,
-    fallback: string
-  ): string {
-    return options.find(option => option.value === value)?.label ?? fallback;
-  }
+}
+function isNotFoundError(error: unknown): error is { status: number } {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
 }

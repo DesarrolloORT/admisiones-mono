@@ -366,11 +366,17 @@
 
             <section aria-labelledby="identity-selfie-title" class="inscription-subsection">
               <h2 id="identity-selfie-title">Adjuntá una foto tuya</h2>
+              @if(facade.initialIdentityFiles().selfie &&
+              facade.initialIdentityFiles().selfie.length > 0) {
+              <p>Ya subiste una foto de tu rostro. Si querés cambiarla, podés subir otra.</p>
+              } @else{
               <p>Tomá una foto clara de tu rostro para validar tu identidad.</p>
+              }
               <ort-file-uploader
                 label="Foto del rostro *"
                 [acceptedTypes]="facade.acceptedImageTypes"
                 [initialFiles]="facade.initialIdentityFiles().selfie"
+                [maxFiles]="1"
                 (filesChanged)="facade.updateIdentityFile('selfie', $event)" />
             </section>
           </div>

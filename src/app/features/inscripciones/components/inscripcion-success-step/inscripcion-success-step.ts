@@ -8,7 +8,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   selector: 'app-inscripcion-success-step',
   imports: [OrtButtonModule, OrtIconModule, RouterLink],
   templateUrl: './inscripcion-success-step.html',
-  styleUrl: '../../pages/inscripcion/inscripcion.scss',
+  styleUrls: ['../../pages/inscripcion/inscripcion.scss', '../inscripcion-result-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionSuccessStep {

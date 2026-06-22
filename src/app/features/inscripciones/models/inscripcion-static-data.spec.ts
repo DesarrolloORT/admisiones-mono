@@ -1,8 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { SECONDARY_STATUS_OPTIONS } from 'inscripcion-static-data';
+import { PAYMENT_OPTIONS } from './inscripcion-static-data';
 
-describe('SECONDARY_STATUS_OPTIONS', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+describe('PAYMENT_OPTIONS', () => {
+  it('keeps payment values stable for the flow policy', () => {
+    expect(PAYMENT_OPTIONS.map(option => option.value)).toEqual([
+      'cuenta-bancaria',
+      'tarjeta-credito',
+      'cuenta-personal',
+      'banred',
+      'abitab',
+      'paganza',
+    ]);
   });
 });
