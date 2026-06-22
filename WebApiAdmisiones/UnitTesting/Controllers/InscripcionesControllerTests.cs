@@ -85,41 +85,6 @@ namespace UnitTesting.Controllers
             serviceMock.Verify(s => s.ObtenerAceptacionReglamentoEstudiantil(1), Times.Once);
         }
 
-        [Fact]
-        public async Task ObtenerBancos_DelegatesToService()
-        {
-            var serviceMock = new Mock<IInscripcionesService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var responseDto = new BancosResponseDto
-            {
-                TotalCount = 1,
-                Bancos =
-                [
-                    new BancoDto
-                    {
-                        IdBanco = 10,
-                        NombreBanco = "Banco Uno",
-                        Codigo = "B1",
-                        Activo = true
-                    }
-                ]
-            };
-
-            serviceMock
-                .Setup(s => s.ObtenerBancos())
-                .ReturnsAsync(OperationResult<BancosResponseDto>.Ok(
-                    responseDto,
-                    nameof(IInscripcionesService.ObtenerBancos)));
-            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            var response = await controller.ObtenerBancos();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-            serviceMock.Verify(s => s.ObtenerBancos(), Times.Once);
-        }
-
         /*
         [Fact]
         public void ObtenerUltimaInscripcionActiva_ReturnsOk()

@@ -174,6 +174,25 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Obtiene los bancos disponibles para pagos.
+        /// </summary>
+        /// <returns>Lista de bancos disponibles.</returns>
+        /// <response code="200">Bancos obtenidos correctamente.</response>
+        /// <response code="400">Solicitud invalida o rechazada por la API interna.</response>
+        /// <response code="500">Error inesperado al obtener bancos.</response>
+        /// <response code="502">La API interna no devolvio datos validos.</response>
+        [HttpGet("Bancos")]
+        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 200)]
+        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 400)]
+        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 500)]
+        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 502)]
+        public async Task<IActionResult> ObtenerBancos()
+        {
+            var result = await catalogosService.ObtenerBancos();
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Obtiene los motivos de elección disponibles para la encuesta de admisión.
         /// </summary>
         /// <returns>Lista de motivos.</returns>

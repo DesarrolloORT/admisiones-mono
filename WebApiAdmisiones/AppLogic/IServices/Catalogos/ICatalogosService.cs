@@ -17,6 +17,7 @@ namespace AppLogic.IServices.Catalogos
         OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
         Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
+        Task<OperationResult<BancosResponseDto>> ObtenerBancos();
         OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
         OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
         OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();
