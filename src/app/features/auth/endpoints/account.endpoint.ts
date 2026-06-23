@@ -24,6 +24,7 @@ export interface AccountPersonalData {
   phone: string;
   email: string;
   emailVerification: string;
+  identityRestricted: boolean;
 }
 
 export interface UpdateAccountPersonalDataPayload {
@@ -65,6 +66,7 @@ export class AccountEndpoint {
         phone: data.telefono1 ?? '',
         email: data.mail ?? '',
         emailVerification: data.verificacionMail ?? data.mail ?? '',
+        identityRestricted: data.identidadRestringida ?? false,
       }))
     );
   }
