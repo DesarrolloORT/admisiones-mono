@@ -1,5 +1,9 @@
 @if (hasPendingPayment()) {
-<ort-alert purpose="warning" radius="straight">
+<ort-alert
+  actionIcon="arrow_forward"
+  purpose="warning"
+  radius="straight"
+  [hideStatusIcon]="hideStatusIcon()">
   <ort-alert-title>
     Inscripción pendiente de pago.
     <span class="alert-detail--inline">Realiza el pago antes del 04/05/2025</span>
@@ -29,7 +33,59 @@
       <app-dashboard-scholarships-section
         class="mis-becas"
         [becas]="becas()"
-        [singleRow]="singleRow()" />
+        [singleRow]="singleRow()"
+        (openDialog)="openDialog()" />
     </div>
   </section>
+
+  @if (isDialogOpen()) {
+  <ort-dialog
+    align="start"
+    class="scholarship-dialog"
+    showCloseButton="false"
+    title="Aceptar Beca del 25%"
+    [open]="isDialogOpen()"
+    (closed)="closeDialog()"
+    (openChange)="isDialogOpen.set($event)">
+    <p class="dialog-text">
+      Estás por aceptar la beca del Fondo de Excelencia Académica. Al confirmar, el beneficio se
+      aplicará directamente a tu carrera.
+    </p>
+    <ul class="scholarship-dialog__list">
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Puntaje total:</span>
+          1500 / 1600 pts
+        </div>
+      </li>
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Verbal:</span>
+          700 pts
+        </div>
+      </li>
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Matemática:</span>
+          800 pts
+        </div>
+      </li>
+    </ul>
+    <ng-container ortDialogFooter>
+      <button ort-primary-button type="button" (click)="closeDialog()">Confirmar beca</button>
+      <button ort-secondary-button ortDialogClose type="button" (click)="closeDialog()">
+        Cancelar
+      </button>
+    </ng-container>
+  </ort-dialog>
+  }
 </main>
