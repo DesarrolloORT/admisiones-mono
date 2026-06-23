@@ -4,13 +4,15 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../../catalogs/services/catalogs';
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
 import { Inscripciones } from '../../services/inscripciones';
+import { InscripcionProcessStore } from '../../store/inscripcion-process';
 import { Inscripcion } from './inscripcion';
 
 describe('Inscripcion', () => {
   let fixture: ComponentFixture<Inscripcion>;
-  let facade: InscripcionFlowFacade;
+  let process: InscripcionProcessStore;
+  let payment: InscripcionPaymentFacade;
 
   beforeEach(() => {
     sessionStorage.clear();
@@ -91,11 +93,12 @@ describe('Inscripcion', () => {
     });
 
     fixture = TestBed.createComponent(Inscripcion);
-    facade = fixture.debugElement.injector.get(InscripcionFlowFacade);
+    process = fixture.debugElement.injector.get(InscripcionProcessStore);
+    payment = fixture.debugElement.injector.get(InscripcionPaymentFacade);
   });
 
-  it('renders the academic proposal as the initial screen', () => {
-    fixture.detectChanges();
+  it('renders the academic proposal as the initial screen', async () => {
+    await fixture.whenStable();
     const text = fixture.nativeElement.textContent as string;
 
     expect(text).toContain('Paso 1 de 3 - Propuesta académica');
@@ -103,18 +106,18 @@ describe('Inscripcion', () => {
     expect(text).toContain('Continuar');
   });
 
-  it('renders survey, payment and terminal screens from explicit states', () => {
-    facade.screen.set('encuesta');
-    fixture.detectChanges();
+  it('renders survey, payment and terminal screens from explicit states', async () => {
+    process.flow.goTo('encuesta');
+    await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Información personal');
     expect(fixture.nativeElement.textContent).toContain('Verificación de identidad');
 
-    facade.screen.set('pago');
-    fixture.detectChanges();
+    process.flow.goTo('pago');
+    await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Confirmación');
 
-    facade.screen.set('inscripcion-en-proceso');
-    fixture.detectChanges();
+    payment.outcome.set('inscripcion-en-proceso');
+    await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Inscripción en proceso');
   });
 });

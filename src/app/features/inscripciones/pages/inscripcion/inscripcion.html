@@ -1,19 +1,22 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
-<app-inscripcion-shell
-  [showBack]="facade.canGoBack()"
-  [showStepper]="facade.showStepper()"
-  [stepLabel]="facade.stepSupportLabel()"
-  [stepNumber]="facade.stepNumber()"
-  [steps]="facade.stepperSteps()"
-  (back)="facade.back()"
-  (closeFlow)="facade.requestExit()">
-  @if (facade.loadingSurveyState()) {
+<app-process-layout
+  closeLabel="Cerrar inscripción"
+  processTitle="Inscripción a carrera"
+  stepperAriaLabel="Progreso de inscripción"
+  [currentStepId]="process.currentStep()"
+  [showBack]="process.canGoBack()"
+  [showStepper]="process.showStepper()"
+  [stepperSubtitle]="process.stepLabel()"
+  [steps]="process.stepItems()"
+  (back)="process.back()"
+  (closeFlow)="process.requestExit()">
+  @if (survey.loadingSurveyState()) {
   <section aria-labelledby="loading-survey-title" class="inscription-screen inscription-terminal">
     <ort-spinner aria-label="Cargando estado de la inscripción" />
     <h1 id="loading-survey-title">Cargando tu inscripción</h1>
     <p>Estamos consultando el estado de tu encuesta inicial.</p>
   </section>
-  } @else if (facade.surveyLoadError()) {
+  } @else if (survey.surveyLoadError()) {
   <section aria-labelledby="survey-error-title" class="inscription-screen inscription-terminal">
     <span
       aria-hidden="true"
@@ -21,32 +24,18 @@
       <ort-icon>error_outline</ort-icon>
     </span>
     <h1 id="survey-error-title">No pudimos cargar tu inscripción</h1>
-    <p role="alert">{{ facade.surveyLoadError() }}</p>
+    <p role="alert">{{ survey.surveyLoadError() }}</p>
     <footer class="inscription-footer">
-      <button ort-primary-button type="button" (click)="facade.retryInitialSurvey()">
+      <button ort-primary-button type="button" (click)="survey.retryInitialSurvey()">
         Intentar nuevamente
       </button>
     </footer>
   </section>
-  } @else if (facade.screen() === 'pago' || facade.screen() === 'confirmacion-pago') {
-  <app-inscripcion-confirmation-step />
-  } @else { @switch (facade.screen()) { @case ('propuesta') {
-  <app-inscripcion-academic-step />
-  } @case ('encuesta') {
-  <app-inscripcion-personal-step />
-  } @case ('lector-reglamento') {
-  <app-inscripcion-regulation-reader />
-  } @case ('procesando') {
-  <section aria-labelledby="processing-title" class="inscription-screen inscription-terminal">
-    <ort-spinner aria-label="Procesando inscripción" />
-    <h1 id="processing-title">Estamos procesando el pago</h1>
-    <p>No cierres esta pantalla. La operación puede demorar unos segundos.</p>
-  </section>
-  } @case ('reserva') {
+  } @else if (payment.outcome() === 'reserva') {
   <app-inscripcion-reservation-step />
-  } @case ('inscripcion-confirmada') {
+  } @else if (payment.outcome() === 'inscripcion-confirmada') {
   <app-inscripcion-success-step />
-  } @case ('inscripcion-en-proceso') {
+  } @else if (payment.outcome() === 'inscripcion-en-proceso') {
   <section aria-labelledby="in-process-title" class="inscription-screen inscription-terminal">
     <span aria-hidden="true" class="inscription-success-heading__icon">
       <ort-icon>pending_actions</ort-icon>
@@ -58,33 +47,47 @@
       <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
     </footer>
   </section>
+  } @else if (payment.view() === 'processing') {
+  <section aria-labelledby="processing-title" class="inscription-screen inscription-terminal">
+    <ort-spinner aria-label="Procesando inscripción" />
+    <h1 id="processing-title">Estamos procesando el pago</h1>
+    <p>No cierres esta pantalla. La operación puede demorar unos segundos.</p>
+  </section>
+  } @else { @switch (process.currentStep()) { @case ('propuesta') {
+  <app-inscripcion-academic-step />
+  } @case ('encuesta') { @if (survey.readerOpen()) {
+  <app-inscripcion-regulation-reader />
+  } @else {
+  <app-inscripcion-personal-step />
+  } } @case ('pago') {
+  <app-inscripcion-confirmation-step />
   } } }
-</app-inscripcion-shell>
+</app-process-layout>
 
 <app-inscripcion-dialog
   closeLabel="Continuar con la inscripción"
   helperText="Guardaremos tus avances para que puedas continuar más tarde."
   title="¿Querés salir de la inscripción?"
-  [open]="facade.exitConfirmationOpen()"
-  (closed)="facade.cancelExit()">
+  [open]="process.exitConfirmationOpen()"
+  (closed)="process.cancelExit()">
   <p>Los archivos de identidad deberán adjuntarse nuevamente cuando retomes el proceso.</p>
-  @if (facade.surveySaveError()) {
-  <p class="inscription-dialog-error" role="alert">{{ facade.surveySaveError() }}</p>
+  @if (process.surveySaveError()) {
+  <p class="inscription-dialog-error" role="alert">{{ process.surveySaveError() }}</p>
   }
   <div inscripcionDialogActions>
     <button
       data-dialog-initial-focus
       ort-secondary-button
       type="button"
-      (click)="facade.cancelExit()">
+      (click)="process.cancelExit()">
       Continuar aquí
     </button>
     <button
       ort-primary-button
       type="button"
-      [disabled]="facade.savingSurvey()"
-      (click)="facade.confirmExit()">
-      {{ facade.savingSurvey() ? 'Guardando…' : 'Guardar y salir' }}
+      [disabled]="process.savingSurvey()"
+      (click)="process.confirmExit()">
+      {{ process.savingSurvey() ? 'Guardando…' : 'Guardar y salir' }}
     </button>
   </div>
 </app-inscripcion-dialog>
