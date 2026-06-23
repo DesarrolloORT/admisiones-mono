@@ -23,6 +23,17 @@ namespace WebApiAdmisiones.Security.Authentication
         public const string PasswordActivationCookieName = "X-Password-Activation";
 
         /// <summary>
+        /// Dominio para las cookies de auth. Vacío/no seteado = host-only (local, sobre localhost).
+        /// En ambientes desplegados setear AUTH_COOKIE_DOMAIN=.ort.edu.uy para que la cookie
+        /// se comparta entre subdominios (admisiones y FDP).
+        /// </summary>
+        private static string? CookieDomain()
+        {
+            var domain = Environment.GetEnvironmentVariable("AUTH_COOKIE_DOMAIN");
+            return string.IsNullOrWhiteSpace(domain) ? null : domain;
+        }
+
+        /// <summary>
         /// Establece el access token como una cookie HttpOnly segura.
         /// </summary>
         /// <param name="context">Contexto HTTP.</param>
@@ -37,6 +48,7 @@ namespace WebApiAdmisiones.Security.Authentication
                 SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
+                Domain = CookieDomain(),
                 IsEssential = true
             };
 
@@ -58,6 +70,7 @@ namespace WebApiAdmisiones.Security.Authentication
                 SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddDays(expiresInDays),
                 Path = "/",
+                Domain = CookieDomain(),
                 IsEssential = true
             };
 
@@ -96,6 +109,7 @@ namespace WebApiAdmisiones.Security.Authentication
                 SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
+                Domain = CookieDomain(),
                 IsEssential = true
             };
 
@@ -120,7 +134,8 @@ namespace WebApiAdmisiones.Security.Authentication
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
-                Path = "/"
+                Path = "/",
+                Domain = CookieDomain()
             };
 
             context.Response.Cookies.Delete(PasswordActivationCookieName, options);
@@ -137,7 +152,8 @@ namespace WebApiAdmisiones.Security.Authentication
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
-                Path = "/"
+                Path = "/",
+                Domain = CookieDomain()
             };
 
             context.Response.Cookies.Delete(AccessTokenCookieName, options);

@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IOfertaRepository
     {
         Oferta GetByKeyWithRelated(long idOferta);
+        ICollection<Materia> GetMateriasPorOferta(long idOferta);
     }
 }

@@ -37,6 +37,25 @@ namespace DataAccess.DevartRepositories
                 .FirstOrDefault();
         }
 
+        /// <summary>
+        /// Inscripción de la persona por id, con oferta/turno/comienzo/paquete/producto incluidos.
+        /// Filtra por persona para garantizar pertenencia.
+        /// </summary>
+        public virtual BusinessLogic.Entities.Inscripto GetDetalleByKey(long idInscripto, long codigoPersona)
+        {
+            return objectSet
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Turno)
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Supraoferta)
+                        .ThenInclude(s => s.Paquete)
+                            .ThenInclude(p => p.Producto)
+                .Include(i => i.Oferta)
+                    .ThenInclude(o => o.Supraoferta)
+                        .ThenInclude(s => s.Comienzo)
+                .FirstOrDefault(i => i.IdInscripto == idInscripto && i.CodigoPersona == codigoPersona);
+        }
+
         public virtual bool TieneInscripcionActiva(long codigoPersona)
         {
             return objectSet.Count(i =>

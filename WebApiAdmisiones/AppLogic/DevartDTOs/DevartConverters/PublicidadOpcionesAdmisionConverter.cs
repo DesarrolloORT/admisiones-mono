@@ -37,11 +37,6 @@ namespace AppLogic.DevartDTOs
             target.IdPublicidad = source.IdPublicidad;
             target.NombrePublicidad = source.NombrePublicidad;
 
-            // Navigation Properties
-            if (level > 0) {
-              target.PublicidadEleccionAdmisions = source.PublicidadEleccionAdmisions.ToDtosWithRelated(level - 1);
-            }
-
             // User-defined partial method
             OnDtoCreating(source, target);
 

@@ -18,6 +18,7 @@ namespace AppLogic.DTOs
 
     public class ResumenInscripcionDto
     {
+        public long IdOferta { get; set; }
         public long IdProducto { get; set; }
         public string? Carrera { get; set; }
         public long IdComienzo { get; set; }

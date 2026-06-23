@@ -63,6 +63,7 @@ namespace AppLogic.DevartDTOs
               target.Supraoferta = source.Supraoferta.ToDtoWithRelated(level - 1);
               target.Localidad = source.Localidad.ToDtoWithRelated(level - 1);
               target.Turno = source.Turno.ToDtoWithRelated(level - 1);
+              target.OfertaCreditos = source.OfertaCreditos.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

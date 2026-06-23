@@ -31,7 +31,7 @@ namespace AppLogic.DTOs
         public bool? PublicidadOrt { get; set; }
         public bool? InstruccionMadreOrt { get; set; }
         public bool? InstruccionPadreOrt { get; set; }
-        public string? TrabajaActualmente { get; set; }
+        public bool? TrabajaActualmente { get; set; }
         public List<EncuestaEmpresaRequest>? UniversidadesConsideradas { get; set; }
         public List<EncuestaEmpresaRequest>? UniversidadesEducacionSuperior { get; set; }
         public List<EncuestaPublicidadRequest>? OpcionesPublicidadSeleccionadas { get; set; }

@@ -116,6 +116,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoEscuelaDevart Escuela { get; set; }
 
+        public List<DtoMateriaDevart> Materias { get; set; }
+
         #endregion
     }
 

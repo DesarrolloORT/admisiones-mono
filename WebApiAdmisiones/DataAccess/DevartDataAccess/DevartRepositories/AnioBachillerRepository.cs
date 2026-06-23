@@ -27,5 +27,16 @@ namespace DataAccess.DevartRepositories
                 .Include(a => a.Titulos)
                 .FirstOrDefault();
         }
+
+        /// <summary>
+        /// Devuelve todos los años de bachiller con sus bachilleratos (títulos) asociados.
+        /// </summary>
+        public virtual ICollection<BusinessLogic.Entities.AnioBachiller> GetAllWithRelated()
+        {
+            return objectSet
+                .Include(a => a.Titulos.Where(t => t.Bachillerato == "SI" && t.OrientacionTitulo != null))
+                .OrderBy(a => a.CantAniosAnioBachiller)
+                .ToList();
+        }
     }
 }

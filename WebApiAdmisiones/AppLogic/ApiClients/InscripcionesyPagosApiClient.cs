@@ -56,6 +56,16 @@ namespace AppLogic.ApiClients
         public string? Turno { get; set; }
     }
 
+
+    /// <summary>
+    /// Response de la seña mínima a pagar de una inscripción (read-only).
+    /// Corresponde a: GET /Inscripciones/SeniaMinima
+    /// </summary>
+    public class SeniaMinimaApiResponse
+    {
+        public decimal SeniaMinima { get; set; }
+    }
+
     /// <summary>
     /// DTO para oferta de inscripción (usado en los GET de ofertas).
     /// </summary>
@@ -240,6 +250,42 @@ namespace AppLogic.ApiClients
             catch (Exception ex)
             {
                 return HandleException<ConfirmarPreInscripcionApiResponse>(ex, nameof(ConfirmarPreInscripcionAsync));
+            }
+        }
+
+        /// <summary>
+        /// Obtiene la seña mínima a pagar de una inscripción existente (read-only).
+        /// Corresponde a: GET /Inscripciones/SeniaMinima
+        /// </summary>
+        public async Task<OperationResult<SeniaMinimaApiResponse>> ObtenerSeniaMinimaAsync(long idInscripto, long idProducto)
+        {
+            try
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Obteniendo seña mínima - Inscripto: {IdInscripto}, Producto: {IdProducto}", idInscripto, idProducto);
+                }
+
+                var url = $"ORTSecure/Inscripciones/SeniaMinima?idInscripto={idInscripto}&idProducto={idProducto}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<SeniaMinimaApiResponse>();
+                    return OperationResult<SeniaMinimaApiResponse>.Ok(result!, nameof(ObtenerSeniaMinimaAsync));
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<SeniaMinimaApiResponse>.IsFailed(
+                    "SENIA_MINIMA_01",
+                    nameof(ObtenerSeniaMinimaAsync),
+                    $"Error al obtener la seña mínima: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!);
+            }
+            catch (Exception ex)
+            {
+                return HandleException<SeniaMinimaApiResponse>(ex, nameof(ObtenerSeniaMinimaAsync));
             }
         }
 

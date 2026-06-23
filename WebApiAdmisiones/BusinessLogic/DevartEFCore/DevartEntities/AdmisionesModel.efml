@@ -4990,6 +4990,269 @@
       <column name="NOMBRE_OFERTA" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="Materia" entity-set="Materias" table="T_MATERIA" schema="CREADOR" p1:Guid="ed86e770-6c03-4df1-9755-2acd5e5a498a">
+    <id name="IdMateria" type="Int64" p1:ValidateRequired="true" p1:Guid="72205e66-bca8-4cc8-93d0-086eb4737921">
+      <column name="ID_MATERIA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="NombreMateria" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="bdbb8f6e-5981-4736-ae94-29c2bc88a8e2">
+      <column name="NOMBRE_MATERIA" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DescripcionMateria" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="acd20ab9-e3b7-4f26-a221-b23baaacdcea">
+      <column name="DESCRIPCION_MATERIA" not-null="True" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ObjetivoMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="cfc2fa53-a138-4c98-ada3-9825e9ec14b7">
+      <column name="OBJETIVO_MATERIA" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="MetodologiaMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="6c67f3f3-061f-4dd7-a7c9-88e1faa8cfca">
+      <column name="METODOLOGIA_MATERIA" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ObservacionesMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="765ece81-6a29-460d-ae5f-d44378f8a332">
+      <column name="OBSERVACIONES_MATERIA" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaCreacionMateria" type="DateTime" p1:ValidateRequired="true" p1:Guid="e6694e15-2747-4ec4-a320-2d34a303badb">
+      <column name="FECHA_CREACION_MATERIA" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="FechaCaducidadMateria" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ec63d309-6e6e-4a96-b104-890ef97f5432">
+      <column name="FECHA_CADUCIDAD_MATERIA" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="IdNivelMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b7b7b884-c538-4bfb-b173-8aa4a7a10207">
+      <column name="ID_NIVEL_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdTipoMateria" type="Int64" p1:ValidateRequired="true" p1:Guid="d831f166-2f51-4b35-bd2b-b3b28a6c523a">
+      <column name="ID_TIPO_MATERIA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="SesionesClaseSemanaMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6d881501-0ea0-475d-bb4f-12a1d5dfd54f">
+      <column name="SESIONES_CLASE_SEMANA_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MinutosSesionClaseMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ad4d22aa-97a2-4e7f-bd8f-31a1cb406c35">
+      <column name="MINUTOS_SESION_CLASE_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="SesionesClaseLabMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="114db23a-3fb7-4dba-aeb6-0570e94cb9ba">
+      <column name="SESIONES_CLASE_LAB_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MinutosSesionLabMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="7b411768-3e76-4b50-87b3-267cc9f9f01c">
+      <column name="MINUTOS_SESION_LAB_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="OtrasSesionesSemanaMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e2d7f58a-89d4-4b05-8950-57c7beccf520">
+      <column name="OTRAS_SESIONES_SEMANA_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MinutosOtraSesionMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="9c48e629-ac89-447d-a637-2ec5937495de">
+      <column name="MINUTOS_OTRA_SESION_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DuracionSemanasMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1b952cf9-6146-43e8-8e7e-32b25a1a0bf8">
+      <column name="DURACION_SEMANAS_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="d99b7a3e-c1df-445b-9692-61dd55b78761">
+      <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="41177297-28ac-4cfc-88b0-52ceeecfc88b">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="true" p1:Guid="fa5edd26-d351-429d-98ef-5602352cd9fa">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="True" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="DepartamentoMateriaRpg" type="String" p1:nullable="True" p1:ValidateMaxLength="1" p1:ValidateRequired="false" p1:Guid="c24df22b-9827-4a27-9f7d-b86d11964a7d">
+      <column name="DEPARTAMENTO_MATERIA_RPG" not-null="False" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="CarreraMateriaRpg" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="76738843-99db-4b34-a491-a5402eef30fc">
+      <column name="CARRERA_MATERIA_RPG" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="PlanMateriaRpg" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="5df9eb23-a263-472e-8c8a-1e7d9081268b">
+      <column name="PLAN_MATERIA_RPG" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="CodigoMateriaRpg" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="bb5e5d23-ae0d-4c5e-ba45-7af669d0e71f">
+      <column name="CODIGO_MATERIA_RPG" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="ExamenObligatorioMateria" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="04f35836-b723-4097-8241-1cbad5a5a6b4">
+      <column name="EXAMEN_OBLIGATORIO_MATERIA" not-null="True" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="CursoObligatorioMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="ce94ddb8-2dae-44ba-9731-ee781905685b">
+      <column name="CURSO_OBLIGATORIO_MATERIA" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="PesoMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="14cbaf49-c152-4c35-8f46-c1da27ce62a1">
+      <column name="PESO_MATERIA" default="1" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="SemestreMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="3" p1:ValidateRequired="false" p1:Guid="26210554-411e-4694-814b-13ee907a8ee0">
+      <column name="SEMESTRE_MATERIA" not-null="False" length="3" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="SupraSemestreMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="3" p1:ValidateRequired="false" p1:Guid="66792a90-7b43-4a90-b954-15141eccc688">
+      <column name="SUPRA_SEMESTRE_MATERIA" not-null="False" length="3" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FicticiaMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="36d7d381-b751-4467-98c0-5e6293bde9f0">
+      <column name="FICTICIA_MATERIA" default="'SI'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="MinimoAprobacionMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="addc4b3f-669d-4130-bda8-24f7861d41b8">
+      <column name="MINIMO_APROBACION_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CargaHorariaSemanalMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="cb599fde-fc88-43b1-abe2-ff417d08297a">
+      <column name="CARGA_HORARIA_SEMANAL_MATERIA" default="0" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CargaHorariaTotalMateria" type="Decimal" p1:ValidateRequired="true" p1:Guid="28e12865-f648-4038-93bf-1158ec660895">
+      <column name="CARGA_HORARIA_TOTAL_MATERIA" not-null="True" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PrerequisitoMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="a45f4d31-1873-45a9-b7be-edbb63b01a39">
+      <column name="PREREQUISITO_MATERIA" default="'NO'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="EstadoMateria" type="String" p1:ValidateMaxLength="1" p1:ValidateRequired="true" p1:Guid="fc29cf22-f371-4eb4-a7b3-a2a15b32227b">
+      <column name="ESTADO_MATERIA" not-null="True" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="IdDepartamentoCreador" type="Int64" p1:ValidateRequired="true" p1:Guid="cde9b90b-7c02-40d2-9de3-5bb4c77227fd">
+      <column name="ID_DEPARTAMENTO_CREADOR" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="TieneRepechajeMateria" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="3e88ef87-92e2-4de1-900d-f5e6788282a8">
+      <column name="TIENE_REPECHAJE_MATERIA" default="'NO'" not-null="True" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="MinimoParaRepechajeMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="44e87997-f126-4e6e-b10b-b9c92ccfee38">
+      <column name="MINIMO_PARA_REPECHAJE_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IndiceDocenteMateria" type="Decimal" p1:ValidateRequired="true" p1:Guid="b4899892-cfc6-43a5-a2d3-f81067341c57">
+      <column name="INDICE_DOCENTE_MATERIA" not-null="True" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MinimoExamenMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="8c5c8c6e-41ca-479b-bf29-249302fd805e">
+      <column name="MINIMO_EXAMEN_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MaxBonificacionExamenMat" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="246bae14-0cfb-41f1-beb4-3b1f6862e87b">
+      <column name="MAX_BONIFICACION_EXAMEN_MAT" default="0" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdCatedra" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ad3a2690-b44b-4edb-8ed4-54c70fe1548a">
+      <column name="ID_CATEDRA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CargaHorariaSemFrontalMat" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="f9bbeb95-86f2-4de4-a583-f9f7878f77c4">
+      <column name="CARGA_HORARIA_SEM_FRONTAL_MAT" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CargaHorariaTotFrontalMat" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="a1290481-dac6-4fcb-9d94-b166837d2552">
+      <column name="CARGA_HORARIA_TOT_FRONTAL_MAT" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MinimoExoneracionMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="4cdf23d6-311f-44ac-bfd9-66642f5bf36d">
+      <column name="MINIMO_EXONERACION_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="TituloLibroMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="8f970e85-a225-48e1-8d37-1cc4bcc7e29f">
+      <column name="TITULO_LIBRO_MATERIA" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="PrecioLibroMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c3f8ce9f-928b-4a99-9329-de5a15bd7838">
+      <column name="PRECIO_LIBRO_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdMoneda" type="String" p1:nullable="True" p1:ValidateMaxLength="10" p1:ValidateRequired="false" p1:Guid="27662b97-3a27-46ea-98cf-92b616810a2a">
+      <column name="ID_MONEDA" not-null="False" length="10" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoBachillerato" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="89a0f97c-5d8e-4ff4-9f98-5cd838e19d85">
+      <column name="CODIGO_BACHILLERATO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MaxIntegrantesEquipoMat" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="64d4cb1b-761a-493a-9f1d-222a331cd5cb">
+      <column name="MAX_INTEGRANTES_EQUIPO_MAT" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdPrereqIncompletoMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="94933194-ec10-4c9e-ae26-f180948416df">
+      <column name="ID_PREREQ_INCOMPLETO_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PesoCostoMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ba2965e4-dca4-4e2c-831f-bc6ed20f850a">
+      <column name="PESO_COSTO_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DescripcionInglesMateria" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="6391615d-9ad8-49ca-9687-c395aeb4dcc4">
+      <column name="DESCRIPCION_INGLES_MATERIA" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="EctsMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="05bc4768-0d9d-4dd1-aa13-31a92beea2d0">
+      <column name="ECTS_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CreditosImpresionMateria" type="Decimal" p1:ValidateRequired="true" p1:Guid="30f3071e-5cfa-4b90-a114-bdce846accb3">
+      <column name="CREDITOS_IMPRESION_MATERIA" default="0" not-null="True" precision="38" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PrecioCero6m6Materia" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="5689f4a5-1a97-4668-8d62-cd75c00537dc">
+      <column name="PRECIO_CERO_6M6_MATERIA" default="'NO'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="IdTipoTrabajoFinal" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="9f8d93ba-74d8-464f-997f-ce954b8231dd">
+      <column name="ID_TIPO_TRABAJO_FINAL" not-null="False" precision="38" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="MaxAlumnosPordictadoMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="194739cb-9baf-4f8d-8628-c9330c88320e">
+      <column name="MAX_ALUMNOS_PORDICTADO_MATERIA" not-null="False" precision="38" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CantalumDictraquiticoMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="335d7817-822f-4593-8db5-6592a1727163">
+      <column name="CANTALUM_DICTRAQUITICO_MATERIA" not-null="False" precision="38" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DuracionExamenMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ae8b3721-949e-4dc8-b91a-5213de7cfdde">
+      <column name="DURACION_EXAMEN_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="AdmiteExamenConsigna" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="a9056014-07bd-45a0-b83e-ed5e3eb69e7f">
+      <column name="ADMITE_EXAMEN_CONSIGNA" default="'NO'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="PesoCreditosMateria" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="693f2028-8545-4c66-a97f-75341a9a741f">
+      <column name="PESO_CREDITOS_MATERIA" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="OfertaCredito" entity-set="OfertaCreditos" table="T_OFERTA_CREDITO" schema="CREADOR" p1:Guid="92b94c5c-fdcc-44b7-9a07-02227d507a6d">
+    <id name="IdOfertaCredito" type="Int64" p1:ValidateRequired="true" p1:Guid="90f0475e-99ab-4fd7-b267-b187735cfda7">
+      <column name="ID_OFERTA_CREDITO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdOferta" type="Int64" p1:ValidateRequired="true" p1:Guid="65030720-13f7-4262-b246-15d42942aa26">
+      <column name="ID_OFERTA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PorcentValorOfertaCredito" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="578c12c8-9be4-424b-9e35-67cc4027438f">
+      <column name="PORCENT_VALOR_OFERTA_CREDITO" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UnicaInscrOfertaCredito" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="f01b4d2b-b579-4ede-8e37-9f3eb3ac8a1e">
+      <column name="UNICA_INSCR_OFERTA_CREDITO" not-null="True" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="TipoOfertaCredito" type="String" p1:ValidateMaxLength="1" p1:ValidateRequired="true" p1:Guid="72f0a36e-e4fb-42dd-a7c1-c1b4beafb8f5">
+      <column name="TIPO_OFERTA_CREDITO" not-null="True" length="1" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="NombreOfertaCredito" type="String" p1:nullable="True" p1:ValidateMaxLength="60" p1:ValidateRequired="false" p1:Guid="75145525-ad7a-47fa-b3de-dc9bd5bd1560">
+      <column name="NOMBRE_OFERTA_CREDITO" not-null="False" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdCreditoPaquete" type="Int64" p1:ValidateRequired="true" p1:Guid="fcebf041-61b9-42b2-86c4-83c7d0a12cde">
+      <column name="ID_CREDITO_PAQUETE" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="b68155da-ce32-4029-9ead-9ff2bbf37266">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="0af443c6-d618-4f0a-98df-62ec07a85884">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="b1b3d242-57a0-48ad-ac49-e18074c648d6">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="GenericOfertaCredito" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="4b6b56b2-8774-4cf5-9940-a5383c9c9c96">
+      <column name="GENERIC_OFERTA_CREDITO" default="'SI'" not-null="False" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="CupoOfertaCredito" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="74e1e04d-b597-4d50-86f7-647301f02c98">
+      <column name="CUPO_OFERTA_CREDITO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CantInscriptosOfertaCredito" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6b88480d-bd00-41ec-8fa6-ccafe95f736d">
+      <column name="CANT_INSCRIPTOS_OFERTA_CREDITO" default="0" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="PorcentVal6m6OfertaCredito" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="35d4a8d9-634c-4f8b-90da-0b7b8bce21e9">
+      <column name="PORCENT_VAL6M6_OFERTA_CREDITO" not-null="False" precision="18" scale="2" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="OfertaCreditoMateria" entity-set="OfertaCreditoMaterias" table="T_OFERTA_CREDITO_MATERIA" schema="CREADOR" p1:Guid="a8a2e691-c736-4321-8f01-fd8fc71e6c55">
+    <composite-id>
+      <key-property name="IdOfertaCredito" type="Int64" p1:ValidateRequired="true" p1:Guid="85e16cc9-d48e-494c-a583-fadca7b1b20e">
+        <column name="ID_OFERTA_CREDITO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+      </key-property>
+      <key-property name="IdMateria" type="Int64" primary-key-index="1" p1:ValidateRequired="true" p1:Guid="49ab5ed7-9a01-448a-8448-e4f8be248155">
+        <column name="ID_MATERIA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+      </key-property>
+    </composite-id>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="affdd9ac-a950-430b-a969-69b163581afb">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="dd2e474d-7cc4-4714-a908-fec90595d5f3">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="56a4ace1-6c01-4106-b76f-9b2e83403007">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ExamenObligCreditoMateria" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="234853ce-e70f-4c8e-a63b-c91cef59b5a4">
+      <column name="EXAMEN_OBLIG_CREDITO_MATERIA" not-null="True" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="MinimoExonCreditoMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="456ecd2d-c508-416c-82ef-53587b8d6e91">
+      <column name="MINIMO_EXON_CREDITO_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CantInscrCreditoMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="8b15fd62-6313-4a44-9e8e-d769bb9032b3">
+      <column name="CANT_INSCR_CREDITO_MATERIA" default="0" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="CupoCreditoMateria" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="bdf287cd-29d9-4fe6-a0fb-8ab99bb7f659">
+      <column name="CUPO_CREDITO_MATERIA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -5723,7 +5986,7 @@
       <end1 multiplicity="One" name="MotivoOpcionesAdmision" class="MotivoEleccionAdmision" relation-class="MotivoOpcionesAdmision" constrained="True" lazy="False" p1:Guid="5edfee1d-d2fd-4b0d-a33c-ae40a6861b29">
         <property name="IdMotivo" />
       </end1>
-      <end2 multiplicity="Many" name="MotivoEleccionAdmisions" class="MotivoOpcionesAdmision" relation-class="MotivoEleccionAdmision" lazy="False" p1:Guid="b6529dd2-3ac8-4b09-a05d-e56ef61f27eb">
+      <end2 multiplicity="Many" name="MotivoEleccionAdmisions" class="MotivoOpcionesAdmision" relation-class="MotivoEleccionAdmision" lazy="False" p1:Guid="b6529dd2-3ac8-4b09-a05d-e56ef61f27eb" p1:GenerateDTO="False">
         <property name="IdMotivo" />
       </end2>
     </association>
@@ -5747,8 +6010,48 @@
       <end1 multiplicity="One" name="PublicidadOpcionesAdmision" class="PublicidadEleccionAdmision" relation-class="PublicidadOpcionesAdmision" constrained="True" lazy="False" p1:Guid="907c5cdf-ca07-4884-bc45-f9704fb69afb">
         <property name="IdPublicidad" />
       </end1>
-      <end2 multiplicity="Many" name="PublicidadEleccionAdmisions" class="PublicidadOpcionesAdmision" relation-class="PublicidadEleccionAdmision" lazy="False" p1:Guid="b856b43a-4646-4398-b061-5c6f1f002891">
+      <end2 multiplicity="Many" name="PublicidadEleccionAdmisions" class="PublicidadOpcionesAdmision" relation-class="PublicidadEleccionAdmision" lazy="False" p1:Guid="b856b43a-4646-4398-b061-5c6f1f002891" p1:GenerateDTO="False">
         <property name="IdPublicidad" />
+      </end2>
+    </association>
+    <association name="Titulo_Materia" cardinality="OneToMany" p1:Guid="d62a5820-19c6-4d14-a288-af2581baddce">
+      <end1 multiplicity="ZeroOrOne" name="Titulo" class="Materia" relation-class="Titulo" constrained="True" lazy="False" p1:Guid="5d8e939a-c209-4906-8622-516d897d826b">
+        <property name="CodigoTitulo" />
+      </end1>
+      <end2 multiplicity="Many" name="Materias" class="Titulo" relation-class="Materia" lazy="False" p1:Guid="d31d41b4-4659-48e8-9057-198c1539f764">
+        <property name="CodigoBachillerato" />
+      </end2>
+    </association>
+    <association name="Departamento_Materia" cardinality="OneToMany" p1:Guid="7fba1743-bd2f-43cc-b275-a18af92106ea">
+      <end1 multiplicity="One" name="Departamento" class="Materia" relation-class="Departamento" constrained="True" lazy="False" p1:Guid="27cfef55-47a4-4caf-a741-17a4cb27d607">
+        <property name="IdDepartamento" />
+      </end1>
+      <end2 multiplicity="Many" name="Materias" class="Departamento" relation-class="Materia" lazy="False" p1:Guid="70140fd1-e43d-4254-a5e2-6619938c1c36">
+        <property name="IdDepartamentoCreador" />
+      </end2>
+    </association>
+    <association name="Oferta_OfertaCredito" cardinality="OneToMany" p1:Guid="fdfd294f-7c1e-4930-a072-45db19f19872">
+      <end1 multiplicity="One" name="Oferta" class="OfertaCredito" relation-class="Oferta" constrained="True" lazy="False" p1:Guid="dc7d81e9-efa3-46f9-b0c2-d0a0a8c88fb2">
+        <property name="IdOferta" />
+      </end1>
+      <end2 multiplicity="Many" name="OfertaCreditos" class="Oferta" relation-class="OfertaCredito" lazy="False" p1:Guid="416ff03d-c1f6-4189-b30d-a5bc075f3133">
+        <property name="IdOferta" />
+      </end2>
+    </association>
+    <association name="Materia_OfertaCreditoMateria" cardinality="OneToMany" p1:Guid="4641fd9d-c0c0-48b0-a5bd-7b228d841ef4">
+      <end1 multiplicity="One" name="Materia" class="OfertaCreditoMateria" relation-class="Materia" constrained="True" lazy="False" p1:Guid="f271f2aa-4464-422c-a774-4efc6cfc031a">
+        <property name="IdMateria" />
+      </end1>
+      <end2 multiplicity="Many" name="OfertaCreditoMaterias" class="Materia" relation-class="OfertaCreditoMateria" lazy="False" p1:Guid="2144e6fd-1416-4c26-9718-52b48103e6af">
+        <property name="IdMateria" />
+      </end2>
+    </association>
+    <association name="OfertaCredito_OfertaCreditoMateria" cardinality="OneToMany" p1:Guid="4fb60ce6-5daf-450a-8704-7eb0bfefbff9">
+      <end1 multiplicity="One" name="OfertaCredito" class="OfertaCreditoMateria" relation-class="OfertaCredito" constrained="True" lazy="False" p1:Guid="64594a37-6741-444d-9f28-debad4855894">
+        <property name="IdOfertaCredito" />
+      </end1>
+      <end2 multiplicity="Many" name="OfertaCreditoMaterias" class="OfertaCredito" relation-class="OfertaCreditoMateria" lazy="False" p1:Guid="e21ef8ed-9b17-4f6c-ae58-2de3adcb88b8">
+        <property name="IdOfertaCredito" />
       </end2>
     </association>
   </associations>
