@@ -121,9 +121,9 @@ namespace WebApiAdmisiones.Controllers
         [HttpGet("Detalle")]
         [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 404)]
-        public IActionResult ObtenerDetalleInscripcion([FromQuery] long idProducto, [FromQuery] long idProceso)
+        public async Task<IActionResult> ObtenerDetalleInscripcion([FromQuery] long idProducto, [FromQuery] long idProceso)
         {
-            var result = inscripcionesService.ObtenerDetalleInscripcion(_currentUser.GetUserId(), idProducto, idProceso);
+            var result = await inscripcionesService.ObtenerDetalleInscripcion(_currentUser.GetUserId(), idProducto, idProceso);
             return ValidateResponse(result);
         }
 

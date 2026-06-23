@@ -39,14 +39,22 @@ namespace AppLogic.Services.Inscripciones
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
-        public OperationResult<DetalleInscripcionResponse> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
+        public async Task<OperationResult<DetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
         {
             using var uow = _uowFactory.Create();
 
-            var estado = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona)
-                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso)?.EstadoInscripcion
-                ?? uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(codigoPersona)
-                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso)?.EstadoInscripcion;
+            var fresco1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona)
+                .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso);
+            var estado = fresco1y2?.EstadoInscripcion;
+            var idInscripto = (long?)fresco1y2?.IdInscripto;
+
+            if (estado == null)
+            {
+                var fresco3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(codigoPersona)
+                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso);
+                estado = fresco3y4?.EstadoInscripcion;
+                idInscripto = (long?)fresco3y4?.IdInscripto;
+            }
 
             if (estado == null)
             {
@@ -67,14 +75,95 @@ namespace AppLogic.Services.Inscripciones
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
+                    var inscriptoPago = idInscripto.HasValue
+                        ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
+                        : null;
+                    if (inscriptoPago == null)
+                    {
+                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                            "INS_DET_02",
+                            nameof(ObtenerDetalleInscripcion),
+                            "No se encontró la inscripción para la persona.",
+                            404);
+                    }
+                    // La seña a pagar la calcula LogicaORT (cálculo canónico ValorSeniaMinimaConCanje).
+                    var senia = await _inscripcionesyPagosApiClient.ObtenerSeniaMinimaAsync(inscriptoPago.IdInscripto, idProducto);
+                    if (!senia.Success)
+                    {
+                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                            senia.ErrorCode,
+                            nameof(ObtenerDetalleInscripcion),
+                            senia.Message,
+                            senia.HttpCode);
+                    }
+                    response.PagoPendiente = MapearPagoPendiente(inscriptoPago, senia.Data!.SeniaMinima);
+                    break;
+
                 case InscripcionesConstants.EstadoInscripcion.Confirmada:
-                    // ponytail: detalle de pago pendiente / confirmada diferido a un servicio read-only de LogicaORT
+                    var inscripto = idInscripto.HasValue
+                        ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
+                        : null;
+                    if (inscripto == null)
+                    {
+                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                            "INS_DET_02",
+                            nameof(ObtenerDetalleInscripcion),
+                            "No se encontró la inscripción confirmada para la persona.",
+                            404);
+                    }
+                    var materias = uow.Ofertas.GetMateriasPorOferta(inscripto.IdOferta ?? 0);
+                    response.Confirmada = MapearConfirmada(codigoPersona, inscripto, materias);
                     break;
 
                 // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
             }
 
             return OperationResult<DetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
+        }
+
+        private static PagoPendienteDetalleDto MapearPagoPendiente(Inscripto inscripto, decimal senia)
+        {
+            return new PagoPendienteDetalleDto
+            {
+                IdInscripcion = inscripto.IdInscripto,
+                Senia = senia,
+                FechaVencimientoPago = inscripto.FechaVtoInscr,
+                Resumen = MapearResumenDesdeInscripto(inscripto)
+            };
+        }
+
+        private static ConfirmadaDetalleDto MapearConfirmada(long codigoPersona, Inscripto inscripto, ICollection<Materia> materias)
+        {
+            var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
+            return new ConfirmadaDetalleDto
+            {
+                NumeroEstudiante = codigoPersona,
+                Resumen = MapearResumenDesdeInscripto(inscripto),
+                CoordinadorAcademico = new CoordinadorDto
+                {
+                    Nombre = producto?.NombreCoordAcadProducto,
+                    Email = producto?.EmailCoordAcadProducto
+                },
+                MateriasPrimerSemestre = materias
+                    .Select(m => new MateriaDto { IdMateria = m.IdMateria, Nombre = m.NombreMateria })
+                    .ToList()
+            };
+        }
+
+        private static ResumenInscripcionDto MapearResumenDesdeInscripto(Inscripto inscripto)
+        {
+            var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
+            var comienzo = inscripto.Oferta?.Supraoferta?.Comienzo;
+            return new ResumenInscripcionDto
+            {
+                IdOferta = inscripto.IdOferta ?? 0,
+                IdProducto = producto?.IdProducto ?? 0,
+                Carrera = producto?.NombreWebProducto ?? producto?.NombreExtensoProducto ?? producto?.NombreProducto,
+                IdComienzo = comienzo?.IdComienzo ?? 0,
+                Comienzo = comienzo?.NombreComienzo,
+                IdTurno = inscripto.Oferta?.IdTurno ?? 0,
+                Turno = inscripto.Oferta?.Turno?.NombreTurno
+            };
         }
 
         private static ResumenInscripcionDto? MapearOfertaResumen(Oferta? oferta)
@@ -584,6 +673,13 @@ namespace AppLogic.Services.Inscripciones
             if (!confirmacionResult.Success)
             {
                 return confirmacionResult;
+            }
+
+            // La confirmación de LogicaORT puede no traer la fecha de vencimiento; se lee de T_INSCRIPTO.
+            if (confirmacionResult.Data!.FechaVencimientoPago == null && confirmacionResult.Data.IdInscripcion.HasValue)
+            {
+                var inscriptoConfirmado = uow.Inscriptos.GetByKey(confirmacionResult.Data.IdInscripcion.Value);
+                confirmacionResult.Data.FechaVencimientoPago = inscriptoConfirmado?.FechaVtoInscr;
             }
 
             var estadoCuentaResult = await _inscripcionesyPagosApiClient.ObtenerCtaCteAsync();

@@ -1576,7 +1576,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
         }
 
-        private void SetupFresco(string? estado, decimal idProducto = 10m, decimal idProceso = 20m)
+        private void SetupFresco(string? estado, decimal idProducto = 10m, decimal idProceso = 20m, decimal idInscripto = 0m)
         {
             var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
             fresco1y2Repo
@@ -1585,7 +1585,7 @@ namespace UnitTesting.AppLogic.Services
                     ? new List<VdInscripcionesFresco1y2>()
                     : new List<VdInscripcionesFresco1y2>
                     {
-                        new() { IdProducto = idProducto, IdProceso = idProceso, EstadoInscripcion = estado }
+                        new() { IdProducto = idProducto, IdProceso = idProceso, IdInscripto = idInscripto, EstadoInscripcion = estado }
                     });
             _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
 
@@ -1597,7 +1597,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertaSeleccionada()
+        public async Task ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertaSeleccionada()
         {
             SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
             var oferta = new Oferta
@@ -1618,7 +1618,7 @@ namespace UnitTesting.AppLogic.Services
             interesRepo.Setup(r => r.GetOfertaSeleccionada(123, 10, 20)).Returns(oferta);
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesRepo.Object);
 
-            var result = _service.ObtenerDetalleInscripcion(123, 10, 20);
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal("En proceso", result.Data!.Estado);
@@ -1631,11 +1631,11 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDetalleInscripcion_WhenALaEspera_ReturnsEstadoSinDetalle()
+        public async Task ObtenerDetalleInscripcion_WhenALaEspera_ReturnsEstadoSinDetalle()
         {
             SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.ALaEspera);
 
-            var result = _service.ObtenerDetalleInscripcion(123, 10, 20);
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal("A la espera", result.Data!.Estado);
@@ -1643,23 +1643,109 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerDetalleInscripcion_WhenPagoPendiente_ReturnsEstadoSinDetalle()
+        public async Task ObtenerDetalleInscripcion_WhenPagoPendiente_ReturnsDetallePago()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente);
+            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente, idInscripto: 555m);
 
-            var result = _service.ObtenerDetalleInscripcion(123, 10, 20);
+            var inscripto = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 99,
+                FechaVtoInscr = new DateTime(2026, 7, 1),
+                Oferta = new Oferta
+                {
+                    IdOferta = 99,
+                    IdTurno = 5,
+                    Turno = new Turno { IdTurno = 5, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete { Producto = new Producto { IdProducto = 10, NombreWebProducto = "Analista programador" } }
+                    }
+                }
+            };
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var service = CrearServiceConApi(new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
+                """
+                { "seniaMinima": 1500.50 }
+                """)));
+
+            var result = await service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal("Pago pendiente", result.Data!.Estado);
-            Assert.Null(result.Data.Detalle);
+            Assert.NotNull(result.Data.PagoPendiente);
+            Assert.Equal(555, result.Data.PagoPendiente!.IdInscripcion);
+            Assert.Equal(1500.50m, result.Data.PagoPendiente.Senia);
+            Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.FechaVencimientoPago);
+            Assert.Equal("Analista programador", result.Data.PagoPendiente.Resumen.Carrera);
         }
 
         [Fact]
-        public void ObtenerDetalleInscripcion_WhenNoInscripcion_ReturnsNotFound()
+        public async Task ObtenerDetalleInscripcion_WhenConfirmada_ReturnsDatosYMaterias()
+        {
+            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+
+            var inscripto = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 99,
+                Oferta = new Oferta
+                {
+                    IdOferta = 99,
+                    IdTurno = 5,
+                    Turno = new Turno { IdTurno = 5, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete
+                        {
+                            Producto = new Producto
+                            {
+                                IdProducto = 10,
+                                NombreWebProducto = "Licenciatura en Diseño Gráfico",
+                                NombreCoordAcadProducto = "María Rodríguez",
+                                EmailCoordAcadProducto = "maria.rodriguez@ort.edu.uy"
+                            }
+                        }
+                    }
+                }
+            };
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetMateriasPorOferta(99)).Returns(new List<Materia>
+            {
+                new() { IdMateria = 1, NombreMateria = "Arte y estética I" },
+                new() { IdMateria = 2, NombreMateria = "Fotografía y edición de video" }
+            });
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal("Confirmada", result.Data!.Estado);
+            Assert.NotNull(result.Data.Confirmada);
+            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Confirmada.Resumen.Carrera);
+            Assert.Equal("María Rodríguez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
+            Assert.Equal(2, result.Data.Confirmada.MateriasPrimerSemestre.Count);
+            Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estética I");
+        }
+
+        [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenNoInscripcion_ReturnsNotFound()
         {
             SetupFresco(null);
 
-            var result = _service.ObtenerDetalleInscripcion(123, 10, 20);
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.False(result.Success);
             Assert.Equal("INS_DET_01", result.ErrorCode);
