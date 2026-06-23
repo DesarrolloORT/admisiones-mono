@@ -9,6 +9,7 @@ namespace AppLogic.IServices.Personas
     {
         OperationResult<DtoDatosPersona> ObtenerDatosPersona(long codigoPersona);
         OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request);
+        OperationResult<bool> EsTelefonoValidoFront(DtoTelefono telefonoValidar, bool telefono1);
         OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona);
         Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request);
         OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona);

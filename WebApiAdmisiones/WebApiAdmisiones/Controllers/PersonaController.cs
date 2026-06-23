@@ -55,6 +55,15 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        [HttpPost("ValidarTelefono")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        public IActionResult ValidarTelefono(DtoTelefono telefonoValidar, [FromQuery] bool telefono1)
+        {
+            var result = personaService.EsTelefonoValidoFront(telefonoValidar, telefono1);
+            return ValidateResponse(result);
+        }
+
         /// <summary>
         /// Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.
         /// </summary>
