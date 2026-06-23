@@ -68,6 +68,7 @@ namespace AppLogic.DevartDTOs
             if (level > 0) {
               target.Productos = source.Productos.ToDtosWithRelated(level - 1);
               target.Escuela = source.Escuela.ToDtoWithRelated(level - 1);
+              target.Materias = source.Materias.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

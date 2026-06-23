@@ -55,6 +55,7 @@ namespace AppLogic.DevartDTOs
               target.TituloOrts = source.TituloOrts.ToDtosWithRelated(level - 1);
               target.BachilleratoPersonas = source.BachilleratoPersonas.ToDtosWithRelated(level - 1);
               target.AnioBachiller = source.AnioBachiller.ToDtoWithRelated(level - 1);
+              target.Materias = source.Materias.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

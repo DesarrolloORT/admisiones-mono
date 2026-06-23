@@ -104,6 +104,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoTurnoDevart Turno { get; set; }
 
+        public List<DtoOfertaCreditoDevart> OfertaCreditos { get; set; }
+
         #endregion
     }
 
