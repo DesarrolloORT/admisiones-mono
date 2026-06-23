@@ -59,9 +59,12 @@ export interface InscripcionBackendSurvey {
 }
 
 export interface InscripcionInitialSurveyResponse {
-  tieneDerechoEncuesta?: boolean;
-  encuesta?: InscripcionBackendSurvey | null;
-  opcionesMotivosSeleccionados?: Array<{ idMotivo?: number; nombreMotivo?: string | null }> | null;
+  tieneDerechoEncuesta: boolean;
+  encuesta: InscripcionBackendSurvey | null;
+  opcionesMotivosSeleccionados: Array<{
+    idMotivo: number;
+    nombreMotivo: string | null;
+  }> | null;
 }
 
 export interface InscripcionInitialSurveyPayload {
@@ -96,19 +99,30 @@ export interface InscripcionProductInterestPayload {
 }
 
 export interface InscripcionStudentRegulationAcceptance {
-  aceptoReglamentoEstudiantil?: boolean;
-  fechaAceptacion?: string | null;
+  aceptoReglamentoEstudiantil: boolean;
+  fechaAceptacion: string | null;
 }
 
 export interface InscripcionPreEnrollmentResponse {
-  confirmada?: boolean | null;
-  fechaVencimientoPago?: string | null;
-  seniaInscripcion?: number | null;
-  resumen?: {
-    carrera?: string | null;
-    comienzo?: string | null;
-    turno?: string | null;
+  confirmada: boolean;
+  fechaVencimientoPago: string | null;
+  seniaInscripcion: number | null;
+  resumen: {
+    carrera: string | null;
+    comienzo: string | null;
+    turno: string | null;
   } | null;
+}
+
+export interface InscripcionIdentityDocumentFile {
+  archivo: string | null;
+  nombreArchivo: string | null;
+}
+
+export interface InscripcionIdentityDocument {
+  frente: InscripcionIdentityDocumentFile | null;
+  dorso: InscripcionIdentityDocumentFile | null;
+  fechaVencimiento: string | null;
 }
 export interface OpcionInscripcion {
   value: string;

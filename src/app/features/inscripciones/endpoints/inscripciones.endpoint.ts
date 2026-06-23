@@ -1,11 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getInscripcionesEncuestaInicialEndpoint,
   getInscripcionesReglamentoEstudiantilEndpoint,
-  type InteresProductoPayload,
   postInscripcionesConfirmarPreInscripcionEndpoint,
   postInscripcionesEncuestaInicialEndpoint,
   postInscripcionesInteresProductoEndpoint,
@@ -14,12 +13,18 @@ import {
   getPersonaDocumentoEndpoint,
   getPersonaFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
-import type { AceptacionReglamentoEstudiantilResponse } from 'src/app/shared/api/generated/models/aceptacionReglamentoEstudiantilResponse';
-import type { ConfirmarPreInscripcionRequest } from 'src/app/shared/api/generated/models/confirmarPreInscripcionRequest';
-import type { ConfirmarPreInscripcionResponse } from 'src/app/shared/api/generated/models/confirmarPreInscripcionResponse';
-import type { DocumentoPersonaResponse } from 'src/app/shared/api/generated/models/documentoPersonaResponse';
-import type { DtoEncuestaInicialAdmisionResponse } from 'src/app/shared/api/generated/models/dtoEncuestaInicialAdmisionResponse';
-import type { GuardarEncuestaInicialRequest } from 'src/app/shared/api/generated/models/guardarEncuestaInicialRequest';
+import type { DtoEncuestaIniAdmisionDevart } from 'src/app/shared/api/generated/models/dtoEncuestaIniAdmisionDevart';
+
+import type {
+  InscripcionBackendSurvey,
+  InscripcionConfirmPreEnrollmentPayload,
+  InscripcionIdentityDocument,
+  InscripcionInitialSurveyPayload,
+  InscripcionInitialSurveyResponse,
+  InscripcionPreEnrollmentResponse,
+  InscripcionProductInterestPayload,
+  InscripcionStudentRegulationAcceptance,
+} from '../models/inscripcion-flow';
 
 @Injectable({
   providedIn: 'root',
@@ -27,46 +32,148 @@ import type { GuardarEncuestaInicialRequest } from 'src/app/shared/api/generated
 export class InscripcionesEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getIdentityDocument(): Observable<DocumentoPersonaResponse> {
-    return this.api.request(getPersonaDocumentoEndpoint, { cache: false });
+  public getIdentityDocument(): Observable<InscripcionIdentityDocument> {
+    return this.api.request(getPersonaDocumentoEndpoint, { cache: false }).pipe(
+      map(document => ({
+        frente: document.frente
+          ? {
+              archivo: document.frente.archivo ?? null,
+              nombreArchivo: document.frente.nombreArchivo ?? null,
+            }
+          : null,
+        dorso: document.dorso
+          ? {
+              archivo: document.dorso.archivo ?? null,
+              nombreArchivo: document.dorso.nombreArchivo ?? null,
+            }
+          : null,
+        fechaVencimiento: document.fechaVencimiento ?? null,
+      }))
+    );
   }
 
   public getIdentityPhoto(): Observable<Blob> {
     return this.api.request(getPersonaFotoEndpoint, { cache: false, responseType: 'blob' });
   }
 
-  public getInitialSurvey(): Observable<DtoEncuestaInicialAdmisionResponse> {
-    return this.api.request(getInscripcionesEncuestaInicialEndpoint, { cache: false });
+  public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
+    return this.api.request(getInscripcionesEncuestaInicialEndpoint, { cache: false }).pipe(
+      map(response => ({
+        tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
+        encuesta: response.encuesta ? this.toInitialSurvey(response.encuesta) : null,
+        opcionesMotivosSeleccionados:
+          response.opcionesMotivosSeleccionados?.map(item => ({
+            idMotivo: item.motivoOpcionesAdmision?.idMotivo ?? item.idMotivo,
+            nombreMotivo: item.motivoOpcionesAdmision?.nombreMotivo ?? null,
+          })) ?? null,
+      }))
+    );
   }
 
-  public saveInitialSurvey(payload: GuardarEncuestaInicialRequest): Observable<boolean> {
+  public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     return this.api
       .request(postInscripcionesEncuestaInicialEndpoint, {
-        body: payload,
+        body: {
+          idProducto: payload.idProducto,
+          idProceso: payload.idProceso,
+          ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
+          instruccionPadre: payload.instruccionPadre,
+          instruccionMadre: payload.instruccionMadre,
+          decisionCarrera: payload.decisionCarrera,
+          decisionUniversidad: payload.decisionUniversidad,
+          infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
+          compartidoCon: payload.compartidoCon,
+          tieneEducacionSuperior: payload.tieneEducacionSuperior,
+          nivelDecision: payload.nivelDecision,
+          asesoramientoOrt: payload.asesoramientoOrt,
+          vistaSitioWebOrt: payload.vistaSitioWebOrt,
+          vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
+          publicidadOrt: payload.publicidadOrt,
+          trabajaActualmente: payload.trabajaActualmente,
+          opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
+        },
         showLoader: true,
       })
-      .pipe(tap(() => this.api.clearCache()));
+      .pipe(
+        map(result => result === true),
+        tap(() => this.api.clearCache())
+      );
   }
 
-  public getStudentRegulationAcceptance(): Observable<AceptacionReglamentoEstudiantilResponse> {
-    return this.api.request(getInscripcionesReglamentoEstudiantilEndpoint, { cache: false });
+  public getStudentRegulationAcceptance(): Observable<InscripcionStudentRegulationAcceptance> {
+    return this.api.request(getInscripcionesReglamentoEstudiantilEndpoint, { cache: false }).pipe(
+      map(acceptance => ({
+        aceptoReglamentoEstudiantil: acceptance.aceptoReglamentoEstudiantil === true,
+        fechaAceptacion: acceptance.fechaAceptacion ?? null,
+      }))
+    );
   }
 
   public confirmPreEnrollment(
-    payload: ConfirmarPreInscripcionRequest
-  ): Observable<ConfirmarPreInscripcionResponse> {
+    payload: InscripcionConfirmPreEnrollmentPayload
+  ): Observable<InscripcionPreEnrollmentResponse> {
     return this.api
       .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
-        body: payload,
+        body: {
+          aceptoReglamento: payload.aceptoReglamento,
+          idOfertaSeleccionada: payload.idOfertaSeleccionada,
+        },
         showLoader: true,
       })
-      .pipe(tap(() => this.api.clearCache()));
+      .pipe(
+        map(response => ({
+          confirmada: response.confirmada === true,
+          fechaVencimientoPago: response.fechaVencimientoPago ?? null,
+          seniaInscripcion: response.seniaInscripcion ?? null,
+          resumen: response.resumen
+            ? {
+                carrera: response.resumen.carrera ?? null,
+                comienzo: response.resumen.comienzo ?? null,
+                turno: response.resumen.turno ?? null,
+              }
+            : null,
+        })),
+        tap(() => this.api.clearCache())
+      );
   }
 
-  public registerProductInterest(payload: InteresProductoPayload): Observable<boolean> {
-    return this.api.request(postInscripcionesInteresProductoEndpoint, {
-      body: payload,
-      showLoader: true,
-    });
+  public registerProductInterest(payload: InscripcionProductInterestPayload): Observable<boolean> {
+    return this.api
+      .request(postInscripcionesInteresProductoEndpoint, {
+        body: {
+          idOferta: payload.idOferta,
+          idProcesoSeleccionado: payload.idProcesoSeleccionado,
+          idProducto: payload.idProducto,
+        },
+        showLoader: true,
+      })
+      .pipe(map(result => result === true));
+  }
+
+  private toInitialSurvey(survey: DtoEncuestaIniAdmisionDevart): InscripcionBackendSurvey {
+    return {
+      idProducto: survey.idProducto ?? null,
+      idProceso: survey.idProceso ?? null,
+      idTurno: survey.idTurno ?? null,
+      estadoEncuestaIniAdmision: survey.estadoEncuestaIniAdmision ?? null,
+      fechaProcesadoEncuestaIni: survey.fechaProcesadoEncuestaIni ?? null,
+      producto: survey.producto
+        ? { idNivelProducto: survey.producto.idNivelProducto ?? null }
+        : null,
+      ultimoanioSecundariaEncuestaIni: survey.ultimoanioSecundariaEncuestaIni ?? null,
+      codigoInstitucionBac: survey.codigoInstitucionBac ?? null,
+      nombreInstSecEncuestaIni: survey.nombreInstSecEncuestaIni ?? null,
+      tieneEducacionSuperiorEncuestaIni: survey.tieneEducacionSuperiorEncuestaIni ?? null,
+      instruccionMadreEncuestaIni: survey.instruccionMadreEncuestaIni ?? null,
+      instruccionPadreEncuestaIni: survey.instruccionPadreEncuestaIni ?? null,
+      decisionCarreraEncuestaIni: survey.decisionCarreraEncuestaIni ?? null,
+      decisionUniverEncuestaIni: survey.decisionUniverEncuestaIni ?? null,
+      inforOtrasAntesEncuestaIni: survey.inforOtrasAntesEncuestaIni ?? null,
+      nivelDecisionEncuestaIni: survey.nivelDecisionEncuestaIni ?? null,
+      asesoramientoOrtEncuestaIni: survey.asesoramientoOrtEncuestaIni ?? null,
+      vistaSitioWebOrtEncuestaIni: survey.vistaSitioWebOrtEncuestaIni ?? null,
+      vistaInstalacionesOrtEncuestaIni: survey.vistaInstalacionesOrtEncuestaIni ?? null,
+      publicidadOrtEncuestaIni: survey.publicidadOrtEncuestaIni ?? null,
+    };
   }
 }

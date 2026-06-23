@@ -232,7 +232,9 @@ describe('InscripcionFlowFacade', () => {
   });
 
   it('skips survey sections and survey saving when the person has no survey right', () => {
-    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(of({ tieneDerechoEncuesta: false }));
+    inscripcionesMock.getInitialSurvey.mockReturnValueOnce(
+      of({ tieneDerechoEncuesta: false, encuesta: null, opcionesMotivosSeleccionados: null })
+    );
     facade = createFacade();
 
     expect(facade.hasInitialSurveyRight()).toBe(false);
@@ -266,6 +268,7 @@ describe('InscripcionFlowFacade', () => {
     facade = createFacade();
 
     expect(facade.hasAcceptedStudentRegulation()).toBe(true);
+    expect(facade.submittedAcceptanceDate()).toEqual(new Date(2026, 5, 1));
     expect(facade.regulationForm.controls.aceptaReglamento.value).toBe(true);
     expect(facade.getSectionState('reglamento')).toBe('completa');
   });
@@ -308,7 +311,11 @@ describe('InscripcionFlowFacade', () => {
 
   it('requests identity preload even when the initial survey is null', async () => {
     facade = createFacade(undefined, undefined, {
-      initialSurvey: { tieneDerechoEncuesta: true },
+      initialSurvey: {
+        tieneDerechoEncuesta: true,
+        encuesta: null,
+        opcionesMotivosSeleccionados: null,
+      },
       loadFailed: false,
     });
 
@@ -587,6 +594,7 @@ function createInitialSurvey(state: string) {
       instruccionMadreEncuestaIni: '4',
       instruccionPadreEncuestaIni: '4',
     },
+    opcionesMotivosSeleccionados: null,
   };
 }
 
@@ -665,7 +673,7 @@ function createInscripcionesMock() {
     getInitialSurvey: vi.fn().mockReturnValue(of({})),
     getStudentRegulationAcceptance: vi
       .fn()
-      .mockReturnValue(of({ aceptoReglamentoEstudiantil: false })),
+      .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })),
     saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
     registerProductInterest: vi.fn().mockReturnValue(of(true)),
   };

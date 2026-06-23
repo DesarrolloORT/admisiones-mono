@@ -24,6 +24,7 @@ import {
   InscripcionBackendSurvey,
   InscripcionInitialSurveyResponse,
   InscripcionPreEnrollmentResponse,
+  InscripcionStudentRegulationAcceptance,
   MetodoPago,
   OpcionInscripcion,
   PantallaInscripcion,
@@ -150,6 +151,7 @@ export class InscripcionFlowFacade {
   public readonly showAllSubjects = signal(false);
   public readonly selectedPaymentMethod = signal<MetodoPago | null>(null);
   public readonly hasAcceptedStudentRegulation = signal(false);
+  public readonly submittedAcceptanceDate = signal<Date | null>(null);
 
   public readonly startOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly turnoOptions = signal<readonly OpcionInscripcion[]>([]);
@@ -693,11 +695,11 @@ export class InscripcionFlowFacade {
       .getStudentRegulationAcceptance()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: acceptance => {
+        next: (acceptance: InscripcionStudentRegulationAcceptance) => {
           const accepted = acceptance.aceptoReglamentoEstudiantil === true;
           this.hasAcceptedStudentRegulation.set(accepted);
           if (!accepted) return;
-
+          this.submittedAcceptanceDate.set(parseDate(acceptance.fechaAceptacion));
           this.regulationForm.controls.aceptaReglamento.setValue(true);
           this.completeSection('reglamento');
         },
@@ -814,7 +816,13 @@ export class InscripcionFlowFacade {
       return;
     }
 
-    this.applyInitialSurvey(resolved.initialSurvey ?? { tieneDerechoEncuesta: true });
+    this.applyInitialSurvey(
+      resolved.initialSurvey ?? {
+        tieneDerechoEncuesta: true,
+        encuesta: null,
+        opcionesMotivosSeleccionados: null,
+      }
+    );
   }
 
   private initializeEmptySurvey(): void {
