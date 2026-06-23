@@ -18,7 +18,14 @@ export const inscripcionInitialSurveyResolver: ResolveFn<InscripcionInitialSurve
       map(initialSurvey => ({ initialSurvey, loadFailed: false })),
       catchError(error =>
         isNotFoundError(error)
-          ? of({ initialSurvey: { tieneDerechoEncuesta: true }, loadFailed: false })
+          ? of({
+              initialSurvey: {
+                tieneDerechoEncuesta: true,
+                encuesta: null,
+                opcionesMotivosSeleccionados: null,
+              },
+              loadFailed: false,
+            })
           : of({ initialSurvey: null, loadFailed: true })
       )
     );

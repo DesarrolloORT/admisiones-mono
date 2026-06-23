@@ -19,13 +19,24 @@ describe('Inscripciones', () => {
 
   beforeEach(() => {
     endpointMock = {
-      confirmPreEnrollment: vi.fn().mockReturnValue(of({ confirmada: true })),
+      confirmPreEnrollment: vi.fn().mockReturnValue(
+        of({
+          confirmada: true,
+          fechaVencimientoPago: null,
+          seniaInscripcion: null,
+          resumen: null,
+        })
+      ),
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
-      getInitialSurvey: vi.fn().mockReturnValue(of({ tieneDerechoEncuesta: true })),
+      getInitialSurvey: vi
+        .fn()
+        .mockReturnValue(
+          of({ tieneDerechoEncuesta: true, encuesta: null, opcionesMotivosSeleccionados: null })
+        ),
       getStudentRegulationAcceptance: vi
         .fn()
-        .mockReturnValue(of({ aceptoReglamentoEstudiantil: false })),
+        .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })),
       saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
       registerProductInterest: vi.fn().mockReturnValue(of(true)),
     };

@@ -60,13 +60,29 @@ describe('Inscripcion', () => {
         {
           provide: Inscripciones,
           useValue: {
-            confirmPreEnrollment: vi.fn().mockReturnValue(of({ confirmada: true })),
+            confirmPreEnrollment: vi.fn().mockReturnValue(
+              of({
+                confirmada: true,
+                fechaVencimientoPago: null,
+                seniaInscripcion: null,
+                resumen: null,
+              })
+            ),
             getIdentityPreload: vi
               .fn()
               .mockReturnValue(
                 of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })
               ),
-            getInitialSurvey: vi.fn().mockReturnValue(of({ tieneDerechoEncuesta: true })),
+            getStudentRegulationAcceptance: vi
+              .fn()
+              .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })),
+            getInitialSurvey: vi.fn().mockReturnValue(
+              of({
+                tieneDerechoEncuesta: true,
+                encuesta: null,
+                opcionesMotivosSeleccionados: null,
+              })
+            ),
             registerProductInterest: vi.fn().mockReturnValue(of(true)),
             saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
           },

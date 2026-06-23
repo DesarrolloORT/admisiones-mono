@@ -5,17 +5,13 @@ import { catchError, map } from 'rxjs/operators';
 import { InscripcionesEndpoint } from '../endpoints/inscripciones.endpoint';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
+  InscripcionIdentityDocumentFile,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
 } from '../models/inscripcion-flow';
-
-interface IdentityDocumentFile {
-  archivo?: string | null;
-  nombreArchivo?: string | null;
-}
 
 export interface InscripcionIdentityPreload {
   frente: File | null;
@@ -66,7 +62,10 @@ export class Inscripciones {
     return this.endpoint.registerProductInterest(payload);
   }
 
-  private toFile(file: IdentityDocumentFile | null | undefined, fallbackName: string): File | null {
+  private toFile(
+    file: InscripcionIdentityDocumentFile | null | undefined,
+    fallbackName: string
+  ): File | null {
     const rawContent = file?.archivo?.trim();
     if (!rawContent) return null;
 

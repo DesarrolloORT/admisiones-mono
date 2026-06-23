@@ -254,7 +254,10 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { nombre: string }; message?: string | null };
+      response: {
+        data: { nombre: string; aceptado: boolean; fechaAceptacion: string | null };
+        message?: string | null;
+      };
     }>({
       operationId: 'ObtenerPersona',
       method: 'GET',
@@ -262,11 +265,20 @@ describe('ApiHttpClient', () => {
     });
 
     api.data(endpoint).subscribe(data => {
-      expect(data).toEqual({ nombre: 'Ana' });
+      expect(data).toEqual({
+        nombre: 'Ana',
+        aceptado: true,
+        fechaAceptacion: '2026-06-01',
+      });
     });
 
     const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
-    request.flush({ success: true, httpCode: 200, data: { nombre: 'Ana' }, message: null });
+    request.flush({
+      success: true,
+      httpCode: 200,
+      data: { nombre: 'Ana', aceptado: true, fechaAceptacion: '2026-06-01' },
+      message: null,
+    });
   });
 
   it('should return operation result data and message when requested explicitly', () => {
