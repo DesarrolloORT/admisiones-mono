@@ -305,6 +305,10 @@ namespace UnitTesting.AppLogic.Services
                 });
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(78)).Returns(new Inscripto { IdInscripto = 78 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
             var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
@@ -349,6 +353,10 @@ namespace UnitTesting.AppLogic.Services
                     IdComienzo = 40
                 });
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(79)).Returns(new Inscripto { IdInscripto = 79 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
             var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
