@@ -36,6 +36,8 @@ namespace AppLogic.Services.Catalogos
 
         public OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
         {
+            using var uow = _uowFactory.Create();
+
             var response = new DtoEncuestaInicialCatalogosResponse
             {
                 NivelConocimiento =
@@ -81,7 +83,33 @@ namespace AppLogic.Services.Catalogos
                     Combo(18, "6 años"),
                     Combo(19, "7 años"),
                     Combo(20, "8 años o más")
-                ]
+                ],
+                MotivosEleccion = uow.MotivoOpcionesAdmisions.GetAll().ToDtos(),
+                PublicidadesEleccion = uow.PublicidadOpcionesAdmisions.GetAll().ToDtos(),
+                AniosBachiller = uow.AnioBachillers.GetAllWithRelated()
+                    .Select(a => new DtoAnioBachilleratoCatalogo
+                    {
+                        IdAnioBachiller = a.IdAnioBachiller,
+                        NombreAnioBachiller = a.NombreAnioBachiller,
+                        CantAniosAnioBachiller = a.CantAniosAnioBachiller,
+                        Bachilleratos = a.Titulos
+                            .Select(t => new DtoBachilleratoCatalogo
+                            {
+                                CodigoTitulo = t.CodigoTitulo,
+                                Nombre = t.Nombre,
+                                OrientacionTitulo = t.OrientacionTitulo,
+                                OrientacionNewTitulo = t.OrientacionNewTitulo
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
+                Universidades = uow.Empresas.GetUniversidades()
+                    .Select(e => new DtoUniversidadCatalogo
+                    {
+                        CodigoEmpresa = e.CodigoEmpresa,
+                        Nombre = e.Nombre
+                    })
+                    .ToList()
             };
 
             return OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(response, nameof(ObtenerEncuestaInicial));

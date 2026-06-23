@@ -5723,7 +5723,7 @@
       <end1 multiplicity="One" name="MotivoOpcionesAdmision" class="MotivoEleccionAdmision" relation-class="MotivoOpcionesAdmision" constrained="True" lazy="False" p1:Guid="5edfee1d-d2fd-4b0d-a33c-ae40a6861b29">
         <property name="IdMotivo" />
       </end1>
-      <end2 multiplicity="Many" name="MotivoEleccionAdmisions" class="MotivoOpcionesAdmision" relation-class="MotivoEleccionAdmision" lazy="False" p1:Guid="b6529dd2-3ac8-4b09-a05d-e56ef61f27eb">
+      <end2 multiplicity="Many" name="MotivoEleccionAdmisions" class="MotivoOpcionesAdmision" relation-class="MotivoEleccionAdmision" lazy="False" p1:Guid="b6529dd2-3ac8-4b09-a05d-e56ef61f27eb" p1:GenerateDTO="False">
         <property name="IdMotivo" />
       </end2>
     </association>
@@ -5747,7 +5747,7 @@
       <end1 multiplicity="One" name="PublicidadOpcionesAdmision" class="PublicidadEleccionAdmision" relation-class="PublicidadOpcionesAdmision" constrained="True" lazy="False" p1:Guid="907c5cdf-ca07-4884-bc45-f9704fb69afb">
         <property name="IdPublicidad" />
       </end1>
-      <end2 multiplicity="Many" name="PublicidadEleccionAdmisions" class="PublicidadOpcionesAdmision" relation-class="PublicidadEleccionAdmision" lazy="False" p1:Guid="b856b43a-4646-4398-b061-5c6f1f002891">
+      <end2 multiplicity="Many" name="PublicidadEleccionAdmisions" class="PublicidadOpcionesAdmision" relation-class="PublicidadEleccionAdmision" lazy="False" p1:Guid="b856b43a-4646-4398-b061-5c6f1f002891" p1:GenerateDTO="False">
         <property name="IdPublicidad" />
       </end2>
     </association>

@@ -27,6 +27,27 @@ namespace UnitTesting.AppLogic.Services
             _uowMock = new Mock<IUnitOfWork>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new CatalogosService(_uowFactoryMock.Object);
+
+            SetupEncuestaInicialCatalogos();
+        }
+
+        private void SetupEncuestaInicialCatalogos()
+        {
+            var motivoRepo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
+            motivoRepo.Setup(r => r.GetAll()).Returns(new List<MotivoOpcionesAdmision>());
+            _uowMock.Setup(u => u.MotivoOpcionesAdmisions).Returns(motivoRepo.Object);
+
+            var publicidadRepo = new Mock<BusinessLogic.IDevartRepositories.IPublicidadOpcionesAdmisionRepository>();
+            publicidadRepo.Setup(r => r.GetAll()).Returns(new List<PublicidadOpcionesAdmision>());
+            _uowMock.Setup(u => u.PublicidadOpcionesAdmisions).Returns(publicidadRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>());
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
         }
 
         [Fact]

@@ -32,12 +32,6 @@ namespace AppLogic.DevartDTOs
         public string NombreMotivo { get; set; }
 
         #endregion
-
-        #region Navigation Properties
-
-        public List<DtoMotivoEleccionAdmisionDevart> MotivoEleccionAdmisions { get; set; }
-
-        #endregion
     }
 
 }

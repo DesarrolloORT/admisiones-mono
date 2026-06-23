@@ -98,44 +98,6 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var inscripto = uow.Inscriptos.GetUltimaInscripcionActiva(codigoPersona);
-            if (inscripto == null)
-            {
-                return OperationResult<DtoUltimaInscripcion>.IsFailed(
-                    "GEN_UI_01",
-                    nameof(ObtenerUltimaInscripcionActiva),
-                    "No se encontró inscripción para la persona.",
-                    204);
-            }
-
-            var dto = new DtoUltimaInscripcion
-            {
-                IdInscripto = inscripto.IdInscripto,
-                IdProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
-                NombreProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreProducto,
-                NombreExtensoProducto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
-                IdComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.IdComienzo ?? 0,
-                NombreComienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-            };
-            return OperationResult<DtoUltimaInscripcion>.Ok(dto, nameof(ObtenerUltimaInscripcionActiva));
-        }
-        public OperationResult<bool> TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var tiene = uow.VdEsFrescoAdmisions.TieneInscripcionActivaParaProceso(codigoPersona, idProducto, idProceso);
-            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionActivaParaProceso));
-        }
-
-        public OperationResult<bool> TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
-        {
-            using var uow = _uowFactory.Create();
-            var tiene = uow.Inscriptos.TieneInscripcionAdmisiones(codigoPersona, idProducto, idProceso);
-            return OperationResult<bool>.Ok(tiene, nameof(TieneInscripcionAdmisiones));
-        }
-
         public OperationResult<AceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
@@ -420,13 +382,12 @@ namespace AppLogic.Services.Inscripciones
                 return false;
             }
 
-            var trabajaActualmente = EncuestaInicialValidationHelper.NormalizarTrabajaActualmente(request.TrabajaActualmente);
-            if (trabajaActualmente == null)
+            if (request.TrabajaActualmente == null)
             {
                 return false;
             }
 
-            persona.TrabajaActualmente = trabajaActualmente;
+            persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
             return true;
         }
 

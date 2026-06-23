@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IAnioBachillerRepository
     {
         AnioBachiller GetWithRelated(long idAnioBachillerato);
+        ICollection<AnioBachiller> GetAllWithRelated();
     }
 }

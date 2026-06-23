@@ -27,11 +27,6 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_02", methodName, "Request invalido.", 400);
             }
 
-            if (!EsTrabajaActualmenteONulo(request.TrabajaActualmente))
-            {
-                return OperationResult<bool>.IsFailed("INS_EI_39", methodName, "Debe indicar si trabaja actualmente.", 400);
-            }
-
             if (request.IdProducto.HasValue)
             {
                 if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto.Value))
@@ -478,12 +473,6 @@ namespace AppLogic.Helpers.ValidationHelpers
             return normalizado == null
                 || normalizado == CommonConstants.Booleanos.Si
                 || normalizado == CommonConstants.Booleanos.No;
-        }
-
-        private static bool EsTrabajaActualmenteONulo(string? valor)
-        {
-            var normalizado = NormalizarTrabajaActualmente(valor);
-            return normalizado == null || EsTrabajaActualmenteValido(normalizado);
         }
 
         private static bool EsTrabajaActualmenteValido(string? valor)

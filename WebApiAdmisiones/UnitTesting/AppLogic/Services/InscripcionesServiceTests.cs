@@ -1070,27 +1070,11 @@ namespace UnitTesting.AppLogic.Services
 
             var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
             {
-                TrabajaActualmente = " s "
+                TrabajaActualmente = true
             });
 
             Assert.True(result.Success);
             personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
-        }
-
-        [Fact]
-        public void GuardarEncuestaInicial_TrabajaActualmenteInvalido_ReturnsBadRequest()
-        {
-            SetupPersonaValida();
-
-            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
-            {
-                TrabajaActualmente = "SI"
-            });
-
-            Assert.False(result.Success);
-            Assert.Equal(400, result.HttpCode);
-            Assert.Equal("INS_EI_39", result.ErrorCode);
-            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
         }
 
         [Fact]
