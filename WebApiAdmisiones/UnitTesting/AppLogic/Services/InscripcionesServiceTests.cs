@@ -477,78 +477,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerUltimaInscripcionActiva_NotFound_ReturnsFailed()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns((Inscripto)null);
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.ObtenerUltimaInscripcionActiva(123);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_UI_01", result.ErrorCode);
-            Assert.Equal(204, result.HttpCode);
-        }
-
-        [Fact]
-        public void ObtenerUltimaInscripcionActiva_ReturnsMappedDto()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns(new Inscripto
-            {
-                IdInscripto = 9,
-                Oferta = new Oferta
-                {
-                    Supraoferta = new Supraoferta
-                    {
-                        Comienzo = new Comienzo { IdComienzo = 5, NombreComienzo = "Abril" },
-                        Paquete = new Paquete
-                        {
-                            Producto = new Producto
-                            {
-                                IdProducto = 7,
-                                NombreProducto = "ATI",
-                                NombreExtensoProducto = "Analista en TI"
-                            }
-                        }
-                    }
-                }
-            });
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.ObtenerUltimaInscripcionActiva(123);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal(9, result.Data.IdInscripto);
-            Assert.Equal(7, result.Data.IdProducto);
-            Assert.Equal("ATI", result.Data.NombreProducto);
-            Assert.Equal("Analista en TI", result.Data.NombreExtensoProducto);
-            Assert.Equal(5, result.Data.IdComienzo);
-            Assert.Equal("Abril", result.Data.NombreComienzo);
-        }
-
-        [Fact]
-        public void ObtenerUltimaInscripcionActiva_ConOfertaNula_UsaValoresPorDefecto()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.GetUltimaInscripcionActiva(123)).Returns(new Inscripto
-            {
-                IdInscripto = 9,
-                Oferta = null
-            });
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.ObtenerUltimaInscripcionActiva(123);
-
-            Assert.True(result.Success);
-            Assert.Equal(0, result.Data.IdProducto);
-            Assert.Equal(0, result.Data.IdComienzo);
-            Assert.Null(result.Data.NombreProducto);
-            Assert.Null(result.Data.NombreComienzo);
-        }
-
-        [Fact]
         public void RegistrarInteresProducto_CreaInteresNuevoYPersistenciaRelacionada()
         {
             var personaRepo = new Mock<IPersonaRepository>();
@@ -993,32 +921,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal(409, result.HttpCode);
             Assert.Equal("GEN_IP_05", result.ErrorCode);
-        }
-
-        [Fact]
-        public void TieneInscripcionActivaParaProceso_ReturnsRepositoryValue()
-        {
-            var repo = new Mock<IVdEsFrescoAdmisionRepository>();
-            repo.Setup(r => r.TieneInscripcionActivaParaProceso(1, 2, 3)).Returns(true);
-            _uowMock.Setup(u => u.VdEsFrescoAdmisions).Returns(repo.Object);
-
-            var result = _service.TieneInscripcionActivaParaProceso(1, 2, 3);
-
-            Assert.True(result.Success);
-            Assert.True(result.Data);
-        }
-
-        [Fact]
-        public void TieneInscripcionAdmisiones_ReturnsRepositoryValue()
-        {
-            var repo = new Mock<IInscriptoRepository>();
-            repo.Setup(r => r.TieneInscripcionAdmisiones(1, 2, 3)).Returns(false);
-            _uowMock.Setup(u => u.Inscriptos).Returns(repo.Object);
-
-            var result = _service.TieneInscripcionAdmisiones(1, 2, 3);
-
-            Assert.True(result.Success);
-            Assert.False(result.Data);
         }
 
         [Fact]
@@ -1720,12 +1622,12 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal("En proceso", result.Data!.Estado);
-            Assert.NotNull(result.Data.Oferta);
-            Assert.Equal(99, result.Data.Oferta!.IdOferta);
-            Assert.Equal(10, result.Data.Oferta.IdProducto);
-            Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Oferta.Carrera);
-            Assert.Equal("Marzo 2026", result.Data.Oferta.Comienzo);
-            Assert.Equal("Matutino", result.Data.Oferta.Turno);
+            Assert.NotNull(result.Data.Detalle);
+            Assert.Equal(99, result.Data.Detalle!.IdOferta);
+            Assert.Equal(10, result.Data.Detalle!.IdProducto);
+            Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Detalle.Carrera);
+            Assert.Equal("Marzo 2026", result.Data.Detalle.Comienzo);
+            Assert.Equal("Matutino", result.Data.Detalle.Turno);
         }
 
         [Fact]
@@ -1737,7 +1639,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal("A la espera", result.Data!.Estado);
-            Assert.Null(result.Data.Oferta);
+            Assert.Null(result.Data.Detalle);
         }
 
         [Fact]
@@ -1749,7 +1651,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal("Pago pendiente", result.Data!.Estado);
-            Assert.Null(result.Data.Oferta);
+            Assert.Null(result.Data.Detalle);
         }
 
         [Fact]

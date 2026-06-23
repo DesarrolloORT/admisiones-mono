@@ -61,10 +61,10 @@ namespace UnitTesting.Security
             Assert.True(jwtOptions.TokenValidationParameters.ValidateLifetime);
             Assert.True(jwtOptions.TokenValidationParameters.ValidateIssuerSigningKey);
 
-            Assert.Contains("https://webapiadmisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
-            Assert.Contains("https://webapiadmisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidAudiences);
+            Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
+            Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidAudiences);
 
-            var token = CreateTestJwt("https://webapiadmisiones.ort.edu.uy");
+            var token = CreateTestJwt("https://admisiones.ort.edu.uy");
             var keys = jwtOptions.TokenValidationParameters.IssuerSigningKeyResolver(
                 token, null, null, jwtOptions.TokenValidationParameters);
 
