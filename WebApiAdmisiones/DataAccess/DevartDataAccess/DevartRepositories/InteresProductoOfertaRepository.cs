@@ -34,5 +34,31 @@ namespace DataAccess.DevartRepositories
                 select proceso
             ).FirstOrDefault();
         }
+
+        public virtual Oferta? GetOfertaSeleccionada(long codigoPersona, long idProducto, long idProceso)
+        {
+            var idOferta =
+            (
+                from interesProductoOferta in objectSet.AsNoTracking()
+                join interes in Context.Set<Intere>().AsNoTracking()
+                    on (decimal)interesProductoOferta.IdInteres equals interes.IdInteres
+                where interes.CodigoPersona == codigoPersona
+                    && interes.IdProceso == idProceso
+                    && interesProductoOferta.IdProducto == idProducto
+                select (long?)interesProductoOferta.IdOferta
+            ).FirstOrDefault();
+
+            if (idOferta == null)
+            {
+                return null;
+            }
+
+            return Context.Set<Oferta>()
+                .AsNoTracking()
+                .Include(o => o.Turno)
+                .Include(o => o.Supraoferta).ThenInclude(s => s.Comienzo)
+                .Include(o => o.Supraoferta).ThenInclude(s => s.Paquete).ThenInclude(p => p.Producto)
+                .FirstOrDefault(o => o.IdOferta == idOferta.Value);
+        }
     }
 }

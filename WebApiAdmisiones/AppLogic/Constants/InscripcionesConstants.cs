@@ -2,6 +2,18 @@ namespace AppLogic.Constants
 {
     public static class InscripcionesConstants
     {
+        /// <summary>
+        /// Valores de ESTADO_INSCRIPCION que devuelven las vistas VD_INSCRIPCIONES_FRESCO_1Y2 / _3Y4.
+        /// Verificar la grafía exacta contra la definición de la vista Oracle (máx. 14 chars).
+        /// </summary>
+        public static class EstadoInscripcion
+        {
+            public const string EnProceso = "En proceso";
+            public const string PagoPendiente = "Pago pendiente";
+            public const string ALaEspera = "A la espera";
+            public const string Confirmada = "Confirmada";
+        }
+
         public static class InteresProducto
         {
             public const string UsuarioAdmisiones = "ADMISIONES";

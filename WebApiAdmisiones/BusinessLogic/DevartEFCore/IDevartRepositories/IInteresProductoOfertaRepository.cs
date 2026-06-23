@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IInteresProductoOfertaRepository
     {
         Proceso? GetProcesoPorInteresActivoOferta(long codigoPersona, long idProducto, long idOferta);
+        Oferta? GetOfertaSeleccionada(long codigoPersona, long idProducto, long idProceso);
     }
 }

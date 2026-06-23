@@ -8,6 +8,7 @@ using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Personas;
 using AppLogic.Utilities;
+using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
@@ -36,6 +37,65 @@ namespace AppLogic.Services.Inscripciones
             _generalService = generalService;
             _tivenosEnvioService = tivenosEnvioService;
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
+        }
+
+        public OperationResult<DetalleInscripcionResponse> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
+        {
+            using var uow = _uowFactory.Create();
+
+            var estado = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona)
+                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso)?.EstadoInscripcion
+                ?? uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(codigoPersona)
+                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso)?.EstadoInscripcion;
+
+            if (estado == null)
+            {
+                return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                    "INS_DET_01",
+                    nameof(ObtenerDetalleInscripcion),
+                    "No se encontró la inscripción para la persona.",
+                    404);
+            }
+
+            var response = new DetalleInscripcionResponse { Estado = estado };
+
+            switch (estado)
+            {
+                case InscripcionesConstants.EstadoInscripcion.EnProceso:
+                    var oferta = uow.InteresProductoOfertas.GetOfertaSeleccionada(codigoPersona, idProducto, idProceso);
+                    response.Detalle = MapearOfertaResumen(oferta);
+                    break;
+
+                case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
+                case InscripcionesConstants.EstadoInscripcion.Confirmada:
+                    // ponytail: detalle de pago pendiente / confirmada diferido a un servicio read-only de LogicaORT
+                    break;
+
+                // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
+            }
+
+            return OperationResult<DetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
+        }
+
+        private static ResumenInscripcionDto? MapearOfertaResumen(Oferta? oferta)
+        {
+            if (oferta == null)
+            {
+                return null;
+            }
+
+            var producto = oferta.Supraoferta?.Paquete?.Producto;
+            var comienzo = oferta.Supraoferta?.Comienzo;
+            return new ResumenInscripcionDto
+            {
+                IdOferta = oferta.IdOferta,
+                IdProducto = producto?.IdProducto ?? 0,
+                Carrera = producto?.NombreWebProducto ?? producto?.NombreExtensoProducto ?? producto?.NombreProducto,
+                IdComienzo = comienzo?.IdComienzo ?? 0,
+                Comienzo = comienzo?.NombreComienzo,
+                IdTurno = oferta.IdTurno,
+                Turno = oferta.Turno?.NombreTurno
+            };
         }
 
         public OperationResult<DtoUltimaInscripcion> ObtenerUltimaInscripcionActiva(long codigoPersona)

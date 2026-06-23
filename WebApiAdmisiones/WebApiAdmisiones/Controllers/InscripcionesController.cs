@@ -108,6 +108,25 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Obtiene el detalle de una inscripción de "Mis carreras" según su estado.
+        /// "En proceso" devuelve la oferta seleccionada; "A la espera" no trae detalle.
+        /// "Pago pendiente" y "Confirmada" devuelven solo el estado (detalle pendiente de implementar).
+        /// </summary>
+        /// <param name="idProducto">ID del producto de la tarjeta.</param>
+        /// <param name="idProceso">ID del proceso de la tarjeta.</param>
+        /// <returns>Estado de la inscripción y, si corresponde, la oferta seleccionada.</returns>
+        /// <response code="200">Detalle obtenido correctamente.</response>
+        /// <response code="404">No se encontró la inscripción para la persona.</response>
+        [HttpGet("Detalle")]
+        [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 404)]
+        public IActionResult ObtenerDetalleInscripcion([FromQuery] long idProducto, [FromQuery] long idProceso)
+        {
+            var result = inscripcionesService.ObtenerDetalleInscripcion(_currentUser.GetUserId(), idProducto, idProceso);
+            return ValidateResponse(result);
+        }
+
         ///// <summary>
         ///// Obtiene la última inscripción activa de la persona autenticada.
         ///// </summary>
