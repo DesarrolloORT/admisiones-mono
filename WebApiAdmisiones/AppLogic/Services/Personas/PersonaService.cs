@@ -98,6 +98,22 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(ActualizarDatosPersona));
         }
 
+        //Valida un telefono para front
+        public OperationResult<bool> EsTelefonoValidoFront(DtoTelefono telefonoValidar, bool telefono1)
+        {
+            // Retorno temprano si el teléfono está vacío o nulo
+            if (string.IsNullOrWhiteSpace(telefonoValidar.TelefonoSimple))
+            {
+                return OperationResult<bool>.Ok(false, nameof(EsTelefonoValidoFront));
+            }
+
+            // Validar el teléfono
+            var telefonoValido = PhoneVerification.Validar(telefonoValidar.TelefonoSimple, telefonoValidar.Iso2, telefono1);
+            bool telValido = telefonoValido != null && telefonoValido.TelefonoValido;
+
+            return OperationResult<bool>.Ok(telValido, nameof(EsTelefonoValidoFront));
+        }
+
         public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
         {
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
 namespace AppLogic.Requests
@@ -47,24 +48,41 @@ namespace AppLogic.Requests
         public string VerificacionMail { get; set; } = string.Empty;
     }
 
+    [ExcludeFromCodeCoverage]
+    public class DtoTelefono
+    {
+        public bool TelefonoValido { get; set; }
+        [StringLength(20)]
+        public string? TelefonoE164 { get; set; }
+        [StringLength(2)]
+        public string? Iso2 { get; set; }
+        public long CaracteristicaPais { get; set; }
+        [StringLength(20)]
+        public string? TelefonoSimple { get; set; }
+    }
+
+    [ExcludeFromCodeCoverage]
     public class EmpresaEncuestaRequest
     {
         public long CodigoEmpresa { get; set; }
         public string Nombre { get; set; } = string.Empty;
     }
 
+    [ExcludeFromCodeCoverage]
     public class PublicidadEncuestaRequest
     {
         public long IdPublicidad { get; set; }
         public string NombrePublicidad { get; set; } = string.Empty;
     }
 
+    [ExcludeFromCodeCoverage]
     public class MotivoEncuestaRequest
     {
         public long IdMotivo { get; set; }
         public string NombreMotivo { get; set; } = string.Empty;
     }
 
+    [ExcludeFromCodeCoverage]
     public class GuardarDatosPersonaEncuestaRequest
     {
         public string PrimerApellido { get; set; } = string.Empty;
