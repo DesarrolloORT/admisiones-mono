@@ -379,9 +379,14 @@ export class InscripcionFlowFacade {
   }
 
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
-    if (this.isSectionValid(section)) return 'completa';
+    if (
+      this.completedSections().includes(section) ||
+      (section !== 'identidad' && this.isSectionValid(section))
+    ) {
+      return 'completa';
+    }
     if (this.activeSection() === section) return 'activa';
-    return this.completedSections().includes(section) ? 'completa' : 'pendiente';
+    return 'pendiente';
   }
 
   public updateIdentityFile(target: IdentityFileTarget, event: OrtFileUploaderChange): void {
@@ -423,9 +428,7 @@ export class InscripcionFlowFacade {
     const method = this.paymentForm.controls.metodoPago.value;
     if (!method) return;
 
-    const submission = this.buildSubmission();
     this.selectedPaymentMethod.set(method);
-    this.logSubmission(submission);
 
     const result = getResultadoPago(method, this.forcedResult);
     if (result === 'reservada') {
@@ -650,12 +653,14 @@ export class InscripcionFlowFacade {
   }
 
   private syncSectionCompletion(section: SeccionEncuestaId): void {
-    if (this.isSectionValid(section)) {
+    if (section !== 'identidad' && this.isSectionValid(section)) {
       this.completeSection(section);
       return;
     }
 
-    this.completedSections.update(sections => sections.filter(item => item !== section));
+    if (!this.isSectionValid(section)) {
+      this.completedSections.update(sections => sections.filter(item => item !== section));
+    }
   }
 
   private isSectionValid(section: SeccionEncuestaId): boolean {
@@ -926,24 +931,6 @@ export class InscripcionFlowFacade {
     >
   ): void {
     this.screen.set(screen);
-  }
-
-  private logSubmission(submission: EnvioInscripcion): void {
-    const safeLog = {
-      escenario: submission.escenario,
-      estadoEncuestaInicial: submission.estadoEncuestaInicial,
-      propuesta: submission.propuesta,
-      encuestaIncluida: submission.encuesta !== null,
-      identidad: {
-        frenteAdjunto: submission.identidad.frenteAdjunto,
-        dorsoAdjunto: submission.identidad.dorsoAdjunto,
-        selfieAdjunta: submission.identidad.selfieAdjunta,
-      },
-      reglamentoAceptado: submission.reglamentoAceptado,
-      metodoPago: submission.metodoPago,
-    };
-
-    console.log('[Inscripciones] envío simulado', safeLog);
   }
 
   private loadCareers(): void {

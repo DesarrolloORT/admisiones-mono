@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, forwardRef, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
@@ -29,6 +30,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
     OrtRadioModule,
     OrtSelectModule,
     ReactiveFormsModule,
+    DatePipe,
   ],
   templateUrl: './inscripcion-personal-step.html',
   styleUrl: '../../pages/inscripcion/inscripcion.scss',

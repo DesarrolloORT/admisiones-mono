@@ -309,6 +309,33 @@ describe('InscripcionFlowFacade', () => {
     expect(facade.identityForm.controls.vencimientoDocumento.value).toEqual(new Date(2030, 1, 4));
   });
 
+  it('requires identity confirmation after preload and keeps an accepted regulation complete', () => {
+    inscripcionesMock.getIdentityPreload.mockReturnValueOnce(
+      of({
+        frente: new File(['front'], 'frente-backend.png', { type: 'image/png' }),
+        dorso: new File(['back'], 'dorso-backend.png', { type: 'image/png' }),
+        selfie: new File(['photo'], 'foto-persona.jpg', { type: 'image/jpeg' }),
+        fechaVencimiento: '2030-02-04',
+      })
+    );
+    inscripcionesMock.getStudentRegulationAcceptance.mockReturnValueOnce(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '2026-06-01' })
+    );
+    facade = createFacade(undefined, undefined, {
+      initialSurvey: createInitialSurvey('completa'),
+      loadFailed: false,
+    });
+    TestBed.flushEffects();
+
+    expect(facade.getSectionState('identidad')).toBe('activa');
+    expect(facade.getSectionState('reglamento')).toBe('completa');
+
+    facade.continue();
+
+    expect(facade.getSectionState('identidad')).toBe('completa');
+    expect(facade.activeSection()).toBe('reglamento');
+  });
+
   it('requests identity preload even when the initial survey is null', async () => {
     facade = createFacade(undefined, undefined, {
       initialSurvey: {

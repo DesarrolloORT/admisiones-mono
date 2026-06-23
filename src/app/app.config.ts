@@ -1,5 +1,6 @@
-import { LocationStrategy, PathLocationStrategy } from '@angular/common';
+import { LocationStrategy, PathLocationStrategy, registerLocaleData } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import localeEsUy from '@angular/common/locales/es-UY';
 import {
   ApplicationConfig,
   importProvidersFrom,
@@ -28,6 +29,8 @@ import { routes } from './app.routes';
 import { authRefreshInterceptor, httpInterceptor } from './core/interceptors/http';
 import { AppApiErrorNotifier } from './core/services/api-error-notifier';
 import { TelemetryService } from './core/services/telemetry';
+
+registerLocaleData(localeEsUy);
 
 export const appConfig: ApplicationConfig = {
   providers: [

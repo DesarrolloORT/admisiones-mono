@@ -405,9 +405,10 @@
           <div class="inscription-accordion__content" [formGroup]="facade.regulationForm">
             @if (facade.hasAcceptedStudentRegulation()) {
             <p>
-              En la fecha como parte del proceso de inscripción a la universidad, Asociación
-              Uruguaya ORT ha recibido de tu parte el reconocimiento y aceptación del Reglamento
-              Estudiantil de Universidad ORT Uruguay.
+              En la fecha {{ facade.submittedAcceptanceDate() | date: 'dd/MM/yyyy' }} como parte del
+              proceso de inscripción a la universidad, Asociación Uruguaya ORT ha recibido de tu
+              parte el reconocimiento y aceptación del Reglamento Estudiantil de Universidad ORT
+              Uruguay.
             </p>
 
             <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
