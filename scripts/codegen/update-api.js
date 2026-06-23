@@ -52,6 +52,16 @@ runNodeStage({
   },
 });
 
+runNodeStage({
+  label: 'Validando contratos públicos de adapters',
+  script: 'check-api-contracts.js',
+  args: [],
+  failure: {
+    what: 'Los adapters exponen DTOs generados o existen responses sin schema tipado.',
+    where: 'features/*/endpoints y src/app/shared/api/generated/endpoints/',
+  },
+});
+
 validateAngularCompilation();
 
 console.log('\n✓ API actualizada y compatibilidad Angular validada.');
