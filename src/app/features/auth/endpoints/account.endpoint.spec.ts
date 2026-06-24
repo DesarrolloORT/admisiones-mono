@@ -85,11 +85,11 @@ describe('AccountEndpoint', () => {
       .updatePersonalData({
         countryCode: 1,
         stateCode: 10,
-        cityCode: null,
-        address: ' Av. 18 de Julio 1360 ',
-        phone: ' 99123456 ',
-        email: ' gabrielaortiz@gmail.com ',
-        emailVerification: ' gabrielaortiz@gmail.com ',
+        cityCode: undefined,
+        address: 'Av. 18 de Julio 1360',
+        phone: '99123456',
+        email: 'gabrielaortiz@gmail.com',
+        emailVerification: 'gabrielaortiz@gmail.com',
       })
       .subscribe(result => expect(result).toBe(true));
 

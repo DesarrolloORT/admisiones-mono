@@ -3,11 +3,11 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  BecasItem,
   getPersonaBecasEndpoint,
   getPersonaInscripcionesEndpoint,
-  InscripcionesItem,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+import type { DtoBecaPersona } from 'src/app/shared/api/generated/models/dtoBecaPersona';
+import type { DtoVdInscripcionesFresco1y2Devart } from 'src/app/shared/api/generated/models/dtoVdInscripcionesFresco1y2Devart';
 
 import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion } from '../models/mi-inscripcion';
@@ -29,7 +29,11 @@ export class HomeEndpoint {
   }
 
   private toMisInscripciones(
-    data: { data: InscripcionesItem[] | null } | InscripcionesItem[] | null | undefined
+    data:
+      | { data: DtoVdInscripcionesFresco1y2Devart[] | null }
+      | DtoVdInscripcionesFresco1y2Devart[]
+      | null
+      | undefined
   ): MiInscripcion[] {
     const items = Array.isArray(data) ? data : (data?.data ?? []);
 
@@ -45,7 +49,7 @@ export class HomeEndpoint {
   }
 
   private toMisBecas(
-    data: { data: BecasItem[] | null } | BecasItem[] | null | undefined
+    data: { data: DtoBecaPersona[] | null } | DtoBecaPersona[] | null | undefined
   ): MiBeca[] {
     const items = Array.isArray(data) ? data : (data?.data ?? []);
 

@@ -9,7 +9,7 @@ import {
   OrtSpinnerModule,
 } from '@desarrolloort/components';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionProposalFacade } from '../../facades/inscripcion-proposal';
 
 @Component({
   selector: 'app-inscripcion-academic-step',
@@ -27,5 +27,5 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionAcademicStep {
-  protected readonly facade = inject(InscripcionFlowFacade);
+  protected readonly facade = inject(InscripcionProposalFacade);
 }

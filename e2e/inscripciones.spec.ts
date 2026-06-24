@@ -161,6 +161,67 @@ test.describe('Inscripción inicial', () => {
 
     await expect(page.getByRole('heading', { name: 'Inscripción en proceso' })).toBeVisible();
   });
+
+  test('restaura la sección activa después de recargar @regression', async ({ page }) => {
+    await setup(page, 'empty');
+    const inscription = new InscripcionPage(page);
+
+    await inscription.goto();
+    await inscription.fillAcademicProposal();
+    await inscription.fillEducation();
+    await page.waitForTimeout(350);
+    await page.reload();
+
+    await expect(
+      page.locator('ort-radio-group[formcontrolname="anioDecisionCarrera"]')
+    ).toBeVisible();
+  });
+
+  test('restaura el paso de pago con la respuesta serializable @regression', async ({ page }) => {
+    await setup(page, 'complete');
+    await page.addInitScript(() => {
+      window.sessionStorage.setItem(
+        'inscripcion-borrador:v1:12345672:encuesta-completa',
+        JSON.stringify({
+          version: 2,
+          escenario: 'encuesta-completa',
+          paso: 'pago',
+          seccionActiva: 'reglamento',
+          seccionesCompletas: ['reglamento'],
+          propuesta: {
+            tipoPropuesta: '1',
+            carrera: '20',
+            comienzo: '200',
+            turno: '300',
+          },
+          encuesta: {
+            educacion: {},
+            decisionAcademica: {},
+            experienciaOrt: {},
+            situacionLaboral: {},
+          },
+          identidad: { vencimientoDocumento: '' },
+          reglamento: { aceptaReglamento: true },
+          pago: { metodoPago: 'cuenta-bancaria' },
+          preinscripcion: {
+            confirmada: true,
+            fechaVencimientoPago: '2027-03-04',
+            seniaInscripcion: 15500,
+            resumen: {
+              carrera: 'Ingeniería en Sistemas',
+              comienzo: 'Agosto 2026',
+              turno: 'Nocturno',
+            },
+          },
+        })
+      );
+    });
+
+    await new InscripcionPage(page).goto();
+
+    await expect(page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
+    await expect(page.getByText('$ 15.500').first()).toBeVisible();
+  });
 });
 
 async function setup(

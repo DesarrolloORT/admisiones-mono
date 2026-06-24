@@ -8,10 +8,10 @@ import {
   getCatalogosEncuestaInicialEndpoint,
   getCatalogosPaisesEstadosCiudadesEndpoint,
   getCatalogosTurnosEndpoint,
-  PaisesEstadosCiudadesItem,
-  PaisesEstadosCiudadesItemEstado,
-  PaisesEstadosCiudadesItemEstadoCiudad,
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
+import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
+import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
+import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
 
 import {
   Career,
@@ -108,7 +108,7 @@ export class CatalogsEndpoint {
     this.api.clearCache();
   }
 
-  private toLocationCountry(item: PaisesEstadosCiudadesItem): LocationCountry {
+  private toLocationCountry(item: DtoPaisEstadoCiudadResponse): LocationCountry {
     return {
       codigoPais: item.codigoPais ?? 0,
       nombre: item.nombre ?? '',
@@ -116,7 +116,7 @@ export class CatalogsEndpoint {
     };
   }
 
-  private toLocationState(s: PaisesEstadosCiudadesItemEstado): LocationState {
+  private toLocationState(s: DtoEstadoCiudadResponse): LocationState {
     return {
       codigoPais: s.codigoPais ?? 0,
       codigoEstado: s.codigoEstado ?? 0,
@@ -125,7 +125,7 @@ export class CatalogsEndpoint {
     };
   }
 
-  private toLocationCity(c: PaisesEstadosCiudadesItemEstadoCiudad): LocationCity {
+  private toLocationCity(c: DtoCiudadResponse): LocationCity {
     return {
       codigoPais: c.codigoPais ?? 0,
       codigoEstado: c.codigoEstado ?? 0,

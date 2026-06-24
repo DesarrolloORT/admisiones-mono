@@ -15,6 +15,7 @@ import {
   withInMemoryScrolling,
   withRouterConfig,
 } from '@angular/router';
+import { FDPComponentsModule, setConfig } from '@desarrolloort/fdp-components';
 import {
   ApiErrorNotifier,
   operationResultInterceptor,
@@ -42,6 +43,12 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
     ),
     provideAppInitializer(() => UiUtils.initializeMaterialSymbols()),
+    provideAppInitializer(() =>
+      setConfig({
+        system: 'ADMISIONES',
+        withCredentials: true,
+      })
+    ),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
     provideHttpClient(
       withInterceptors([
@@ -58,5 +65,6 @@ export const appConfig: ApplicationConfig = {
     }),
     { provide: LOCALE_ID, useValue: 'es-UY' },
     { provide: LocationStrategy, useClass: PathLocationStrategy },
+    importProvidersFrom(FDPComponentsModule),
   ],
 };

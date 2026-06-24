@@ -8,7 +8,7 @@ import {
   OrtSelectModule,
 } from '@desarrolloort/components';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
 import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
 
 @Component({
@@ -27,5 +27,5 @@ import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionConfirmationStep {
-  protected readonly facade = inject(InscripcionFlowFacade);
+  protected readonly facade = inject(InscripcionPaymentFacade);
 }

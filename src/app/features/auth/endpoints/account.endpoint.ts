@@ -28,9 +28,9 @@ export interface AccountPersonalData {
 }
 
 export interface UpdateAccountPersonalDataPayload {
-  countryCode: number | null;
-  stateCode: number | null;
-  cityCode: number | null;
+  countryCode?: number;
+  stateCode?: number;
+  cityCode?: number;
   address: string;
   phone: string;
   email: string;
@@ -75,13 +75,13 @@ export class AccountEndpoint {
     return this.api
       .request(putPersonaDatosPersonaEndpoint, {
         body: {
-          codigoPais: this.toOptionalNumber(payload.countryCode),
-          codigoEstado: this.toOptionalNumber(payload.stateCode),
-          codigoCiudad: this.toOptionalNumber(payload.cityCode),
-          direccion: payload.address.trim(),
-          telefono1: payload.phone.trim(),
-          mail: payload.email.trim(),
-          verificacionMail: payload.emailVerification.trim(),
+          codigoPais: payload.countryCode,
+          codigoEstado: payload.stateCode,
+          codigoCiudad: payload.cityCode,
+          direccion: payload.address,
+          telefono1: payload.phone,
+          mail: payload.email,
+          verificacionMail: payload.emailVerification,
         },
       })
       .pipe(map(result => result === true));
@@ -94,9 +94,5 @@ export class AccountEndpoint {
         passwordNueva: payload.password,
       },
     });
-  }
-
-  private toOptionalNumber(value: number | null): number | undefined {
-    return value ?? undefined;
   }
 }
