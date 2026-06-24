@@ -192,6 +192,7 @@ namespace UnitTesting.AppLogic.Services
                     NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
                 }
             ]);
+            repo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
             _uowMock.Setup(u => u.Productos).Returns(repo.Object);
 
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
