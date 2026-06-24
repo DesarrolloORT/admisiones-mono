@@ -55,19 +55,5 @@ namespace DataAccess.DevartRepositories
                 .ThenBy(p => p.NombreProducto)
                 .ToList();
         }
-
-        public virtual ICollection<BusinessLogic.Entities.Producto> GetByKeys(IEnumerable<long> ids)
-        {
-            var productoIds = ids.Distinct().ToList();
-            if (productoIds.Count == 0)
-            {
-                return new List<BusinessLogic.Entities.Producto>();
-            }
-
-            return objectSet
-                .Where(p => productoIds.Contains(p.IdProducto))
-                .Include(p => p.NivelProducto)
-                .ToList();
-        }
     }
 }

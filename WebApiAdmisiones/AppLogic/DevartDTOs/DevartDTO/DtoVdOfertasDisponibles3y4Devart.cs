@@ -64,6 +64,13 @@ namespace AppLogic.DevartDTOs
         [StringLength(1000)]
         public string? DescripcionOferta { get; set; }
 
+        [Required()]
+        public long IdNivelProducto { get; set; }
+
+        [StringLength(30)]
+        [Required()]
+        public string NombreNivelProducto { get; set; }
+
         #endregion
     }
 

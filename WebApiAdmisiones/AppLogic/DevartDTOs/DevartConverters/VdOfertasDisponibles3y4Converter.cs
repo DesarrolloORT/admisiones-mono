@@ -48,6 +48,8 @@ namespace AppLogic.DevartDTOs
             target.IdProceso = source.IdProceso;
             target.NombreProceso = source.NombreProceso;
             target.DescripcionOferta = source.DescripcionOferta;
+            target.IdNivelProducto = source.IdNivelProducto;
+            target.NombreNivelProducto = source.NombreNivelProducto;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -77,6 +79,8 @@ namespace AppLogic.DevartDTOs
             target.IdProceso = source.IdProceso;
             target.NombreProceso = source.NombreProceso;
             target.DescripcionOferta = source.DescripcionOferta;
+            target.IdNivelProducto = source.IdNivelProducto;
+            target.NombreNivelProducto = source.NombreNivelProducto;
 
             // User-defined partial method
             OnEntityCreating(source, target);

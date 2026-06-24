@@ -42,14 +42,14 @@ namespace AppLogic.DTOs
         }
 
         public static DtoCarreraResponse ToAdmisionesDto(
-            this VdOfertasDisponibles3y4 oferta, Producto? producto)
+            this VdOfertasDisponibles3y4 oferta)
         {
             return new DtoCarreraResponse
             {
                 IdProducto = oferta.IdProducto!.Value,
                 NombreProducto = oferta.NombreWebProducto,
-                IdNivelProducto = producto?.IdNivelProducto ?? 0,
-                NombreNivelProducto = producto?.NivelProducto?.NombreNivelProducto,
+                IdNivelProducto = oferta.IdNivelProducto,
+                NombreNivelProducto = oferta.NombreNivelProducto,
                 IdEscuela = oferta.IdEscuela,
                 NombreEscuela = oferta.NombreExtensoEscuela
             };

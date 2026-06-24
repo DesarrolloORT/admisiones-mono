@@ -139,16 +139,7 @@ namespace AppLogic.Services.Catalogos
             var nivel12 = uow.Productos.GetProductosVigentes()
                 .Select(CarrerasMapper.ToAdmisionesDto);
 
-            var vista = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles();
-            var productosPorId = uow.Productos
-                .GetByKeys(vista.Select(v => v.IdProducto!.Value))
-                .ToDictionary(p => p.IdProducto);
-
-            var nivel34 = vista.Select(v =>
-            {
-                productosPorId.TryGetValue(v.IdProducto!.Value, out var producto);
-                return v.ToAdmisionesDto(producto);
-            });
+            var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(CarrerasMapper.ToAdmisionesDto);
 
             return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(nivel12.Concat(nivel34), nameof(ObtenerCarreras));
         }
