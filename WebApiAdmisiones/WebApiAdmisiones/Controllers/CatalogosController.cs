@@ -182,13 +182,13 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="500">Error inesperado al obtener bancos.</response>
         /// <response code="502">La API interna no devolvio datos validos.</response>
         [HttpGet("Bancos")]
-        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 200)]
-        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 400)]
-        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 500)]
-        [ProducesResponseType(typeof(OperationResult<BancosResponseDto>), 502)]
+        [ProducesResponseType(typeof(OperationResult<DtoBancoDevart>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoBancoDevart>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoBancoDevart>), 500)]
+        [ProducesResponseType(typeof(OperationResult<DtoBancoDevart>), 502)]
         public async Task<IActionResult> ObtenerBancos()
         {
-            var result = await catalogosService.ObtenerBancos();
+            var result = catalogosService.ObtenerBancos();
             return ValidateResponse(result);
         }
 

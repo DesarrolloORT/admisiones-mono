@@ -160,27 +160,6 @@ namespace AppLogic.ApiClients
         public string? NumeroFactura { get; set; }
     }
 
-    /// <summary>
-    /// DTO de banco.
-    /// Corresponde a: GET /api/Pagos/Bancos
-    /// </summary>
-    public class BancoDto
-    {
-        public long IdBanco { get; set; }
-        public string? NombreBanco { get; set; }
-        public string? Codigo { get; set; }
-        public bool Activo { get; set; }
-    }
-
-    /// <summary>
-    /// Response de lista de bancos.
-    /// </summary>
-    public class BancosResponse
-    {
-        public List<BancoDto> Bancos { get; set; } = new();
-        public int TotalCount { get; set; }
-    }
-
     #endregion
 
     /// <summary>
@@ -564,43 +543,6 @@ namespace AppLogic.ApiClients
             catch (Exception ex)
             {
                 return HandleException<CrearFacturaResponse>(ex, nameof(CrearFacturaAsync));
-            }
-        }
-
-        /// <summary>
-        /// Obtiene la lista de bancos disponibles.
-        /// Corresponde a: GET /api/Pagos/Bancos
-        /// </summary>
-        /// <returns>Lista de bancos activos</returns>
-        public async Task<OperationResult<BancosResponse>> ObtenerBancosAsync()
-        {
-            try
-            {
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Consultando lista de bancos disponibles");
-                }
-
-                var response = await _httpClient.GetAsync("ORTSecure/Pagos/Bancos");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<BancosResponse>();
-                    return OperationResult<BancosResponse>.Ok(result!, nameof(ObtenerBancosAsync));
-                }
-
-                var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<BancosResponse>.IsFailed(
-                    "BANCOS_GET_01",
-                    nameof(ObtenerBancosAsync),
-                    $"Error al obtener bancos: {response.StatusCode} - {errorContent}",
-                    (int)response.StatusCode,
-                    default!
-                );
-            }
-            catch (Exception ex)
-            {
-                return HandleException<BancosResponse>(ex, nameof(ObtenerBancosAsync));
             }
         }
 

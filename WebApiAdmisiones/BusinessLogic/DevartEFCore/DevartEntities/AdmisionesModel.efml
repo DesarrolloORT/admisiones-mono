@@ -5262,6 +5262,47 @@
       <column name="DESCRIPCION_OFERTA" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="Banco" entity-set="Bancos" table="T_BANCO" schema="CREADOR" p1:Guid="3e033ce5-2c61-43a3-b2cc-df900175d77f">
+    <id name="IdBanco" type="Int64" p1:ValidateRequired="true" p1:Guid="086602c4-6856-4d64-94c1-77cae4616ac4">
+      <column name="ID_BANCO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="NombreBanco" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="050888db-a5d5-4a06-8d37-2b07ac1b3c37">
+      <column name="NOMBRE_BANCO" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="CodigoBanco" type="Int64" p1:ValidateRequired="true" p1:Guid="a88e8411-7be3-4146-b1d2-697d9e853f7d">
+      <column name="CODIGO_BANCO" not-null="True" precision="18" scale="0" sql-type="NUMBER" unique="True" p1:unicode="False" />
+    </property>
+    <property name="ObservacionesBanco" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="b3a79f22-6870-4a73-89bf-2f79ac23bc7b" p1:GenerateDTO="False">
+      <column name="OBSERVACIONES_BANCO" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="fcb94663-48b5-453a-a27b-f6c256ddfe60" p1:GenerateDTO="False">
+      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="af5e7963-9af4-41f6-94bc-c07541573731" p1:GenerateDTO="False">
+      <column name="FECHA_INGRESO" default="TO_DATE(TO_CHAR(SYSDATE,'YYYY-MM-DD'),'YYYY-MM-DD')" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="1a63ee7e-46bc-4d14-bd5f-404d3b51e808" p1:GenerateDTO="False">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'HH24:MI:SS')" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="BancoPsig" type="String" p1:nullable="True" p1:ValidateMaxLength="6" p1:ValidateRequired="false" p1:Guid="01eecf8f-d0b3-4ca3-8184-4acea9e2f59e" p1:GenerateDTO="False">
+      <column name="BANCO_PSIG" not-null="False" length="6" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="BancoPsigUsd" type="String" p1:nullable="True" p1:ValidateMaxLength="6" p1:ValidateRequired="false" p1:Guid="49b2f131-12fc-4f28-bb70-74edd1429c6b" p1:GenerateDTO="False">
+      <column name="BANCO_PSIG_USD" not-null="False" length="6" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="PagoSueldoBanco" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="085de871-8c1a-4988-af70-3213afcc503a" p1:GenerateDTO="False">
+      <column name="PAGO_SUELDO_BANCO" default="'NO'" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdBancoSistarbanc" type="String" p1:nullable="True" p1:ValidateMaxLength="4" p1:ValidateRequired="false" p1:Guid="585f840e-c93b-48bf-80a2-11213873e030">
+      <column name="ID_BANCO_SISTARBANC" not-null="False" length="4" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="HabilitadoSistarbanc" type="String" p1:ValidateMaxLength="2" p1:ValidateRequired="true" p1:Guid="e0d2f1a4-badd-42f4-96dc-67b9ab7ce427" p1:GenerateDTO="False">
+      <column name="HABILITADO_SISTARBANC" default="'NO'" not-null="True" length="2" sql-type="CHAR" p1:fixed-length="True" p1:unicode="False" />
+    </property>
+    <property name="GrupoBanco" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="27f24b3c-0b98-4919-866e-d1b4513802ef" p1:GenerateDTO="False">
+      <column name="GRUPO_BANCO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

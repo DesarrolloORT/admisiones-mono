@@ -26,8 +26,8 @@ namespace DataAccess.DevartRepositories
                 .ToList()
                 .GroupBy(x => new { x.IdOferta, x.IdTurno })
                 .Select(g => g.First())
-                .OrderBy(x => x.IdTurno)
-                .ThenBy(x => x.IdOferta)
+                .OrderBy(x => x.FechaReferencia)
+                .ThenBy(x => x.DescripcionOferta)
                 .ToList();
         }
 
