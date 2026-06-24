@@ -30,9 +30,14 @@
 
   <ort-form-field [hideRequiredMarker]="!!form().controls.fechaNacimiento.value">
     <ort-label>Fecha de nacimiento</ort-label>
-    <input formControlName="fechaNacimiento" format="DD/MM/YYYY" ortDateInput placeholder="dd/mm/aaaa" valueType="date"
-      [id]="'birth-date'" [maxDate]="maxBirthDate" />
-    <ort-datepicker-toggle ortSuffix [maxDate]="maxBirthDate" [selectedDate]="maxBirthDate"></ort-datepicker-toggle>
+    <input
+      formControlName="fechaNacimiento"
+      format="DD/MM/YYYY"
+      ortDateInput
+      placeholder="dd/mm/aaaa"
+      valueType="date"
+      [id]="'birth-date'" />
+    <ort-datepicker-toggle ortSuffix [selectedDate]="initDate" />
     @if (form().controls.fechaNacimiento.touched &&
     form().controls.fechaNacimiento.hasError('required')) {
     <ort-error class="sr-only">Este campo es obligatorio</ort-error>
@@ -53,17 +58,11 @@
 
   <app-location-select class="auth-field--wide" formControlName="location" />
   @if (submitted() && form().controls.location.hasError('locationRequired')) {
-  <p class="sr-only" id="location-country-error" role="alert">
-    Seleccioná el país de residencia
-  </p>
+  <p class="sr-only" id="location-country-error" role="alert">Seleccioná el país de residencia</p>
   } @if (submitted() && form().controls.location.hasError('locationStateRequired')) {
-  <p class="sr-only" id="location-state-error" role="alert">
-    Seleccioná el departamento o estado
-  </p>
+  <p class="sr-only" id="location-state-error" role="alert">Seleccioná el departamento o estado</p>
   } @if (submitted() && form().controls.location.hasError('locationCityRequired')) {
-  <p class="sr-only" id="location-city-error" role="alert">
-    Seleccioná la ciudad
-  </p>
+  <p class="sr-only" id="location-city-error" role="alert">Seleccioná la ciudad</p>
   }
 
   <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.direccion.value">

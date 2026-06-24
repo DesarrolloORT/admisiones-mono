@@ -29,7 +29,7 @@ export class RegisterPersonalCompleteFields {
   public readonly form = input.required<FormGroup<PersonalForm>>();
   public readonly submitted = input(false);
 
-  protected readonly maxBirthDate = createDateOnly(
+  protected readonly initDate = createDateOnly(
     new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate())
   );
 }
