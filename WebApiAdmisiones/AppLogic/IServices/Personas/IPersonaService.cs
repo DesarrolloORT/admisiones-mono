@@ -15,10 +15,6 @@ namespace AppLogic.IServices.Personas
         OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona);
         OperationResult<byte[]> ObtenerFotoPersona(long codigoPersona);
         OperationResult<bool> SubirFotoPersona(long codigoPersona, byte[] fileContent, string fileName);
-        OperationResult<bool> SubirDocumentoPersona(
-            long codigoPersona,
-            DateTime fecha,
-            DocumentoPersonaArchivoDto frente,
-            DocumentoPersonaArchivoDto dorso);
+        OperationResult<bool> SubirDocumentoPersona(long codigoPersona, DateTime fecha, DocumentoPersonaArchivoDto frente, DocumentoPersonaArchivoDto dorso);
     }
 }

@@ -7,24 +7,16 @@ namespace AppLogic.IServices.Catalogos
 {
     public interface ICatalogosService
     {
-        OperationResult<DtoPaisDevart> ObtenerPais(long idPais);
-
         // Versión síncrona (legacy, mantener para compatibilidad)
         OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
         // Versión asíncrona (preferida, soporta cache distribuido)
         Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
         OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
-        OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos();
+        OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
         Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
         Task<OperationResult<BancosResponseDto>> ObtenerBancos();
-        OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras();
-        OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion();
-        OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion();
-        OperationResult<IEnumerable<DtoTituloDevart>> ObtenerBachilleratos(long idAnioBachillerato);
-        OperationResult<DtoAnioBachillerDevart> ObtenerAnioBachiller(long idAnioBachillerato);
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado);
-        OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades();
         //OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona);
         OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto);
     }

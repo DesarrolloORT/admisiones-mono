@@ -150,7 +150,7 @@ namespace UnitTesting.Controllers
                 .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
                     new DtoEncuestaInicialCatalogosResponse
                     {
-                        DecisionCarrera =
+                        OpcionesEMS =
                         [
                             new DtoComboOption { Value = 2, Label = "1° EMS (4° año)" }
                         ]
@@ -162,31 +162,6 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
-
-        //[Fact]
-        //public void CatalogosController_ExposesTipoDocumentos()
-        //{
-        //    Assert.NotNull(typeof(CatalogosController).GetMethod("ObtenerTipoDocumentos"));
-        //}
-
-        //[Fact]
-        //public void ObtenerTipoDocumentos_ReturnsOk()
-        //{
-        //    var serviceMock = new Mock<ICatalogosService>();
-        //    var currentUserMock = new Mock<ICurrentUserService>();
-        //    var loggerMock = new Mock<ILogger<CatalogosController>>();
-        //    var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-        //    serviceMock.Setup(s => s.ObtenerTipoDocumentos())
-        //        .Returns(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(
-        //            [new DtoAcaTipoDocumentoDevart { CodTipoDocumento = 1, Descripcion = "Cedula" }],
-        //            nameof(ICatalogosService.ObtenerTipoDocumentos)));
-
-        //    var response = controller.ObtenerTipoDocumentos();
-
-        //    var okResult = Assert.IsType<ObjectResult>(response);
-        //    Assert.Equal(200, okResult.StatusCode);
-        //}
 
         [Fact]
         public void ObtenerComienzos_ReturnsOk()

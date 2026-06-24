@@ -47,7 +47,13 @@ namespace AppLogic.Services.Catalogos
                     Combo(3, "Medio"),
                     Combo(4, "Superior")
                 ],
-                DecisionCarrera = DecisionSecundariaOptions(),
+                OpcionesEMS =
+                [
+                    Combo(2, "1° EMS (4° año)"),
+                    Combo(3, "2° EMS (5° año)"),
+                    Combo(4, "3° EMS (6° año)"),
+                    Combo(0, "Otro")
+                ],
                 CompartidoCon =
                 [
                     Combo(1, "Padres u otros familiares"),
@@ -72,7 +78,6 @@ namespace AppLogic.Services.Catalogos
                     Combo(1, "En curso"),
                     Combo(2, "Abandonado")
                 ],
-                DecisionUniversidad = DecisionSecundariaOptions(),
                 AniosAprobadosEducacionSuperior =
                 [
                     Combo(13, "1 año"),
@@ -115,14 +120,6 @@ namespace AppLogic.Services.Catalogos
             return OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(response, nameof(ObtenerEncuestaInicial));
         }
 
-        private static IReadOnlyList<DtoComboOption> DecisionSecundariaOptions() =>
-        [
-            Combo(2, "1° EMS (4° año)"),
-            Combo(3, "2° EMS (5° año)"),
-            Combo(4, "3° EMS (6° año)"),
-            Combo(0, "Otro")
-        ];
-
         private static DtoComboOption Combo(int value, string label) => new()
         {
             Value = value,
@@ -133,37 +130,6 @@ namespace AppLogic.Services.Catalogos
         public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
         {
             return Task.FromResult(ObtenerPaisesEstadosCiudades());
-        }
-
-        public OperationResult<DtoPaisDevart> ObtenerPais(long idPais)
-        {
-            using var uow = _uowFactory.Create();
-            var pais = uow.Paises.GetPaisConEstadosYCiudades(idPais);
-            if (pais == null)
-            {
-                return OperationResult<DtoPaisDevart>.IsFailed("FDP_GPAC_01", nameof(ObtenerPais), "País no encontrado.", 204);
-            }
-
-            if (pais.Estado != null)
-            {
-                pais.Estado = pais.Estado.OrderBy(e => e.Nombre).ToList();
-                foreach (var estado in pais.Estado)
-                {
-                    if (estado.Ciudad != null)
-                    {
-                        estado.Ciudad = estado.Ciudad.OrderBy(c => c.Nombre).ToList();
-                    }
-                }
-            }
-
-            return OperationResult<DtoPaisDevart>.Ok(pais.ToDtoWithRelated(2), nameof(ObtenerPais));
-        }
-
-        public OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>> ObtenerTipoDocumentos()
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.AcaTipoDocumentos.GetAll().ToList();
-            return OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>.Ok(AcaTipoDocumentoConverter.ToDtos(entidades), nameof(ObtenerTipoDocumentos));
         }
 
         public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
@@ -322,51 +288,11 @@ namespace AppLogic.Services.Catalogos
             };
         }
 
-        public OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>> ObtenerMotivosEleccion()
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.MotivoOpcionesAdmisions.GetAll().ToList();
-            return OperationResult<IEnumerable<DtoMotivoOpcionesAdmisionDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerMotivosEleccion));
-        }
-
-        public OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>> ObtenerPublicidadesEleccion()
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.PublicidadOpcionesAdmisions.GetAll().ToList();
-            return OperationResult<IEnumerable<DtoPublicidadOpcionesAdmisionDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerPublicidadesEleccion));
-        }
-
-        public OperationResult<IEnumerable<DtoTituloDevart>> ObtenerBachilleratos(long idAnioBachillerato)
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Titulos.GetBachilleratosPorAnio(idAnioBachillerato);
-            return OperationResult<IEnumerable<DtoTituloDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerBachilleratos));
-        }
-
-        public OperationResult<DtoAnioBachillerDevart> ObtenerAnioBachiller(long idAnioBachillerato)
-        {
-            using var uow = _uowFactory.Create();
-            var anio = uow.AnioBachillers.GetWithRelated(idAnioBachillerato);
-            if (anio == null)
-            {
-                return OperationResult<DtoAnioBachillerDevart>.IsFailed("GEN_ANB_01", nameof(ObtenerAnioBachiller), "Año de bachillerato no encontrado.", 204);
-            }
-
-            return OperationResult<DtoAnioBachillerDevart>.Ok(anio.ToDto(), nameof(ObtenerAnioBachiller));
-        }
-
         public OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado)
         {
             using var uow = _uowFactory.Create();
             var entidades = uow.Empresas.GetInstituciones(codigoPais, codigoEstado);
             return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerInstituciones));
-        }
-
-        public OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades()
-        {
-            using var uow = _uowFactory.Create();
-            var entidades = uow.Empresas.GetUniversidades();
-            return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerUniversidades));
         }
 
         //public OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona)
