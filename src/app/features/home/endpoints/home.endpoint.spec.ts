@@ -27,6 +27,7 @@ describe('HomeEndpoint', () => {
       of([
         {
           idProducto: 10,
+          idProceso: 25,
           idComienzo: 20,
           idTurno: 30,
           nombreExtensoProducto: 'Analista Programador',
@@ -40,6 +41,7 @@ describe('HomeEndpoint', () => {
     await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
       {
         idProducto: 10,
+        idProceso: 25,
         idComienzo: 20,
         idTurno: 30,
         nombreProducto: 'Analista Programador',

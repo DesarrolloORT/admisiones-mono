@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
+  getInscripcionesDetalleEndpoint,
   getInscripcionesEncuestaInicialEndpoint,
   getInscripcionesReglamentoEstudiantilEndpoint,
   postInscripcionesConfirmarPreInscripcionEndpoint,
@@ -15,6 +16,7 @@ import {
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 import type { DtoEncuestaIniAdmisionDevart } from 'src/app/shared/api/generated/models/dtoEncuestaIniAdmisionDevart';
 
+import type { InscripcionDetail, InscripcionSummary } from '../models/inscripcion-detail';
 import type {
   InscripcionBackendSurvey,
   InscripcionConfirmPreEnrollmentPayload,
@@ -31,6 +33,46 @@ import type {
 })
 export class InscripcionesEndpoint {
   private readonly api = inject(ApiHttpClient);
+
+  public getDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail> {
+    return this.api
+      .request(getInscripcionesDetalleEndpoint, {
+        queryParams: { idProducto, idProceso },
+        cache: false,
+        showLoader: true,
+      })
+      .pipe(
+        map(response => ({
+          estado: response.estado ?? null,
+          detalle: this.toSummary(response.detalle),
+          pagoPendiente: response.pagoPendiente
+            ? {
+                idInscripcion: response.pagoPendiente.idInscripcion ?? null,
+                senia: response.pagoPendiente.senia ?? null,
+                fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
+                resumen: this.toSummary(response.pagoPendiente.resumen),
+              }
+            : null,
+          confirmada: response.confirmada
+            ? {
+                numeroEstudiante: response.confirmada.numeroEstudiante ?? null,
+                resumen: this.toSummary(response.confirmada.resumen),
+                coordinadorAcademico: response.confirmada.coordinadorAcademico
+                  ? {
+                      nombre: response.confirmada.coordinadorAcademico.nombre ?? null,
+                      email: response.confirmada.coordinadorAcademico.email ?? null,
+                    }
+                  : null,
+                materiasPrimerSemestre:
+                  response.confirmada.materiasPrimerSemestre?.map(materia => ({
+                    idMateria: materia.idMateria ?? null,
+                    nombre: materia.nombre ?? null,
+                  })) ?? [],
+              }
+            : null,
+        }))
+      );
+  }
 
   public getIdentityDocument(): Observable<InscripcionIdentityDocument> {
     return this.api.request(getPersonaDocumentoEndpoint, { cache: false }).pipe(
@@ -175,5 +217,32 @@ export class InscripcionesEndpoint {
       vistaInstalacionesOrtEncuestaIni: survey.vistaInstalacionesOrtEncuestaIni ?? null,
       publicidadOrtEncuestaIni: survey.publicidadOrtEncuestaIni ?? null,
     };
+  }
+
+  private toSummary(
+    summary:
+      | {
+          idOferta?: number;
+          idProducto?: number;
+          carrera?: string | null;
+          idComienzo?: number;
+          comienzo?: string | null;
+          idTurno?: number;
+          turno?: string | null;
+        }
+      | null
+      | undefined
+  ): InscripcionSummary | null {
+    return summary
+      ? {
+          idOferta: summary.idOferta ?? null,
+          idProducto: summary.idProducto ?? null,
+          carrera: summary.carrera ?? null,
+          idComienzo: summary.idComienzo ?? null,
+          comienzo: summary.comienzo ?? null,
+          idTurno: summary.idTurno ?? null,
+          turno: summary.turno ?? null,
+        }
+      : null;
   }
 }

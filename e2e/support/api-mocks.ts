@@ -6,6 +6,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 export interface MockApiOptions {
   initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
   identityPreload?: 'none' | 'complete';
+  inscriptionDetail?: 'pending-payment';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -145,12 +146,55 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, true);
     }
 
+    if (path === '/Persona/Inscripciones' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.inscriptionDetail
+          ? [
+              {
+                idProducto: 20,
+                idProceso: 200,
+                idComienzo: 2,
+                idTurno: 3,
+                nombreExtensoProducto: 'Licenciatura en Diseño Gráfico',
+                nombreComienzo: 'Marzo 2027',
+                nombreTurno: 'Matutino',
+                estadoInscripcion: 'Pago pendiente',
+              },
+            ]
+          : []
+      );
+    }
+
+    if (path === '/Persona/Becas' && request.method() === 'GET') {
+      return fulfillOperation(route, []);
+    }
+
     if (path === '/Inscripciones/MisInscripciones') {
       return fulfillOperation(route, []);
     }
 
     if (path === '/Inscripciones/InteresProducto') {
       return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/Detalle' && request.method() === 'GET') {
+      return fulfillOperation(route, {
+        estado: 'Pago pendiente',
+        pagoPendiente: {
+          idInscripcion: 7001,
+          senia: 15500,
+          fechaVencimientoPago: '2027-03-04',
+          resumen: {
+            idProducto: 20,
+            carrera: 'Licenciatura en Diseño Gráfico',
+            idComienzo: 2,
+            comienzo: 'Marzo 2027',
+            idTurno: 3,
+            turno: 'Matutino',
+          },
+        },
+      });
     }
 
     if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'GET') {

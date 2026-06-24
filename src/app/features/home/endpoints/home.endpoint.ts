@@ -39,6 +39,7 @@ export class HomeEndpoint {
 
     return items.map(item => ({
       idProducto: item.idProducto ?? 0,
+      idProceso: item.idProceso ?? 0,
       idComienzo: item.idComienzo ?? 0,
       idTurno: item.idTurno ?? 0,
       nombreProducto: item.nombreExtensoProducto ?? '',

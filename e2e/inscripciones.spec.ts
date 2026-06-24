@@ -5,6 +5,30 @@ import { InscripcionPage } from './support/pages/inscripcion-page';
 import { addAuthenticatedSession } from './support/session';
 
 test.describe('Inscripción inicial', () => {
+  test('abre el detalle real de un pago pendiente desde Mis carreras @smoke', async ({ page }) => {
+    await mockApi(page, { inscriptionDetail: 'pending-payment' });
+    await addAuthenticatedSession(page);
+    await page.goto('/inicio');
+
+    const detailRequest = page.waitForRequest(request => {
+      const url = new URL(request.url());
+      return (
+        request.method() === 'GET' && decodeURIComponent(url.pathname) === '/Inscripciones/Detalle'
+      );
+    });
+    await page.getByRole('link', { name: /Ver instrucciones de pago/ }).click();
+
+    const url = new URL((await detailRequest).url());
+    expect(url.searchParams.get('idProducto')).toBe('20');
+    expect(url.searchParams.get('idProceso')).toBe('200');
+    await expect(
+      page.getByRole('heading', { name: 'Inscripción pendiente de pago' })
+    ).toBeVisible();
+    await expect(page.getByText('$ 15.500')).toBeVisible();
+    await expect(page.getByText(/04\/03\/2027/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
+  });
+
   test('completa encuesta nueva, confirma preinscripción y confirma el pago @smoke @regression', async ({
     page,
   }) => {

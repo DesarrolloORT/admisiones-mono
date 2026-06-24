@@ -2,6 +2,7 @@ export type InscripcionEstado = 'Confirmada' | 'Pendiente' | 'Cancelada' | strin
 
 export interface MiInscripcion {
   idProducto: number;
+  idProceso: number;
   idComienzo: number;
   idTurno: number;
   nombreProducto: string;

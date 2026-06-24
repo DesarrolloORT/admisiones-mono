@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 
 import { ApiHttpClient } from '../../../shared/api/core/api-http-client';
 import {
+  getInscripcionesDetalleEndpoint,
   getInscripcionesEncuestaInicialEndpoint,
   getInscripcionesReglamentoEstudiantilEndpoint,
   postInscripcionesConfirmarPreInscripcionEndpoint,
@@ -34,6 +35,48 @@ describe('InscripcionesEndpoint', () => {
       providers: [InscripcionesEndpoint, { provide: ApiHttpClient, useValue: apiMock }],
     });
     endpoint = TestBed.inject(InscripcionesEndpoint);
+  });
+
+  it('maps inscription detail without exposing generated contracts', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'Confirmada',
+        confirmada: {
+          numeroEstudiante: 397654,
+          resumen: { idProducto: 20, carrera: 'Sistemas' },
+          coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
+          materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Programación' }, {}],
+        },
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual({
+      estado: 'Confirmada',
+      detalle: null,
+      pagoPendiente: null,
+      confirmada: {
+        numeroEstudiante: 397654,
+        resumen: {
+          idOferta: null,
+          idProducto: 20,
+          carrera: 'Sistemas',
+          idComienzo: null,
+          comienzo: null,
+          idTurno: null,
+          turno: null,
+        },
+        coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
+        materiasPrimerSemestre: [
+          { idMateria: 1, nombre: 'Programación' },
+          { idMateria: null, nombre: null },
+        ],
+      },
+    });
+    expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesDetalleEndpoint, {
+      queryParams: { idProducto: 20, idProceso: 200 },
+      cache: false,
+      showLoader: true,
+    });
   });
 
   it('maps identity document fields to the feature contract', async () => {
