@@ -5309,6 +5309,47 @@
       <column name="NOMBRE_NIVEL_PRODUCTO" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
+  <class name="VdProcesosDisponibles1y2" entity-set="VdProcesosDisponibles1y2s" table="VD_PROCESOS_DISPONIBLES_1Y2" schema="CREADOR" query-type="True" p1:Guid="f02ba257-94cb-4a17-ad44-3b9573302c5f">
+    <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="c815fb3d-5c9e-44f3-b31f-9dacd1fb14ca">
+      <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdProceso" type="Decimal" p1:ValidateRequired="true" p1:Guid="a11528d1-2df2-4d3b-a094-dd41ccade336">
+      <column name="ID_PROCESO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdTipoProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="4ef358f1-0cce-4546-b3e5-abd72d890ade">
+      <column name="ID_TIPO_PROCESO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreProceso" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="68eee27a-392d-44ca-b5b2-f635ee45c9b4">
+      <column name="NOMBRE_PROCESO" not-null="True" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ObservacionesProceso" type="String" p1:nullable="True" p1:ValidateMaxLength="200" p1:ValidateRequired="false" p1:Guid="e8351498-ecad-4d00-a561-d85de7e0c896">
+      <column name="OBSERVACIONES_PROCESO" not-null="False" length="200" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaFinProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b6d71e07-049a-4a01-81ed-75c2e0e40199">
+      <column name="FECHA_FIN_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="ComienzoSemestre1Proceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="165278a7-e796-4bb7-b1b5-06aaf6dd8cd4">
+      <column name="COMIENZO_SEMESTRE1_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada20porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5d062e84-4c5d-4607-8656-995dc11f1f1c">
+      <column name="ANTICIPADA20PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada30porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="767fc672-787a-4d21-a4ad-20b4387da753">
+      <column name="ANTICIPADA30PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada40porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="25b05360-2d05-4426-896d-19f37016d894">
+      <column name="ANTICIPADA40PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada50porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5e087c73-373e-4694-974d-b2a36aa8c548">
+      <column name="ANTICIPADA50PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada60porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1b264489-585a-4678-bff1-ca8d1076a843">
+      <column name="ANTICIPADA60PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="Anticipada70porcientoProceso" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c29ec6fa-9176-484f-8b8d-4d275aba7745">
+      <column name="ANTICIPADA70PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

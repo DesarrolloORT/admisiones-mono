@@ -147,7 +147,7 @@ namespace AppLogic.Services.Catalogos
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Procesos.GetProcesosHabilitadosPorProducto(idCarrera);
+            var entidades = uow.VdProcesosDisponibles1y2s.GetProcesosDisponibles(idCarrera);
             return OperationResult<IEnumerable<DtoComienzoResponse>>.Ok(entidades.Select(ComienzosMapper.ToAdmisionesDto), nameof(ObtenerComienzos));
         }
 

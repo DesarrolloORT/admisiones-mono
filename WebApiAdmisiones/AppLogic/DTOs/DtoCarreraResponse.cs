@@ -68,5 +68,15 @@ namespace AppLogic.DTOs
                 NombreProceso = comienzo.NombreProceso
             };
         }
+
+        public static DtoComienzoResponse ToAdmisionesDto(
+            this VdProcesosDisponibles1y2 comienzo)
+        {
+            return new DtoComienzoResponse
+            {
+                IdProceso = (long)comienzo.IdProceso,
+                NombreProceso = comienzo.NombreProceso
+            };
+        }
     }
 }

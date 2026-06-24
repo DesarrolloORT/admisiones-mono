@@ -160,12 +160,12 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerComienzos_ReturnsMappedItems()
         {
-            var repo = new Mock<IProcesoRepository>();
-            repo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(
+            var repo = new Mock<IVdProcesosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProcesosDisponibles(10)).Returns(
             [
-                new Proceso { IdProceso = 20, NombreProceso = "Marzo" }
+                new VdProcesosDisponibles1y2 { IdProceso = 20, NombreProceso = "Marzo" }
             ]);
-            _uowMock.Setup(u => u.Procesos).Returns(repo.Object);
+            _uowMock.Setup(u => u.VdProcesosDisponibles1y2s).Returns(repo.Object);
 
             var result = _service.ObtenerComienzos(10);
 
