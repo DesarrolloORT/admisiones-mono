@@ -1,0 +1,19 @@
+<app-process-layout
+  closeLabel="Cerrar becas"
+  currentStepId="info-postulacion"
+  processTitle="Postulación a becas"
+  stepperAriaLabel="Progreso de postulación a becas"
+  stepperSubtitle="Paso 1 de 3 - Información de postulación"
+  [showStepper]="true"
+  [steps]="steps"
+  (closeFlow)="goHome()"
+  (logoutRequested)="logout()">
+  <main class="scholarship-process__main">
+    <!-- <app-scholarship-onboarding
+      [title]="'Fondo de becas de reválidas'"
+      [variant]="'revalidation'" /> -->
+
+    <!-- <app-scholarship-postulation-step /> -->
+    <app-scholarship-personal-step />
+  </main>
+</app-process-layout>

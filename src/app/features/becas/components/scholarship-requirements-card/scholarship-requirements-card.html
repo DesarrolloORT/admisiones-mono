@@ -1,0 +1,17 @@
+<section class="scholarship-requirements__card">
+  <h3 class="scholarship-requirements__title">Requisitos</h3>
+  <ul class="scholarship-requirements__list">
+    @for (requirement of config().requirements; track requirement.title) {
+    <li class="scholarship-requirements__list-item">
+      <ort-icon aria-hidden="true" class="scholarship-requirements__list-marker" size="md">
+        chevron_right
+      </ort-icon>
+
+      <div class="scholarship-requirements__list-item-content">
+        <strong>{{ requirement.title }}:</strong>
+        {{ requirement.description }}
+      </div>
+    </li>
+    }
+  </ul>
+</section>
