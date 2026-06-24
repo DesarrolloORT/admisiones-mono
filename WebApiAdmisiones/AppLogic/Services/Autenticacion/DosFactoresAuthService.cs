@@ -241,9 +241,12 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                 Message = "Verificación completada. Los tokens han sido establecidos como cookies seguras."
             };
 
-            _logger.LogInformation(
-                "2FA verificado exitosamente para la persona {CodigoPersona}",
-                session.CodigoPersona);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "2FA verificado exitosamente para la persona {CodigoPersona}",
+                    session.CodigoPersona);
+            }
 
             return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(VerificarCodigoAsync));
         }
@@ -345,10 +348,13 @@ public class DosFactoresAuthService : IDosFactoresAuthService
 
             await _sessionStore.UpdateAsync(sessionId, session, ttl);
 
-            _logger.LogInformation(
-                "2FA reenviado para persona {CodigoPersona}, sesión {SessionId}",
-                session.CodigoPersona,
-                sessionId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "2FA reenviado para persona {CodigoPersona}, sesión {SessionId}",
+                    session.CodigoPersona,
+                    sessionId);
+            }
 
             return OperationResult<DtoLogin2FARequired>.Ok(
                 new DtoLogin2FARequired

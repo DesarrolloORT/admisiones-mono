@@ -56,19 +56,19 @@ namespace AppLogic.Services.RateLimiting
                 var transaction = db.CreateTransaction();
 
                 // 1. Eliminar requests antiguos fuera de la ventana (cleanup)
-                var removeTask = transaction.SortedSetRemoveRangeByScoreAsync(
+                _ = transaction.SortedSetRemoveRangeByScoreAsync(
                     redisKey,
                     double.NegativeInfinity,
                     windowStart);
 
                 // 2. Agregar el request actual con timestamp como score
-                var addTask = transaction.SortedSetAddAsync(redisKey, now, now);
+                _ = transaction.SortedSetAddAsync(redisKey, now, now);
 
                 // 3. Contar requests dentro de la ventana
                 var countTask = transaction.SortedSetLengthAsync(redisKey);
 
                 // 4. Establecer expiración para auto-limpieza de claves viejas
-                var expireTask = transaction.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1)));
+                _ = transaction.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1)));
 
                 // Ejecutar todas las operaciones atómicamente
                 var executed = await transaction.ExecuteAsync();
@@ -185,7 +185,7 @@ namespace AppLogic.Services.RateLimiting
                 var redisKey = $"ratelimit:{key}";
                 var deleted = await db.KeyDeleteAsync(redisKey);
 
-                if (deleted)
+                if (deleted && _logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation("Rate limit cleared for key {Key}", key);
                 }

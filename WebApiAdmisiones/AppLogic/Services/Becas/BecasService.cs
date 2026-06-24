@@ -3,7 +3,6 @@ using AppLogic.DevartDTOs;
 using AppLogic.IServices.Becas;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
-using ConnectionContext;
 using Utilities;
 
 namespace AppLogic.Services.Becas
@@ -11,14 +10,10 @@ namespace AppLogic.Services.Becas
     public class BecasService : IBecasService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
-        private readonly IDbConnectionContext _dbConnectionContext;
 
-        public BecasService(
-            IUnitOfWorkFactory uowFactory,
-            IDbConnectionContext dbConnectionContext)
+        public BecasService(IUnitOfWorkFactory uowFactory)
         {
             _uowFactory = uowFactory;
-            _dbConnectionContext = dbConnectionContext;
         }
 
         public OperationResult<DtoAceptacionReglamentoEstDevart> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)

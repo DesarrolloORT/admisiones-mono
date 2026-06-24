@@ -156,24 +156,24 @@ namespace AppLogic.Helpers.ValidationHelpers
             }
 
             if (encuesta.InforOtrasAntesEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).Any())
+                && uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).Count == 0)
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
-            if (!uow.MotivoEleccionAdmisions.GetByPersona(codigoPersona).Any())
+            if (uow.MotivoEleccionAdmisions.GetByPersona(codigoPersona).Count == 0)
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
             if (encuesta.PublicidadOrtEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.PublicidadEleccionAdmisions.GetByPersona(codigoPersona).Any())
+                && uow.PublicidadEleccionAdmisions.GetByPersona(codigoPersona).Count == 0)
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
             if (encuesta.TieneEducacionSuperiorEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).Any())
+                && uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).Count == 0)
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
@@ -274,26 +274,18 @@ namespace AppLogic.Helpers.ValidationHelpers
             if (!validacionEducacion.Success)
                 return validacionEducacion;
 
-            if (request.OpcionesMotivosSeleccionados != null)
+            if (request.OpcionesMotivosSeleccionados != null
+                && request.OpcionesMotivosSeleccionados.Any(motivo =>
+                    motivo.IdMotivo <= 0 || uow.MotivoOpcionesAdmisions.GetByKey(motivo.IdMotivo) == null))
             {
-                foreach (var motivo in request.OpcionesMotivosSeleccionados)
-                {
-                    if (motivo.IdMotivo <= 0 || uow.MotivoOpcionesAdmisions.GetByKey(motivo.IdMotivo) == null)
-                    {
-                        return OperationResult<bool>.IsFailed("INS_EI_23", methodName, "Motivo de eleccion invalido.", 400);
-                    }
-                }
+                return OperationResult<bool>.IsFailed("INS_EI_23", methodName, "Motivo de eleccion invalido.", 400);
             }
 
-            if (request.OpcionesPublicidadSeleccionadas != null)
+            if (request.OpcionesPublicidadSeleccionadas != null
+                && request.OpcionesPublicidadSeleccionadas.Any(publicidad =>
+                    publicidad.IdPublicidad <= 0 || uow.PublicidadOpcionesAdmisions.GetByKey(publicidad.IdPublicidad) == null))
             {
-                foreach (var publicidad in request.OpcionesPublicidadSeleccionadas)
-                {
-                    if (publicidad.IdPublicidad <= 0 || uow.PublicidadOpcionesAdmisions.GetByKey(publicidad.IdPublicidad) == null)
-                    {
-                        return OperationResult<bool>.IsFailed("INS_EI_24", methodName, "Publicidad seleccionada invalida.", 400);
-                    }
-                }
+                return OperationResult<bool>.IsFailed("INS_EI_24", methodName, "Publicidad seleccionada invalida.", 400);
             }
 
             return OperationResult<bool>.Ok(true, methodName);

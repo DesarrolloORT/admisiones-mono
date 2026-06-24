@@ -98,25 +98,6 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Lista los tipos de documento aceptados por admisiones.
-        /// </summary>
-        /// <remarks>
-        /// Endpoint publico para poblar el combo de tipo de documento en registro, login o recuperacion de acceso.
-        /// </remarks>
-        /// <returns>Tipos de documento disponibles.</returns>
-        /// <response code="200">Catalogo obtenido correctamente.</response>
-        /// <response code="400">Solicitud invalida.</response>
-        //[AllowAnonymous]
-        //[HttpGet("TiposDocumentos")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoAcaTipoDocumentoDevart>>), 400)]
-        //public IActionResult ObtenerTipoDocumentos()
-        //{
-        //    var result = catalogosService.ObtenerTipoDocumentos();
-        //    return ValidateResponse(result);
-        //}
-
-        /// <summary>
         /// Lista las carreras vigentes para el registro de admision.
         /// </summary>
         /// <remarks>
@@ -208,23 +189,6 @@ namespace WebApiAdmisiones.Controllers
             var result = catalogosService.ObtenerInstituciones(codigoPais, codigoEstado);
             return ValidateResponse(result);
         }
-
-        /// <summary>
-        /// Obtiene los productos elegibles para beca de la persona autenticada:
-        /// combina inscripciones realizadas, pendientes en workflow e intereses activos.
-        /// Un registro por producto (el más antiguo por fecha de inscripción).
-        /// </summary>
-        /// <returns>Lista de productos beca.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("ProductosBeca")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoBeca>>), 400)]
-        //public IActionResult ObtenerProductosBeca()
-        //{
-        //    var result = catalogosService.ObtenerProductosBeca(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
 
         /// <summary>
         /// Obtiene los fondos de beca disponibles según el nivel de un producto.

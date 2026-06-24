@@ -19,23 +19,6 @@ namespace WebApiAdmisiones.Controllers
         #region BECAS
 
         /// <summary>
-        /// Obtiene la aceptación del reglamento estudiantil de la persona autenticada.
-        /// </summary>
-        /// <returns>Datos de aceptación del reglamento.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="404">No se encontró aceptación del reglamento para la persona.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("AceptacionReglamentoEstudiantil")]
-        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 400)]
-        //[ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstDevart>), 404)]
-        //public IActionResult ObtenerAceptacionReglamentoEstudiantil()
-        //{
-        //    var result = becasService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
-        //    return ValidateResponse(result);
-        //}
-
-        /// <summary>
         /// Registra la aceptación del reglamento estudiantil para la persona autenticada.
         /// Toma el producto y el comienzo desde la encuesta inicial de admisión vigente.
         /// </summary>

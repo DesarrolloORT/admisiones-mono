@@ -124,7 +124,7 @@ namespace WebApiAdmisiones.Controllers
             {
                 Response.Headers["X-RateLimit-Reset"] = headers.ResetTime.Value.ToUnixTimeSeconds().ToString();
                 var retryAfter = (int)(headers.ResetTime.Value - DateTimeOffset.UtcNow).TotalSeconds;
-                Response.Headers["Retry-After"] = Math.Max(0, retryAfter).ToString();
+                Response.Headers.RetryAfter = Math.Max(0, retryAfter).ToString();
             }
         }
 
