@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 import { InscripcionPersonalStep } from './inscripcion-personal-step';
 
 describe('InscripcionPersonalStep', () => {
@@ -15,7 +15,7 @@ describe('InscripcionPersonalStep', () => {
       imports: [InscripcionPersonalStep],
       providers: [
         {
-          provide: InscripcionFlowFacade,
+          provide: InscripcionSurveyFacade,
           useValue: { continue: continueSpy },
         },
       ],

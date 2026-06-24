@@ -10,6 +10,7 @@ export const WORK_STATUS_OPTIONS: readonly OpcionInscripcion[] = [
   { value: 'buscando', label: 'Estoy buscando trabajo' },
   { value: 'no-trabaja', label: 'No trabajo actualmente' },
 ];
+
 export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & { value: MetodoPago })[] = [
   {
     value: 'cuenta-bancaria',

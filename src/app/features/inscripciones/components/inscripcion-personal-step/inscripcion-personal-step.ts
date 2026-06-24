@@ -11,10 +11,11 @@ import {
   OrtIconModule,
   OrtInputModule,
   OrtRadioModule,
+  OrtRatingModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 
 @Component({
   selector: 'app-inscripcion-personal-step',
@@ -28,6 +29,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
     OrtIconModule,
     OrtInputModule,
     OrtRadioModule,
+    OrtRatingModule,
     OrtSelectModule,
     ReactiveFormsModule,
     DatePipe,
@@ -37,7 +39,7 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionPersonalStep {
-  protected readonly facade = inject(InscripcionFlowFacade);
+  protected readonly facade = inject(InscripcionSurveyFacade);
 
   protected onSubmit(event: SubmitEvent): void {
     event.preventDefault();

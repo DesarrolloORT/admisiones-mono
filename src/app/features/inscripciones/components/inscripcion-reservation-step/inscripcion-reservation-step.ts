@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
 
 @Component({
   selector: 'app-inscripcion-reservation-step',
@@ -12,5 +12,5 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionReservationStep {
-  protected readonly facade = inject(InscripcionFlowFacade);
+  protected readonly facade = inject(InscripcionPaymentFacade);
 }

@@ -24,19 +24,34 @@ describe('InscripcionDraft', () => {
     expect(storage.load('primera-vez')).toEqual(draft);
   });
 
-  it('discards a draft with an unknown screen', () => {
-    sessionStorage.setItem(key, JSON.stringify({ ...createDraft(), pantalla: 'desconocida' }));
+  it('discards a draft with an unknown step', () => {
+    sessionStorage.setItem(key, JSON.stringify({ ...createDraft(), paso: 'desconocido' }));
 
     expect(storage.load('primera-vez')).toBeNull();
     expect(sessionStorage.getItem(key)).toBeNull();
+  });
+
+  it('invalidates drafts from version 1', () => {
+    sessionStorage.setItem(key, JSON.stringify({ ...createDraft(), version: 1 }));
+
+    expect(storage.load('primera-vez')).toBeNull();
+    expect(sessionStorage.getItem(key)).toBeNull();
+  });
+
+  it('does not persist data without an identified session', () => {
+    localStorage.removeItem('auth-session');
+
+    storage.save(createDraft());
+
+    expect(sessionStorage.length).toBe(0);
   });
 });
 
 function createDraft(): BorradorInscripcion {
   return {
-    version: 1,
+    version: 2,
     escenario: 'primera-vez',
-    pantalla: 'encuesta',
+    paso: 'encuesta',
     seccionActiva: 'identidad',
     seccionesCompletas: ['educacion'],
     propuesta: {
@@ -48,29 +63,40 @@ function createDraft(): BorradorInscripcion {
     encuesta: {
       educacion: {
         cursaSecundaria: 'cursando',
+        anioSecundaria: '2-ems',
+        tipoBachillerato: 'nacional',
+        orientacion: 'cientifico',
         lugarSecundaria: 'uruguay',
+        departamento: 'montevideo',
+        institucionEducativa: 'liceo-publico',
         estadoEducacionSuperior: '3',
         formacionMadre: '4',
+        tituloOrtMadre: 'si',
         formacionPadre: '4',
       },
       decisionAcademica: {
         anioDecisionCarrera: '',
-        apoyoDecision: '',
+        apoyoDecision: [],
         anioDecisionOrt: '',
         otrasUniversidades: '',
+        universidadesInformadas: [],
         certezaDecision: '',
-        motivosOrt: '',
+        motivosOrt: [],
       },
       experienciaOrt: {
         reunionAsesoramiento: '',
+        calificacionAsesoramiento: null,
         visitoWeb: '',
+        calificacionWeb: null,
         visitoSede: '',
         recuerdaPublicidad: '',
+        mediosPublicidad: [],
       },
       situacionLaboral: { situacionLaboral: 'trabaja' },
     },
     identidad: { vencimientoDocumento: '2030-02-04' },
     reglamento: { aceptaReglamento: false },
     pago: { metodoPago: '' },
+    preinscripcion: null,
   };
 }

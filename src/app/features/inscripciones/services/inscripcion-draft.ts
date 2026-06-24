@@ -8,12 +8,10 @@ import {
   SECCIONES_ENCUESTA,
 } from '../models/inscripcion-flow';
 
-const PANTALLAS_PERSISTIBLES: readonly BorradorInscripcion['pantalla'][] = [
+const PASOS_PERSISTIBLES: readonly BorradorInscripcion['paso'][] = [
   'propuesta',
   'encuesta',
-  'lector-reglamento',
   'pago',
-  'confirmacion-pago',
 ];
 
 @Injectable({
@@ -23,7 +21,9 @@ export class InscripcionDraft {
   private readonly document = inject(DOCUMENT);
 
   public load(scenario: EscenarioInscripcion): BorradorInscripcion | null {
-    const rawDraft = this.storage?.getItem(this.getKey(scenario));
+    const key = this.getKey(scenario);
+    if (!key) return null;
+    const rawDraft = this.storage?.getItem(key);
 
     if (!rawDraft) {
       return null;
@@ -45,11 +45,23 @@ export class InscripcionDraft {
   }
 
   public save(draft: BorradorInscripcion): void {
-    this.storage?.setItem(this.getKey(draft.escenario), JSON.stringify(draft));
+    const key = this.getKey(draft.escenario);
+    if (!key) return;
+    try {
+      this.storage?.setItem(key, JSON.stringify(draft));
+    } catch {
+      // El guardado local es auxiliar; el backend sigue siendo la persistencia autoritativa.
+    }
   }
 
   public clear(scenario: EscenarioInscripcion): void {
-    this.storage?.removeItem(this.getKey(scenario));
+    const key = this.getKey(scenario);
+    if (!key) return;
+    try {
+      this.storage?.removeItem(key);
+    } catch {
+      // sessionStorage puede no estar disponible por políticas del navegador.
+    }
   }
 
   private isValidDraft(
@@ -57,9 +69,9 @@ export class InscripcionDraft {
     scenario: EscenarioInscripcion
   ): draft is BorradorInscripcion {
     return (
-      draft.version === 1 &&
+      draft.version === 2 &&
       draft.escenario === scenario &&
-      PANTALLAS_PERSISTIBLES.includes(draft.pantalla as BorradorInscripcion['pantalla']) &&
+      PASOS_PERSISTIBLES.includes(draft.paso as BorradorInscripcion['paso']) &&
       SECCIONES_ENCUESTA.includes(draft.seccionActiva as BorradorInscripcion['seccionActiva']) &&
       Array.isArray(draft.seccionesCompletas) &&
       draft.seccionesCompletas.every(section =>
@@ -69,7 +81,8 @@ export class InscripcionDraft {
       this.isRecord(draft.encuesta) &&
       this.isRecord(draft.identidad) &&
       this.isRecord(draft.reglamento) &&
-      this.isRecord(draft.pago)
+      this.isRecord(draft.pago) &&
+      (draft.preinscripcion === null || this.isRecord(draft.preinscripcion))
     );
   }
 
@@ -77,24 +90,25 @@ export class InscripcionDraft {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
-  private getKey(scenario: EscenarioInscripcion): string {
-    return `${storageKeys.inscriptionDraft}:${this.getUserKey()}:${scenario}`;
+  private getKey(scenario: EscenarioInscripcion): string | null {
+    const userKey = this.getUserKey();
+    return userKey ? `${storageKeys.inscriptionDraft}:${userKey}:${scenario}` : null;
   }
 
-  private getUserKey(): string {
+  private getUserKey(): string | null {
     const rawSession = this.document.defaultView?.localStorage.getItem(storageKeys.session);
 
     if (!rawSession) {
-      return 'anonimo';
+      return null;
     }
 
     try {
       const session = JSON.parse(rawSession) as { documentNumber?: unknown };
       return typeof session.documentNumber === 'string' && session.documentNumber
         ? session.documentNumber
-        : 'anonimo';
+        : null;
     } catch {
-      return 'anonimo';
+      return null;
     }
   }
 
