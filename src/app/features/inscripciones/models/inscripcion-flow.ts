@@ -1,19 +1,10 @@
 import { FormControl } from '@angular/forms';
 
+import type { InscripcionStep } from './inscripcion-process';
+
 export type EscenarioInscripcion = 'primera-vez' | 'parcial' | 'encuesta-completa';
 
 export type EstadoEncuestaInicial = 'no-iniciada' | 'en-progreso' | 'completa';
-
-export type PantallaInscripcion =
-  | 'propuesta'
-  | 'encuesta'
-  | 'lector-reglamento'
-  | 'pago'
-  | 'confirmacion-pago'
-  | 'procesando'
-  | 'reserva'
-  | 'inscripcion-confirmada'
-  | 'inscripcion-en-proceso';
 
 export type SeccionEncuestaId =
   | 'educacion'
@@ -83,7 +74,7 @@ export interface InscripcionInitialSurveyPayload {
   vistaSitioWebOrt: boolean | null;
   vistaInstalacionesOrt: boolean | null;
   publicidadOrt: boolean | null;
-  trabajaActualmente: string | null;
+  trabajaActualmente: boolean | null;
   opcionesMotivosSeleccionados: Array<{ idMotivo: number; nombreMotivo: string }> | null;
 }
 
@@ -131,18 +122,6 @@ export interface OpcionInscripcion {
   hint?: string;
 }
 
-export interface MetadatosPasoInscripcion {
-  number: 1 | 2 | 3;
-  supportLabel: string;
-}
-
-export interface PasoInscripcion {
-  id: 'propuesta' | 'encuesta' | 'pago';
-  title: string;
-  overline: string;
-  status: 'completo' | 'actual' | 'pendiente';
-}
-
 export interface FormularioPropuesta {
   tipoPropuesta: FormControl<string>;
   carrera: FormControl<string>;
@@ -152,26 +131,36 @@ export interface FormularioPropuesta {
 
 export interface FormularioEducacion {
   cursaSecundaria: FormControl<string>;
+  anioSecundaria: FormControl<string>;
+  tipoBachillerato: FormControl<string>;
+  orientacion: FormControl<string>;
   lugarSecundaria: FormControl<string>;
+  departamento: FormControl<string>;
+  institucionEducativa: FormControl<string>;
   estadoEducacionSuperior: FormControl<string>;
   formacionMadre: FormControl<string>;
+  tituloOrtMadre: FormControl<string>;
   formacionPadre: FormControl<string>;
 }
 
 export interface FormularioDecisionAcademica {
   anioDecisionCarrera: FormControl<string>;
-  apoyoDecision: FormControl<string>;
+  apoyoDecision: FormControl<string[]>;
   anioDecisionOrt: FormControl<string>;
   otrasUniversidades: FormControl<string>;
+  universidadesInformadas: FormControl<string[]>;
   certezaDecision: FormControl<string>;
-  motivosOrt: FormControl<string>;
+  motivosOrt: FormControl<string[]>;
 }
 
 export interface FormularioExperienciaOrt {
   reunionAsesoramiento: FormControl<string>;
+  calificacionAsesoramiento: FormControl<number | null>;
   visitoWeb: FormControl<string>;
+  calificacionWeb: FormControl<number | null>;
   visitoSede: FormControl<string>;
   recuerdaPublicidad: FormControl<string>;
+  mediosPublicidad: FormControl<string[]>;
 }
 
 export interface FormularioSituacionLaboral {
@@ -206,24 +195,34 @@ export interface ValoresPropuesta {
 export interface ValoresEncuesta {
   educacion: {
     cursaSecundaria: string;
+    anioSecundaria: string;
+    tipoBachillerato: string;
+    orientacion: string;
     lugarSecundaria: string;
+    departamento: string;
+    institucionEducativa: string;
     estadoEducacionSuperior: string;
     formacionMadre: string;
+    tituloOrtMadre: string;
     formacionPadre: string;
   };
   decisionAcademica: {
     anioDecisionCarrera: string;
-    apoyoDecision: string;
+    apoyoDecision: string[];
     anioDecisionOrt: string;
     otrasUniversidades: string;
+    universidadesInformadas: string[];
     certezaDecision: string;
-    motivosOrt: string;
+    motivosOrt: string[];
   };
   experienciaOrt: {
     reunionAsesoramiento: string;
+    calificacionAsesoramiento: number | null;
     visitoWeb: string;
+    calificacionWeb: number | null;
     visitoSede: string;
     recuerdaPublicidad: string;
+    mediosPublicidad: string[];
   };
   situacionLaboral: {
     situacionLaboral: string;
@@ -231,12 +230,9 @@ export interface ValoresEncuesta {
 }
 
 export interface BorradorInscripcion {
-  version: 1;
+  version: 2;
   escenario: EscenarioInscripcion;
-  pantalla: Exclude<
-    PantallaInscripcion,
-    'procesando' | 'reserva' | 'inscripcion-confirmada' | 'inscripcion-en-proceso'
-  >;
+  paso: InscripcionStep;
   seccionActiva: SeccionEncuestaId;
   seccionesCompletas: SeccionEncuestaId[];
   propuesta: ValoresPropuesta;
@@ -250,6 +246,7 @@ export interface BorradorInscripcion {
   pago: {
     metodoPago: MetodoPago | '';
   };
+  preinscripcion: InscripcionPreEnrollmentResponse | null;
 }
 
 export interface EnvioInscripcion {
@@ -299,21 +296,3 @@ export const SECCIONES_ENCUESTA_COMPLETA: readonly SeccionEncuestaId[] = [
   'identidad',
   'reglamento',
 ];
-
-export const METADATOS_PASOS_INSCRIPCION: Record<
-  'propuesta' | 'encuesta' | 'pago',
-  MetadatosPasoInscripcion
-> = {
-  propuesta: {
-    number: 1,
-    supportLabel: 'Paso 1 de 3 - Propuesta académica',
-  },
-  encuesta: {
-    number: 2,
-    supportLabel: 'Paso 2 de 3 - Información personal',
-  },
-  pago: {
-    number: 3,
-    supportLabel: 'Paso 3 de 3 - Confirmación',
-  },
-};

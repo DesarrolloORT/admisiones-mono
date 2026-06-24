@@ -1,24 +1,31 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProcessLayout } from 'process-layout';
+import { provideRouter } from '@angular/router';
+
+import { ProcessLayout } from './process-layout';
 
 describe('ProcessLayout', () => {
-  let component: ProcessLayout;
   let fixture: ComponentFixture<ProcessLayout>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ProcessLayout],
-    }).compileComponents();
-  });
-
   beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ProcessLayout],
+      providers: [provideRouter([])],
+    });
     fixture = TestBed.createComponent(ProcessLayout);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('renders process metadata received from its consumer', async () => {
+    fixture.componentRef.setInput('processTitle', 'Inscripción a carrera');
+    fixture.componentRef.setInput('stepperSubtitle', 'Paso 2 de 3 - Información personal');
+    fixture.componentRef.setInput('currentStepId', 'encuesta');
+    fixture.componentRef.setInput('steps', [
+      { id: 'propuesta', overline: 'Paso 1', status: 'completed', title: 'Propuesta' },
+      { id: 'encuesta', overline: 'Paso 2', status: 'current', title: 'Información personal' },
+    ]);
+
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Inscripción a carrera');
+    expect(fixture.nativeElement.textContent).toContain('Paso 2 de 3 - Información personal');
   });
 });

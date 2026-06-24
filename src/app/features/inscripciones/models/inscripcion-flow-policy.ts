@@ -1,7 +1,6 @@
 import {
   EscenarioInscripcion,
   MetodoPago,
-  PantallaInscripcion,
   ResultadoPago,
   SeccionEncuestaId,
   SECCIONES_ENCUESTA,
@@ -33,26 +32,6 @@ export function findFirstIncompleteSection(
   completedSections: readonly SeccionEncuestaId[]
 ): SeccionEncuestaId {
   return sections.find(section => !completedSections.includes(section)) ?? sections.at(-1)!;
-}
-
-export function getPreviousScreen(
-  screen: PantallaInscripcion,
-  activeSection: SeccionEncuestaId,
-  visibleSections: readonly SeccionEncuestaId[]
-): PantallaInscripcion | null {
-  if (screen === 'encuesta') {
-    return visibleSections.indexOf(activeSection) === 0 ? 'propuesta' : 'encuesta';
-  }
-
-  if (screen === 'lector-reglamento') {
-    return 'encuesta';
-  }
-
-  if (screen === 'pago' || screen === 'confirmacion-pago') {
-    return 'encuesta';
-  }
-
-  return null;
 }
 
 export function getResultadoPago(

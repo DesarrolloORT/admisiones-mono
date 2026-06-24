@@ -91,7 +91,8 @@ export function patchBackendSurveyForms(
           : survey.nivelDecisionEncuestaIni === false
             ? 'con-dudas'
             : '',
-      motivosOrt: response.opcionesMotivosSeleccionados?.[0]?.idMotivo?.toString() ?? '',
+      motivosOrt:
+        response.opcionesMotivosSeleccionados?.map(option => option.idMotivo.toString()) ?? [],
     },
     { emitEvent: false }
   );
@@ -110,7 +111,8 @@ export function patchBackendSurveyForms(
 
 export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) {
   const { forms } = context;
-  const decisionUniversity = toNullableNumber(forms.academicDecisionForm.controls.motivosOrt.value);
+  const selectedMotives = forms.academicDecisionForm.controls.motivosOrt.value;
+  const decisionUniversity = toNullableNumber(selectedMotives[0] ?? '');
   const higherEducation = hasHigherEducation(
     forms.educationForm.controls.estadoEducacionSuperior.value,
     context.previousCareerOptions
@@ -131,7 +133,9 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
     infoOtrasUniversidadesAntes: toBackendYesNo(
       forms.academicDecisionForm.controls.otrasUniversidades.value
     ),
-    compartidoCon: toNullableNumber(forms.academicDecisionForm.controls.apoyoDecision.value),
+    compartidoCon: toNullableNumber(
+      forms.academicDecisionForm.controls.apoyoDecision.value[0] ?? ''
+    ),
     tieneEducacionSuperior: higherEducation,
     nivelDecision:
       forms.academicDecisionForm.controls.certezaDecision.value === 'decidido'
@@ -145,20 +149,21 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
     vistaSitioWebOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoWeb.value),
     vistaInstalacionesOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoSede.value),
     publicidadOrt: toNullableBoolean(forms.ortExperienceForm.controls.recuerdaPublicidad.value),
-    trabajaActualmente: forms.workForm.controls.situacionLaboral.value || null,
+    trabajaActualmente: toWorkStatusFlag(forms.workForm.controls.situacionLaboral.value),
     opcionesMotivosSeleccionados:
-      decisionUniversity === null
+      selectedMotives.length === 0
         ? null
-        : [
-            {
-              idMotivo: decisionUniversity,
-              nombreMotivo: getOptionLabel(
-                context.motivesOptions,
-                decisionUniversity.toString(),
-                ''
-              ),
-            },
-          ],
+        : selectedMotives.flatMap(value => {
+            const idMotivo = toNullableNumber(value);
+            return idMotivo === null
+              ? []
+              : [
+                  {
+                    idMotivo,
+                    nombreMotivo: getOptionLabel(context.motivesOptions, value, ''),
+                  },
+                ];
+          }),
   };
 }
 
@@ -242,6 +247,10 @@ export function toYesNoValue(value: string | boolean | null | undefined): string
 
 export function toNullableBoolean(value: string): boolean | null {
   return value === 'si' ? true : value === 'no' ? false : null;
+}
+
+export function toWorkStatusFlag(value: string): boolean | null {
+  return value ? value === 'trabaja' : null;
 }
 
 export function toBackendYesNo(value: string): string | null {

@@ -1,3 +1,5 @@
+import '@angular/compiler';
+
 import { createInscripcionForms } from './inscripcion-flow-forms';
 import { buildInitialSurveyPayload } from './inscripcion-flow-mappers';
 
@@ -13,16 +15,20 @@ describe('inscripcion flow mappers', () => {
     });
     forms.academicDecisionForm.patchValue({
       anioDecisionCarrera: '1',
-      apoyoDecision: '5',
+      apoyoDecision: ['5'],
       otrasUniversidades: 'si',
+      universidadesInformadas: ['udelar'],
       certezaDecision: 'decidido',
-      motivosOrt: '2',
+      motivosOrt: ['2'],
     });
     forms.ortExperienceForm.patchValue({
       reunionAsesoramiento: 'si',
+      calificacionAsesoramiento: 4,
       visitoWeb: 'no',
+      calificacionWeb: null,
       visitoSede: 'si',
       recuerdaPublicidad: 'no',
+      mediosPublicidad: [],
     });
     forms.workForm.controls.situacionLaboral.setValue('trabaja');
 
@@ -33,7 +39,7 @@ describe('inscripcion flow mappers', () => {
         motivesOptions: [{ value: '2', label: 'Prestigio académico' }],
       })
     ).toMatchObject({
-      trabajaActualmente: 'trabaja',
+      trabajaActualmente: true,
       idProducto: 20,
       idProceso: 200,
     });

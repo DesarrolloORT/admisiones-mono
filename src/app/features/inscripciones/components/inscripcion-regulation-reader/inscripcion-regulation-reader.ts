@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { OrtButtonModule } from '@desarrolloort/components';
 
-import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
+import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 
 @Component({
   selector: 'app-inscripcion-regulation-reader',
@@ -11,5 +11,5 @@ import { InscripcionFlowFacade } from '../../facades/inscripcion-flow.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionRegulationReader {
-  protected readonly facade = inject(InscripcionFlowFacade);
+  protected readonly facade = inject(InscripcionSurveyFacade);
 }

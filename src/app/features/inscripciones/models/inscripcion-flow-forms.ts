@@ -58,15 +58,24 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
+      anioSecundaria: new FormControl('', { nonNullable: true }),
+      tipoBachillerato: new FormControl('', { nonNullable: true }),
+      orientacion: new FormControl('', { nonNullable: true }),
       lugarSecundaria: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
+      departamento: new FormControl('', { nonNullable: true }),
+      institucionEducativa: new FormControl('', { nonNullable: true }),
       estadoEducacionSuperior: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
       formacionMadre: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      tituloOrtMadre: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
@@ -80,29 +89,39 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
-      apoyoDecision: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      apoyoDecision: new FormControl<string[]>([], {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
       anioDecisionOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
       otrasUniversidades: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
+      universidadesInformadas: new FormControl<string[]>([], { nonNullable: true }),
       certezaDecision: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
-      motivosOrt: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      motivosOrt: new FormControl<string[]>([], {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
     }),
     ortExperienceForm: new FormGroup<FormularioExperienciaOrt>({
       reunionAsesoramiento: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
+      calificacionAsesoramiento: new FormControl<number | null>(null),
       visitoWeb: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      calificacionWeb: new FormControl<number | null>(null),
       visitoSede: new FormControl('', { nonNullable: true, validators: Validators.required }),
       recuerdaPublicidad: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
+      mediosPublicidad: new FormControl<string[]>([], { nonNullable: true }),
     }),
     workForm: new FormGroup<FormularioSituacionLaboral>({
       situacionLaboral: new FormControl('', {
@@ -138,13 +157,19 @@ export function createSectionConfig(
       form: forms.educationForm,
       errorFields: [
         { controlName: 'cursaSecundaria', fieldId: '', label: 'Situación de secundaria' },
+        { controlName: 'anioSecundaria', fieldId: '', label: 'Año en curso' },
+        { controlName: 'tipoBachillerato', fieldId: '', label: 'Tipo de bachillerato' },
+        { controlName: 'orientacion', fieldId: '', label: 'Orientación' },
         { controlName: 'lugarSecundaria', fieldId: '', label: 'Lugar de secundaria' },
+        { controlName: 'departamento', fieldId: '', label: 'Departamento' },
+        { controlName: 'institucionEducativa', fieldId: '', label: 'Institución educativa' },
         {
           controlName: 'estadoEducacionSuperior',
           fieldId: '',
           label: 'Estado de educación superior',
         },
         { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
+        { controlName: 'tituloOrtMadre', fieldId: '', label: 'Título en ORT de madre o tutor' },
         { controlName: 'formacionPadre', fieldId: '', label: 'Formación de padre o tutor' },
       ],
     },
@@ -157,6 +182,11 @@ export function createSectionConfig(
         { controlName: 'apoyoDecision', fieldId: '', label: 'Apoyo en la decisión' },
         { controlName: 'anioDecisionOrt', fieldId: '', label: 'Año de decisión de ORT' },
         { controlName: 'otrasUniversidades', fieldId: '', label: 'Otras universidades' },
+        {
+          controlName: 'universidadesInformadas',
+          fieldId: '',
+          label: 'Universidades consultadas',
+        },
         { controlName: 'certezaDecision', fieldId: '', label: 'Certeza de la decisión' },
         { controlName: 'motivosOrt', fieldId: '', label: 'Motivos para elegir ORT' },
       ],
@@ -171,9 +201,16 @@ export function createSectionConfig(
           fieldId: '',
           label: 'Reunión de asesoramiento',
         },
+        {
+          controlName: 'calificacionAsesoramiento',
+          fieldId: '',
+          label: 'Calificación del asesoramiento',
+        },
         { controlName: 'visitoWeb', fieldId: '', label: 'Visita al sitio web' },
+        { controlName: 'calificacionWeb', fieldId: '', label: 'Calificación del sitio web' },
         { controlName: 'visitoSede', fieldId: '', label: 'Visita a instalaciones' },
         { controlName: 'recuerdaPublicidad', fieldId: '', label: 'Publicidad de ORT' },
+        { controlName: 'mediosPublicidad', fieldId: '', label: 'Origen de la publicidad' },
       ],
     },
     'situacion-laboral': {

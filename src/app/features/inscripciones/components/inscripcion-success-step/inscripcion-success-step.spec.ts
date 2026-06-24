@@ -1,24 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { InscripcionSuccessStep } from 'inscripcion-success-step';
+import { TestBed } from '@angular/core/testing';
+
+import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
+import { InscripcionSuccessStep } from './inscripcion-success-step';
 
 describe('InscripcionSuccessStep', () => {
-  let component: InscripcionSuccessStep;
-  let fixture: ComponentFixture<InscripcionSuccessStep>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  it('creates with its step facade', () => {
+    TestBed.configureTestingModule({
       imports: [InscripcionSuccessStep],
-    }).compileComponents();
-  });
+      providers: [{ provide: InscripcionPaymentFacade, useValue: {} }],
+    }).overrideComponent(InscripcionSuccessStep, { set: { imports: [], template: '' } });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(InscripcionSuccessStep);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+    expect(TestBed.createComponent(InscripcionSuccessStep).componentInstance).toBeTruthy();
   });
 });

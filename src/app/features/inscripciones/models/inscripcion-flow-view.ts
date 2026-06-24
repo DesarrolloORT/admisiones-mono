@@ -1,49 +1,11 @@
 import type { InstruccionReserva, ItemResumenInscripcion } from './inscripcion-flow';
 import {
   InscripcionPreEnrollmentResponse,
-  METADATOS_PASOS_INSCRIPCION,
   MetodoPago,
   OpcionInscripcion,
-  PantallaInscripcion,
-  PasoInscripcion,
 } from './inscripcion-flow';
 import { getOptionLabel } from './inscripcion-flow-options';
 import { RESERVATION_INSTRUCTIONS } from './inscripcion-static-data';
-
-export function getStepNumber(screen: PantallaInscripcion): 1 | 2 | 3 {
-  if (screen === 'propuesta') return 1;
-  if (screen === 'encuesta' || screen === 'lector-reglamento') return 2;
-  return 3;
-}
-
-export function getStepSupportLabel(number: 1 | 2 | 3): string {
-  if (number === 1) return METADATOS_PASOS_INSCRIPCION.propuesta.supportLabel;
-  if (number === 2) return METADATOS_PASOS_INSCRIPCION.encuesta.supportLabel;
-  return METADATOS_PASOS_INSCRIPCION.pago.supportLabel;
-}
-
-export function buildStepperSteps(stepNumber: 1 | 2 | 3): PasoInscripcion[] {
-  return [
-    {
-      id: 'propuesta',
-      title: 'Propuesta académica',
-      overline: 'Paso 1',
-      status: stepNumber > 1 ? 'completo' : 'actual',
-    },
-    {
-      id: 'encuesta',
-      title: 'Información personal',
-      overline: 'Paso 2',
-      status: _setPersonalInformationStatus(stepNumber),
-    },
-    {
-      id: 'pago',
-      title: 'Confirmación',
-      overline: 'Paso 3',
-      status: stepNumber === 3 ? 'actual' : 'pendiente',
-    },
-  ];
-}
 
 export function buildSummaryItems(context: {
   response: InscripcionPreEnrollmentResponse | null;
@@ -99,10 +61,4 @@ export function getReservationInstructions(method: MetodoPago | null): Instrucci
   return method === 'paganza' || method === 'banred' || method === 'abitab'
     ? RESERVATION_INSTRUCTIONS[method]
     : RESERVATION_INSTRUCTIONS.abitab;
-}
-
-function _setPersonalInformationStatus(stepNumber: 1 | 2 | 3): 'completo' | 'actual' | 'pendiente' {
-  if (stepNumber === 1) return 'pendiente';
-  if (stepNumber === 2) return 'actual';
-  return 'completo';
 }
