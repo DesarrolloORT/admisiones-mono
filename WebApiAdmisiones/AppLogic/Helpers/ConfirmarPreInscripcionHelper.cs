@@ -20,11 +20,6 @@ namespace AppLogic.Helpers
                 return OperationResult<bool>.IsFailed("INS_CPI_01", methodName, "Request invalido.", 400);
             }
 
-            if (!request.AceptoReglamento)
-            {
-                return OperationResult<bool>.IsFailed("INS_CPI_02", methodName, "Debe aceptar el reglamento estudiantil para confirmar la preinscripcion.", 400);
-            }
-
             if (request.IdOfertaSeleccionada <= 0)
             {
                 return OperationResult<bool>.IsFailed("INS_CPI_03", methodName, "La oferta seleccionada es invalida.", 400);
@@ -134,12 +129,25 @@ namespace AppLogic.Helpers
             long codigoPersona,
             long idProducto,
             long idComienzo,
+            bool aceptoReglamento,
             string methodName)
         {
             var existente = uow.AceptacionReglamentoEsts.GetByPersonaProductoComienzo(codigoPersona, idProducto, idComienzo);
             if (existente != null)
             {
                 return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(existente.ToDto(), methodName);
+            }
+
+            // El reglamento se acepta una sola vez por persona; si no lo acepta ahora pero ya lo
+            // aceptó antes, se carga la fila para esta oferta sin volver a pedir aceptación.
+            if (!aceptoReglamento
+                && uow.AceptacionReglamentoEsts.GetByPersona(codigoPersona) == null)
+            {
+                return OperationResult<DtoAceptacionReglamentoEstDevart>.IsFailed(
+                    "INS_CPI_02",
+                    methodName,
+                    "Debe aceptar el reglamento estudiantil para confirmar la preinscripcion.",
+                    400);
             }
 
             var entidad = new AceptacionReglamentoEst

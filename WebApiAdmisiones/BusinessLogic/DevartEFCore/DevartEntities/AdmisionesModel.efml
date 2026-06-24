@@ -3949,13 +3949,13 @@
     </property>
   </class>
   <class name="VdInscripcionesFresco1y2" entity-set="VdInscripcionesFresco1y2s" table="VD_INSCRIPCIONES_FRESCO_1Y2" schema="CREADOR" query-type="True" p1:Guid="693847e2-e33c-4fe8-ab34-471d281b8828">
-    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="8b20074a-53aa-4003-a32a-dae251e469f6">
+    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="8b20074a-53aa-4003-a32a-dae251e469f6" p1:GenerateDTO="False">
       <column name="CODIGO_PERSONA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="50bc2c73-24ae-4862-b57f-a2df84a86de2">
+    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="50bc2c73-24ae-4862-b57f-a2df84a86de2" p1:GenerateDTO="False">
       <column name="FECHA_INSCRIPCION" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="844adc87-6ca3-4cef-b6bc-e10ea033c4ba">
+    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="844adc87-6ca3-4cef-b6bc-e10ea033c4ba" p1:GenerateDTO="False">
       <column name="USUARIO_INSCRIPCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="253b4d59-b9f4-4c10-bc3c-18d484fa5b1e">
@@ -3994,7 +3994,7 @@
     <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="2158d47b-309f-428e-83af-e0ae17816445">
       <column name="ESTADO_INSCRIPCION" not-null="False" length="14" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="ca641631-a6fe-40e2-b88e-8631cb2e187e">
+    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="ca641631-a6fe-40e2-b88e-8631cb2e187e" p1:GenerateDTO="False">
       <column name="VENGO_DE" not-null="False" length="61" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -4906,13 +4906,13 @@
     </property>
   </class>
   <class name="VdInscripcionesFresco3y4" entity-set="VdInscripcionesFresco3y4s" table="VD_INSCRIPCIONES_FRESCO_3Y4" schema="CREADOR" query-type="True" p1:Guid="775b4e36-3ff9-477b-b2f5-7aa8dc5ca76e">
-    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e49867eb-6260-486f-8c66-6100be55c5df">
+    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e49867eb-6260-486f-8c66-6100be55c5df" p1:GenerateDTO="False">
       <column name="CODIGO_PERSONA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5859cc32-1928-459f-81b2-f4f3cc6c3efb">
+    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5859cc32-1928-459f-81b2-f4f3cc6c3efb" p1:GenerateDTO="False">
       <column name="FECHA_INSCRIPCION" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="db6ed4c5-1d4d-4fe5-9df7-9c0e76831987">
+    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="db6ed4c5-1d4d-4fe5-9df7-9c0e76831987" p1:GenerateDTO="False">
       <column name="USUARIO_INSCRIPCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
     <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="d09e655d-37ff-438a-a860-bdb2e113846d">
@@ -4951,7 +4951,7 @@
     <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="1596eea0-dda2-4846-bc05-d26c8c3dcc5e">
       <column name="ESTADO_INSCRIPCION" not-null="False" length="14" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="204ba925-39de-446d-8f64-40d38d151571">
+    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="204ba925-39de-446d-8f64-40d38d151571" p1:GenerateDTO="False">
       <column name="VENGO_DE" not-null="False" length="61" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>

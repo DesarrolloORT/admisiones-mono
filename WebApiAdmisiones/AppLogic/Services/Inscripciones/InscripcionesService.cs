@@ -661,6 +661,7 @@ namespace AppLogic.Services.Inscripciones
                 codigoPersona,
                 contexto.IdProducto,
                 contexto.IdComienzo,
+                request.AceptoReglamento,
                 methodName);
             if (!aceptacion.Success)
             {

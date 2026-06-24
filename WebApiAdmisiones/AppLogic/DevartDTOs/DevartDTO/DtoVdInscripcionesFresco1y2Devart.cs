@@ -23,13 +23,6 @@ namespace AppLogic.DevartDTOs
 
         #region Properties
 
-        public decimal? CodigoPersona { get; set; }
-
-        public DateTime? FechaInscripcion { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioInscripcion { get; set; }
-
         public decimal? IdTurno { get; set; }
 
         public decimal? IdProducto { get; set; }
@@ -57,9 +50,6 @@ namespace AppLogic.DevartDTOs
 
         [StringLength(14)]
         public string? EstadoInscripcion { get; set; }
-
-        [StringLength(61)]
-        public string? VengoDe { get; set; }
 
         #endregion
     }

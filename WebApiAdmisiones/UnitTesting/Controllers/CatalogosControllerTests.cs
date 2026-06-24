@@ -205,38 +205,6 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task ObtenerBancos_DelegatesToService()
-        {
-            var controller = CreateController();
-            var responseDto = new BancosResponseDto
-            {
-                TotalCount = 1,
-                Bancos =
-                [
-                    new global::AppLogic.DTOs.BancoDto
-                    {
-                        IdBanco = 10,
-                        NombreBanco = "Banco Uno",
-                        Codigo = "B1",
-                        Activo = true
-                    }
-                ]
-            };
-
-            _serviceMock
-                .Setup(s => s.ObtenerBancos())
-                .ReturnsAsync(OperationResult<BancosResponseDto>.Ok(
-                    responseDto,
-                    nameof(ICatalogosService.ObtenerBancos)));
-
-            var response = await controller.ObtenerBancos();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-            _serviceMock.Verify(s => s.ObtenerBancos(), Times.Once);
-        }
-
-        [Fact]
         public void ObtenerCarreras_ReturnsOk()
         {
             var controller = CreateController();

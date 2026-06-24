@@ -583,9 +583,6 @@ namespace AppLogic.Services.Personas
         {
             return new DtoVdInscripcionesFresco1y2Devart
             {
-                CodigoPersona = source.CodigoPersona,
-                FechaInscripcion = source.FechaInscripcion,
-                UsuarioInscripcion = source.UsuarioInscripcion,
                 IdTurno = source.IdTurno,
                 IdProducto = source.IdProducto,
                 IdComienzo = source.IdComienzo,
@@ -598,7 +595,6 @@ namespace AppLogic.Services.Personas
                 FechaReferencia = source.FechaReferencia,
                 IdInscripto = source.IdInscripto,
                 EstadoInscripcion = source.EstadoInscripcion,
-                VengoDe = source.VengoDe
             };
         }
 
