@@ -1,29 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  OrtButtonModule,
-  OrtFormFieldModule,
-  OrtIconModule,
-  OrtRadioModule,
-  OrtSelectModule,
-  OrtSpinnerModule,
-} from '@desarrolloort/components';
+import { OrtButtonModule } from '@desarrolloort/components';
 
+import { AcademicProposalSelect } from '../../../catalogs/components/academic-proposal-select/academic-proposal-select';
 import { InscripcionProposalFacade } from '../../facades/inscripcion-proposal';
 
 @Component({
   selector: 'app-inscripcion-academic-step',
-  imports: [
-    OrtButtonModule,
-    OrtFormFieldModule,
-    OrtIconModule,
-    OrtRadioModule,
-    OrtSelectModule,
-    OrtSpinnerModule,
-    ReactiveFormsModule,
-  ],
+  imports: [AcademicProposalSelect, OrtButtonModule, ReactiveFormsModule],
   templateUrl: './inscripcion-academic-step.html',
-  styleUrls: ['../../pages/inscripcion/inscripcion.scss', './inscripcion-academic-step.scss'],
+  styleUrl: '../../pages/inscripcion/inscripcion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionAcademicStep {

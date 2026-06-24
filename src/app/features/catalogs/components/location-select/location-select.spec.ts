@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
-import { Catalogs } from '../../../catalogs/services/catalogs';
+import { Catalogs } from '../../services/catalogs';
 import { LocationSelect } from './location-select';
 
 @Component({

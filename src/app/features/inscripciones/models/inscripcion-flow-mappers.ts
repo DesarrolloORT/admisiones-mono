@@ -1,3 +1,4 @@
+import { getAcademicProposalTypeByLevel } from '../../catalogs/models/academic-proposal';
 import type { Career } from '../../catalogs/models/catalog.interface';
 import type {
   InscripcionBackendSurvey,
@@ -7,7 +8,7 @@ import type {
   ValoresEncuesta,
 } from './inscripcion-flow';
 import type { InscripcionForms } from './inscripcion-flow-forms';
-import { getOptionLabel, getProposalOptionByLevel } from './inscripcion-flow-options';
+import { getOptionLabel } from './inscripcion-flow-options';
 
 const SURVEY_SECTION_ALIASES: Readonly<Record<string, SeccionEncuestaId>> = {
   educacion: 'educacion',
@@ -47,7 +48,7 @@ export function patchBackendSurveyForms(
   const proposalType =
     levelId === undefined
       ? forms.academicForm.controls.tipoPropuesta.value
-      : (getProposalOptionByLevel(levelId)?.value ?? '');
+      : (getAcademicProposalTypeByLevel(levelId)?.value ?? '');
   const hasHigherEducation = fromBackendBoolean(survey.tieneEducacionSuperiorEncuestaIni);
 
   forms.academicForm.patchValue(

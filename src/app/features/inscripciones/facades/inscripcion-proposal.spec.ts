@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
@@ -17,6 +18,7 @@ describe('InscripcionProposalFacade', () => {
     registerProductInterest.mockReset().mockReturnValue(of(true));
     TestBed.configureTestingModule({
       providers: [
+        AcademicProposalSelection,
         InscripcionFormsStore,
         InscripcionProcessStore,
         InscripcionProposalFacade,

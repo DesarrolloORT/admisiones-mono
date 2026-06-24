@@ -6,8 +6,8 @@ import {
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
 
+import { LocationValue } from '../../catalogs/models/location-value';
 import { isCedulaDocumentType } from '../models/document-number';
-import { LocationValue } from '../models/location-value';
 
 export interface LoginForm {
   documentType: FormControl<string>;

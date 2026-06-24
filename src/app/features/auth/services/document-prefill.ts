@@ -1,13 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+import { LocationValue } from '../../catalogs/models/location-value';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import {
   type RecognizedFormPatch,
   resolveStateCodeFromBirthplace,
   toRecognizedFormPatch,
 } from '../mappers/document-recognition.mapper';
-import { LocationValue } from '../models/location-value';
 import { DocumentRecognition } from './document-recognition';
 
 export interface DocumentPrefillResult {

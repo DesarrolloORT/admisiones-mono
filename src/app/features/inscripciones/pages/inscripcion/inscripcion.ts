@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule, OrtSpinnerModule } from '@desarrolloort/components';
 
 import { ProcessLayout } from '../../../../shared/ui/process-layout/process-layout';
+import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
 import { InscripcionAcademicStep } from '../../components/inscripcion-academic-step/inscripcion-academic-step';
 import { InscripcionConfirmationStep } from '../../components/inscripcion-confirmation-step/inscripcion-confirmation-step';
 import { InscripcionDialog } from '../../components/inscripcion-dialog/inscripcion-dialog';
@@ -35,6 +36,7 @@ import { InscripcionProcessStore } from '../../store/inscripcion-process';
     RouterLink,
   ],
   providers: [
+    AcademicProposalSelection,
     InscripcionFormsStore,
     InscripcionProcessStore,
     InscripcionProposalFacade,

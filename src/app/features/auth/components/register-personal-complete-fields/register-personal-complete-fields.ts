@@ -7,8 +7,8 @@ import {
   OrtSelectModule,
 } from '@desarrolloort/components';
 
+import { LocationSelect } from '../../../catalogs/components/location-select/location-select';
 import { PersonalForm } from '../../forms/auth-forms';
-import { LocationSelect } from '../location-select/location-select';
 import { RegisterPersonalContactFields } from '../register-personal-contact-fields/register-personal-contact-fields';
 
 @Component({
@@ -37,4 +37,3 @@ export class RegisterPersonalCompleteFields {
 function createDateOnly(value: Date): Date {
   return new Date(value.getFullYear(), value.getMonth(), value.getDate());
 }
-

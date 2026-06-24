@@ -1,0 +1,83 @@
+<div class="academic-proposal-select" [formGroup]="form()">
+  <ort-radio-group
+    class="academic-proposal-select__types"
+    formControlName="tipoPropuesta"
+    indicatorPosition="right"
+    legend="Propuesta académica"
+    name="proposal"
+    orientation="vertical"
+    [required]="true">
+    @for (option of selection().proposalOptions(); track option.value) {
+    <ort-radio-card-button class="academic-proposal-select__type" [value]="option.value">
+      <ort-icon aria-hidden="true" class="academic-proposal-select__icon" ortRadioCardIcon>
+        {{ option.icon }}
+      </ort-icon>
+      <span class="academic-proposal-select__label">{{ option.label }}</span>
+      <span class="academic-proposal-select__hint" ortRadioSupportingText>{{ option.hint }}</span>
+    </ort-radio-card-button>
+    }
+  </ort-radio-group>
+
+  <div class="academic-proposal-select__fields">
+    <output class="academic-proposal-select__loading" [hidden]="!selection().loadingCareers()">
+      <ort-spinner aria-label="Cargando carreras" size="sm" />
+      <span>{{ selection().careersLoadingMessage() }}</span>
+    </output>
+
+    <ort-form-field [hideRequiredMarker]="!!form().controls.carrera.value">
+      <ort-label>Carrera</ort-label>
+      <ort-select
+        aria-label="Carrera"
+        formControlName="carrera"
+        id="academic-proposal-career"
+        [disabled]="!selection().canSelectCareer()">
+        <ort-option value="">Seleccioná...</ort-option>
+        @for (option of selection().careerOptions(); track option.value) {
+        <ort-option [value]="option.value">{{ option.label }}</ort-option>
+        }
+      </ort-select>
+    </ort-form-field>
+
+    <output class="academic-proposal-select__loading" [hidden]="!selection().loadingStarts()">
+      <ort-spinner aria-label="Cargando comienzos" size="sm" />
+      <span>{{ selection().startsLoadingMessage() }}</span>
+    </output>
+
+    <div class="academic-proposal-select__row">
+      <div class="academic-proposal-select__field-stack">
+        <ort-form-field [hideRequiredMarker]="!!form().controls.comienzo.value">
+          <ort-label>Comienzo</ort-label>
+          <ort-select
+            aria-label="Comienzo"
+            formControlName="comienzo"
+            id="academic-proposal-start"
+            [disabled]="!selection().canSelectStart()">
+            <ort-option value="">Seleccioná...</ort-option>
+            @for (option of selection().startOptions(); track option.value) {
+            <ort-option [value]="option.value">{{ option.label }}</ort-option>
+            }
+          </ort-select>
+        </ort-form-field>
+
+        <output class="academic-proposal-select__loading" [hidden]="!selection().loadingShifts()">
+          <ort-spinner aria-label="Cargando turnos" size="sm" />
+          <span>{{ selection().shiftsLoadingMessage() }}</span>
+        </output>
+      </div>
+
+      <ort-form-field [hideRequiredMarker]="!!form().controls.turno.value">
+        <ort-label>Turno</ort-label>
+        <ort-select
+          aria-label="Turno"
+          formControlName="turno"
+          id="academic-proposal-shift"
+          [disabled]="!selection().canSelectShift()">
+          <ort-option value="">Seleccioná...</ort-option>
+          @for (option of selection().shiftOptions(); track option.value) {
+          <ort-option [value]="option.value">{{ option.label }}</ort-option>
+          }
+        </ort-select>
+      </ort-form-field>
+    </div>
+  </div>
+</div>

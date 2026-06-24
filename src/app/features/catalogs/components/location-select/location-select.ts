@@ -22,9 +22,9 @@ import {
 } from '@angular/forms';
 import { OrtFormFieldModule, OrtSelectModule } from '@desarrolloort/components';
 
-import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
-import { Catalogs } from '../../../catalogs/services/catalogs';
+import { LocationCountry, LocationState } from '../../models/catalog.interface';
 import { LocationValue } from '../../models/location-value';
+import { Catalogs } from '../../services/catalogs';
 
 @Component({
   selector: 'app-location-select',
@@ -223,15 +223,24 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
   }
 
   private syncFieldVisualState(): void {
-    const controlToSync = this.injector.get(NgControl, null, { self: true, optional: true })?.control;
+    const controlToSync = this.injector.get(NgControl, null, {
+      self: true,
+      optional: true,
+    })?.control;
     if (!controlToSync) {
       return;
     }
 
     const touched = controlToSync.touched;
     this.syncFieldError(this.countryControl, touched && controlToSync.hasError('locationRequired'));
-    this.syncFieldError(this.stateControl, touched && controlToSync.hasError('locationStateRequired'));
-    this.syncFieldError(this.cityControl, touched && controlToSync.hasError('locationCityRequired'));
+    this.syncFieldError(
+      this.stateControl,
+      touched && controlToSync.hasError('locationStateRequired')
+    );
+    this.syncFieldError(
+      this.cityControl,
+      touched && controlToSync.hasError('locationCityRequired')
+    );
   }
 
   private syncFieldError(control: FormControl<string>, hasError: boolean): void {

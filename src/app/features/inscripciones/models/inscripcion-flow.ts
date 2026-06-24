@@ -1,5 +1,6 @@
 import { FormControl } from '@angular/forms';
 
+import type { AcademicProposalForm } from '../../catalogs/models/academic-proposal';
 import type { InscripcionStep } from './inscripcion-process';
 
 export type EscenarioInscripcion = 'primera-vez' | 'parcial' | 'encuesta-completa';
@@ -122,12 +123,7 @@ export interface OpcionInscripcion {
   hint?: string;
 }
 
-export interface FormularioPropuesta {
-  tipoPropuesta: FormControl<string>;
-  carrera: FormControl<string>;
-  comienzo: FormControl<string>;
-  turno: FormControl<string>;
-}
+export type FormularioPropuesta = AcademicProposalForm;
 
 export interface FormularioEducacion {
   cursaSecundaria: FormControl<string>;

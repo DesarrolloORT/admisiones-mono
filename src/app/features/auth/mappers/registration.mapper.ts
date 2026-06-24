@@ -1,5 +1,6 @@
 import type { PhoneInputValue } from '@desarrolloort/components';
 
+import { LocationValue } from '../../catalogs/models/location-value';
 import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
 import {
   AuthIdentityData,
@@ -7,7 +8,6 @@ import {
   AuthRegisterRequest,
 } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
-import { LocationValue } from '../models/location-value';
 
 export interface RegisterPersonalFormValue {
   primerNombre: string;

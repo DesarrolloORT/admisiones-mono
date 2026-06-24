@@ -3,6 +3,7 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
@@ -46,6 +47,7 @@ describe('InscripcionSurveyFacade', () => {
   } {
     TestBed.configureTestingModule({
       providers: [
+        AcademicProposalSelection,
         InscripcionFormsStore,
         InscripcionProcessStore,
         InscripcionProposalFacade,
