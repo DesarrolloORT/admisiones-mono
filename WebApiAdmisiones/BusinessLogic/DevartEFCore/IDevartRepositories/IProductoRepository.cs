@@ -13,5 +13,6 @@ namespace BusinessLogic.IDevartRepositories
     {
         bool EsProductoValidoParaInteres(long idProducto);
         ICollection<Producto> GetProductosVigentes();
+        ICollection<Producto> GetByKeys(IEnumerable<long> ids);
     }
 }

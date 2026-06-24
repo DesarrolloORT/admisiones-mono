@@ -41,6 +41,7 @@ namespace DataAccess.DevartRepositories
                     && p.PermiteInteresadoProducto == "SI"
                     && p.ActivoWebProducto == "SI"
                     && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    && (p.IdNivelProducto == 1 || p.IdNivelProducto == 2)
                     && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
                     && p.Paquetes.Any(pk =>
                         pk.SemestrePaquete != 99
@@ -52,6 +53,20 @@ namespace DataAccess.DevartRepositories
                 .Include(p => p.NivelProducto)
                 .OrderBy(p => p.NivelProducto.OrdenListadoNivelProducto)
                 .ThenBy(p => p.NombreProducto)
+                .ToList();
+        }
+
+        public virtual ICollection<BusinessLogic.Entities.Producto> GetByKeys(IEnumerable<long> ids)
+        {
+            var productoIds = ids.Distinct().ToList();
+            if (productoIds.Count == 0)
+            {
+                return new List<BusinessLogic.Entities.Producto>();
+            }
+
+            return objectSet
+                .Where(p => productoIds.Contains(p.IdProducto))
+                .Include(p => p.NivelProducto)
                 .ToList();
         }
     }

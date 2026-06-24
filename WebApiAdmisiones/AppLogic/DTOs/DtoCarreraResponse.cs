@@ -1,5 +1,6 @@
 using BusinessLogic.Entities;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace AppLogic.DTOs
 {
@@ -10,6 +11,12 @@ namespace AppLogic.DTOs
         public string? NombreProducto { get; set; }
         public long IdNivelProducto { get; set; }
         public string? NombreNivelProducto { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public long? IdEscuela { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? NombreEscuela { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
@@ -31,6 +38,20 @@ namespace AppLogic.DTOs
                 NombreProducto = carrera.NombreWebProducto,
                 IdNivelProducto = carrera.IdNivelProducto,
                 NombreNivelProducto = carrera.NivelProducto?.NombreNivelProducto
+            };
+        }
+
+        public static DtoCarreraResponse ToAdmisionesDto(
+            this VdOfertasDisponibles3y4 oferta, Producto? producto)
+        {
+            return new DtoCarreraResponse
+            {
+                IdProducto = oferta.IdProducto!.Value,
+                NombreProducto = oferta.NombreWebProducto,
+                IdNivelProducto = producto?.IdNivelProducto ?? 0,
+                NombreNivelProducto = producto?.NivelProducto?.NombreNivelProducto,
+                IdEscuela = oferta.IdEscuela,
+                NombreEscuela = oferta.NombreExtensoEscuela
             };
         }
     }

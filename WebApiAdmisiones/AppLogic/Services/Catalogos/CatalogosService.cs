@@ -135,8 +135,22 @@ namespace AppLogic.Services.Catalogos
         public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosVigentes();
-            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(entidades.Select(CarrerasMapper.ToAdmisionesDto), nameof(ObtenerCarreras));
+
+            var nivel12 = uow.Productos.GetProductosVigentes()
+                .Select(CarrerasMapper.ToAdmisionesDto);
+
+            var vista = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles();
+            var productosPorId = uow.Productos
+                .GetByKeys(vista.Select(v => v.IdProducto!.Value))
+                .ToDictionary(p => p.IdProducto);
+
+            var nivel34 = vista.Select(v =>
+            {
+                productosPorId.TryGetValue(v.IdProducto!.Value, out var producto);
+                return v.ToAdmisionesDto(producto);
+            });
+
+            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(nivel12.Concat(nivel34), nameof(ObtenerCarreras));
         }
 
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)

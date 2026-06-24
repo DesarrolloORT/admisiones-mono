@@ -194,6 +194,10 @@ namespace UnitTesting.AppLogic.Services
             ]);
             _uowMock.Setup(u => u.Productos).Returns(repo.Object);
 
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(new List<VdOfertasDisponibles3y4>());
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
             var result = _service.ObtenerCarreras();
 
             Assert.True(result.Success);
@@ -203,6 +207,49 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("ATI", item.NombreProducto);
             Assert.Equal(2, item.IdNivelProducto);
             Assert.Equal("Carrera", item.NombreNivelProducto);
+            Assert.Null(item.IdEscuela);
+            Assert.Null(item.NombreEscuela);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel3o4_FromVistaWithEscuela()
+        {
+            var repo = new Mock<IProductoRepository>();
+            repo.Setup(r => r.GetProductosVigentes()).Returns(new List<Producto>());
+            repo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
+            [
+                new Producto
+                {
+                    IdProducto = 50,
+                    IdNivelProducto = 3,
+                    NivelProducto = new NivelProducto { IdNivelProducto = 3, NombreNivelProducto = "Postgrado" }
+                }
+            ]);
+            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
+            [
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 50,
+                    NombreWebProducto = "MBA",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion"
+                }
+            ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.ObtenerCarreras();
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(50, item.IdProducto);
+            Assert.Equal("MBA", item.NombreProducto);
+            Assert.Equal(3, item.IdNivelProducto);
+            Assert.Equal("Postgrado", item.NombreNivelProducto);
+            Assert.Equal(7, item.IdEscuela);
+            Assert.Equal("Facultad de Administracion", item.NombreEscuela);
         }
 
         [Fact]
