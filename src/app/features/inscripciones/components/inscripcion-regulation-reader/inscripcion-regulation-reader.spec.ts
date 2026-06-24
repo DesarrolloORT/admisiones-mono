@@ -1,24 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { InscripcionRegulationReader } from 'inscripcion-regulation-reader';
+import { TestBed } from '@angular/core/testing';
+
+import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
+import { InscripcionRegulationReader } from './inscripcion-regulation-reader';
 
 describe('InscripcionRegulationReader', () => {
-  let component: InscripcionRegulationReader;
-  let fixture: ComponentFixture<InscripcionRegulationReader>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  it('creates with its step facade', () => {
+    TestBed.configureTestingModule({
       imports: [InscripcionRegulationReader],
-    }).compileComponents();
-  });
+      providers: [{ provide: InscripcionSurveyFacade, useValue: {} }],
+    }).overrideComponent(InscripcionRegulationReader, { set: { imports: [], template: '' } });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(InscripcionRegulationReader);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+    expect(TestBed.createComponent(InscripcionRegulationReader).componentInstance).toBeTruthy();
   });
 });
