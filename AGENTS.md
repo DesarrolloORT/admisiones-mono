@@ -18,8 +18,10 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 ## Arquitectura Angular/API
 
 - Solo los adapters en `endpoints/` pueden importar contratos generados desde `src/app/shared/api/generated/**`.
-- `services/`, `facades/`, `models/`, componentes y specs de feature deben depender de tipos propios de la feature o del adapter correspondiente, no de DTOs generados.
-- Si un contrato backend necesita exponerse fuera de `endpoints/`, define un tipo/mapper local de feature y mantén el DTO generado encapsulado en el endpoint adapter.
+- Los metodos publicos de adapters deben exponer tipos propios de la feature y mapear explicitamente request/response; nunca retornar ni aceptar DTOs generados.
+- `services/`, `facades/`, `models/`, componentes y specs de feature dependen de tipos propios de la feature o del adapter, no de DTOs generados.
+- Las fechas de API permanecen como `string | null` en contratos de feature; la conversion a `Date` se hace explicitamente en facades/UI.
+- `npm run update-api` y `npm run check-api-contracts` deben fallar si un adapter filtra generated o un endpoint se genera con `response: unknown`.
 
 ## Perfiles
 
