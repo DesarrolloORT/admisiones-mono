@@ -192,7 +192,6 @@ namespace UnitTesting.AppLogic.Services
                     NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
                 }
             ]);
-            repo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
             _uowMock.Setup(u => u.Productos).Returns(repo.Object);
 
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
@@ -217,15 +216,6 @@ namespace UnitTesting.AppLogic.Services
         {
             var repo = new Mock<IProductoRepository>();
             repo.Setup(r => r.GetProductosVigentes()).Returns(new List<Producto>());
-            repo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
-            [
-                new Producto
-                {
-                    IdProducto = 50,
-                    IdNivelProducto = 3,
-                    NivelProducto = new NivelProducto { IdNivelProducto = 3, NombreNivelProducto = "Postgrado" }
-                }
-            ]);
             _uowMock.Setup(u => u.Productos).Returns(repo.Object);
 
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
@@ -235,6 +225,8 @@ namespace UnitTesting.AppLogic.Services
                 {
                     IdProducto = 50,
                     NombreWebProducto = "MBA",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
                     IdEscuela = 7,
                     NombreExtensoEscuela = "Facultad de Administracion"
                 }

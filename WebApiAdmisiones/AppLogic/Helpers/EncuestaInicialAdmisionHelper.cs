@@ -99,6 +99,19 @@ namespace AppLogic.Helpers
             Persona persona,
             long? idComienzo)
         {
+            AplicarIdentificadores(encuesta, request, persona, idComienzo);
+            AplicarFormacion(encuesta, request);
+            AplicarInfoOtras(encuesta, request);
+            AplicarValoraciones(encuesta, request);
+            AplicarPublicidadEInstruccionOrt(encuesta, request);
+        }
+
+        private static void AplicarIdentificadores(
+            EncuestaIniAdmision encuesta,
+            GuardarEncuestaInicialRequest request,
+            Persona persona,
+            long? idComienzo)
+        {
             if (request.IdProducto.HasValue)
             {
                 encuesta.IdProducto = request.IdProducto.Value;
@@ -118,7 +131,10 @@ namespace AppLogic.Helpers
             {
                 encuesta.ClaveEncuestaIni = GenerarClaveEncuesta(encuesta.IdProducto.Value, persona.Documento);
             }
+        }
 
+        private static void AplicarFormacion(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        {
             if (request.NombreInstitucion != null)
             {
                 encuesta.NombreInstSecEncuestaIni = NormalizarTextoOpcional(request.NombreInstitucion);
@@ -164,7 +180,10 @@ namespace AppLogic.Helpers
             {
                 encuesta.DecisionUniverEncuestaIni = request.DecisionUniversidad.Value.ToString();
             }
+        }
 
+        private static void AplicarInfoOtras(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        {
             if (request.InfoOtrasUniversidadesAntes != null)
             {
                 encuesta.InforOtrasAntesEncuestaIni = NormalizarSiNo(request.InfoOtrasUniversidadesAntes);
@@ -209,7 +228,10 @@ namespace AppLogic.Helpers
             {
                 encuesta.NivelDecisionEncuestaIni = request.NivelDecision.Value == 1;
             }
+        }
 
+        private static void AplicarValoraciones(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        {
             if (request.AsesoramientoOrt.HasValue)
             {
                 encuesta.AsesoramientoOrtEncuestaIni = ConvertirBoolASiNo(request.AsesoramientoOrt.Value);
@@ -251,7 +273,10 @@ namespace AppLogic.Helpers
             {
                 encuesta.ValoracionInstalacionesOrtEncuestaIni = null;
             }
+        }
 
+        private static void AplicarPublicidadEInstruccionOrt(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        {
             if (request.PublicidadOrt.HasValue)
             {
                 encuesta.PublicidadOrtEncuestaIni = ConvertirBoolASiNo(request.PublicidadOrt.Value);
