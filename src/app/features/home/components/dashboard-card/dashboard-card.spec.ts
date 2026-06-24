@@ -1,24 +1,30 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DashboardCard } from 'dashboard-card';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { DashboardCard } from './dashboard-card';
 
 describe('DashboardCard', () => {
-  let component: DashboardCard;
-  let fixture: ComponentFixture<DashboardCard>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  it('passes product and process identifiers to the career action', async () => {
+    TestBed.configureTestingModule({
       imports: [DashboardCard],
-    }).compileComponents();
-  });
+      providers: [provideRouter([])],
+    });
+    const fixture = TestBed.createComponent(DashboardCard);
+    fixture.componentRef.setInput('inscripcion', {
+      idProducto: 20,
+      idProceso: 200,
+      idComienzo: 2,
+      idTurno: 3,
+      nombreProducto: 'Sistemas',
+      nombreComienzo: 'Marzo 2027',
+      nombreTurno: 'Noche',
+      estado: 'Confirmada',
+    });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(DashboardCard);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    await fixture.whenStable();
 
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+    expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
+      '/inscripciones/detalle?idProducto=20&idProceso=200'
+    );
   });
 });
