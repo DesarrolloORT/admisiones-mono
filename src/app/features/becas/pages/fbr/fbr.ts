@@ -5,31 +5,38 @@ import { AuthSessionService } from 'src/app/features/auth/services/auth-session'
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { ScholarshipOnboarding } from '../../components/scholarship-onboarding/scholarship-onboarding';
+import { ScholarshipPersonalStep } from '../../components/scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipPostulationStep } from '../../components/scholarship-postulation-step/scholarship-postulation-step';
 
 const SCHOLARSHIP_STEPS: ExpandableStepperStep[] = [
   {
-    id: 'inicio',
+    id: 'info-postulacion',
     overline: 'Paso 1',
     status: 'current',
-    title: 'Inicio',
+    title: 'Información de postulación',
   },
   {
-    id: 'postulacion',
+    id: 'info-personal',
     overline: 'Paso 2',
     status: 'pending',
-    title: 'Postulación',
+    title: 'Información personal',
   },
   {
-    id: 'resultado',
+    id: 'confirmacion',
     overline: 'Paso 3',
     status: 'pending',
-    title: 'Resultado',
+    title: 'Confirmación',
   },
 ];
 
 @Component({
   selector: 'app-fbr',
-  imports: [ProcessLayout, ScholarshipOnboarding],
+  imports: [
+    ProcessLayout,
+    ScholarshipOnboarding,
+    ScholarshipPostulationStep,
+    ScholarshipPersonalStep,
+  ],
   templateUrl: './fbr.html',
   styleUrl: './fbr.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
