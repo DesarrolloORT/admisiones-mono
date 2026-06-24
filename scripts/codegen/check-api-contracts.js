@@ -14,12 +14,13 @@ export function checkApiContracts({
 } = {}) {
   const program = createProgram(root, tsconfigPath);
   const adapterViolations = findAdapterContractViolations(program, root);
+  const bodyViolations = findAdapterBodyLaunderingViolations(program, root);
   const responseViolations = findUnknownResponseViolations(
     resolve(root, generatedEndpointsDir),
     root
   );
 
-  return [...adapterViolations, ...responseViolations];
+  return [...adapterViolations, ...bodyViolations, ...responseViolations];
 }
 
 export function findAdapterContractViolations(program, root) {
@@ -72,6 +73,80 @@ export function findAdapterContractViolations(program, root) {
   }
 
   return violations;
+}
+
+export function findAdapterBodyLaunderingViolations(program, root) {
+  const violations = [];
+
+  for (const sourceFile of program.getSourceFiles()) {
+    const fileName = normalizePath(sourceFile.fileName);
+    if (!isEndpointAdapter(fileName, root)) continue;
+
+    violations.push(
+      ...findBodyLaunderingInSource(sourceFile.text, sourceFile.fileName).map(violation => ({
+        ...violation,
+        file: toProjectPath(sourceFile.fileName, root),
+      }))
+    );
+  }
+
+  return violations;
+}
+
+export function findBodyLaunderingInSource(sourceText, fileName = 'adapter.endpoint.ts') {
+  const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true);
+  const violations = [];
+
+  const visit = node => {
+    const bodyProperty = getRequestBodyProperty(node);
+    if (bodyProperty?.initializer) {
+      for (const call of findCallExpressions(bodyProperty.initializer)) {
+        violations.push({
+          line: sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1,
+          message:
+            'El body del adapter transforma valores con una llamada; mové el mapeo a mappers/facade y dejá el body como passthrough para que TS valide contra el contrato generado.',
+        });
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return violations;
+}
+
+function getRequestBodyProperty(node) {
+  if (!ts.isCallExpression(node)) return null;
+
+  const callee = node.expression;
+  if (!ts.isPropertyAccessExpression(callee) || callee.name.text !== 'request') return null;
+
+  const options = node.arguments[1];
+  if (!options || !ts.isObjectLiteralExpression(options)) return null;
+
+  return (
+    options.properties.find(
+      property =>
+        ts.isPropertyAssignment(property) &&
+        ts.isIdentifier(property.name) &&
+        property.name.text === 'body'
+    ) ?? null
+  );
+}
+
+function findCallExpressions(node) {
+  const calls = [];
+
+  const visit = current => {
+    if (ts.isCallExpression(current) || ts.isNewExpression(current)) {
+      calls.push(current);
+    }
+    ts.forEachChild(current, visit);
+  };
+
+  visit(node);
+  return calls;
 }
 
 export function findUnknownResponsesInSource(sourceText, fileName = 'generated.endpoints.ts') {
