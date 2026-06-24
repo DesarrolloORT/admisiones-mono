@@ -9,7 +9,7 @@
     class="inscription-payment-layout"
     novalidate
     [formGroup]="facade.paymentForm"
-    (ngSubmit)="facade.continue()">
+    (ngSubmit)="facade.requestConfirmation()">
     <div class="inscription-payment-main">
       <section aria-labelledby="payment-method-title" class="inscription-form__card">
         <div class="inscription-payment-method">
@@ -96,8 +96,8 @@
     closeLabel="Volver al pago"
     helperText="Revisá la propuesta y el medio de pago antes de continuar."
     title="Confirmar inscripción"
-    [open]="facade.screen() === 'confirmacion-pago'"
-    (closed)="facade.cancelPaymentConfirmation()">
+    [open]="facade.view() === 'confirming'"
+    (closed)="facade.cancelConfirmation()">
     <dl class="inscription-summary-list">
       @for (item of facade.summaryItems(); track item.label) {
       <div class="inscription-summary-list__item">
@@ -115,10 +115,10 @@
         data-dialog-initial-focus
         ort-secondary-button
         type="button"
-        (click)="facade.cancelPaymentConfirmation()">
+        (click)="facade.cancelConfirmation()">
         Volver
       </button>
-      <button ort-primary-button type="button" (click)="facade.confirmPayment()">Confirmar</button>
+      <button ort-primary-button type="button" (click)="facade.confirm()">Confirmar</button>
     </div>
   </app-inscripcion-dialog>
 </section>
