@@ -380,7 +380,7 @@ namespace AppLogic.Services.Inscripciones
             return PersistirEncuestaInicial(uow, persona, encuesta, request, codigoPersona, esNueva, actualizaTrabajaActualmente);
         }
 
-        private OperationResult<long?> ResolverIdComienzoEncuesta(
+        private static OperationResult<long?> ResolverIdComienzoEncuesta(
             IUnitOfWork uow,
             GuardarEncuestaInicialRequest request,
             BusinessLogic.Entities.EncuestaIniAdmision encuesta)
