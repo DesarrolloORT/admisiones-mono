@@ -5350,6 +5350,23 @@
       <column name="ANTICIPADA70PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
   </class>
+  <class name="VdProductosDisponibles1y2" entity-set="VdProductosDisponibles1y2s" table="VD_PRODUCTOS_DISPONIBLES_1Y2" schema="CREADOR" query-type="True" p1:Guid="f9ba9df9-9476-4b93-8dcc-2a955b0e4bb5">
+    <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="2ff8dfde-f923-4bbc-9fb8-5834b0d5aad4">
+      <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreWebProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="b1b076cb-df4a-482d-aa18-4f47a4d93799">
+      <column name="NOMBRE_WEB_PRODUCTO" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdNivelProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="3383817b-dde1-456a-915a-c0557ad101b2">
+      <column name="ID_NIVEL_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreNivelProducto" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="5a624cb1-3a00-4d8b-940c-57a841dd0661">
+      <column name="NOMBRE_NIVEL_PRODUCTO" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="OrdenListadoNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="50b4cdd6-834e-4c0b-ac95-3490c8957e01">
+      <column name="ORDEN_LISTADO_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

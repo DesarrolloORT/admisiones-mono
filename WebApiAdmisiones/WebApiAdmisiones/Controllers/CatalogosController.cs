@@ -111,7 +111,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 400)]
         public IActionResult ObtenerCarreras()
         {
-            var result = catalogosService.ObtenerCarreras();
+            var result = catalogosService.ObtenerCarreras(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 

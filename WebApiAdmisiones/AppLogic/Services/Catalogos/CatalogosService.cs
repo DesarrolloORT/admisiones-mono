@@ -132,11 +132,11 @@ namespace AppLogic.Services.Catalogos
             return Task.FromResult(ObtenerPaisesEstadosCiudades());
         }
 
-        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
+        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
 
-            var nivel12 = uow.Productos.GetProductosVigentes()
+            var nivel12 = uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona)
                 .Select(CarrerasMapper.ToAdmisionesDto);
 
             var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(CarrerasMapper.ToAdmisionesDto);

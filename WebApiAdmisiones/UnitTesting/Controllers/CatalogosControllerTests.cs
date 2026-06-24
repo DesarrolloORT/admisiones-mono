@@ -209,7 +209,7 @@ namespace UnitTesting.Controllers
         {
             var controller = CreateController();
 
-            _serviceMock.Setup(s => s.ObtenerCarreras())
+            _serviceMock.Setup(s => s.ObtenerCarreras(It.IsAny<long>()))
                 .Returns(OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(
                     [new DtoCarreraResponse { IdProducto = 10, NombreProducto = "ATI" }],
                     nameof(ICatalogosService.ObtenerCarreras)));

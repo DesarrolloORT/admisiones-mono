@@ -179,26 +179,24 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerCarreras_ReturnsMappedItems()
         {
-            var repo = new Mock<IProductoRepository>();
-            repo.Setup(r => r.GetProductosVigentes()).Returns(
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99)).Returns(
             [
-                new Producto
+                new VdProductosDisponibles1y2
                 {
                     IdProducto = 10,
-                    NombreProducto = "ATI",
                     NombreWebProducto = "ATI",
-                    NombreExtensoProducto = "Analista en TI",
                     IdNivelProducto = 2,
-                    NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
+                    NombreNivelProducto = "Carrera"
                 }
             ]);
-            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
 
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
             vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(new List<VdOfertasDisponibles3y4>());
             _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
 
-            var result = _service.ObtenerCarreras();
+            var result = _service.ObtenerCarreras(99);
 
             Assert.True(result.Success);
             Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
@@ -214,9 +212,9 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerCarreras_Nivel3o4_FromVistaWithEscuela()
         {
-            var repo = new Mock<IProductoRepository>();
-            repo.Setup(r => r.GetProductosVigentes()).Returns(new List<Producto>());
-            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99)).Returns(new List<VdProductosDisponibles1y2>());
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
 
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
             vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
@@ -233,7 +231,7 @@ namespace UnitTesting.AppLogic.Services
             ]);
             _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
 
-            var result = _service.ObtenerCarreras();
+            var result = _service.ObtenerCarreras(99);
 
             Assert.True(result.Success);
             var item = Assert.Single(result.Data!);

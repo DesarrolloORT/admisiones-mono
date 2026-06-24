@@ -30,14 +30,14 @@ namespace AppLogic.DTOs
     public static class CarrerasMapper
     {
         public static DtoCarreraResponse ToAdmisionesDto(
-            this Producto carrera)
+            this VdProductosDisponibles1y2 producto)
         {
             return new DtoCarreraResponse
             {
-                IdProducto = carrera.IdProducto,
-                NombreProducto = carrera.NombreWebProducto,
-                IdNivelProducto = carrera.IdNivelProducto,
-                NombreNivelProducto = carrera.NivelProducto?.NombreNivelProducto
+                IdProducto = producto.IdProducto,
+                NombreProducto = producto.NombreWebProducto,
+                IdNivelProducto = producto.IdNivelProducto,
+                NombreNivelProducto = producto.NombreNivelProducto
             };
         }
 
