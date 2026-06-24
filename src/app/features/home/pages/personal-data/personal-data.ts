@@ -21,6 +21,7 @@ import {
   OrtSelectModule,
   OrtSkeletonModule,
 } from '@desarrolloort/components';
+import { ComponentModeService, DatosPersonalesComponent } from '@desarrolloort/fdp-components';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
@@ -66,7 +67,9 @@ interface PersonalDataForm {
     OrtSelectModule,
     OrtSkeletonModule,
     ReactiveFormsModule,
+    DatosPersonalesComponent,
   ],
+  providers: [ComponentModeService],
   templateUrl: './personal-data.html',
   styleUrl: './personal-data.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -119,6 +122,7 @@ export class PersonalData implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
+  protected readonly identityRestricted = signal(false);
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
@@ -191,13 +195,13 @@ export class PersonalData implements OnInit {
 
     this.account
       .updatePersonalData({
-        countryCode: this.toNullableNumber(value.countryCode),
-        stateCode: this.toNullableNumber(value.stateCode),
-        cityCode: this.toNullableNumber(value.cityCode),
-        address: value.address,
-        phone: this.toBackendPhone(value.phone),
-        email: value.email,
-        emailVerification: value.emailConfirmation,
+        countryCode: this.toOptionalNumber(value.countryCode),
+        stateCode: this.toOptionalNumber(value.stateCode),
+        cityCode: this.toOptionalNumber(value.cityCode),
+        address: value.address.trim(),
+        phone: this.toBackendPhone(value.phone).trim(),
+        email: value.email.trim(),
+        emailVerification: value.emailConfirmation.trim(),
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
@@ -239,6 +243,7 @@ export class PersonalData implements OnInit {
   }
 
   private patchForm(data: PersonalDataRecord): void {
+    this.identityRestricted.set(data.identityRestricted);
     this.selectedCountryCode.set(data.countryCode);
     this.selectedStateCode.set(data.stateCode);
 
@@ -270,6 +275,10 @@ export class PersonalData implements OnInit {
 
   private toNullableNumber(value: string): number | null {
     return value ? Number(value) : null;
+  }
+
+  private toOptionalNumber(value: string): number | undefined {
+    return value ? Number(value) : undefined;
   }
 
   private toPhoneInputValue(value: string): PhoneInputValue | null {

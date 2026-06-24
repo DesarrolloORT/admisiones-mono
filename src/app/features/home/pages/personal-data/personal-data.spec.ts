@@ -125,6 +125,34 @@ describe('PersonalData', () => {
     });
   });
 
+  it('should render the fdp organism when the identity is restricted', () => {
+    service.getPersonalData.mockReturnValue(
+      of({
+        documentType: 'CI',
+        documentNumber: '4123456-9',
+        firstName: 'Gabriela',
+        secondName: '',
+        firstLastName: 'Ortiz',
+        secondLastName: 'Morales',
+        birthDate: '1988-05-31',
+        sex: 'F',
+        countryCode: 1,
+        stateCode: 10,
+        cityCode: 100,
+        address: 'Av. 18 de Julio 1360',
+        phone: '99123456',
+        email: 'gabrielaortiz@gmail.com',
+        emailVerification: 'gabrielaortiz@gmail.com',
+        identityRestricted: true,
+      })
+    );
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('fdp-datos-personales')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('form.personal-data-form')).toBeNull();
+  });
+
   it('should render skeletons while personal data is loading', () => {
     service.getPersonalData.mockReturnValue(NEVER);
 
