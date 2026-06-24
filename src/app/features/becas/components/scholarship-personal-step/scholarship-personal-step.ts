@@ -16,7 +16,7 @@ import { PersonalData } from '../postulation-forms/personal-data/personal-data';
     Declaration,
   ],
   templateUrl: './scholarship-personal-step.html',
-  styleUrls: ['./scholarship-personal-step.scss', '../../pages/fbr/fbr.scss'],
+  styleUrls: ['../../pages/fbr/fbr.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipPersonalStep {}
