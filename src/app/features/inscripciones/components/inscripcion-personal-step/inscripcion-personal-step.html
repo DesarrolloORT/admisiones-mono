@@ -75,9 +75,8 @@
                 orientation="vertical"
                 [disabled]="facade.baccalaureateOptions().length === 0"
                 [required]="true">
-                @for (option of facade.baccalaureateOptions(); track option.value) {
-                <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
-                }
+                <ort-radio-button value="option.value" />
+                <ort-radio-button value="option.value" />
               </ort-radio-group>
               @if (facade.educationForm.controls.tipoBachillerato.touched &&
               facade.educationForm.controls.tipoBachillerato.hasError('required')) {
