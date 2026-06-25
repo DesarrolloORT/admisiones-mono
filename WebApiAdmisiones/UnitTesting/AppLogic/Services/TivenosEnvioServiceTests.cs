@@ -12,40 +12,16 @@ namespace UnitTesting.AppLogic.Services
     {
         private readonly Mock<IUnitOfWork> _uowMock = new();
         private readonly Mock<IEnvioParaTivenoRepository> _envioParaTivenosRepoMock = new();
-        private readonly Mock<IParametroRepository> _parametroRepoMock = new();
         private readonly TivenosEnvioService _service = new();
 
         public TivenosEnvioServiceTests()
         {
             _uowMock.Setup(u => u.EnvioParaTivenos).Returns(_envioParaTivenosRepoMock.Object);
-            _uowMock.Setup(u => u.Parametros).Returns(_parametroRepoMock.Object);
         }
 
         [Fact]
-        public void EncolarAltaInteresXSeleccionEnSitio_ConTivenosNoLiberadoYPersonaComun_NoEncola()
+        public void EncolarAltaInteresXSeleccionEnSitio_EncolaPayload()
         {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("NO");
-
-            var result = _service.EncolarAltaInteresXSeleccionEnSitio(
-                _uowMock.Object,
-                RequestBase(TivenosAltaInteresOperacion.AltaInteresProducto()),
-                777,
-                "Test");
-
-            Assert.True(result.Success);
-            Assert.False(result.Data);
-            _envioParaTivenosRepoMock.Verify(r => r.Add(It.IsAny<EnvioParaTiveno>()), Times.Never);
-        }
-
-        [Fact]
-        public void EncolarAltaInteresXSeleccionEnSitio_ConTivenosLiberado_EncolaPayloadLegacy()
-        {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("SI");
-
             var result = _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.AltaInteresProducto()),
@@ -71,36 +47,8 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void EncolarAltaInteresXSeleccionEnSitio_ConTivenosNoLiberadoYPersonaLegacy_Encola()
-        {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("NO");
-
-            var result = _service.EncolarAltaInteresXSeleccionEnSitio(
-                _uowMock.Object,
-                new TivenosAltaInteresRequest
-                {
-                    CodigoPersona = 129329,
-                    IdProducto = 10,
-                    IdProceso = 20,
-                    Operacion = TivenosAltaInteresOperacion.AltaInteresProducto(),
-                },
-                777,
-                "Test");
-
-            Assert.True(result.Success);
-            Assert.True(result.Data);
-            _envioParaTivenosRepoMock.Verify(r => r.Add(It.IsAny<EnvioParaTiveno>()), Times.Once);
-        }
-
-        [Fact]
         public void EncolarAltaInteresXSeleccionEnSitio_ParaProductoExistenteActualizado_EncolaModificar()
         {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("SI");
-
             _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.ModificarActualizarInteres()),
@@ -116,10 +64,6 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void EncolarAltaInteresXSeleccionEnSitio_ParaProductoNuevoEnInteresExistente_EncolaAltaConOrigenSis()
         {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("SI");
-
             _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.AltaActualizarInteres()),
@@ -133,12 +77,8 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void EncolarAltaDatosBachillerato_ConTivenosLiberado_EncolaPayloadLegacy()
+        public void EncolarAltaDatosBachillerato_EncolaPayload()
         {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("SI");
-
             var result = _service.EncolarAltaDatosBachillerato(
                 _uowMock.Object,
                 new TivenosBachilleratoRequest
@@ -164,12 +104,8 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void EncolarModificacionDatosBachillerato_ConTivenosLiberado_EncolaPayloadLegacy()
+        public void EncolarModificacionDatosBachillerato_EncolaPayload()
         {
-            _parametroRepoMock
-                .Setup(r => r.ObtenerSeLiberoTivenos())
-                .Returns("SI");
-
             var result = _service.EncolarModificacionDatosBachillerato(
                 _uowMock.Object,
                 new TivenosBachilleratoRequest
