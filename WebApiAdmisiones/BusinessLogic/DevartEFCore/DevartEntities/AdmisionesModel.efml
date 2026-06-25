@@ -5367,6 +5367,26 @@
       <column name="ORDEN_LISTADO_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
+  <class name="InscriptoSeniaMinimum" entity-set="InscriptoSeniaMinima" table="T_INSCRIPTO_SENIA_MINIMA" schema="CREADOR" p1:Guid="c68be5be-df92-4fd8-b5d0-3b308499caf6">
+    <id name="IdInscripto" type="Int64" p1:ValidateRequired="true" p1:Guid="3ac05b45-1210-4baf-ab43-c59616a72e9e">
+      <column name="ID_INSCRIPTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="65b2af99-b447-4c31-819c-a9ce506017e1" p1:GenerateDTO="False">
+      <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="bdfc4775-155c-486b-9d99-e31eb346ae5d" p1:GenerateDTO="False">
+      <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="6cfddede-7105-406a-a617-53c1fffc6c04" p1:GenerateDTO="False">
+      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="MetodoPagoSeniaMinima" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="a9f3fe3e-e585-4c73-a296-d92f1464102b">
+      <Documentation>
+        <Summary>valores posibles ABITAB o PAGANZA</Summary>
+      </Documentation>
+      <column name="METODO_PAGO_SENIA_MINIMA" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">

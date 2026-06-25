@@ -43,7 +43,14 @@ namespace AppLogic.ApiClients
         public long? IdInscripcion { get; set; }
         public decimal SeniaInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
+        public List<CarritoSeniaApiDto> CarritosSenia { get; set; } = new();
         public ResumenInscripcionApiDto? Resumen { get; set; }
+    }
+
+    public class CarritoSeniaApiDto
+    {
+        public string IdCarrito { get; set; } = string.Empty;
+        public decimal Senia { get; set; }
     }
 
     public class ResumenInscripcionApiDto

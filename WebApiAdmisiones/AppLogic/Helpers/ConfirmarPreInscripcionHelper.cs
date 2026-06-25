@@ -285,6 +285,9 @@ namespace AppLogic.Helpers
                 IdInscripcion = source.IdInscripcion,
                 SeniaInscripcion = source.SeniaInscripcion,
                 FechaVencimientoPago = source.FechaVencimientoPago,
+                CarritosSenia = source.CarritosSenia?
+                    .Select(c => new CarritoSeniaDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
+                    .ToList() ?? new List<CarritoSeniaDto>(),
                 Resumen = new ResumenInscripcionDto
                 {
                     IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,

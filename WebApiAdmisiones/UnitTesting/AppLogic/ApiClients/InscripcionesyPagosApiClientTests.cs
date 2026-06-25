@@ -111,6 +111,16 @@ namespace UnitTesting.AppLogic.ApiClients
                   "idInscripcion": 55,
                   "seniaInscripcion": 1234.50,
                   "fechaVencimientoPago": "2026-06-30T00:00:00",
+                  "carritosSenia": [
+                    {
+                      "idCarrito": "123|20|1|30|55",
+                      "senia": 1234.50
+                    },
+                    {
+                      "idCarrito": "123|20|1|30|56",
+                      "senia": 800
+                    }
+                  ],
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista en TI",
@@ -137,6 +147,11 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.Equal(55, result.Data!.IdInscripcion);
             Assert.Equal(1234.50m, result.Data!.SeniaInscripcion);
             Assert.Equal(new DateTime(2026, 6, 30), result.Data!.FechaVencimientoPago);
+            Assert.Equal(2, result.Data!.CarritosSenia.Count);
+            Assert.Equal("123|20|1|30|55", result.Data.CarritosSenia[0].IdCarrito);
+            Assert.Equal(1234.50m, result.Data.CarritosSenia[0].Senia);
+            Assert.Equal("123|20|1|30|56", result.Data.CarritosSenia[1].IdCarrito);
+            Assert.Equal(800, result.Data.CarritosSenia[1].Senia);
             Assert.Equal("Analista en TI", result.Data!.Resumen!.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);

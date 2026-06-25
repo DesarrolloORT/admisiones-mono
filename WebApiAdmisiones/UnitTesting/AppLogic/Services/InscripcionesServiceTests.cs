@@ -266,6 +266,16 @@ namespace UnitTesting.AppLogic.Services
                   "idInscripcion": 77,
                   "seniaInscripcion": 2500,
                   "fechaVencimientoPago": "2026-07-01T00:00:00",
+                  "carritosSenia": [
+                    {
+                      "idCarrito": "123|20|1|40|77",
+                      "senia": 2500
+                    },
+                    {
+                      "idCarrito": "123|20|1|40|78",
+                      "senia": 1200
+                    }
+                  ],
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista Programador",
@@ -322,6 +332,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(77, result.Data.IdInscripcion);
             Assert.Equal(2500, result.Data.SeniaInscripcion);
+            Assert.Equal(2, result.Data.CarritosSenia.Count);
+            Assert.Equal("123|20|1|40|77", result.Data.CarritosSenia[0].IdCarrito);
+            Assert.Equal(2500, result.Data.CarritosSenia[0].Senia);
+            Assert.Equal("123|20|1|40|78", result.Data.CarritosSenia[1].IdCarrito);
+            Assert.Equal(1200, result.Data.CarritosSenia[1].Senia);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
