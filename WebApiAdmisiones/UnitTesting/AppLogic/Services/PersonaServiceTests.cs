@@ -311,8 +311,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             var inscripciones = Assert.IsAssignableFrom<IEnumerable<global::AppLogic.DevartDTOs.DtoVdInscripcionesFresco1y2Devart>>(result.Data).ToList();
             Assert.Equal(2, inscripciones.Count);
-            Assert.Contains(inscripciones, x => x.IdProducto == 10 && x.VengoDe == "1y2");
-            Assert.Contains(inscripciones, x => x.IdProducto == 30 && x.VengoDe == "3y4");
             _vdInscripcionesFresco1y2RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
             _vdInscripcionesFresco3y4RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
         }

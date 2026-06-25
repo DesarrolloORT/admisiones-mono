@@ -160,12 +160,12 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerComienzos_ReturnsMappedItems()
         {
-            var repo = new Mock<IProcesoRepository>();
-            repo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(
+            var repo = new Mock<IVdProcesosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProcesosDisponibles(10)).Returns(
             [
-                new Proceso { IdProceso = 20, NombreProceso = "Marzo" }
+                new VdProcesosDisponibles1y2 { IdProceso = 20, NombreProceso = "Marzo" }
             ]);
-            _uowMock.Setup(u => u.Procesos).Returns(repo.Object);
+            _uowMock.Setup(u => u.VdProcesosDisponibles1y2s).Returns(repo.Object);
 
             var result = _service.ObtenerComienzos(10);
 
@@ -179,22 +179,24 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerCarreras_ReturnsMappedItems()
         {
-            var repo = new Mock<IProductoRepository>();
-            repo.Setup(r => r.GetProductosVigentes()).Returns(
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99)).Returns(
             [
-                new Producto
+                new VdProductosDisponibles1y2
                 {
                     IdProducto = 10,
-                    NombreProducto = "ATI",
                     NombreWebProducto = "ATI",
-                    NombreExtensoProducto = "Analista en TI",
                     IdNivelProducto = 2,
-                    NivelProducto = new NivelProducto { IdNivelProducto = 2, NombreNivelProducto = "Carrera" }
+                    NombreNivelProducto = "Carrera"
                 }
             ]);
-            _uowMock.Setup(u => u.Productos).Returns(repo.Object);
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
 
-            var result = _service.ObtenerCarreras();
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(new List<VdOfertasDisponibles3y4>());
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.ObtenerCarreras(99);
 
             Assert.True(result.Success);
             Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
@@ -203,6 +205,42 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("ATI", item.NombreProducto);
             Assert.Equal(2, item.IdNivelProducto);
             Assert.Equal("Carrera", item.NombreNivelProducto);
+            Assert.Null(item.IdEscuela);
+            Assert.Null(item.NombreEscuela);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel3o4_FromVistaWithEscuela()
+        {
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99)).Returns(new List<VdProductosDisponibles1y2>());
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
+
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
+            [
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 50,
+                    NombreWebProducto = "MBA",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion"
+                }
+            ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.ObtenerCarreras(99);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(50, item.IdProducto);
+            Assert.Equal("MBA", item.NombreProducto);
+            Assert.Equal(3, item.IdNivelProducto);
+            Assert.Equal("Postgrado", item.NombreNivelProducto);
+            Assert.Equal(7, item.IdEscuela);
+            Assert.Equal("Facultad de Administracion", item.NombreEscuela);
         }
 
         [Fact]
@@ -312,55 +350,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("CAT_TURNOS_02", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
             Assert.Empty(handler.Requests);
-        }
-
-        [Fact]
-        public async Task ObtenerBancos_WithSuccess_ReturnsMappedResponse()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
-                {
-                  "bancos": [
-                    {
-                      "idBanco": 10,
-                      "nombreBanco": "Banco Uno",
-                      "codigo": "B1",
-                      "activo": true
-                    }
-                  ],
-                  "totalCount": 1
-                }
-                """));
-            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
-
-            var result = await service.ObtenerBancos();
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal(1, result.Data!.TotalCount);
-            var banco = Assert.Single(result.Data.Bancos);
-            Assert.Equal(10, banco.IdBanco);
-            Assert.Equal("Banco Uno", banco.NombreBanco);
-            Assert.Equal("B1", banco.Codigo);
-            Assert.True(banco.Activo);
-            var request = Assert.Single(handler.Requests);
-            Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Contains("ORTSecure/Pagos/Bancos", request.RequestUri);
-        }
-
-        [Fact]
-        public async Task ObtenerBancos_WhenApiRejects_ReturnsFailure()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.BadRequest, "error bancos"));
-            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
-
-            var result = await service.ObtenerBancos();
-
-            Assert.False(result.Success);
-            Assert.Equal("BANCOS_GET_01", result.ErrorCode);
-            Assert.Equal(400, result.HttpCode);
-            Assert.Contains("error bancos", result.Message);
         }
 
         [Fact]

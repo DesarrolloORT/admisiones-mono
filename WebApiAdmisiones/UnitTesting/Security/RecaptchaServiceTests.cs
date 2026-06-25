@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using UnitTesting.AppLogic.Services;
 using WebApiAdmisiones.Security.Captcha;
 
@@ -8,12 +9,19 @@ namespace UnitTesting.Security
     [Collection(EnvironmentVariablesCollection.Name)]
     public class RecaptchaServiceTests
     {
+        private static readonly IConfiguration Configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Captcha:VerifyUrl"] = "https://www.google.com/recaptcha/api/siteverify"
+            })
+            .Build();
+
         [Fact]
         public async Task ValidarConScoreAsync_WithEmptyToken_ReturnsBadRequestAndDoesNotCallGoogle()
         {
             var handler = new StubHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK));
-            var service = new RecaptchaService(new HttpClient(handler));
+            var service = new RecaptchaService(new HttpClient(handler), Configuration);
 
             var result = await service.ValidarConScoreAsync(" ");
 
@@ -29,7 +37,7 @@ namespace UnitTesting.Security
             using var scope = new EnvironmentVariableScope(
                 ("RECAPTCHA_SECRET_KEY", null));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
-                new HttpResponseMessage(HttpStatusCode.OK))));
+                new HttpResponseMessage(HttpStatusCode.OK))), Configuration);
 
             var result = await service.ValidarConScoreAsync("captcha-token");
 
@@ -45,7 +53,7 @@ namespace UnitTesting.Security
                 ("RECAPTCHA_SECRET_KEY", "secret-key"));
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.9,"action":"login"}"""));
-            var service = new RecaptchaService(new HttpClient(handler));
+            var service = new RecaptchaService(new HttpClient(handler), Configuration);
 
             var result = await service.ValidarConScoreAsync("captcha-token", "login");
 
@@ -64,7 +72,7 @@ namespace UnitTesting.Security
             using var scope = new EnvironmentVariableScope(
                 ("RECAPTCHA_SECRET_KEY", "secret-key"));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.BadRequest, """{"error":"invalid"}"""))));
+                JsonResponse(HttpStatusCode.BadRequest, """{"error":"invalid"}"""))), Configuration);
 
             var result = await service.ValidarConScoreAsync("captcha-token");
 
@@ -79,7 +87,7 @@ namespace UnitTesting.Security
             using var scope = new EnvironmentVariableScope(
                 ("RECAPTCHA_SECRET_KEY", "secret-key"));
             var service = new RecaptchaService(new HttpClient(new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.9,"action":"registro"}"""))));
+                JsonResponse(HttpStatusCode.OK, """{"success":true,"score":0.9,"action":"registro"}"""))), Configuration);
 
             var result = await service.ValidarConScoreAsync("captcha-token", "login");
 

@@ -41,6 +41,7 @@ namespace DataAccess.DevartRepositories
                     && p.PermiteInteresadoProducto == "SI"
                     && p.ActivoWebProducto == "SI"
                     && (p.FechaCaducidadProducto == null || p.FechaCaducidadProducto >= today)
+                    && (p.IdNivelProducto == 1 || p.IdNivelProducto == 2)
                     && p.ProcesoProductos.Any(pp => pp.Proceso.HabilitadoInteresSitio == "SI")
                     && p.Paquetes.Any(pk =>
                         pk.SemestrePaquete != 99

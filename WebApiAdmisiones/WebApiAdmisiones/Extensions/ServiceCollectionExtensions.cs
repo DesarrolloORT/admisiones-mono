@@ -103,7 +103,10 @@ namespace WebApiAdmisiones.Extensions
 
                     connection.ConnectionRestored += (sender, args) =>
                     {
-                        logger.LogInformation("Redis connection restored: {EndPoint}", args.EndPoint);
+                        if (logger.IsEnabled(LogLevel.Information))
+                        {
+                            logger.LogInformation("Redis connection restored: {EndPoint}", args.EndPoint);
+                        }
                     };
 
                     connection.ErrorMessage += (sender, args) =>
@@ -111,15 +114,18 @@ namespace WebApiAdmisiones.Extensions
                         logger.LogError("Redis error: {Message}", args.Message);
                     };
 
-                    logger.LogInformation("Redis connection established successfully to {Endpoints}", 
-                        string.Join(", ", connection.GetEndPoints()));
+                    if (logger.IsEnabled(LogLevel.Information))
+                    {
+                        logger.LogInformation("Redis connection established successfully to {Endpoints}",
+                            string.Join(", ", connection.GetEndPoints()));
+                    }
 
                     return connection;
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to connect to Redis. Rate limiting will fail-open.");
-                    throw;
+                    throw new InvalidOperationException(
+                        "Failed to connect to Redis during multiplexer initialization.", ex);
                 }
             });
 
@@ -326,7 +332,7 @@ namespace WebApiAdmisiones.Extensions
                     {
                         context.HttpContext.Response.Headers["X-RateLimit-Reset"] = 
                             resetTime.Value.ToUnixTimeSeconds().ToString();
-                        context.HttpContext.Response.Headers["Retry-After"] = 
+                        context.HttpContext.Response.Headers.RetryAfter =
                             ((int)(resetTime.Value - DateTimeOffset.UtcNow).TotalSeconds).ToString();
                     }
 

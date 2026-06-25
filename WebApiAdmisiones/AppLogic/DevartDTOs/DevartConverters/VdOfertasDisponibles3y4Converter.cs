@@ -35,6 +35,9 @@ namespace AppLogic.DevartDTOs
 
             // Properties
             target.IdProducto = source.IdProducto;
+            target.NombreWebProducto = source.NombreWebProducto;
+            target.IdEscuela = source.IdEscuela;
+            target.NombreExtensoEscuela = source.NombreExtensoEscuela;
             target.IdComienzo = source.IdComienzo;
             target.FechaReferencia = source.FechaReferencia;
             target.IdMateria = source.IdMateria;
@@ -44,7 +47,9 @@ namespace AppLogic.DevartDTOs
             target.SemestrePaquete = source.SemestrePaquete;
             target.IdProceso = source.IdProceso;
             target.NombreProceso = source.NombreProceso;
-            target.NombreOferta = source.NombreOferta;
+            target.DescripcionOferta = source.DescripcionOferta;
+            target.IdNivelProducto = source.IdNivelProducto;
+            target.NombreNivelProducto = source.NombreNivelProducto;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -61,6 +66,9 @@ namespace AppLogic.DevartDTOs
 
             // Properties
             target.IdProducto = source.IdProducto;
+            target.NombreWebProducto = source.NombreWebProducto;
+            target.IdEscuela = source.IdEscuela;
+            target.NombreExtensoEscuela = source.NombreExtensoEscuela;
             target.IdComienzo = source.IdComienzo;
             target.FechaReferencia = source.FechaReferencia;
             target.IdMateria = source.IdMateria;
@@ -70,7 +78,9 @@ namespace AppLogic.DevartDTOs
             target.SemestrePaquete = source.SemestrePaquete;
             target.IdProceso = source.IdProceso;
             target.NombreProceso = source.NombreProceso;
-            target.NombreOferta = source.NombreOferta;
+            target.DescripcionOferta = source.DescripcionOferta;
+            target.IdNivelProducto = source.IdNivelProducto;
+            target.NombreNivelProducto = source.NombreNivelProducto;
 
             // User-defined partial method
             OnEntityCreating(source, target);

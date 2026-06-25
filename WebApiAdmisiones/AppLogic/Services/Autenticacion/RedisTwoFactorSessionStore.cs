@@ -64,11 +64,9 @@ public class RedisTwoFactorSessionStore : ITwoFactorSessionStore
     public Task<TimeSpan?> GetTtlAsync(string sessionId)
         => _db.KeyTimeToLiveAsync($"{KeyPrefix}{sessionId}");
 
+    // En Redis, actualizar es la misma operación que guardar (SET sobrescribe la clave).
     public Task UpdateAsync(string sessionId, TwoFactorSession session, TimeSpan ttl)
-    {
-        var json = JsonSerializer.Serialize(session, JsonOptions);
-        return _db.StringSetAsync($"{KeyPrefix}{sessionId}", json, ttl);
-    }
+        => SaveAsync(sessionId, session, ttl);
 
     public Task DeleteAsync(string sessionId)
         => _db.KeyDeleteAsync($"{KeyPrefix}{sessionId}");

@@ -2,6 +2,8 @@
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
+namespace WebApiAdmisiones.Extensions;
+
 public class AuthDescriptionOperationFilter : IOperationFilter
 {
 

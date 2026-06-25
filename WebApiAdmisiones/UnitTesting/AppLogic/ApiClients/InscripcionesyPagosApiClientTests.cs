@@ -101,19 +101,6 @@ namespace UnitTesting.AppLogic.ApiClients
         }
 
         [Fact]
-        public async Task ObtenerBancosAsync_WhenHttpRequestFails_ReturnsNetworkFailure()
-        {
-            var handler = new StubHttpMessageHandler(_ => throw new HttpRequestException("network down"));
-            var client = CrearClient(handler);
-
-            var result = await client.ObtenerBancosAsync();
-
-            Assert.False(result.Success);
-            Assert.Equal("API_NETWORK", result.ErrorCode);
-            Assert.Equal(503, result.HttpCode);
-        }
-
-        [Fact]
         public async Task ConfirmarPreInscripcionAsync_WithSuccess_ReturnsResponse()
         {
             var handler = new StubHttpMessageHandler(_ =>

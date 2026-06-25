@@ -12,16 +12,14 @@ namespace UnitTesting.AppLogic.Services
     {
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
-        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly BecasService _service;
 
         public BecasServiceTests()
         {
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
-            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new BecasService(_uowFactoryMock.Object, _dbConnectionContextMock.Object);
+            _service = new BecasService(_uowFactoryMock.Object);
         }
 
         [Fact]

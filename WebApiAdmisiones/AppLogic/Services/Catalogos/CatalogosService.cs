@@ -132,17 +132,22 @@ namespace AppLogic.Services.Catalogos
             return Task.FromResult(ObtenerPaisesEstadosCiudades());
         }
 
-        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras()
+        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Productos.GetProductosVigentes();
-            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(entidades.Select(CarrerasMapper.ToAdmisionesDto), nameof(ObtenerCarreras));
+
+            var nivel12 = uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona)
+                .Select(CarrerasMapper.ToAdmisionesDto);
+
+            var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(CarrerasMapper.ToAdmisionesDto);
+
+            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(nivel12.Concat(nivel34), nameof(ObtenerCarreras));
         }
 
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.Procesos.GetProcesosHabilitadosPorProducto(idCarrera);
+            var entidades = uow.VdProcesosDisponibles1y2s.GetProcesosDisponibles(idCarrera);
             return OperationResult<IEnumerable<DtoComienzoResponse>>.Ok(entidades.Select(ComienzosMapper.ToAdmisionesDto), nameof(ObtenerComienzos));
         }
 
@@ -236,56 +241,11 @@ namespace AppLogic.Services.Catalogos
             return OperationResult<List<OfertaInscripcionDto>>.Ok(resultadoOfertas.Data, nameof(ObtenerTurnos));
         }
 
-        public async Task<OperationResult<BancosResponseDto>> ObtenerBancos()
+        public OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos()
         {
-            const string methodName = nameof(ObtenerBancos);
-
-            if (_inscripcionesyPagosApiClient == null)
-            {
-                return OperationResult<BancosResponseDto>.IsFailed(
-                    "CAT_BAN_01",
-                    methodName,
-                    "Cliente de Inscripciones y Pagos no configurado.",
-                    500);
-            }
-
-            var bancosResult = await _inscripcionesyPagosApiClient.ObtenerBancosAsync();
-            if (!bancosResult.Success)
-            {
-                return OperationResult<BancosResponseDto>.IsFailed(
-                    bancosResult.ErrorCode,
-                    methodName,
-                    bancosResult.Message,
-                    bancosResult.HttpCode);
-            }
-
-            if (bancosResult.Data == null)
-            {
-                return OperationResult<BancosResponseDto>.IsFailed(
-                    "CAT_BAN_02",
-                    methodName,
-                    "La API interna no devolvio datos de bancos.",
-                    502);
-            }
-
-            return OperationResult<BancosResponseDto>.Ok(MapearBancos(bancosResult.Data), methodName);
-        }
-
-        private static BancosResponseDto MapearBancos(BancosResponse source)
-        {
-            return new BancosResponseDto
-            {
-                TotalCount = source.TotalCount,
-                Bancos = source.Bancos
-                    .Select(b => new AppLogic.DTOs.BancoDto
-                    {
-                        IdBanco = b.IdBanco,
-                        NombreBanco = b.NombreBanco,
-                        Codigo = b.Codigo,
-                        Activo = b.Activo
-                    })
-                    .ToList()
-            };
+            using var uow = _uowFactory.Create();
+            var entidades = uow.Bancos.GetAllHabilitados();
+            return OperationResult<IEnumerable<DtoBancoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerBancos));
         }
 
         public OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado)
@@ -294,129 +254,6 @@ namespace AppLogic.Services.Catalogos
             var entidades = uow.Empresas.GetInstituciones(codigoPais, codigoEstado);
             return OperationResult<IEnumerable<DtoEmpresaDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerInstituciones));
         }
-
-        //public OperationResult<IEnumerable<DtoProductoBeca>> ObtenerProductosBeca(long codigoPersona)
-        //{
-        //    using var uow = _uowFactory.Create();
-
-        //    // 1. Inscripciones realizadas (T_INSCRIPTO)
-        //    var realizadas = uow.Inscriptos.GetInscripcionesRealizadas(codigoPersona)
-        //        .Select(i => new DtoProductoBeca
-        //        {
-        //            FechaInscripcion = i.FechaInscr ?? DateTime.MinValue,
-        //            IdProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdProducto ?? 0,
-        //            IdNivelProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.IdNivelProducto ?? 0,
-        //            NombreProducto = i.Oferta?.Supraoferta?.Paquete?.Producto?.NombreExtensoProducto,
-        //            NombreComienzo = i.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-        //            NombreTurno = i.Oferta?.Turno?.NombreTurno,
-        //            IdProceso = i.Oferta?.Supraoferta?.Comienzo?.ProcesoComienzos?
-        //                                   .FirstOrDefault()?.IdProceso ?? 0,
-        //        })
-        //        .ToList();
-
-        //    var pendientes = ConstruirPendientesProductosBeca(uow, codigoPersona);
-
-        //    // 3. Productos con interés activo (sin inscripción pendiente en workflow)
-        //    var intereses = uow.Productos.GetProductosConInteresActivo(codigoPersona)
-        //        .Select(p => new DtoProductoBeca
-        //        {
-        //            FechaInscripcion = DateTime.MinValue,
-        //            IdProducto = p.IdProducto,
-        //            IdNivelProducto = p.IdNivelProducto,
-        //            NombreProducto = p.NombreExtensoProducto,
-        //            NombreComienzo = p.ProcesoProductos?.FirstOrDefault()?.Proceso?.NombreProceso,
-        //            NombreTurno = null,
-        //            IdProceso = p.ProcesoProductos?.FirstOrDefault()?.IdProceso ?? 0,
-        //        })
-        //        .ToList();
-
-        //    var todos = realizadas.Concat(pendientes).Concat(intereses)
-        //        .GroupBy(b => b.IdProducto)
-        //        .Select(g => g.OrderBy(b => b.FechaInscripcion).First())
-        //        .ToList();
-
-        //    return OperationResult<IEnumerable<DtoProductoBeca>>.Ok(todos, nameof(ObtenerProductosBeca));
-        //}
-
-
-
-        //private static List<DtoProductoBeca> ConstruirPendientesProductosBeca(IUnitOfWork uow, long codigoPersona)
-        //{
-        //    var instancias = uow.InstanciaWorkflows.GetInscripcionesPendientes(codigoPersona);
-        //    var instanciaIds = instancias.Select(iw => iw.IdInstanciaWorkflow).ToList();
-        //    var inscripcionesPorInstanciaId = uow.InstWorkflowInscripcions
-        //        .GetByInstanciaIds(instanciaIds)
-        //        .ToDictionary(iwi => iwi.IdInstanciaWorkflow);
-
-        //    var pendientesConProducto = instanciass
-        //        .Where(iw => inscripcionesPorInstanciaId.ContainsKey(iw.IdInstanciaWorkflow)
-        //            && inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto.HasValue)
-        //        .ToList();
-
-        //    var productoIds = pendientesConProducto
-        //        .Select(iw => (long)inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdProducto!.Value)
-        //        .Distinct()
-        //        .ToList();
-
-        //    var productosPorId = uow.Productos
-        //        .GetByKeys(productoIds)
-        //        .ToDictionary(p => p.IdProducto);
-
-        //    var comienzoIds = pendientesConProducto
-        //        .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdComienzo)
-        //        .Where(id => id.HasValue)
-        //        .Select(id => (long)id!.Value)
-        //        .Distinct()
-        //        .ToList();
-
-        //    var comienzosPorId = uow.Comienzos
-        //        .GetByKeys(comienzoIds)
-        //        .ToDictionary(c => c.IdComienzo);
-
-        //    var turnoIds = pendientesConProducto
-        //        .Select(iw => inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow].IdTurno)
-        //        .Where(id => id.HasValue)
-        //        .Select(id => (long)id!.Value)
-        //        .Distinct()
-        //        .ToList();
-
-        //    var turnosPorId = uow.Turnos
-        //        .GetByKeys(turnoIds)
-        //        .ToDictionary(t => t.IdTurno);
-
-        //    return pendientesConProducto
-        //        .Select(iw =>
-        //        {
-        //            var inscripcion = inscripcionesPorInstanciaId[iw.IdInstanciaWorkflow];
-        //            var idProducto = (long)inscripcion.IdProducto!.Value;
-
-        //            productosPorId.TryGetValue(idProducto, out var producto);
-
-        //            BusinessLogic.Entities.Comienzo? comienzo = null;
-        //            if (inscripcion.IdComienzo.HasValue)
-        //            {
-        //                comienzosPorId.TryGetValue((long)inscripcion.IdComienzo.Value, out comienzo);
-        //            }
-
-        //            BusinessLogic.Entities.Turno? turno = null;
-        //            if (inscripcion.IdTurno.HasValue)
-        //            {
-        //                turnosPorId.TryGetValue((long)inscripcion.IdTurno.Value, out turno);
-        //            }
-
-        //            return new DtoProductoBeca
-        //            {
-        //                FechaInscripcion = iw.FechaInicialInstanciaWf ?? DateTime.MinValue,
-        //                IdProducto = idProducto,
-        //                IdNivelProducto = producto?.IdNivelProducto ?? 0,
-        //                NombreProducto = producto?.NombreExtensoProducto,
-        //                NombreComienzo = comienzo?.NombreComienzo,
-        //                NombreTurno = turno?.NombreTurno,
-        //                IdProceso = (long)iw.IdProceso,
-        //            };
-        //        })
-        //        .ToList();
-        //}
 
         public OperationResult<IEnumerable<DtoTipoDescuentoDevart>> ObtenerFondosDeBecaPorProducto(long idProducto)
         {

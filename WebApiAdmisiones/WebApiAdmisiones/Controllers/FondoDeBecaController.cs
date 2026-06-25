@@ -19,67 +19,6 @@ namespace WebApiAdmisiones.Controllers
         ICurrentUserService currentUser)
         : ApiBaseController<FondoDeBecaController>(logger, currentUser)
     {
-        #region TIPOS DECLARACIÓN JURADA
-
-        /// <summary>
-        /// Devuelve todos los tipos de parentesco disponibles.
-        /// </summary>
-        /// <returns>Colección de tipos de parentesco.</returns>
-        /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        //[HttpGet("TiposParentesco")]
-        //public IActionResult GetTiposParentesco()
-        //{
-        //    var result = fondoDeBecaServices.ObtenerTiposParentesco();
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Devuelve los tipos de egreso activos, ordenados por campo Orden.
-        ///// </summary>
-        ///// <returns>Colección de tipos de egreso activos.</returns>
-        ///// <response code="200">Consulta realizada correctamente.</response>
-        ///// <response code="400">Error interno del servidor.</response>
-        //[HttpGet("TiposEgreso")]
-        //public IActionResult GetTiposEgreso()
-        //{
-        //    var result = fondoDeBecaServices.ObtenerTiposEgreso();
-        //    return ValidateResponse(result);
-        //}
-
-        ///// <summary>
-        ///// Devuelve todos los tipos de vivienda disponibles.
-        ///// </summary>
-        ///// <returns>Colección de tipos de vivienda.</returns>
-        ///// <response code="200">Consulta realizada correctamente.</response>
-        ///// <response code="400">Error interno del servidor.</response>
-        //[HttpGet("TiposDeVivienda")]
-        //public IActionResult GetTiposVivienda()
-        //{
-        //    var result = fondoDeBecaServices.ObtenerTiposVivienda();
-        //    return ValidateResponse(result);
-        //}
-
-        #endregion
-
-        #region UNIVERSIDADES
-
-        /// <summary>
-        /// Devuelve las universidades disponibles para el país indicado.
-        /// </summary>
-        /// <param name="codigoPais">Código del país. Por defecto devuelve Uruguay (1).</param>
-        /// <returns>Colección de universidades para el país indicado.</returns>
-        /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        //[HttpGet("Universidades")]
-        //public IActionResult GetUniversidades([FromQuery] long codigoPais = 1)
-        //{
-        //    var result = fondoDeBecaServices.ObtenerUniversidades(codigoPais);
-        //    return ValidateResponse(result);
-        //}
-
-        #endregion
-
         #region DECLARACIÓN JURADA
 
         /// <summary>

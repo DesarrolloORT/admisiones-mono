@@ -122,8 +122,23 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_WhenReglamentoNotAccepted_ReturnsBadRequest()
+        public async Task ConfirmarPreInscripcion_WhenReglamentoNotAcceptedAndNoPriorAcceptance_ReturnsBadRequest()
         {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.GetByPersona(123))
+                .Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
             var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
@@ -133,6 +148,56 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("INS_CPI_02", result.ErrorCode);
             Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenReglamentoNotAcceptedButHasPriorAcceptance_Confirms()
+        {
+            AceptacionReglamentoEst? aceptacionAgregada = null;
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
+                {
+                  "confirmada": true,
+                  "idInscripcion": 80
+                }
+                """);
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
+                .Returns(1000);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.GetByPersona(123))
+                .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 500, CodigoPersona = 123 });
+            aceptacionRepo
+                .Setup(r => r.Add(It.IsAny<AceptacionReglamentoEst>()))
+                .Callback<AceptacionReglamentoEst>(a => aceptacionAgregada = a);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetByKey(80)).Returns(new Inscripto { IdInscripto = 80 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = false,
+                IdOfertaSeleccionada = 10
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.NotNull(aceptacionAgregada);
+            Assert.Equal(1000, aceptacionAgregada!.IdAceptacionReglamentoEst);
         }
 
         [Fact]

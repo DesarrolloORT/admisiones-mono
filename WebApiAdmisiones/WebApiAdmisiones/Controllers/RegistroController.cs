@@ -223,7 +223,7 @@ namespace WebApiAdmisiones.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogWarning(
+                _logger.LogWarning(
                     ex,
                     "No se pudieron guardar en Redis las imagenes reconocidas para {TipoDocumento}:{Documento}.",
                     tipoDocumento,

@@ -26,8 +26,26 @@ namespace DataAccess.DevartRepositories
                 .ToList()
                 .GroupBy(x => new { x.IdOferta, x.IdTurno })
                 .Select(g => g.First())
-                .OrderBy(x => x.IdTurno)
-                .ThenBy(x => x.IdOferta)
+                .OrderBy(x => x.FechaReferencia)
+                .ThenBy(x => x.DescripcionOferta)
+                .ToList();
+        }
+
+        public virtual ICollection<BusinessLogic.Entities.VdOfertasDisponibles3y4> GetProductosDisponibles()
+        {
+            return objectSet
+                .Where(x => x.IdProducto != null
+                    && ((x.ConSeminarios != null && x.ConSeminarios != "SI")
+                        || x.FechaReferencia == objectSet
+                            .Where(x2 => x2.IdProducto == x.IdProducto
+                                && x2.IdMateria == x.IdMateria
+                                && x2.ConSeminarios == "SI")
+                            .Min(x2 => x2.FechaReferencia)))
+                .ToList()
+                .GroupBy(x => x.IdProducto)
+                .Select(g => g.First())
+                .OrderBy(x => x.NombreExtensoEscuela)
+                .ThenBy(x => x.NombreWebProducto)
                 .ToList();
         }
     }

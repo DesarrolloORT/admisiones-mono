@@ -34,9 +34,6 @@ namespace AppLogic.DevartDTOs
             var target = new DtoVdInscripcionesFresco3y4Devart();
 
             // Properties
-            target.CodigoPersona = source.CodigoPersona;
-            target.FechaInscripcion = source.FechaInscripcion;
-            target.UsuarioInscripcion = source.UsuarioInscripcion;
             target.IdTurno = source.IdTurno;
             target.IdProducto = source.IdProducto;
             target.IdComienzo = source.IdComienzo;
@@ -49,7 +46,6 @@ namespace AppLogic.DevartDTOs
             target.FechaReferencia = source.FechaReferencia;
             target.IdInscripto = source.IdInscripto;
             target.EstadoInscripcion = source.EstadoInscripcion;
-            target.VengoDe = source.VengoDe;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -65,9 +61,6 @@ namespace AppLogic.DevartDTOs
             var target = new BusinessLogic.Entities.VdInscripcionesFresco3y4();
 
             // Properties
-            target.CodigoPersona = source.CodigoPersona;
-            target.FechaInscripcion = source.FechaInscripcion;
-            target.UsuarioInscripcion = source.UsuarioInscripcion;
             target.IdTurno = source.IdTurno;
             target.IdProducto = source.IdProducto;
             target.IdComienzo = source.IdComienzo;
@@ -80,7 +73,6 @@ namespace AppLogic.DevartDTOs
             target.FechaReferencia = source.FechaReferencia;
             target.IdInscripto = source.IdInscripto;
             target.EstadoInscripcion = source.EstadoInscripcion;
-            target.VengoDe = source.VengoDe;
 
             // User-defined partial method
             OnEntityCreating(source, target);

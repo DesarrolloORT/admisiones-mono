@@ -5,15 +5,16 @@ namespace WebApiAdmisiones.Security.Captcha
 {
     public class RecaptchaService : IRecaptchaService
     {
-        private const string VerifyUrl = "https://www.google.com/recaptcha/api/siteverify";
-        private const string SecretKeyEnvironmentVariable = "RECAPTCHA_SECRET_KEY";
-
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public RecaptchaService(HttpClient httpClient)
+        public RecaptchaService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
+            _configuration = configuration;
         }
+
+        private const string SecretKeyEnvironmentVariable = "RECAPTCHA_SECRET_KEY";
 
         public async Task<OperationResult<double>> ValidarConScoreAsync(string token, string expectedAction = "login")
         {
@@ -28,6 +29,8 @@ namespace WebApiAdmisiones.Security.Captcha
             }
 
             var secretKey = Environment.GetEnvironmentVariable(SecretKeyEnvironmentVariable);
+            var verifyUrl = _configuration.GetValue<string>("Authentication:Captcha:VerifyUrl");
+
             if (string.IsNullOrWhiteSpace(secretKey))
             {
                 return OperationResult<double>.IsFailed(
@@ -46,7 +49,7 @@ namespace WebApiAdmisiones.Security.Captcha
                     ["response"] = token
                 });
 
-                var response = await _httpClient.PostAsync(VerifyUrl, content);
+                var response = await _httpClient.PostAsync(verifyUrl, content);
                 var body = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)

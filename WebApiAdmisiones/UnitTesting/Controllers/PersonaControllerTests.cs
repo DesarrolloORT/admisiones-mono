@@ -84,7 +84,7 @@ namespace UnitTesting.Controllers
         {
             var inscripciones = new List<DtoVdInscripcionesFresco1y2Devart>
             {
-                new() { CodigoPersona = 123, IdProducto = 10 }
+                new() { IdProducto = 10 }
             };
 
             _currentUserMock.Setup(c => c.GetUserId()).Returns(123);

@@ -73,7 +73,7 @@ public class LoginFlowService : ILoginFlowService
         var failWindowMinutes = _configuration.GetValue<int?>("Authentication:Login:FailedAttemptWindowMinutes") ?? 15;
         var failWindow = TimeSpan.FromMinutes(failWindowMinutes);
 
-        var normalizedDoc = request.Documento
+        var normalizedDoc = request.Documento!
             .Replace(".", "").Replace("-", "").Replace(" ", "")
             .Trim().ToLowerInvariant();
         var failUserKey = $"login-fail-cred-user:{normalizedDoc}";
@@ -106,8 +106,8 @@ public class LoginFlowService : ILoginFlowService
         }
 
         var result = await _authService.AutenticarUsuarioLDAPAsync(
-            request.TipoDocumento,
-            request.Documento,
+            request.TipoDocumento!,
+            request.Documento!,
             request.Password);
 
         if (!result.Success || result.Data == null)
@@ -153,10 +153,13 @@ public class LoginFlowService : ILoginFlowService
                 default!));
         }
 
-        _logger.LogInformation(
-            "Score reCAPTCHA bajo ({Score}) para {Doc}. Iniciando 2FA.",
-            recaptchaScore,
-            request.Documento);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "Score reCAPTCHA bajo ({Score}) para {Doc}. Iniciando 2FA.",
+                recaptchaScore,
+                request.Documento);
+        }
 
         var twoFactorResult = await _dosFactoresService.IniciarAsync(result.Data, result.Data.Persona.Email);
         if (!twoFactorResult.Success)

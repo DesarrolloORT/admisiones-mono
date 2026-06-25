@@ -39,7 +39,7 @@ namespace WebApiAdmisiones.Security.Cache
         /// <returns>Valor desde cache o desde la función factory</returns>
         public async Task<T?> GetOrSetAsync<T>(
             string cacheKey,
-            Func<Task<T>> factory,
+            Func<Task<T?>> factory,
             TimeSpan ttl) where T : class
         {
             try
@@ -60,7 +60,10 @@ namespace WebApiAdmisiones.Security.Cache
                 }
 
                 // Cache MISS - Ejecutar factory
-                _logger.LogInformation("❄️  Cache MISS: {CacheKey}. Fetching from source...", cacheKey);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("❄️  Cache MISS: {CacheKey}. Fetching from source...", cacheKey);
+                }
 
                 var value = await factory();
 
@@ -70,11 +73,14 @@ namespace WebApiAdmisiones.Security.Cache
                     var serialized = JsonSerializer.Serialize(value, _jsonOptions);
                     await db.StringSetAsync(cacheKey, serialized, ttl);
 
-                    _logger.LogInformation(
-                        "💾 Cached: {CacheKey} (TTL: {TTL}, Size: {Size} bytes)",
-                        cacheKey,
-                        ttl,
-                        serialized.Length);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation(
+                            "💾 Cached: {CacheKey} (TTL: {TTL}, Size: {Size} bytes)",
+                            cacheKey,
+                            ttl,
+                            serialized.Length);
+                    }
                 }
 
                 return value;
@@ -121,7 +127,7 @@ namespace WebApiAdmisiones.Security.Cache
                 var db = _redis.GetDatabase();
                 var deleted = await db.KeyDeleteAsync(cacheKey);
 
-                if (deleted)
+                if (deleted && _logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation("🗑️  Cache invalidated: {CacheKey}", cacheKey);
                 }

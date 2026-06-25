@@ -25,6 +25,16 @@ namespace AppLogic.DevartDTOs
 
         public long? IdProducto { get; set; }
 
+        [StringLength(1000)]
+        public string? NombreWebProducto { get; set; }
+
+        [Required()]
+        public long IdEscuela { get; set; }
+
+        [StringLength(60)]
+        [Required()]
+        public string NombreExtensoEscuela { get; set; }
+
         [Required()]
         public long IdComienzo { get; set; }
 
@@ -51,8 +61,15 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public string NombreProceso { get; set; }
 
+        [StringLength(1000)]
+        public string? DescripcionOferta { get; set; }
+
+        [Required()]
+        public long IdNivelProducto { get; set; }
+
         [StringLength(30)]
-        public string? NombreOferta { get; set; }
+        [Required()]
+        public string NombreNivelProducto { get; set; }
 
         #endregion
     }

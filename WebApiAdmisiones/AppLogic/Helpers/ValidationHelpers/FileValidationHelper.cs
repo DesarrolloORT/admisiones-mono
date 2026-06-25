@@ -34,6 +34,8 @@ namespace AppLogic.Helpers.ValidationHelpers
             "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
         };
 
+        private const string JpegExtension = ".jpeg";
+
         // Extensiones permitidas para validación de contenido (PDF, JPG, JPEG)
         private static readonly string[] DefaultContentValidationExtensions = { ".pdf", ".jpg" };
 
@@ -54,7 +56,7 @@ namespace AppLogic.Helpers.ValidationHelpers
                     new byte[] { 0xFF, 0xD8, 0xFF, 0xE2 }  // Canon
                 } 
             },
-            { ".jpeg", new List<byte[]> 
+            { JpegExtension, new List<byte[]> 
                 { 
                     new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 },
                     new byte[] { 0xFF, 0xD8, 0xFF, 0xE1 },
@@ -112,7 +114,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         {
             { ".pdf", 10 * 1024 * 1024 },    // 10 MB para PDFs
             { ".jpg", 5 * 1024 * 1024 },     // 5 MB para imágenes
-            { ".jpeg", 5 * 1024 * 1024 },    // 5 MB para imágenes
+            { JpegExtension, 5 * 1024 * 1024 },    // 5 MB para imágenes
             { ".png", 5 * 1024 * 1024 },     // 5 MB para imágenes
             { ".doc", 10 * 1024 * 1024 },    // 10 MB para documentos
             { ".docx", 10 * 1024 * 1024 },   // 10 MB para documentos
@@ -367,7 +369,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             string fileName,
             string originMethod)
         {
-            var allowedExtensions = new List<string> { ".jpg", ".jpeg", ".png" };
+            var allowedExtensions = new List<string> { ".jpg", JpegExtension, ".png" };
             return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
         }
 
@@ -383,7 +385,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             string fileName,
             string originMethod)
         {
-            var allowedExtensions = new List<string> { ".pdf", ".jpg", ".jpeg", ".png" };
+            var allowedExtensions = new List<string> { ".pdf", ".jpg", JpegExtension, ".png" };
             return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
         }
 
@@ -411,7 +413,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             string fileName,
             string originMethod)
         {
-            var allowedExtensions = new List<string> { ".pdf", ".jpg", ".jpeg", ".png" };
+            var allowedExtensions = new List<string> { ".pdf", ".jpg", JpegExtension, ".png" };
             return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
         }
 
@@ -822,7 +824,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
         public static OperationResult<string> SanitizeDeclaracionJuradaAttachmentName(string fileName, string originMethod)
         {
-            return SanitizeFileName(fileName, new List<string> { ".pdf", ".jpg", ".jpeg", ".png" }, originMethod);
+            return SanitizeFileName(fileName, new List<string> { ".pdf", ".jpg", JpegExtension, ".png" }, originMethod);
         }
     }
 }

@@ -364,15 +364,37 @@ namespace AppLogic.Services.Inscripciones
             var esNueva = encuesta == null;
             encuesta ??= EncuestaInicialAdmisionHelper.CrearEncuestaInicial(_dbConnectionContext, persona, codigoPersona);
 
+            var idComienzoResult = ResolverIdComienzoEncuesta(uow, request, encuesta);
+            if (!idComienzoResult.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    idComienzoResult.ErrorCode,
+                    nameof(GuardarEncuestaInicial),
+                    idComienzoResult.Message,
+                    idComienzoResult.HttpCode);
+            }
+
+            EncuestaInicialAdmisionHelper.AplicarRequestAEncuesta(encuesta, request, persona, idComienzoResult.Data);
+            var actualizaTrabajaActualmente = AplicarTrabajaActualmente(persona, request);
+
+            return PersistirEncuestaInicial(uow, persona, encuesta, request, codigoPersona, esNueva, actualizaTrabajaActualmente);
+        }
+
+        private static OperationResult<long?> ResolverIdComienzoEncuesta(
+            IUnitOfWork uow,
+            GuardarEncuestaInicialRequest request,
+            BusinessLogic.Entities.EncuestaIniAdmision encuesta)
+        {
             var idProducto = request.IdProducto ?? encuesta.IdProducto;
             var idProceso = request.IdProceso ?? encuesta.IdProceso;
             long? idComienzo = encuesta.IdComienzo;
+
             if (idProducto.HasValue && idProceso.HasValue)
             {
                 var idComienzoResult = EncuestaInicialValidationHelper.ObtenerIdComienzoValido(uow, idProducto.Value, idProceso.Value, nameof(GuardarEncuestaInicial));
                 if (!idComienzoResult.Success)
                 {
-                    return OperationResult<bool>.IsFailed(
+                    return OperationResult<long?>.IsFailed(
                         idComienzoResult.ErrorCode,
                         nameof(GuardarEncuestaInicial),
                         idComienzoResult.Message,
@@ -382,9 +404,18 @@ namespace AppLogic.Services.Inscripciones
                 idComienzo = idComienzoResult.Data;
             }
 
-            EncuestaInicialAdmisionHelper.AplicarRequestAEncuesta(encuesta, request, persona, idComienzo);
-            var actualizaTrabajaActualmente = AplicarTrabajaActualmente(persona, request);
+            return OperationResult<long?>.Ok(idComienzo, nameof(GuardarEncuestaInicial));
+        }
 
+        private OperationResult<bool> PersistirEncuestaInicial(
+            IUnitOfWork uow,
+            BusinessLogic.Entities.Persona persona,
+            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
+            GuardarEncuestaInicialRequest request,
+            long codigoPersona,
+            bool esNueva,
+            bool actualizaTrabajaActualmente)
+        {
             uow.BeginTransaction();
             try
             {
@@ -401,52 +432,11 @@ namespace AppLogic.Services.Inscripciones
 
                 uow.Save();
 
-                var completitud = EncuestaInicialValidationHelper.ResolverCompletitud(uow, encuesta, persona, codigoPersona, nameof(GuardarEncuestaInicial));
-                if (!completitud.Success)
+                var finalizacion = FinalizarEncuesta(uow, persona, encuesta, codigoPersona);
+                if (!finalizacion.Success)
                 {
                     uow.Rollback();
-                    return OperationResult<bool>.IsFailed(
-                        completitud.ErrorCode,
-                        nameof(GuardarEncuestaInicial),
-                        completitud.Message,
-                        completitud.HttpCode);
-                }
-
-                encuesta.EstadoEncuestaIniAdmision = completitud.Data
-                    ? EncuestaInicialAdmisionHelper.EstadoDefinitivo
-                    : EncuestaInicialAdmisionHelper.EstadoTemporal;
-                if (encuesta.IdProceso.HasValue && encuesta.IdProducto.HasValue)
-                {
-                    var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
-                    if (!fechaVencimientoResult.Success)
-                    {
-                        uow.Rollback();
-                        return OperationResult<bool>.IsFailed(
-                            fechaVencimientoResult.ErrorCode,
-                            nameof(GuardarEncuestaInicial),
-                            fechaVencimientoResult.Message,
-                            fechaVencimientoResult.HttpCode);
-                    }
-
-                    encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
-                }
-
-                if (completitud.Data)
-                {
-                    var sincronizacionBachillerato = SincronizarBachilleratoPersona(
-                        uow,
-                        encuesta,
-                        codigoPersona,
-                        nameof(GuardarEncuestaInicial));
-                    if (!sincronizacionBachillerato.Success)
-                    {
-                        uow.Rollback();
-                        return OperationResult<bool>.IsFailed(
-                            sincronizacionBachillerato.ErrorCode,
-                            nameof(GuardarEncuestaInicial),
-                            sincronizacionBachillerato.Message,
-                            sincronizacionBachillerato.HttpCode);
-                    }
+                    return finalizacion;
                 }
 
                 if (!esNueva)
@@ -462,6 +452,61 @@ namespace AppLogic.Services.Inscripciones
                 uow.Rollback();
                 throw;
             }
+        }
+
+        private OperationResult<bool> FinalizarEncuesta(
+            IUnitOfWork uow,
+            BusinessLogic.Entities.Persona persona,
+            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
+            long codigoPersona)
+        {
+            var completitud = EncuestaInicialValidationHelper.ResolverCompletitud(uow, encuesta, persona, codigoPersona, nameof(GuardarEncuestaInicial));
+            if (!completitud.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    completitud.ErrorCode,
+                    nameof(GuardarEncuestaInicial),
+                    completitud.Message,
+                    completitud.HttpCode);
+            }
+
+            encuesta.EstadoEncuestaIniAdmision = completitud.Data
+                ? EncuestaInicialAdmisionHelper.EstadoDefinitivo
+                : EncuestaInicialAdmisionHelper.EstadoTemporal;
+
+            if (encuesta.IdProceso.HasValue && encuesta.IdProducto.HasValue)
+            {
+                var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
+                if (!fechaVencimientoResult.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        fechaVencimientoResult.ErrorCode,
+                        nameof(GuardarEncuestaInicial),
+                        fechaVencimientoResult.Message,
+                        fechaVencimientoResult.HttpCode);
+                }
+
+                encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
+            }
+
+            if (completitud.Data)
+            {
+                var sincronizacionBachillerato = SincronizarBachilleratoPersona(
+                    uow,
+                    encuesta,
+                    codigoPersona,
+                    nameof(GuardarEncuestaInicial));
+                if (!sincronizacionBachillerato.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        sincronizacionBachillerato.ErrorCode,
+                        nameof(GuardarEncuestaInicial),
+                        sincronizacionBachillerato.Message,
+                        sincronizacionBachillerato.HttpCode);
+                }
+            }
+
+            return OperationResult<bool>.Ok(completitud.Data, nameof(GuardarEncuestaInicial));
         }
 
         private static bool AplicarTrabajaActualmente(BusinessLogic.Entities.Persona persona, GuardarEncuestaInicialRequest request)
@@ -661,6 +706,7 @@ namespace AppLogic.Services.Inscripciones
                 codigoPersona,
                 contexto.IdProducto,
                 contexto.IdComienzo,
+                request.AceptoReglamento,
                 methodName);
             if (!aceptacion.Success)
             {

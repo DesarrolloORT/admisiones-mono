@@ -17,6 +17,8 @@ namespace AppLogic.Helpers.ValidationHelpers
             long? CodigoTitulo,
             long UltimoAnioSexto);
 
+        private sealed record TituloAnioResuelto(long? CodigoTitulo, long UltimoAnioSexto);
+
         public static OperationResult<bool> ValidarConsistenciaParcial(
             IUnitOfWork uow,
             GuardarEncuestaInicialRequest request,
@@ -27,58 +29,83 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_02", methodName, "Request invalido.", 400);
             }
 
-            if (request.IdProducto.HasValue)
-            {
-                if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto.Value))
-                {
-                    return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
-                }
+            var validacionProducto = ValidarProductoBachillerato(uow, request, methodName);
+            if (!validacionProducto.Success)
+                return validacionProducto;
 
-                var producto = uow.Productos.GetByKey(request.IdProducto.Value);
-                if (producto == null)
-                {
-                    return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
-                }
-
-                if (producto.IdNivelProducto == 1 && request.UltimoAnioSexto == 4)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        "INS_EI_04",
-                        methodName,
-                        "Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto anio.",
-                        400);
-                }
-            }
-
-            if (request.IdProceso is <= 0)
-                return OperationResult<bool>.IsFailed("INS_EI_05", methodName, "Proceso invalido.", 400);
-            if (request.UltimoAnioSexto.HasValue && request.UltimoAnioSexto is < 4 or > 6)
-                return OperationResult<bool>.IsFailed("INS_EI_06", methodName, "Ultimo anio de bachillerato invalido.", 400);
-            if (request.InstruccionMadre.HasValue && request.InstruccionMadre is < 1 or > 7)
-                return OperationResult<bool>.IsFailed("INS_EI_07", methodName, "Instruccion madre invalida.", 400);
-            if (request.InstruccionPadre.HasValue && request.InstruccionPadre is < 1 or > 7)
-                return OperationResult<bool>.IsFailed("INS_EI_08", methodName, "Instruccion padre invalida.", 400);
-            if (request.DecisionCarrera.HasValue && request.DecisionCarrera is not (0 or 2 or 3 or 4))
-                return OperationResult<bool>.IsFailed("INS_EI_09", methodName, "Decision de carrera invalida.", 400);
-            if (request.DecisionUniversidad.HasValue && request.DecisionUniversidad is not (0 or 2 or 3 or 4))
-                return OperationResult<bool>.IsFailed("INS_EI_10", methodName, "Decision de universidad invalida.", 400);
-            if (request.CompartidoCon.HasValue && request.CompartidoCon < PersonaConstants.CompartidoCon.Padres)
-                return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
-            if (request.CompartidoCon.HasValue && request.CompartidoCon > PersonaConstants.CompartidoCon.Nadie)
-                return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
-            if (!EsSiNoONulo(request.InfoOtrasUniversidadesAntes))
-                return OperationResult<bool>.IsFailed("INS_EI_12", methodName, "Debe indicar SI o NO para universidades consideradas.", 400);
-            if (!EsSiNoONulo(request.InformarEncuesta))
-                return OperationResult<bool>.IsFailed("INS_EI_13", methodName, "Debe indicar SI o NO para informar encuesta.", 400);
-            if (request.UltimoAnioSecundaria.HasValue && request.UltimoAnioSecundaria is not (1 or 2))
-                return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
-            if (request.NivelDecision.HasValue && request.NivelDecision is not (1 or 2))
-                return OperationResult<bool>.IsFailed("INS_EI_15", methodName, "Nivel de decision invalido.", 400);
+            var validacionRangos = ValidarRangosRequest(request, methodName);
+            if (!validacionRangos.Success)
+                return validacionRangos;
 
             var validacionValoraciones = ValidarValoracionParcial(request, methodName);
             if (!validacionValoraciones.Success)
                 return validacionValoraciones;
 
+            var validacionInstitucion = ValidarInstitucionTitulo(uow, request, methodName);
+            if (!validacionInstitucion.Success)
+                return validacionInstitucion;
+
+            return ValidarListasHijas(uow, request, methodName);
+        }
+
+        private static OperationResult<bool> ValidarProductoBachillerato(
+            IUnitOfWork uow,
+            GuardarEncuestaInicialRequest request,
+            string methodName)
+        {
+            if (!request.IdProducto.HasValue)
+                return OperationResult<bool>.Ok(true, methodName);
+
+            if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto.Value))
+                return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
+
+            var producto = uow.Productos.GetByKey(request.IdProducto.Value);
+            if (producto == null)
+                return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
+
+            if (producto.IdNivelProducto == 1 && request.UltimoAnioSexto == 4)
+                return OperationResult<bool>.IsFailed(
+                    "INS_EI_04",
+                    methodName,
+                    "Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto anio.",
+                    400);
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static OperationResult<bool> ValidarRangosRequest(GuardarEncuestaInicialRequest request, string methodName)
+        {
+            if (request.IdProceso is <= 0)
+                return OperationResult<bool>.IsFailed("INS_EI_05", methodName, "Proceso invalido.", 400);
+            if (FueraDeRango(request.UltimoAnioSexto, 4, 6))
+                return OperationResult<bool>.IsFailed("INS_EI_06", methodName, "Ultimo anio de bachillerato invalido.", 400);
+            if (FueraDeRango(request.InstruccionMadre, 1, 7))
+                return OperationResult<bool>.IsFailed("INS_EI_07", methodName, "Instruccion madre invalida.", 400);
+            if (FueraDeRango(request.InstruccionPadre, 1, 7))
+                return OperationResult<bool>.IsFailed("INS_EI_08", methodName, "Instruccion padre invalida.", 400);
+            if (ValorNoPermitido(request.DecisionCarrera, 0, 2, 3, 4))
+                return OperationResult<bool>.IsFailed("INS_EI_09", methodName, "Decision de carrera invalida.", 400);
+            if (ValorNoPermitido(request.DecisionUniversidad, 0, 2, 3, 4))
+                return OperationResult<bool>.IsFailed("INS_EI_10", methodName, "Decision de universidad invalida.", 400);
+            if (FueraDeRango(request.CompartidoCon, PersonaConstants.CompartidoCon.Padres, PersonaConstants.CompartidoCon.Nadie))
+                return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
+            if (!EsSiNoONulo(request.InfoOtrasUniversidadesAntes))
+                return OperationResult<bool>.IsFailed("INS_EI_12", methodName, "Debe indicar SI o NO para universidades consideradas.", 400);
+            if (!EsSiNoONulo(request.InformarEncuesta))
+                return OperationResult<bool>.IsFailed("INS_EI_13", methodName, "Debe indicar SI o NO para informar encuesta.", 400);
+            if (ValorNoPermitido(request.UltimoAnioSecundaria, 1, 2))
+                return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
+            if (ValorNoPermitido(request.NivelDecision, 1, 2))
+                return OperationResult<bool>.IsFailed("INS_EI_15", methodName, "Nivel de decision invalido.", 400);
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static OperationResult<bool> ValidarInstitucionTitulo(
+            IUnitOfWork uow,
+            GuardarEncuestaInicialRequest request,
+            string methodName)
+        {
             if (request.CodigoInstitucionBac.HasValue && request.CodigoInstitucionBac <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_19", methodName, "Institucion invalida.", 400);
             if (request.CodigoInstitucionBac.HasValue && uow.Empresas.GetByKey(request.CodigoInstitucionBac.Value) == null)
@@ -87,10 +114,6 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_21", methodName, "Titulo invalido.", 400);
             if (request.CodigoTitulo.HasValue && uow.Titulos.GetByKey(request.CodigoTitulo.Value) == null)
                 return OperationResult<bool>.IsFailed("INS_EI_22", methodName, "El titulo indicado es invalido.", 400);
-
-            var validacionListas = ValidarListasHijas(uow, request, methodName);
-            if (!validacionListas.Success)
-                return validacionListas;
 
             return OperationResult<bool>.Ok(true, methodName);
         }
@@ -150,69 +173,68 @@ namespace AppLogic.Helpers.ValidationHelpers
             encuesta.CodigoTitulo = datosAcademicos.Data.CodigoTitulo;
             encuesta.UltimoAnioSextoEncuestaIni = datosAcademicos.Data.UltimoAnioSexto.ToString();
 
-            if (ultimoAnioResult.Value == 6 && string.IsNullOrWhiteSpace(encuesta.TieneEducacionSuperiorEncuestaIni))
+            if (!CompletoEducacionYListas(uow, encuesta, codigoPersona, ultimoAnioResult.Value))
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
-            if (encuesta.InforOtrasAntesEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).Any())
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (!uow.MotivoEleccionAdmisions.GetByPersona(codigoPersona).Any())
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (encuesta.PublicidadOrtEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.PublicidadEleccionAdmisions.GetByPersona(codigoPersona).Any())
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (encuesta.TieneEducacionSuperiorEncuestaIni == CommonConstants.Booleanos.Si
-                && !uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).Any())
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (encuesta.AsesoramientoOrtEncuestaIni == CommonConstants.Booleanos.Si
-                && !encuesta.ValoracionAsesoramientoOrtEncuestaIni.HasValue)
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (encuesta.VistaSitioWebOrtEncuestaIni == CommonConstants.Booleanos.Si
-                && !encuesta.ValoracionSitioWebOrtEncuestaIni.HasValue)
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (encuesta.VistaInstalacionesOrtEncuestaIni == CommonConstants.Booleanos.Si
-                && !encuesta.ValoracionInstalacionesOrtEncuestaIni.HasValue)
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (instruccionMadreResult.Value is 5 or 6 && string.IsNullOrWhiteSpace(encuesta.InstruccionMadreOrtEncuestaIni))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (instruccionPadreResult.Value is 5 or 6 && string.IsNullOrWhiteSpace(encuesta.InstruccionPadreOrtEncuestaIni))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            if (EsPersonaSgi(persona) && !EsTrabajaActualmenteValido(persona.TrabajaActualmente))
+            if (!CompletoValoracionesEInstruccion(encuesta, persona, instruccionMadreResult.Value, instruccionPadreResult.Value))
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
             return OperationResult<bool>.Ok(true, methodName);
         }
+
+        private static bool CompletoEducacionYListas(
+            IUnitOfWork uow,
+            EncuestaIniAdmision encuesta,
+            long codigoPersona,
+            long ultimoAnioSexto)
+        {
+            if (ultimoAnioSexto == 6 && string.IsNullOrWhiteSpace(encuesta.TieneEducacionSuperiorEncuestaIni))
+                return false;
+            if (encuesta.InforOtrasAntesEncuestaIni == CommonConstants.Booleanos.Si
+                && uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).Count == 0)
+                return false;
+            if (uow.MotivoEleccionAdmisions.GetByPersona(codigoPersona).Count == 0)
+                return false;
+            if (encuesta.PublicidadOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && uow.PublicidadEleccionAdmisions.GetByPersona(codigoPersona).Count == 0)
+                return false;
+            if (encuesta.TieneEducacionSuperiorEncuestaIni == CommonConstants.Booleanos.Si
+                && uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).Count == 0)
+                return false;
+
+            return true;
+        }
+
+        private static bool CompletoValoracionesEInstruccion(
+            EncuestaIniAdmision encuesta,
+            Persona persona,
+            int instruccionMadre,
+            int instruccionPadre)
+        {
+            if (encuesta.AsesoramientoOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionAsesoramientoOrtEncuestaIni.HasValue)
+                return false;
+            if (encuesta.VistaSitioWebOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionSitioWebOrtEncuestaIni.HasValue)
+                return false;
+            if (encuesta.VistaInstalacionesOrtEncuestaIni == CommonConstants.Booleanos.Si
+                && !encuesta.ValoracionInstalacionesOrtEncuestaIni.HasValue)
+                return false;
+            if (EsInstruccionAlta(instruccionMadre) && string.IsNullOrWhiteSpace(encuesta.InstruccionMadreOrtEncuestaIni))
+                return false;
+            if (EsInstruccionAlta(instruccionPadre) && string.IsNullOrWhiteSpace(encuesta.InstruccionPadreOrtEncuestaIni))
+                return false;
+            if (EsPersonaSgi(persona) && !EsTrabajaActualmenteValido(persona.TrabajaActualmente))
+                return false;
+
+            return true;
+        }
+
+        private static bool EsInstruccionAlta(int valor) => valor is 5 or 6;
 
         public static string? NormalizarTrabajaActualmente(string? valor)
         {
@@ -274,26 +296,18 @@ namespace AppLogic.Helpers.ValidationHelpers
             if (!validacionEducacion.Success)
                 return validacionEducacion;
 
-            if (request.OpcionesMotivosSeleccionados != null)
+            if (request.OpcionesMotivosSeleccionados != null
+                && request.OpcionesMotivosSeleccionados.Any(motivo =>
+                    motivo.IdMotivo <= 0 || uow.MotivoOpcionesAdmisions.GetByKey(motivo.IdMotivo) == null))
             {
-                foreach (var motivo in request.OpcionesMotivosSeleccionados)
-                {
-                    if (motivo.IdMotivo <= 0 || uow.MotivoOpcionesAdmisions.GetByKey(motivo.IdMotivo) == null)
-                    {
-                        return OperationResult<bool>.IsFailed("INS_EI_23", methodName, "Motivo de eleccion invalido.", 400);
-                    }
-                }
+                return OperationResult<bool>.IsFailed("INS_EI_23", methodName, "Motivo de eleccion invalido.", 400);
             }
 
-            if (request.OpcionesPublicidadSeleccionadas != null)
+            if (request.OpcionesPublicidadSeleccionadas != null
+                && request.OpcionesPublicidadSeleccionadas.Any(publicidad =>
+                    publicidad.IdPublicidad <= 0 || uow.PublicidadOpcionesAdmisions.GetByKey(publicidad.IdPublicidad) == null))
             {
-                foreach (var publicidad in request.OpcionesPublicidadSeleccionadas)
-                {
-                    if (publicidad.IdPublicidad <= 0 || uow.PublicidadOpcionesAdmisions.GetByKey(publicidad.IdPublicidad) == null)
-                    {
-                        return OperationResult<bool>.IsFailed("INS_EI_24", methodName, "Publicidad seleccionada invalida.", 400);
-                    }
-                }
+                return OperationResult<bool>.IsFailed("INS_EI_24", methodName, "Publicidad seleccionada invalida.", 400);
             }
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -403,37 +417,54 @@ namespace AppLogic.Helpers.ValidationHelpers
                 }
             }
 
+            var tituloAnio = ResolverTituloYAnio(uow, ultimoAnioSexto, codigoTitulo, methodName);
+            if (!tituloAnio.Success)
+            {
+                return OperationResult<DatosAcademicosEncuesta>.IsFailed(
+                    tituloAnio.ErrorCode, methodName, tituloAnio.Message, tituloAnio.HttpCode);
+            }
+            if (tituloAnio.Data == null)
+            {
+                return OperationResult<DatosAcademicosEncuesta>.Ok(null, methodName);
+            }
+
+            return OperationResult<DatosAcademicosEncuesta>.Ok(
+                new DatosAcademicosEncuesta(
+                    codigoInstitucionBac,
+                    nombreInstitucion,
+                    tituloAnio.Data!.CodigoTitulo,
+                    tituloAnio.Data.UltimoAnioSexto),
+                methodName);
+        }
+
+        private static OperationResult<TituloAnioResuelto?> ResolverTituloYAnio(
+            IUnitOfWork uow,
+            long ultimoAnioSexto,
+            long? codigoTitulo,
+            string methodName)
+        {
             if (ultimoAnioSexto == 6)
             {
                 if (!codigoTitulo.HasValue || codigoTitulo.Value <= 0)
                 {
-                    return OperationResult<DatosAcademicosEncuesta>.Ok(null, methodName);
+                    return OperationResult<TituloAnioResuelto?>.Ok(null, methodName);
                 }
 
                 var titulo = uow.Titulos.GetByKey(codigoTitulo.Value);
                 if (titulo == null)
                 {
-                    return OperationResult<DatosAcademicosEncuesta>.IsFailed(
-                        "INS_EI_31",
-                        methodName,
-                        "El titulo indicado es invalido.",
-                        400);
+                    return OperationResult<TituloAnioResuelto?>.IsFailed(
+                        "INS_EI_31", methodName, "El titulo indicado es invalido.", 400);
                 }
 
-                if (titulo.IdAnioBachiller.HasValue)
+                var anio = ResolverAnioDeTitulo(uow, titulo, ultimoAnioSexto, methodName);
+                if (!anio.Success)
                 {
-                    var anioTitulo = uow.AnioBachillers.GetByKey((long)titulo.IdAnioBachiller.Value);
-                    if (anioTitulo == null)
-                    {
-                        return OperationResult<DatosAcademicosEncuesta>.IsFailed(
-                            "INS_EI_32",
-                            methodName,
-                            "El bachillerato indicado es invalido.",
-                            400);
-                    }
-
-                    ultimoAnioSexto = (long)(anioTitulo.CantAniosAnioBachiller ?? ultimoAnioSexto);
+                    return OperationResult<TituloAnioResuelto?>.IsFailed(
+                        anio.ErrorCode, methodName, anio.Message, anio.HttpCode);
                 }
+
+                ultimoAnioSexto = anio.Data;
             }
             else
             {
@@ -442,19 +473,37 @@ namespace AppLogic.Helpers.ValidationHelpers
                     .FirstOrDefault(a => a.CantAniosAnioBachiller == ultimoAnioSexto);
                 if (anioBachiller == null)
                 {
-                    return OperationResult<DatosAcademicosEncuesta>.IsFailed(
-                        "INS_EI_33",
-                        methodName,
-                        "El bachillerato indicado es invalido.",
-                        400);
+                    return OperationResult<TituloAnioResuelto?>.IsFailed(
+                        "INS_EI_33", methodName, "El bachillerato indicado es invalido.", 400);
                 }
 
                 ultimoAnioSexto = (long)(anioBachiller.CantAniosAnioBachiller ?? ultimoAnioSexto);
             }
 
-            return OperationResult<DatosAcademicosEncuesta>.Ok(
-                new DatosAcademicosEncuesta(codigoInstitucionBac, nombreInstitucion, codigoTitulo, ultimoAnioSexto),
-                methodName);
+            return OperationResult<TituloAnioResuelto?>.Ok(
+                new TituloAnioResuelto(codigoTitulo, ultimoAnioSexto), methodName);
+        }
+
+        private static OperationResult<long> ResolverAnioDeTitulo(
+            IUnitOfWork uow,
+            Titulo titulo,
+            long ultimoAnioSexto,
+            string methodName)
+        {
+            if (!titulo.IdAnioBachiller.HasValue)
+            {
+                return OperationResult<long>.Ok(ultimoAnioSexto, methodName);
+            }
+
+            var anioTitulo = uow.AnioBachillers.GetByKey((long)titulo.IdAnioBachiller.Value);
+            if (anioTitulo == null)
+            {
+                return OperationResult<long>.IsFailed(
+                    "INS_EI_32", methodName, "El bachillerato indicado es invalido.", 400);
+            }
+
+            return OperationResult<long>.Ok(
+                (long)(anioTitulo.CantAniosAnioBachiller ?? ultimoAnioSexto), methodName);
         }
 
         private static long? LeerLong(string? valor)
@@ -465,6 +514,26 @@ namespace AppLogic.Helpers.ValidationHelpers
         private static int? LeerInt(string? valor)
         {
             return int.TryParse(valor, out var resultado) ? resultado : null;
+        }
+
+        private static bool FueraDeRango(long? valor, long min, long max)
+        {
+            return valor.HasValue && (valor.Value < min || valor.Value > max);
+        }
+
+        private static bool FueraDeRango(int? valor, int min, int max)
+        {
+            return valor.HasValue && (valor.Value < min || valor.Value > max);
+        }
+
+        private static bool ValorNoPermitido(int? valor, params int[] permitidos)
+        {
+            return valor.HasValue && !permitidos.Contains(valor.Value);
+        }
+
+        private static bool ValorNoPermitido(long? valor, params long[] permitidos)
+        {
+            return valor.HasValue && !permitidos.Contains(valor.Value);
         }
 
         private static bool EsSiNoONulo(string? valor)
