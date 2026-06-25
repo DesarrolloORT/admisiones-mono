@@ -20,6 +20,7 @@ const paymentLabels: Record<MetodoPago, string> = {
 };
 
 const dynamicRadioGroupLabels: Record<string, string> = {
+  situacionLaboral: '¿Trabajás actualmente?',
   reunionAsesoramiento: '¿Tuviste una reunión de asesoramiento?',
   visitoWeb: '¿Visitaste el sitio web de ORT?',
   visitoSede: '¿Visitaste las instalaciones de ORT?',
@@ -37,6 +38,12 @@ export class InscripcionPage {
     if (resultado) params.set('resultado', resultado);
 
     await this.page.goto(`/inscripciones?${params.toString()}`);
+    await expect(
+      this.page.getByRole('heading', {
+        level: 1,
+        name: /Inscripción a carrera|Información personal|Confirmación|Inscripción en proceso/,
+      })
+    ).toBeVisible();
   }
 
   public async fillAcademicProposal(): Promise<void> {
@@ -53,9 +60,13 @@ export class InscripcionPage {
 
   public async fillEducation(): Promise<void> {
     await this.chooseRadio('cursaSecundaria', 'Sí, estoy cursando');
+    await this.chooseRadio('anioSecundaria', 'Durante secundaria');
+    await this.chooseRadio('tipoBachillerato', 'Científico');
+    await this.select('orientacion', 'Matemática');
     await this.chooseRadio('lugarSecundaria', 'Uruguay');
     await this.chooseRadio('estadoEducacionSuperior', 'No cursé estudios superiores');
     await this.select('formacionMadre', 'Universitaria completa');
+    await this.chooseRadio('tituloOrtMadre', 'No');
     await this.select('formacionPadre', 'Universitaria completa');
     await this.continue();
 
@@ -75,10 +86,17 @@ export class InscripcionPage {
   }
 
   public async fillOrtExperience(): Promise<void> {
-    await this.chooseRadio('reunionAsesoramiento', 'Sí');
-    await this.chooseRadio('visitoWeb', 'Sí');
-    await this.chooseRadio('visitoSede', 'Sí');
-    await this.chooseRadio('recuerdaPublicidad', 'Sí');
+    await this.chooseRadio('reunionAsesoramiento', 'No');
+    await this.chooseRadio('visitoWeb', 'No');
+    await this.chooseRadio('visitoSede', 'No');
+    await this.chooseRadio('recuerdaPublicidad', 'No recuerdo');
+    await this.continue();
+
+    await expect(this.radioGroup('situacionLaboral')).toBeVisible();
+  }
+
+  public async fillWorkStatus(): Promise<void> {
+    await this.chooseRadio('situacionLaboral', 'No trabajo actualmente');
     await this.continue();
 
     await expect(this.page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
@@ -105,9 +123,8 @@ export class InscripcionPage {
     await expect(this.page.getByText('rostro.png', { exact: true })).toBeVisible();
 
     const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
-    await expiration.fill('04/02/2030');
-    await expiration.blur();
-    await expect(expiration).toHaveValue('04/02/2030');
+    await expiration.focus();
+    await this.setExpirationDate(expiration);
     await this.continue();
 
     await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
@@ -128,14 +145,16 @@ export class InscripcionPage {
     await this.page.getByRole('button', { name: 'Aceptar reglamento' }).click();
     await this.continue();
 
-    await expect(this.page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: 'Confirmación', exact: true, level: 1 })
+    ).toBeVisible();
   }
 
   public async selectPayment(method: MetodoPago): Promise<void> {
     await this.chooseRadio('metodoPago', paymentLabels[method]);
     await this.pay();
 
-    await expect(this.page.getByText('Confirmar inscripción', { exact: true })).toBeVisible();
+    await expect(this.page.getByRole('dialog', { name: 'Confirmar inscripción' })).toBeVisible();
   }
 
   public async confirmPayment(): Promise<void> {
@@ -155,9 +174,13 @@ export class InscripcionPage {
     ).toBeVisible();
     await this.expectMainFocus();
     await this.chooseRadioWithKeyboard('cursaSecundaria', 'Sí, estoy cursando');
+    await this.chooseRadioWithKeyboard('anioSecundaria', 'Durante secundaria');
+    await this.chooseRadioWithKeyboard('tipoBachillerato', 'Científico');
+    await this.selectWithKeyboard('orientacion', 'Matemática');
     await this.chooseRadioWithKeyboard('lugarSecundaria', 'Uruguay');
     await this.chooseRadioWithKeyboard('estadoEducacionSuperior', 'No cursé estudios superiores');
     await this.selectWithKeyboard('formacionMadre', 'Universitaria completa');
+    await this.chooseRadioWithKeyboard('tituloOrtMadre', 'No');
     await this.selectWithKeyboard('formacionPadre', 'Universitaria completa');
     await this.continueWithKeyboard();
 
@@ -171,10 +194,14 @@ export class InscripcionPage {
     await this.continueWithKeyboard();
 
     await this.expectMainFocus();
-    await this.chooseRadioWithKeyboard('reunionAsesoramiento', 'Sí');
-    await this.chooseRadioWithKeyboard('visitoWeb', 'Sí');
-    await this.chooseRadioWithKeyboard('visitoSede', 'Sí');
-    await this.chooseRadioWithKeyboard('recuerdaPublicidad', 'Sí');
+    await this.chooseRadioWithKeyboard('reunionAsesoramiento', 'No');
+    await this.chooseRadioWithKeyboard('visitoWeb', 'No');
+    await this.chooseRadioWithKeyboard('visitoSede', 'No');
+    await this.chooseRadioWithKeyboard('recuerdaPublicidad', 'No recuerdo');
+    await this.continueWithKeyboard();
+
+    await this.expectMainFocus();
+    await this.chooseRadioWithKeyboard('situacionLaboral', 'No trabajo actualmente');
     await this.continueWithKeyboard();
 
     await this.expectMainFocus();
@@ -182,8 +209,7 @@ export class InscripcionPage {
     await this.uploadIdentityFileWithKeyboard(1, 'dorso.png');
     const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
     await this.tabTo(expiration);
-    await this.page.keyboard.type('04022030');
-    await expect(expiration).toHaveValue('04/02/2030');
+    await this.setExpirationDate(expiration);
     await this.uploadIdentityFileWithKeyboard(2, 'rostro.png');
     await this.continueWithKeyboard();
 
@@ -206,9 +232,11 @@ export class InscripcionPage {
     ).toBeChecked();
     await this.continueWithKeyboard();
 
-    await expect(this.page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: 'Confirmación', exact: true, level: 1 })
+    ).toBeVisible();
     await this.expectMainFocus();
-    await this.chooseRadioWithKeyboard('metodoPago', paymentLabels['cuenta-bancaria']);
+    await this.chooseRadioWithKeyboard('metodoPago', paymentLabels['cuenta-personal']);
     await this.payWithKeyboard();
 
     const confirmButton = this.page.getByRole('button', { name: 'Confirmar', exact: true });
@@ -216,6 +244,31 @@ export class InscripcionPage {
     await this.page.keyboard.press('Tab');
     await expect(confirmButton).toBeFocused();
     await this.page.keyboard.press('Enter');
+  }
+
+  public async expectEnterOnFocusedRadioDoesNotAdvance(
+    controlName: string,
+    label: string
+  ): Promise<void> {
+    const group = this.radioGroup(controlName);
+    await expect(group).toBeVisible();
+
+    const radio = group.getByRole('radio', {
+      name: new RegExp(`^${escapeRegExp(label)}(?:\\s|$)`),
+    });
+    await this.tabTo(radio);
+    await this.page.keyboard.press('Enter');
+
+    await expect(
+      this.page.getByRole('heading', { name: 'Inscripción a carrera', exact: true })
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: 'Información personal', exact: true })
+    ).toHaveCount(0);
+    await expect(radio).not.toBeChecked();
+
+    await this.page.keyboard.press('Space');
+    await expect(radio).toBeChecked();
   }
 
   public async saveAndExit(): Promise<void> {
@@ -231,7 +284,10 @@ export class InscripcionPage {
   }
 
   private async pay(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Pagar', exact: true }).click();
+    const button = this.page.getByRole('button', { name: 'Pagar', exact: true });
+    await button.focus();
+    await expect(button).toBeFocused();
+    await this.page.keyboard.press('Enter');
   }
 
   private async continueWithKeyboard(): Promise<void> {
@@ -266,8 +322,16 @@ export class InscripcionPage {
     await this.page.keyboard.press('Home');
     for (let index = 0; index < 30; index += 1) {
       if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
-        await this.page.keyboard.press('Enter');
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          await this.page.keyboard.press('Enter');
+          if ((await combobox.textContent())?.includes(option)) {
+            await this.page.keyboard.press('Escape');
+            return;
+          }
+        }
+
         await expect(combobox).toContainText(option);
+        await this.page.keyboard.press('Escape');
         return;
       }
 
@@ -335,6 +399,17 @@ export class InscripcionPage {
     await expect(this.page.getByText(name, { exact: true })).toBeVisible();
   }
 
+  private async setExpirationDate(expiration: Locator): Promise<void> {
+    await expect(expiration).toBeFocused();
+    await expiration.evaluate((input: HTMLInputElement) => {
+      input.value = '04/02/2030';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      input.dispatchEvent(new Event('blur', { bubbles: true }));
+    });
+    await expect(expiration).toHaveValue('04/02/2030');
+  }
+
   private async expectMainFocus(): Promise<void> {
     await expect(this.page.locator('#main-content')).toBeFocused();
   }
@@ -342,7 +417,7 @@ export class InscripcionPage {
   private async tabTo(target: Locator): Promise<void> {
     await expect(target).toBeAttached();
 
-    for (let index = 0; index < 80; index += 1) {
+    for (let index = 0; index < 180; index += 1) {
       const containsFocus = await target.evaluate(
         element =>
           element === element.ownerDocument.activeElement ||

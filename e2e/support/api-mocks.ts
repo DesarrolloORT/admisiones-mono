@@ -391,11 +391,21 @@ function profileData(): unknown {
 function initialSurveyCatalogs(): unknown {
   return {
     aniosAprobadosEducacionSuperior: [{ value: 1, label: 'Un año' }],
+    aniosBachiller: [
+      {
+        idAnioBachiller: 6,
+        nombreAnioBachiller: '6º año',
+        bachilleratos: [
+          { codigoTitulo: 12, nombre: 'Científico', orientacionTitulo: 'Matemática' },
+        ],
+      },
+    ],
     compartidoCon: [{ value: 1, label: 'Familia' }],
     decisionCarrera: [{ value: 1, label: 'Durante secundaria' }],
     decisionUniversidad: [{ value: 1, label: 'Propuesta académica' }],
     estadoEducacionSuperior: [{ value: 3, label: 'No cursé estudios superiores' }],
     formacionTutores: [{ value: 4, label: 'Universitaria completa' }],
+    motivosEleccion: [{ idMotivo: 1, nombreMotivo: 'Propuesta académica' }],
     nivelConocimiento: [{ value: 1, label: 'Conocía bien la propuesta' }],
   };
 }

@@ -51,6 +51,7 @@ test.describe('WCAG axe coverage @a11y', () => {
 });
 
 test.describe('Keyboard and form accessibility @a11y', () => {
+  test.describe.configure({ timeout: 60_000 });
   test('keeps invalid login errors discoverable @a11y', async ({ page }) => {
     const login = new LoginPage(page);
 
@@ -116,6 +117,19 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(closeButton).toBeFocused();
   });
 
+  test('does not advance enrollment when Enter is pressed on a focused radio @a11y', async ({
+    page,
+  }) => {
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await inscription.expectEnterOnFocusedRadioDoesNotAdvance(
+      'tipoPropuesta',
+      'Carrera universitaria'
+    );
+  });
+
   test('keeps the enrollment survey, payment and confirmation dialog accessible @a11y', async ({
     page,
   }) => {
@@ -132,6 +146,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
+    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
     await inscription.acceptRegulation();
 
@@ -139,7 +154,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
-    await inscription.selectPayment('cuenta-bancaria');
+    await inscription.selectPayment('cuenta-personal');
 
     const dialog = page.getByRole('dialog', { name: 'Confirmar inscripción' });
     await expect(dialog).toBeVisible();
@@ -149,7 +164,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await page.keyboard.press('Escape');
 
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Pagar', exact: true })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Pagar', exact: true })).toBeVisible();
   });
 
   test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({

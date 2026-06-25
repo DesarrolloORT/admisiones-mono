@@ -5,12 +5,16 @@ export async function selectOrtOption(
   trigger: Locator,
   optionName: string | RegExp
 ): Promise<void> {
+  await trigger.evaluate((element: HTMLElement) =>
+    element.scrollIntoView({ block: 'center', inline: 'nearest' })
+  );
   await trigger.click();
 
   const optionByRole = page.getByRole('option', { name: optionName });
 
   if ((await optionByRole.count()) > 0) {
     await optionByRole.first().click();
+    await page.keyboard.press('Escape');
     return;
   }
 
@@ -18,6 +22,7 @@ export async function selectOrtOption(
 
   await expect(optionByText).toBeVisible();
   await optionByText.click();
+  await page.keyboard.press('Escape');
 }
 
 export async function clickRadioByName(page: Page, name: string | RegExp): Promise<void> {
