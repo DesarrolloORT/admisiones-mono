@@ -1,10 +1,31 @@
-@switch (action().type) { @case ('primary') {
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+@switch (action().type) { @case ('primary') { @if (resumesFlow()) {
+<a
+  class="quick-actions__btn"
+  ort-primary-button
+  routerLink="/inscripciones"
+  [attr.aria-label]="ariaLabel()"
+  [queryParams]="resumeQueryParams()">
+  @if (action().icon) {
+  <ort-icon aria-hidden="true">{{ action().icon }}</ort-icon>
+  } {{ action().label }}
+</a>
+} @else {
 <button class="quick-actions__btn" ort-primary-button type="button" [attr.aria-label]="ariaLabel()">
   @if (action().icon) {
   <ort-icon aria-hidden="true">{{ action().icon }}</ort-icon>
   } {{ action().label }}
 </button>
-} @case ('secondary') {
+} } @case ('secondary') { @if (resumesFlow()) {
+<a
+  class="quick-actions__btn"
+  ort-secondary-button
+  routerLink="/inscripciones"
+  [attr.aria-label]="ariaLabel()"
+  [queryParams]="resumeQueryParams()">
+  {{ action().label }}
+</a>
+} @else {
 <button
   class="quick-actions__btn"
   ort-secondary-button
@@ -12,6 +33,6 @@
   [attr.aria-label]="ariaLabel()">
   {{ action().label }}
 </button>
-} @case ('text') {
+} } @case ('text') {
 <p class="quick-actions__message" [attr.aria-label]="ariaLabel()">{{ action().label }}</p>
 } }

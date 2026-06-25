@@ -32,6 +32,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.svg",
+                "input": "node_modules/@desarrolloort/fdp-components/assets/icons/banks",
+                "output": "assets/banks"
               }
             ],
             "styles": [

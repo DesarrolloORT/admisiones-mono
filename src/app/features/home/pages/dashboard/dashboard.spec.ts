@@ -32,6 +32,7 @@ describe('Dashboard', () => {
     fixture.componentRef.setInput('inscripciones', [
       {
         idProducto: 1,
+        idProceso: 4,
         idComienzo: 2,
         idTurno: 3,
         nombreProducto: 'Analista Programador',

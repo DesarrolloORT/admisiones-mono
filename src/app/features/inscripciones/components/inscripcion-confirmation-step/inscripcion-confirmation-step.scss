@@ -40,6 +40,18 @@
   display: block;
 }
 
+.inscription-bank-option {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+}
+
+.inscription-bank-option__logo {
+  object-fit: contain;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .inscription-payment-card {
   gap: var(--ort-sys-spacing-12);
   border-color: var(--ort-sys-alert-border-color-information);
