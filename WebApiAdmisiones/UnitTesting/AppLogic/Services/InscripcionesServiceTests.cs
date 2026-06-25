@@ -1839,5 +1839,112 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("INS_DET_01", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
         }
+
+        [Fact]
+        public void GuardarMetodoPago_WithValidData_AddsAndSaves()
+        {
+            InscriptoSeniaMinimum? agregado = null;
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
+            seniaRepo.Setup(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()))
+                .Callback<InscriptoSeniaMinimum>(x => agregado = x);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = "ABITAB"
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+            Assert.NotNull(agregado);
+            Assert.Equal(555, agregado!.IdInscripto);
+            Assert.Equal("ABITAB", agregado.MetodoPagoSeniaMinima);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarMetodoPago_NormalizesMetodoPago()
+        {
+            InscriptoSeniaMinimum? agregado = null;
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
+            seniaRepo.Setup(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()))
+                .Callback<InscriptoSeniaMinimum>(x => agregado = x);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = " paganza "
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("PAGANZA", agregado!.MetodoPagoSeniaMinima);
+        }
+
+        [Fact]
+        public void GuardarMetodoPago_WhenMetodoPagoInvalid_ReturnsBadRequest()
+        {
+            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = "TARJETA"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_MP_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _uowFactoryMock.Verify(f => f.Create(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarMetodoPago_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = "ABITAB"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_MP_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarMetodoPago_WhenAlreadyExists_ReturnsConflict()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns(new InscriptoSeniaMinimum { IdInscripto = 555, MetodoPagoSeniaMinima = "ABITAB" });
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = "PAGANZA"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_MP_04", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+            seniaRepo.Verify(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
     }
 }

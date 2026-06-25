@@ -2,6 +2,12 @@ using System.Collections.Generic;
 
 namespace AppLogic.DTOs
 {
+    public class GuardarMetodoPagoRequest
+    {
+        public long IdInscripto { get; set; }
+        public string MetodoPago { get; set; } = string.Empty;
+    }
+
     public class ConfirmarPreInscripcionRequest
     {
         public bool AceptoReglamento { get; set; }

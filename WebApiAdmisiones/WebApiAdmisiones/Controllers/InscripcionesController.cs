@@ -95,6 +95,17 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        [HttpPost("MetodoPago")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult GuardarMetodoPago([FromBody] GuardarMetodoPagoRequest request)
+        {
+            var result = inscripcionesService.GuardarMetodoPago(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
         /// <summary>
         /// Indica si la persona autenticada ya aceptó el reglamento estudiantil.
         /// </summary>

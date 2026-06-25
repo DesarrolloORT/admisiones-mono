@@ -48,6 +48,31 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public void GuardarMetodoPago_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new GuardarMetodoPagoRequest
+            {
+                IdInscripto = 555,
+                MetodoPago = "ABITAB"
+            };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.GuardarMetodoPago(1, request))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.GuardarMetodoPago)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.GuardarMetodoPago(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.GuardarMetodoPago(1, request), Times.Once);
+        }
+
+        [Fact]
         public void ReglamentoEstudiantil_PostEndpoint_IsNotExposed()
         {
             var postRoutes = typeof(InscripcionesController)

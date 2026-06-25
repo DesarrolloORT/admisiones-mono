@@ -741,6 +741,48 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 3 - PAGOS
 
+        public OperationResult<bool> GuardarMetodoPago(long codigoPersona, GuardarMetodoPagoRequest request)
+        {
+            const string methodName = nameof(GuardarMetodoPago);
+
+            if (request == null)
+            {
+                return OperationResult<bool>.IsFailed("INS_MP_00", methodName, "Request invalido.", 400);
+            }
+
+            if (request.IdInscripto <= 0)
+            {
+                return OperationResult<bool>.IsFailed("INS_MP_01", methodName, "IdInscripto invalido.", 400);
+            }
+
+            var metodoPago = request.MetodoPago?.Trim().ToUpperInvariant();
+            if (metodoPago is not ("ABITAB" or "PAGANZA"))
+            {
+                return OperationResult<bool>.IsFailed("INS_MP_02", methodName, "MetodoPago invalido.", 400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            if (uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona) == null)
+            {
+                return OperationResult<bool>.IsFailed("INS_MP_03", methodName, "No se encontro la inscripcion para la persona.", 404);
+            }
+
+            if (uow.InscriptoSeniaMinima.GetByKey(request.IdInscripto) != null)
+            {
+                return OperationResult<bool>.IsFailed("INS_MP_04", methodName, "La senia minima ya fue registrada para la inscripcion.", 409);
+            }
+
+            uow.InscriptoSeniaMinima.Add(new InscriptoSeniaMinimum
+            {
+                IdInscripto = request.IdInscripto,
+                MetodoPagoSeniaMinima = metodoPago
+            });
+            uow.Save();
+
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
         #endregion PASO 3 - PAGOS
     }
 }
