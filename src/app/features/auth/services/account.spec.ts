@@ -10,6 +10,7 @@ describe('AccountService', () => {
     getPersonalData: ReturnType<typeof vi.fn>;
     updatePersonalData: ReturnType<typeof vi.fn>;
     changePassword: ReturnType<typeof vi.fn>;
+    validatePhone: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -17,6 +18,7 @@ describe('AccountService', () => {
       getPersonalData: vi.fn().mockReturnValue(of({ firstName: 'Gabriela' })),
       updatePersonalData: vi.fn().mockReturnValue(of(true)),
       changePassword: vi.fn().mockReturnValue(of(undefined)),
+      validatePhone: vi.fn().mockReturnValue(of(true)),
     };
 
     TestBed.configureTestingModule({
@@ -38,7 +40,7 @@ describe('AccountService', () => {
     const payload = {
       countryCode: 1,
       stateCode: 10,
-      cityCode: null,
+      cityCode: undefined,
       address: 'Mercedes 1234',
       phone: '99123456',
       email: 'gabriela@example.com',
@@ -50,6 +52,21 @@ describe('AccountService', () => {
     });
 
     expect(endpoint.updatePersonalData).toHaveBeenCalledWith(payload);
+  });
+
+  it('should validate phone through the endpoint adapter', () => {
+    const payload = {
+      iso2: 'UY',
+      countryPrefix: 598,
+      number: '99123456',
+      numberE164: '+59899123456',
+    };
+
+    service.validatePhone(payload).subscribe(result => {
+      expect(result).toBe(true);
+    });
+
+    expect(endpoint.validatePhone).toHaveBeenCalledWith(payload);
   });
 
   it('should change password through the endpoint adapter', () => {

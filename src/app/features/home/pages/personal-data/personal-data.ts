@@ -7,7 +7,13 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AsyncValidatorFn,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import type { PhoneInputValue } from '@desarrolloort/components';
 import {
@@ -22,8 +28,8 @@ import {
   OrtSkeletonModule,
 } from '@desarrolloort/components';
 import { ComponentModeService, DatosPersonalesComponent } from '@desarrolloort/fdp-components';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
@@ -36,7 +42,8 @@ import {
 } from 'src/app/shared/forms/matching-fields.validator';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
-import { AccountService, PersonalDataRecord } from '../../../auth/services/account';
+import type { PersonalDataRecord, PhoneValidationPayload } from '../../../auth/services/account';
+import { AccountService } from '../../../auth/services/account';
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
 
 interface PersonalDataForm {
@@ -96,6 +103,8 @@ export class PersonalData implements OnInit {
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       phone: new FormControl<PhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
+        asyncValidators: [this.phoneValidator()],
+        updateOn: 'blur',
       }),
       email: new FormControl('', {
         nonNullable: true,
@@ -312,6 +321,37 @@ export class PersonalData implements OnInit {
     }
 
     return (value.numberE164 || value.number).trim();
+  }
+
+  private phoneValidator(): AsyncValidatorFn {
+    return control => {
+      const value = control.value as PhoneInputValue | null;
+      if (!value?.number.trim()) {
+        return of(null);
+      }
+
+      return this.account.validatePhone(this.toPhoneValidationPayload(value)).pipe(
+        map(isValid => (isValid ? null : { phone: true })),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  private toPhoneValidationPayload(value: PhoneInputValue): PhoneValidationPayload {
+    const iso2 = value.iso2 || null;
+    const country = this.findPhoneCountryByIso2(iso2);
+
+    return {
+      iso2,
+      countryPrefix: country?.prefix ?? null,
+      number: value.number.trim(),
+      numberE164: value.numberE164?.trim() || null,
+    };
+  }
+
+  private findPhoneCountryByIso2(iso2: string | null) {
+    const code = getIso2Codes().find(item => item === iso2);
+    return code ? findCountryByIso2(code) : undefined;
   }
 
   private findPhoneCountryByPrefix(digits: string) {

@@ -5,6 +5,7 @@ import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getPersonaDatosPersonaEndpoint,
   postPersonaCambiarContrasenaEndpoint,
+  postPersonaValidarTelefonoEndpoint,
   putPersonaDatosPersonaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 
@@ -40,6 +41,13 @@ export interface UpdateAccountPersonalDataPayload {
 export interface AccountChangePasswordPayload {
   currentPassword: string;
   password: string;
+}
+
+export interface AccountPhoneValidationPayload {
+  iso2: string | null;
+  countryPrefix: number | null;
+  number: string;
+  numberE164: string | null;
 }
 
 @Injectable({
@@ -96,5 +104,19 @@ export class AccountEndpoint {
         },
       })
       .pipe(map(() => undefined));
+  }
+
+  public validatePhone(payload: AccountPhoneValidationPayload): Observable<boolean> {
+    return this.api
+      .request(postPersonaValidarTelefonoEndpoint, {
+        queryParams: { telefono1: true },
+        body: {
+          telefonoE164: payload.numberE164,
+          iso2: payload.iso2,
+          caracteristicaPais: payload.countryPrefix ?? undefined,
+          telefonoSimple: payload.number,
+        },
+      })
+      .pipe(map(result => result === true));
   }
 }

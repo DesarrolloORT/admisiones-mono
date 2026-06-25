@@ -112,6 +112,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
       direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       telefono1: new FormControl<PhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
+        updateOn: 'blur',
       }),
       mail: new FormControl('', {
         nonNullable: true,

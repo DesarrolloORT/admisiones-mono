@@ -38,6 +38,7 @@ describe('PersonalData', () => {
   let service: {
     getPersonalData: ReturnType<typeof vi.fn>;
     updatePersonalData: ReturnType<typeof vi.fn>;
+    validatePhone: ReturnType<typeof vi.fn>;
   };
   let snackbar: { success: ReturnType<typeof vi.fn> };
 
@@ -63,6 +64,7 @@ describe('PersonalData', () => {
         })
       ),
       updatePersonalData: vi.fn().mockReturnValue(of(true)),
+      validatePhone: vi.fn().mockReturnValue(of(true)),
     };
     snackbar = { success: vi.fn() };
 
@@ -159,6 +161,26 @@ describe('PersonalData', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('ort-skeleton')).toHaveLength(6);
+  });
+
+  it('should validate phone on blur through the backend validator', () => {
+    fixture.detectChanges();
+    service.validatePhone.mockClear();
+
+    expect(component.form.controls.phone.updateOn).toBe('blur');
+
+    component.form.controls.phone.setValue({
+      iso2: 'UY',
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
+
+    expect(service.validatePhone).toHaveBeenCalledWith({
+      iso2: 'UY',
+      countryPrefix: 598,
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
   });
 
   it('should submit editable fields to the backend service', () => {

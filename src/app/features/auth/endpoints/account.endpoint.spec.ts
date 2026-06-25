@@ -111,6 +111,34 @@ describe('AccountEndpoint', () => {
     req.flush({ success: true, httpCode: 200, data: true });
   });
 
+  it('should validate mobile phone numbers', () => {
+    endpoint
+      .validatePhone({
+        iso2: 'UY',
+        countryPrefix: 598,
+        number: '99123456',
+        numberE164: '+59899123456',
+      })
+      .subscribe(result => expect(result).toBe(true));
+
+    const req = httpController.expectOne(
+      r =>
+        r.url.includes('/Persona/ValidarTelefono') &&
+        r.method === 'POST' &&
+        r.params.get('telefono1') === 'true'
+    );
+
+    expect(req.request.body).toEqual({
+      telefonoE164: '+59899123456',
+      iso2: 'UY',
+      caracteristicaPais: 598,
+      telefonoSimple: '99123456',
+    });
+    expect(req.request.withCredentials).toBe(true);
+
+    req.flush({ success: true, httpCode: 200, data: true });
+  });
+
   it('should change the authenticated account password', () => {
     endpoint
       .changePassword({

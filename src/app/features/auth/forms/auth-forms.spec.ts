@@ -12,6 +12,10 @@ describe('auth forms', () => {
     expect(createIdentityForm().controls.documentType.value).toBe('CI');
   });
 
+  it('should validate phone on blur', () => {
+    expect(createPersonalForm().controls.telefono1.updateOn).toBe('blur');
+  });
+
   it('should validate matching emails case-insensitively', () => {
     const form = createPersonalForm();
 
