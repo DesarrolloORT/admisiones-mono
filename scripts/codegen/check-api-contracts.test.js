@@ -4,7 +4,11 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 
-import { checkApiContracts, findUnknownResponsesInSource } from './check-api-contracts.js';
+import {
+  checkApiContracts,
+  findUnsafeAssertionsInSource,
+  findUnknownResponsesInSource,
+} from './check-api-contracts.js';
 
 test('detects response unknown only at the endpoint response boundary', () => {
   const source = `
@@ -58,6 +62,44 @@ test('accepts feature-owned public contracts', () => {
   }
 });
 
+test('detects unknown and any exposed by public adapter methods', () => {
+  const fixture = createFixture({
+    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+      interface Observable<T> {}
+      interface DemoPayload { value: unknown; }
+      interface DemoAny { value: any; }
+      export class DemoEndpoint {
+        public load(): Observable<unknown> { throw new Error('test'); }
+        public save(payload: DemoPayload): DemoAny { return { value: payload.value }; }
+      }
+    `,
+  });
+
+  try {
+    const violations = checkApiContracts({ root: fixture, tsconfigPath: 'tsconfig.json' });
+    assert.equal(violations.length, 3);
+    assert.match(violations.map(v => v.message).join('\n'), /load.*unknown.*retorno/);
+    assert.match(violations.map(v => v.message).join('\n'), /save.*unknown.*parámetro payload/);
+    assert.match(violations.map(v => v.message).join('\n'), /save.*any.*retorno/);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test('detects double assertions through unknown in adapters', () => {
+  const source = `
+    export class DemoEndpoint {
+      public load(): string {
+        return ({} as unknown as { value: string }).value;
+      }
+    }
+  `;
+
+  const violations = findUnsafeAssertionsInSource(source);
+
+  assert.equal(violations.length, 1);
+  assert.match(violations[0].message, /as unknown as/);
+});
 function createFixture(files) {
   const root = mkdtempSync(join(tmpdir(), 'api-contracts-'));
   writeFixtureFile(

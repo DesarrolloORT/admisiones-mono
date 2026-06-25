@@ -33,8 +33,16 @@ export type EndpointRequest<TEndpoint> =
 export type EndpointResponse<TEndpoint> =
   TEndpoint extends ApiEndpoint<infer TDefinition> ? TDefinition['response'] : never;
 
-export type ApiResponseData<TResponse> = TResponse extends { data?: infer TData }
-  ? NonNullable<TData>
+type IsAny<TValue> = 0 extends 1 & TValue ? true : false;
+
+type SafeApiData<TData> = IsAny<TData> extends true ? unknown : NonNullable<TData>;
+
+export type ApiResponseData<TResponse> = TResponse extends {
+  success?: boolean;
+  httpCode?: number;
+  data: infer TData;
+}
+  ? SafeApiData<TData>
   : TResponse;
 
 export type EndpointData<TEndpoint> = ApiResponseData<EndpointResponse<TEndpoint>>;

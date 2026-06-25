@@ -15,12 +15,13 @@ export function checkApiContracts({
   const program = createProgram(root, tsconfigPath);
   const adapterViolations = findAdapterContractViolations(program, root);
   const bodyViolations = findAdapterBodyLaunderingViolations(program, root);
+  const assertionViolations = findAdapterUnsafeAssertionViolations(program, root);
   const responseViolations = findUnknownResponseViolations(
     resolve(root, generatedEndpointsDir),
     root
   );
 
-  return [...adapterViolations, ...bodyViolations, ...responseViolations];
+  return [...adapterViolations, ...bodyViolations, ...assertionViolations, ...responseViolations];
 }
 
 export function findAdapterContractViolations(program, root) {
@@ -41,11 +42,8 @@ export function findAdapterContractViolations(program, root) {
         const signature = checker.getSignatureFromDeclaration(member);
         if (!signature) continue;
 
-        const returnLeak = findGeneratedType(
-          checker.getReturnTypeOfSignature(signature),
-          checker,
-          root
-        );
+        const returnType = checker.getReturnTypeOfSignature(signature);
+        const returnLeak = findGeneratedType(returnType, checker, root);
         if (returnLeak) {
           violations.push({
             file: toProjectPath(sourceFile.fileName, root),
@@ -54,19 +52,33 @@ export function findAdapterContractViolations(program, root) {
           });
         }
 
-        for (const parameter of member.parameters) {
-          const parameterLeak = findGeneratedType(
-            checker.getTypeAtLocation(parameter),
-            checker,
-            root
-          );
-          if (!parameterLeak) continue;
-
+        const returnUnsafe = findUnsafeType(returnType, checker, root);
+        if (returnUnsafe) {
           violations.push({
             file: toProjectPath(sourceFile.fileName, root),
-            line: sourceFile.getLineAndCharacterOfPosition(parameter.getStart()).line + 1,
-            message: `El método público ${methodName} expone un tipo generated en el parámetro ${parameter.name.getText(sourceFile)} (${parameterLeak}).`,
+            line: sourceFile.getLineAndCharacterOfPosition(member.name.getStart()).line + 1,
+            message: `El método público ${methodName} expone ${returnUnsafe} en su retorno.`,
           });
+        }
+        for (const parameter of member.parameters) {
+          const parameterType = checker.getTypeAtLocation(parameter);
+          const parameterLeak = findGeneratedType(parameterType, checker, root);
+          if (parameterLeak) {
+            violations.push({
+              file: toProjectPath(sourceFile.fileName, root),
+              line: sourceFile.getLineAndCharacterOfPosition(parameter.getStart()).line + 1,
+              message: `El método público ${methodName} expone un tipo generated en el parámetro ${parameter.name.getText(sourceFile)} (${parameterLeak}).`,
+            });
+          }
+
+          const parameterUnsafe = findUnsafeType(parameterType, checker, root);
+          if (parameterUnsafe) {
+            violations.push({
+              file: toProjectPath(sourceFile.fileName, root),
+              line: sourceFile.getLineAndCharacterOfPosition(parameter.getStart()).line + 1,
+              message: `El método público ${methodName} expone ${parameterUnsafe} en el parámetro ${parameter.name.getText(sourceFile)}.`,
+            });
+          }
         }
       }
     }
@@ -93,6 +105,47 @@ export function findAdapterBodyLaunderingViolations(program, root) {
   return violations;
 }
 
+export function findAdapterUnsafeAssertionViolations(program, root) {
+  const violations = [];
+
+  for (const sourceFile of program.getSourceFiles()) {
+    const fileName = normalizePath(sourceFile.fileName);
+    if (!isEndpointAdapter(fileName, root)) continue;
+
+    violations.push(
+      ...findUnsafeAssertionsInSource(sourceFile.text, sourceFile.fileName).map(violation => ({
+        ...violation,
+        file: toProjectPath(sourceFile.fileName, root),
+      }))
+    );
+  }
+
+  return violations;
+}
+
+export function findUnsafeAssertionsInSource(sourceText, fileName = 'adapter.endpoint.ts') {
+  const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true);
+  const violations = [];
+
+  const visit = node => {
+    if (
+      ts.isAsExpression(node) &&
+      ts.isAsExpression(node.expression) &&
+      isTopLevelUnknown(node.expression.type)
+    ) {
+      violations.push({
+        line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
+        message:
+          'El adapter usa doble assertion as unknown as; corregí el contrato generado o discriminá con tipos reales.',
+      });
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return violations;
+}
 export function findBodyLaunderingInSource(sourceText, fileName = 'adapter.endpoint.ts') {
   const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true);
   const violations = [];
@@ -246,6 +299,46 @@ function findGeneratedType(type, checker, root, seen = new Set()) {
   return null;
 }
 
+function findUnsafeType(type, checker, root, seen = new Set()) {
+  if (!type || seen.has(type)) return null;
+  seen.add(type);
+
+  if (type.flags & ts.TypeFlags.Any) return 'any';
+  if (type.flags & ts.TypeFlags.Unknown) return 'unknown';
+
+  if (type.isUnionOrIntersection()) {
+    for (const child of type.types) {
+      const unsafe = findUnsafeType(child, checker, root, seen);
+      if (unsafe) return unsafe;
+    }
+  }
+
+  if (type.flags & ts.TypeFlags.Object) {
+    const typeArguments = checker.getTypeArguments(type);
+    for (const argument of typeArguments) {
+      const unsafe = findUnsafeType(argument, checker, root, seen);
+      if (unsafe) return unsafe;
+    }
+  }
+
+  const symbol = type.aliasSymbol ?? type.getSymbol();
+  const declarationFile = symbol?.declarations?.[0]?.getSourceFile().fileName;
+  if (declarationFile && normalizePath(declarationFile).startsWith(`${normalizePath(root)}/src/`)) {
+    for (const property of checker.getPropertiesOfType(type)) {
+      const declaration = property.valueDeclaration ?? property.declarations?.[0];
+      if (!declaration) continue;
+      const unsafe = findUnsafeType(
+        checker.getTypeOfSymbolAtLocation(property, declaration),
+        checker,
+        root,
+        seen
+      );
+      if (unsafe) return unsafe;
+    }
+  }
+
+  return null;
+}
 function findUnknownResponseViolations(directory, root) {
   if (!existsSync(directory)) return [];
 

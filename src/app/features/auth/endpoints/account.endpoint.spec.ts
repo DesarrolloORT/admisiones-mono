@@ -117,7 +117,7 @@ describe('AccountEndpoint', () => {
         currentPassword: 'ActualPassword1!',
         password: 'NuevaPassword1!',
       })
-      .subscribe(result => expect(result).toBeNull());
+      .subscribe(result => expect(result).toBeUndefined());
 
     const req = httpController.expectOne(
       r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'

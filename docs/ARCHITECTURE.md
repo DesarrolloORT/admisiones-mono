@@ -68,8 +68,10 @@ request y response. No contienen logica funcional ni reemplazan los servicios de
 feature. La ejecucion centralizada vive en
 `src/app/shared/api/core/api-http-client.ts`, que usa `environment.API_URL`,
 `HttpClient` y `buildApiPath`. Para los `OperationResult` del backend, los
-adapters deben preferir `api.data(...)` o `api.list(...)` y no leer `.data` a
-mano en cada llamada.
+adapters deben usar la receta unica: `api.data(...)` para un item, `api.list(...)`
+para arrays, `requestWithMessage(...)` solo si necesitan `message`, y `void`
+cuando el POST no devuelve data util. Los mappers viven en el adapter y no leen
+`.data` a mano en cada llamada.
 
 Acoplamiento esperado:
 
@@ -87,9 +89,10 @@ Reglas:
 - no editar manualmente archivos generados;
 - no importar endpoints generados fuera de `features/*/endpoints/*.endpoint.ts`;
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
-- usar `npm run check-endpoints` cuando se quiera validar drift contra Swagger.
-- usar `npm run api:endpoints` para listar endpoints reales locales y el adapter
-  que los consume.
+- usar `npm run check-api-contracts` para validar que los adapters no filtren
+  `generated`, `unknown`, `any` ni casts `as unknown as`.
+- usar `node scripts/codegen/list-endpoints.js` para listar endpoints reales
+  locales y el adapter que los consume.
 
 `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
 `queryParams`. Esto cubre catálogos y datos de referencia sin agregar

@@ -92,6 +92,10 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 - Si cambia un endpoint en Swagger y se regenera, solo el adapter necesita
   ajuste. El resto de la feature compila sin cambios.
 - Cada adapter expone tipos propios simples (no reexporta DTOs del backend).
+- Los metodos publicos del adapter nunca exponen `unknown`, `any`, DTOs
+  generated ni `OperationResult`.
+- Los casts `as unknown as` no se usan en adapters; si aparecen, falta tipar el
+  endpoint generado o discriminar una union real.
 - Los errores de HTTP se transforman en errores de dominio dentro del adapter.
 
 ### Ejemplo: auth
@@ -131,13 +135,13 @@ export class AuthSessionService {
 
 ### Que pasa cuando cambia el backend
 
-| Cambio en backend                         | Impacto en frontend                                         |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                     |
-| Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.             |
-| Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.               |
-| Endpoint eliminado                        | `check-endpoints` detecta. Borrar adapter method + service. |
-| Endpoint nuevo                            | Agregar method en adapter con tipos estables.               |
+| Cambio en backend                         | Impacto en frontend                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                               |
+| Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.                       |
+| Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.                         |
+| Endpoint eliminado                        | `check-api-contracts`/build detecta. Borrar adapter method + service. |
+| Endpoint nuevo                            | Agregar method en adapter con tipos estables.                         |
 
 ## Tipos generados vs tipos de feature
 
@@ -195,10 +199,10 @@ va a mostrar ni que hacer con ellos.
 - Las pages son dueñas del estado de la pantalla: signals de error, loading, pasos de wizard, navegacion. Hacen `inject()` de servicios y reaccionan a sus respuestas.
 - Los components deben quedarse cerca de la presentacion: inputs, outputs, formularios, eventos de usuario, mensajes visibles y bindings. No hacen `inject()` de servicios.
 - Los servicios deben coordinar endpoints, stores y transformaciones de dominio. Pueden exponer `Observable`, signals readonly o metodos imperativos segun el caso de uso.
-- Los servicios deben ser la capa normal para usar la API. Para endpoints que
-  devuelven `OperationResult`, usar `api.data(endpoint, options)` o
-  `api.list(endpoint, mapper?, options?)` en vez de repetir `result.data` en cada
-  llamada.
+- Los adapters deben usar la receta unica de API: `api.data(endpoint, options)`
+  para un item, `api.list(endpoint, mapper?, options?)` para arrays,
+  `requestWithMessage(endpoint, options)` solo si la feature necesita `message`,
+  y `Observable<void>` para comandos sin data util.
 - Cada feature debe tener un adapter en `endpoints/` que encapsule los imports
   de generated y DTOs. Los services llaman al adapter, no a `ApiHttpClient`
   directo. Si la feature es trivial (un solo GET), el adapter puede ser inline
@@ -225,13 +229,13 @@ Esto ejecuta:
 Para descubrir endpoints reales en el ambiente local:
 
 ```bash
-npm run api:endpoints
+node scripts/codegen/list-endpoints.js
 ```
 
 Para detectar drift en CI o antes de un PR:
 
 ```bash
-npm run check-endpoints
+npm run check-api-contracts
 ```
 
 Si el generador muestra warnings por schemas ambiguos, la correccion debe hacerse

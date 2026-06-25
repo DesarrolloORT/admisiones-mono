@@ -59,7 +59,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    Para descubrir los endpoints reales disponibles en tu ambiente local:
 
    ```bash
-   npm run api:endpoints
+   node scripts/codegen/list-endpoints.js
    ```
 
 4. Ajustar la base del repositorio nuevo:
@@ -83,15 +83,15 @@ npm run test
 npm run build
 ```
 
-Cuando el PR depende de cambios en Swagger, tambien conviene validar si el
-Swagger local elimina o renombra endpoints consumidos por adapters:
+Antes de abrir un PR, validar que los adapters mantengan encapsulados los contratos
+generados y no expongan tipos ambiguos:
 
 ```bash
-npm run check-endpoints
+npm run check-api-contracts
 ```
 
-Ese comando es de solo lectura: compara el Swagger actual contra los endpoints
-generados locales y reporta breaking changes o imports obsoletos.
+Ese comando es de solo lectura: revisa los endpoints generados locales y las
+firmas publicas de adapters.
 
 ## Dev Container
 

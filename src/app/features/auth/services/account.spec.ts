@@ -16,7 +16,7 @@ describe('AccountService', () => {
     endpoint = {
       getPersonalData: vi.fn().mockReturnValue(of({ firstName: 'Gabriela' })),
       updatePersonalData: vi.fn().mockReturnValue(of(true)),
-      changePassword: vi.fn().mockReturnValue(of(null)),
+      changePassword: vi.fn().mockReturnValue(of(undefined)),
     };
 
     TestBed.configureTestingModule({
@@ -59,7 +59,7 @@ describe('AccountService', () => {
     };
 
     service.changePassword(payload).subscribe(result => {
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     expect(endpoint.changePassword).toHaveBeenCalledWith(payload);

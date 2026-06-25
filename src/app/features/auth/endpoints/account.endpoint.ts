@@ -87,12 +87,14 @@ export class AccountEndpoint {
       .pipe(map(result => result === true));
   }
 
-  public changePassword(payload: AccountChangePasswordPayload): Observable<unknown> {
-    return this.api.request(postPersonaCambiarContrasenaEndpoint, {
-      body: {
-        passwordActual: payload.currentPassword,
-        passwordNueva: payload.password,
-      },
-    });
+  public changePassword(payload: AccountChangePasswordPayload): Observable<void> {
+    return this.api
+      .request(postPersonaCambiarContrasenaEndpoint, {
+        body: {
+          passwordActual: payload.currentPassword,
+          passwordNueva: payload.password,
+        },
+      })
+      .pipe(map(() => undefined));
   }
 }

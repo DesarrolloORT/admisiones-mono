@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
 import {
@@ -40,7 +41,9 @@ const { values: flags } = nodeParseArgs({
   strict: false,
 });
 
-if (flags.help) {
+const isMain = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+
+if (isMain && flags.help) {
   console.log(`
 Usage: node scripts/codegen/update-endpoints.js [options]
 
@@ -164,10 +167,12 @@ async function main() {
   }
 }
 
-main().catch(error => {
-  console.error(`✗ ${error.message}`);
-  process.exit(1);
-});
+if (isMain) {
+  main().catch(error => {
+    console.error(`✗ ${error.message}`);
+    process.exit(1);
+  });
+}
 
 function printLlmFixPrompt(staleImports) {
   const lines = [];
@@ -431,7 +436,7 @@ async function formatTypeScript(content) {
   }
 }
 
-function generateEndpointFiles(swagger, options) {
+export function generateEndpointFiles(swagger, options) {
   if (
     !swagger ||
     typeof swagger !== 'object' ||
@@ -690,37 +695,41 @@ function createResponseType(operation, context, indentSpaces) {
     return 'unknown';
   }
 
-  const responseCode = selectMainResponseCode(responses);
-  if (!responseCode) {
+  const responseCodes = selectSuccessResponseCodes(responses);
+  if (responseCodes.length === 0) {
     context.warnings.push(`No 2xx response documented for ${context.source}.`);
     return 'unknown';
   }
 
+  const responseTypes = responseCodes.map(responseCode =>
+    createResponseTypeForCode(responseCode, responses[responseCode], context, indentSpaces)
+  );
+  const uniqueResponseTypes = [...new Set(responseTypes)];
+
+  return uniqueResponseTypes.join(' | ');
+}
+
+function createResponseTypeForCode(responseCode, rawResponse, context, indentSpaces) {
   if (responseCode === '204') {
     return 'void';
   }
 
-  const response = resolveMaybeRef(context.swagger, responses[responseCode]);
+  const response = resolveMaybeRef(context.swagger, rawResponse);
   const contentItem = pickContentItem(response?.content);
   if (!contentItem?.schema) {
-    context.warnings.push(`Response schema could not be resolved for ${context.source}.`);
+    context.warnings.push(
+      `Response schema could not be resolved for ${context.source} (${responseCode}).`
+    );
     return 'unknown';
   }
 
   return schemaToType(contentItem.schema, context, indentSpaces);
 }
 
-function selectMainResponseCode(responses) {
-  const preferred = ['200', '201', '204'];
-  for (const code of preferred) {
-    if (responses[code]) {
-      return code;
-    }
-  }
-
+function selectSuccessResponseCodes(responses) {
   return Object.keys(responses)
     .filter(code => /^2\d\d$/.test(code))
-    .sort()[0];
+    .sort((a, b) => Number(a) - Number(b));
 }
 
 function pickContentItem(content) {

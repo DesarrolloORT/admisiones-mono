@@ -208,18 +208,12 @@ export class AuthEndpoint {
       })
       .pipe(
         map(response => {
-          const twoFactor = response as unknown as {
-            sessionId?: string;
-            maskedEmail?: string;
-            message?: string;
-          };
-
-          if (typeof twoFactor.sessionId === 'string' && twoFactor.sessionId.length > 0) {
+          if ('sessionId' in response) {
             return {
               kind: 'twoFactorRequired',
-              sessionId: twoFactor.sessionId,
-              maskedEmail: twoFactor.maskedEmail ?? '',
-              message: twoFactor.message ?? '',
+              sessionId: response.sessionId ?? '',
+              maskedEmail: response.maskedEmail ?? '',
+              message: response.message ?? '',
             } satisfies LoginResult;
           }
 

@@ -172,7 +172,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: string[] };
+      response: { success?: boolean; httpCode?: number; data: string[] };
     }>({
       operationId: 'ListarPaises',
       method: 'GET',
@@ -226,7 +226,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: string[] };
+      response: { success?: boolean; httpCode?: number; data: string[] };
     }>({
       operationId: 'ListarPaises',
       method: 'GET',
@@ -255,6 +255,8 @@ describe('ApiHttpClient', () => {
       queryParams: never;
       request: never;
       response: {
+        success?: boolean;
+        httpCode?: number;
         data: { nombre: string; aceptado: boolean; fechaAceptacion: string | null };
         message?: string | null;
       };
@@ -286,7 +288,12 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { nombre: string }; message?: string | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: { nombre: string };
+        message?: string | null;
+      };
     }>({
       operationId: 'EvaluarDocumento',
       method: 'POST',
@@ -316,7 +323,13 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: null; errorCode?: string | null; message?: string | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: null;
+        errorCode?: string | null;
+        message?: string | null;
+      };
     }>({
       operationId: 'CrearPersona',
       method: 'POST',
@@ -351,7 +364,11 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: Array<{ id: number; nombre: string }> | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: Array<{ id: number; nombre: string }> | null;
+      };
     }>({
       operationId: 'ListarPersonas',
       method: 'GET',
@@ -373,7 +390,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { id: number; nombre: string } };
+      response: { success?: boolean; httpCode?: number; data: { id: number; nombre: string } };
     }>({
       operationId: 'ObtenerPersona',
       method: 'GET',
@@ -393,7 +410,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: Array<{ id: number }> | null };
+      response: { success?: boolean; httpCode?: number; data: Array<{ id: number }> | null };
     }>({
       operationId: 'ListarPersonas',
       method: 'GET',

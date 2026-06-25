@@ -26,7 +26,7 @@ export class AccountService {
     return this.endpoint.updatePersonalData(payload);
   }
 
-  public changePassword(payload: ChangePasswordPayload): Observable<unknown> {
+  public changePassword(payload: ChangePasswordPayload): Observable<void> {
     return this.endpoint.changePassword(payload);
   }
 }

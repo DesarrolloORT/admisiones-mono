@@ -147,7 +147,7 @@ ignorados por Git.
 
 `ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
 defecto los `GET` sin parámetros. Los services consumen adapters de feature; si
-necesitas ver los endpoints reales locales, ejecuta `npm run api:endpoints`.
+necesitas ver los endpoints reales locales, ejecuta `node scripts/codegen/list-endpoints.js`.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
@@ -191,7 +191,7 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
 - `update-endpoints`: actualiza constantes tipadas de endpoints desde Swagger.
 - `update-api`: actualiza modelos y endpoints, y valida que Angular siga compilando.
-- `check-endpoints`: regenera contratos de endpoints y falla si quedan diferencias en Git.
+- `check-api-contracts`: valida que adapters no filtren `generated`, `unknown`, `any` ni casts inseguros.
 
 ## Pre-commit hook
 
