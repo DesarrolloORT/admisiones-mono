@@ -24,26 +24,24 @@ namespace DataAccess.DevartRepositories
 
             // Productos con interés fresco (grado 5) en procesos marcados para web/habilitados,
             // que además figuran en VD_FRESCO_PRODUCTO_ADMISIONES para la persona.
-            // ponytail: Any() se traduce a CASE WHEN EXISTS THEN TRUE ELSE FALSE (ORA-00904 "FALSE"
-            // en Oracle <23c). Usamos join para forzar EXISTS plano sin literal booleano.
             var productosInteresFresco =
-                from ip in ctx.InteresProductos
-                join i in ctx.Interes on ip.IdInteres equals i.IdInteres
-                join p in ctx.Procesos on i.IdProceso equals p.IdProceso
-                join f in ctx.VdFrescoProductoAdmisiones
-                    on new { CodigoPersona = (long?)i.CodigoPersona, IdProducto = (long?)ip.IdProducto }
-                       equals new { f.CodigoPersona, f.IdProducto }
-                where i.CodigoPersona == codigoPersona
-                    && ip.IdGradoInteres == 5m
-                    && p.MarcadoParawebProceso == "SI"
-                    && p.HabilitadoInteresSitio == "SI"
-                select ip.IdProducto;
+                (from ip in ctx.InteresProductos
+                 join i in ctx.Interes on ip.IdInteres equals i.IdInteres
+                 join p in ctx.Procesos on i.IdProceso equals p.IdProceso
+                 join f in ctx.VdFrescoProductoAdmisiones
+                     on new { CodigoPersona = (long?)i.CodigoPersona, IdProducto = (long?)ip.IdProducto }
+                        equals new { f.CodigoPersona, f.IdProducto }
+                 where i.CodigoPersona == codigoPersona
+                     && ip.IdGradoInteres == 5m
+                     && p.MarcadoParawebProceso == "SI"
+                     && p.HabilitadoInteresSitio == "SI"
+                 select ip.IdProducto).ToList();
 
             // Productos en los que la persona ya está inscripta (sin baja).
             var productosInscripto =
-                from ins in ctx.Inscriptos
-                where ins.CodigoPersona == codigoPersona && ins.BajaInscr == null && ins.IdProductoReal != null
-                select ins.IdProductoReal.Value;
+                (from ins in ctx.Inscriptos
+                 where ins.CodigoPersona == codigoPersona && ins.BajaInscr == null && ins.IdProductoReal != null
+                 select ins.IdProductoReal.Value).ToList();
 
             return objectSet
                 .Where(v => !productosInteresFresco.Contains(v.IdProducto)
