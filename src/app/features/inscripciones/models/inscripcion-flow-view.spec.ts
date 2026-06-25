@@ -25,4 +25,12 @@ describe('inscripcion flow view', () => {
     expect(formatPaymentDeadline('2027-03-04')).toBe('04/03/2027');
     expect(formatInscriptionAmount(15500)).toBe('$ 15.500');
   });
+
+  it('does not invent missing or invalid payment data', () => {
+    expect(formatPaymentDeadline(null)).toBe('No informado');
+    expect(formatPaymentDeadline('2027-02-30')).toBe('No informado');
+    expect(formatPaymentDeadline('not-a-date')).toBe('No informado');
+    expect(formatInscriptionAmount(null)).toBe('No informado');
+    expect(formatInscriptionAmount(-1)).toBe('No informado');
+  });
 });

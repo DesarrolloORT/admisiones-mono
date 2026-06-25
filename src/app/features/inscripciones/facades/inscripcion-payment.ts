@@ -1,8 +1,13 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import type { OrtErrorItem } from '@desarrolloort/components';
+import { finalize } from 'rxjs/operators';
 
-import type { MetodoPago } from '../models/inscripcion-flow';
+import { Catalogs } from '../../catalogs/services/catalogs';
+import { toBankOption } from '../models/inscripcion-bank-logo';
+import type { MetodoPago, OpcionInscripcion } from '../models/inscripcion-flow';
 import { buildFormErrors } from '../models/inscripcion-flow-forms';
 import { getResultadoPago, parseResultadoForzado } from '../models/inscripcion-flow-policy';
 import {
@@ -20,6 +25,7 @@ import { InscripcionProposalFacade } from './inscripcion-proposal';
 export class InscripcionPaymentFacade {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly catalogs = inject(Catalogs);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
   private readonly proposal = inject(InscripcionProposalFacade);
@@ -29,6 +35,10 @@ export class InscripcionPaymentFacade {
   public readonly paymentOptions = PAYMENT_OPTIONS;
   public readonly coordinators = COORDINATORS;
   public readonly studentNumber = '397654';
+
+  public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
+  public readonly loadingBanks = signal(false);
+  public readonly bankLoadError = signal<string | null>(null);
 
   private readonly submitted = signal(false);
   public readonly view = signal<InscripcionPaymentView>('editing');
@@ -44,6 +54,7 @@ export class InscripcionPaymentFacade {
     this.submitted()
       ? buildFormErrors(this.paymentForm, [
           { controlName: 'metodoPago', fieldId: '', label: 'Medio de pago' },
+          { controlName: 'banco', fieldId: '', label: 'Banco' },
         ])
       : []
   );
@@ -78,6 +89,38 @@ export class InscripcionPaymentFacade {
     this.destroyRef.onDestroy(() => {
       if (this.processingTimer) clearTimeout(this.processingTimer);
     });
+    this.loadBanks();
+    this.configureBankValidator();
+  }
+
+  private loadBanks(): void {
+    this.loadingBanks.set(true);
+    this.bankLoadError.set(null);
+    this.catalogs
+      .getBancos()
+      .pipe(
+        finalize(() => this.loadingBanks.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: banks => this.bankOptions.set(banks.map(toBankOption)),
+        error: () =>
+          this.bankLoadError.set('No se pudieron cargar los bancos. Intentá nuevamente.'),
+      });
+  }
+
+  private configureBankValidator(): void {
+    this.paymentForm.controls.metodoPago.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(method => this.syncBankValidator(method));
+    this.syncBankValidator(this.paymentForm.controls.metodoPago.value);
+  }
+
+  private syncBankValidator(method: MetodoPago | ''): void {
+    const bankControl = this.paymentForm.controls.banco;
+    bankControl.setValidators(method === 'cuenta-bancaria' ? Validators.required : null);
+    if (method !== 'cuenta-bancaria') bankControl.setValue('', { emitEvent: false });
+    bankControl.updateValueAndValidity({ emitEvent: false });
   }
 
   public requestConfirmation(): void {
@@ -124,6 +167,7 @@ export class InscripcionPaymentFacade {
     response: ReturnType<InscripcionProcessStore['preEnrollmentResponse']>
   ): void {
     this.paymentForm.controls.metodoPago.setValue(method, { emitEvent: false });
+    this.syncBankValidator(method);
     this.process.preEnrollmentResponse.set(response);
     this.view.set('editing');
   }

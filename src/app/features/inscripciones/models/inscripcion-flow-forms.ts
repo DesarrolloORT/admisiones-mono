@@ -143,6 +143,7 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
+      banco: new FormControl('', { nonNullable: true }),
     }),
   };
 }

@@ -42,19 +42,30 @@ export function buildSummaryItems(context: {
 }
 
 export function formatInscriptionAmount(value: number | null | undefined): string {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return '$ 15.500';
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 'No informado';
 
   return `$ ${new Intl.NumberFormat('es-UY', { maximumFractionDigits: 0 }).format(value)}`;
 }
 
 export function formatPaymentDeadline(value: string | null | undefined): string {
-  if (!value) return '04/03/2027';
+  if (!value) return 'No informado';
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return value;
 
-  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
-  if (!year || !month || !day) return value;
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/.exec(value);
+  if (!isoDate) return 'No informado';
 
-  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+  const [, year, month, day] = isoDate;
+  const date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() + 1 !== Number(month) ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    return 'No informado';
+  }
+
+  return `${day}/${month}/${year}`;
 }
 
 export function getReservationInstructions(method: MetodoPago | null): InstruccionReserva {

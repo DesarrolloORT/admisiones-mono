@@ -173,6 +173,7 @@ export interface FormularioReglamento {
 
 export interface FormularioPago {
   metodoPago: FormControl<MetodoPago | ''>;
+  banco: FormControl<string>;
 }
 
 export interface ArchivosIdentidad {

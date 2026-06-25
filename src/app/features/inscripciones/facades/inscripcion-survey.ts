@@ -10,7 +10,11 @@ import type {
 import { merge, Observable, of } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 
-import type { InitialSurveyCatalogs } from '../../catalogs/models/catalog.interface';
+import type {
+  BaccalaureateYearGroup,
+  InitialSurveyCatalogs,
+  LocationCountry,
+} from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type {
   ArchivosIdentidad,
@@ -54,7 +58,9 @@ export class InscripcionSurveyFacade {
   private readonly proposal = inject(InscripcionProposalFacade);
   private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
   private identityPreloadRequested = false;
+  private uruguayCountryCode: number | null = null;
   private readonly identityFileTouched = new Set<IdentityFileTarget>();
+  private readonly baccalaureateYears = signal<readonly BaccalaureateYearGroup[]>([]);
 
   public readonly educationForm = this.formsStore.educationForm;
   public readonly academicDecisionForm = this.formsStore.academicDecisionForm;
@@ -157,11 +163,25 @@ export class InscripcionSurveyFacade {
 
   constructor() {
     this.loadInitialSurveyCatalogs();
+    this.loadDepartmentOptions();
     this.configureConditionalValidators();
+    this.configureDependentCatalogs();
     this.observeForms();
     this.loadStudentRegulationAcceptance();
     this.loadIdentityPreloadOnIdentitySection();
     this.applyResolvedInitialSurveyState();
+  }
+
+  private configureDependentCatalogs(): void {
+    this.educationForm.controls.tipoBachillerato.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.refreshOrientationOptions();
+        this.updateConditionalValidators();
+      });
+    this.educationForm.controls.departamento.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadInstitutionsForSelectedDepartment());
   }
 
   public continue(): void {
@@ -630,6 +650,10 @@ export class InscripcionSurveyFacade {
             estadoEducacionSuperior: [],
             formacionTutores: [],
             nivelConocimiento: [],
+            motivosEleccion: [],
+            publicidadesEleccion: [],
+            universidades: [],
+            aniosBachiller: [],
           });
         },
       });
@@ -640,9 +664,124 @@ export class InscripcionSurveyFacade {
     this.educationLevelOptions.set(toCatalogOptions(catalogs.formacionTutores));
     this.supportOptions.set(toCatalogOptions(catalogs.compartidoCon));
     this.careerDecisionOptions.set(toCatalogOptions(catalogs.decisionCarrera));
-    this.motivesOptions.set(toCatalogOptions(catalogs.decisionUniversidad));
+    this.motivesOptions.set(toCatalogOptions(catalogs.motivosEleccion));
+    this.universityOptions.set(toCatalogOptions(catalogs.universidades));
+    this.advertisingOptions.set(toCatalogOptions(catalogs.publicidadesEleccion));
+    this.baccalaureateYears.set(catalogs.aniosBachiller);
+    this.baccalaureateOptions.set(buildBaccalaureateOptions(catalogs.aniosBachiller));
+    this.refreshOrientationOptions();
     this.updateConditionalValidators();
   }
+
+  /** Recalcula las orientaciones disponibles según el bachillerato seleccionado. */
+  private refreshOrientationOptions(): void {
+    const selected = this.educationForm.controls.tipoBachillerato.value;
+    this.orientationOptions.set(buildOrientationOptions(this.baccalaureateYears(), selected));
+    if (
+      this.educationForm.controls.orientacion.value &&
+      !this.orientationOptions().some(
+        option => option.value === this.educationForm.controls.orientacion.value
+      )
+    ) {
+      this.educationForm.controls.orientacion.setValue('', { emitEvent: false });
+    }
+  }
+
+  private loadDepartmentOptions(): void {
+    this.catalogs
+      .getCountryLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: countries => this.applyDepartmentOptions(countries),
+        error: () => undefined,
+      });
+  }
+
+  private applyDepartmentOptions(countries: readonly LocationCountry[]): void {
+    const uruguay =
+      countries.find(country => normalizeName(country.nombre) === 'uruguay') ??
+      countries[0] ??
+      null;
+    this.uruguayCountryCode = uruguay?.codigoPais ?? null;
+    this.departmentOptions.set(
+      (uruguay?.estado ?? []).map(state => ({
+        value: state.codigoEstado.toString(),
+        label: state.nombre,
+      }))
+    );
+    this.updateConditionalValidators();
+  }
+
+  private loadInstitutionsForSelectedDepartment(): void {
+    const departmentValue = this.educationForm.controls.departamento.value;
+    const codigoEstado = departmentValue ? Number(departmentValue) : null;
+    if (this.uruguayCountryCode === null || codigoEstado === null) {
+      this.institutionOptions.set([]);
+      this.updateConditionalValidators();
+      return;
+    }
+    this.catalogs
+      .getInstituciones(this.uruguayCountryCode, codigoEstado)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: institutions => {
+          this.institutionOptions.set(
+            institutions.map(institution => ({
+              value: institution.id.toString(),
+              label: institution.label,
+            }))
+          );
+          const selected = this.educationForm.controls.institucionEducativa.value;
+          if (selected && !this.institutionOptions().some(option => option.value === selected)) {
+            this.educationForm.controls.institucionEducativa.setValue('', { emitEvent: false });
+          }
+          this.updateConditionalValidators();
+        },
+        error: () => {
+          this.institutionOptions.set([]);
+          this.updateConditionalValidators();
+        },
+      });
+  }
+}
+
+function normalizeName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toLowerCase();
+}
+
+function buildBaccalaureateOptions(
+  years: readonly BaccalaureateYearGroup[]
+): readonly OpcionInscripcion[] {
+  const seen = new Map<string, OpcionInscripcion>();
+  for (const year of years) {
+    for (const baccalaureate of year.baccalaureates) {
+      const value = baccalaureate.id.toString();
+      if (!seen.has(value)) seen.set(value, { value, label: baccalaureate.label });
+    }
+  }
+  return [...seen.values()];
+}
+
+function buildOrientationOptions(
+  years: readonly BaccalaureateYearGroup[],
+  selectedBaccalaureate: string
+): readonly OpcionInscripcion[] {
+  if (!selectedBaccalaureate) return [];
+  const seen = new Map<string, OpcionInscripcion>();
+  for (const year of years) {
+    for (const baccalaureate of year.baccalaureates) {
+      if (baccalaureate.id.toString() !== selectedBaccalaureate || !baccalaureate.orientation) {
+        continue;
+      }
+      const value = baccalaureate.orientation;
+      if (!seen.has(value)) seen.set(value, { value, label: baccalaureate.orientation });
+    }
+  }
+  return [...seen.values()];
 }
 
 function isNotFoundError(error: unknown): error is { status: number } {

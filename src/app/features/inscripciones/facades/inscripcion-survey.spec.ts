@@ -67,6 +67,8 @@ describe('InscripcionSurveyFacade', () => {
             getCareers: () => of([]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
+            getCountryLocations: () => of([]),
+            getInstituciones: () => of([]),
             getInitialSurveyCatalogs: () =>
               of({
                 aniosAprobadosEducacionSuperior: [],
@@ -76,6 +78,10 @@ describe('InscripcionSurveyFacade', () => {
                 estadoEducacionSuperior: [],
                 formacionTutores: [],
                 nivelConocimiento: [],
+                motivosEleccion: [],
+                publicidadesEleccion: [],
+                universidades: [],
+                aniosBachiller: [],
               }),
           },
         },

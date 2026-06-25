@@ -31,6 +31,7 @@ describe('InscripcionPaymentFacade', () => {
             getCareers: () => of([]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
+            getBancos: () => of([{ id: 1, label: 'BROU', code: 'brou' }]),
           },
         },
         { provide: Inscripciones, useValue: {} },
@@ -50,6 +51,7 @@ describe('InscripcionPaymentFacade', () => {
 
   it('shows processing before completing an immediate payment', fakeAsync(() => {
     facade.paymentForm.controls.metodoPago.setValue('cuenta-bancaria');
+    facade.paymentForm.controls.banco.setValue('1');
 
     facade.requestConfirmation();
     facade.confirm();
@@ -58,4 +60,20 @@ describe('InscripcionPaymentFacade', () => {
     tick(1000);
     expect(facade.outcome()).toBe('inscripcion-confirmada');
   }));
+
+  it('requires a bank when paying from a bank account', () => {
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-bancaria');
+    facade.paymentForm.controls.banco.setValue('');
+
+    facade.requestConfirmation();
+
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentForm.controls.banco.hasError('required')).toBe(true);
+  });
+
+  it('loads bank options with their logos', () => {
+    expect(facade.bankOptions()).toEqual([
+      { value: '1', label: 'BROU', icon: 'assets/banks/brou.svg' },
+    ]);
+  });
 });

@@ -9,6 +9,7 @@ describe('Inscripciones', () => {
   let service: Inscripciones;
   let endpointMock: {
     confirmPreEnrollment: ReturnType<typeof vi.fn>;
+    getDetail: ReturnType<typeof vi.fn>;
     getIdentityDocument: ReturnType<typeof vi.fn>;
     getIdentityPhoto: ReturnType<typeof vi.fn>;
     getInitialSurvey: ReturnType<typeof vi.fn>;
@@ -27,6 +28,11 @@ describe('Inscripciones', () => {
           resumen: null,
         })
       ),
+      getDetail: vi
+        .fn()
+        .mockReturnValue(
+          of({ estado: 'A la espera', detalle: null, pagoPendiente: null, confirmada: null })
+        ),
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
       getInitialSurvey: vi
@@ -118,6 +124,12 @@ describe('Inscripciones', () => {
 
     expect(endpointMock.getInitialSurvey).toHaveBeenCalledOnce();
     expect(endpointMock.saveInitialSurvey).toHaveBeenCalledWith(payload);
+  });
+
+  it('delegates inscription detail loading', () => {
+    service.getDetail(20, 200).subscribe();
+
+    expect(endpointMock.getDetail).toHaveBeenCalledWith(20, 200);
   });
 
   it('delegates student regulation acceptance loading', () => {

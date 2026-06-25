@@ -1,9 +1,10 @@
 import { computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { merge } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
+import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscripcion-detail';
 import type { BorradorInscripcion, EscenarioInscripcion } from '../models/inscripcion-flow';
 import { getSurveyValues, parseDate, serializeDate } from '../models/inscripcion-flow-mappers';
 import { InscripcionDraft } from '../services/inscripcion-draft';
@@ -21,6 +22,7 @@ const DRAFT_SCENARIOS: readonly EscenarioInscripcion[] = [
 
 export class InscripcionProcessFacade {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly forms = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
@@ -170,7 +172,24 @@ export class InscripcionProcessFacade {
         saved.paso === 'pago' && !saved.preinscripcion ? 'encuesta' : saved.paso
       );
     }
+    this.applyResumeContext();
     this.draftReady.set(true);
+  }
+
+  // Si la inscripción se retoma desde el panel con un detalle resuelto, reconstruye
+  // el contexto y posiciona el flujo en el paso pendiente: "Pago pendiente" precarga
+  // seña/vencimiento/resumen y salta al paso de pago; "Confirmada" precarga el
+  // resumen y muestra el success step terminal. El resto sigue el flujo normal ya
+  // configurado por la encuesta.
+  private applyResumeContext(): void {
+    const detail = this.route.snapshot.data['inscriptionDetail'] as InscripcionDetail | null;
+    if (detail?.estado !== 'Pago pendiente' && detail?.estado !== 'Confirmada') return;
+
+    const preEnrollment = detailToPreEnrollment(detail);
+    if (preEnrollment) this.process.preEnrollmentResponse.set(preEnrollment);
+
+    if (detail.estado === 'Pago pendiente') this.process.flow.goTo('pago');
+    else this.payment.outcome.set('inscripcion-confirmada');
   }
 
   private observeDraftChanges(): void {

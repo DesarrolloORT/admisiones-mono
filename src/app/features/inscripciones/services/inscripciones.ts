@@ -3,6 +3,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { InscripcionesEndpoint } from '../endpoints/inscripciones.endpoint';
+import type { InscripcionDetail } from '../models/inscripcion-detail';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocumentFile,
@@ -25,6 +26,10 @@ export interface InscripcionIdentityPreload {
 })
 export class Inscripciones {
   private readonly endpoint = inject(InscripcionesEndpoint);
+
+  public getDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail> {
+    return this.endpoint.getDetail(idProducto, idProceso);
+  }
 
   public getIdentityPreload(): Observable<InscripcionIdentityPreload> {
     return forkJoin({
