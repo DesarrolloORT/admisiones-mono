@@ -59,6 +59,18 @@ describe('CatalogsEndpoint', () => {
         estadoEducacionSuperior: [{ value: 5, label: 'Sin estudios previos' }],
         formacionTutores: [{ value: 6, label: 'Universitaria completa' }],
         nivelConocimiento: [{ value: 7, label: 'Alto' }],
+        motivosEleccion: [{ idMotivo: 8, nombreMotivo: 'Reputación' }],
+        publicidadesEleccion: [{ idPublicidad: 9, nombrePublicidad: 'Redes sociales' }],
+        universidades: [{ codigoEmpresa: 10, nombre: 'Universidad de la República' }],
+        aniosBachiller: [
+          {
+            idAnioBachiller: 11,
+            nombreAnioBachiller: '6º año',
+            bachilleratos: [
+              { codigoTitulo: 12, nombre: 'Científico', orientacionTitulo: 'Matemática' },
+            ],
+          },
+        ],
       })
     );
 
@@ -71,7 +83,44 @@ describe('CatalogsEndpoint', () => {
         estadoEducacionSuperior: [{ id: 5, label: 'Sin estudios previos' }],
         formacionTutores: [{ id: 6, label: 'Universitaria completa' }],
         nivelConocimiento: [{ id: 7, label: 'Alto' }],
+        motivosEleccion: [{ id: 8, label: 'Reputación' }],
+        publicidadesEleccion: [{ id: 9, label: 'Redes sociales' }],
+        universidades: [{ id: 10, label: 'Universidad de la República' }],
+        aniosBachiller: [
+          {
+            id: 11,
+            label: '6º año',
+            baccalaureates: [{ id: 12, label: 'Científico', orientation: 'Matemática' }],
+          },
+        ],
       });
+    });
+  });
+
+  it('should map bancos from API data', () => {
+    apiMock.request.mockReturnValue(
+      of({
+        bancos: [{ idBanco: 1, nombreBanco: 'BROU', codigo: 'brou' }],
+        totalCount: 1,
+      })
+    );
+
+    endpoint.getBancos().subscribe(result => {
+      expect(result).toEqual([{ id: 1, label: 'BROU', code: 'brou' }]);
+    });
+  });
+
+  it('should map instituciones from API data', () => {
+    apiMock.request.mockReturnValue(
+      of([{ codigoEmpresa: 5, nombre: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }])
+    );
+
+    endpoint.getInstituciones(1, 10).subscribe(result => {
+      expect(result).toEqual([{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }]);
+    });
+
+    expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
+      queryParams: { codigoPais: 1, codigoEstado: 10 },
     });
   });
 

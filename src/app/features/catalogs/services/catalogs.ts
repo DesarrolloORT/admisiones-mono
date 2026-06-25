@@ -3,10 +3,12 @@ import { Observable, of } from 'rxjs';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import {
+  Bank,
   Career,
   Comienzo,
   Country,
   DocumentType,
+  EducationalInstitution,
   InitialSurveyCatalogs,
   LocationCountry,
   Turno,
@@ -47,6 +49,17 @@ export class Catalogs {
 
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
     return this.endpoint.getInitialSurveyCatalogs();
+  }
+
+  public getBancos(): Observable<Bank[]> {
+    return this.endpoint.getBancos();
+  }
+
+  public getInstituciones(
+    codigoPais: number,
+    codigoEstado: number
+  ): Observable<EducationalInstitution[]> {
+    return this.endpoint.getInstituciones(codigoPais, codigoEstado);
   }
 
   public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {

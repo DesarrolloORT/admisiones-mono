@@ -83,6 +83,16 @@ export interface ScholarshipFund extends CatalogItem {
   productId: number | string;
 }
 
+/** Bachillerato dentro de un año, con su orientación. */
+export interface BaccalaureateOption extends CatalogItem {
+  orientation: string | null;
+}
+
+/** Año de bachillerato con sus bachilleratos/orientaciones asociadas. */
+export interface BaccalaureateYearGroup extends CatalogItem {
+  baccalaureates: BaccalaureateOption[];
+}
+
 export interface InitialSurveyCatalogs {
   aniosAprobadosEducacionSuperior: CatalogItem[];
   compartidoCon: CatalogItem[];
@@ -91,4 +101,19 @@ export interface InitialSurveyCatalogs {
   estadoEducacionSuperior: CatalogItem[];
   formacionTutores: CatalogItem[];
   nivelConocimiento: CatalogItem[];
+  motivosEleccion: CatalogItem[];
+  publicidadesEleccion: CatalogItem[];
+  universidades: CatalogItem[];
+  aniosBachiller: BaccalaureateYearGroup[];
+}
+
+/** Banco disponible para el pago de la seña. */
+export interface Bank extends CatalogItem {
+  code: string | null;
+}
+
+/** Institución educativa para un país/estado dados. */
+export interface EducationalInstitution extends CatalogItem {
+  codigoPais: number | null;
+  codigoEstado: number | null;
 }

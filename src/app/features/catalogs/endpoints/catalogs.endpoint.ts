@@ -3,21 +3,27 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
+  getCatalogosBancosEndpoint,
   getCatalogosCarrerasEndpoint,
   getCatalogosComienzosEndpoint,
   getCatalogosEncuestaInicialEndpoint,
+  getCatalogosInstitucionesEndpoint,
   getCatalogosPaisesEstadosCiudadesEndpoint,
   getCatalogosTurnosEndpoint,
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
+import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoBachilleratoCatalogo';
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
 
 import {
+  BaccalaureateYearGroup,
+  Bank,
   Career,
   CatalogItem,
   Comienzo,
   Country,
+  EducationalInstitution,
   InitialSurveyCatalogs,
   LocationCity,
   LocationCountry,
@@ -85,8 +91,51 @@ export class CatalogsEndpoint {
         estadoEducacionSuperior: this.toCatalogItems(data?.estadoEducacionSuperior),
         formacionTutores: this.toCatalogItems(data?.formacionTutores),
         nivelConocimiento: this.toCatalogItems(data?.nivelConocimiento),
+        motivosEleccion: (data?.motivosEleccion ?? []).map(item => ({
+          id: item.idMotivo,
+          label: item.nombreMotivo,
+        })),
+        publicidadesEleccion: (data?.publicidadesEleccion ?? []).map(item => ({
+          id: item.idPublicidad,
+          label: item.nombrePublicidad,
+        })),
+        universidades: (data?.universidades ?? []).map(item => ({
+          id: item.codigoEmpresa ?? 0,
+          label: item.nombre ?? '',
+        })),
+        aniosBachiller: (data?.aniosBachiller ?? []).map(year => this.toBaccalaureateYear(year)),
       }))
     );
+  }
+
+  public getBancos(): Observable<Bank[]> {
+    return this.api.request(getCatalogosBancosEndpoint).pipe(
+      map(data =>
+        (data?.bancos ?? []).map(banco => ({
+          id: banco.idBanco ?? 0,
+          label: banco.nombreBanco ?? '',
+          code: banco.codigo ?? null,
+        }))
+      )
+    );
+  }
+
+  public getInstituciones(
+    codigoPais: number,
+    codigoEstado: number
+  ): Observable<EducationalInstitution[]> {
+    return this.api
+      .request(getCatalogosInstitucionesEndpoint, { queryParams: { codigoPais, codigoEstado } })
+      .pipe(
+        map(data =>
+          this.fromData(data, item => ({
+            id: item.codigoEmpresa,
+            label: item.nombre,
+            codigoPais: item.codigoPais ?? null,
+            codigoEstado: item.codigoEstado ?? null,
+          }))
+        )
+      );
   }
 
   public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
@@ -131,6 +180,22 @@ export class CatalogsEndpoint {
       codigoEstado: c.codigoEstado ?? 0,
       codigoCiudad: c.codigoCiudad ?? 0,
       nombre: c.nombre ?? '',
+    };
+  }
+
+  private toBaccalaureateYear(year: {
+    idAnioBachiller?: number;
+    nombreAnioBachiller?: string | null;
+    bachilleratos?: DtoBachilleratoCatalogo[] | null;
+  }): BaccalaureateYearGroup {
+    return {
+      id: year.idAnioBachiller ?? 0,
+      label: year.nombreAnioBachiller ?? '',
+      baccalaureates: (year.bachilleratos ?? []).map(item => ({
+        id: item.codigoTitulo ?? 0,
+        label: item.nombre ?? '',
+        orientation: item.orientacionTitulo ?? null,
+      })),
     };
   }
 

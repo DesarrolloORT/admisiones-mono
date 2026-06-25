@@ -13,6 +13,8 @@ describe('Catalogs', () => {
     getCareers: ReturnType<typeof vi.fn>;
     getComienzos: ReturnType<typeof vi.fn>;
     getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
+    getBancos: ReturnType<typeof vi.fn>;
+    getInstituciones: ReturnType<typeof vi.fn>;
     getTurnos: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
   };
@@ -24,6 +26,8 @@ describe('Catalogs', () => {
       getCareers: vi.fn(),
       getComienzos: vi.fn(),
       getInitialSurveyCatalogs: vi.fn(),
+      getBancos: vi.fn(),
+      getInstituciones: vi.fn(),
       getTurnos: vi.fn(),
       clearCache: vi.fn(),
     };
@@ -98,6 +102,10 @@ describe('Catalogs', () => {
       estadoEducacionSuperior: [],
       formacionTutores: [],
       nivelConocimiento: [],
+      motivosEleccion: [],
+      publicidadesEleccion: [],
+      universidades: [],
+      aniosBachiller: [],
     };
     endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
 
@@ -106,6 +114,28 @@ describe('Catalogs', () => {
     });
 
     expect(endpointMock.getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getBancos to the endpoint', () => {
+    const result = [{ id: 1, label: 'BROU', code: 'brou' }];
+    endpointMock.getBancos.mockReturnValue(of(result));
+
+    service.getBancos().subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getBancos).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getInstituciones to the endpoint', () => {
+    const result = [{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }];
+    endpointMock.getInstituciones.mockReturnValue(of(result));
+
+    service.getInstituciones(1, 10).subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getInstituciones).toHaveBeenCalledWith(1, 10);
   });
 
   it('should delegate getTurnos to the endpoint', () => {
