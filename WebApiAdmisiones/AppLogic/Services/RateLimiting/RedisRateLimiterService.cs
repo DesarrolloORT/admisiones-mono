@@ -1,4 +1,5 @@
 using AppLogic.IServices;
+using AppLogic.Utilities;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
@@ -22,9 +23,7 @@ namespace AppLogic.Services.RateLimiting
             _logger = logger;
         }
 
-        /// <summary>
         /// Implementa Sliding Window Rate Limiting usando Redis Sorted Sets.
-        /// </summary>
         /// <param name="key">Clave única de partición (ej: "login-ip:192.168.1.1")</param>
         /// <param name="limit">Máximo número de requests permitidos</param>
         /// <param name="window">Ventana de tiempo</param>
@@ -226,7 +225,7 @@ namespace AppLogic.Services.RateLimiting
             int limit, 
             TimeSpan window)
         {
-            var normalizedDoc = NormalizeDocumento(documento);
+            var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(documento);
             var key = $"login-account:{tipoDocumento}:{normalizedDoc}:ip:{ipAddress}";
 
             var allowed = await IsAllowedAsync(key, limit, window);
@@ -242,21 +241,5 @@ namespace AppLogic.Services.RateLimiting
             };
         }
 
-        /// <summary>
-        /// Normaliza el número de documento para evitar bypass por formato
-        /// (ej: "1.234.567-8" vs "12345678").
-        /// </summary>
-        private static string NormalizeDocumento(string? documento)
-        {
-            if (string.IsNullOrWhiteSpace(documento))
-                return "unknown";
-
-            // Remover puntos, guiones, espacios
-            return documento.Replace(".", "")
-                           .Replace("-", "")
-                           .Replace(" ", "")
-                           .Trim()
-                           .ToLowerInvariant();
-        }
     }
 }

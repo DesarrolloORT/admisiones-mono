@@ -5,6 +5,7 @@ using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Personas;
 using AppLogic.Requests;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -87,9 +88,9 @@ namespace AppLogic.Services.Personas
             persona.CodigoPais = request.CodigoPais;
             persona.CodigoEstado = request.CodigoEstado;
             persona.CodigoCiudad = request.CodigoCiudad;
-            persona.Direccion = FormatearTextoCapitalizado(request.Direccion);
-            persona.Telefono1 = request.Telefono1?.Trim();
-            persona.Email = request.Mail?.Trim();
+            persona.Direccion = DocumentUtils.FormatearTextoCapitalizado(request.Direccion);
+            persona.Telefono1 = DocumentUtils.NormalizarOpcional(request.Telefono1);
+            persona.Email = DocumentUtils.NormalizarOpcional(request.Mail);
 
             PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
             uow.Personas.Update(persona);
@@ -560,19 +561,19 @@ namespace AppLogic.Services.Personas
             var mail = persona.Email ?? string.Empty;
             return new DtoDatosPersona
             {
-                TipoDocumento = persona.TipoDocumento?.Trim() ?? string.Empty,
-                Documento = persona.Documento?.Trim() ?? string.Empty,
-                PrimerNombre = persona.PrimerNombre?.Trim() ?? string.Empty,
-                SegundoNombre = persona.SegundoNombre?.Trim() ?? string.Empty,
-                PrimerApellido = persona.PrimerApellido?.Trim() ?? string.Empty,
-                SegundoApellido = persona.SegundoApellido?.Trim() ?? string.Empty,
+                TipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento),
+                Documento = DocumentUtils.Normalizar(persona.Documento),
+                PrimerNombre = DocumentUtils.Normalizar(persona.PrimerNombre),
+                SegundoNombre = DocumentUtils.Normalizar(persona.SegundoNombre),
+                PrimerApellido = DocumentUtils.Normalizar(persona.PrimerApellido),
+                SegundoApellido = DocumentUtils.Normalizar(persona.SegundoApellido),
                 FechaNacimiento = persona.FechaNacimiento ?? default,
-                Sexo = persona.Sexo?.Trim() ?? string.Empty,
+                Sexo = DocumentUtils.Normalizar(persona.Sexo),
                 CodigoPais = persona.CodigoPais ?? 0,
                 CodigoEstado = persona.CodigoEstado ?? 0,
                 CodigoCiudad = persona.CodigoCiudad ?? 0,
-                Direccion = persona.Direccion?.Trim() ?? string.Empty,
-                Telefono1 = persona.Telefono1?.Trim() ?? string.Empty,
+                Direccion = DocumentUtils.Normalizar(persona.Direccion),
+                Telefono1 = DocumentUtils.Normalizar(persona.Telefono1),
                 Mail = mail,
                 VerificacionMail = mail,
                 IdentidadRestringida = identidadRestringida
@@ -596,17 +597,6 @@ namespace AppLogic.Services.Personas
                 IdInscripto = source.IdInscripto,
                 EstadoInscripcion = source.EstadoInscripcion,
             };
-        }
-
-        private static string FormatearTextoCapitalizado(string? valor)
-        {
-            if (string.IsNullOrWhiteSpace(valor))
-            {
-                return string.Empty;
-            }
-
-            var texto = string.Join(" ", valor.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(texto.ToLower(CultureInfo.CurrentCulture));
         }
     }
 }

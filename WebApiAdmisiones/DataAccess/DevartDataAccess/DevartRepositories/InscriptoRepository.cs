@@ -13,31 +13,6 @@ namespace DataAccess.DevartRepositories
     public partial class InscriptoRepository
     {
         /// <summary>
-        /// Devuelve la última inscripción activa (sin baja) de la persona incluyendo producto y comienzo.
-        /// </summary>
-        public virtual BusinessLogic.Entities.Inscripto GetUltimaInscripcionActiva(long codigoPersona)
-        {
-            return objectSet
-                .Where(i => i.CodigoPersona == codigoPersona
-                         && i.BajaInscr == null
-                         && (i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 1
-                             || i.Oferta.Supraoferta.Paquete.Producto.IdNivelProducto == 2)
-                         && i.Oferta.Supraoferta.Paquete.Producto.ProcesoProductos
-                                .Count(pp => pp.Proceso.HabilitadoInteresSitio == "SI") > 0
-                         && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
-                                .Count(pc => pc.Proceso.HabilitadoInteresSitio == "SI") > 0)
-                .Include(i => i.Oferta)
-                    .ThenInclude(o => o.Supraoferta)
-                        .ThenInclude(s => s.Paquete)
-                            .ThenInclude(p => p.Producto)
-                .Include(i => i.Oferta)
-                    .ThenInclude(o => o.Supraoferta)
-                        .ThenInclude(s => s.Comienzo)
-                .OrderByDescending(i => i.FechaInscr)
-                .FirstOrDefault();
-        }
-
-        /// <summary>
         /// Inscripción de la persona por id, con oferta/turno/comienzo/paquete/producto incluidos.
         /// Filtra por persona para garantizar pertenencia.
         /// </summary>
@@ -61,22 +36,6 @@ namespace DataAccess.DevartRepositories
             return objectSet.Count(i =>
                 i.CodigoPersona == codigoPersona
                 && i.BajaInscr == null) > 0;
-        }
-
-        /// <summary>
-        /// Devuelve true si la persona tiene al menos una inscripción activa (sin baja)
-        /// para el producto e IdProceso indicados (via ProcesoComienzo).
-        /// </summary>
-        public virtual bool TieneInscripcionAdmisiones(long codigoPersona, long idProducto, long idProceso)
-        {
-            return objectSet
-                .Where(i =>
-                    i.CodigoPersona == codigoPersona
-                    && i.BajaInscr == null
-                    && i.IdProductoReal == idProducto
-                    && i.Oferta.Supraoferta.Comienzo.ProcesoComienzos
-                           .Count(pc => pc.IdProceso == idProceso) > 0)
-                .Count() > 0;
         }
 
         public virtual bool TieneInscripcionPreviaAProducto(long codigoPersona, long idProducto)

@@ -39,8 +39,8 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
         var ttlHours = _configuration.GetValue<double?>(TtlConfigKey) ?? DefaultTtlHours;
         var ttl = TimeSpan.FromHours(ttlHours > 0 ? ttlHours : DefaultTtlHours);
 
-        imagenes.TipoDocumento = NormalizarTipoDocumento(tipoDocumento);
-        imagenes.Documento = NormalizarDocumento(imagenes.TipoDocumento, documento);
+        imagenes.TipoDocumento = DocumentUtils.NormalizarTipoDocumento(tipoDocumento);
+        imagenes.Documento = DocumentUtils.NormalizarDocumentoIdentidad(imagenes.TipoDocumento, documento);
         imagenes.CreatedAt = imagenes.CreatedAt == default ? DateTime.UtcNow : imagenes.CreatedAt;
 
         var json = JsonSerializer.Serialize(imagenes, JsonOptions);
@@ -72,19 +72,8 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
 
     internal static string CrearKey(string tipoDocumento, string documento)
     {
-        var tipoNormalizado = NormalizarTipoDocumento(tipoDocumento);
-        var documentoNormalizado = NormalizarDocumento(tipoNormalizado, documento);
+        var tipoNormalizado = DocumentUtils.NormalizarTipoDocumento(tipoDocumento);
+        var documentoNormalizado = DocumentUtils.NormalizarDocumentoIdentidad(tipoNormalizado, documento);
         return $"{KeyPrefix}{tipoNormalizado}:{documentoNormalizado}";
-    }
-
-    internal static string NormalizarTipoDocumento(string? tipoDocumento)
-        => DocumentUtils.NormalizarMayusculas(tipoDocumento);
-
-    internal static string NormalizarDocumento(string tipoDocumento, string? documento)
-    {
-        var documentoNormalizado = DocumentUtils.NormalizarMayusculas(documento);
-        return string.Equals(tipoDocumento, "CI", StringComparison.Ordinal)
-            ? new string(documentoNormalizado.Where(char.IsDigit).ToArray())
-            : documentoNormalizado;
     }
 }

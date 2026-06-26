@@ -24,26 +24,5 @@ namespace DataAccess.DevartRepositories
                 .Where(t => turnoIds.Contains(t.IdTurno))
                 .ToList();
         }
-
-        /// <summary>
-        /// Devuelve los turnos disponibles para las ofertas asociadas al producto y proceso dados.
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.Turno> GetTurnosParaAdmisiones(long idProducto, long idProceso)
-        {
-            var turnoIds = Context.Set<BusinessLogic.Entities.Oferta>()
-                .Where(o => o.InscripcionesAbiertasOferta == "SI"
-                         && o.Supraoferta.Paquete.IdProducto == idProducto
-                         && o.Supraoferta.Paquete.SemestrePaquete != 99
-                         && o.Supraoferta.Paquete.Producto.VisibleAdmisionesProducto == "SI"
-                         && o.Supraoferta.Paquete.Producto.InscribibleProducto == "SI"
-                         && o.Supraoferta.Comienzo.ProcesoComienzos
-                                .Any(pc => pc.IdProceso == idProceso))
-                .Select(o => o.IdTurno)
-                .Distinct();
-
-            return objectSet
-                .Where(t => turnoIds.Contains(t.IdTurno))
-                .ToList();
-        }
     }
 }

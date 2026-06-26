@@ -1,5 +1,6 @@
 using AppLogic.Constants;
 using AppLogic.DTOs;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
@@ -100,9 +101,9 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_10", methodName, "Decision de universidad invalida.", 400);
             if (ValorNoPermitido(request.CompartidoCon, CompartidoConCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
-            if (!EsSiNoONulo(request.InfoOtrasUniversidadesAntes))
+            if (!DocumentUtils.EsSiNoONulo(request.InfoOtrasUniversidadesAntes))
                 return OperationResult<bool>.IsFailed("INS_EI_12", methodName, "Debe indicar SI o NO para universidades consideradas.", 400);
-            if (!EsSiNoONulo(request.InformarEncuesta))
+            if (!DocumentUtils.EsSiNoONulo(request.InformarEncuesta))
                 return OperationResult<bool>.IsFailed("INS_EI_13", methodName, "Debe indicar SI o NO para informar encuesta.", 400);
             if (ValorNoPermitido(request.UltimoAnioSecundaria, UltimoAnioSecundariaCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
@@ -353,7 +354,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             GuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (EsSi(request.InfoOtrasUniversidadesAntes) && request.UniversidadesConsideradas is { Count: 0 })
+            if (DocumentUtils.EsSi(request.InfoOtrasUniversidadesAntes) && request.UniversidadesConsideradas is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_39", methodName, "Debe indicar universidades consideradas.", 400);
             if (request.TieneEducacionSuperior == true && request.UniversidadesEducacionSuperior is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_40", methodName, "Debe indicar universidades de educacion superior.", 400);
@@ -552,19 +553,6 @@ namespace AppLogic.Helpers.ValidationHelpers
             return valor.HasValue && !permitidos.Contains(valor.Value);
         }
 
-        private static bool EsSiNoONulo(string? valor)
-        {
-            var normalizado = NormalizarSiNo(valor);
-            return normalizado == null
-                || normalizado == CommonConstants.Booleanos.Si
-                || normalizado == CommonConstants.Booleanos.No;
-        }
-
-        private static bool EsSi(string? valor)
-        {
-            return NormalizarSiNo(valor) == CommonConstants.Booleanos.Si;
-        }
-
         private static bool AnioBachillerCatalogado(IUnitOfWork uow, long ultimoAnio)
         {
             return uow.AnioBachillers.GetAllWithRelated()
@@ -576,11 +564,6 @@ namespace AppLogic.Helpers.ValidationHelpers
             return uow.AnioBachillers.GetAllWithRelated()
                 .SelectMany(a => a.Titulos)
                 .Any(t => t.CodigoTitulo == codigoTitulo);
-        }
-
-        private static string? NormalizarSiNo(string? valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
         }
     }
 }

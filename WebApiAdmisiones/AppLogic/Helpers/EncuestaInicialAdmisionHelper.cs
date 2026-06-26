@@ -2,6 +2,7 @@ using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.DTOs;
 using AppLogic.Services.Personas;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -137,7 +138,7 @@ namespace AppLogic.Helpers
         {
             if (request.NombreInstitucion != null)
             {
-                encuesta.NombreInstSecEncuestaIni = NormalizarTextoOpcional(request.NombreInstitucion);
+                encuesta.NombreInstSecEncuestaIni = DocumentUtils.NormalizarOpcional(request.NombreInstitucion);
             }
 
             if (request.CodigoTitulo.HasValue)
@@ -186,17 +187,17 @@ namespace AppLogic.Helpers
         {
             if (request.InfoOtrasUniversidadesAntes != null)
             {
-                encuesta.InforOtrasAntesEncuestaIni = NormalizarSiNo(request.InfoOtrasUniversidadesAntes);
+                encuesta.InforOtrasAntesEncuestaIni = DocumentUtils.NormalizarSiNo(request.InfoOtrasUniversidadesAntes);
             }
 
             if (request.InfoOtrasLinea1 != null)
             {
-                encuesta.InforOtrasLinea1Ini = NormalizarTextoOpcional(request.InfoOtrasLinea1);
+                encuesta.InforOtrasLinea1Ini = DocumentUtils.NormalizarOpcional(request.InfoOtrasLinea1);
             }
 
             if (request.InfoOtrasLinea2 != null)
             {
-                encuesta.InforOtrasLinea2Ini = NormalizarTextoOpcional(request.InfoOtrasLinea2);
+                encuesta.InforOtrasLinea2Ini = DocumentUtils.NormalizarOpcional(request.InfoOtrasLinea2);
             }
 
             if (request.CompartidoCon.HasValue)
@@ -211,7 +212,7 @@ namespace AppLogic.Helpers
 
             if (request.InformarEncuesta != null)
             {
-                encuesta.InformarEncuestaIni = NormalizarSiNo(request.InformarEncuesta);
+                encuesta.InformarEncuestaIni = DocumentUtils.NormalizarSiNo(request.InformarEncuesta);
             }
 
             if (request.UltimoAnioSecundaria.HasValue)
@@ -299,7 +300,7 @@ namespace AppLogic.Helpers
             long codigoPersona,
             GuardarEncuestaInicialRequest request)
         {
-            if (string.Equals(NormalizarSiNo(request.InfoOtrasUniversidadesAntes), CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(DocumentUtils.NormalizarSiNo(request.InfoOtrasUniversidadesAntes), CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
             {
                 uow.EmpresaConsideradaAdmisions.RemoveByPersona(codigoPersona);
             }
@@ -362,7 +363,7 @@ namespace AppLogic.Helpers
                     IdEmpresaConsiderada = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION),
                     CodigoPersona = codigoPersona,
                     CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
-                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
+                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? DocumentUtils.NormalizarOpcional(universidad.Nombre) : null
                 });
             }
         }
@@ -381,19 +382,9 @@ namespace AppLogic.Helpers
                     IdEducacionSuperior = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION),
                     CodigoPersona = codigoPersona,
                     CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
-                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
+                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? DocumentUtils.NormalizarOpcional(universidad.Nombre) : null
                 });
             }
-        }
-
-        private static string? NormalizarSiNo(string? valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
-        }
-
-        private static string? NormalizarTextoOpcional(string? valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
         }
 
         private static string ConvertirBoolASiNo(bool valor)
@@ -403,7 +394,7 @@ namespace AppLogic.Helpers
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)
         {
-            var input = $"{idProducto}/{documento?.Trim().ToUpperInvariant()}";
+            var input = $"{idProducto}/{DocumentUtils.NormalizarMayusculas(documento)}";
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
             return Convert.ToHexString(hash)[..30];
         }
