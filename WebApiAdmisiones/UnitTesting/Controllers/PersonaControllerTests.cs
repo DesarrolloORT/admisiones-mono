@@ -1,6 +1,7 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Becas;
+using AppLogic.Dtos.Personas;
 using AppLogic.DevartDTOs;
-using AppLogic.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public void ActualizarDatosPersona_UsesAuthenticatedUserAndReturnsOk()
         {
-            var request = new ActualizarDatosPersonaRequest
+            var request = new DtoActualizarDatosPersonaRequest
             {
                 CodigoPais = 1,
                 CodigoEstado = 2,
@@ -163,9 +164,9 @@ namespace UnitTesting.Controllers
         public void ObtenerDocumentoPersona_UsesAuthenticatedUserAndReturnsOk()
         {
             var fechaVencimiento = DateTime.Today.AddYears(1);
-            var documento = new DocumentoPersonaResponse
+            var documento = new DtoDocumentoPersonaResponse
             {
-                Frente = new DocumentoPersonaArchivoDto
+                Frente = new DtoDocumentoPersonaArchivo
                 {
                     NombreArchivo = "123_1.pdf",
                     Archivo = new byte[] { 1, 2, 3 }
@@ -176,7 +177,7 @@ namespace UnitTesting.Controllers
             _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
             _personaServiceMock
                 .Setup(s => s.ObtenerDocumentoPersona(123))
-                .Returns(OperationResult<DocumentoPersonaResponse>.Ok(
+                .Returns(OperationResult<DtoDocumentoPersonaResponse>.Ok(
                     documento,
                     nameof(IPersonaService.ObtenerDocumentoPersona)));
 
@@ -184,7 +185,7 @@ namespace UnitTesting.Controllers
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DocumentoPersonaResponse>>(okResult.Value);
+            var operationResult = Assert.IsType<OperationResult<DtoDocumentoPersonaResponse>>(okResult.Value);
             Assert.Equal(fechaVencimiento, operationResult.Data!.FechaVencimiento);
             _personaServiceMock.Verify(s => s.ObtenerDocumentoPersona(123), Times.Once);
         }
@@ -213,10 +214,10 @@ namespace UnitTesting.Controllers
                 .Setup(s => s.SubirDocumentoPersona(
                     123,
                     fecha,
-                    It.Is<DocumentoPersonaArchivoDto>(d =>
+                    It.Is<DtoDocumentoPersonaArchivo>(d =>
                         d.NombreArchivo == "frente.pdf" &&
                         d.Archivo!.SequenceEqual(new byte[] { 1, 2, 3 })),
-                    It.Is<DocumentoPersonaArchivoDto>(d =>
+                    It.Is<DtoDocumentoPersonaArchivo>(d =>
                         d.NombreArchivo == "dorso.pdf" &&
                         d.Archivo!.SequenceEqual(new byte[] { 4, 5, 6 }))))
                 .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaService.SubirDocumentoPersona)));

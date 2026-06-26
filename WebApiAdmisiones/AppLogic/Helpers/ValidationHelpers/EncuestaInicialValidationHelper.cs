@@ -1,5 +1,5 @@
+using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -26,7 +26,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         public static OperationResult<bool> ValidarConsistenciaParcial(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             if (request == null)
@@ -59,7 +59,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarProductoBachillerato(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             if (!request.IdProducto.HasValue)
@@ -84,7 +84,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarCatalogosRequest(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             if (request.IdProceso is <= 0)
@@ -119,7 +119,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarInstitucionTitulo(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             if (request.CodigoInstitucionBac.HasValue && request.CodigoInstitucionBac <= 0)
@@ -275,7 +275,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             return OperationResult<long>.Ok(idComienzo.Value, methodName);
         }
 
-        private static OperationResult<bool> ValidarValoracionParcial(GuardarEncuestaInicialRequest request, string methodName)
+        private static OperationResult<bool> ValidarValoracionParcial(DtoGuardarEncuestaInicialRequest request, string methodName)
         {
             if (request.ValoracionAsesoramientoOrt.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionAsesoramientoOrt.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_16", methodName, "Valoracion de asesoramiento invalida.", 400);
@@ -289,7 +289,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarListasHijas(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             var validacionUniversidades = ValidarEmpresasEncuesta(uow, request.UniversidadesConsideradas, methodName);
@@ -325,7 +325,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarEmpresasEncuesta(
             IUnitOfWork uow,
-            List<EncuestaEmpresaRequest>? empresas,
+            List<DtoEncuestaEmpresaRequest>? empresas,
             string methodName)
         {
             if (empresas == null)
@@ -351,7 +351,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         }
 
         private static OperationResult<bool> ValidarCondicionesRequest(
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
             if (DocumentUtils.EsSi(request.InfoOtrasUniversidadesAntes) && request.UniversidadesConsideradas is { Count: 0 })

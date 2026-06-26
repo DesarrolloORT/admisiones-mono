@@ -1,10 +1,11 @@
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Registro;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.IServices.Autenticacion;
 using BusinessLogic.Entities;
@@ -349,10 +350,10 @@ public class PasswordActivationService : IPasswordActivationService
                 default!);
         }
 
-        RegistroPendingPersona? pending;
+        DtoRegistroPendingPersona? pending;
         try
         {
-            pending = JsonSerializer.Deserialize<RegistroPendingPersona>(pendingJson.ToString(), JsonOptions);
+            pending = JsonSerializer.Deserialize<DtoRegistroPendingPersona>(pendingJson.ToString(), JsonOptions);
         }
         catch
         {

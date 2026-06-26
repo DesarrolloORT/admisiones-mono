@@ -1,4 +1,5 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Registro;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Registro;
@@ -455,7 +456,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private async Task<RegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(Persona persona)
+    private async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(Persona persona)
     {
         if (_documentoImagenCacheService is null ||
             string.IsNullOrWhiteSpace(persona.TipoDocumento) ||
@@ -483,7 +484,7 @@ public class AuthService : IAuthService
 
     private async Task EliminarImagenesTemporalesAsync(
         Persona persona,
-        RegistroDocumentoImagenesTemporales? imagenes)
+        DtoRegistroDocumentoImagenesTemporales? imagenes)
     {
         if (_documentoImagenCacheService is null ||
             imagenes is null ||
@@ -510,7 +511,7 @@ public class AuthService : IAuthService
     }
 
     private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
-        RegistroDocumentoImagenesTemporales? imagenes)
+        DtoRegistroDocumentoImagenesTemporales? imagenes)
     {
         return DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
             imagenes,
@@ -542,7 +543,7 @@ public class AuthService : IAuthService
     private void GuardarImagenesDocumentoReconocido(
         BusinessLogic.IDevartRepositories.IUnitOfWork uow,
         Persona persona,
-        RegistroDocumentoImagenesTemporales? imagenes)
+        DtoRegistroDocumentoImagenesTemporales? imagenes)
     {
         if (imagenes is null || _dbConnectionContext is null)
         {

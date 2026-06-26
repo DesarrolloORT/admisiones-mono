@@ -1,8 +1,8 @@
+using AppLogic.Dtos.Catalogos;
 using System.Net;
 using System.Text;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

@@ -1,4 +1,4 @@
-﻿using BusinessLogic.Entities;
+using BusinessLogic.Entities;
 
 namespace AppLogic.IServices.Autenticacion
 {

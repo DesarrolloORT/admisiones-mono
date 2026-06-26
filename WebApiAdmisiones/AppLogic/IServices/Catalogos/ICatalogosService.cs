@@ -1,6 +1,6 @@
+using AppLogic.Dtos.Catalogos;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using Utilities;
 
 namespace AppLogic.IServices.Catalogos

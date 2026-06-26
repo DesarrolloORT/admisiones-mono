@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using BusinessLogic.Entities;
 using Utilities;
 

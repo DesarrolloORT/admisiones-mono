@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Inscripciones;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices.Inscripciones;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -20,23 +20,23 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new ConfirmarPreInscripcionRequest
+            var request = new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
             };
-            var responseDto = new ConfirmarPreInscripcionResponse
+            var responseDto = new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
                 IdInscripcion = 100,
                 FechaVencimientoPago = new DateTime(2026, 6, 30),
-                Carritos = [new CarritoDto { IdCarrito = "1", Senia = 1500 }]
+                Carritos = [new DtoCarrito { IdCarrito = "1", Senia = 1500 }]
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             serviceMock
                 .Setup(s => s.ConfirmarPreInscripcion(1, request))
-                .ReturnsAsync(OperationResult<ConfirmarPreInscripcionResponse>.Ok(responseDto, nameof(IInscripcionesService.ConfirmarPreInscripcion)));
+                .ReturnsAsync(OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(responseDto, nameof(IInscripcionesService.ConfirmarPreInscripcion)));
 
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
@@ -53,7 +53,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new GuardarMetodoPagoRequest
+            var request = new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = "ABITAB"
@@ -89,7 +89,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var responseDto = new AceptacionReglamentoEstudiantilResponse
+            var responseDto = new DtoAceptacionReglamentoEstudiantilResponse
             {
                 AceptoReglamentoEstudiantil = true,
                 FechaAceptacion = new DateTime(2026, 6, 1)
@@ -98,7 +98,7 @@ namespace UnitTesting.Controllers
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             serviceMock
                 .Setup(s => s.ObtenerAceptacionReglamentoEstudiantil(1))
-                .Returns(OperationResult<AceptacionReglamentoEstudiantilResponse>.Ok(
+                .Returns(OperationResult<DtoAceptacionReglamentoEstudiantilResponse>.Ok(
                     responseDto,
                     nameof(IInscripcionesService.ObtenerAceptacionReglamentoEstudiantil)));
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
@@ -137,7 +137,7 @@ namespace UnitTesting.Controllers
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 };
+            var request = new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 };
 
             serviceMock.Setup(s => s.RegistrarInteresProducto(1, request))
                 .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.RegistrarInteresProducto)));

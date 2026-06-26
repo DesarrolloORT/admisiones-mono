@@ -1,7 +1,7 @@
+using AppLogic.Dtos.Inscripciones;
 using AppLogic.ApiClients;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -13,7 +13,7 @@ namespace AppLogic.Helpers
     {
         private const string EstadoDefinitivo = "DEFINITIVO";
 
-        public static OperationResult<bool> ValidarRequest(ConfirmarPreInscripcionRequest request, string methodName)
+        public static OperationResult<bool> ValidarRequest(DtoConfirmarPreInscripcionRequest request, string methodName)
         {
             if (request == null)
             {
@@ -176,34 +176,34 @@ namespace AppLogic.Helpers
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
         }
 
-        public static OperationResult<ConfirmarPreInscripcionResponse> MapearResultadoApi(
+        public static OperationResult<DtoConfirmarPreInscripcionResponse> MapearResultadoApi(
             OperationResult<ConfirmarPreInscripcionApiResponse> apiResult,
             ContextoConfirmacionPreInscripcion contexto,
             string methodName)
         {
             if (!apiResult.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
             }
 
             if (apiResult.Data == null)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_13", methodName, "La API interna no devolvio datos de confirmacion.", 502);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_13", methodName, "La API interna no devolvio datos de confirmacion.", 502);
             }
 
-            return OperationResult<ConfirmarPreInscripcionResponse>.Ok(
+            return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
                 MapearConfirmacionPreInscripcion(apiResult.Data, contexto),
                 methodName);
         }
 
-        public static EstadoCuentaDto? MapearEstadoCuenta(EstadoCuentaApiDto? source)
+        public static DtoEstadoCuenta? MapearEstadoCuenta(EstadoCuentaApiDto? source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            return new EstadoCuentaDto
+            return new DtoEstadoCuenta
             {
                 SaldoActual = source.SaldoActual
             };
@@ -277,18 +277,18 @@ namespace AppLogic.Helpers
                 methodName);
         }
 
-        private static ConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
+        private static DtoConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
             ConfirmarPreInscripcionApiResponse source,
             ContextoConfirmacionPreInscripcion contexto)
         {
-            return new ConfirmarPreInscripcionResponse
+            return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = source.Confirmada || source.Success,
                 IdInscripcion = source.IdInscripcion,
                 FechaVencimientoPago = source.FechaVencimientoPago,
                 Carritos = MapearCarritos(source),
                 EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
-                Resumen = new ResumenInscripcionDto
+                Resumen = new DtoResumenInscripcion
                 {
                     IdOferta = source.Resumen != null && source.Resumen.IdOferta > 0 ? source.Resumen.IdOferta : contexto.IdOferta,
                     IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,
@@ -301,11 +301,11 @@ namespace AppLogic.Helpers
             };
         }
 
-        private static List<CarritoDto> MapearCarritos(ConfirmarPreInscripcionApiResponse source)
+        private static List<DtoCarrito> MapearCarritos(ConfirmarPreInscripcionApiResponse source)
         {
             return source.Carritos?
-                .Select(c => new CarritoDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                .ToList() ?? new List<CarritoDto>();
+                .Select(c => new DtoCarrito { IdCarrito = c.IdCarrito, Senia = c.Senia })
+                .ToList() ?? new List<DtoCarrito>();
         }
 
         private static OperationResult<ContextoConfirmacionPreInscripcion> ErrorInteresOfertaNoEncontrado(string methodName)

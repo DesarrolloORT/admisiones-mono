@@ -1,3 +1,4 @@
+using AppLogic.Dtos.Registro;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;
@@ -9,7 +10,6 @@ using System.Text;
 using System.Text.Json;
 using Moq;
 using StackExchange.Redis;
-using AppLogic.DTOs;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 using AppLogic.Services.Autenticacion;
@@ -197,7 +197,7 @@ namespace UnitTesting.AppLogic.Services
             var flowId = Guid.NewGuid().ToString("N");
             var documento = "12345672";
             var token = GenerarTokenFlowId(flowId, "nueva-persona-activacion", TimeSpan.FromHours(1));
-            var pending = new RegistroPendingPersona
+            var pending = new DtoRegistroPendingPersona
             {
                 FlowId = flowId,
                 TipoDocumento = "CI",

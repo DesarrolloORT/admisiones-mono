@@ -1,6 +1,6 @@
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.EncuestaInicial
 {
-    public sealed class GuardarEncuestaInicialRequest
+    public sealed class DtoGuardarEncuestaInicialRequest
     {
         public long? IdProducto { get; set; }
         public long? IdProceso { get; set; }
@@ -32,25 +32,25 @@ namespace AppLogic.DTOs
         public bool? InstruccionMadreOrt { get; set; }
         public bool? InstruccionPadreOrt { get; set; }
         public bool? TrabajaActualmente { get; set; }
-        public List<EncuestaEmpresaRequest>? UniversidadesConsideradas { get; set; }
-        public List<EncuestaEmpresaRequest>? UniversidadesEducacionSuperior { get; set; }
-        public List<EncuestaPublicidadRequest>? OpcionesPublicidadSeleccionadas { get; set; }
-        public List<EncuestaMotivoRequest>? OpcionesMotivosSeleccionados { get; set; }
+        public List<DtoEncuestaEmpresaRequest>? UniversidadesConsideradas { get; set; }
+        public List<DtoEncuestaEmpresaRequest>? UniversidadesEducacionSuperior { get; set; }
+        public List<DtoEncuestaPublicidadRequest>? OpcionesPublicidadSeleccionadas { get; set; }
+        public List<DtoEncuestaMotivoRequest>? OpcionesMotivosSeleccionados { get; set; }
     }
 
-    public sealed class EncuestaEmpresaRequest
+    public sealed class DtoEncuestaEmpresaRequest
     {
         public long CodigoEmpresa { get; set; }
         public string? Nombre { get; set; }
     }
 
-    public sealed class EncuestaPublicidadRequest
+    public sealed class DtoEncuestaPublicidadRequest
     {
         public long IdPublicidad { get; set; }
         public string? NombrePublicidad { get; set; }
     }
 
-    public sealed class EncuestaMotivoRequest
+    public sealed class DtoEncuestaMotivoRequest
     {
         public long IdMotivo { get; set; }
         public string? NombreMotivo { get; set; }

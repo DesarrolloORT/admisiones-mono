@@ -1,6 +1,6 @@
 using AppLogic.DevartDTOs;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Catalogos
 {
     public sealed class DtoComboOption
     {

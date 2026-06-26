@@ -1,6 +1,6 @@
+using AppLogic.Dtos.Catalogos;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices.Catalogos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

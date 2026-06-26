@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Registro
 {
     [ExcludeFromCodeCoverage]
-    public class RegistroEvaluarDocumentoRequest
+    public class DtoRegistroEvaluarDocumentoRequest
     {
         [Required]
         public string TipoDocumento { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
-    public class RegistroPersonaRequest
+    public class DtoRegistroPersonaRequest
     {
         [Required]
         public string TipoDocumento { get; set; } = string.Empty;
@@ -68,7 +68,7 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
-    public class RegistroVerificarIdentidadRequest
+    public class DtoRegistroVerificarIdentidadRequest
     {
         [Required]
         public string TipoDocumento { get; set; } = string.Empty;
@@ -86,7 +86,7 @@ namespace AppLogic.DTOs
     }
 
     [ExcludeFromCodeCoverage]
-    public class RegistroEvaluacionResponse
+    public class DtoRegistroEvaluacionResponse
     {
         /// <summary>
         /// La persona existe y ya tiene usuario LDAP. El front debe mostrar el mensaje del OperationResult y ofrecer acceso o recuperacion.

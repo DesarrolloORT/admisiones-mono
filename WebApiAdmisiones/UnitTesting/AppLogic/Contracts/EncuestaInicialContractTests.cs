@@ -1,4 +1,5 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Catalogos;
+using AppLogic.Dtos.EncuestaInicial;
 using System.Reflection;
 using System.Text.Json.Nodes;
 
@@ -12,7 +13,7 @@ namespace UnitTesting.AppLogic.Contracts
         public void EncuestaInicialContract_IsValidJson()
         {
             Assert.Equal(1, Contract["version"]!.GetValue<int>());
-            Assert.Equal("GuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
+            Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
         }
 
@@ -20,7 +21,7 @@ namespace UnitTesting.AppLogic.Contracts
         public void EncuestaInicialContract_CoversRequestProperties()
         {
             var fields = Contract["fields"]!.AsObject();
-            var requestProperties = typeof(GuardarEncuestaInicialRequest)
+            var requestProperties = typeof(DtoGuardarEncuestaInicialRequest)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => p.Name)
                 .Order()

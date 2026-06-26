@@ -1,6 +1,8 @@
+using AppLogic.Dtos.EncuestaInicial;
+using AppLogic.Dtos.Inscripciones;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Inscripciones;
@@ -48,21 +50,21 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
                     It.IsAny<IUnitOfWork>(),
-                    It.IsAny<TivenosAltaInteresRequest>(),
+                    It.IsAny<DtoTivenosAltaInteresRequest>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()))
                 .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio)));
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaDatosBachillerato(
                     It.IsAny<IUnitOfWork>(),
-                    It.IsAny<TivenosBachilleratoRequest>(),
+                    It.IsAny<DtoTivenosBachilleratoRequest>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()))
                 .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaDatosBachillerato)));
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarModificacionDatosBachillerato(
                     It.IsAny<IUnitOfWork>(),
-                    It.IsAny<TivenosBachilleratoRequest>(),
+                    It.IsAny<DtoTivenosBachilleratoRequest>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()))
                 .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarModificacionDatosBachillerato)));
@@ -139,7 +141,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((AceptacionReglamentoEst)null);
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
                 IdOfertaSeleccionada = 10
@@ -188,7 +190,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetByKey(80)).Returns(new Inscripto { IdInscripto = 80 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
                 IdOfertaSeleccionada = 10
@@ -214,7 +216,7 @@ namespace UnitTesting.AppLogic.Services
                 IdComienzo = 40
             });
 
-            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -244,7 +246,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Imagen)null);
             _uowMock.Setup(u => u.Imagens).Returns(imagenDefinitivaRepo.Object);
 
-            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -304,7 +306,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<AceptacionReglamentoEst>(a => aceptacionAgregada = a);
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -368,7 +370,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetByKey(78)).Returns(new Inscripto { IdInscripto = 78 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -415,7 +417,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetByKey(79)).Returns(new Inscripto { IdInscripto = 79 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -474,7 +476,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<AceptacionReglamentoEst>(a => aceptacionAgregada = a);
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            var result = await service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -513,7 +515,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Proceso)null);
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
 
-            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -531,7 +533,7 @@ namespace UnitTesting.AppLogic.Services
             SetupOfertaConfirmacion(10, 21, 40, 1);
             SetupEncuesta(123, EncuestaDefinitiva(123));
 
-            var result = await _service.ConfirmarPreInscripcion(123, new ConfirmarPreInscripcionRequest
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
                 IdOfertaSeleccionada = 10
@@ -599,7 +601,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(901);
 
             var fechaAntes = DateTime.Now;
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
             var fechaDespues = DateTime.Now;
 
             Assert.True(result.Success);
@@ -623,7 +625,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(40, encuesta.IdComienzo);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
-                It.Is<TivenosAltaInteresRequest>(r =>
+                It.Is<DtoTivenosAltaInteresRequest>(r =>
                     r.CodigoPersona == 123 &&
                     r.IdProducto == 10 &&
                     r.IdProceso == 20 &&
@@ -691,13 +693,13 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
                     It.IsAny<IUnitOfWork>(),
-                    It.IsAny<TivenosAltaInteresRequest>(),
+                    It.IsAny<DtoTivenosAltaInteresRequest>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()))
                 .Throws(new InvalidOperationException("No se pudo encolar Tivenos."));
 
             Assert.Throws<InvalidOperationException>(() =>
-                _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 }));
+                _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 }));
 
             _uowMock.Verify(u => u.Rollback(), Times.Once);
             _uowMock.Verify(u => u.Commit(), Times.Never);
@@ -752,7 +754,7 @@ namespace UnitTesting.AppLogic.Services
             procesoComienzoRepo.Setup(r => r.GetByKeyWithRelated(20, 40)).Returns((ProcesoComienzo)null);
             _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
 
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.False(result.Success);
             Assert.Equal(400, result.HttpCode);
@@ -846,7 +848,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(900)
                 .Returns(901);
 
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.True(result.Success);
             Assert.Equal(4m, interesProductoProducto10.IdGradoInteres);
@@ -860,7 +862,7 @@ namespace UnitTesting.AppLogic.Services
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
-                It.Is<TivenosAltaInteresRequest>(r =>
+                It.Is<DtoTivenosAltaInteresRequest>(r =>
                     r.CodigoPersona == 123 &&
                     r.IdProducto == 10 &&
                     r.IdProceso == 20 &&
@@ -922,7 +924,7 @@ namespace UnitTesting.AppLogic.Services
             var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
 
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.True(result.Success);
             actividadRepo.Verify(r => r.Add(It.IsAny<Actividad>()), Times.Never);
@@ -948,7 +950,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(true);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.False(result.Success);
             Assert.Equal(409, result.HttpCode);
@@ -978,7 +980,7 @@ namespace UnitTesting.AppLogic.Services
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(true);
             _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
 
-            var result = _service.RegistrarInteresProducto(123, new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
+            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.False(result.Success);
             Assert.Equal(409, result.HttpCode);
@@ -1000,7 +1002,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
                 .Returns(900);
 
-            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest());
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest());
 
             Assert.True(result.Success);
             Assert.NotNull(encuestaAgregada);
@@ -1032,7 +1034,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
                 .Returns(900);
 
-            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
                 TrabajaActualmente = true
             });
@@ -1058,7 +1060,7 @@ namespace UnitTesting.AppLogic.Services
             var motivoRepo = new Mock<IMotivoEleccionAdmisionRepository>();
             _uowMock.Setup(u => u.MotivoEleccionAdmisions).Returns(motivoRepo.Object);
 
-            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
                 OpcionesMotivosSeleccionados = []
             });
@@ -1083,18 +1085,18 @@ namespace UnitTesting.AppLogic.Services
             var bachilleratoRepo = new Mock<BusinessLogic.IDevartRepositories.IBachilleratoPersonaRepository>();
             _uowMock.Setup(u => u.BachilleratoPersonas).Returns(bachilleratoRepo.Object);
 
-            var result = _service.GuardarEncuestaInicial(123, new GuardarEncuestaInicialRequest());
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest());
 
             Assert.True(result.Success);
             bachilleratoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
         }
@@ -1115,12 +1117,12 @@ namespace UnitTesting.AppLogic.Services
                 b.ActualizacionBachillerPer == FechaBase)), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 _uowMock.Object,
-                It.Is<TivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1304),
+                It.Is<DtoTivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1304),
                 777,
                 nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
         }
@@ -1182,12 +1184,12 @@ namespace UnitTesting.AppLogic.Services
                 b.ActualizacionBachillerPer == FechaBase)), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 _uowMock.Object,
-                It.Is<TivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1300),
+                It.Is<DtoTivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1300),
                 777,
                 nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
         }
@@ -1212,12 +1214,12 @@ namespace UnitTesting.AppLogic.Services
             bachilleratoRepo.Verify(r => r.Update(It.IsAny<BachilleratoPersona>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
-                It.IsAny<TivenosBachilleratoRequest>(),
+                It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
         }
@@ -1390,11 +1392,11 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(777);
         }
 
-        private static GuardarEncuestaInicialRequest RequestEncuestaDefinitiva(
+        private static DtoGuardarEncuestaInicialRequest RequestEncuestaDefinitiva(
             long ultimoAnioSexto = 6,
             long? codigoTitulo = 1300)
         {
-            return new GuardarEncuestaInicialRequest
+            return new DtoGuardarEncuestaInicialRequest
             {
                 IdProducto = 10,
                 IdProceso = 20,
@@ -1417,7 +1419,7 @@ namespace UnitTesting.AppLogic.Services
                 PublicidadOrt = false,
                 OpcionesMotivosSeleccionados =
                 [
-                    new EncuestaMotivoRequest { IdMotivo = 1 }
+                    new DtoEncuestaMotivoRequest { IdMotivo = 1 }
                 ]
             };
         }
@@ -1951,7 +1953,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = "ABITAB"
@@ -1978,7 +1980,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = " paganza "
@@ -1991,7 +1993,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void GuardarMetodoPago_WhenMetodoPagoInvalid_ReturnsBadRequest()
         {
-            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = "TARJETA"
@@ -2010,7 +2012,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = "ABITAB"
@@ -2032,7 +2034,7 @@ namespace UnitTesting.AppLogic.Services
             seniaRepo.Setup(r => r.GetByKey(555)).Returns(new InscriptoSeniaMinimum { IdInscripto = 555, MetodoPagoSeniaMinima = "ABITAB" });
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new GuardarMetodoPagoRequest
+            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
             {
                 IdInscripto = 555,
                 MetodoPago = "PAGANZA"

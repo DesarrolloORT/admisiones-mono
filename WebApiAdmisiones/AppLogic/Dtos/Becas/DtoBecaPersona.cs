@@ -1,4 +1,4 @@
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Becas
 {
     public class DtoBecaPersona
     {

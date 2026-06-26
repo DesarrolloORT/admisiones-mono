@@ -1,7 +1,7 @@
 using BusinessLogic.Entities;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Catalogos
 {
     [ExcludeFromCodeCoverage]
     public class DtoPaisEstadoCiudadResponse

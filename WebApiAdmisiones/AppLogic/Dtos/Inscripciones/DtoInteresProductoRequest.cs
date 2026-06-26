@@ -1,6 +1,6 @@
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Inscripciones
 {
-    public class InteresProductoRequest
+    public class DtoInteresProductoRequest
     {
         public long IdProducto { get; set; }
         public long IdProcesoSeleccionado { get; set; }

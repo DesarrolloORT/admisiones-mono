@@ -1,10 +1,10 @@
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Personas;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Personas;
-using AppLogic.Requests;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -42,7 +42,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDatosPersona));
         }
 
-        public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request)
+        public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, DtoActualizarDatosPersonaRequest request)
         {
             using var uow = uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -198,7 +198,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoPersona));
         }
 
-        public OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona)
+        public OperationResult<DtoDocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona)
         {
             using var uow = uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -211,7 +211,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDocumentoPersona));
             if (!frente.Success)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     frente.ErrorCode,
                     nameof(ObtenerDocumentoPersona),
                     frente.Message,
@@ -226,7 +226,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDocumentoPersona));
             if (!dorso.Success)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     dorso.ErrorCode,
                     nameof(ObtenerDocumentoPersona),
                     dorso.Message,
@@ -235,15 +235,15 @@ namespace AppLogic.Services.Personas
 
             if (frente.Data is null && dorso.Data is null)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     "GEN_DA_02",
                     nameof(ObtenerDocumentoPersona),
                     "Documento no encontrado.",
                     404);
             }
 
-            return OperationResult<DocumentoPersonaResponse>.Ok(
-                new DocumentoPersonaResponse
+            return OperationResult<DtoDocumentoPersonaResponse>.Ok(
+                new DtoDocumentoPersonaResponse
                 {
                     Frente = frente.Data?.Archivo,
                     Dorso = dorso.Data?.Archivo,
@@ -307,8 +307,8 @@ namespace AppLogic.Services.Personas
         public OperationResult<bool> SubirDocumentoPersona(
             long codigoPersona,
             DateTime fecha,
-            DocumentoPersonaArchivoDto frente,
-            DocumentoPersonaArchivoDto dorso)
+            DtoDocumentoPersonaArchivo frente,
+            DtoDocumentoPersonaArchivo dorso)
         {
             var validacionFrente = ValidarArchivoDocumentoPersona(frente, "frente");
             if (!validacionFrente.Success)
@@ -363,7 +363,7 @@ namespace AppLogic.Services.Personas
             long codigoPersona,
             int tipo,
             DateTime fecha,
-            DocumentoPersonaArchivoDto documento)
+            DtoDocumentoPersonaArchivo documento)
         {
             var fileContent = documento.Archivo ?? Array.Empty<byte>();
             var fileName = documento.NombreArchivo ?? string.Empty;
@@ -415,7 +415,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }
 
-        private static OperationResult<bool> ValidarArchivoDocumentoPersona(DocumentoPersonaArchivoDto? documento, string lado)
+        private static OperationResult<bool> ValidarArchivoDocumentoPersona(DtoDocumentoPersonaArchivo? documento, string lado)
         {
             if (documento?.Archivo == null || documento.Archivo.Length == 0)
             {
@@ -451,7 +451,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }
 
-        private static OperationResult<bool> ValidarActualizarDatosPersona(ActualizarDatosPersonaRequest request)
+        private static OperationResult<bool> ValidarActualizarDatosPersona(DtoActualizarDatosPersonaRequest request)
         {
             if (request is null)
             {

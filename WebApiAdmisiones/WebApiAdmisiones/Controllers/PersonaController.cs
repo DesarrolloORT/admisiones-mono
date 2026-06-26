@@ -1,7 +1,8 @@
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Becas;
+using AppLogic.Dtos.Personas;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices.Personas;
-using AppLogic.Requests;
 using AppLogic.Services.Inscripciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +50,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult ActualizarDatosPersona([FromBody] ActualizarDatosPersonaRequest request)
+        public IActionResult ActualizarDatosPersona([FromBody] DtoActualizarDatosPersonaRequest request)
         {
             var result = personaService.ActualizarDatosPersona(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
@@ -187,9 +188,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Imagen obtenida correctamente.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
         [HttpGet("Documento")]
-        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 404)]
-        [ProducesResponseType(typeof(OperationResult<DocumentoPersonaResponse>), 409)]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 409)]
         public IActionResult ObtenerDocumentoPersona()
         {
             var result = personaService.ObtenerDocumentoPersona(_currentUser.GetUserId());
@@ -236,12 +237,12 @@ namespace WebApiAdmisiones.Controllers
             var result = personaService.SubirDocumentoPersona(
                 _currentUser.GetUserId(),
                 request.Fecha,
-                new DocumentoPersonaArchivoDto
+                new DtoDocumentoPersonaArchivo
                 {
                     NombreArchivo = request.Frente.NombreArchivo,
                     Archivo = request.Frente.Archivo
                 },
-                new DocumentoPersonaArchivoDto
+                new DtoDocumentoPersonaArchivo
                 {
                     NombreArchivo = request.Dorso.NombreArchivo,
                     Archivo = request.Dorso.Archivo

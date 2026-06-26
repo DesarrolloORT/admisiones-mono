@@ -1,27 +1,27 @@
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Personas
 {
-    public class DocumentoPersonaResponse
+    public class DtoDocumentoPersonaResponse
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DocumentoPersonaArchivoDto? Frente { get; set; }
+        public DtoDocumentoPersonaArchivo? Frente { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DocumentoPersonaArchivoDto? Dorso { get; set; }
+        public DtoDocumentoPersonaArchivo? Dorso { get; set; }
 
         public DateTime? FechaVencimiento { get; set; }
     }
 
-    public class DocumentoPersonaArchivoDto
+    public class DtoDocumentoPersonaArchivo
     {
         public string? NombreArchivo { get; set; }
         public byte[]? Archivo { get; set; }
     }
 
-    public class DocumentoPersonaConsultaDto
+    public class DtoDocumentoPersonaConsulta
     {
-        public DocumentoPersonaArchivoDto? Archivo { get; set; }
+        public DtoDocumentoPersonaArchivo? Archivo { get; set; }
         public DateTime? FechaVencimiento { get; set; }
     }
 }

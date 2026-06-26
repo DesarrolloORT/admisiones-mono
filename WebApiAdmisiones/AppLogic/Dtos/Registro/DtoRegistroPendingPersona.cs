@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.DTOs;
+namespace AppLogic.Dtos.Registro;
 
 /// <summary>
 /// Datos de una nueva persona pendiente de creación en t_persona,
@@ -9,7 +9,7 @@ namespace AppLogic.DTOs;
 /// Redis index: registro:pending-doc:{TipoDocumento}:{Documento} -> FlowId.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed class RegistroPendingPersona
+public sealed class DtoRegistroPendingPersona
 {
     public string FlowId { get; set; } = string.Empty;
     public string TipoDocumento { get; set; } = string.Empty;

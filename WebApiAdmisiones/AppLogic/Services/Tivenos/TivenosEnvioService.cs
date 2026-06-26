@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.IServices.Tivenos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -10,7 +10,7 @@ namespace AppLogic.Services.Tivenos
     {
         public OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
             IUnitOfWork uow,
-            TivenosAltaInteresRequest request,
+            DtoTivenosAltaInteresRequest request,
             int idTivenos,
             string methodName)
         {
@@ -27,7 +27,7 @@ namespace AppLogic.Services.Tivenos
 
         public OperationResult<bool> EncolarAltaDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName)
         {
@@ -48,7 +48,7 @@ namespace AppLogic.Services.Tivenos
 
         public OperationResult<bool> EncolarModificacionDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName)
         {
@@ -67,7 +67,7 @@ namespace AppLogic.Services.Tivenos
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        private static EnvioParaTiveno CrearEnvioAltaInteres(TivenosAltaInteresRequest request)
+        private static EnvioParaTiveno CrearEnvioAltaInteres(DtoTivenosAltaInteresRequest request)
         {
             return new EnvioParaTiveno
             {
@@ -88,7 +88,7 @@ namespace AppLogic.Services.Tivenos
         }
 
         private static EnvioParaTiveno CrearEnvioBachillerato(
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             string tipoProcesoLlamador,
             string disparador,
             string metodo)

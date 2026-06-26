@@ -2,7 +2,7 @@ using BusinessLogic.Entities;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Catalogos
 {
     [ExcludeFromCodeCoverage]
     public class DtoCarreraResponse

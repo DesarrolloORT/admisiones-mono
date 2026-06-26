@@ -1,12 +1,12 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 
 namespace AppLogic.IServices.Autenticacion;
 
 public interface ITwoFactorSessionStore
 {
-    Task SaveAsync(string sessionId, TwoFactorSession session, TimeSpan ttl);
-    Task<TwoFactorSession?> GetAsync(string sessionId);
+    Task SaveAsync(string sessionId, DtoTwoFactorSession session, TimeSpan ttl);
+    Task<DtoTwoFactorSession?> GetAsync(string sessionId);
     Task<TimeSpan?> GetTtlAsync(string sessionId);
-    Task UpdateAsync(string sessionId, TwoFactorSession session, TimeSpan ttl);
+    Task UpdateAsync(string sessionId, DtoTwoFactorSession session, TimeSpan ttl);
     Task DeleteAsync(string sessionId);
 }

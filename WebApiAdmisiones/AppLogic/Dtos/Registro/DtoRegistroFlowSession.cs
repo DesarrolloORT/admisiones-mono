@@ -1,13 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.DTOs;
+namespace AppLogic.Dtos.Registro;
 
 /// <summary>
 /// Sesión de registro almacenada en Redis durante el flujo de onboarding.
 /// Se crea en EvaluarDocumento y se valida en los pasos subsiguientes vía X-Flow-Id.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed class RegistroFlowSession
+public sealed class DtoRegistroFlowSession
 {
     public string FlowId { get; set; } = string.Empty;
     public string TipoDocumento { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-using AppLogic.Requests;
+using AppLogic.Dtos.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using Utilities;
@@ -22,7 +22,7 @@ namespace AppLogic.Helpers
 
         public static OperationResult<bool> ValidarCambiosIdentidad(
             Persona persona,
-            ActualizarDatosPersonaRequest request,
+            DtoActualizarDatosPersonaRequest request,
             bool identidadRestringida,
             string callingMethod)
         {
@@ -52,7 +52,7 @@ namespace AppLogic.Helpers
 
         public static void AplicarCambiosIdentidad(
             Persona persona,
-            ActualizarDatosPersonaRequest request,
+            DtoActualizarDatosPersonaRequest request,
             bool identidadRestringida)
         {
             if (identidadRestringida)

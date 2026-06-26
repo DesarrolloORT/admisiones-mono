@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Registro;
 using Microsoft.AspNetCore.Authorization;
@@ -49,8 +49,8 @@ namespace UnitTesting.Controllers
 
             // Setup por defecto: login exitoso sin cookies (los tests de Login lo sobreescriben)
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
                     OperationResult<DtoAuthenticationResponse>.Ok(
                         new DtoAuthenticationResponse
                         {
@@ -148,7 +148,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthentication_ReturnsOkAndSetsCookies()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -168,8 +168,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
                     OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
@@ -180,7 +180,7 @@ namespace UnitTesting.Controllers
             Assert.Equal(200, okResult.StatusCode);
             _loginFlowServiceMock.Verify(
                 s => s.EjecutarAsync(
-                    It.Is<AuthRequest>(r => r == request),
+                    It.Is<DtoAuthRequest>(r => r == request),
                     "192.168.1.100",
                     0.9),
                 Times.Once);
@@ -189,7 +189,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_WithoutValidatedCaptchaScore_ReturnsServerError()
         {
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -205,7 +205,7 @@ namespace UnitTesting.Controllers
             Assert.False(operationResult.Success);
             Assert.Equal("AUTH_CAPTCHA_99", operationResult.ErrorCode);
             _loginFlowServiceMock.Verify(
-                s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()),
+                s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()),
                 Times.Never);
         }
 
@@ -213,7 +213,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthenticationWithLoggingEnabled_LogsInformation()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -228,8 +228,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
                     OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
@@ -244,7 +244,7 @@ namespace UnitTesting.Controllers
         public async Task Login_FailedAuthentication_ReturnsError()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -252,8 +252,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.Fallo(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.Fallo(
                     OperationResult<DtoAuthenticationResponse>.IsFailed(
                         errorCode: "AUTH_01",
                         originMethod: "EjecutarAsync",
@@ -272,7 +272,7 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessWithNullData_ReturnsResultWithoutSettingCookies()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -280,8 +280,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
                     OperationResult<DtoAuthenticationResponse>.Ok(null, "EjecutarAsync")));
 
             // Act
@@ -295,7 +295,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_WhenRequiresTwoFactor_ReturnsAcceptedWithOperationResult202()
         {
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "4773331-2",
@@ -303,8 +303,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.Requiere2FA(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.Requiere2FA(
                     OperationResult<DtoLogin2FARequired>.IsSuccess(
                         new DtoLogin2FARequired
                         {
@@ -538,18 +538,18 @@ namespace UnitTesting.Controllers
         public async Task Login_ExceedsAccountRateLimit_Returns429()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "12345678",
                 Password = "password123"
             };
 
-            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = DateTimeOffset.UtcNow.AddMinutes(15) };
+            var headers = new DtoLoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = DateTimeOffset.UtcNow.AddMinutes(15) };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.FalloConRateLimit(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.FalloConRateLimit(
                     OperationResult<DtoAuthenticationResponse>.IsFailed(
                         "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
                     headers));
@@ -566,7 +566,7 @@ namespace UnitTesting.Controllers
         public async Task Login_WithinRateLimit_CallsAuthService()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "12345678",
@@ -581,8 +581,8 @@ namespace UnitTesting.Controllers
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.LoginExitoso(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
                     OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
 
             // Act
@@ -597,7 +597,7 @@ namespace UnitTesting.Controllers
         public async Task Login_RateLimitResponse_IncludesCorrectHeaders()
         {
             // Arrange
-            var request = new AuthRequest
+            var request = new DtoAuthRequest
             {
                 TipoDocumento = "CI",
                 Documento = "12345678",
@@ -605,11 +605,11 @@ namespace UnitTesting.Controllers
             };
 
             var resetTime = DateTimeOffset.UtcNow.AddMinutes(15);
-            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = resetTime };
+            var headers = new DtoLoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = resetTime };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(LoginFlowResult.FalloConRateLimit(
+                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(DtoLoginFlowResult.FalloConRateLimit(
                     OperationResult<DtoAuthenticationResponse>.IsFailed(
                         "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
                     headers));

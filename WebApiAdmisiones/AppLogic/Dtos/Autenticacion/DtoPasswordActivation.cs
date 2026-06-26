@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs;
+namespace AppLogic.Dtos.Autenticacion;
 
 /// <summary>
 /// Resultado de ValidarSessionToken: identifica si la sesión corresponde

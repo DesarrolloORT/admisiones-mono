@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Registro;
 
 namespace AppLogic.IServices.Registro;
 
@@ -7,9 +7,9 @@ public interface IRegistroDocumentoImagenCacheService
     Task GuardarAsync(
         string tipoDocumento,
         string documento,
-        RegistroDocumentoImagenesTemporales imagenes);
+        DtoRegistroDocumentoImagenesTemporales imagenes);
 
-    Task<RegistroDocumentoImagenesTemporales?> ObtenerAsync(string tipoDocumento, string documento);
+    Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerAsync(string tipoDocumento, string documento);
 
     Task EliminarAsync(string tipoDocumento, string documento);
 }

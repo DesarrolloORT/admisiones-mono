@@ -1,6 +1,6 @@
+using AppLogic.Dtos.Registro;
 using System.Collections.Generic;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,9 +48,9 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.EvaluarDocumento, CaptchaValidationMode.ScoreOnly)]
         [HttpPost("EvaluarDocumento")]
-        [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<RegistroEvaluacionResponse>), 400)]
-        public async Task<IActionResult> EvaluarDocumento([FromBody] RegistroEvaluarDocumentoRequest request)
+        [ProducesResponseType(typeof(OperationResult<DtoRegistroEvaluacionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoRegistroEvaluacionResponse>), 400)]
+        public async Task<IActionResult> EvaluarDocumento([FromBody] DtoRegistroEvaluarDocumentoRequest request)
         {
             var result = await registroService.EvaluarDocumentoAsync(request);
 
@@ -85,7 +85,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("VerificarIdentidad")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> VerificarIdentidad([FromBody] RegistroVerificarIdentidadRequest request)
+        public async Task<IActionResult> VerificarIdentidad([FromBody] DtoRegistroVerificarIdentidadRequest request)
         {
             var flowId = ObtenerFlowId();
             var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
@@ -197,12 +197,12 @@ namespace WebApiAdmisiones.Controllers
                 await documentoImagenCacheService.GuardarAsync(
                     tipoDocumento,
                     numeroDocumento,
-                    new RegistroDocumentoImagenesTemporales
+                    new DtoRegistroDocumentoImagenesTemporales
                     {
                         TipoDocumento = tipoDocumento,
                         Documento = numeroDocumento,
                         FechaVencimiento = reconocimiento.Campos.FechaVencimiento,
-                        DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                        DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                         {
                             Archivo = documentoOriginal,
                             NombreArchivo = nombreDocumento,
@@ -212,7 +212,7 @@ namespace WebApiAdmisiones.Controllers
                         },
                         CaraPersona = reconocimiento.CaraPersona is null
                             ? null
-                            : new RegistroDocumentoArchivoTemporal
+                            : new DtoRegistroDocumentoArchivoTemporal
                             {
                                 Archivo = reconocimiento.CaraPersona.Archivo,
                                 NombreArchivo = reconocimiento.CaraPersona.NombreArchivo,
@@ -249,7 +249,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("ConfirmarNuevaPersona")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] RegistroPersonaRequest request)
+        public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] DtoRegistroPersonaRequest request)
         {
             var flowId = ObtenerFlowId();
             var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
@@ -275,7 +275,7 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("ConfirmarSolicitudAlta")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] RegistroPersonaRequest request)
+        public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] DtoRegistroPersonaRequest request)
         {
             var flowId = ObtenerFlowId();
             var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");

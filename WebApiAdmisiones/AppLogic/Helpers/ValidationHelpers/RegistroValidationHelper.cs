@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Registro;
 using System;
-using AppLogic.DTOs;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using Utilities;
@@ -10,7 +10,7 @@ namespace AppLogic.Helpers.ValidationHelpers
     {
         public static OperationResult<object?> ValidarVerificacionPersonaExistente(
             Persona persona,
-            RegistroVerificarIdentidadRequest request,
+            DtoRegistroVerificarIdentidadRequest request,
             string method)
         {
             var apellidoEntrada = DocumentUtils.NormalizarMayusculas(request.PrimerApellido);

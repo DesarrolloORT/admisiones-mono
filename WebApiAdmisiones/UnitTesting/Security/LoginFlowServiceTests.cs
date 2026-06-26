@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.Services.Autenticacion;
@@ -129,7 +129,7 @@ namespace UnitTesting.Security
                 Mock.Of<ILogger<LoginFlowService>>());
         }
 
-        private static AuthRequest CreateRequest() =>
+        private static DtoAuthRequest CreateRequest() =>
             new()
             {
                 TipoDocumento = "CI",

@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Registro;
 using Microsoft.AspNetCore.Authorization;
@@ -76,7 +76,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
-        public async Task<IActionResult> Login([FromBody] AuthRequest request)
+        public async Task<IActionResult> Login([FromBody] DtoAuthRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.TipoDocumento) || string.IsNullOrWhiteSpace(request.Documento))
             {
@@ -114,7 +114,7 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(flowResult.AuthResult!);
         }
 
-        private void AgregarHeadersRateLimit(LoginRateLimitHeaders headers)
+        private void AgregarHeadersRateLimit(DtoLoginRateLimitHeaders headers)
         {
             WebApiAdmisiones.Extensions.ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
             Response.Headers["X-RateLimit-Limit"] = headers.Limit.ToString();

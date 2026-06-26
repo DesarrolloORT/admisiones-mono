@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Registro;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices;
@@ -45,11 +45,11 @@ namespace AppLogic.Services.Registro
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        public async Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request)
+        public async Task<OperationResult<DtoRegistroEvaluacionResponse>> EvaluarDocumentoAsync(DtoRegistroEvaluarDocumentoRequest request)
         {
             if (request == null)
             {
-                return OperationResult<RegistroEvaluacionResponse>.IsFailed(
+                return OperationResult<DtoRegistroEvaluacionResponse>.IsFailed(
                     requestErrorCode,
                     nameof(EvaluarDocumentoAsync),
                     requestErrorMessage,
@@ -59,7 +59,7 @@ namespace AppLogic.Services.Registro
             var validacion = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
             if (!validacion.IsValid)
             {
-                return OperationResult<RegistroEvaluacionResponse>.IsFailed(
+                return OperationResult<DtoRegistroEvaluacionResponse>.IsFailed(
                     ObtenerCodigoValidacionDocumento(validacion.Error),
                     nameof(EvaluarDocumentoAsync),
                     validacion.Message,
@@ -75,8 +75,8 @@ namespace AppLogic.Services.Registro
                 var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
                 if (solicitudAlta != null)
                 {
-                    return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                        new RegistroEvaluacionResponse
+                    return OperationResult<DtoRegistroEvaluacionResponse>.IsSuccess(
+                        new DtoRegistroEvaluacionResponse
                         {
                             SolicitudAltaExistente = true
                         },
@@ -84,8 +84,8 @@ namespace AppLogic.Services.Registro
                         "El documento ingresado está en revisión.");
                 }
 
-                return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                    new RegistroEvaluacionResponse
+                return OperationResult<DtoRegistroEvaluacionResponse>.IsSuccess(
+                    new DtoRegistroEvaluacionResponse
                     {
                         RequiereAltaSolicitud = true
                     },
@@ -96,8 +96,8 @@ namespace AppLogic.Services.Registro
             var persona = uow.Personas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
             if (persona == null)
             {
-                return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                    new RegistroEvaluacionResponse
+                return OperationResult<DtoRegistroEvaluacionResponse>.IsSuccess(
+                    new DtoRegistroEvaluacionResponse
                     {
                         RequiereAltaPersona = true
                     },
@@ -108,8 +108,8 @@ namespace AppLogic.Services.Registro
             var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
-                return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                    new RegistroEvaluacionResponse
+                return OperationResult<DtoRegistroEvaluacionResponse>.IsSuccess(
+                    new DtoRegistroEvaluacionResponse
                     {
                         UsuarioExistente = true
                     },
@@ -117,8 +117,8 @@ namespace AppLogic.Services.Registro
                     "La cedula ingresada ya está registrada.");
             }
 
-            return OperationResult<RegistroEvaluacionResponse>.IsSuccess(
-                new RegistroEvaluacionResponse
+            return OperationResult<DtoRegistroEvaluacionResponse>.IsSuccess(
+                new DtoRegistroEvaluacionResponse
                 {
                     RequiereVerificacion = true
                 },
@@ -126,7 +126,7 @@ namespace AppLogic.Services.Registro
                 "La persona existe y requiere verificación de apellido y correo.");
         }
 
-        public async Task<OperationResult<object?>> VerificarIdentidadAsync(RegistroVerificarIdentidadRequest request)
+        public async Task<OperationResult<object?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request)
         {
             if (request == null)
             {
@@ -198,7 +198,7 @@ namespace AppLogic.Services.Registro
                 nameof(VerificarIdentidadAsync));
         }
 
-        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroPersonaRequest request)
+        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
         {
             if (request == null)
             {
@@ -245,7 +245,7 @@ namespace AppLogic.Services.Registro
             return await CrearPersonaUsuarioAsync(uow, request);
         }
 
-        public async Task<OperationResult<object?>> ValidarNuevaPersonaAsync(RegistroPersonaRequest request)
+        public async Task<OperationResult<object?>> ValidarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
         {
             if (request == null)
             {
@@ -306,9 +306,9 @@ namespace AppLogic.Services.Registro
         }
 
         public async Task<OperationResult<long>> CompletarNuevaPersonaAsync(
-            RegistroPendingPersona data,
+            DtoRegistroPendingPersona data,
             string passwordNueva,
-            RegistroDocumentoImagenesTemporales? imagenes = null)
+            DtoRegistroDocumentoImagenesTemporales? imagenes = null)
         {
             if (data == null)
             {
@@ -432,7 +432,7 @@ namespace AppLogic.Services.Registro
             return OperationResult<long>.Ok(persona.CodigoPersona, nameof(CompletarNuevaPersonaAsync));
         }
 
-        public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroPersonaRequest request)
+        public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(DtoRegistroPersonaRequest request)
         {
             if (request == null)
             {
@@ -470,7 +470,7 @@ namespace AppLogic.Services.Registro
 
         private async Task<OperationResult<object?>> CrearPersonaUsuarioAsync(
             IUnitOfWork uow,
-            RegistroPersonaRequest request)
+            DtoRegistroPersonaRequest request)
         {
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad == null)
@@ -558,7 +558,7 @@ namespace AppLogic.Services.Registro
 
         private async Task<OperationResult<object?>> CrearSolicitudAltaAsync(
             IUnitOfWork uow,
-            RegistroPersonaRequest request)
+            DtoRegistroPersonaRequest request)
         {
             try
             {
@@ -596,7 +596,7 @@ namespace AppLogic.Services.Registro
         }
 
         private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
-            RegistroDocumentoImagenesTemporales? imagenes)
+            DtoRegistroDocumentoImagenesTemporales? imagenes)
         {
             return DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
                 imagenes,
@@ -606,7 +606,7 @@ namespace AppLogic.Services.Registro
         private void GuardarImagenesDocumentoReconocido(
             IUnitOfWork uow,
             Persona persona,
-            RegistroDocumentoImagenesTemporales? imagenes)
+            DtoRegistroDocumentoImagenesTemporales? imagenes)
         {
             if (imagenes is null)
             {
@@ -736,7 +736,7 @@ namespace AppLogic.Services.Registro
 
         private static bool EsMismaPersonaPendiente(
             Persona persona,
-            RegistroPendingPersona data,
+            DtoRegistroPendingPersona data,
             string tipoDocumento,
             string documento)
         {

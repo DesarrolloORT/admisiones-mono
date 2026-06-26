@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Tivenos;
 using BusinessLogic.Entities;
@@ -81,7 +81,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = _service.EncolarAltaDatosBachillerato(
                 _uowMock.Object,
-                new TivenosBachilleratoRequest
+                new DtoTivenosBachilleratoRequest
                 {
                     CodigoPersona = 123,
                     CodigoOrientacion = 1304
@@ -108,7 +108,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = _service.EncolarModificacionDatosBachillerato(
                 _uowMock.Object,
-                new TivenosBachilleratoRequest
+                new DtoTivenosBachilleratoRequest
                 {
                     CodigoPersona = 123,
                     CodigoOrientacion = null
@@ -130,7 +130,7 @@ namespace UnitTesting.AppLogic.Services
                 e.BachilleratoOrientacionId == null)), Times.Once);
         }
 
-        private static TivenosAltaInteresRequest RequestBase(TivenosAltaInteresOperacion operacion) => new()
+        private static DtoTivenosAltaInteresRequest RequestBase(TivenosAltaInteresOperacion operacion) => new()
         {
             CodigoPersona = 123,
             IdProducto = 10,

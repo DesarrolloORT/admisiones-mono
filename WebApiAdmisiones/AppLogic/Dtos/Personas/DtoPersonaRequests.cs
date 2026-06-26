@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Requests
+namespace AppLogic.Dtos.Personas
 {
     [ExcludeFromCodeCoverage]
-    public class ActualizarDatosPersonaRequest
+    public class DtoActualizarDatosPersonaRequest
     {
         public string? TipoDocumento { get; set; }
         public string? Documento { get; set; }
@@ -39,21 +39,21 @@ namespace AppLogic.Requests
     }
 
     [ExcludeFromCodeCoverage]
-    public class EmpresaEncuestaRequest
+    public class DtoEmpresaEncuestaRequest
     {
         public long CodigoEmpresa { get; set; }
         public string Nombre { get; set; } = string.Empty;
     }
 
     [ExcludeFromCodeCoverage]
-    public class PublicidadEncuestaRequest
+    public class DtoPublicidadEncuestaRequest
     {
         public long IdPublicidad { get; set; }
         public string NombrePublicidad { get; set; } = string.Empty;
     }
 
     [ExcludeFromCodeCoverage]
-    public class MotivoEncuestaRequest
+    public class DtoMotivoEncuestaRequest
     {
         public long IdMotivo { get; set; }
         public string NombreMotivo { get; set; } = string.Empty;

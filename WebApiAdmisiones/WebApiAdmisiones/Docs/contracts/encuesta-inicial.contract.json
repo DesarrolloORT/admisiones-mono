@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "request": "GuardarEncuestaInicialRequest",
+  "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "fields": {
     "IdProducto": {

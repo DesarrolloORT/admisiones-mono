@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Autenticacion
 {
     /// <summary>
     /// DTO para la respuesta de autenticación exitosa.

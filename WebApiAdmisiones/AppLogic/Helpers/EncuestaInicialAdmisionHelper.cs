@@ -1,6 +1,6 @@
+using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Services.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
@@ -49,7 +49,7 @@ namespace AppLogic.Helpers
         internal static EncuestaIniAdmision? ObtenerEncuestaParaGuardar(
             IUnitOfWork uow,
             long codigoPersona,
-            GuardarEncuestaInicialRequest request)
+            DtoGuardarEncuestaInicialRequest request)
         {
             if (request.IdProducto.HasValue && request.IdProceso.HasValue)
             {
@@ -96,7 +96,7 @@ namespace AppLogic.Helpers
 
         internal static void AplicarRequestAEncuesta(
             EncuestaIniAdmision encuesta,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             Persona persona,
             long? idComienzo)
         {
@@ -109,7 +109,7 @@ namespace AppLogic.Helpers
 
         private static void AplicarIdentificadores(
             EncuestaIniAdmision encuesta,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             Persona persona,
             long? idComienzo)
         {
@@ -134,7 +134,7 @@ namespace AppLogic.Helpers
             }
         }
 
-        private static void AplicarFormacion(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarFormacion(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
             if (request.NombreInstitucion != null)
             {
@@ -183,7 +183,7 @@ namespace AppLogic.Helpers
             }
         }
 
-        private static void AplicarInfoOtras(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarInfoOtras(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
             if (request.InfoOtrasUniversidadesAntes != null)
             {
@@ -231,7 +231,7 @@ namespace AppLogic.Helpers
             }
         }
 
-        private static void AplicarValoraciones(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarValoraciones(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
             if (request.AsesoramientoOrt.HasValue)
             {
@@ -276,7 +276,7 @@ namespace AppLogic.Helpers
             }
         }
 
-        private static void AplicarPublicidadEInstruccionOrt(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarPublicidadEInstruccionOrt(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
             if (request.PublicidadOrt.HasValue)
             {
@@ -298,7 +298,7 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            GuardarEncuestaInicialRequest request)
+            DtoGuardarEncuestaInicialRequest request)
         {
             if (string.Equals(DocumentUtils.NormalizarSiNo(request.InfoOtrasUniversidadesAntes), CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
             {
@@ -353,7 +353,7 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            IEnumerable<EncuestaEmpresaRequest> universidades)
+            IEnumerable<DtoEncuestaEmpresaRequest> universidades)
         {
             uow.EmpresaConsideradaAdmisions.RemoveByPersona(codigoPersona);
             foreach (var universidad in universidades)
@@ -372,7 +372,7 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            IEnumerable<EncuestaEmpresaRequest> universidades)
+            IEnumerable<DtoEncuestaEmpresaRequest> universidades)
         {
             uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);
             foreach (var universidad in universidades)

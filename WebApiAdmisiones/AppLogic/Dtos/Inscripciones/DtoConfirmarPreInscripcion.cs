@@ -1,36 +1,36 @@
 using System.Collections.Generic;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Inscripciones
 {
-    public class GuardarMetodoPagoRequest
+    public class DtoGuardarMetodoPagoRequest
     {
         public long IdInscripto { get; set; }
         public string MetodoPago { get; set; } = string.Empty;
     }
 
-    public class ConfirmarPreInscripcionRequest
+    public class DtoConfirmarPreInscripcionRequest
     {
         public bool AceptoReglamento { get; set; }
         public long IdOfertaSeleccionada { get; set; }
     }
 
-    public class ConfirmarPreInscripcionResponse
+    public class DtoConfirmarPreInscripcionResponse
     {
         public bool Confirmada { get; set; }
         public long? IdInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
-        public List<CarritoDto> Carritos { get; set; } = new();
-        public ResumenInscripcionDto Resumen { get; set; } = new();
-        public EstadoCuentaDto? EstadoCuenta { get; set; }
+        public List<DtoCarrito> Carritos { get; set; } = new();
+        public DtoResumenInscripcion Resumen { get; set; } = new();
+        public DtoEstadoCuenta? EstadoCuenta { get; set; }
     }
 
-    public class CarritoDto
+    public class DtoCarrito
     {
         public string IdCarrito { get; set; } = string.Empty;
         public decimal Senia { get; set; }
     }
 
-    public class ResumenInscripcionDto
+    public class DtoResumenInscripcion
     {
         public long IdOferta { get; set; }
         public long IdProducto { get; set; }
@@ -41,7 +41,7 @@ namespace AppLogic.DTOs
         public string? Turno { get; set; }
     }
 
-    public class EstadoCuentaDto
+    public class DtoEstadoCuenta
     {
         public decimal SaldoActual { get; set; }
     }

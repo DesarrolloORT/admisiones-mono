@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Registro;
 using System.Text.Json;
-using AppLogic.DTOs;
 using AppLogic.IServices.Registro;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
@@ -33,7 +33,7 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
     public async Task GuardarAsync(
         string tipoDocumento,
         string documento,
-        RegistroDocumentoImagenesTemporales imagenes)
+        DtoRegistroDocumentoImagenesTemporales imagenes)
     {
         var key = CrearKey(tipoDocumento, documento);
         var ttlHours = _configuration.GetValue<double?>(TtlConfigKey) ?? DefaultTtlHours;
@@ -47,7 +47,7 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
         await _redisDb.StringSetAsync(key, json, ttl);
     }
 
-    public async Task<RegistroDocumentoImagenesTemporales?> ObtenerAsync(string tipoDocumento, string documento)
+    public async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerAsync(string tipoDocumento, string documento)
     {
         var json = await _redisDb.StringGetAsync(CrearKey(tipoDocumento, documento));
         if (!json.HasValue)
@@ -57,7 +57,7 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
 
         try
         {
-            return JsonSerializer.Deserialize<RegistroDocumentoImagenesTemporales>(
+            return JsonSerializer.Deserialize<DtoRegistroDocumentoImagenesTemporales>(
                 json.ToString(),
                 JsonOptions);
         }

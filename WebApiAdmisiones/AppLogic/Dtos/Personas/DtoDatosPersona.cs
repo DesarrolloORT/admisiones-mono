@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Personas
 {
     [ExcludeFromCodeCoverage]
     public class DtoDatosPersona

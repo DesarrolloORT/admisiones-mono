@@ -1,6 +1,8 @@
+using AppLogic.Dtos.EncuestaInicial;
+using AppLogic.Dtos.Inscripciones;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
@@ -39,7 +41,7 @@ namespace AppLogic.Services.Inscripciones
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
-        public async Task<OperationResult<DetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
+        public async Task<OperationResult<DtoDetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
         {
             using var uow = _uowFactory.Create();
 
@@ -58,14 +60,14 @@ namespace AppLogic.Services.Inscripciones
 
             if (estado == null)
             {
-                return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                     "INS_DET_01",
                     nameof(ObtenerDetalleInscripcion),
                     "No se encontró la inscripción para la persona.",
                     404);
             }
 
-            var response = new DetalleInscripcionResponse { Estado = estado };
+            var response = new DtoDetalleInscripcionResponse { Estado = estado };
 
             switch (estado)
             {
@@ -80,7 +82,7 @@ namespace AppLogic.Services.Inscripciones
                         : null;
                     if (inscriptoPago == null)
                     {
-                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                        return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                             "INS_DET_02",
                             nameof(ObtenerDetalleInscripcion),
                             "No se encontró la inscripción para la persona.",
@@ -89,7 +91,7 @@ namespace AppLogic.Services.Inscripciones
                     var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
                     if (!carritos.Success)
                     {
-                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                        return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                             carritos.ErrorCode,
                             nameof(ObtenerDetalleInscripcion),
                             carritos.Message,
@@ -104,7 +106,7 @@ namespace AppLogic.Services.Inscripciones
                         : null;
                     if (inscripto == null)
                     {
-                        return OperationResult<DetalleInscripcionResponse>.IsFailed(
+                        return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                             "INS_DET_02",
                             nameof(ObtenerDetalleInscripcion),
                             "No se encontró la inscripción confirmada para la persona.",
@@ -118,25 +120,25 @@ namespace AppLogic.Services.Inscripciones
                 // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
             }
 
-            return OperationResult<DetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
+            return OperationResult<DtoDetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
         }
 
-        private static ConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
+        private static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
         {
-            return new ConfirmarPreInscripcionResponse
+            return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
                 IdInscripcion = inscripto.IdInscripto,
                 FechaVencimientoPago = inscripto.FechaVtoInscr,
                 Carritos = carritos?.Carritos
-                    .Select(c => new CarritoDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                    .ToList() ?? new List<CarritoDto>(),
+                    .Select(c => new DtoCarrito { IdCarrito = c.IdCarrito, Senia = c.Senia })
+                    .ToList() ?? new List<DtoCarrito>(),
                 EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
         }
 
-        private static ConfirmadaDetalleDto MapearConfirmada(
+        private static DtoConfirmadaDetalle MapearConfirmada(
             long codigoPersona,
             Inscripto inscripto,
             ICollection<VdInscriptoCoordinadore> coordinadores,
@@ -149,7 +151,7 @@ namespace AppLogic.Services.Inscripciones
                 coordinadorCursos = null;
             }
 
-            return new ConfirmadaDetalleDto
+            return new DtoConfirmadaDetalle
             {
                 NumeroEstudiante = codigoPersona,
                 Resumen = MapearResumenDesdeInscripto(inscripto),
@@ -158,7 +160,7 @@ namespace AppLogic.Services.Inscripciones
                 MateriasPrimerSemestre = materias
                     .Where(m => m.IdMateria.HasValue)
                     .GroupBy(m => m.IdMateria!.Value)
-                    .Select(g => new MateriaDto { IdMateria = g.Key, Nombre = g.First().DescripcionMateria?.Trim() })
+                    .Select(g => new DtoMateria { IdMateria = g.Key, Nombre = g.First().DescripcionMateria?.Trim() })
                     .ToList()
             };
         }
@@ -173,7 +175,7 @@ namespace AppLogic.Services.Inscripciones
             return coordinador == null
                 ? null
                 : new CoordinadorMapeado(
-                    new CoordinadorDto
+                    new DtoCoordinador
                     {
                         Nombre = NombreCompleto(coordinador.CooacadPrimerNombre, coordinador.CooacadPrimerApellido),
                         Email = coordinador.MailAcad?.Trim()
@@ -191,7 +193,7 @@ namespace AppLogic.Services.Inscripciones
             return coordinador == null
                 ? null
                 : new CoordinadorMapeado(
-                    new CoordinadorDto
+                    new DtoCoordinador
                     {
                         Nombre = NombreCompleto(coordinador.CoorespPrimerNombre, coordinador.CoorespPrimerApellido),
                         Email = coordinador.MailResp?.Trim()
@@ -231,13 +233,13 @@ namespace AppLogic.Services.Inscripciones
             return string.IsNullOrWhiteSpace(completo) ? null : completo;
         }
 
-        private sealed record CoordinadorMapeado(CoordinadorDto Dto, long? Codigo);
+        private sealed record CoordinadorMapeado(DtoCoordinador Dto, long? Codigo);
 
-        private static ResumenInscripcionDto MapearResumenDesdeInscripto(Inscripto inscripto)
+        private static DtoResumenInscripcion MapearResumenDesdeInscripto(Inscripto inscripto)
         {
             var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
             var comienzo = inscripto.Oferta?.Supraoferta?.Comienzo;
-            return new ResumenInscripcionDto
+            return new DtoResumenInscripcion
             {
                 IdOferta = inscripto.IdOferta ?? 0,
                 IdProducto = producto?.IdProducto ?? 0,
@@ -249,7 +251,7 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        private static ResumenInscripcionDto? MapearOfertaResumen(Oferta? oferta)
+        private static DtoResumenInscripcion? MapearOfertaResumen(Oferta? oferta)
         {
             if (oferta == null)
             {
@@ -258,7 +260,7 @@ namespace AppLogic.Services.Inscripciones
 
             var producto = oferta.Supraoferta?.Paquete?.Producto;
             var comienzo = oferta.Supraoferta?.Comienzo;
-            return new ResumenInscripcionDto
+            return new DtoResumenInscripcion
             {
                 IdOferta = oferta.IdOferta,
                 IdProducto = producto?.IdProducto ?? 0,
@@ -270,23 +272,23 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        public OperationResult<AceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
+        public OperationResult<DtoAceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
             var aceptacion = uow.AceptacionReglamentoEsts.GetPrimeraByPersona(codigoPersona);
-            var response = new AceptacionReglamentoEstudiantilResponse
+            var response = new DtoAceptacionReglamentoEstudiantilResponse
             {
                 AceptoReglamentoEstudiantil = aceptacion != null,
                 FechaAceptacion = aceptacion?.FechaIngreso
             };
 
-            return OperationResult<AceptacionReglamentoEstudiantilResponse>.Ok(
+            return OperationResult<DtoAceptacionReglamentoEstudiantilResponse>.Ok(
                 response,
                 nameof(ObtenerAceptacionReglamentoEstudiantil));
         }
 
         #region PASO 1 - REGISTRAR INTERES POR PRODUCTO
-        public OperationResult<bool> RegistrarInteresProducto(long codigoPersona, InteresProductoRequest request)
+        public OperationResult<bool> RegistrarInteresProducto(long codigoPersona, DtoInteresProductoRequest request)
         {
             using var uow = _uowFactory.Create();
 
@@ -423,7 +425,7 @@ namespace AppLogic.Services.Inscripciones
                 nameof(ObtenerEncuestaInicial));
         }
 
-        public OperationResult<bool> GuardarEncuestaInicial(long codigoPersona, GuardarEncuestaInicialRequest request)
+        public OperationResult<bool> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request)
         {
             using var uow = _uowFactory.Create();
 
@@ -465,7 +467,7 @@ namespace AppLogic.Services.Inscripciones
 
         private static OperationResult<long?> ResolverIdComienzoEncuesta(
             IUnitOfWork uow,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             BusinessLogic.Entities.EncuestaIniAdmision encuesta)
         {
             var idProducto = request.IdProducto ?? encuesta.IdProducto;
@@ -494,7 +496,7 @@ namespace AppLogic.Services.Inscripciones
             IUnitOfWork uow,
             BusinessLogic.Entities.Persona persona,
             BusinessLogic.Entities.EncuestaIniAdmision encuesta,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             long codigoPersona,
             bool esNueva,
             bool actualizaTrabajaActualmente)
@@ -592,7 +594,7 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<bool>.Ok(completitud.Data, nameof(GuardarEncuestaInicial));
         }
 
-        private static bool AplicarTrabajaActualmente(BusinessLogic.Entities.Persona persona, GuardarEncuestaInicialRequest request)
+        private static bool AplicarTrabajaActualmente(BusinessLogic.Entities.Persona persona, DtoGuardarEncuestaInicialRequest request)
         {
             if (!string.Equals(persona.TipoPersona, PersonaConstants.TipoPersonaSgi, StringComparison.OrdinalIgnoreCase))
             {
@@ -643,7 +645,7 @@ namespace AppLogic.Services.Inscripciones
 
                 return _tivenosEnvioService.EncolarAltaDatosBachillerato(
                 uow,
-                new TivenosBachilleratoRequest
+                new DtoTivenosBachilleratoRequest
                 {
                     CodigoPersona = codigoPersona,
                     CodigoOrientacion = datosBachillerato.CodigoOrientacion
@@ -665,7 +667,7 @@ namespace AppLogic.Services.Inscripciones
 
             return _tivenosEnvioService.EncolarModificacionDatosBachillerato(
                 uow,
-                new TivenosBachilleratoRequest
+                new DtoTivenosBachilleratoRequest
                 {
                     CodigoPersona = codigoPersona,
                     CodigoOrientacion = datosBachillerato.CodigoOrientacion
@@ -735,14 +737,14 @@ namespace AppLogic.Services.Inscripciones
             string AnioBachiller,
             long? CodigoOrientacion);
 
-        public async Task<OperationResult<ConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, ConfirmarPreInscripcionRequest request)
+        public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, DtoConfirmarPreInscripcionRequest request)
         {
             const string methodName = nameof(ConfirmarPreInscripcion);
 
             var validacionRequest = ConfirmarPreInscripcionHelper.ValidarRequest(request, methodName);
             if (!validacionRequest.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
                     validacionRequest.ErrorCode,
                     methodName,
                     validacionRequest.Message,
@@ -754,19 +756,19 @@ namespace AppLogic.Services.Inscripciones
             var persona = uow.Personas.GetByKey(codigoPersona);
             if (persona == null)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
             var oferta = uow.Ofertas.GetByKeyWithRelated(request.IdOfertaSeleccionada);
             if (oferta == null)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, "No se encontro la oferta seleccionada.", 404);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, "No se encontro la oferta seleccionada.", 404);
             }
 
             var contextoResult = ConfirmarPreInscripcionHelper.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
             if (!contextoResult.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
                     contextoResult.ErrorCode,
                     methodName,
                     contextoResult.Message,
@@ -780,7 +782,7 @@ namespace AppLogic.Services.Inscripciones
                 methodName);
             if (!validacionDocumentos.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
             }
 
             var aceptacion = ConfirmarPreInscripcionHelper.AsegurarAceptacionReglamentoEstudiantil(
@@ -793,7 +795,7 @@ namespace AppLogic.Services.Inscripciones
                 methodName);
             if (!aceptacion.Success)
             {
-                return OperationResult<ConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
             }
 
             var apiRequest = ConfirmarPreInscripcionHelper.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
@@ -818,7 +820,7 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 3 - PAGOS
 
-        public OperationResult<bool> GuardarMetodoPago(long codigoPersona, GuardarMetodoPagoRequest request)
+        public OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
         {
             const string methodName = nameof(GuardarMetodoPago);
 

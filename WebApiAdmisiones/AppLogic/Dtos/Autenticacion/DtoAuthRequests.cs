@@ -3,13 +3,13 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.Autenticacion
 {
     /// <summary>
     /// DTO para la solicitud de autenticación de usuario.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public class AuthRequest
+    public class DtoAuthRequest
     {
         /// <summary>
         /// Tipo de documento de la persona que intenta autenticarse.

@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Becas;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using Utilities;
 
 namespace AppLogic.IServices.Becas

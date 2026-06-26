@@ -1,7 +1,7 @@
 using AppLogic.DevartDTOs;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.DTOs
+namespace AppLogic.Dtos.EncuestaInicial
 {
     public class DtoEncuestaInicialAdmisionResponse
     {

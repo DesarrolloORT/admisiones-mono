@@ -1,5 +1,5 @@
+using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -64,7 +64,7 @@ namespace UnitTesting.AppLogic.Helpers
             };
         }
 
-        private static GuardarEncuestaInicialRequest RequestValido() => new()
+        private static DtoGuardarEncuestaInicialRequest RequestValido() => new()
         {
             IdProducto = 10,
             IdProceso = 20,
@@ -82,7 +82,7 @@ namespace UnitTesting.AppLogic.Helpers
             NivelDecision = 1
         };
 
-        private static string? ErrorDe(ParcialCtx ctx, GuardarEncuestaInicialRequest request)
+        private static string? ErrorDe(ParcialCtx ctx, DtoGuardarEncuestaInicialRequest request)
         {
             var r = EncuestaInicialValidationHelper.ValidarConsistenciaParcial(ctx.Uow.Object, request, Method);
             return r.Success ? null : r.ErrorCode;
@@ -282,7 +282,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_MotivoInvalido_INS_EI_23()
         {
             var req = RequestValido();
-            req.OpcionesMotivosSeleccionados = [new EncuestaMotivoRequest { IdMotivo = 0 }];
+            req.OpcionesMotivosSeleccionados = [new DtoEncuestaMotivoRequest { IdMotivo = 0 }];
             Assert.Equal("INS_EI_23", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -290,7 +290,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_PublicidadInvalida_INS_EI_24()
         {
             var req = RequestValido();
-            req.OpcionesPublicidadSeleccionadas = [new EncuestaPublicidadRequest { IdPublicidad = 0 }];
+            req.OpcionesPublicidadSeleccionadas = [new DtoEncuestaPublicidadRequest { IdPublicidad = 0 }];
             Assert.Equal("INS_EI_24", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -298,7 +298,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_UniversidadCodigoNegativo_INS_EI_25()
         {
             var req = RequestValido();
-            req.UniversidadesConsideradas = [new EncuestaEmpresaRequest { CodigoEmpresa = -1 }];
+            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = -1 }];
             Assert.Equal("INS_EI_25", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -306,7 +306,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_UniversidadCodigoCero_INS_EI_25()
         {
             var req = RequestValido();
-            req.UniversidadesConsideradas = [new EncuestaEmpresaRequest { CodigoEmpresa = 0, Nombre = "Otro" }];
+            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = 0, Nombre = "Otro" }];
             Assert.Equal("INS_EI_25", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -317,7 +317,7 @@ namespace UnitTesting.AppLogic.Helpers
             ctx.Empresas.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
             var req = RequestValido();
             req.CodigoInstitucionBac = null; // evitar INS_EI_20 antes de llegar a las listas
-            req.UniversidadesConsideradas = [new EncuestaEmpresaRequest { CodigoEmpresa = 99 }];
+            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = 99 }];
             Assert.Equal("INS_EI_27", ErrorDe(ctx, req));
         }
 

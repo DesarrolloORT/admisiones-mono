@@ -1,8 +1,8 @@
+using AppLogic.Dtos.Registro;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -52,7 +52,7 @@ namespace UnitTesting.AppLogic.Services
             solicitudAltaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("PS", "A123")).Returns(default(SolicitudAlta)!);
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
-            var request = new RegistroEvaluarDocumentoRequest
+            var request = new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "PS",
                 Documento = "A123"
@@ -86,7 +86,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(true);
 
-            var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
+            var result = await _service.EvaluarDocumentoAsync(new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2"
@@ -106,7 +106,7 @@ namespace UnitTesting.AppLogic.Services
             personaRepo.Setup(r => r.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(default(Persona)!);
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
 
-            var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
+            var result = await _service.EvaluarDocumentoAsync(new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2"
@@ -135,7 +135,7 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.SolicitudAltas).Returns(solicitudAltaRepo.Object);
 
-            var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
+            var result = await _service.EvaluarDocumentoAsync(new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "PS",
                 Documento = "A123"
@@ -152,7 +152,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void RegistroEvaluacionResponse_SerializesOnlyTrueFlags()
         {
-            var response = new RegistroEvaluacionResponse
+            var response = new DtoRegistroEvaluacionResponse
             {
                 RequiereAltaPersona = true
             };
@@ -171,7 +171,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EvaluarDocumento_InvalidCi_ReturnsFailure()
         {
-            var result = await _service.EvaluarDocumentoAsync(new RegistroEvaluarDocumentoRequest
+            var result = await _service.EvaluarDocumentoAsync(new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-1"
@@ -209,7 +209,7 @@ namespace UnitTesting.AppLogic.Services
                     nameof(IRegistroService.VerificarIdentidadAsync),
                     "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."));
 
-            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -238,7 +238,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
 
-            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -257,7 +257,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task VerificarIdentidad_WithNonCiDocument_ReturnsFailure()
         {
-            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "PS",
                 Documento = "A123",
@@ -273,7 +273,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ConfirmarNuevaPersona_InvalidDocument_ReturnsFailure()
         {
-            var result = await _service.ConfirmarNuevaPersonaAsync(new RegistroPersonaRequest
+            var result = await _service.ConfirmarNuevaPersonaAsync(new DtoRegistroPersonaRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-1"
@@ -286,7 +286,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ConfirmarSolicitudAlta_WithCiDocument_ReturnsFailure()
         {
-            var result = await _service.ConfirmarSolicitudAltaAsync(new RegistroPersonaRequest
+            var result = await _service.ConfirmarSolicitudAltaAsync(new DtoRegistroPersonaRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2"
@@ -362,7 +362,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(l => l.ForzarCambiarPasswordAsync("123", "NuevaPassword1!"))
                 .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
 
-            var result = await _service.CompletarNuevaPersonaAsync(new RegistroPendingPersona
+            var result = await _service.CompletarNuevaPersonaAsync(new DtoRegistroPendingPersona
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -421,16 +421,16 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.CompletarNuevaPersonaAsync(
                 CrearPendingPersona(),
                 "NuevaPassword1!",
-                new RegistroDocumentoImagenesTemporales
+                new DtoRegistroDocumentoImagenesTemporales
                 {
                     FechaVencimiento = new DateTime(2030, 1, 1),
-                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [0x25, 0x50, 0x44, 0x46, 1],
                         NombreArchivo = "documento.pdf",
                         ContentType = "application/pdf"
                     },
-                    CaraPersona = new RegistroDocumentoArchivoTemporal
+                    CaraPersona = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
                         NombreArchivo = "cara.jpg",
@@ -476,9 +476,9 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.CompletarNuevaPersonaAsync(
                 CrearPendingPersona(),
                 "NuevaPassword1!",
-                new RegistroDocumentoImagenesTemporales
+                new DtoRegistroDocumentoImagenesTemporales
                 {
-                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
                         NombreArchivo = "documento.jpg",
@@ -507,9 +507,9 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.CompletarNuevaPersonaAsync(
                 CrearPendingPersona(),
                 "NuevaPassword1!",
-                new RegistroDocumentoImagenesTemporales
+                new DtoRegistroDocumentoImagenesTemporales
                 {
-                    DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                    DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [1, 2, 3],
                         NombreArchivo = "documento.pdf",
@@ -532,7 +532,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
             _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(true);
 
-            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -564,7 +564,7 @@ namespace UnitTesting.AppLogic.Services
                     500,
                     false));
 
-            var result = await _service.VerificarIdentidadAsync(new RegistroVerificarIdentidadRequest
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -595,7 +595,7 @@ namespace UnitTesting.AppLogic.Services
             };
         }
 
-        private static RegistroPersonaRequest CrearRegistroPersonaRequest(string tipoDocumento, string documento)
+        private static DtoRegistroPersonaRequest CrearRegistroPersonaRequest(string tipoDocumento, string documento)
             => new()
             {
                 TipoDocumento = tipoDocumento,
@@ -613,7 +613,7 @@ namespace UnitTesting.AppLogic.Services
                 CodigoCiudad = 3
             };
 
-        private static RegistroPendingPersona CrearPendingPersona()
+        private static DtoRegistroPendingPersona CrearPendingPersona()
             => new()
             {
                 TipoDocumento = "CI",

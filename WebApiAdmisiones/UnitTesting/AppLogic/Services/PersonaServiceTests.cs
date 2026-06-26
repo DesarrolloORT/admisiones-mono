@@ -1,5 +1,5 @@
-using AppLogic.DTOs;
-using AppLogic.Requests;
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Personas;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -221,8 +221,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 fecha,
-                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
 
             Assert.True(result.Success);
             Assert.Equal(fecha, persona.FechaVtoDocumentoPersona);
@@ -249,8 +249,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 DateTime.Today.AddYears(1),
-                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_02", result.ErrorCode);
@@ -264,8 +264,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 DateTime.Today.AddYears(1),
-                new DocumentoPersonaArchivoDto { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DocumentoPersonaArchivoDto { NombreArchivo = "dorso.pdf", Archivo = Array.Empty<byte>() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = Array.Empty<byte>() });
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_03", result.ErrorCode);
@@ -448,7 +448,7 @@ namespace UnitTesting.AppLogic.Services
                 Telefono1 = "111",
                 Email = "viejo@test.com"
             };
-            var request = new ActualizarDatosPersonaRequest
+            var request = new DtoActualizarDatosPersonaRequest
             {
                 CodigoPais = 4,
                 CodigoEstado = 5,
@@ -502,7 +502,7 @@ namespace UnitTesting.AppLogic.Services
             _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
 
-            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            var result = _service.ActualizarDatosPersona(123, new DtoActualizarDatosPersonaRequest
             {
                 SegundoNombre = "Laura",
                 SegundoApellido = "Lopez",
@@ -547,7 +547,7 @@ namespace UnitTesting.AppLogic.Services
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(123)).Returns(true);
             _ciudadRepositoryMock.Setup(r => r.GetByKey(4, 5, 6)).Returns(new Ciudad());
 
-            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            var result = _service.ActualizarDatosPersona(123, new DtoActualizarDatosPersonaRequest
             {
                 CodigoPais = 4,
                 CodigoEstado = 5,
@@ -595,7 +595,7 @@ namespace UnitTesting.AppLogic.Services
             _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
             _ciudadRepositoryMock.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad());
 
-            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            var result = _service.ActualizarDatosPersona(123, new DtoActualizarDatosPersonaRequest
             {
                 TipoDocumento = "pa",
                 Documento = " A123 ",
@@ -635,7 +635,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetByKey(123))
                 .Returns(new Persona { CodigoPersona = 123 });
 
-            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            var result = _service.ActualizarDatosPersona(123, new DtoActualizarDatosPersonaRequest
             {
                 CodigoPais = 1,
                 CodigoEstado = 2,
@@ -660,7 +660,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetByKey(1, 2, 3))
                 .Returns((Ciudad)null!);
 
-            var result = _service.ActualizarDatosPersona(123, new ActualizarDatosPersonaRequest
+            var result = _service.ActualizarDatosPersona(123, new DtoActualizarDatosPersonaRequest
             {
                 CodigoPais = 1,
                 CodigoEstado = 2,

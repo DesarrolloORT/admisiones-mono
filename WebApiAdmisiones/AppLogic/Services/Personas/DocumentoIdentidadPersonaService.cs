@@ -1,5 +1,6 @@
+using AppLogic.Dtos.Personas;
+using AppLogic.Dtos.Registro;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -53,7 +54,7 @@ namespace AppLogic.Services.Personas
             return ValidarDocumentoDefinitivoParaConsulta(definitivo, persona?.FechaVtoDocumentoPersona, methodName);
         }
 
-        public static OperationResult<DocumentoPersonaConsultaDto?> ObtenerDocumentoOpcionalParaConsulta(
+        public static OperationResult<DtoDocumentoPersonaConsulta?> ObtenerDocumentoOpcionalParaConsulta(
             IUnitOfWork uow,
             long codigoPersona,
             int tipo,
@@ -62,7 +63,7 @@ namespace AppLogic.Services.Personas
         {
             if (!EsTipoDocumentoValido(tipo))
             {
-                return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaConsulta?>.IsFailed(
                     "GEN_DA_01",
                     methodName,
                     "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
@@ -75,17 +76,17 @@ namespace AppLogic.Services.Personas
                 var validacionTemporal = ValidarDocumentoTemporalParaConsulta(temporal, methodName);
                 if (!validacionTemporal.Success)
                 {
-                    return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                    return OperationResult<DtoDocumentoPersonaConsulta?>.IsFailed(
                         validacionTemporal.ErrorCode,
                         methodName,
                         validacionTemporal.Message,
                         validacionTemporal.HttpCode);
                 }
 
-                return OperationResult<DocumentoPersonaConsultaDto?>.Ok(
-                    new DocumentoPersonaConsultaDto
+                return OperationResult<DtoDocumentoPersonaConsulta?>.Ok(
+                    new DtoDocumentoPersonaConsulta
                     {
-                        Archivo = new DocumentoPersonaArchivoDto
+                        Archivo = new DtoDocumentoPersonaArchivo
                         {
                             NombreArchivo = temporal.NombreImagen,
                             Archivo = validacionTemporal.Data
@@ -98,7 +99,7 @@ namespace AppLogic.Services.Personas
             var definitivo = uow.Imagens.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
             if (definitivo is null)
             {
-                return OperationResult<DocumentoPersonaConsultaDto?>.Ok(null, methodName);
+                return OperationResult<DtoDocumentoPersonaConsulta?>.Ok(null, methodName);
             }
 
             var validacionDefinitivo = ValidarDocumentoDefinitivoParaConsulta(
@@ -107,17 +108,17 @@ namespace AppLogic.Services.Personas
                 methodName);
             if (!validacionDefinitivo.Success)
             {
-                return OperationResult<DocumentoPersonaConsultaDto?>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaConsulta?>.IsFailed(
                     validacionDefinitivo.ErrorCode,
                     methodName,
                     validacionDefinitivo.Message,
                     validacionDefinitivo.HttpCode);
             }
 
-            return OperationResult<DocumentoPersonaConsultaDto?>.Ok(
-                new DocumentoPersonaConsultaDto
+            return OperationResult<DtoDocumentoPersonaConsulta?>.Ok(
+                new DtoDocumentoPersonaConsulta
                 {
-                    Archivo = new DocumentoPersonaArchivoDto
+                    Archivo = new DtoDocumentoPersonaArchivo
                     {
                         NombreArchivo = definitivo.NombreImagen,
                         Archivo = validacionDefinitivo.Data
@@ -222,7 +223,7 @@ namespace AppLogic.Services.Personas
         }
 
         public static OperationResult<bool> ValidarImagenesDocumentoReconocido(
-            RegistroDocumentoImagenesTemporales? imagenes,
+            DtoRegistroDocumentoImagenesTemporales? imagenes,
             string methodName)
         {
             if (imagenes is null)
@@ -256,7 +257,7 @@ namespace AppLogic.Services.Personas
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             Persona persona,
-            RegistroDocumentoImagenesTemporales? imagenes)
+            DtoRegistroDocumentoImagenesTemporales? imagenes)
         {
             if (imagenes is null)
             {
