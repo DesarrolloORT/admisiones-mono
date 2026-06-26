@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
-import {
-  ScholarshipRequirementsCard,
-  ScholarshipType,
-} from '../scholarship-requirements-card/scholarship-requirements-card';
+import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
+import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipRequirementsCard } from '../scholarship-requirements-card/scholarship-requirements-card';
 
 @Component({
   selector: 'app-scholarship-onboarding',
@@ -14,6 +13,25 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipOnboarding {
-  readonly variant = input.required<ScholarshipType>();
-  readonly title = input.required<string>();
+  protected readonly facade = inject(ScholarshipProposalFacade);
+
+  readonly variant = input.required<ScholarshipVariant>();
+
+  readonly title = computed(() => {
+    const titles: Record<ScholarshipVariant, string> = {
+      fbr: 'Fondo de becas de reválidas',
+      fexaSin: 'Fondo de Excelencia Académica',
+      fexaCon: 'Fondo de Excelencia Académica',
+      fbc: 'Fondo de becas concursables',
+      fcl: 'Fondo de becas de capacitación laboral',
+    };
+
+    return titles[this.variant()];
+  });
+
+  readonly continueRequested = output<void>();
+
+  protected continue(): void {
+    this.continueRequested.emit();
+  }
 }

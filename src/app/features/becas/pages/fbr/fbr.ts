@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
+import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
@@ -14,7 +15,13 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
 
 @Component({
   selector: 'app-fbr',
-  imports: [ProcessLayout, ScholarshipOnboarding, ScholarshipAcademicStep, ScholarshipPersonalStep],
+  imports: [
+    ProcessLayout,
+    ScholarshipOnboarding,
+    ScholarshipAcademicStep,
+    ScholarshipPersonalStep,
+    HomeHeader,
+  ],
   providers: [
     AcademicProposalSelection,
     ScholarshipFormsStore,
@@ -27,6 +34,11 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Fbr {
+  protected readonly onboardingCompleted = signal(false);
+
+  protected startApplication(): void {
+    this.onboardingCompleted.set(true);
+  }
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
 
