@@ -1152,7 +1152,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarEncuestaInicial_DefinitivaSgiSinTrabajaActualmente_QuedaTemporal()
+        public void GuardarEncuestaInicial_DefinitivaSgiSinTrabajaActualmente_NoBloqueaDefinitiva()
         {
             SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
 
@@ -1178,8 +1178,8 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.NotNull(encuestaAgregada);
-            Assert.Equal("TEMPORAL", encuestaAgregada!.EstadoEncuestaIniAdmision);
-            bachilleratoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
+            Assert.Equal("DEFINITIVO", encuestaAgregada!.EstadoEncuestaIniAdmision);
+            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Once);
             personaRepo.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
@@ -1353,11 +1353,39 @@ namespace UnitTesting.AppLogic.Services
                 AnioBachiller(5),
                 AnioBachiller(6)
             });
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
+            {
+                AnioBachiller(4),
+                AnioBachiller(5),
+                new()
+                {
+                    IdAnioBachiller = 6,
+                    CantAniosAnioBachiller = 6,
+                    NombreAnioBachiller = "6",
+                    UsuarioIngreso = string.Empty,
+                    FechaIngreso = FechaBase,
+                    HoraIngreso = "10:30:00",
+                    Titulos =
+                    [
+                        new Titulo
+                        {
+                            CodigoTitulo = 1300,
+                            Nombre = "Sexto",
+                            IdAnioBachiller = 6,
+                            UsuarioIngreso = string.Empty,
+                            FechaIngreso = FechaBase,
+                            HoraIngreso = "10:30:00",
+                            Bachillerato = "SI"
+                        }
+                    ]
+                }
+            });
             anioRepo.Setup(r => r.GetByKey(6)).Returns(AnioBachiller(6));
             _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
 
             var motivoOpcionesRepo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
             motivoOpcionesRepo.Setup(r => r.GetByKey(1)).Returns(new MotivoOpcionesAdmision { IdMotivo = 1 });
+            motivoOpcionesRepo.Setup(r => r.GetAll()).Returns(new List<MotivoOpcionesAdmision> { new() { IdMotivo = 1 } });
             _uowMock.Setup(u => u.MotivoOpcionesAdmisions).Returns(motivoOpcionesRepo.Object);
 
             var empresaConsideradaRepo = new Mock<IEmpresaConsideradaAdmisionRepository>();

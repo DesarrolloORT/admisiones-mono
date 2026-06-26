@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Prometheus;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -44,6 +45,30 @@ namespace WebApiAdmisiones.Extensions
 
             // Headers de seguridad
             app.UseSecurityHeaders();
+
+            // Contratos para el front: publicos solo en Development.
+            if (app.Environment.IsDevelopment())
+            {
+                var contractsPath = Path.Combine(app.Environment.ContentRootPath, "Docs", "contracts");
+                if (Directory.Exists(contractsPath))
+                {
+                    app.UseStaticFiles(new StaticFileOptions
+                    {
+                        FileProvider = new PhysicalFileProvider(contractsPath),
+                        RequestPath = "/contracts"
+                    });
+
+                    app.MapGet("/contracts", () =>
+                        Directory
+                            .EnumerateFiles(contractsPath, "*.json", SearchOption.TopDirectoryOnly)
+                            .OrderBy(Path.GetFileName)
+                            .Select(path => new
+                            {
+                                name = Path.GetFileName(path),
+                                url = $"/contracts/{Path.GetFileName(path)}"
+                            }));
+                }
+            }
 
             // Middleware para OPTIONS (CORS preflight)
             app.UseOptionsPreflight();

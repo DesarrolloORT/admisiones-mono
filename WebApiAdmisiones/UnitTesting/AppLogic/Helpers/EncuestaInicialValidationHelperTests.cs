@@ -26,6 +26,7 @@ namespace UnitTesting.AppLogic.Helpers
             public Mock<IProductoRepository> Productos { get; } = new();
             public Mock<IEmpresaRepository> Empresas { get; } = new();
             public Mock<ITituloRepository> Titulos { get; } = new();
+            public Mock<IAnioBachillerRepository> Anios { get; } = new();
             public Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository> MotivoOpc { get; } = new();
             public Mock<BusinessLogic.IDevartRepositories.IPublicidadOpcionesAdmisionRepository> PublOpc { get; } = new();
 
@@ -34,15 +35,33 @@ namespace UnitTesting.AppLogic.Helpers
                 Productos.Setup(r => r.EsProductoValidoParaInteres(It.IsAny<long>())).Returns(true);
                 Productos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Producto { IdProducto = 10, IdNivelProducto = 2 });
                 Empresas.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Empresa { CodigoEmpresa = 50, Nombre = "Liceo" });
+                Empresas.Setup(r => r.GetUniversidades()).Returns(new List<Empresa> { new() { CodigoEmpresa = 50, Nombre = "Universidad" } });
                 Titulos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Titulo { CodigoTitulo = 1300 });
-                MotivoOpc.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new MotivoOpcionesAdmision { IdMotivo = 1 });
-                PublOpc.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new PublicidadOpcionesAdmision { IdPublicidad = 1 });
+                Anios.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
+                {
+                    AnioBachillerCatalogo(4),
+                    AnioBachillerCatalogo(5),
+                    AnioBachillerCatalogo(6, new Titulo { CodigoTitulo = 1300 })
+                });
+                MotivoOpc.Setup(r => r.GetAll()).Returns(new List<MotivoOpcionesAdmision> { new() { IdMotivo = 1 } });
+                PublOpc.Setup(r => r.GetAll()).Returns(new List<PublicidadOpcionesAdmision> { new() { IdPublicidad = 1 } });
                 Uow.Setup(u => u.Productos).Returns(Productos.Object);
                 Uow.Setup(u => u.Empresas).Returns(Empresas.Object);
                 Uow.Setup(u => u.Titulos).Returns(Titulos.Object);
+                Uow.Setup(u => u.AnioBachillers).Returns(Anios.Object);
                 Uow.Setup(u => u.MotivoOpcionesAdmisions).Returns(MotivoOpc.Object);
                 Uow.Setup(u => u.PublicidadOpcionesAdmisions).Returns(PublOpc.Object);
             }
+        }
+
+        private static AnioBachiller AnioBachillerCatalogo(long cantAnios, params Titulo[] titulos)
+        {
+            return new AnioBachiller
+            {
+                IdAnioBachiller = cantAnios,
+                CantAniosAnioBachiller = cantAnios,
+                Titulos = titulos.ToList()
+            };
         }
 
         private static GuardarEncuestaInicialRequest RequestValido() => new()
@@ -250,7 +269,12 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_TituloNoEncontrado_INS_EI_22()
         {
             var ctx = new ParcialCtx();
-            ctx.Titulos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns((Titulo)null!);
+            ctx.Anios.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
+            {
+                AnioBachillerCatalogo(4),
+                AnioBachillerCatalogo(5),
+                AnioBachillerCatalogo(6)
+            });
             Assert.Equal("INS_EI_22", ErrorDe(ctx, RequestValido()));
         }
 
@@ -279,18 +303,18 @@ namespace UnitTesting.AppLogic.Helpers
         }
 
         [Fact]
-        public void Parcial_UniversidadNuevaSinNombre_INS_EI_26()
+        public void Parcial_UniversidadCodigoCero_INS_EI_25()
         {
             var req = RequestValido();
             req.UniversidadesConsideradas = [new EncuestaEmpresaRequest { CodigoEmpresa = 0, Nombre = "Otro" }];
-            Assert.Equal("INS_EI_26", ErrorDe(new ParcialCtx(), req));
+            Assert.Equal("INS_EI_25", ErrorDe(new ParcialCtx(), req));
         }
 
         [Fact]
         public void Parcial_UniversidadNoEncontrada_INS_EI_27()
         {
             var ctx = new ParcialCtx();
-            ctx.Empresas.Setup(r => r.GetByKey(It.IsAny<long>())).Returns((Empresa)null!);
+            ctx.Empresas.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
             var req = RequestValido();
             req.CodigoInstitucionBac = null; // evitar INS_EI_20 antes de llegar a las listas
             req.UniversidadesConsideradas = [new EncuestaEmpresaRequest { CodigoEmpresa = 99 }];
@@ -454,12 +478,12 @@ namespace UnitTesting.AppLogic.Helpers
         }
 
         [Fact]
-        public void Completitud_PersonaSgiSinTrabajaActualmente_OkFalse()
+        public void Completitud_PersonaSgiSinTrabajaActualmente_NoBloqueaCompletitud()
         {
             var persona = new Persona { CodigoPersona = 123, TipoPersona = PersonaConstants.TipoPersonaSgi, TrabajaActualmente = null };
             var r = Completar(new CompletitudCtx(), EncuestaCompletable(), persona);
             Assert.True(r.success);
-            Assert.False(r.data);
+            Assert.True(r.data);
         }
 
         [Fact]
