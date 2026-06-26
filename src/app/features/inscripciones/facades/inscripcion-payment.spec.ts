@@ -61,6 +61,18 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.outcome()).toBe('inscripcion-confirmada');
   }));
 
+  it('shows a reusable error alert when no payment method is selected', () => {
+    expect(facade.paymentForm.controls.metodoPago.value).toBe('');
+
+    facade.requestConfirmation();
+
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'Medio de pago requerido',
+      message: 'Elegí un medio de pago para poder continuar.',
+    });
+  });
+
   it('requires a bank when paying from a bank account', () => {
     facade.paymentForm.controls.metodoPago.setValue('cuenta-bancaria');
     facade.paymentForm.controls.banco.setValue('');
@@ -69,6 +81,7 @@ describe('InscripcionPaymentFacade', () => {
 
     expect(facade.view()).toBe('editing');
     expect(facade.paymentForm.controls.banco.hasError('required')).toBe(true);
+    expect(facade.paymentErrorAlert()?.title).toBe('Banco requerido');
   });
 
   it('loads bank options with their logos', () => {

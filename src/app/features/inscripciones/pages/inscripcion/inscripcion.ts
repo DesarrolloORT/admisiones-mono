@@ -70,5 +70,6 @@ export class Inscripcion {
     const main = this.document.getElementById('main-content');
     main?.focus();
     this.document.defaultView?.scrollTo({ behavior: 'instant', left: 0, top: 0 });
+    this.document.defaultView?.setTimeout(() => main?.focus(), 50);
   }
 }

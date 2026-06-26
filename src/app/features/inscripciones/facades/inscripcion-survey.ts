@@ -35,9 +35,12 @@ import {
   buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
   isBackendSurveyComplete,
+  isNationalSecondaryPlace as isNationalSecondaryPlaceValue,
   parseDate,
   patchBackendSurveyForms,
   resolveBackendSection,
+  SECONDARY_PLACE_INTERNATIONAL,
+  SECONDARY_PLACE_NATIONAL,
 } from '../models/inscripcion-flow-mappers';
 import { toCatalogOptions } from '../models/inscripcion-flow-options';
 import { getSeccionesVisibles } from '../models/inscripcion-flow-policy';
@@ -47,6 +50,16 @@ import { Inscripciones, type InscripcionIdentityPreload } from '../services/insc
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
+
+interface InscripcionErrorAlertState {
+  title: string;
+  message: string;
+}
+
+const INCOMPLETE_INSCRIPTION_ERROR_ALERT: InscripcionErrorAlertState = {
+  title: 'Información incompleta',
+  message: 'Revisá y completá los campos obligatorios para continuar.',
+};
 
 export class InscripcionSurveyFacade {
   private readonly catalogs = inject(Catalogs);
@@ -105,6 +118,13 @@ export class InscripcionSurveyFacade {
   public readonly careerDecisionOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly baccalaureateOptions = signal<readonly OpcionInscripcion[]>([]);
+  public readonly secondaryPlaceOptions: readonly OpcionInscripcion[] = [
+    { value: SECONDARY_PLACE_NATIONAL, label: 'Nacional' },
+    { value: SECONDARY_PLACE_INTERNATIONAL, label: 'Internacional' },
+  ];
+  public readonly secondaryYearOptions = computed<readonly OpcionInscripcion[]>(() =>
+    this.baccalaureateYears().map(year => ({ value: year.id.toString(), label: year.label }))
+  );
   public readonly orientationOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly departmentOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly institutionOptions = signal<readonly OpcionInscripcion[]>([]);
@@ -160,6 +180,9 @@ export class InscripcionSurveyFacade {
       ...(!files.selfie ? [{ message: 'Foto del rostro es obligatoria.' }] : []),
     ];
   });
+  public readonly activeSectionErrorAlert = computed<InscripcionErrorAlertState | null>(() =>
+    this.activeSectionErrors().length > 0 ? INCOMPLETE_INSCRIPTION_ERROR_ALERT : null
+  );
 
   constructor() {
     this.loadInitialSurveyCatalogs();
@@ -247,6 +270,14 @@ export class InscripcionSurveyFacade {
     this.preloadedIdentityFiles.update(files => ({ ...files, [target]: null }));
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
     this.syncSectionCompletion('identidad');
+  }
+
+  public isIdentityFileMissing(target: IdentityFileTarget): boolean {
+    return this.submittedSections().includes('identidad') && !this.identityFiles()[target];
+  }
+
+  public isNationalSecondaryPlace(): boolean {
+    return isNationalSecondaryPlaceValue(this.educationForm.controls.lugarSecundaria.value);
   }
 
   public openRegulationReader(): void {
@@ -387,7 +418,7 @@ export class InscripcionSurveyFacade {
       this.educationForm.controls.cursaSecundaria.value === 'cursando';
     this.setRequired(
       [this.educationForm.controls.anioSecundaria],
-      currentlyInSecondarySchool && this.careerDecisionOptions().length > 0
+      currentlyInSecondarySchool && this.secondaryYearOptions().length > 0
     );
     this.setRequired(
       [this.educationForm.controls.tipoBachillerato],
@@ -399,7 +430,7 @@ export class InscripcionSurveyFacade {
     );
     this.setRequired(
       [this.educationForm.controls.departamento, this.educationForm.controls.institucionEducativa],
-      this.educationForm.controls.lugarSecundaria.value === 'uruguay' &&
+      this.isNationalSecondaryPlace() &&
         this.departmentOptions().length > 0 &&
         this.institutionOptions().length > 0
     );

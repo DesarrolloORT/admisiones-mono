@@ -13,6 +13,16 @@
 .inscription-payment-summary {
   gap: var(--ort-sys-spacing-24);
   align-content: start;
+  order: 1;
+}
+
+.inscription-payment-main {
+  order: 2;
+}
+
+.inscription-payment-submit {
+  order: 3;
+  width: 100%;
 }
 
 .inscription-payment-method {
@@ -36,8 +46,22 @@
   line-height: var(--ort-sys-body-sm-line-height);
 }
 
+.inscription-payment-option__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ort-sys-spacing-4);
+  align-items: center;
+}
+
 .inscription-payment-option__label {
+  display: inline-flex;
+}
+
+.inscription-payment-option__badge {
   display: block;
+  object-fit: contain;
+  width: 2.5rem;
+  height: 1.5rem;
 }
 
 .inscription-bank-option {
@@ -53,7 +77,6 @@
 }
 
 .inscription-payment-card {
-  gap: var(--ort-sys-spacing-12);
   border-color: var(--ort-sys-alert-border-color-information);
   background: var(--ort-sys-alert-background-information);
 }
@@ -89,10 +112,6 @@
 
 .inscription-payment-deadline strong {
   color: inherit;
-}
-
-.inscription-payment-submit {
-  width: 100%;
 }
 
 .inscription-summary-list {
@@ -136,15 +155,26 @@
 
 @media (width >= 52.5rem) {
   .inscription-payment-layout {
+    grid-template-areas:
+      'main summary'
+      'main submit';
     grid-template-columns: minmax(0, 40.8125rem) minmax(19rem, 19.375rem);
     gap: var(--ort-sys-spacing-36);
     width: min(100%, 62.4375rem);
   }
 
-  .inscription-payment-summary .inscription-card:not(.inscription-payment-card) {
-    border: 0;
-    box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
-      var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
-      var(--ort-sys-elevation-sm-color);
+  .inscription-payment-main {
+    grid-area: main;
+    order: initial;
+  }
+
+  .inscription-payment-summary {
+    grid-area: summary;
+    order: initial;
+  }
+
+  .inscription-payment-submit {
+    grid-area: submit;
+    order: initial;
   }
 }

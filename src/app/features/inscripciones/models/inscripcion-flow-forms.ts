@@ -139,7 +139,7 @@ export function createInscripcionForms(): InscripcionForms {
       }),
     }),
     paymentForm: new FormGroup<FormularioPago>({
-      metodoPago: new FormControl<MetodoPago | ''>('cuenta-bancaria', {
+      metodoPago: new FormControl<MetodoPago | ''>('', {
         nonNullable: true,
         validators: Validators.required,
       }),

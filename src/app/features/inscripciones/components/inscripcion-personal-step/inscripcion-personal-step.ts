@@ -16,6 +16,7 @@ import {
 } from '@desarrolloort/components';
 
 import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
+import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-error-alert';
 
 @Component({
   selector: 'app-inscripcion-personal-step',
@@ -28,6 +29,7 @@ import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
+    InscripcionErrorAlert,
     OrtRadioModule,
     OrtRatingModule,
     OrtSelectModule,
@@ -40,6 +42,12 @@ import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 })
 export class InscripcionPersonalStep {
   protected readonly facade = inject(InscripcionSurveyFacade);
+
+  protected onFormEnter(event: Event): void {
+    if (event.target instanceof HTMLInputElement && event.target.type === 'radio') {
+      event.preventDefault();
+    }
+  }
 
   protected onSubmit(event: SubmitEvent): void {
     event.preventDefault();

@@ -2,13 +2,11 @@ import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import type { OrtErrorItem } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { toBankOption } from '../models/inscripcion-bank-logo';
 import type { MetodoPago, OpcionInscripcion } from '../models/inscripcion-flow';
-import { buildFormErrors } from '../models/inscripcion-flow-forms';
 import { getResultadoPago, parseResultadoForzado } from '../models/inscripcion-flow-policy';
 import {
   buildSummaryItems,
@@ -21,6 +19,11 @@ import { COORDINATORS, PAYMENT_OPTIONS, SUBJECTS } from '../models/inscripcion-s
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
+
+interface InscripcionErrorAlertState {
+  title: string;
+  message: string;
+}
 
 export class InscripcionPaymentFacade {
   private readonly route = inject(ActivatedRoute);
@@ -50,14 +53,22 @@ export class InscripcionPaymentFacade {
     this.route.snapshot.queryParamMap.get('resultado')
   );
 
-  public readonly paymentErrors = computed<OrtErrorItem[]>(() =>
-    this.submitted()
-      ? buildFormErrors(this.paymentForm, [
-          { controlName: 'metodoPago', fieldId: '', label: 'Medio de pago' },
-          { controlName: 'banco', fieldId: '', label: 'Banco' },
-        ])
-      : []
-  );
+  public readonly paymentErrorAlert = computed<InscripcionErrorAlertState | null>(() => {
+    if (!this.submitted()) return null;
+    if (this.paymentForm.controls.metodoPago.hasError('required')) {
+      return {
+        title: 'Medio de pago requerido',
+        message: 'Elegí un medio de pago para poder continuar.',
+      };
+    }
+    if (this.paymentForm.controls.banco.hasError('required')) {
+      return {
+        title: 'Banco requerido',
+        message: 'Seleccioná tu banco para poder continuar.',
+      };
+    }
+    return null;
+  });
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),

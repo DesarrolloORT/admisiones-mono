@@ -6,8 +6,14 @@
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
-  <form class="inscription-form" novalidate (submit)="onSubmit($event)">
-    <ort-error-summary [errors]="facade.activeSectionErrors()" />
+  <form
+    class="inscription-form"
+    novalidate
+    (keydown.enter)="onFormEnter($event)"
+    (submit)="onSubmit($event)">
+    @if (facade.activeSectionErrorAlert(); as error) {
+    <app-inscripcion-error-alert [message]="error.message" [title]="error.title" />
+    }
     <ort-accordion [multi]="false">
       @if (facade.visibleSections().includes('educacion')) {
       <ort-accordion-item
@@ -43,13 +49,21 @@
                 legend="¿Cursás secundaria actualmente?"
                 name="secondary-status"
                 orientation="vertical"
+                [aria-describedby]="
+                  facade.educationForm.controls.cursaSecundaria.touched &&
+                  facade.educationForm.controls.cursaSecundaria.hasError('required')
+                    ? 'secondary-status-error'
+                    : null
+                "
                 [required]="true">
                 <ort-radio-card-button value="cursando">Sí, estoy cursando</ort-radio-card-button>
                 <ort-radio-card-button value="no-cursando">No</ort-radio-card-button>
               </ort-radio-group>
               @if (facade.educationForm.controls.cursaSecundaria.touched &&
               facade.educationForm.controls.cursaSecundaria.hasError('required')) {
-              <p class="inscription-field-error">Seleccioná una opción</p>
+              <p class="inscription-field-error" id="secondary-status-error" role="alert">
+                Seleccioná una opción
+              </p>
               } @if (facade.educationForm.controls.cursaSecundaria.value === 'cursando') {
               <ort-radio-group
                 class="inscription-choice-list"
@@ -57,14 +71,22 @@
                 legend="Indicá el año en curso"
                 name="secondary-year"
                 orientation="vertical"
+                [aria-describedby]="
+                  facade.educationForm.controls.anioSecundaria.touched &&
+                  facade.educationForm.controls.anioSecundaria.hasError('required')
+                    ? 'secondary-year-error'
+                    : null
+                "
                 [required]="true">
-                @for (option of facade.careerDecisionOptions(); track option.value) {
+                @for (option of facade.secondaryYearOptions(); track option.value) {
                 <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
                 }
               </ort-radio-group>
               @if (facade.educationForm.controls.anioSecundaria.touched &&
               facade.educationForm.controls.anioSecundaria.hasError('required')) {
-              <p class="inscription-field-error">Seleccioná una opción</p>
+              <p class="inscription-field-error" id="secondary-year-error" role="alert">
+                Seleccioná una opción
+              </p>
               }
 
               <ort-radio-group
@@ -73,14 +95,23 @@
                 legend="¿Qué tipo de bachillerato?"
                 name="baccalaureate-type"
                 orientation="vertical"
+                [aria-describedby]="
+                  facade.educationForm.controls.tipoBachillerato.touched &&
+                  facade.educationForm.controls.tipoBachillerato.hasError('required')
+                    ? 'baccalaureate-type-error'
+                    : null
+                "
                 [disabled]="facade.baccalaureateOptions().length === 0"
                 [required]="true">
-                <ort-radio-button value="option.value" />
-                <ort-radio-button value="option.value" />
+                @for (option of facade.baccalaureateOptions(); track option.value) {
+                <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
+                }
               </ort-radio-group>
               @if (facade.educationForm.controls.tipoBachillerato.touched &&
               facade.educationForm.controls.tipoBachillerato.hasError('required')) {
-              <p class="inscription-field-error">Seleccioná una opción</p>
+              <p class="inscription-field-error" id="baccalaureate-type-error" role="alert">
+                Seleccioná una opción
+              </p>
               }
 
               <ort-form-field
@@ -108,14 +139,25 @@
                 legend="¿Dónde cursaste el último año de secundaria?"
                 name="secondary-place"
                 orientation="vertical"
+                [aria-describedby]="
+                  facade.educationForm.controls.lugarSecundaria.touched &&
+                  facade.educationForm.controls.lugarSecundaria.hasError('required')
+                    ? 'secondary-place-error'
+                    : null
+                "
                 [required]="true">
-                <ort-radio-card-button value="uruguay">Uruguay</ort-radio-card-button>
-                <ort-radio-card-button value="exterior">En el exterior</ort-radio-card-button>
+                @for (option of facade.secondaryPlaceOptions; track option.value) {
+                <ort-radio-card-button [value]="option.value">
+                  {{ option.label }}
+                </ort-radio-card-button>
+                }
               </ort-radio-group>
               @if (facade.educationForm.controls.lugarSecundaria.touched &&
               facade.educationForm.controls.lugarSecundaria.hasError('required')) {
-              <p class="inscription-field-error">Seleccioná una opción</p>
-              } @if (facade.educationForm.controls.lugarSecundaria.value === 'uruguay') {
+              <p class="inscription-field-error" id="secondary-place-error" role="alert">
+                Seleccioná una opción
+              </p>
+              } @if (facade.isNationalSecondaryPlace()) {
               <ort-form-field
                 [hideRequiredMarker]="!!facade.educationForm.controls.departamento.value">
                 <ort-label>Departamento</ort-label>
@@ -161,6 +203,12 @@
                 legend="¿Cursaste carreras previamente?"
                 name="previous-career"
                 orientation="vertical"
+                [aria-describedby]="
+                  facade.educationForm.controls.estadoEducacionSuperior.touched &&
+                  facade.educationForm.controls.estadoEducacionSuperior.hasError('required')
+                    ? 'previous-career-error'
+                    : null
+                "
                 [required]="true">
                 @for (option of facade.previousCareerOptions(); track option.value) {
                 <ort-radio-card-button [value]="option.value">
@@ -170,7 +218,9 @@
               </ort-radio-group>
               @if (facade.educationForm.controls.estadoEducacionSuperior.touched &&
               facade.educationForm.controls.estadoEducacionSuperior.hasError('required')) {
-              <p class="inscription-field-error">Seleccioná una opción</p>
+              <p class="inscription-field-error" id="previous-career-error" role="alert">
+                Seleccioná una opción
+              </p>
               }
             </section>
 
@@ -201,13 +251,21 @@
                   legend="¿Obtuvo el título en ORT?"
                   name="mother-ort-degree"
                   orientation="vertical"
+                  [aria-describedby]="
+                    facade.educationForm.controls.tituloOrtMadre.touched &&
+                    facade.educationForm.controls.tituloOrtMadre.hasError('required')
+                      ? 'mother-ort-degree-error'
+                      : null
+                  "
                   [required]="true">
                   <ort-radio-button value="si">Sí</ort-radio-button>
                   <ort-radio-button value="no">No</ort-radio-button>
                 </ort-radio-group>
                 @if (facade.educationForm.controls.tituloOrtMadre.touched &&
                 facade.educationForm.controls.tituloOrtMadre.hasError('required')) {
-                <p class="inscription-field-error">Seleccioná una opción</p>
+                <p class="inscription-field-error" id="mother-ort-degree-error" role="alert">
+                  Seleccioná una opción
+                </p>
                 }
                 <ort-form-field
                   [hideRequiredMarker]="!!facade.educationForm.controls.formacionPadre.value">
@@ -262,6 +320,12 @@
               legend="¿En qué año de secundaria decidiste qué carrera estudiar?"
               name="decision-career-year"
               orientation="vertical"
+              [aria-describedby]="
+                facade.academicDecisionForm.controls.anioDecisionCarrera.touched &&
+                facade.academicDecisionForm.controls.anioDecisionCarrera.hasError('required')
+                  ? 'decision-career-year-error'
+                  : null
+              "
               [required]="true">
               @for (option of facade.careerDecisionOptions(); track option.value) {
               <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
@@ -269,7 +333,9 @@
             </ort-radio-group>
             @if (facade.academicDecisionForm.controls.anioDecisionCarrera.touched &&
             facade.academicDecisionForm.controls.anioDecisionCarrera.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="decision-career-year-error" role="alert">
+              Seleccioná una opción
+            </p>
             }
 
             <ort-form-field
@@ -297,6 +363,12 @@
               legend="¿En qué año decidiste estudiar en ORT?"
               name="decision-ort-year"
               orientation="vertical"
+              [aria-describedby]="
+                facade.academicDecisionForm.controls.anioDecisionOrt.touched &&
+                facade.academicDecisionForm.controls.anioDecisionOrt.hasError('required')
+                  ? 'decision-ort-year-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="1-ems">1º EMS (4º año)</ort-radio-button>
               <ort-radio-button value="2-ems">2º EMS (5º año)</ort-radio-button>
@@ -305,7 +377,9 @@
             </ort-radio-group>
             @if (facade.academicDecisionForm.controls.anioDecisionOrt.touched &&
             facade.academicDecisionForm.controls.anioDecisionOrt.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="decision-ort-year-error" role="alert">
+              Seleccioná una opción
+            </p>
             }
 
             <ort-radio-group
@@ -314,13 +388,21 @@
               legend="¿Te informaste en otras universidades?"
               name="other-universities"
               orientation="vertical"
+              [aria-describedby]="
+                facade.academicDecisionForm.controls.otrasUniversidades.touched &&
+                facade.academicDecisionForm.controls.otrasUniversidades.hasError('required')
+                  ? 'other-universities-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="si">Sí</ort-radio-button>
               <ort-radio-button value="no">No</ort-radio-button>
             </ort-radio-group>
             @if (facade.academicDecisionForm.controls.otrasUniversidades.touched &&
             facade.academicDecisionForm.controls.otrasUniversidades.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="other-universities-error" role="alert">
+              Seleccioná una opción
+            </p>
             } @if (facade.academicDecisionForm.controls.otrasUniversidades.value === 'si') {
             <ort-form-field
               [hideRequiredMarker]="
@@ -349,13 +431,21 @@
               legend="Grado de decisión al momento de inscribirte a la carrera"
               name="decision-certainty"
               orientation="vertical"
+              [aria-describedby]="
+                facade.academicDecisionForm.controls.certezaDecision.touched &&
+                facade.academicDecisionForm.controls.certezaDecision.hasError('required')
+                  ? 'decision-certainty-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="decidido">Decidido/a</ort-radio-button>
               <ort-radio-button value="con-dudas">Con dudas</ort-radio-button>
             </ort-radio-group>
             @if (facade.academicDecisionForm.controls.certezaDecision.touched &&
             facade.academicDecisionForm.controls.certezaDecision.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="decision-certainty-error" role="alert">
+              Seleccioná una opción
+            </p>
             }
 
             <ort-form-field
@@ -410,13 +500,21 @@
               legend="¿Tuviste una reunión de asesoramiento?"
               name="reunionAsesoramiento"
               orientation="vertical"
+              [aria-describedby]="
+                facade.ortExperienceForm.controls.reunionAsesoramiento.touched &&
+                facade.ortExperienceForm.controls.reunionAsesoramiento.hasError('required')
+                  ? 'advice-meeting-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="si">Sí</ort-radio-button>
               <ort-radio-button value="no">No</ort-radio-button>
             </ort-radio-group>
             @if (facade.ortExperienceForm.controls.reunionAsesoramiento.touched &&
             facade.ortExperienceForm.controls.reunionAsesoramiento.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="advice-meeting-error" role="alert">
+              Seleccioná una opción
+            </p>
             } @if (facade.ortExperienceForm.controls.reunionAsesoramiento.value === 'si') {
             <ort-rating
               formControlName="calificacionAsesoramiento"
@@ -440,13 +538,21 @@
               legend="¿Visitaste el sitio web de ORT?"
               name="visitoWeb"
               orientation="vertical"
+              [aria-describedby]="
+                facade.ortExperienceForm.controls.visitoWeb.touched &&
+                facade.ortExperienceForm.controls.visitoWeb.hasError('required')
+                  ? 'website-visit-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="si">Sí</ort-radio-button>
               <ort-radio-button value="no">No</ort-radio-button>
             </ort-radio-group>
             @if (facade.ortExperienceForm.controls.visitoWeb.touched &&
             facade.ortExperienceForm.controls.visitoWeb.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="website-visit-error" role="alert">
+              Seleccioná una opción
+            </p>
             } @if (facade.ortExperienceForm.controls.visitoWeb.value === 'si') {
             <ort-rating
               formControlName="calificacionWeb"
@@ -470,13 +576,21 @@
               legend="¿Visitaste las instalaciones de ORT?"
               name="visitoSede"
               orientation="vertical"
+              [aria-describedby]="
+                facade.ortExperienceForm.controls.visitoSede.touched &&
+                facade.ortExperienceForm.controls.visitoSede.hasError('required')
+                  ? 'campus-visit-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="si">Sí</ort-radio-button>
               <ort-radio-button value="no">No</ort-radio-button>
             </ort-radio-group>
             @if (facade.ortExperienceForm.controls.visitoSede.touched &&
             facade.ortExperienceForm.controls.visitoSede.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="campus-visit-error" role="alert">
+              Seleccioná una opción
+            </p>
             }
 
             <ort-radio-group
@@ -485,13 +599,21 @@
               legend="¿Recordás haber visto publicidad de ORT?"
               name="recuerdaPublicidad"
               orientation="vertical"
+              [aria-describedby]="
+                facade.ortExperienceForm.controls.recuerdaPublicidad.touched &&
+                facade.ortExperienceForm.controls.recuerdaPublicidad.hasError('required')
+                  ? 'advertising-memory-error'
+                  : null
+              "
               [required]="true">
               <ort-radio-button value="si">Sí</ort-radio-button>
               <ort-radio-button value="no">No recuerdo</ort-radio-button>
             </ort-radio-group>
             @if (facade.ortExperienceForm.controls.recuerdaPublicidad.touched &&
             facade.ortExperienceForm.controls.recuerdaPublicidad.hasError('required')) {
-            <p class="inscription-field-error">Seleccioná una opción</p>
+            <p class="inscription-field-error" id="advertising-memory-error" role="alert">
+              Seleccioná una opción
+            </p>
             } @if (facade.ortExperienceForm.controls.recuerdaPublicidad.value === 'si') {
             <ort-form-field
               [hideRequiredMarker]="
@@ -544,11 +666,23 @@
               legend="¿Trabajás actualmente?"
               name="situacionLaboral"
               orientation="vertical"
+              [aria-describedby]="
+                facade.workForm.controls.situacionLaboral.touched &&
+                facade.workForm.controls.situacionLaboral.hasError('required')
+                  ? 'work-status-error'
+                  : null
+              "
               [required]="true">
               @for (option of facade.workStatusOptions; track option.value) {
               <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
               }
             </ort-radio-group>
+            @if (facade.workForm.controls.situacionLaboral.touched &&
+            facade.workForm.controls.situacionLaboral.hasError('required')) {
+            <p class="inscription-field-error" id="work-status-error" role="alert">
+              Seleccioná una opción
+            </p>
+            }
           </div>
         </ort-accordion-body>
       </ort-accordion-item>
@@ -577,17 +711,26 @@
             <section aria-labelledby="identity-document-title" class="inscription-subsection">
               <h2 id="identity-document-title">Documento de identidad</h2>
               <p>Subí una imagen clara del frente y dorso de tu documento de identidad.</p>
-              <!-- TODO(a11y-ort-component): OrtFileUploader tiene contraste mobile interno pendiente en la libreria; no se parchean clases internas desde la app. -->
               <ort-file-uploader
                 label="Frente del documento *"
                 [acceptedTypes]="facade.acceptedImageTypes"
                 [initialFiles]="facade.initialIdentityFiles().frente"
                 (filesChanged)="facade.updateIdentityFile('frente', $event)" />
+              @if (facade.isIdentityFileMissing('frente')) {
+              <p class="inscription-field-error" role="alert">
+                Adjuntá la imagen del frente del documento
+              </p>
+              }
               <ort-file-uploader
                 label="Dorso del documento *"
                 [acceptedTypes]="facade.acceptedImageTypes"
                 [initialFiles]="facade.initialIdentityFiles().dorso"
                 (filesChanged)="facade.updateIdentityFile('dorso', $event)" />
+              @if (facade.isIdentityFileMissing('dorso')) {
+              <p class="inscription-field-error" role="alert">
+                Adjuntá la imagen del dorso del documento
+              </p>
+              }
               <ort-form-field
                 [hideRequiredMarker]="!!facade.identityForm.controls.vencimientoDocumento.value">
                 <ort-label>Vencimiento</ort-label>
@@ -597,6 +740,10 @@
                   ortDateInput
                   placeholder="dd/mm/aaaa"
                   valueType="date" />
+                @if (facade.identityForm.controls.vencimientoDocumento.touched &&
+                facade.identityForm.controls.vencimientoDocumento.hasError('required')) {
+                <ort-error>Ingresá fecha de vencimiento del documento</ort-error>
+                }
               </ort-form-field>
             </section>
 
@@ -614,6 +761,9 @@
                 [initialFiles]="facade.initialIdentityFiles().selfie"
                 [maxFiles]="1"
                 (filesChanged)="facade.updateIdentityFile('selfie', $event)" />
+              @if (facade.isIdentityFileMissing('selfie')) {
+              <p class="inscription-field-error" role="alert">Adjuntá tu imagen de perfil</p>
+              }
             </section>
           </div>
         </ort-accordion-body>

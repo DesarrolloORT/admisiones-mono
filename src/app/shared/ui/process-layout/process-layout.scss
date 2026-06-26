@@ -251,13 +251,13 @@
   font-size: 24px;
 }
 
-@media (width >= 30rem) and (width < 52.5rem) {
+@media (width >=30rem) and (width < 52.5rem) {
   .process-layout {
     box-shadow: 0 12px 32px rgb(13 13 28 / 14%);
   }
 }
 
-@media (width >= 52.5rem) {
+@media (width >=52.5rem) {
   .process-layout {
     width: 100%;
     margin: 0;
@@ -310,10 +310,6 @@
   .process-layout__main {
     min-height: auto;
     padding: var(--ort-sys-spacing-32, 2rem) var(--ort-sys-spacing-48, 3rem);
-  }
-
-  .process-layout__content {
-    width: min(100%, 40.875rem);
   }
 
   .process-layout__close-button {

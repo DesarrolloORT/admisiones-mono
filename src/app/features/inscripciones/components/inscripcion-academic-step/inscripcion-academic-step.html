@@ -14,7 +14,9 @@
     [formGroup]="facade.academicForm"
     (keydown.enter)="onFormEnter($event)"
     (ngSubmit)="facade.continue()">
-    <ort-error-summary [errors]="facade.academicErrors()" />
+    @if (facade.academicErrorAlert(); as error) {
+    <app-inscripcion-error-alert [message]="error.message" [title]="error.title" />
+    }
     <app-academic-proposal-select [form]="facade.academicForm" [selection]="facade.selection" />
 
     <footer class="inscription-footer">

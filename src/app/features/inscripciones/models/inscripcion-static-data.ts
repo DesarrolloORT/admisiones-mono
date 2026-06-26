@@ -11,7 +11,10 @@ export const WORK_STATUS_OPTIONS: readonly OpcionInscripcion[] = [
   { value: 'no-trabaja', label: 'No trabajo actualmente' },
 ];
 
-export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & { value: MetodoPago })[] = [
+export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & {
+  value: MetodoPago;
+  badges?: readonly string[];
+})[] = [
   {
     value: 'cuenta-bancaria',
     label: 'Cuenta bancaria',
@@ -21,6 +24,7 @@ export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & { value: MetodoPago 
     value: 'tarjeta-credito',
     label: 'Tarjeta de crédito',
     hint: 'Podrás seleccionar tu tarjeta de crédito dentro de Sistarbanc',
+    badges: ['Mastercard', 'Visa'],
   },
   { value: 'cuenta-personal', label: 'Cuenta personal', hint: 'Monto disponible $70.000,00' },
   {

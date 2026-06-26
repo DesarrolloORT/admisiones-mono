@@ -144,7 +144,7 @@
   color: var(--ort-sys-base-text-primary-color);
 }
 
-.inscription-card h3 {
+ort-card h3 {
   margin: var(--ort-sys-spacing-8) 0 0;
   color: var(--ort-sys-base-text-color-headline);
   font-size: var(--ort-sys-body-text-size);
@@ -202,14 +202,6 @@
   .inscription-screen--success {
     width: min(100%, 40.875rem);
     margin-inline: auto;
-  }
-
-  .inscription-screen--success .inscription-card {
-    padding: var(--ort-sys-spacing-24);
-    border: 0;
-    box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
-      var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
-      var(--ort-sys-elevation-sm-color);
   }
 
   .inscription-screen--success .inscription-contact-list,

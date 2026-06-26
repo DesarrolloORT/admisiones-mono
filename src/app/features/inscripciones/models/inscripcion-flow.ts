@@ -35,7 +35,10 @@ export interface InscripcionBackendSurvey {
   fechaProcesadoEncuestaIni?: string | null;
   producto?: { idNivelProducto?: number | null } | null;
   ultimoanioSecundariaEncuestaIni?: boolean | null;
+  codigoTitulo?: number | null;
+  ultimoAnioSextoEncuestaIni?: string | null;
   codigoInstitucionBac?: number | string | null;
+  informarEncuestaIni?: string | null;
   nombreInstSecEncuestaIni?: string | null;
   tieneEducacionSuperiorEncuestaIni?: string | boolean | null;
   instruccionMadreEncuestaIni?: string | null;
@@ -63,6 +66,10 @@ export interface InscripcionInitialSurveyPayload {
   idProducto: number | null;
   idProceso: number | null;
   ultimoAnioSecundaria: number | null;
+  codigoTitulo: number | null;
+  ultimoAnioSexto: number | null;
+  codigoInstitucionBac: number | null;
+  informarEncuesta: string | null;
   instruccionPadre: number | null;
   instruccionMadre: number | null;
   decisionCarrera: number | null;

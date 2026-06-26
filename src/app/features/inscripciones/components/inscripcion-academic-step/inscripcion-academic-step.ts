@@ -4,10 +4,17 @@ import { OrtButtonModule, OrtFormFieldModule } from '@desarrolloort/components';
 
 import { AcademicProposalSelect } from '../../../catalogs/components/academic-proposal-select/academic-proposal-select';
 import { InscripcionProposalFacade } from '../../facades/inscripcion-proposal';
+import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-error-alert';
 
 @Component({
   selector: 'app-inscripcion-academic-step',
-  imports: [AcademicProposalSelect, OrtButtonModule, OrtFormFieldModule, ReactiveFormsModule],
+  imports: [
+    AcademicProposalSelect,
+    InscripcionErrorAlert,
+    OrtButtonModule,
+    OrtFormFieldModule,
+    ReactiveFormsModule,
+  ],
   templateUrl: './inscripcion-academic-step.html',
   styleUrl: '../../pages/inscripcion/inscripcion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
