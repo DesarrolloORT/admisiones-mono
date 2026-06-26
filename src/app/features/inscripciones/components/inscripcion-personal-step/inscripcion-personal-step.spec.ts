@@ -1,7 +1,6 @@
-import { signal } from '@angular/core';
+import { readFileSync } from 'node:fs';
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { OrtRadioModule } from '@desarrolloort/components';
 import { vi } from 'vitest';
 
 import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
@@ -19,36 +18,17 @@ describe('InscripcionPersonalStep', () => {
       providers: [
         {
           provide: InscripcionSurveyFacade,
-          useValue: {
-            continue: continueSpy,
-            educationForm: new FormGroup({
-              tipoBachillerato: new FormControl('', { nonNullable: true }),
-            }),
-            baccalaureateOptions: signal([
-              { value: '12', label: 'Científico' },
-              { value: '13', label: 'Artístico' },
-            ]),
-          },
+          useValue: { continue: continueSpy },
         },
       ],
     }).overrideComponent(InscripcionPersonalStep, {
       set: {
-        imports: [OrtRadioModule, ReactiveFormsModule],
+        imports: [],
         template: `
           <form (keydown.enter)="onFormEnter($event)" (submit)="onSubmit($event)">
             <input type="radio" name="personal" />
             <button type="submit">Continuar</button>
           </form>
-          <div [formGroup]="facade.educationForm">
-            <ort-radio-group
-              formControlName="tipoBachillerato"
-              legend="¿Qué tipo de bachillerato?"
-              name="baccalaureate-type">
-              @for (option of facade.baccalaureateOptions(); track option.value) {
-              <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
-              }
-            </ort-radio-group>
-          </div>
         `,
       },
     });
@@ -81,8 +61,17 @@ describe('InscripcionPersonalStep', () => {
     expect(continueSpy).not.toHaveBeenCalled();
   });
 
-  it('renders real baccalaureate options from the catalog facade', () => {
-    expect(fixture.nativeElement.textContent).toContain('Científico');
-    expect(fixture.nativeElement.textContent).toContain('Artístico');
+  it('keeps baccalaureate options bound in the real template', () => {
+    const template = readFileSync(
+      'src/app/features/inscripciones/components/inscripcion-personal-step/inscripcion-personal-step.html',
+      'utf8'
+    );
+
+    expect(template).toContain(
+      '@for (option of facade.baccalaureateOptions(); track option.value)'
+    );
+    expect(template).toContain(
+      '<ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>'
+    );
   });
 });

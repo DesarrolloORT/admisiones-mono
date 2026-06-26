@@ -75,14 +75,12 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
-      tituloOrtMadre: new FormControl('', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
+      tituloOrtMadre: new FormControl('', { nonNullable: true }),
       formacionPadre: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
+      tituloOrtPadre: new FormControl('', { nonNullable: true }),
     }),
     academicDecisionForm: new FormGroup<FormularioDecisionAcademica>({
       anioDecisionCarrera: new FormControl('', {
@@ -128,6 +126,7 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
+      tipoJornadaLaboral: new FormControl('', { nonNullable: true }),
     }),
     identityForm: new FormGroup<FormularioIdentidad>({
       vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
@@ -172,6 +171,7 @@ export function createSectionConfig(
         { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
         { controlName: 'tituloOrtMadre', fieldId: '', label: 'Título en ORT de madre o tutor' },
         { controlName: 'formacionPadre', fieldId: '', label: 'Formación de padre o tutor' },
+        { controlName: 'tituloOrtPadre', fieldId: '', label: 'Título en ORT de padre o tutor' },
       ],
     },
     'decision-academica': {
@@ -218,7 +218,10 @@ export function createSectionConfig(
       label: 'Situación laboral',
       icon: 'business_center',
       form: forms.workForm,
-      errorFields: [{ controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' }],
+      errorFields: [
+        { controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' },
+        { controlName: 'tipoJornadaLaboral', fieldId: '', label: 'Tipo de jornada laboral' },
+      ],
     },
     identidad: {
       label: 'Verificación de identidad',

@@ -7,24 +7,29 @@
     legend="Propuesta académica"
     name="proposal"
     orientation="vertical"
-    [aria-describedby]="
-      form().controls.tipoPropuesta.touched && form().controls.tipoPropuesta.hasError('required')
-        ? 'academic-proposal-type-error'
-        : null
-    "
+    [aria-describedby]="proposalTypeErrorId()"
+    [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
     [required]="true">
     @for (option of selection().proposalOptions(); track option.value) {
-    <ort-radio-card-button class="academic-proposal-select__type" [value]="option.value">
+    <ort-radio-card-button
+      class="academic-proposal-select__type"
+      [attr.aria-describedby]="proposalTypeOptionDescription(option.value)"
+      [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
+      [value]="option.value">
       <ort-icon aria-hidden="true" class="academic-proposal-select__icon" ortRadioCardIcon>
         {{ option.icon }}
       </ort-icon>
       <span class="academic-proposal-select__label">{{ option.label }}</span>
-      <span class="academic-proposal-select__hint" ortRadioSupportingText>{{ option.hint }}</span>
+      <span
+        class="academic-proposal-select__hint"
+        ortRadioSupportingText
+        [id]="'academic-proposal-type-hint-' + option.value">
+        {{ option.hint }}
+      </span>
     </ort-radio-card-button>
     }
   </ort-radio-group>
-  @if (form().controls.tipoPropuesta.touched && form().controls.tipoPropuesta.hasError('required'))
-  {
+  @if (proposalTypeInvalid()) {
   <p class="academic-proposal-select__error" id="academic-proposal-type-error" role="alert">
     Seleccioná una propuesta académica
   </p>

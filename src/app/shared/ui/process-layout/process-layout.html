@@ -8,9 +8,9 @@
         <div class="process-layout__header-action">
           @if (showBack()) {
           <button
-            aria-label="Volver al paso anterior"
             class="process-layout__icon-button"
             type="button"
+            [attr.aria-label]="backLabel()"
             (click)="backClick()">
             <ort-icon aria-hidden="true">arrow_back_ios</ort-icon>
           </button>
@@ -105,10 +105,15 @@
     </header>
 
     @if (showStepper()) {
+    <p aria-live="polite" class="sr-only" role="status">
+      {{ processTitle() }}. {{ stepperSubtitle() }}
+    </p>
     <div class="process-layout__mobile-stepper">
       <ort-expandable-stepper
         [allowStepNavigation]="false"
         [ariaLabel]="stepperAriaLabel()"
+        [attr.aria-expanded]="stepperExpanded()"
+        [attr.aria-haspopup]="true"
         [currentStepId]="currentStepId()"
         [expanded]="stepperExpanded()"
         [interactiveSteps]="false"
@@ -127,6 +132,8 @@
         <ort-expandable-stepper
           [allowStepNavigation]="false"
           [ariaLabel]="stepperAriaLabel()"
+          [attr.aria-expanded]="true"
+          [attr.aria-haspopup]="true"
           [currentStepId]="currentStepId()"
           [expanded]="true"
           [interactiveSteps]="false"

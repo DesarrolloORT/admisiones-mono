@@ -1,12 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, forwardRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtAccordionModule,
   OrtButtonModule,
   OrtCheckboxModule,
   OrtDatePickerModule,
-  OrtFileUploader,
+  OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
@@ -25,7 +25,6 @@ import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-er
     OrtButtonModule,
     OrtCheckboxModule,
     OrtDatePickerModule,
-    forwardRef(() => OrtFileUploader),
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
@@ -35,6 +34,7 @@ import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-er
     OrtSelectModule,
     ReactiveFormsModule,
     DatePipe,
+    OrtFileUploaderModule,
   ],
   templateUrl: './inscripcion-personal-step.html',
   styleUrl: '../../pages/inscripcion/inscripcion.scss',
@@ -52,5 +52,10 @@ export class InscripcionPersonalStep {
   protected onSubmit(event: SubmitEvent): void {
     event.preventDefault();
     this.facade.continue();
+  }
+
+  protected openRegulationReader(event: Event): void {
+    event.preventDefault();
+    this.facade.openRegulationReader();
   }
 }

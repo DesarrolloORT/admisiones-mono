@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { BecaEstado } from 'mi-beca';
+import type { BecaEstado } from './mi-beca';
 
 describe('BecaEstado', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('accepts known scholarship states', () => {
+    const estado: BecaEstado = 'Aceptada';
+
+    expect(estado).toBe('Aceptada');
   });
 });

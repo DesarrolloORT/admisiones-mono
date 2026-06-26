@@ -113,31 +113,36 @@ export class InscripcionesEndpoint {
   }
 
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
+    const body = {
+      idProducto: payload.idProducto,
+      idProceso: payload.idProceso,
+      ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
+      codigoTitulo: payload.codigoTitulo,
+      ultimoAnioSexto: payload.ultimoAnioSexto,
+      codigoInstitucionBac: payload.codigoInstitucionBac,
+      informarEncuesta: payload.informarEncuesta,
+      instruccionPadre: payload.instruccionPadre,
+      instruccionMadre: payload.instruccionMadre,
+      decisionCarrera: payload.decisionCarrera,
+      decisionUniversidad: payload.decisionUniversidad,
+      infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
+      compartidoCon: payload.compartidoCon,
+      tieneEducacionSuperior: payload.tieneEducacionSuperior,
+      nivelDecision: payload.nivelDecision,
+      asesoramientoOrt: payload.asesoramientoOrt,
+      vistaSitioWebOrt: payload.vistaSitioWebOrt,
+      vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
+      publicidadOrt: payload.publicidadOrt,
+      trabajaActualmente: payload.trabajaActualmente,
+      opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
+      instruccionMadreOrt: payload.instruccionMadreOrt,
+      instruccionPadreOrt: payload.instruccionPadreOrt,
+      tipoJornadaLaboral: payload.tipoJornadaLaboral,
+    };
+
     return this.api
       .request(postInscripcionesEncuestaInicialEndpoint, {
-        body: {
-          idProducto: payload.idProducto,
-          idProceso: payload.idProceso,
-          ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
-          codigoTitulo: payload.codigoTitulo,
-          ultimoAnioSexto: payload.ultimoAnioSexto,
-          codigoInstitucionBac: payload.codigoInstitucionBac,
-          informarEncuesta: payload.informarEncuesta,
-          instruccionPadre: payload.instruccionPadre,
-          instruccionMadre: payload.instruccionMadre,
-          decisionCarrera: payload.decisionCarrera,
-          decisionUniversidad: payload.decisionUniversidad,
-          infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
-          compartidoCon: payload.compartidoCon,
-          tieneEducacionSuperior: payload.tieneEducacionSuperior,
-          nivelDecision: payload.nivelDecision,
-          asesoramientoOrt: payload.asesoramientoOrt,
-          vistaSitioWebOrt: payload.vistaSitioWebOrt,
-          vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
-          publicidadOrt: payload.publicidadOrt,
-          trabajaActualmente: payload.trabajaActualmente,
-          opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
-        },
+        body,
         showLoader: true,
       })
       .pipe(
@@ -215,6 +220,8 @@ export class InscripcionesEndpoint {
       tieneEducacionSuperiorEncuestaIni: survey.tieneEducacionSuperiorEncuestaIni ?? null,
       instruccionMadreEncuestaIni: survey.instruccionMadreEncuestaIni ?? null,
       instruccionPadreEncuestaIni: survey.instruccionPadreEncuestaIni ?? null,
+      instruccionMadreOrtEncuestaIni: survey.instruccionMadreOrtEncuestaIni ?? null,
+      instruccionPadreOrtEncuestaIni: survey.instruccionPadreOrtEncuestaIni ?? null,
       decisionCarreraEncuestaIni: survey.decisionCarreraEncuestaIni ?? null,
       decisionUniverEncuestaIni: survey.decisionUniverEncuestaIni ?? null,
       inforOtrasAntesEncuestaIni: survey.inforOtrasAntesEncuestaIni ?? null,

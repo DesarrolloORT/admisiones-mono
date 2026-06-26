@@ -35,6 +35,7 @@ import {
 })
 export class ProcessLayout {
   public readonly brandName = input('Admisiones');
+  public readonly backLabel = input('Volver al paso anterior');
   public readonly closeLabel = input('Cerrar proceso');
   public readonly closeVisible = input(true);
   public readonly currentStepId = input<string | undefined>(undefined);

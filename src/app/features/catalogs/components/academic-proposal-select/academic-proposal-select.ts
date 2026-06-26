@@ -33,4 +33,19 @@ export class AcademicProposalSelect implements OnInit {
   ngOnInit(): void {
     this.selection().connect(this.form());
   }
+
+  protected proposalTypeErrorId(): string | null {
+    const control = this.form().controls.tipoPropuesta;
+    return control.touched && control.hasError('required') ? 'academic-proposal-type-error' : null;
+  }
+
+  protected proposalTypeInvalid(): boolean {
+    return this.proposalTypeErrorId() !== null;
+  }
+
+  protected proposalTypeOptionDescription(optionValue: string): string {
+    return ['academic-proposal-type-hint-' + optionValue, this.proposalTypeErrorId()]
+      .filter(Boolean)
+      .join(' ');
+  }
 }

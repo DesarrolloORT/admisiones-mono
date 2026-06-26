@@ -15,7 +15,14 @@ import {
   getReservationInstructions,
 } from '../models/inscripcion-flow-view';
 import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscripcion-process';
-import { COORDINATORS, PAYMENT_OPTIONS, SUBJECTS } from '../models/inscripcion-static-data';
+import {
+  COORDINATORS,
+  PAYMENT_OPTIONS,
+  type PaymentOption,
+  SANTANDER_ACCOUNT_URL,
+  STUDENT_SERVICE_LINKS,
+  SUBJECTS,
+} from '../models/inscripcion-static-data';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
@@ -35,9 +42,13 @@ export class InscripcionPaymentFacade {
   private processingTimer: ReturnType<typeof setTimeout> | null = null;
 
   public readonly paymentForm = this.formsStore.paymentForm;
-  public readonly paymentOptions = PAYMENT_OPTIONS;
+  public readonly paymentOptions = computed<readonly PaymentOption[]>(() =>
+    PAYMENT_OPTIONS.flatMap(option => this.resolvePaymentOption(option))
+  );
   public readonly coordinators = COORDINATORS;
+  public readonly santanderAccountUrl = SANTANDER_ACCOUNT_URL;
   public readonly studentNumber = '397654';
+  public readonly studentServices = STUDENT_SERVICE_LINKS;
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
@@ -136,6 +147,11 @@ export class InscripcionPaymentFacade {
 
   public requestConfirmation(): void {
     this.submitted.set(true);
+    if (!this.isSelectedPaymentMethodAvailable()) {
+      this.paymentForm.controls.metodoPago.setValue('');
+      this.paymentForm.markAllAsTouched();
+      return;
+    }
     if (this.paymentForm.invalid) {
       this.paymentForm.markAllAsTouched();
       return;
@@ -173,6 +189,26 @@ export class InscripcionPaymentFacade {
     this.showAllSubjects.update(showAll => !showAll);
   }
 
+  private resolvePaymentOption(option: PaymentOption): readonly PaymentOption[] {
+    if (option.value !== 'cuenta-personal') return [option];
+
+    const amount = this.process.preEnrollmentResponse()?.seniaInscripcion;
+    if (!isPositiveAmount(amount)) return [];
+
+    return [
+      {
+        ...option,
+        disabled: amount > (option.availableAmount ?? 0),
+      },
+    ];
+  }
+
+  private isSelectedPaymentMethodAvailable(): boolean {
+    const selected = this.paymentForm.controls.metodoPago.value;
+    if (!selected) return true;
+    return this.paymentOptions().some(option => option.value === selected && !option.disabled);
+  }
+
   public restore(
     method: MetodoPago | '',
     response: ReturnType<InscripcionProcessStore['preEnrollmentResponse']>
@@ -187,4 +223,8 @@ export class InscripcionPaymentFacade {
     this.outcome.set(outcome);
     this.process.markCheckpoint();
   }
+}
+
+function isPositiveAmount(value: number | null | undefined): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }

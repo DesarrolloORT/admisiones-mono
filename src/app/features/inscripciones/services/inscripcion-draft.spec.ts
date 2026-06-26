@@ -73,6 +73,7 @@ function createDraft(): BorradorInscripcion {
         formacionMadre: '4',
         tituloOrtMadre: 'si',
         formacionPadre: '4',
+        tituloOrtPadre: 'no',
       },
       decisionAcademica: {
         anioDecisionCarrera: '',
@@ -92,7 +93,7 @@ function createDraft(): BorradorInscripcion {
         recuerdaPublicidad: '',
         mediosPublicidad: [],
       },
-      situacionLaboral: { situacionLaboral: 'trabaja' },
+      situacionLaboral: { situacionLaboral: 'trabaja', tipoJornadaLaboral: 'tiempo-completo' },
     },
     identidad: { vencimientoDocumento: '2030-02-04' },
     reglamento: { aceptaReglamento: false },

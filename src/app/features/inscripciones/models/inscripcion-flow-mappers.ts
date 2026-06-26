@@ -34,6 +34,7 @@ export interface BackendSurveyPatchContext {
 export interface InitialSurveyPayloadContext {
   forms: InscripcionForms;
   previousCareerOptions: readonly OpcionInscripcion[];
+  educationLevelOptions: readonly OpcionInscripcion[];
   motivesOptions: readonly OpcionInscripcion[];
 }
 
@@ -78,7 +79,9 @@ export function patchBackendSurveyForms(
         context.previousCareerOptions
       ),
       formacionMadre: survey.instruccionMadreEncuestaIni ?? '',
+      tituloOrtMadre: toYesNoValue(survey.instruccionMadreOrtEncuestaIni),
       formacionPadre: survey.instruccionPadreEncuestaIni ?? '',
+      tituloOrtPadre: toYesNoValue(survey.instruccionPadreOrtEncuestaIni),
     },
     { emitEvent: false }
   );
@@ -115,13 +118,21 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
   const { forms } = context;
   const education = forms.educationForm.controls;
   const selectedMotives = forms.academicDecisionForm.controls.motivosOrt.value;
-  const decisionUniversity = toNullableNumber(selectedMotives[0] ?? '');
   const higherEducation = hasHigherEducation(
     education.estadoEducacionSuperior.value,
     context.previousCareerOptions
   );
   const currentlyInSecondarySchool = education.cursaSecundaria.value === 'cursando';
   const secondaryPlace = toBackendSecondaryPlace(education.lugarSecundaria.value);
+  const motherHasCompleteUniversity = hasCompleteUniversityEducation(
+    education.formacionMadre.value,
+    context.educationLevelOptions
+  );
+  const fatherHasCompleteUniversity = hasCompleteUniversityEducation(
+    education.formacionPadre.value,
+    context.educationLevelOptions
+  );
+  const works = forms.workForm.controls.situacionLaboral.value === 'trabaja';
 
   return {
     idProducto: toNullableNumber(forms.academicForm.controls.carrera.value),
@@ -139,10 +150,18 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
     informarEncuesta: secondaryPlace,
     instruccionPadre: toNullableNumber(forms.educationForm.controls.formacionPadre.value),
     instruccionMadre: toNullableNumber(forms.educationForm.controls.formacionMadre.value),
+    instruccionPadreOrt: fatherHasCompleteUniversity
+      ? toNullableBoolean(education.tituloOrtPadre.value)
+      : null,
+    instruccionMadreOrt: motherHasCompleteUniversity
+      ? toNullableBoolean(education.tituloOrtMadre.value)
+      : null,
     decisionCarrera: toNullableNumber(
       forms.academicDecisionForm.controls.anioDecisionCarrera.value
     ),
-    decisionUniversidad: decisionUniversity,
+    decisionUniversidad: toNullableNumber(
+      forms.academicDecisionForm.controls.anioDecisionOrt.value
+    ),
     infoOtrasUniversidadesAntes: toBackendYesNo(
       forms.academicDecisionForm.controls.otrasUniversidades.value
     ),
@@ -163,6 +182,7 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
     vistaInstalacionesOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoSede.value),
     publicidadOrt: toNullableBoolean(forms.ortExperienceForm.controls.recuerdaPublicidad.value),
     trabajaActualmente: toWorkStatusFlag(forms.workForm.controls.situacionLaboral.value),
+    tipoJornadaLaboral: works ? forms.workForm.controls.tipoJornadaLaboral.value || null : null,
     opcionesMotivosSeleccionados:
       selectedMotives.length === 0
         ? null
@@ -310,6 +330,20 @@ function findHigherEducationOption(
     return value ? !isNegative : isNegative;
   });
   return option?.value ?? '';
+}
+
+export function hasCompleteUniversityEducation(
+  value: string,
+  options: readonly OpcionInscripcion[]
+): boolean {
+  if (!value) return false;
+  const label = normalizeBackendState(getOptionLabel(options, value, value));
+  return (
+    !!label &&
+    !label.startsWith('no') &&
+    !label.includes('nouniversitaria') &&
+    label.endsWith('universitariacompleta')
+  );
 }
 
 function hasHigherEducation(value: string, options: readonly OpcionInscripcion[]): boolean | null {

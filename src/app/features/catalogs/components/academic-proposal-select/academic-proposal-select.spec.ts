@@ -52,6 +52,12 @@ describe('AcademicProposalSelect', () => {
 
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Seleccioná una propuesta académica');
+    expect(
+      fixture.nativeElement.querySelector('ort-radio-group')?.getAttribute('aria-invalid')
+    ).toBe('true');
+    expect(
+      fixture.nativeElement.querySelector('ort-radio-card-button')?.getAttribute('aria-describedby')
+    ).toContain('academic-proposal-type-error');
     expect(text).toContain('Seleccioná una carrera');
     expect(text).toContain('Seleccioná un comienzo');
     expect(text).toContain('Seleccioná un turno');

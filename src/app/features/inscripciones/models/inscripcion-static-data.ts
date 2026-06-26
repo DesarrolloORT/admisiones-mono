@@ -3,18 +3,20 @@ import type {
   InstruccionReserva,
   MetodoPago,
   OpcionInscripcion,
+  StudentServiceLink,
 } from './inscripcion-flow';
 
-export const WORK_STATUS_OPTIONS: readonly OpcionInscripcion[] = [
-  { value: 'trabaja', label: 'Sí, trabajo actualmente' },
-  { value: 'buscando', label: 'Estoy buscando trabajo' },
-  { value: 'no-trabaja', label: 'No trabajo actualmente' },
-];
+export const STUDENT_ACCOUNT_AVAILABLE_AMOUNT = 70000;
+export const SANTANDER_ACCOUNT_URL = 'https://www.santander.com.uy/personas/cuentas/cuenta-soy';
 
-export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & {
+export type PaymentOption = OpcionInscripcion & {
   value: MetodoPago;
   badges?: readonly string[];
-})[] = [
+  availableAmount?: number;
+  disabled?: boolean;
+};
+
+export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
   {
     value: 'cuenta-bancaria',
     label: 'Cuenta bancaria',
@@ -26,7 +28,12 @@ export const PAYMENT_OPTIONS: readonly (OpcionInscripcion & {
     hint: 'Podrás seleccionar tu tarjeta de crédito dentro de Sistarbanc',
     badges: ['Mastercard', 'Visa'],
   },
-  { value: 'cuenta-personal', label: 'Cuenta personal', hint: 'Monto disponible $70.000,00' },
+  {
+    value: 'cuenta-personal',
+    label: 'Cuenta personal',
+    hint: 'Monto disponible $70.000,00',
+    availableAmount: STUDENT_ACCOUNT_AVAILABLE_AMOUNT,
+  },
   {
     value: 'banred',
     label: 'Banred',
@@ -86,6 +93,12 @@ export const COORDINATORS: readonly ContactoCoordinador[] = [
     name: 'Carlos Fernández',
     email: 'carlos.fernandez@ort.edu.uy',
   },
+];
+
+export const STUDENT_SERVICE_LINKS: readonly StudentServiceLink[] = [
+  { label: 'Biblioteca', icon: 'local_library', url: 'https://bibliotecas.ort.edu.uy/' },
+  { label: 'Deportes', icon: 'sports_soccer', url: 'https://www.ort.edu.uy/deportes' },
+  { label: 'Mentorías', icon: 'groups', url: 'https://www.ort.edu.uy/' },
 ];
 
 export const SUBJECTS: readonly string[] = [

@@ -43,6 +43,8 @@ export interface InscripcionBackendSurvey {
   tieneEducacionSuperiorEncuestaIni?: string | boolean | null;
   instruccionMadreEncuestaIni?: string | null;
   instruccionPadreEncuestaIni?: string | null;
+  instruccionMadreOrtEncuestaIni?: string | boolean | null;
+  instruccionPadreOrtEncuestaIni?: string | boolean | null;
   decisionCarreraEncuestaIni?: string | null;
   decisionUniverEncuestaIni?: string | null;
   inforOtrasAntesEncuestaIni?: string | boolean | null;
@@ -72,6 +74,8 @@ export interface InscripcionInitialSurveyPayload {
   informarEncuesta: string | null;
   instruccionPadre: number | null;
   instruccionMadre: number | null;
+  instruccionPadreOrt: boolean | null;
+  instruccionMadreOrt: boolean | null;
   decisionCarrera: number | null;
   decisionUniversidad: number | null;
   infoOtrasUniversidadesAntes: string | null;
@@ -83,6 +87,7 @@ export interface InscripcionInitialSurveyPayload {
   vistaInstalacionesOrt: boolean | null;
   publicidadOrt: boolean | null;
   trabajaActualmente: boolean | null;
+  tipoJornadaLaboral: string | null;
   opcionesMotivosSeleccionados: Array<{ idMotivo: number; nombreMotivo: string }> | null;
 }
 
@@ -144,6 +149,7 @@ export interface FormularioEducacion {
   formacionMadre: FormControl<string>;
   tituloOrtMadre: FormControl<string>;
   formacionPadre: FormControl<string>;
+  tituloOrtPadre: FormControl<string>;
 }
 
 export interface FormularioDecisionAcademica {
@@ -168,6 +174,7 @@ export interface FormularioExperienciaOrt {
 
 export interface FormularioSituacionLaboral {
   situacionLaboral: FormControl<string>;
+  tipoJornadaLaboral: FormControl<string>;
 }
 
 export interface FormularioIdentidad {
@@ -209,6 +216,7 @@ export interface ValoresEncuesta {
     formacionMadre: string;
     tituloOrtMadre: string;
     formacionPadre: string;
+    tituloOrtPadre: string;
   };
   decisionAcademica: {
     anioDecisionCarrera: string;
@@ -230,6 +238,7 @@ export interface ValoresEncuesta {
   };
   situacionLaboral: {
     situacionLaboral: string;
+    tipoJornadaLaboral: string;
   };
 }
 
@@ -278,6 +287,7 @@ export interface ContactoCoordinador {
   role: string;
   name: string;
   email: string;
+  imageUrl?: string;
 }
 
 export interface InstruccionReserva {
@@ -285,6 +295,12 @@ export interface InstruccionReserva {
   description: string;
   items: readonly string[];
   help: string;
+}
+
+export interface StudentServiceLink {
+  label: string;
+  icon: string;
+  url: string;
 }
 
 export const SECCIONES_ENCUESTA: readonly SeccionEncuestaId[] = [

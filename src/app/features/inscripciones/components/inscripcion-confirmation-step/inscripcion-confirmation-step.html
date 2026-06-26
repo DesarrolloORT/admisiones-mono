@@ -2,7 +2,7 @@
 <section aria-labelledby="inscription-confirm-title" class="inscription-screen">
   <header class="inscription-screen__header">
     <strong class="inscription-screen__eyebrow">Inscripción a carrera</strong>
-    <h1 id="inscription-confirm-title">Confirmación</h1>
+    <h2 id="inscription-confirm-title">Confirmación</h2>
     <p>Para confirmar tu inscripción, realizá el pago de la seña antes de la fecha indicada.</p>
   </header>
 
@@ -15,7 +15,7 @@
     <aside aria-label="Resumen de inscripción" class="inscription-payment-summary">
       <ort-card aria-labelledby="summary-title" role="region">
         <ort-card-content>
-          <h2 id="summary-title">Resumen de inscripción</h2>
+          <h3 id="summary-title">Resumen de inscripción</h3>
           <dl class="inscription-summary-list">
             @for (item of facade.summaryItems(); track item.label) {
             <div class="inscription-summary-list__item">
@@ -33,7 +33,7 @@
       <ort-card aria-labelledby="deposit-title" class="inscription-payment-card" role="region">
         <ort-card-content>
           <div class="inscription-payment">
-            <h2 id="deposit-title">Seña de inscripción</h2>
+            <h3 id="deposit-title">Seña de inscripción</h3>
             <strong>{{ facade.inscriptionAmount() }}</strong>
             <p>La seña confirma tu inscripción y se descuenta del valor total de la carrera.</p>
           </div>
@@ -48,8 +48,8 @@
       <ort-card aria-labelledby="payment-method-title" role="region">
         <ort-card-content>
           <div class="inscription-payment-method">
-            <h2 id="payment-method-title">Medio de pago</h2>
-            <p>Elegí el medio de pago con el que querés abonar la seña.</p>
+            <h3 id="payment-method-title">Medio de pago</h3>
+            <p id="payment-method-help">Elegí el medio de pago con el que querés abonar la seña.</p>
           </div>
 
           @if (facade.paymentErrorAlert(); as error) {
@@ -57,6 +57,8 @@
           }
 
           <ort-radio-group
+            aria-describedby="payment-method-help"
+            aria-labelledby="payment-method-title"
             class="inscription-radio-list inscription-radio-list--cards"
             formControlName="metodoPago"
             indicatorPosition="left"
@@ -64,8 +66,11 @@
             name="payment-method"
             orientation="vertical"
             [required]="true">
-            @for (option of facade.paymentOptions; track option.value) {
-            <ort-radio-card-button class="inscription-payment-option" [value]="option.value">
+            @for (option of facade.paymentOptions(); track option.value) {
+            <ort-radio-card-button
+              class="inscription-payment-option"
+              [disabled]="option.disabled === true"
+              [value]="option.value">
               <span class="inscription-payment-option__title">
                 <span class="inscription-payment-option__label">{{ option.label }}</span>
                 @for (badge of option.badges ?? []; track badge) {
@@ -88,45 +93,47 @@
       <ort-card aria-labelledby="bank-account-title" role="region">
         <ort-card-content>
           <div class="inscription-payment-method">
-            <h2 id="bank-account-title">Cuenta bancaria</h2>
+            <h3 id="bank-account-title">Cuenta bancaria</h3>
             <p>Te redirigiremos al banco seleccionado para que realices el pago.</p>
           </div>
 
-          <ort-form-field [hideRequiredMarker]="!!facade.paymentForm.controls.banco.value">
-            <ort-label>Seleccioná tu banco *</ort-label>
-            <ort-select
-              aria-label="Banco"
-              formControlName="banco"
-              id="inscription-bank"
-              noOptionsText="No hay bancos cargados"
-              placeholder="Seleccioná..."
-              [disabled]="facade.loadingBanks() || facade.bankOptions().length === 0">
-              <ort-option value="">Seleccioná...</ort-option>
-              @for (bank of facade.bankOptions(); track bank.value) {
-              <ort-option [textValue]="bank.label" [value]="bank.value">
-                <span class="inscription-bank-option">
-                  <img alt="" class="inscription-bank-option__logo" [src]="bank.icon" />
-                  <span>{{ bank.label }}</span>
-                </span>
-              </ort-option>
+          <fieldset aria-label="Seleccioná tu banco" class="inscription-fieldset">
+            <ort-form-field [hideRequiredMarker]="!!facade.paymentForm.controls.banco.value">
+              <ort-label>Seleccioná tu banco *</ort-label>
+              <ort-select
+                aria-label="Banco"
+                formControlName="banco"
+                id="inscription-bank"
+                noOptionsText="No hay bancos cargados"
+                placeholder="Seleccioná..."
+                [disabled]="facade.loadingBanks() || facade.bankOptions().length === 0">
+                <ort-option value="">Seleccioná...</ort-option>
+                @for (bank of facade.bankOptions(); track bank.value) {
+                <ort-option [textValue]="bank.label" [value]="bank.value">
+                  <span class="inscription-bank-option">
+                    <img alt="" class="inscription-bank-option__logo" [src]="bank.icon" />
+                    <span>{{ bank.label }}</span>
+                  </span>
+                </ort-option>
+                }
+              </ort-select>
+              @if (facade.paymentForm.controls.banco.touched &&
+              facade.paymentForm.controls.banco.hasError('required')) {
+              <ort-error>Seleccioná un banco</ort-error>
               }
-            </ort-select>
-            @if (facade.paymentForm.controls.banco.touched &&
-            facade.paymentForm.controls.banco.hasError('required')) {
-            <ort-error>Seleccioná un banco</ort-error>
-            }
-          </ort-form-field>
+            </ort-form-field>
 
-          @if (facade.bankLoadError()) {
-          <p class="inscription-field-error" role="alert">{{ facade.bankLoadError() }}</p>
-          }
+            @if (facade.bankLoadError()) {
+            <p class="inscription-field-error" role="alert">{{ facade.bankLoadError() }}</p>
+            }
+          </fieldset>
         </ort-card-content>
       </ort-card>
       }
     </div>
 
     <button #paymentSubmit class="inscription-payment-submit" ort-primary-button type="submit">
-      Pagar
+      Continuar
     </button>
   </form>
 

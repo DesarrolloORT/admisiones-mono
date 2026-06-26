@@ -173,6 +173,8 @@ describe('InscripcionesEndpoint', () => {
       informarEncuesta: null,
       instruccionPadre: null,
       instruccionMadre: null,
+      instruccionPadreOrt: null,
+      instruccionMadreOrt: null,
       decisionCarrera: null,
       decisionUniversidad: null,
       infoOtrasUniversidadesAntes: null,
@@ -184,6 +186,7 @@ describe('InscripcionesEndpoint', () => {
       vistaInstalacionesOrt: null,
       publicidadOrt: null,
       trabajaActualmente: null,
+      tipoJornadaLaboral: null,
       opcionesMotivosSeleccionados: null,
     };
 
