@@ -10,6 +10,7 @@
 
   <form>
     <ort-accordion>
+      @if (variant() !== 'fcl' && variant() !== 'fexaSin') {
       <ort-accordion-item [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
@@ -21,8 +22,9 @@
           <app-personal-data />
         </ort-accordion-body>
       </ort-accordion-item>
+      }
 
-      <ort-accordion-item>
+      <ort-accordion-item [expanded]="variant() === 'fcl' || variant() === 'fexaSin'">
         <ort-accordion-header>
           <ort-accordion-title>
             <ort-icon name="auto_stories" ortAccordionTitleLeadingIcon size="md" />
@@ -31,10 +33,29 @@
         </ort-accordion-header>
 
         <ort-accordion-body>
+          @if (variant() === 'fbr') {
           <app-education-info-fbr />
+          } @else if (variant() === 'fcl'){
+          <app-education-info-fcl />
+          } @else {
+          <app-education-info />
+          }
         </ort-accordion-body>
       </ort-accordion-item>
 
+      @if (variant() === 'fcl') {
+      <ort-accordion-item>
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <ort-icon name="work_outline" ortAccordionTitleLeadingIcon size="md" />
+            Antecedentes laborales
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-work-history />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (variant() !== 'fexaSin'){
       <ort-accordion-item>
         <ort-accordion-header>
           <ort-accordion-title>
@@ -46,6 +67,7 @@
           <app-declaration />
         </ort-accordion-body>
       </ort-accordion-item>
+      }
     </ort-accordion>
   </form>
   <button ort-primary-button type="button">Continuar</button>
