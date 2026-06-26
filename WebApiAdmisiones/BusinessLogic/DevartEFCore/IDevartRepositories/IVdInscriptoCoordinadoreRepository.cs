@@ -10,5 +10,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IVdInscriptoCoordinadoreRepository
     {
+        ICollection<BusinessLogic.Entities.VdInscriptoCoordinadore> GetByInscripto(long idInscripto);
     }
 }

@@ -1815,8 +1815,8 @@ namespace UnitTesting.AppLogic.Services
                             {
                                 IdProducto = 10,
                                 NombreWebProducto = "Licenciatura en Diseño Gráfico",
-                                NombreCoordAcadProducto = "María Rodríguez",
-                                EmailCoordAcadProducto = "maria.rodriguez@ort.edu.uy"
+                                NombreCoordAcadProducto = "No usar",
+                                EmailCoordAcadProducto = "no.usar@ort.edu.uy"
                             }
                         }
                     }
@@ -1827,12 +1827,35 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
             var ofertaRepo = new Mock<IOfertaRepository>();
-            ofertaRepo.Setup(r => r.GetMateriasPorOferta(99)).Returns(new List<Materia>
-            {
-                new() { IdMateria = 1, NombreMateria = "Arte y estética I" },
-                new() { IdMateria = 2, NombreMateria = "Fotografía y edición de video" }
-            });
             _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>
+            {
+                new()
+                {
+                    IdInscripto = 555,
+                    CooacadCodigo = 1,
+                    CooacadPrimerNombre = "María ",
+                    CooacadPrimerApellido = " Rodríguez",
+                    MailAcad = " maria.rodriguez@ort.edu.uy ",
+                    CoorespCodigo = 2,
+                    CoorespPrimerNombre = "Juan",
+                    CoorespPrimerApellido = "Pérez",
+                    MailResp = "juan.perez@ort.edu.uy"
+                }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estética I" },
+                new() { IdInscripto = 555, IdMateria = 2, DescripcionMateria = "Fotografía y edición de video" },
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estética I duplicada" },
+                new() { IdInscripto = 555, IdMateria = null, DescripcionMateria = "Sin materia" }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
 
             var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
@@ -1842,8 +1865,70 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
             Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Confirmada.Resumen.Carrera);
             Assert.Equal("María Rodríguez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
+            Assert.Equal("maria.rodriguez@ort.edu.uy", result.Data.Confirmada.CoordinadorAcademico.Email);
+            Assert.Equal("Juan Pérez", result.Data.Confirmada.CoordinadorCursos!.Nombre);
+            Assert.Equal("juan.perez@ort.edu.uy", result.Data.Confirmada.CoordinadorCursos.Email);
             Assert.Equal(2, result.Data.Confirmada.MateriasPrimerSemestre.Count);
             Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estética I");
+            ofertaRepo.Verify(r => r.GetMateriasPorOferta(It.IsAny<long>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenConfirmadaAndCoordinadoresIguales_MuestraSoloAcademico()
+        {
+            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+
+            var inscripto = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 99,
+                Oferta = new Oferta
+                {
+                    IdOferta = 99,
+                    IdTurno = 5,
+                    Turno = new Turno { IdTurno = 5, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete
+                        {
+                            Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en Diseño Gráfico" }
+                        }
+                    }
+                }
+            };
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>
+            {
+                new()
+                {
+                    IdInscripto = 555,
+                    CooacadCodigo = 10,
+                    CooacadPrimerNombre = "María",
+                    CooacadPrimerApellido = "Rodríguez",
+                    MailAcad = "maria.rodriguez@ort.edu.uy",
+                    CoorespCodigo = 10,
+                    CoorespPrimerNombre = "María",
+                    CoorespPrimerApellido = "Rodríguez",
+                    MailResp = "maria.rodriguez@ort.edu.uy"
+                }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>());
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
+
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal("María Rodríguez", result.Data!.Confirmada!.CoordinadorAcademico!.Nombre);
+            Assert.Null(result.Data.Confirmada.CoordinadorCursos);
         }
 
         [Fact]

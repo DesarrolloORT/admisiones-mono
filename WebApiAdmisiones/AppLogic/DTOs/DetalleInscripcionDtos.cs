@@ -32,6 +32,7 @@ namespace AppLogic.DTOs
         public long NumeroEstudiante { get; set; }
         public ResumenInscripcionDto Resumen { get; set; } = new();
         public CoordinadorDto? CoordinadorAcademico { get; set; }
+        public CoordinadorDto? CoordinadorCursos { get; set; }
         public List<MateriaDto> MateriasPrimerSemestre { get; set; } = new();
     }
 

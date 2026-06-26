@@ -13,5 +13,12 @@ namespace DataAccess.DevartRepositories
 {
     public partial class VdInscriptoCreditoAlumnoRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.VdInscriptoCreditoAlumno> GetByInscripto(long idInscripto)
+        {
+            return objectSet
+                .AsNoTracking()
+                .Where(x => x.IdInscripto == idInscripto)
+                .ToList();
+        }
     }
 }

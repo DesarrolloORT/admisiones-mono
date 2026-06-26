@@ -110,8 +110,9 @@ namespace AppLogic.Services.Inscripciones
                             "No se encontró la inscripción confirmada para la persona.",
                             404);
                     }
-                    var materias = uow.Ofertas.GetMateriasPorOferta(inscripto.IdOferta ?? 0);
-                    response.Confirmada = MapearConfirmada(codigoPersona, inscripto, materias);
+                    var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(inscripto.IdInscripto);
+                    var materias = uow.VdInscriptoCreditoAlumnos.GetByInscripto(inscripto.IdInscripto);
+                    response.Confirmada = MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
                     break;
 
                 // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
@@ -135,23 +136,102 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        private static ConfirmadaDetalleDto MapearConfirmada(long codigoPersona, Inscripto inscripto, ICollection<Materia> materias)
+        private static ConfirmadaDetalleDto MapearConfirmada(
+            long codigoPersona,
+            Inscripto inscripto,
+            ICollection<VdInscriptoCoordinadore> coordinadores,
+            ICollection<VdInscriptoCreditoAlumno> materias)
         {
-            var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
+            var coordinadorAcademico = MapearCoordinadorAcademico(coordinadores);
+            var coordinadorCursos = MapearCoordinadorCursos(coordinadores);
+            if (EsMismoCoordinador(coordinadorAcademico, coordinadorCursos))
+            {
+                coordinadorCursos = null;
+            }
+
             return new ConfirmadaDetalleDto
             {
                 NumeroEstudiante = codigoPersona,
                 Resumen = MapearResumenDesdeInscripto(inscripto),
-                CoordinadorAcademico = new CoordinadorDto
-                {
-                    Nombre = producto?.NombreCoordAcadProducto,
-                    Email = producto?.EmailCoordAcadProducto
-                },
+                CoordinadorAcademico = coordinadorAcademico?.Dto,
+                CoordinadorCursos = coordinadorCursos?.Dto,
                 MateriasPrimerSemestre = materias
-                    .Select(m => new MateriaDto { IdMateria = m.IdMateria, Nombre = m.NombreMateria })
+                    .Where(m => m.IdMateria.HasValue)
+                    .GroupBy(m => m.IdMateria!.Value)
+                    .Select(g => new MateriaDto { IdMateria = g.Key, Nombre = g.First().DescripcionMateria?.Trim() })
                     .ToList()
             };
         }
+
+        private static CoordinadorMapeado? MapearCoordinadorAcademico(IEnumerable<VdInscriptoCoordinadore> coordinadores)
+        {
+            var coordinador = coordinadores.FirstOrDefault(c =>
+                !string.IsNullOrWhiteSpace(c.CooacadPrimerNombre)
+                || !string.IsNullOrWhiteSpace(c.CooacadPrimerApellido)
+                || !string.IsNullOrWhiteSpace(c.MailAcad));
+
+            return coordinador == null
+                ? null
+                : new CoordinadorMapeado(
+                    new CoordinadorDto
+                    {
+                        Nombre = NombreCompleto(coordinador.CooacadPrimerNombre, coordinador.CooacadPrimerApellido),
+                        Email = coordinador.MailAcad?.Trim()
+                    },
+                    coordinador.CooacadCodigo);
+        }
+
+        private static CoordinadorMapeado? MapearCoordinadorCursos(IEnumerable<VdInscriptoCoordinadore> coordinadores)
+        {
+            var coordinador = coordinadores.FirstOrDefault(c =>
+                !string.IsNullOrWhiteSpace(c.CoorespPrimerNombre)
+                || !string.IsNullOrWhiteSpace(c.CoorespPrimerApellido)
+                || !string.IsNullOrWhiteSpace(c.MailResp));
+
+            return coordinador == null
+                ? null
+                : new CoordinadorMapeado(
+                    new CoordinadorDto
+                    {
+                        Nombre = NombreCompleto(coordinador.CoorespPrimerNombre, coordinador.CoorespPrimerApellido),
+                        Email = coordinador.MailResp?.Trim()
+                    },
+                    coordinador.CoorespCodigo);
+        }
+
+        private static bool EsMismoCoordinador(CoordinadorMapeado? academico, CoordinadorMapeado? cursos)
+        {
+            if (academico == null || cursos == null)
+            {
+                return false;
+            }
+
+            if (academico.Codigo.HasValue && cursos.Codigo.HasValue)
+            {
+                return academico.Codigo.Value == cursos.Codigo.Value;
+            }
+
+            return TextoIgual(academico.Dto.Email, cursos.Dto.Email)
+                || TextoIgual(academico.Dto.Nombre, cursos.Dto.Nombre);
+        }
+
+        private static bool TextoIgual(string? izquierda, string? derecha)
+        {
+            return !string.IsNullOrWhiteSpace(izquierda)
+                && !string.IsNullOrWhiteSpace(derecha)
+                && string.Equals(izquierda.Trim(), derecha.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string? NombreCompleto(string? nombre, string? apellido)
+        {
+            var partes = new[] { nombre?.Trim(), apellido?.Trim() }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+
+            var completo = string.Join(" ", partes);
+            return string.IsNullOrWhiteSpace(completo) ? null : completo;
+        }
+
+        private sealed record CoordinadorMapeado(CoordinadorDto Dto, long? Codigo);
 
         private static ResumenInscripcionDto MapearResumenDesdeInscripto(Inscripto inscripto)
         {

@@ -10,5 +10,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IVdInscriptoCreditoAlumnoRepository
     {
+        ICollection<BusinessLogic.Entities.VdInscriptoCreditoAlumno> GetByInscripto(long idInscripto);
     }
 }
