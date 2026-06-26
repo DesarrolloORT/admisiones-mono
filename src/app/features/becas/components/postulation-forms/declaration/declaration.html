@@ -8,12 +8,38 @@
       </p>
     </div>
 
+    @for (member of members(); track member.id; let index = $index) {
     <ort-card>
+      <ort-card-header class="member-card__header" [divider]="false">
+        <h5 class="member-card__title" ortCardTitle>Integrante {{ index + 1 }}</h5>
+
+        @if (index === 0) {
+        <p ortCardHeaderIconAction>Postulante</p>
+        } @else {
+        <button
+          aria-label="Eliminar integrante"
+          ort-icon-button
+          ortCardHeaderIconAction
+          type="button"
+          (click)="removeMember(member.id)">
+          <ort-icon name="delete" />
+        </button>
+        }
+      </ort-card-header>
       <ort-card-content>
-        <header class="member-card__header">
-          <h5 class="member-card__title" ortCardTitle>Integrante 1</h5>
-          <p ortCardSubtitle>Postulante</p>
-        </header>
+        @if (index !== 0) {
+        <ort-form-field>
+          <ort-label>Parentesco</ort-label>
+          <ort-select required>
+            <ort-option value="padre">Padre</ort-option>
+            <ort-option value="madre">Madre</ort-option>
+            <ort-option value="hermano">Hermano/a</ort-option>
+            <ort-option value="hijo">Hijo/a</ort-option>
+            <ort-option value="conyuge">Cónyuge</ort-option>
+            <ort-option value="otro">Otro</ort-option>
+          </ort-select>
+        </ort-form-field>
+        }
 
         <ort-form-field>
           <ort-label>Nombre</ort-label>
@@ -29,11 +55,13 @@
           <ort-radio-button class="inscription-radio-option" value="si">
             Si, percibe
           </ort-radio-button>
+
           <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
         </ort-radio-group>
       </ort-card-content>
     </ort-card>
-    <button ort-secondary-button type="button">
+    }
+    <button ort-secondary-button type="button" (click)="agregarIntegrante()">
       <ort-icon name="add" size="sm" />
       Agregar integrante
     </button>
@@ -157,9 +185,25 @@
         <ort-form-field>
           <ort-label>Transporte</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="moneyInput" ortNumberInput required />
+          <input class="money-input" ortNumberInput required />
           <ort-hint>Boletos, combustible, peajes, etc.</ort-hint>
         </ort-form-field>
+
+        @for (expense of expenses(); track expense.name) {
+        <ort-form-field>
+          <ort-label>{{ expense.name }}</ort-label>
+          <span ortTextPrefix>$</span>
+          <input class="money-input" ortNumberInput required [value]="expense.amount" />
+          <button
+            aria-label="Eliminar gasto"
+            class="delete-expense-button"
+            ortSuffix
+            type="button"
+            (click)="removeExpense(expense.id)">
+            <ort-icon name="close" />
+          </button>
+        </ort-form-field>
+        }
       </ort-card-content>
     </ort-card>
 
@@ -169,21 +213,26 @@
     </button>
   </section>
 
-  <ort-drawer title="Nuevo gasto mensual" [(open)]="drawer">
-    <ort-form-field>
-      <ort-label>Nombre del gasto</ort-label>
-      <input ortInput required />
-    </ort-form-field>
+  <ort-drawer title="Nuevo gasto mensual" [open]="drawer()" (openChange)="drawer.set($event)">
+    <form
+      #expenseFormElement
+      id="expenseForm"
+      (submit)="saveExpense($event, nameInput.value, amountInput.value, expenseFormElement)">
+      <ort-form-field>
+        <ort-label>Nombre del gasto</ort-label>
+        <input #nameInput name="name" ortInput required />
+      </ort-form-field>
 
-    <ort-form-field>
-      <ort-label>Monto</ort-label>
-      <span ortTextPrefix>$</span>
-      <input class="money-input" ortNumberInput required />
-      <ort-hint>Debe ser mayor a $1000 pesos uruguayos.</ort-hint>
-    </ort-form-field>
+      <ort-form-field>
+        <ort-label>Monto</ort-label>
+        <span ortTextPrefix>$</span>
+        <input #amountInput class="money-input" name="amount" ortNumberInput required />
+        <ort-hint>Debe ser mayor a $1000 pesos uruguayos.</ort-hint>
+      </ort-form-field>
+    </form>
 
     <ng-container ortDrawerFooter>
-      <button ort-primary-button type="button" (click)="closeDrawer()">Agregar a la lista</button>
+      <button form="expenseForm" ort-primary-button type="submit">Agregar a la lista</button>
     </ng-container>
   </ort-drawer>
 </div>

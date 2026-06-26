@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  padding-inline: var(--ort-sys-spacing-12);
+  padding-bottom: 0;
 }
 
 .member-card__header h5 {
@@ -19,4 +21,14 @@
 
 input[ortNumberInput].money-input {
   text-align: right;
+}
+
+.delete-expense-button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ort-sys-spacing-4);
+  border: 0;
+  background: none;
+  color: var(--ort-sys-base-icon-color);
+  cursor: pointer;
 }
