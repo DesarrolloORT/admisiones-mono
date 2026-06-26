@@ -41,10 +41,10 @@ namespace AppLogic.ApiClients
         public bool Success { get; set; }
         public string? Message { get; set; }
         public long? IdInscripcion { get; set; }
-        public decimal SeniaInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
-        public List<CarritoSeniaApiDto> CarritosSenia { get; set; } = new();
+        public List<CarritoSeniaApiDto> Carritos { get; set; } = new();
         public ResumenInscripcionApiDto? Resumen { get; set; }
+        public EstadoCuentaApiDto? EstadoCuenta { get; set; }
     }
 
     public class CarritoSeniaApiDto
@@ -55,12 +55,18 @@ namespace AppLogic.ApiClients
 
     public class ResumenInscripcionApiDto
     {
+        public long IdOferta { get; set; }
         public long IdProducto { get; set; }
         public string? Carrera { get; set; }
         public long IdComienzo { get; set; }
         public string? Comienzo { get; set; }
         public long IdTurno { get; set; }
         public string? Turno { get; set; }
+    }
+
+    public class EstadoCuentaApiDto
+    {
+        public decimal SaldoActual { get; set; }
     }
 
 
@@ -129,6 +135,12 @@ namespace AppLogic.ApiClients
     {
         public List<CursoPago> Cursos { get; set; } = new();
         public decimal MontoTotal { get; set; }
+    }
+
+    public class CarritosInscripcionApiResponse
+    {
+        public List<CarritoSeniaApiDto> Carritos { get; set; } = new();
+        public EstadoCuentaApiDto? EstadoCuenta { get; set; }
     }
 
     /// <summary>
@@ -457,6 +469,37 @@ namespace AppLogic.ApiClients
             catch (Exception ex)
             {
                 return HandleException<CursosPagosResponse>(ex, nameof(ObtenerCursosPagosAsync));
+            }
+        }
+
+        public async Task<OperationResult<CarritosInscripcionApiResponse>> ObtenerCarritosPorInscripcionAsync(long idInscripcion)
+        {
+            try
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Consultando carritos de la inscripciÃ³n: {IdInscripcion}", idInscripcion);
+                }
+
+                var response = await _httpClient.GetAsync($"ORTSecure/Pagos/Carritos?idInscripcion={idInscripcion}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<CarritosInscripcionApiResponse>();
+                    return OperationResult<CarritosInscripcionApiResponse>.Ok(result!, nameof(ObtenerCarritosPorInscripcionAsync));
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return OperationResult<CarritosInscripcionApiResponse>.IsFailed(
+                    "CARRITOS_INSCRIPCION_GET_01",
+                    nameof(ObtenerCarritosPorInscripcionAsync),
+                    $"Error al obtener carritos de la inscripciÃ³n: {response.StatusCode} - {errorContent}",
+                    (int)response.StatusCode,
+                    default!);
+            }
+            catch (Exception ex)
+            {
+                return HandleException<CarritosInscripcionApiResponse>(ex, nameof(ObtenerCarritosPorInscripcionAsync));
             }
         }
 

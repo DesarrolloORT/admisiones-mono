@@ -264,18 +264,16 @@ namespace UnitTesting.AppLogic.Services
                 {
                   "confirmada": true,
                   "idInscripcion": 77,
-                  "seniaInscripcion": 2500,
                   "fechaVencimientoPago": "2026-07-01T00:00:00",
-                  "carritosSenia": [
+                  "carritos": [
                     {
                       "idCarrito": "123|20|1|40|77",
                       "senia": 2500
-                    },
-                    {
-                      "idCarrito": "123|20|1|40|78",
-                      "senia": 1200
                     }
                   ],
+                  "estadoCuenta": {
+                    "saldoActual": 3210.50
+                  },
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista Programador",
@@ -284,22 +282,6 @@ namespace UnitTesting.AppLogic.Services
                     "idTurno": 1,
                     "turno": "Nocturno"
                   }
-                }
-                """,
-                """
-                {
-                  "saldoActual": 3210.50,
-                  "saldoVencido": 100,
-                  "saldoAVencer": 200,
-                  "movimientos": [
-                    {
-                      "fecha": "2026-07-01T00:00:00",
-                      "concepto": "Inscripcion",
-                      "debe": 3210.50,
-                      "haber": 0,
-                      "saldo": 3210.50
-                    }
-                  ]
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -331,28 +313,22 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(77, result.Data.IdInscripcion);
-            Assert.Equal(2500, result.Data.SeniaInscripcion);
-            Assert.Equal(2, result.Data.CarritosSenia.Count);
-            Assert.Equal("123|20|1|40|77", result.Data.CarritosSenia[0].IdCarrito);
-            Assert.Equal(2500, result.Data.CarritosSenia[0].Senia);
-            Assert.Equal("123|20|1|40|78", result.Data.CarritosSenia[1].IdCarrito);
-            Assert.Equal(1200, result.Data.CarritosSenia[1].Senia);
+            var carrito = Assert.Single(result.Data.Carritos);
+            Assert.Equal("123|20|1|40|77", carrito.IdCarrito);
+            Assert.Equal(2500, carrito.Senia);
+            Assert.Equal(10, result.Data.Resumen.IdOferta);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(999, aceptacionAgregada!.IdAceptacionReglamentoEst);
-            Assert.Equal(2, handler.Requests.Count);
-            var requestApi = handler.Requests[0];
+            var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
             Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
             Assert.Contains("\"idTurno\":1", requestApi.Body);
-            var requestEstadoCuenta = handler.Requests[1];
-            Assert.Equal(HttpMethod.Get, requestEstadoCuenta.Method);
-            Assert.Contains("Pagos/CtaCte", requestEstadoCuenta.RequestUri);
-            Assert.Contains("estado=SALDO_ACTUAL_Y_MOVIMIENTOS", requestEstadoCuenta.RequestUri);
+            Assert.DoesNotContain("Pagos/CtaCte", requestApi.RequestUri);
         }
 
         [Fact]
@@ -362,7 +338,10 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "confirmada": true,
-                  "idInscripcion": 78
+                  "idInscripcion": 78,
+                  "estadoCuenta": {
+                    "saldoActual": 3210.50
+                  }
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -403,7 +382,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_WhenEstadoCuentaFails_ReturnsConfirmationWithoutEstadoCuenta()
+        public async Task ConfirmarPreInscripcion_WhenEstadoCuentaMissing_ReturnsConfirmationWithoutEstadoCuenta()
         {
             var handler = ConfirmacionConEstadoCuentaHandler(
                 """
@@ -411,9 +390,7 @@ namespace UnitTesting.AppLogic.Services
                   "confirmada": true,
                   "idInscripcion": 79
                 }
-                """,
-                "error",
-                HttpStatusCode.InternalServerError);
+                """);
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
@@ -448,9 +425,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(79, result.Data.IdInscripcion);
             Assert.Null(result.Data.EstadoCuenta);
-            Assert.Equal(2, handler.Requests.Count);
-            Assert.Contains("ConfirmarPreInscripcion", handler.Requests[0].RequestUri);
-            Assert.Contains("Pagos/CtaCte", handler.Requests[1].RequestUri);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
+            Assert.DoesNotContain("Pagos/CtaCte", request.RequestUri);
         }
 
         [Fact]
@@ -461,7 +438,9 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "success": true,
-                  "seniaInscripcion": 1500
+                  "estadoCuenta": {
+                    "saldoActual": 3210.50
+                  }
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -513,8 +492,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
 
-            Assert.Equal(2, handler.Requests.Count);
-            var requestApi = handler.Requests[0];
+            var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
             Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
@@ -1785,20 +1763,32 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var service = CrearServiceConApi(new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
                 """
-                { "seniaMinima": 1500.50 }
-                """)));
+                {
+                  "carritos": [
+                    { "idCarrito": "123|10|1|7|555", "senia": 1500.50 }
+                  ],
+                  "estadoCuenta": { "saldoActual": 3210.50 }
+                }
+                """));
+            var service = CrearServiceConApi(handler);
 
             var result = await service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal("Pago pendiente", result.Data!.Estado);
             Assert.NotNull(result.Data.PagoPendiente);
+            Assert.True(result.Data.PagoPendiente!.Confirmada);
             Assert.Equal(555, result.Data.PagoPendiente!.IdInscripcion);
-            Assert.Equal(1500.50m, result.Data.PagoPendiente.Senia);
+            var carrito = Assert.Single(result.Data.PagoPendiente.Carritos);
+            Assert.Equal("123|10|1|7|555", carrito.IdCarrito);
+            Assert.Equal(1500.50m, carrito.Senia);
+            Assert.Equal(3210.50m, result.Data.PagoPendiente.EstadoCuenta!.SaldoActual);
             Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.FechaVencimientoPago);
             Assert.Equal("Analista programador", result.Data.PagoPendiente.Resumen.Carrera);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("Pagos/Carritos?idInscripcion=555", request.RequestUri);
         }
 
         [Fact]

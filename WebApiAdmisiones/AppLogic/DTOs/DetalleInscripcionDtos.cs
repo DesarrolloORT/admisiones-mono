@@ -20,19 +20,11 @@ namespace AppLogic.DTOs
 
         /// <summary>Solo se completa cuando el estado es "Pago pendiente".</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public PagoPendienteDetalleDto? PagoPendiente { get; set; }
+        public ConfirmarPreInscripcionResponse? PagoPendiente { get; set; }
 
         /// <summary>Solo se completa cuando el estado es "Confirmada".</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ConfirmadaDetalleDto? Confirmada { get; set; }
-    }
-
-    public class PagoPendienteDetalleDto
-    {
-        public long IdInscripcion { get; set; }
-        public decimal Senia { get; set; }
-        public DateTime? FechaVencimientoPago { get; set; }
-        public ResumenInscripcionDto Resumen { get; set; } = new();
     }
 
     public class ConfirmadaDetalleDto

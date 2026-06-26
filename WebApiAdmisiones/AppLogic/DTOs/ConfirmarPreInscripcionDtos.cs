@@ -18,14 +18,13 @@ namespace AppLogic.DTOs
     {
         public bool Confirmada { get; set; }
         public long? IdInscripcion { get; set; }
-        public decimal SeniaInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
-        public List<CarritoSeniaDto> CarritosSenia { get; set; } = new();
+        public List<CarritoDto> Carritos { get; set; } = new();
         public ResumenInscripcionDto Resumen { get; set; } = new();
         public EstadoCuentaDto? EstadoCuenta { get; set; }
     }
 
-    public class CarritoSeniaDto
+    public class CarritoDto
     {
         public string IdCarrito { get; set; } = string.Empty;
         public decimal Senia { get; set; }

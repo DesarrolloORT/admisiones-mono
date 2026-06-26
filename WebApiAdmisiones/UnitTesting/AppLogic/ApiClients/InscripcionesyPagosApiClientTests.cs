@@ -109,9 +109,8 @@ namespace UnitTesting.AppLogic.ApiClients
                   "confirmada": true,
                   "message": "confirmada",
                   "idInscripcion": 55,
-                  "seniaInscripcion": 1234.50,
                   "fechaVencimientoPago": "2026-06-30T00:00:00",
-                  "carritosSenia": [
+                  "carritos": [
                     {
                       "idCarrito": "123|20|1|30|55",
                       "senia": 1234.50
@@ -121,6 +120,9 @@ namespace UnitTesting.AppLogic.ApiClients
                       "senia": 800
                     }
                   ],
+                  "estadoCuenta": {
+                    "saldoActual": 3210.50
+                  },
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista en TI",
@@ -145,13 +147,13 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(55, result.Data!.IdInscripcion);
-            Assert.Equal(1234.50m, result.Data!.SeniaInscripcion);
             Assert.Equal(new DateTime(2026, 6, 30), result.Data!.FechaVencimientoPago);
-            Assert.Equal(2, result.Data!.CarritosSenia.Count);
-            Assert.Equal("123|20|1|30|55", result.Data.CarritosSenia[0].IdCarrito);
-            Assert.Equal(1234.50m, result.Data.CarritosSenia[0].Senia);
-            Assert.Equal("123|20|1|30|56", result.Data.CarritosSenia[1].IdCarrito);
-            Assert.Equal(800, result.Data.CarritosSenia[1].Senia);
+            Assert.Equal(2, result.Data!.Carritos.Count);
+            Assert.Equal("123|20|1|30|55", result.Data.Carritos[0].IdCarrito);
+            Assert.Equal(1234.50m, result.Data.Carritos[0].Senia);
+            Assert.Equal("123|20|1|30|56", result.Data.Carritos[1].IdCarrito);
+            Assert.Equal(800, result.Data.Carritos[1].Senia);
+            Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
             Assert.Equal("Analista en TI", result.Data!.Resumen!.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -164,6 +166,32 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.DoesNotContain("\"idProducto\":20", request.Body);
             Assert.Contains("\"idTurno\":7", request.Body);
             Assert.DoesNotContain("\"tipoInscripcion\":\"WEB\"", request.Body);
+        }
+
+        [Fact]
+        public async Task ObtenerCarritosPorInscripcionAsync_WithSuccess_MapsResponseAndBuildsUrl()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "carritos": [
+                    { "idCarrito": "123|20|1|30|55", "senia": 1234.50 }
+                  ],
+                  "estadoCuenta": { "saldoActual": 3210.50 }
+                }
+                """));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerCarritosPorInscripcionAsync(55);
+
+            Assert.True(result.Success);
+            Assert.Equal(3210.50m, result.Data!.EstadoCuenta!.SaldoActual);
+            var carrito = Assert.Single(result.Data.Carritos);
+            Assert.Equal("123|20|1|30|55", carrito.IdCarrito);
+            Assert.Equal(1234.50m, carrito.Senia);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("Pagos/Carritos?idInscripcion=55", request.RequestUri);
         }
 
         private static InscripcionesyPagosApiClient CrearClient(HttpMessageHandler handler)

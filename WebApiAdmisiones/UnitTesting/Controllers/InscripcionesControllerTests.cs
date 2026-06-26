@@ -29,8 +29,8 @@ namespace UnitTesting.Controllers
             {
                 Confirmada = true,
                 IdInscripcion = 100,
-                SeniaInscripcion = 1500,
-                FechaVencimientoPago = new DateTime(2026, 6, 30)
+                FechaVencimientoPago = new DateTime(2026, 6, 30),
+                Carritos = [new CarritoDto { IdCarrito = "1", Senia = 1500 }]
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);

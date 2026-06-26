@@ -99,6 +99,7 @@ namespace AppLogic.Helpers
 
             return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
                 new ContextoConfirmacionPreInscripcion(
+                    idOfertaSeleccionada,
                     idProductoOferta,
                     proceso.IdProceso,
                     idComienzoOferta,
@@ -195,7 +196,7 @@ namespace AppLogic.Helpers
                 methodName);
         }
 
-        public static EstadoCuentaDto? MapearEstadoCuenta(CtaCteResponse? source)
+        public static EstadoCuentaDto? MapearEstadoCuenta(EstadoCuentaApiDto? source)
         {
             if (source == null)
             {
@@ -265,6 +266,7 @@ namespace AppLogic.Helpers
 
             return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
                 new ContextoConfirmacionPreInscripcion(
+                    oferta.IdOferta,
                     idProductoOferta,
                     procesoInteres.IdProceso,
                     idComienzoOferta,
@@ -283,13 +285,12 @@ namespace AppLogic.Helpers
             {
                 Confirmada = source.Confirmada || source.Success,
                 IdInscripcion = source.IdInscripcion,
-                SeniaInscripcion = source.SeniaInscripcion,
                 FechaVencimientoPago = source.FechaVencimientoPago,
-                CarritosSenia = source.CarritosSenia?
-                    .Select(c => new CarritoSeniaDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                    .ToList() ?? new List<CarritoSeniaDto>(),
+                Carritos = MapearCarritos(source),
+                EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
                 Resumen = new ResumenInscripcionDto
                 {
+                    IdOferta = source.Resumen != null && source.Resumen.IdOferta > 0 ? source.Resumen.IdOferta : contexto.IdOferta,
                     IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,
                     Carrera = source.Resumen?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
                     IdComienzo = source.Resumen?.IdComienzo ?? contexto.IdComienzo,
@@ -298,6 +299,13 @@ namespace AppLogic.Helpers
                     Turno = source.Resumen?.Turno ?? contexto.Turno?.NombreTurno
                 }
             };
+        }
+
+        private static List<CarritoDto> MapearCarritos(ConfirmarPreInscripcionApiResponse source)
+        {
+            return source.Carritos?
+                .Select(c => new CarritoDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
+                .ToList() ?? new List<CarritoDto>();
         }
 
         private static OperationResult<ContextoConfirmacionPreInscripcion> ErrorInteresOfertaNoEncontrado(string methodName)
@@ -323,6 +331,7 @@ namespace AppLogic.Helpers
     }
 
     internal sealed record ContextoConfirmacionPreInscripcion(
+        long IdOferta,
         long IdProducto,
         long IdProceso,
         long IdComienzo,

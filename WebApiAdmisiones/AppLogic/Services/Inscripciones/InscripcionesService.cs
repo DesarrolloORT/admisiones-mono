@@ -86,17 +86,16 @@ namespace AppLogic.Services.Inscripciones
                             "No se encontró la inscripción para la persona.",
                             404);
                     }
-                    // La seña a pagar la calcula LogicaORT (cálculo canónico ValorSeniaMinimaConCanje).
-                    var senia = await _inscripcionesyPagosApiClient.ObtenerSeniaMinimaAsync(inscriptoPago.IdInscripto, idProducto);
-                    if (!senia.Success)
+                    var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
+                    if (!carritos.Success)
                     {
                         return OperationResult<DetalleInscripcionResponse>.IsFailed(
-                            senia.ErrorCode,
+                            carritos.ErrorCode,
                             nameof(ObtenerDetalleInscripcion),
-                            senia.Message,
-                            senia.HttpCode);
+                            carritos.Message,
+                            carritos.HttpCode);
                     }
-                    response.PagoPendiente = MapearPagoPendiente(inscriptoPago, senia.Data!.SeniaMinima);
+                    response.PagoPendiente = MapearPagoPendiente(inscriptoPago, carritos.Data);
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.Confirmada:
@@ -121,13 +120,17 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<DetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
         }
 
-        private static PagoPendienteDetalleDto MapearPagoPendiente(Inscripto inscripto, decimal senia)
+        private static ConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
         {
-            return new PagoPendienteDetalleDto
+            return new ConfirmarPreInscripcionResponse
             {
+                Confirmada = true,
                 IdInscripcion = inscripto.IdInscripto,
-                Senia = senia,
                 FechaVencimientoPago = inscripto.FechaVtoInscr,
+                Carritos = carritos?.Carritos
+                    .Select(c => new CarritoDto { IdCarrito = c.IdCarrito, Senia = c.Senia })
+                    .ToList() ?? new List<CarritoDto>(),
+                EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
         }
@@ -726,12 +729,6 @@ namespace AppLogic.Services.Inscripciones
             {
                 var inscriptoConfirmado = uow.Inscriptos.GetByKey(confirmacionResult.Data.IdInscripcion.Value);
                 confirmacionResult.Data.FechaVencimientoPago = inscriptoConfirmado?.FechaVtoInscr;
-            }
-
-            var estadoCuentaResult = await _inscripcionesyPagosApiClient.ObtenerCtaCteAsync();
-            if (estadoCuentaResult.Success)
-            {
-                confirmacionResult.Data!.EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(estadoCuentaResult.Data);
             }
 
             return confirmacionResult;
