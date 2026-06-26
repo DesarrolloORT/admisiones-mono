@@ -12,7 +12,9 @@
     class="inscription-form inscription-form--academic"
     novalidate
     [formGroup]="facade.academicForm"
+    (keydown.enter)="onFormEnter($event)"
     (ngSubmit)="facade.continue()">
+    <ort-error-summary [errors]="facade.academicErrors()" />
     <app-academic-proposal-select [form]="facade.academicForm" [selection]="facade.selection" />
 
     <footer class="inscription-footer">

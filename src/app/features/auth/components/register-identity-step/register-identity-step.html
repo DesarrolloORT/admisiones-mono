@@ -7,29 +7,19 @@
         <p>Los campos se autocompletarán</p>
       </div>
 
-      <input
-        #documentFile
-        accept="image/*,application/pdf"
-        aria-label="Adjuntar documento para escaneo"
-        class="auth-hidden-file"
-        id="document-file"
-        type="file"
-        (change)="documentSelected.emit($event)" />
-
-      <button
-        loadingLabel="Procesando documento"
-        ort-tonal-button
-        type="button"
+      <ort-file-uploader
+        label="Documento para escaneo"
+        [acceptedTypes]="acceptedDocumentTypes()"
         [disabled]="isRecognizingDocument()"
-        [loading]="isRecognizingDocument()"
-        (click)="documentFile.click()">
-        <ort-icon aria-hidden="true">center_focus_weak</ort-icon>
-        {{ isRecognizingDocument() ? 'Procesando...' : 'Escanear documento' }}
-      </button>
+        [maxFiles]="1"
+        (filesChanged)="onDocumentFilesChanged($event)" />
 
-      <p class="auth-selected-file" role="status" [hidden]="!selectedFileName()">
-        Archivo seleccionado: {{ selectedFileName() }}
+      @if (isRecognizingDocument()) {
+      <p class="auth-selected-file" role="status">
+        <ort-icon aria-hidden="true">hourglass_top</ort-icon>
+        Procesando documento... Los campos se completarán automáticamente.
       </p>
+      }
     </section>
 
     <div class="auth-divider">O ingresá tus datos manualmente</div>

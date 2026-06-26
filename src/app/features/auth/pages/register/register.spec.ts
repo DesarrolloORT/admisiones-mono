@@ -130,16 +130,8 @@ describe('Register', () => {
   it('should preload returned document fields', async () => {
     const facade = component['facade'];
     const file = new File(['binary-content'], 'cedula.pdf', { type: 'application/pdf' });
-    const input = document.createElement('input');
 
-    Object.defineProperty(input, 'files', {
-      configurable: true,
-      value: {
-        item: (index: number) => (index === 0 ? file : null),
-      },
-    });
-
-    await facade.onDocumentSelected({ target: input } as unknown as Event);
+    await facade.onDocumentSelected(file);
 
     expect(documentPrefillMock.preload).toHaveBeenCalledWith(file);
     expect(facade.selectedFileName()).toBe('cedula.pdf');

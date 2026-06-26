@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <div class="academic-proposal-select" [formGroup]="form()">
   <ort-radio-group
     class="academic-proposal-select__types"
@@ -6,6 +7,11 @@
     legend="Propuesta académica"
     name="proposal"
     orientation="vertical"
+    [aria-describedby]="
+      form().controls.tipoPropuesta.touched && form().controls.tipoPropuesta.hasError('required')
+        ? 'academic-proposal-type-error'
+        : null
+    "
     [required]="true">
     @for (option of selection().proposalOptions(); track option.value) {
     <ort-radio-card-button class="academic-proposal-select__type" [value]="option.value">
@@ -17,6 +23,12 @@
     </ort-radio-card-button>
     }
   </ort-radio-group>
+  @if (form().controls.tipoPropuesta.touched && form().controls.tipoPropuesta.hasError('required'))
+  {
+  <p class="academic-proposal-select__error" id="academic-proposal-type-error" role="alert">
+    Seleccioná una propuesta académica
+  </p>
+  }
 
   <div class="academic-proposal-select__fields">
     <output class="academic-proposal-select__loading" [hidden]="!selection().loadingCareers()">
@@ -36,6 +48,9 @@
         <ort-option [value]="option.value">{{ option.label }}</ort-option>
         }
       </ort-select>
+      @if (form().controls.carrera.touched && form().controls.carrera.hasError('required')) {
+      <ort-error>Seleccioná una carrera</ort-error>
+      }
     </ort-form-field>
 
     <output class="academic-proposal-select__loading" [hidden]="!selection().loadingStarts()">
@@ -57,6 +72,9 @@
             <ort-option [value]="option.value">{{ option.label }}</ort-option>
             }
           </ort-select>
+          @if (form().controls.comienzo.touched && form().controls.comienzo.hasError('required')) {
+          <ort-error>Seleccioná un comienzo</ort-error>
+          }
         </ort-form-field>
 
         <output class="academic-proposal-select__loading" [hidden]="!selection().loadingShifts()">
@@ -77,6 +95,9 @@
           <ort-option [value]="option.value">{{ option.label }}</ort-option>
           }
         </ort-select>
+        @if (form().controls.turno.touched && form().controls.turno.hasError('required')) {
+        <ort-error>Seleccioná un turno</ort-error>
+        }
       </ort-form-field>
     </div>
   </div>

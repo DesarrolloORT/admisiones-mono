@@ -53,6 +53,13 @@
   display: none;
 }
 
+.academic-proposal-select__error {
+  margin: calc(var(--ort-sys-spacing-8) * -1) 0 0;
+  color: var(--ort-sys-base-text-error-color, #b42318);
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
 @media (width >= 52.5rem) {
   .academic-proposal-select {
     gap: var(--ort-sys-spacing-24);
