@@ -38,8 +38,13 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, Scholar
     requirements: [
       {
         title: 'Calificación mínima exigida',
-        description: `8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.
-        Cursado de 3.º de EMS: Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.`,
+        description:
+          '8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.',
+      },
+      {
+        title: 'Cursado de 3.º de EMS',
+        description:
+          'Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.',
       },
       {
         title: 'Certificado de secundaria',
@@ -65,9 +70,14 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, Scholar
   fexaSin: {
     requirements: [
       {
-        title: 'Perfil del estudiante',
+        title: 'Calificación mínima exigida',
         description:
-          'Ingreso desde cero con Bachillerato Internacional o promedios destacados (5.º ≥ 7 o 6.º ≥ 8)',
+          '8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.',
+      },
+      {
+        title: 'Cursado de 3.º de EMS',
+        description:
+          'Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.',
       },
       {
         title: 'Certificado de secundaria',
