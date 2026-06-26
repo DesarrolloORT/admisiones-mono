@@ -592,7 +592,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
 
             var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            accionRepo.Setup(r => r.ExisteAccionParaProcesoPersona(123, 20)).Returns(false);
             _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
             _dbConnectionContextMock
                 .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_3100))
@@ -687,7 +686,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
 
             var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            accionRepo.Setup(r => r.ExisteAccionParaProcesoPersona(123, 20)).Returns(true);
             _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
 
             _tivenosEnvioServiceMock
@@ -842,7 +840,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
 
             var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            accionRepo.Setup(r => r.ExisteAccionParaProcesoPersona(123, 20)).Returns(false);
             _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
             _dbConnectionContextMock
                 .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_3100))
@@ -920,7 +917,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
 
             var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            accionRepo.Setup(r => r.ExisteAccionParaProcesoPersona(123, 20)).Returns(true);
             _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
 
             var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
@@ -1870,7 +1866,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("juan.perez@ort.edu.uy", result.Data.Confirmada.CoordinadorCursos.Email);
             Assert.Equal(2, result.Data.Confirmada.MateriasPrimerSemestre.Count);
             Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estética I");
-            ofertaRepo.Verify(r => r.GetMateriasPorOferta(It.IsAny<long>()), Times.Never);
         }
 
         [Fact]

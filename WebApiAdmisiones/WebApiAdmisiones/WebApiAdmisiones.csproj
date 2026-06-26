@@ -10,7 +10,6 @@
    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>  
  </PropertyGroup>  
  <ItemGroup>  
-   <PackageReference Include="AutoMapper" Version="16.1.1" />
    <PackageReference Include="HtmlSanitizer" Version="9.1.923-beta" />
    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
