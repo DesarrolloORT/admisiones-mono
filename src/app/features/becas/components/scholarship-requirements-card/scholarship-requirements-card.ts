@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { OrtIconModule } from '@desarrolloort/components';
 
-export type ScholarshipType = 'revalidation' | 'academic' | 'socioeconomic';
+import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
 
 interface ScholarshipRequirement {
   title: string;
@@ -10,10 +10,11 @@ interface ScholarshipRequirement {
 
 interface ScholarshipConfig {
   requirements: ScholarshipRequirement[];
+  methods: ScholarshipRequirement[];
 }
 
-export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, ScholarshipConfig> = {
-  revalidation: {
+export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, ScholarshipConfig> = {
+  fbr: {
     requirements: [
       {
         title: 'Perfil del estudiante',
@@ -31,33 +32,94 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, Scholarshi
           'Es necesario adjuntar el formulario de reválidas firmado por la Coordinación Académica de Universidad ORT.',
       },
     ],
+    methods: [],
   },
-
-  academic: {
+  fexaCon: {
     requirements: [
       {
-        title: 'Promedio académico',
-        description: 'Dirigido a estudiantes con alto rendimiento académico comprobable.',
+        title: 'Calificación mínima exigida',
+        description: `8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.
+        Cursado de 3.º de EMS: Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.`,
       },
       {
-        title: 'Regularidad',
-        description: 'El estudiante deberá mantener la regularidad en la carrera.',
+        title: 'Certificado de secundaria',
+        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
       },
     ],
-  },
-
-  socioeconomic: {
-    requirements: [
+    methods: [
       {
-        title: 'Situación económica',
-        description: 'Dirigido a estudiantes que acrediten necesidad de apoyo económico.',
-      },
-      {
-        title: 'Documentación respaldatoria',
+        title: 'Con declaración jurada',
         description:
-          'Se deberá presentar documentación que permita evaluar la situación socioeconómica.',
+          'otorga hasta 60% de beca. Deberás completar información sobre ingresos y gastos de tu núcleo familiar.',
+      },
+      {
+        title: 'Sin declaración jurada',
+        description: 'otorga hasta un 35% de beca. No requiere información económica.',
       },
     ],
+  },
+  fexaSin: {
+    requirements: [
+      {
+        title: 'Perfil del estudiante',
+        description:
+          'Ingreso desde cero con Bachillerato Internacional o promedios destacados (5.º ≥ 7 o 6.º ≥ 8)',
+      },
+      {
+        title: 'Certificado de secundaria',
+        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
+      },
+    ],
+    methods: [
+      {
+        title: 'Con declaración jurada',
+        description:
+          'otorga hasta 60% de beca. Deberás completar información sobre ingresos y gastos de tu núcleo familiar.',
+      },
+      {
+        title: 'Sin declaración jurada',
+        description: 'otorga hasta un 35% de beca. No requiere información económica.',
+      },
+    ],
+  },
+  fbc: {
+    requirements: [
+      {
+        title: 'Perfil del estudiante',
+        description:
+          'Ingreso desde cero con bachillerato completo o con materias de 3.° de EMS pendientes.',
+      },
+      {
+        title: 'Certificado de secundaria',
+        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
+      },
+    ],
+    methods: [],
+  },
+  fcl: {
+    requirements: [
+      {
+        title: 'Perfil del estudiante',
+        description: 'Dirigido a programas de nivel corto o capacitación laboral.',
+      },
+      {
+        title: 'Requisitos académicos',
+        description: 'Mínimo 1.° de EMS (4.° año) aprobado.',
+      },
+    ],
+    methods: [],
   },
 };
 
@@ -69,7 +131,7 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, Scholarshi
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipRequirementsCard {
-  readonly variant = input.required<ScholarshipType>();
+  readonly variant = input.required<ScholarshipVariant>();
 
   protected readonly config = computed<ScholarshipConfig>(
     () => SCHOLARSHIP_REQUIREMENTS_CONFIG[this.variant()]
