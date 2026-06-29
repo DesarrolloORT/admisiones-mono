@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <div class="scholarship-accordion__content">
   <section aria-labelledby="family-nucleus-title" class="scholarship-subsection">
     <div class="scholarship-subsection__header">
@@ -176,11 +177,27 @@
 
     <ort-radio-group
       legend="¿Cuentan con vehículo propio?"
+      name="vehiculoPropio"
       orientation="vertical"
-      [required]="true">
+      [ngModel]="vehiculoPropio()"
+      [required]="true"
+      (ngModelChange)="vehiculoPropio.set($event)">
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
     </ort-radio-group>
+
+    @if (vehiculoPropio() === 'si') {
+    <ort-form-field>
+      <ort-label>Marca y modelo</ort-label>
+      <input ortInput required />
+    </ort-form-field>
+
+    <ort-form-field>
+      <ort-label>Año</ort-label>
+      <input ortNumberInput required [decimals]="0" />
+    </ort-form-field>
+
+    }
   </section>
 
   <hr class="subsection-divider" />

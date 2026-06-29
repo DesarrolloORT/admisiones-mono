@@ -111,4 +111,6 @@ export class Declaration {
   removeExpense(id: number) {
     this.expenses.update(expenses => expenses.filter(expense => expense.id !== id));
   }
+
+  vehiculoPropio = signal<'si' | 'no' | null>(null);
 }
