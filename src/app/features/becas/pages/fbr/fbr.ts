@@ -6,8 +6,10 @@ import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
 import { ScholarshipAcademicStep } from '../../components/scholarship-academic-step/scholarship-academic-step';
+import { ScholarshipConfirmationStep } from '../../components/scholarship-confirmation-step/scholarship-confirmation-step';
 import { ScholarshipOnboarding } from '../../components/scholarship-onboarding/scholarship-onboarding';
 import { ScholarshipPersonalStep } from '../../components/scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipSuccess } from '../../components/scholarship-success/scholarship-success';
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
 import { ScholarshipFormsStore } from '../../store/scholarship-forms';
@@ -21,6 +23,8 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
     ScholarshipAcademicStep,
     ScholarshipPersonalStep,
     HomeHeader,
+    ScholarshipConfirmationStep,
+    ScholarshipSuccess,
   ],
   providers: [
     AcademicProposalSelection,
@@ -35,6 +39,7 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
 })
 export class Fbr {
   protected readonly onboardingCompleted = signal(false);
+  protected readonly show = signal(false);
 
   protected startApplication(): void {
     this.onboardingCompleted.set(true);
@@ -50,5 +55,9 @@ export class Fbr {
 
   protected logout(): void {
     this.authSession.logout();
+  }
+
+  protected showSuccess(): void {
+    this.show.set(true);
   }
 }

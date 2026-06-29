@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+#scholarship-success-title {
+  margin-bottom: var(--ort-sys-spacing-8);
+  color: var(--ort-sys-base-text-color-headline);
+  font-size: var(--ort-sys-font-size-24);
+}
+
+.success-screen__content p {
+  color: var(--ort-sys-base-text-color-body);
+}
+
+.success-screen__content {
+  padding-inline: var(--ort-sys-spacing-8);
+  padding-top: var(--ort-sys-spacing-64);
+  text-align: center;
+}
+
+.success-screen {
+  display: grid;
+  gap: var(--ort-sys-spacing-48);
+  margin: var(--ort-sys-spacing-24);
+}

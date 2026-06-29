@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, output } from '@angular/core';
 import {
   OrtButtonModule,
   OrtCardModule,
@@ -14,4 +14,10 @@ import {
   styleUrls: ['./scholarship-confirmation-step.scss', '../../pages/fbr/fbr.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ScholarshipConfirmationStep {}
+export class ScholarshipConfirmationStep {
+  readonly confirmApplication = output<void>();
+
+  protected onConfirmApplication(): void {
+    this.confirmApplication.emit();
+  }
+}
