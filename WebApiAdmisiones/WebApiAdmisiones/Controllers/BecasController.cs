@@ -18,6 +18,15 @@ namespace WebApiAdmisiones.Controllers
     {
         #region BECAS
 
+        [HttpGet("Inscripciones")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
+        public IActionResult ObtenerMisInscripcionesConfirmadas()
+        {
+            var result = becasService.ObtenerMisInscripcionesConfirmadas(_currentUser.GetUserId());
+            return ValidateResponse(result);
+        }
+
         #endregion
     }
 }

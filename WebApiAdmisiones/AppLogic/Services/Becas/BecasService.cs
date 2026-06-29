@@ -57,6 +57,17 @@ namespace AppLogic.Services.Becas
             return OperationResult<IEnumerable<DtoPruebaDevart>>.Ok(dtos, nameof(ObtenerFondosDeBecaVigentes));
         }
 
+        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripcionesConfirmadas(long codigoPersona)
+        {
+            using var uow = _uowFactory.Create();
+            var dtos = uow.VdInscripcionesFresco1y2s
+                .GetInscripcionesFrescoHabilitadas(codigoPersona)
+                .Where(i => i.EstadoInscripcion == "Confirmada")
+                .ToDtos();
+
+            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripcionesConfirmadas));
+        }
+
         private static bool EstaDisponibleEnFechaActual(Prueba prueba, DateTime fechaActual)
         {
             if (prueba.FechaEntregaDjPrueba?.Date != fechaActual.Date

@@ -110,5 +110,24 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(1, item.IdPrueba);
             Assert.Equal(11, item.IdTipoBeca);
         }
+
+        [Fact]
+        public void ObtenerMisInscripcionesConfirmadas_ReturnsOnlyConfirmadas()
+        {
+            var repo = new Mock<IVdInscripcionesFresco1y2Repository>();
+            repo.Setup(r => r.GetInscripcionesFrescoHabilitadas(123)).Returns(
+            [
+                new VdInscripcionesFresco1y2 { IdProducto = 10, EstadoInscripcion = "Confirmada" },
+                new VdInscripcionesFresco1y2 { IdProducto = 20, EstadoInscripcion = "Pendiente" }
+            ]);
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(repo.Object);
+
+            var result = _service.ObtenerMisInscripcionesConfirmadas(123);
+
+            Assert.True(result.Success);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(10, item.IdProducto);
+            Assert.Equal("Confirmada", item.EstadoInscripcion);
+        }
     }
 }
