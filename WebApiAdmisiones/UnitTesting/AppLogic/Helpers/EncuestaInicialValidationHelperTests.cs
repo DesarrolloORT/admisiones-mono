@@ -1,4 +1,4 @@
-using AppLogic.Dtos.EncuestaInicial;
+﻿using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
 using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
@@ -10,9 +10,9 @@ using Xunit;
 namespace UnitTesting.AppLogic.Helpers
 {
     /// <summary>
-    /// Tests de caracterización que fijan el comportamiento actual de
+    /// Tests de caracterizaciÃ³n que fijan el comportamiento actual de
     /// EncuestaInicialValidationHelper antes de refactorizar su complejidad cognitiva.
-    /// No deben cambiar al refactorizar: cualquier diferencia es una regresión.
+    /// No deben cambiar al refactorizar: cualquier diferencia es una regresiÃ³n.
     /// </summary>
     public class EncuestaInicialValidationHelperTests
     {
@@ -66,20 +66,21 @@ namespace UnitTesting.AppLogic.Helpers
 
         private static DtoGuardarEncuestaInicialRequest RequestValido() => new()
         {
-            IdProducto = 10,
-            IdProceso = 20,
-            CodigoTitulo = 1300,
-            UltimoAnioSexto = 6,
-            InstruccionPadre = 1,
-            InstruccionMadre = 1,
-            DecisionCarrera = 2,
-            DecisionUniversidad = 2,
-            InfoOtrasUniversidadesAntes = "NO",
-            CompartidoCon = 1,
-            CodigoInstitucionBac = 50,
-            InformarEncuesta = "NO",
-            UltimoAnioSecundaria = 1,
-            NivelDecision = 1
+            CarreraId = 10,
+            ComienzoId = 20,
+            OrientacionBachilleratoId = 1300,
+            AnioBachillerato = 6,
+            NivelFormacionPadreTutorId = 1,
+            NivelFormacionMadreTutorId = 1,
+            AnioDecisionCarreraId = 2,
+            AnioDecisionOrtId = 2,
+            SeInformoEnOtrasUniversidades = false,
+            ApoyoDecisionId = 1,
+            InstitucionSecundariaId = 50,
+            AutorizaInformarEncuesta = false,
+            UbicacionUltimoAnioSecundariaId = 1,
+            EstadoEducacionSuperiorPreviaId = 3,
+            NivelDecisionId = 1
         };
 
         private static string? ErrorDe(ParcialCtx ctx, DtoGuardarEncuestaInicialRequest request)
@@ -121,7 +122,7 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new ParcialCtx();
             ctx.Productos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             var req = RequestValido();
-            req.UltimoAnioSexto = 4;
+            req.AnioBachillerato = 4;
             Assert.Equal("INS_EI_04", ErrorDe(ctx, req));
         }
 
@@ -129,7 +130,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_ProcesoInvalido_INS_EI_05()
         {
             var req = RequestValido();
-            req.IdProceso = 0;
+            req.ComienzoId = 0;
             Assert.Equal("INS_EI_05", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -139,7 +140,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_UltimoAnioSextoFueraDeRango_INS_EI_06(long valor)
         {
             var req = RequestValido();
-            req.UltimoAnioSexto = valor;
+            req.AnioBachillerato = valor;
             Assert.Equal("INS_EI_06", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -147,7 +148,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_InstruccionMadreFueraDeRango_INS_EI_07()
         {
             var req = RequestValido();
-            req.InstruccionMadre = 8;
+            req.NivelFormacionMadreTutorId = 8;
             Assert.Equal("INS_EI_07", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -155,7 +156,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_InstruccionPadreFueraDeRango_INS_EI_08()
         {
             var req = RequestValido();
-            req.InstruccionPadre = 0;
+            req.NivelFormacionPadreTutorId = 0;
             Assert.Equal("INS_EI_08", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -163,7 +164,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_DecisionCarreraInvalida_INS_EI_09()
         {
             var req = RequestValido();
-            req.DecisionCarrera = 1;
+            req.AnioDecisionCarreraId = 1;
             Assert.Equal("INS_EI_09", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -171,7 +172,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_DecisionUniversidadInvalida_INS_EI_10()
         {
             var req = RequestValido();
-            req.DecisionUniversidad = 1;
+            req.AnioDecisionOrtId = 1;
             Assert.Equal("INS_EI_10", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -181,31 +182,31 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_CompartidoConFueraDeRango_INS_EI_11(int valor)
         {
             var req = RequestValido();
-            req.CompartidoCon = valor;
+            req.ApoyoDecisionId = valor;
             Assert.Equal("INS_EI_11", ErrorDe(new ParcialCtx(), req));
         }
 
         [Fact]
-        public void Parcial_InfoOtrasInvalido_INS_EI_12()
+        public void Parcial_SeInformoEnOtrasUniversidadesBooleano_Ok()
         {
             var req = RequestValido();
-            req.InfoOtrasUniversidadesAntes = "X";
-            Assert.Equal("INS_EI_12", ErrorDe(new ParcialCtx(), req));
+            req.SeInformoEnOtrasUniversidades = false;
+            Assert.Null(ErrorDe(new ParcialCtx(), req));
         }
 
         [Fact]
-        public void Parcial_InformarEncuestaInvalido_INS_EI_13()
+        public void Parcial_AutorizaInformarEncuestaBooleano_Ok()
         {
             var req = RequestValido();
-            req.InformarEncuesta = "X";
-            Assert.Equal("INS_EI_13", ErrorDe(new ParcialCtx(), req));
+            req.AutorizaInformarEncuesta = true;
+            Assert.Null(ErrorDe(new ParcialCtx(), req));
         }
 
         [Fact]
         public void Parcial_UltimoAnioSecundariaInvalido_INS_EI_14()
         {
             var req = RequestValido();
-            req.UltimoAnioSecundaria = 3;
+            req.UbicacionUltimoAnioSecundariaId = 3;
             Assert.Equal("INS_EI_14", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -213,7 +214,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_NivelDecisionInvalido_INS_EI_15()
         {
             var req = RequestValido();
-            req.NivelDecision = 3;
+            req.NivelDecisionId = 3;
             Assert.Equal("INS_EI_15", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -221,7 +222,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_TipoJornadaInvalido_INS_EI_48()
         {
             var req = RequestValido();
-            req.TipoJornada = 3;
+            req.TipoJornadaId = 3;
             Assert.Equal("INS_EI_48", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -229,7 +230,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_ValoracionAsesoramientoInvalida_INS_EI_16()
         {
             var req = RequestValido();
-            req.ValoracionAsesoramientoOrt = 6;
+            req.ValoracionAsesoramientoOrtId = 6;
             Assert.Equal("INS_EI_16", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -237,7 +238,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_ValoracionSitioWebInvalida_INS_EI_17()
         {
             var req = RequestValido();
-            req.ValoracionSitioWeb = 0;
+            req.ValoracionSitioWebOrtId = 0;
             Assert.Equal("INS_EI_17", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -245,7 +246,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_ValoracionInstalacionesInvalida_INS_EI_18()
         {
             var req = RequestValido();
-            req.ValoracionInstalacionesOrt = 6;
+            req.ValoracionInstalacionesOrtId = 6;
             Assert.Equal("INS_EI_18", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -253,7 +254,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_InstitucionInvalida_INS_EI_19()
         {
             var req = RequestValido();
-            req.CodigoInstitucionBac = 0;
+            req.InstitucionSecundariaId = 0;
             Assert.Equal("INS_EI_19", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -269,7 +270,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_TituloInvalido_INS_EI_21()
         {
             var req = RequestValido();
-            req.CodigoTitulo = 0;
+            req.OrientacionBachilleratoId = 0;
             Assert.Equal("INS_EI_21", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -290,7 +291,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_MotivoInvalido_INS_EI_23()
         {
             var req = RequestValido();
-            req.OpcionesMotivosSeleccionados = [new DtoEncuestaMotivoRequest { IdMotivo = 0 }];
+            req.MotivoEleccionOrtIds = [0];
             Assert.Equal("INS_EI_23", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -298,7 +299,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_PublicidadInvalida_INS_EI_24()
         {
             var req = RequestValido();
-            req.OpcionesPublicidadSeleccionadas = [new DtoEncuestaPublicidadRequest { IdPublicidad = 0 }];
+            req.PublicidadOrtIds = [0];
             Assert.Equal("INS_EI_24", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -306,7 +307,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_UniversidadCodigoNegativo_INS_EI_25()
         {
             var req = RequestValido();
-            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = -1 }];
+            req.UniversidadConsideradaIds = [-1];
             Assert.Equal("INS_EI_25", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -314,7 +315,7 @@ namespace UnitTesting.AppLogic.Helpers
         public void Parcial_UniversidadCodigoCero_INS_EI_25()
         {
             var req = RequestValido();
-            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = 0, Nombre = "Otro" }];
+            req.UniversidadConsideradaIds = [0];
             Assert.Equal("INS_EI_25", ErrorDe(new ParcialCtx(), req));
         }
 
@@ -324,8 +325,8 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new ParcialCtx();
             ctx.Empresas.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
             var req = RequestValido();
-            req.CodigoInstitucionBac = null; // evitar INS_EI_20 antes de llegar a las listas
-            req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = 99 }];
+            req.InstitucionSecundariaId = null; // evitar INS_EI_20 antes de llegar a las listas
+            req.UniversidadConsideradaIds = [99];
             Assert.Equal("INS_EI_27", ErrorDe(ctx, req));
         }
 
@@ -524,3 +525,4 @@ namespace UnitTesting.AppLogic.Helpers
         }
     }
 }
+

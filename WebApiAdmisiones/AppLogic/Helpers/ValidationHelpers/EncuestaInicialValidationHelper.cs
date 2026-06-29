@@ -1,4 +1,4 @@
-using AppLogic.Dtos.EncuestaInicial;
+﻿using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
@@ -13,6 +13,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         private static readonly int[] CompartidoConCatalogo = [1, 2, 3, 4, 5];
         private static readonly int[] FormacionTutoresCatalogo = [1, 2, 3, 4, 5, 6, 7];
         private static readonly long[] UltimoAnioSecundariaCatalogo = [1, 2];
+        private static readonly long[] EstadoEducacionSuperiorPreviaCatalogo = [1, 2, 3];
         private static readonly long[] NivelDecisionCatalogo = [1, 2];
         private static readonly long[] ValoracionesCatalogo = [1, 2, 3, 4, 5];
         private static readonly long[] TipoJornadaCatalogo = [1, 2];
@@ -63,17 +64,17 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (!request.IdProducto.HasValue)
+            if (!request.CarreraId.HasValue)
                 return OperationResult<bool>.Ok(true, methodName);
 
-            if (!uow.Productos.EsProductoValidoParaInteres(request.IdProducto.Value))
+            if (!uow.Productos.EsProductoValidoParaInteres(request.CarreraId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
 
-            var producto = uow.Productos.GetByKey(request.IdProducto.Value);
+            var producto = uow.Productos.GetByKey(request.CarreraId.Value);
             if (producto == null)
                 return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
 
-            if (producto.IdNivelProducto == 1 && request.UltimoAnioSexto == 4)
+            if (producto.IdNivelProducto == 1 && request.AnioBachillerato == 4)
                 return OperationResult<bool>.IsFailed(
                     "INS_EI_04",
                     methodName,
@@ -88,33 +89,31 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (request.IdProceso is <= 0)
+            if (request.ComienzoId is <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_05", methodName, "Proceso invalido.", 400);
-            if (request.UltimoAnioSexto.HasValue && !AnioBachillerCatalogado(uow, request.UltimoAnioSexto.Value))
+            if (request.AnioBachillerato.HasValue && !AnioBachillerCatalogado(uow, request.AnioBachillerato.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_06", methodName, "Ultimo anio de bachillerato invalido.", 400);
-            if (ValorNoPermitido(request.InstruccionMadre, FormacionTutoresCatalogo))
+            if (ValorNoPermitido(request.NivelFormacionMadreTutorId, FormacionTutoresCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_07", methodName, "Instruccion madre invalida.", 400);
-            if (ValorNoPermitido(request.InstruccionPadre, FormacionTutoresCatalogo))
+            if (ValorNoPermitido(request.NivelFormacionPadreTutorId, FormacionTutoresCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_08", methodName, "Instruccion padre invalida.", 400);
-            if (ValorNoPermitido(request.DecisionCarrera, OpcionesEms))
+            if (ValorNoPermitido(request.AnioDecisionCarreraId, OpcionesEms))
                 return OperationResult<bool>.IsFailed("INS_EI_09", methodName, "Decision de carrera invalida.", 400);
-            if (ValorNoPermitido(request.DecisionUniversidad, OpcionesEms))
+            if (ValorNoPermitido(request.AnioDecisionOrtId, OpcionesEms))
                 return OperationResult<bool>.IsFailed("INS_EI_10", methodName, "Decision de universidad invalida.", 400);
-            if (ValorNoPermitido(request.CompartidoCon, CompartidoConCatalogo))
+            if (ValorNoPermitido(request.ApoyoDecisionId, CompartidoConCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
-            if (!DocumentUtils.EsSiNoONulo(request.InfoOtrasUniversidadesAntes))
-                return OperationResult<bool>.IsFailed("INS_EI_12", methodName, "Debe indicar SI o NO para universidades consideradas.", 400);
-            if (!DocumentUtils.EsSiNoONulo(request.InformarEncuesta))
-                return OperationResult<bool>.IsFailed("INS_EI_13", methodName, "Debe indicar SI o NO para informar encuesta.", 400);
-            if (ValorNoPermitido(request.UltimoAnioSecundaria, UltimoAnioSecundariaCatalogo))
+            if (ValorNoPermitido(request.UbicacionUltimoAnioSecundariaId, UltimoAnioSecundariaCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
-            if (ValorNoPermitido(request.NivelDecision, NivelDecisionCatalogo))
+            if (ValorNoPermitido(request.EstadoEducacionSuperiorPreviaId, EstadoEducacionSuperiorPreviaCatalogo))
+                return OperationResult<bool>.IsFailed("INS_EI_50", methodName, "Educacion superior previa invalida.", 400);
+            if (ValorNoPermitido(request.NivelDecisionId, NivelDecisionCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_15", methodName, "Nivel de decision invalido.", 400);
-            if (ValorNoPermitido(request.TipoJornada, TipoJornadaCatalogo))
+            if (ValorNoPermitido(request.TipoJornadaId, TipoJornadaCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_48", methodName, "Tipo jornada invalido.", 400);
-            if (request.CodigoTitulo.HasValue && request.CodigoTitulo <= 0)
+            if (request.OrientacionBachilleratoId.HasValue && request.OrientacionBachilleratoId <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_21", methodName, "Titulo invalido.", 400);
-            if (request.CodigoTitulo.HasValue && !TituloCatalogado(uow, request.CodigoTitulo.Value))
+            if (request.OrientacionBachilleratoId.HasValue && !TituloCatalogado(uow, request.OrientacionBachilleratoId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_22", methodName, "El titulo indicado es invalido.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -125,9 +124,9 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (request.CodigoInstitucionBac.HasValue && request.CodigoInstitucionBac <= 0)
+            if (request.InstitucionSecundariaId.HasValue && request.InstitucionSecundariaId <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_19", methodName, "Institucion invalida.", 400);
-            if (request.CodigoInstitucionBac.HasValue && uow.Empresas.GetByKey(request.CodigoInstitucionBac.Value) == null)
+            if (request.InstitucionSecundariaId.HasValue && uow.Empresas.GetByKey(request.InstitucionSecundariaId.Value) == null)
                 return OperationResult<bool>.IsFailed("INS_EI_20", methodName, "La institucion indicada es invalida.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -280,11 +279,11 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarValoracionParcial(DtoGuardarEncuestaInicialRequest request, string methodName)
         {
-            if (request.ValoracionAsesoramientoOrt.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionAsesoramientoOrt.Value))
+            if (request.ValoracionAsesoramientoOrtId.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionAsesoramientoOrtId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_16", methodName, "Valoracion de asesoramiento invalida.", 400);
-            if (request.ValoracionSitioWeb.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionSitioWeb.Value))
+            if (request.ValoracionSitioWebOrtId.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionSitioWebOrtId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_17", methodName, "Valoracion del sitio web invalida.", 400);
-            if (request.ValoracionInstalacionesOrt.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionInstalacionesOrt.Value))
+            if (request.ValoracionInstalacionesOrtId.HasValue && !ValoracionesCatalogo.Contains(request.ValoracionInstalacionesOrtId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_18", methodName, "Valoracion de instalaciones invalida.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -295,29 +294,29 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            var validacionUniversidades = ValidarEmpresasEncuesta(uow, request.UniversidadesConsideradas, methodName);
+            var validacionUniversidades = ValidarEmpresasEncuesta(uow, request.UniversidadConsideradaIds, methodName);
             if (!validacionUniversidades.Success)
                 return validacionUniversidades;
 
-            var validacionEducacion = ValidarEmpresasEncuesta(uow, request.UniversidadesEducacionSuperior, methodName);
+            var validacionEducacion = ValidarEmpresasEncuesta(uow, request.UniversidadEducacionSuperiorIds, methodName);
             if (!validacionEducacion.Success)
                 return validacionEducacion;
 
-            if (request.OpcionesMotivosSeleccionados is { Count: > 0 })
+            if (request.MotivoEleccionOrtIds is { Count: > 0 })
             {
                 var motivosCatalogo = uow.MotivoOpcionesAdmisions.GetAll();
-                if (request.OpcionesMotivosSeleccionados.Any(motivo =>
-                    motivo.IdMotivo <= 0 || !motivosCatalogo.Any(m => m.IdMotivo == motivo.IdMotivo)))
+                if (request.MotivoEleccionOrtIds.Any(motivoId =>
+                    motivoId <= 0 || !motivosCatalogo.Any(m => m.IdMotivo == motivoId)))
                 {
                     return OperationResult<bool>.IsFailed("INS_EI_23", methodName, "Motivo de eleccion invalido.", 400);
                 }
             }
 
-            if (request.OpcionesPublicidadSeleccionadas is { Count: > 0 })
+            if (request.PublicidadOrtIds is { Count: > 0 })
             {
                 var publicidadesCatalogo = uow.PublicidadOpcionesAdmisions.GetAll();
-                if (request.OpcionesPublicidadSeleccionadas.Any(publicidad =>
-                    publicidad.IdPublicidad <= 0 || !publicidadesCatalogo.Any(p => p.IdPublicidad == publicidad.IdPublicidad)))
+                if (request.PublicidadOrtIds.Any(publicidadId =>
+                    publicidadId <= 0 || !publicidadesCatalogo.Any(p => p.IdPublicidad == publicidadId)))
                 {
                     return OperationResult<bool>.IsFailed("INS_EI_24", methodName, "Publicidad seleccionada invalida.", 400);
                 }
@@ -328,7 +327,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private static OperationResult<bool> ValidarEmpresasEncuesta(
             IUnitOfWork uow,
-            List<DtoEncuestaEmpresaRequest>? empresas,
+            List<long>? empresas,
             string methodName)
         {
             if (empresas == null)
@@ -337,14 +336,14 @@ namespace AppLogic.Helpers.ValidationHelpers
             }
 
             var universidadesCatalogo = uow.Empresas.GetUniversidades();
-            foreach (var empresa in empresas)
+            foreach (var empresaId in empresas)
             {
-                if (empresa.CodigoEmpresa <= 0)
+                if (empresaId <= 0)
                 {
                     return OperationResult<bool>.IsFailed("INS_EI_25", methodName, "Universidad seleccionada invalida.", 400);
                 }
 
-                if (!universidadesCatalogo.Any(u => u.CodigoEmpresa == empresa.CodigoEmpresa))
+                if (!universidadesCatalogo.Any(u => u.CodigoEmpresa == empresaId))
                 {
                     return OperationResult<bool>.IsFailed("INS_EI_27", methodName, "Universidad seleccionada invalida.", 400);
                 }
@@ -357,25 +356,25 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (DocumentUtils.EsSi(request.InfoOtrasUniversidadesAntes) && request.UniversidadesConsideradas is { Count: 0 })
+            if (request.SeInformoEnOtrasUniversidades == true && request.UniversidadConsideradaIds is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_39", methodName, "Debe indicar universidades consideradas.", 400);
-            if (request.TieneEducacionSuperior == true && request.UniversidadesEducacionSuperior is { Count: 0 })
+            if (request.EstadoEducacionSuperiorPreviaId is 1 or 2 && request.UniversidadEducacionSuperiorIds is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_40", methodName, "Debe indicar universidades de educacion superior.", 400);
-            if (request.UltimoAnioSexto == 6 && !request.CodigoTitulo.HasValue)
+            if (request.AnioBachillerato == 6 && !request.OrientacionBachilleratoId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_41", methodName, "Debe indicar orientacion de bachillerato.", 400);
-            if (request.AsesoramientoOrt == true && !request.ValoracionAsesoramientoOrt.HasValue)
+            if (request.TuvoAsesoramientoOrt == true && !request.ValoracionAsesoramientoOrtId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_42", methodName, "Debe indicar valoracion de asesoramiento.", 400);
-            if (request.VistaSitioWebOrt == true && !request.ValoracionSitioWeb.HasValue)
+            if (request.VisitoSitioWebOrt == true && !request.ValoracionSitioWebOrtId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_43", methodName, "Debe indicar valoracion del sitio web.", 400);
-            if (request.VistaInstalacionesOrt == true && !request.ValoracionInstalacionesOrt.HasValue)
+            if (request.VisitoInstalacionesOrt == true && !request.ValoracionInstalacionesOrtId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_44", methodName, "Debe indicar valoracion de instalaciones.", 400);
-            if (request.PublicidadOrt == true && request.OpcionesPublicidadSeleccionadas is { Count: 0 })
+            if (request.RecuerdaPublicidadOrt == true && request.PublicidadOrtIds is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_45", methodName, "Debe indicar publicidades seleccionadas.", 400);
-            if (EsInstruccionAlta(request.InstruccionMadre ?? 0) && !request.InstruccionMadreOrt.HasValue)
+            if (EsInstruccionAlta(request.NivelFormacionMadreTutorId ?? 0) && !request.MadreTutorEgresadoOrt.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_46", methodName, "Debe indicar si la madre o tutor obtuvo el titulo en ORT.", 400);
-            if (EsInstruccionAlta(request.InstruccionPadre ?? 0) && !request.InstruccionPadreOrt.HasValue)
+            if (EsInstruccionAlta(request.NivelFormacionPadreTutorId ?? 0) && !request.PadreTutorEgresadoOrt.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_47", methodName, "Debe indicar si el padre o tutor obtuvo el titulo en ORT.", 400);
-            if (request.TrabajaActualmente == true && !request.TipoJornada.HasValue)
+            if (request.TrabajaActualmente == true && !request.TipoJornadaId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_49", methodName, "Debe indicar el tipo jornada.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -572,3 +571,4 @@ namespace AppLogic.Helpers.ValidationHelpers
         }
     }
 }
+

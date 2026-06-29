@@ -1,4 +1,4 @@
-using AppLogic.Dtos.Catalogos;
+﻿using AppLogic.Dtos.Catalogos;
 using System.Net;
 using System.Text;
 using AppLogic.ApiClients;
@@ -116,12 +116,15 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal(nameof(CatalogosService.ObtenerEncuestaInicial), result.Method);
             Assert.NotNull(result.Data);
-            Assert.Equal(4, result.Data.NivelConocimiento.Count);
-            Assert.Equal(4, result.Data.OpcionesEMS.Count);
-            Assert.Equal(5, result.Data.CompartidoCon.Count);
-            Assert.Equal(7, result.Data.FormacionTutores.Count);
-            Assert.Equal(3, result.Data.EstadoEducacionSuperior.Count);
-            Assert.Equal(8, result.Data.AniosAprobadosEducacionSuperior.Count);
+            Assert.Equal(2, result.Data.Educacion.OpcionesSiNo.Count);
+            Assert.Equal(2, result.Data.Educacion.UbicacionesUltimoAnioSecundaria.Count);
+            Assert.Equal(3, result.Data.Educacion.EstadosEducacionSuperiorPrevia.Count);
+            Assert.Equal(7, result.Data.Educacion.NivelesFormacionTutores.Count);
+            Assert.Equal(4, result.Data.DecisionAcademica.AniosEducacionMediaSuperior.Count);
+            Assert.Equal(5, result.Data.DecisionAcademica.ApoyosDecision.Count);
+            Assert.Equal(2, result.Data.DecisionAcademica.NivelesDecision.Count);
+            Assert.Equal(5, result.Data.ExperienciaOrt.Valoraciones.Count);
+            Assert.Equal(2, result.Data.SituacionLaboral.TiposJornada.Count);
         }
 
         [Fact]
@@ -129,32 +132,78 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = _service.ObtenerEncuestaInicial();
 
-            var decisionCarrera = result.Data!.OpcionesEMS.ToList();
+            var decisionCarrera = result.Data!.DecisionAcademica.AniosEducacionMediaSuperior.ToList();
             Assert.Collection(
                 decisionCarrera,
                 item =>
                 {
                     Assert.Equal(2, item.Value);
-                    Assert.Equal("1° EMS (4° año)", item.Label);
+                    Assert.Equal("1\u00b0 EMS (4\u00b0 a\u00f1o)", item.Label);
                 },
                 item =>
                 {
                     Assert.Equal(3, item.Value);
-                    Assert.Equal("2° EMS (5° año)", item.Label);
+                    Assert.Equal("2\u00b0 EMS (5\u00b0 a\u00f1o)", item.Label);
                 },
                 item =>
                 {
                     Assert.Equal(4, item.Value);
-                    Assert.Equal("3° EMS (6° año)", item.Label);
+                    Assert.Equal("3\u00b0 EMS (6\u00b0 a\u00f1o)", item.Label);
                 },
                 item =>
                 {
                     Assert.Equal(0, item.Value);
                     Assert.Equal("Otro", item.Label);
                 });
+        }
 
-            Assert.Equal(decisionCarrera.Select(x => x.Value), result.Data.OpcionesEMS.Select(x => x.Value));
-            Assert.Equal(decisionCarrera.Select(x => x.Label), result.Data.OpcionesEMS.Select(x => x.Label));
+        [Fact]
+        public void ObtenerEncuestaInicial_IncludesDynamicCatalogsBySection()
+        {
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(
+            [
+                new AnioBachiller
+                {
+                    IdAnioBachiller = 10,
+                    CantAniosAnioBachiller = 6,
+                    NombreAnioBachiller = "6 anio",
+                    Titulos =
+                    [
+                        new Titulo
+                        {
+                            CodigoTitulo = 20,
+                            Nombre = "Ingenieria",
+                            OrientacionTitulo = "Fisico Matematica",
+                            OrientacionNewTitulo = "Fisico-Matematica"
+                        }
+                    ]
+                }
+            ]);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(
+            [
+                new Empresa { CodigoEmpresa = 30, Nombre = "Universidad ejemplo" }
+            ]);
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var result = _service.ObtenerEncuestaInicial();
+
+            var anio = Assert.Single(result.Data!.Educacion.AniosBachillerato);
+            Assert.Equal(6, anio.Value);
+            Assert.Equal("6 anio", anio.Label);
+            var orientacion = Assert.Single(anio.Orientaciones);
+            Assert.Equal(20, orientacion.Value);
+            Assert.Equal("Ingenieria", orientacion.Label);
+
+            var universidadEducacion = Assert.Single(result.Data.Educacion.Universidades);
+            var universidadDecision = Assert.Single(result.Data.DecisionAcademica.Universidades);
+            Assert.Equal(30, universidadEducacion.Value);
+            Assert.Equal("Universidad ejemplo", universidadEducacion.Label);
+            Assert.Equal(universidadEducacion.Value, universidadDecision.Value);
+            Assert.Equal(universidadEducacion.Label, universidadDecision.Label);
         }
 
         [Fact]

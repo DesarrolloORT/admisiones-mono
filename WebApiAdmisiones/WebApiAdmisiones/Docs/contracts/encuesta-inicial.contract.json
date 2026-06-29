@@ -1,168 +1,230 @@
-{
-  "version": 1,
+﻿{
+  "version": 2,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
+  "catalogSections": [
+    "educacion",
+    "decisionAcademica",
+    "experienciaOrt",
+    "situacionLaboral"
+  ],
   "fields": {
-    "IdProducto": {
+    "carreraId": {
       "type": "number",
       "catalogEndpoint": "Catalogos/Carreras",
-      "valueField": "idProducto"
+      "valueField": "idProducto",
+      "labelField": "nombreProducto"
     },
-    "IdProceso": {
+    "comienzoId": {
       "type": "number",
-      "catalogEndpoint": "Catalogos/Comienzos?idCarrera={IdProducto}",
-      "valueField": "idProceso"
+      "catalogEndpoint": "Catalogos/Comienzos?idCarrera={carreraId}",
+      "valueField": "idProceso",
+      "labelField": "nombreProceso"
     },
-    "CodigoTitulo": {
+    "orientacionBachilleratoId": {
       "type": "number",
-      "catalogPath": "AniosBachiller[].Bachilleratos",
-      "valueField": "CodigoTitulo",
-      "requiredWhen": "UltimoAnioSexto == 6"
+      "catalogPath": "educacion.aniosBachillerato[].orientaciones",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "anioBachillerato == 6"
     },
-    "UltimoAnioSexto": {
+    "anioBachillerato": {
       "type": "number",
-      "catalogPath": "AniosBachiller",
-      "valueField": "CantAniosAnioBachiller"
+      "catalogPath": "educacion.aniosBachillerato",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "VecesSexto": {
+    "vecesRecursaAnioBachillerato": {
       "type": "number",
-      "requiredWhen": "VecesSextoBool == true"
+      "requiredWhen": "recursaAnioBachillerato == true"
     },
-    "VecesSextoBool": {
+    "recursaAnioBachillerato": {
       "type": "boolean",
-      "allowedValues": [true, false]
+      "allowedOptions": [
+        { "value": true, "label": "Sí" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "InstruccionPadre": {
+    "nivelFormacionPadreTutorId": {
       "type": "number",
-      "catalogPath": "FormacionTutores",
-      "valueField": "Value"
+      "catalogPath": "educacion.nivelesFormacionTutores",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "InstruccionMadre": {
+    "nivelFormacionMadreTutorId": {
       "type": "number",
-      "catalogPath": "FormacionTutores",
-      "valueField": "Value"
+      "catalogPath": "educacion.nivelesFormacionTutores",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "DecisionCarrera": {
+    "anioDecisionCarreraId": {
       "type": "number",
-      "catalogPath": "OpcionesEMS",
-      "valueField": "Value"
+      "catalogPath": "decisionAcademica.aniosEducacionMediaSuperior",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "DecisionUniversidad": {
+    "anioDecisionOrtId": {
       "type": "number",
-      "catalogPath": "OpcionesEMS",
-      "valueField": "Value"
+      "catalogPath": "decisionAcademica.aniosEducacionMediaSuperior",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "InfoOtrasUniversidadesAntes": {
-      "type": "string",
-      "allowedValues": ["SI", "NO"]
+    "seInformoEnOtrasUniversidades": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí, lo hice" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "InfoOtrasLinea1": {
-      "type": "string"
-    },
-    "InfoOtrasLinea2": {
-      "type": "string"
-    },
-    "CompartidoCon": {
+    "informacionOtrasUniversidadesLinea1": { "type": "string" },
+    "informacionOtrasUniversidadesLinea2": { "type": "string" },
+    "apoyoDecisionId": {
       "type": "number",
-      "catalogPath": "CompartidoCon",
-      "valueField": "Value"
+      "catalogPath": "decisionAcademica.apoyosDecision",
+      "valueField": "value",
+      "labelField": "label"
     },
-    "CodigoInstitucionBac": {
+    "institucionSecundariaId": {
       "type": "number",
       "catalogEndpoint": "Catalogos/Instituciones",
-      "valueField": "codigoEmpresa"
+      "valueField": "codigoEmpresa",
+      "labelField": "nombre"
     },
-    "InformarEncuesta": {
-      "type": "string",
-      "allowedValues": ["SI", "NO"]
+    "autorizaInformarEncuesta": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "NombreInstitucion": {
-      "type": "string"
-    },
-    "UltimoAnioSecundaria": {
+    "nombreInstitucionSecundaria": { "type": "string" },
+    "ubicacionUltimoAnioSecundariaId": {
       "type": "number",
-      "allowedValues": [1, 2]
+      "allowedOptions": [
+        { "value": 1, "label": "Uruguay" },
+        { "value": 2, "label": "En el exterior" }
+      ]
     },
-    "TieneEducacionSuperior": {
-      "type": "boolean",
-      "allowedValues": [true, false]
-    },
-    "NivelDecision": {
+    "estadoEducacionSuperiorPreviaId": {
       "type": "number",
-      "allowedValues": [1, 2]
+      "allowedOptions": [
+        { "value": 1, "label": "Sí, en Uruguay" },
+        { "value": 2, "label": "Sí, en el exterior" },
+        { "value": 3, "label": "No" }
+      ]
     },
-    "AsesoramientoOrt": {
-      "type": "boolean",
-      "allowedValues": [true, false]
-    },
-    "ValoracionAsesoramientoOrt": {
+    "nivelDecisionId": {
       "type": "number",
-      "allowedValues": [1, 2, 3, 4, 5],
-      "requiredWhen": "AsesoramientoOrt == true"
+      "allowedOptions": [
+        { "value": 1, "label": "Decidido/a" },
+        { "value": 2, "label": "Con dudas" }
+      ]
     },
-    "VistaSitioWebOrt": {
+    "tuvoAsesoramientoOrt": {
       "type": "boolean",
-      "allowedValues": [true, false]
+      "allowedOptions": [
+        { "value": true, "label": "Sí, tuve" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "ValoracionSitioWeb": {
+    "valoracionAsesoramientoOrtId": {
       "type": "number",
-      "allowedValues": [1, 2, 3, 4, 5],
-      "requiredWhen": "VistaSitioWebOrt == true"
+      "catalogPath": "experienciaOrt.valoraciones",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "tuvoAsesoramientoOrt == true"
     },
-    "VistaInstalacionesOrt": {
+    "visitoSitioWebOrt": {
       "type": "boolean",
-      "allowedValues": [true, false]
+      "allowedOptions": [
+        { "value": true, "label": "Sí, lo visite" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "ValoracionInstalacionesOrt": {
+    "valoracionSitioWebOrtId": {
       "type": "number",
-      "allowedValues": [1, 2, 3, 4, 5],
-      "requiredWhen": "VistaInstalacionesOrt == true"
+      "catalogPath": "experienciaOrt.valoraciones",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "visitoSitioWebOrt == true"
     },
-    "PublicidadOrt": {
+    "visitoInstalacionesOrt": {
       "type": "boolean",
-      "allowedValues": [true, false]
+      "allowedOptions": [
+        { "value": true, "label": "Sí, lo hice" },
+        { "value": false, "label": "No" }
+      ]
     },
-    "InstruccionMadreOrt": {
-      "type": "boolean",
-      "allowedValues": [true, false],
-      "requiredWhen": "InstruccionMadre in [5, 6]"
-    },
-    "InstruccionPadreOrt": {
-      "type": "boolean",
-      "allowedValues": [true, false],
-      "requiredWhen": "InstruccionPadre in [5, 6]"
-    },
-    "TrabajaActualmente": {
-      "type": "boolean",
-      "allowedValues": [true, false]
-    },
-    "TipoJornada": {
+    "valoracionInstalacionesOrtId": {
       "type": "number",
-      "allowedValues": [1, 2],
-      "requiredWhen": "TrabajaActualmente == true"
+      "catalogPath": "experienciaOrt.valoraciones",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "visitoInstalacionesOrt == true"
     },
-    "UniversidadesConsideradas": {
+    "recuerdaPublicidadOrt": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí" },
+        { "value": false, "label": "No recuerdo" }
+      ]
+    },
+    "madreTutorEgresadoOrt": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí" },
+        { "value": false, "label": "No" }
+      ],
+      "requiredWhen": "nivelFormacionMadreTutorId in [5, 6]"
+    },
+    "padreTutorEgresadoOrt": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí" },
+        { "value": false, "label": "No" }
+      ],
+      "requiredWhen": "nivelFormacionPadreTutorId in [5, 6]"
+    },
+    "trabajaActualmente": {
+      "type": "boolean",
+      "allowedOptions": [
+        { "value": true, "label": "Sí, trabajo" },
+        { "value": false, "label": "No" }
+      ]
+    },
+    "tipoJornadaId": {
+      "type": "number",
+      "catalogPath": "situacionLaboral.tiposJornada",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "trabajaActualmente == true"
+    },
+    "universidadConsideradaIds": {
       "type": "array",
-      "catalogPath": "Universidades",
-      "itemValueField": "CodigoEmpresa",
-      "requiredWhen": "InfoOtrasUniversidadesAntes == SI"
+      "catalogPath": "decisionAcademica.universidades",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "seInformoEnOtrasUniversidades == true"
     },
-    "UniversidadesEducacionSuperior": {
+    "universidadEducacionSuperiorIds": {
       "type": "array",
-      "catalogPath": "Universidades",
-      "itemValueField": "CodigoEmpresa",
-      "requiredWhen": "TieneEducacionSuperior == true"
+      "catalogPath": "educacion.universidades",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "estadoEducacionSuperiorPreviaId in [1, 2]"
     },
-    "OpcionesPublicidadSeleccionadas": {
+    "publicidadOrtIds": {
       "type": "array",
-      "catalogPath": "PublicidadesEleccion",
-      "itemValueField": "IdPublicidad",
-      "requiredWhen": "PublicidadOrt == true"
+      "catalogPath": "experienciaOrt.publicidadesOrt",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "recuerdaPublicidadOrt == true"
     },
-    "OpcionesMotivosSeleccionados": {
+    "motivoEleccionOrtIds": {
       "type": "array",
-      "catalogPath": "MotivosEleccion",
-      "itemValueField": "IdMotivo",
+      "catalogPath": "decisionAcademica.motivosEleccionOrt",
+      "itemValueField": "value",
+      "itemLabelField": "label",
       "requiredForDefinitivo": true
     }
   }

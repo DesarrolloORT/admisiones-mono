@@ -1,4 +1,4 @@
-using AppLogic.Dtos.EncuestaInicial;
+﻿using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Dtos.Inscripciones;
 using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
@@ -1037,7 +1037,7 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
                 TrabajaActualmente = true,
-                TipoJornada = 1
+                TipoJornadaId = 1
             });
 
             Assert.True(result.Success);
@@ -1067,7 +1067,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
-                TipoJornada = 2
+                TipoJornadaId = 2
             });
 
             Assert.True(result.Success);
@@ -1093,7 +1093,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
-                OpcionesMotivosSeleccionados = []
+                MotivoEleccionOrtIds = []
             });
 
             Assert.True(result.Success);
@@ -1429,29 +1429,26 @@ namespace UnitTesting.AppLogic.Services
         {
             return new DtoGuardarEncuestaInicialRequest
             {
-                IdProducto = 10,
-                IdProceso = 20,
-                CodigoTitulo = codigoTitulo,
-                UltimoAnioSexto = ultimoAnioSexto,
-                InstruccionPadre = 1,
-                InstruccionMadre = 1,
-                DecisionCarrera = 2,
-                DecisionUniversidad = 2,
-                InfoOtrasUniversidadesAntes = "NO",
-                CompartidoCon = 1,
-                CodigoInstitucionBac = 50,
-                InformarEncuesta = "NO",
-                UltimoAnioSecundaria = 1,
-                TieneEducacionSuperior = false,
-                NivelDecision = 1,
-                AsesoramientoOrt = false,
-                VistaSitioWebOrt = false,
-                VistaInstalacionesOrt = false,
-                PublicidadOrt = false,
-                OpcionesMotivosSeleccionados =
-                [
-                    new DtoEncuestaMotivoRequest { IdMotivo = 1 }
-                ]
+                CarreraId = 10,
+                ComienzoId = 20,
+                OrientacionBachilleratoId = codigoTitulo,
+                AnioBachillerato = ultimoAnioSexto,
+                NivelFormacionPadreTutorId = 1,
+                NivelFormacionMadreTutorId = 1,
+                AnioDecisionCarreraId = 2,
+                AnioDecisionOrtId = 2,
+                SeInformoEnOtrasUniversidades = false,
+                ApoyoDecisionId = 1,
+                InstitucionSecundariaId = 50,
+                AutorizaInformarEncuesta = false,
+                UbicacionUltimoAnioSecundariaId = 1,
+                EstadoEducacionSuperiorPreviaId = 3,
+                NivelDecisionId = 1,
+                TuvoAsesoramientoOrt = false,
+                VisitoSitioWebOrt = false,
+                VisitoInstalacionesOrt = false,
+                RecuerdaPublicidadOrt = false,
+                MotivoEleccionOrtIds = [1]
             };
         }
 
@@ -1733,7 +1730,7 @@ namespace UnitTesting.AppLogic.Services
                     Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
                     Paquete = new Paquete
                     {
-                        Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en Diseño Gráfico" }
+                        Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en DiseÃ±o GrÃ¡fico" }
                     }
                 }
             };
@@ -1748,7 +1745,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(result.Data.Detalle);
             Assert.Equal(99, result.Data.Detalle!.IdOferta);
             Assert.Equal(10, result.Data.Detalle!.IdProducto);
-            Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Detalle.Carrera);
+            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Detalle.Carrera);
             Assert.Equal("Marzo 2026", result.Data.Detalle.Comienzo);
             Assert.Equal("Matutino", result.Data.Detalle.Turno);
         }
@@ -1843,7 +1840,7 @@ namespace UnitTesting.AppLogic.Services
                             Producto = new Producto
                             {
                                 IdProducto = 10,
-                                NombreWebProducto = "Licenciatura en Diseño Gráfico",
+                                NombreWebProducto = "Licenciatura en DiseÃ±o GrÃ¡fico",
                                 NombreCoordAcadProducto = "No usar",
                                 EmailCoordAcadProducto = "no.usar@ort.edu.uy"
                             }
@@ -1865,12 +1862,12 @@ namespace UnitTesting.AppLogic.Services
                 {
                     IdInscripto = 555,
                     CooacadCodigo = 1,
-                    CooacadPrimerNombre = "María ",
-                    CooacadPrimerApellido = " Rodríguez",
+                    CooacadPrimerNombre = "MarÃ­a ",
+                    CooacadPrimerApellido = " RodrÃ­guez",
                     MailAcad = " maria.rodriguez@ort.edu.uy ",
                     CoorespCodigo = 2,
                     CoorespPrimerNombre = "Juan",
-                    CoorespPrimerApellido = "Pérez",
+                    CoorespPrimerApellido = "PÃ©rez",
                     MailResp = "juan.perez@ort.edu.uy"
                 }
             });
@@ -1879,9 +1876,9 @@ namespace UnitTesting.AppLogic.Services
             var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
             creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>
             {
-                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estética I" },
-                new() { IdInscripto = 555, IdMateria = 2, DescripcionMateria = "Fotografía y edición de video" },
-                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estética I duplicada" },
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estÃ©tica I" },
+                new() { IdInscripto = 555, IdMateria = 2, DescripcionMateria = "FotografÃ­a y ediciÃ³n de video" },
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estÃ©tica I duplicada" },
                 new() { IdInscripto = 555, IdMateria = null, DescripcionMateria = "Sin materia" }
             });
             _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
@@ -1892,13 +1889,13 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Confirmada", result.Data!.Estado);
             Assert.NotNull(result.Data.Confirmada);
             Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
-            Assert.Equal("Licenciatura en Diseño Gráfico", result.Data.Confirmada.Resumen.Carrera);
-            Assert.Equal("María Rodríguez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
+            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
+            Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
             Assert.Equal("maria.rodriguez@ort.edu.uy", result.Data.Confirmada.CoordinadorAcademico.Email);
-            Assert.Equal("Juan Pérez", result.Data.Confirmada.CoordinadorCursos!.Nombre);
+            Assert.Equal("Juan PÃ©rez", result.Data.Confirmada.CoordinadorCursos!.Nombre);
             Assert.Equal("juan.perez@ort.edu.uy", result.Data.Confirmada.CoordinadorCursos.Email);
             Assert.Equal(2, result.Data.Confirmada.MateriasPrimerSemestre.Count);
-            Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estética I");
+            Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estÃ©tica I");
         }
 
         [Fact]
@@ -1921,7 +1918,7 @@ namespace UnitTesting.AppLogic.Services
                         Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
                         Paquete = new Paquete
                         {
-                            Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en Diseño Gráfico" }
+                            Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en DiseÃ±o GrÃ¡fico" }
                         }
                     }
                 }
@@ -1937,12 +1934,12 @@ namespace UnitTesting.AppLogic.Services
                 {
                     IdInscripto = 555,
                     CooacadCodigo = 10,
-                    CooacadPrimerNombre = "María",
-                    CooacadPrimerApellido = "Rodríguez",
+                    CooacadPrimerNombre = "MarÃ­a",
+                    CooacadPrimerApellido = "RodrÃ­guez",
                     MailAcad = "maria.rodriguez@ort.edu.uy",
                     CoorespCodigo = 10,
-                    CoorespPrimerNombre = "María",
-                    CoorespPrimerApellido = "Rodríguez",
+                    CoorespPrimerNombre = "MarÃ­a",
+                    CoorespPrimerApellido = "RodrÃ­guez",
                     MailResp = "maria.rodriguez@ort.edu.uy"
                 }
             });
@@ -1955,7 +1952,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
             Assert.True(result.Success);
-            Assert.Equal("María Rodríguez", result.Data!.Confirmada!.CoordinadorAcademico!.Nombre);
+            Assert.Equal("MarÃ­a RodrÃ­guez", result.Data!.Confirmada!.CoordinadorAcademico!.Nombre);
             Assert.Null(result.Data.Confirmada.CoordinadorCursos);
         }
 
@@ -2079,3 +2076,4 @@ namespace UnitTesting.AppLogic.Services
         }
     }
 }
+

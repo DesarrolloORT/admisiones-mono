@@ -38,88 +38,120 @@ namespace AppLogic.Services.Catalogos
         {
             using var uow = _uowFactory.Create();
 
+            var opcionesSiNo = new[] { Combo(1, "Sí"), Combo(2, "No") };
+            var universidades = uow.Empresas.GetUniversidades()
+                .Select(e => new DtoUniversidadCatalogo
+                {
+                    Value = e.CodigoEmpresa,
+                    Label = e.Nombre ?? string.Empty
+                })
+                .ToList();
+
             var response = new DtoEncuestaInicialCatalogosResponse
             {
-                NivelConocimiento =
-                [
-                    Combo(1, "Ninguno"),
-                    Combo(2, "Básico"),
-                    Combo(3, "Medio"),
-                    Combo(4, "Superior")
-                ],
-                OpcionesEMS =
-                [
-                    Combo(2, "1° EMS (4° año)"),
-                    Combo(3, "2° EMS (5° año)"),
-                    Combo(4, "3° EMS (6° año)"),
-                    Combo(0, "Otro")
-                ],
-                CompartidoCon =
-                [
-                    Combo(1, "Padres u otros familiares"),
-                    Combo(2, "Amigos de la familia"),
-                    Combo(3, "Amigos propios, compañeros"),
-                    Combo(4, "Otros"),
-                    Combo(5, "Nadie")
-                ],
-                FormacionTutores =
-                [
-                    Combo(1, "Primaria"),
-                    Combo(2, "Secundaria"),
-                    Combo(3, "Formación técnica"),
-                    Combo(4, "Formación universitaria incompleta"),
-                    Combo(5, "Formación universitaria completa"),
-                    Combo(6, "Estudios de postgrado"),
-                    Combo(7, "Otros estudios")
-                ],
-                AniosAprobadosEducacionSuperior =
-                [
-                    Combo(13, "1 año"),
-                    Combo(14, "2 años"),
-                    Combo(15, "3 años"),
-                    Combo(16, "4 años"),
-                    Combo(17, "5 años"),
-                    Combo(18, "6 años"),
-                    Combo(19, "7 años"),
-                    Combo(20, "8 años o más")
-                ],
-                MotivosEleccion = uow.MotivoOpcionesAdmisions.GetAll().ToDtos(),
-                PublicidadesEleccion = uow.PublicidadOpcionesAdmisions.GetAll().ToDtos(),
-                AniosBachiller = uow.AnioBachillers.GetAllWithRelated()
-                    .Select(a => new DtoAnioBachilleratoCatalogo
-                    {
-                        IdAnioBachiller = a.IdAnioBachiller,
-                        NombreAnioBachiller = a.NombreAnioBachiller,
-                        CantAniosAnioBachiller = a.CantAniosAnioBachiller,
-                        Bachilleratos = a.Titulos
-                            .Select(t => new DtoBachilleratoCatalogo
-                            {
-                                CodigoTitulo = t.CodigoTitulo,
-                                Nombre = t.Nombre,
-                                OrientacionTitulo = t.OrientacionTitulo,
-                                OrientacionNewTitulo = t.OrientacionNewTitulo
-                            })
-                            .ToList()
-                    })
-                    .ToList(),
-                Universidades = uow.Empresas.GetUniversidades()
-                    .Select(e => new DtoUniversidadCatalogo
-                    {
-                        CodigoEmpresa = e.CodigoEmpresa,
-                        Nombre = e.Nombre
-                    })
-                    .ToList()
+                Educacion = new DtoEncuestaEducacionCatalogos
+                {
+                    OpcionesSiNo = opcionesSiNo,
+                    UbicacionesUltimoAnioSecundaria =
+                    [
+                        Combo(1, "Uruguay"),
+                        Combo(2, "En el exterior")
+                    ],
+                    EstadosEducacionSuperiorPrevia =
+                    [
+                        Combo(1, "Sí, en Uruguay"),
+                        Combo(2, "Sí, en el exterior"),
+                        Combo(3, "No")
+                    ],
+                    AniosBachillerato = uow.AnioBachillers.GetAllWithRelated()
+                        .Select(a => new DtoAnioBachilleratoCatalogo
+                        {
+                            Value = (long)(a.CantAniosAnioBachiller ?? a.IdAnioBachiller),
+                            Label = a.NombreAnioBachiller ?? $"{a.CantAniosAnioBachiller}",
+                            Orientaciones = a.Titulos
+                                .Select(t => new DtoBachilleratoCatalogo
+                                {
+                                    Value = t.CodigoTitulo,
+                                    Label = t.Nombre ?? string.Empty,
+                                    Orientacion = t.OrientacionTitulo,
+                                    OrientacionNueva = t.OrientacionNewTitulo
+                                })
+                                .ToList()
+                        })
+                        .ToList(),
+                    Universidades = universidades,
+                    NivelesFormacionTutores =
+                    [
+                        Combo(1, "Primaria"),
+                        Combo(2, "Secundaria"),
+                        Combo(3, "Formación técnica"),
+                        Combo(4, "Formación universitaria incompleta"),
+                        Combo(5, "Formación universitaria completa"),
+                        Combo(6, "Estudios de postgrado"),
+                        Combo(7, "Otros estudios")
+                    ]
+                },
+                DecisionAcademica = new DtoEncuestaDecisionAcademicaCatalogos
+                {
+                    AniosEducacionMediaSuperior =
+                    [
+                        Combo(2, "1° EMS (4° año)"),
+                        Combo(3, "2° EMS (5° año)"),
+                        Combo(4, "3° EMS (6° año)"),
+                        Combo(0, "Otro")
+                    ],
+                    ApoyosDecision =
+                    [
+                        Combo(1, "Padres u otros familiares"),
+                        Combo(2, "Amigos de la familia"),
+                        Combo(3, "Amigos propios, compañeros"),
+                        Combo(4, "Otros"),
+                        Combo(5, "Nadie")
+                    ],
+                    NivelesDecision =
+                    [
+                        Combo(1, "Decidido/a"),
+                        Combo(2, "Con dudas")
+                    ],
+                    Universidades = universidades,
+                    MotivosEleccionOrt = uow.MotivoOpcionesAdmisions.GetAll()
+                        .Select(m => Combo(m.IdMotivo, m.NombreMotivo))
+                        .ToList()
+                },
+                ExperienciaOrt = new DtoEncuestaExperienciaOrtCatalogos
+                {
+                    OpcionesSiNo = opcionesSiNo,
+                    Valoraciones =
+                    [
+                        Combo(1, "1"),
+                        Combo(2, "2"),
+                        Combo(3, "3"),
+                        Combo(4, "4"),
+                        Combo(5, "5")
+                    ],
+                    PublicidadesOrt = uow.PublicidadOpcionesAdmisions.GetAll()
+                        .Select(p => Combo(p.IdPublicidad, p.NombrePublicidad))
+                        .ToList()
+                },
+                SituacionLaboral = new DtoEncuestaSituacionLaboralCatalogos
+                {
+                    OpcionesSiNo = opcionesSiNo,
+                    TiposJornada =
+                    [
+                        Combo(1, "Tiempo completo"),
+                        Combo(2, "Tiempo parcial")
+                    ]
+                }
             };
 
             return OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(response, nameof(ObtenerEncuestaInicial));
         }
 
-        private static DtoComboOption Combo(int value, string label) => new()
+        private static DtoComboOption Combo(long value, string label) => new()
         {
             Value = value,
             Label = label
         };
-
         // Versión async para compatibilidad con controllers async
         public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
         {

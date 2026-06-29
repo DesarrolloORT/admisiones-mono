@@ -1,7 +1,9 @@
 using AppLogic.Dtos.Catalogos;
 using AppLogic.Dtos.EncuestaInicial;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace UnitTesting.AppLogic.Contracts
 {
@@ -12,9 +14,10 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(1, Contract["version"]!.GetValue<int>());
+            Assert.Equal(2, Contract["version"]!.GetValue<int>());
             Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
+            Assert.NotNull(Contract["catalogSections"]);
         }
 
         [Fact]
@@ -23,7 +26,8 @@ namespace UnitTesting.AppLogic.Contracts
             var fields = Contract["fields"]!.AsObject();
             var requestProperties = typeof(DtoGuardarEncuestaInicialRequest)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(p => p.Name)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                .Select(JsonName)
                 .Order()
                 .ToList();
 
@@ -31,11 +35,25 @@ namespace UnitTesting.AppLogic.Contracts
         }
 
         [Fact]
-        public void EncuestaInicialContract_CatalogPathsReferenceCatalogResponse()
+        public void EncuestaInicialContract_CatalogSectionsReferenceCatalogResponse()
         {
             var catalogProperties = typeof(DtoEncuestaInicialCatalogosResponse)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(p => p.Name)
+                .Select(JsonName)
+                .ToHashSet();
+
+            var sections = Contract["catalogSections"]!.AsArray()
+                .Select(s => s!.GetValue<string>())
+                .ToHashSet();
+
+            Assert.Subset(catalogProperties, sections);
+        }
+
+        [Fact]
+        public void EncuestaInicialContract_CatalogPathsReferenceCatalogSections()
+        {
+            var catalogSections = Contract["catalogSections"]!.AsArray()
+                .Select(s => s!.GetValue<string>())
                 .ToHashSet();
 
             foreach (var field in Contract["fields"]!.AsObject())
@@ -47,20 +65,39 @@ namespace UnitTesting.AppLogic.Contracts
                 }
 
                 var root = catalogPath.Split('.')[0].Replace("[]", string.Empty);
-                Assert.Contains(root, catalogProperties);
+                Assert.Contains(root, catalogSections);
             }
         }
 
         [Fact]
-        public void EncuestaInicialContract_PrivateAllowedValuesMatchBackendValidation()
+        public void EncuestaInicialContract_AllowedOptionsExposeValueAndLabel()
         {
-            Assert.Equal([1, 2], AllowedNumbers("UltimoAnioSecundaria"));
-            Assert.Equal([1, 2], AllowedNumbers("NivelDecision"));
-            Assert.Equal([1, 2, 3, 4, 5], AllowedNumbers("ValoracionAsesoramientoOrt"));
-            Assert.Equal([1, 2, 3, 4, 5], AllowedNumbers("ValoracionSitioWeb"));
-            Assert.Equal([1, 2, 3, 4, 5], AllowedNumbers("ValoracionInstalacionesOrt"));
-            Assert.Equal(["SI", "NO"], AllowedStrings("InfoOtrasUniversidadesAntes"));
-            Assert.Equal(["SI", "NO"], AllowedStrings("InformarEncuesta"));
+            foreach (var field in Contract["fields"]!.AsObject())
+            {
+                var allowedOptions = field.Value?["allowedOptions"]?.AsArray();
+                if (allowedOptions == null)
+                {
+                    continue;
+                }
+
+                Assert.NotEmpty(allowedOptions);
+                foreach (var option in allowedOptions)
+                {
+                    Assert.NotNull(option?["value"]);
+                    Assert.False(string.IsNullOrWhiteSpace(option?["label"]?.GetValue<string>()));
+                }
+            }
+        }
+
+        [Fact]
+        public void EncuestaInicialContract_PrivateAllowedOptionsMatchBackendValidation()
+        {
+            Assert.Equal([1, 2], AllowedOptionNumbers("ubicacionUltimoAnioSecundariaId"));
+            Assert.Equal([1, 2, 3], AllowedOptionNumbers("estadoEducacionSuperiorPreviaId"));
+            Assert.Equal([1, 2], AllowedOptionNumbers("nivelDecisionId"));
+            Assert.Equal(["Uruguay", "En el exterior"], AllowedOptionLabels("ubicacionUltimoAnioSecundariaId"));
+            Assert.Equal(["S\u00ed, en Uruguay", "S\u00ed, en el exterior", "No"], AllowedOptionLabels("estadoEducacionSuperiorPreviaId"));
+            Assert.Equal(["Decidido/a", "Con dudas"], AllowedOptionLabels("nivelDecisionId"));
         }
 
         [Fact]
@@ -74,31 +111,37 @@ namespace UnitTesting.AppLogic.Contracts
             Assert.NotEmpty(booleanFields);
             foreach (var field in booleanFields)
             {
-                Assert.Equal([true, false], AllowedBooleans(field));
+                Assert.Equal([true, false], AllowedOptionBooleans(field));
             }
         }
 
-        private static List<int> AllowedNumbers(string field)
+        private static string JsonName(PropertyInfo property)
         {
-            return Contract["fields"]![field]!["allowedValues"]!
+            return property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                ?? JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+        }
+
+        private static List<int> AllowedOptionNumbers(string field)
+        {
+            return Contract["fields"]![field]!["allowedOptions"]!
                 .AsArray()
-                .Select(v => v!.GetValue<int>())
+                .Select(v => v!["value"]!.GetValue<int>())
                 .ToList();
         }
 
-        private static List<string> AllowedStrings(string field)
+        private static List<string> AllowedOptionLabels(string field)
         {
-            return Contract["fields"]![field]!["allowedValues"]!
+            return Contract["fields"]![field]!["allowedOptions"]!
                 .AsArray()
-                .Select(v => v!.GetValue<string>())
+                .Select(v => v!["label"]!.GetValue<string>())
                 .ToList();
         }
 
-        private static List<bool> AllowedBooleans(string field)
+        private static List<bool> AllowedOptionBooleans(string field)
         {
-            return Contract["fields"]![field]!["allowedValues"]!
+            return Contract["fields"]![field]!["allowedOptions"]!
                 .AsArray()
-                .Select(v => v!.GetValue<bool>())
+                .Select(v => v!["value"]!.GetValue<bool>())
                 .ToList();
         }
 

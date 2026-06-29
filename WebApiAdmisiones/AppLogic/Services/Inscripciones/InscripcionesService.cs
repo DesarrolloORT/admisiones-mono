@@ -1,4 +1,4 @@
-using AppLogic.Dtos.EncuestaInicial;
+﻿using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Dtos.Inscripciones;
 using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
@@ -470,8 +470,8 @@ namespace AppLogic.Services.Inscripciones
             DtoGuardarEncuestaInicialRequest request,
             BusinessLogic.Entities.EncuestaIniAdmision encuesta)
         {
-            var idProducto = request.IdProducto ?? encuesta.IdProducto;
-            var idProceso = request.IdProceso ?? encuesta.IdProceso;
+            var idProducto = request.CarreraId ?? encuesta.IdProducto;
+            var idProceso = request.ComienzoId ?? encuesta.IdProceso;
             long? idComienzo = encuesta.IdComienzo;
 
             if (idProducto.HasValue && idProceso.HasValue)
@@ -609,9 +609,9 @@ namespace AppLogic.Services.Inscripciones
                 actualizaPersona = true;
             }
 
-            if (request.TipoJornada.HasValue)
+            if (request.TipoJornadaId.HasValue)
             {
-                persona.TipoJornada = (byte)request.TipoJornada.Value;
+                persona.TipoJornada = (byte)request.TipoJornadaId.Value;
                 actualizaPersona = true;
             }
 
@@ -873,3 +873,4 @@ namespace AppLogic.Services.Inscripciones
         #endregion PASO 3 - PAGOS
     }
 }
+
