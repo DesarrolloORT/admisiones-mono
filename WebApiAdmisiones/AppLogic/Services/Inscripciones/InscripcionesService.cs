@@ -886,6 +886,53 @@ namespace AppLogic.Services.Inscripciones
                 : OperationResult<string>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
         }
 
+        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request)
+        {
+            const string methodName = nameof(PagarCuentaPersonal);
+
+            if (request == null)
+            {
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed("INS_PC_00", methodName, "Request invalido.", 400);
+            }
+
+            if (request.IdInscripto <= 0)
+            {
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed("INS_PC_01", methodName, "IdInscripto invalido.", 400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            if (uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona) == null)
+            {
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed("INS_PC_02", methodName, "No se encontro la inscripcion para la persona.", 404);
+            }
+
+            var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(request.IdInscripto);
+            if (!carritos.Success)
+            {
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(carritos.ErrorCode, methodName, carritos.Message, carritos.HttpCode);
+            }
+
+            if (carritos.Data?.Carritos == null || carritos.Data.Carritos.Count == 0)
+            {
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed("INS_PC_03", methodName, "No hay carritos para la inscripcion.", 404);
+            }
+
+            var payload = carritos.Data.Carritos
+                .Select(c => new ClaveValorCarrito
+                {
+                    ClaveCarrito = c.IdCarrito,
+                    CantidadCuotasAPagar = CantidadCuotasSeniaLegacy,
+                    Banco = string.Empty
+                })
+                .ToList();
+
+            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosAsync(payload);
+            return pagoResult.Success
+                ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
+                : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
+        }
+
         public OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
         {
             const string methodName = nameof(GuardarMetodoPago);

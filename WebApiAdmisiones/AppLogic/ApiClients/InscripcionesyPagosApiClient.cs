@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using AppLogic.Dtos.Inscripciones;
 using Microsoft.Extensions.Logging;
 using Utilities;
 
@@ -95,7 +96,7 @@ namespace AppLogic.ApiClients
 
     /// <summary>
     /// DTO para par clave-valor usado en carritos de pago.
-    /// Usado en: POST /Pagos/Carritos/{id}/Pagar y POST /Carritos/UltCrearFactura
+    /// Usado en: POST /Pagos/Carritos/Pagar y POST /Carritos/UrlCrearFactura
     /// </summary>
     public class ClaveValorCarrito
     {
@@ -156,18 +157,6 @@ namespace AppLogic.ApiClients
         public decimal Monto { get; set; }
         public string? Estado { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-    }
-
-    /// <summary>
-    /// Response de pago realizado.
-    /// Corresponde a: POST /Pagos/Carritos/{id}/Pagar
-    /// </summary>
-    public class PagoCarritoResponse
-    {
-        public bool Success { get; set; }
-        public string? Message { get; set; }
-        public long? IdTransaccion { get; set; }
-        public string? NumeroComprobante { get; set; }
     }
 
     /// <summary>
@@ -506,16 +495,8 @@ namespace AppLogic.ApiClients
             }
         }
 
-        /// <summary>
-        /// Procesa un pago de carrito.
-        /// Corresponde a: POST /OMTSecure/Pagos/Carritos/{id}/Pagar
-        /// </summary>
-        /// <param name="idCarrito">ID del carrito a pagar</param>
-        /// <param name="carritos">Lista de pares clave-valor con datos del carrito</param>
-        /// <param name="tipoPago">Tipo de pago (ej: "PAGO_CUENTA_CORRIENTE_...")</param>
-        /// <returns>Resultado del pago procesado</returns>
-        public async Task<OperationResult<PagoCarritoResponse>> PagarCarritoAsync(
-            long idCarrito,
+        /// <summary>Procesa pagos de carritos contra la API legacy.</summary>
+        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCarritosAsync(
             List<ClaveValorCarrito> carritos,
             string tipoPago = "PAGO_CUENTA_CORRIENTE")
         {
@@ -524,24 +505,24 @@ namespace AppLogic.ApiClients
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                    "Procesando pago de carrito {IdCarrito} con tipo de pago: {TipoPago}",
-                    idCarrito,
+                    "Procesando pago de {CantidadCarritos} carritos con tipo de pago: {TipoPago}",
+                    carritos.Count,
                     tipoPago
                     );
                 }
-                var url = $"/ORTSecure/Pagos/Carritos/{idCarrito}/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var url = $"ORTSecure/Pagos/Carritos/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<PagoCarritoResponse>();
-                    return OperationResult<PagoCarritoResponse>.Ok(result!, nameof(PagarCarritoAsync));
+                    var result = await response.Content.ReadFromJsonAsync<List<DtoMensajePagoCarrito>>();
+                    return OperationResult<List<DtoMensajePagoCarrito>>.Ok(result!, nameof(PagarCarritosAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<PagoCarritoResponse>.IsFailed(
-                    "PAGAR_CARRITO_01",
-                    nameof(PagarCarritoAsync),
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(
+                    "PAGAR_CARRITOS_01",
+                    nameof(PagarCarritosAsync),
                     $"La API rechazó el pago: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
@@ -549,7 +530,7 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<PagoCarritoResponse>(ex, nameof(PagarCarritoAsync));
+                return HandleException<List<DtoMensajePagoCarrito>>(ex, nameof(PagarCarritosAsync));
             }
         }
 

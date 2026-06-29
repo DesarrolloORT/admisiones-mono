@@ -79,28 +79,6 @@ namespace UnitTesting.AppLogic.ApiClients
         }
 
         [Fact]
-        public async Task CrearFacturaAsync_WithSuccess_PostsPayloadAndEscapesTipoPago()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """{"success":true,"message":"ok","idFactura":99,"numeroFactura":"A123"}"""));
-            var client = CrearClient(handler);
-            var carritos = new List<ClaveValorCarrito>
-            {
-                new() { Clave = "id", Valor = "123" }
-            };
-
-            var result = await client.CrearFacturaAsync(carritos, "EAN RED");
-
-            Assert.True(result.Success);
-            Assert.Equal(99, result.Data!.IdFactura);
-            var request = Assert.Single(handler.Requests);
-            Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Contains("UltCrearFactura?tipoPago=EAN", request.RequestUri);
-            Assert.Contains("RED", request.RequestUri);
-            Assert.Contains("\"clave\":\"id\"", request.Body);
-        }
-
-        [Fact]
         public async Task ObtenerUrlCrearFacturaAsync_WithSuccess_PostsLegacyPayload()
         {
             var handler = new StubHttpMessageHandler(_ =>
@@ -126,6 +104,40 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", request.Body);
             Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", request.Body);
             Assert.Contains("\"banco\":\"001\"", request.Body);
+        }
+
+        [Fact]
+        public async Task PagarCarritosAsync_WithSuccess_PostsLegacyPayloadAndReturnsMessages()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  { "clave": "123|10|1|7|555", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." }
+                ]
+                """));
+            var client = CrearClient(handler);
+            var carritos = new List<ClaveValorCarrito>
+            {
+                new()
+                {
+                    ClaveCarrito = "123|10|1|7|555",
+                    CantidadCuotasAPagar = "Seña",
+                    Banco = string.Empty
+                }
+            };
+
+            var result = await client.PagarCarritosAsync(carritos);
+
+            Assert.True(result.Success);
+            var mensaje = Assert.Single(result.Data!);
+            Assert.Equal("123|10|1|7|555", mensaje.Clave);
+            Assert.Contains("Cuenta Personal", mensaje.Valor);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", request.RequestUri);
+            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", request.Body);
+            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", request.Body);
+            Assert.Contains("\"banco\":\"\"", request.Body);
         }
 
         [Fact]

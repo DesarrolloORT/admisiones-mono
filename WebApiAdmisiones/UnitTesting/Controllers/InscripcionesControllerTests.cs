@@ -73,6 +73,29 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task PagarCuentaPersonal_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoPagarCuentaPersonalRequest { IdInscripto = 555 };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.PagarCuentaPersonal(1, request))
+                .ReturnsAsync(OperationResult<List<DtoMensajePagoCarrito>>.Ok(
+                    [new DtoMensajePagoCarrito { Clave = "1", Valor = "ok" }],
+                    nameof(IInscripcionesService.PagarCuentaPersonal)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = await controller.PagarCuentaPersonal(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.PagarCuentaPersonal(1, request), Times.Once);
+        }
+
+        [Fact]
         public void GuardarMetodoPago_DelegatesToServiceWithAuthenticatedUser()
         {
             var serviceMock = new Mock<IInscripcionesService>();

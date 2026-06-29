@@ -2068,6 +2068,112 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task PagarCuentaPersonal_WithValidData_PostsAllCarritosAndReturnsMessages()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(request =>
+            {
+                if (request.Method == HttpMethod.Get)
+                {
+                    return JsonResponse(HttpStatusCode.OK,
+                        """
+                        {
+                          "carritos": [
+                            { "idCarrito": "123|10|1|7|555", "senia": 1500.50 },
+                            { "idCarrito": "123|10|1|7|556", "senia": 700 }
+                          ]
+                        }
+                        """);
+                }
+
+                return JsonResponse(HttpStatusCode.OK,
+                    """
+                    [
+                      { "clave": "123|10|1|7|555", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." },
+                      { "clave": "123|10|1|7|556", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." }
+                    ]
+                    """);
+            });
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data!.Count);
+            Assert.Equal("123|10|1|7|555", result.Data[0].Clave);
+            Assert.Equal(2, handler.Requests.Count);
+            Assert.Contains("Pagos/Carritos?idInscripcion=555", handler.Requests[0].RequestUri);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", handler.Requests[1].RequestUri);
+            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", handler.Requests[1].Body);
+            Assert.Contains("\"claveCarrito\":\"123|10|1|7|556\"", handler.Requests[1].Body);
+            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", handler.Requests[1].Body);
+            Assert.Contains("\"banco\":\"\"", handler.Requests[1].Body);
+        }
+
+        [Fact]
+        public async Task PagarCuentaPersonal_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns((Inscripto)null);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = await _service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_PC_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task PagarCuentaPersonal_WhenNoCarritos_ReturnsNotFound()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"carritos":[]}"""));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_PC_03", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task PagarCuentaPersonal_WhenLegacyRejects_ReturnsFailure()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(request =>
+                request.Method == HttpMethod.Get
+                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
+                    : JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+
+            Assert.False(result.Success);
+            Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Contains("saldo insuficiente", result.Message);
+        }
+
+        [Fact]
         public void GuardarMetodoPago_WithValidData_AddsAndSaves()
         {
             InscriptoSeniaMinimum? agregado = null;

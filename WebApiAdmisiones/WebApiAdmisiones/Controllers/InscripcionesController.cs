@@ -106,6 +106,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        [HttpPost("PagarCuentaPersonal")]
+        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 404)]
+        public async Task<IActionResult> PagarCuentaPersonal([FromBody] DtoPagarCuentaPersonalRequest request)
+        {
+            var result = await inscripcionesService.PagarCuentaPersonal(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
         [HttpPost("MetodoPago")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]

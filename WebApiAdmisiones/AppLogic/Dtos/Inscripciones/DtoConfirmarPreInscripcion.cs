@@ -15,6 +15,17 @@ namespace AppLogic.Dtos.Inscripciones
         public string? IdBancoSistarbanc { get; set; }
     }
 
+    public class DtoPagarCuentaPersonalRequest
+    {
+        public long IdInscripto { get; set; }
+    }
+
+    public class DtoMensajePagoCarrito
+    {
+        public string Clave { get; set; } = string.Empty;
+        public string Valor { get; set; } = string.Empty;
+    }
+
     public class DtoConfirmarPreInscripcionRequest
     {
         public bool AceptoReglamento { get; set; }
