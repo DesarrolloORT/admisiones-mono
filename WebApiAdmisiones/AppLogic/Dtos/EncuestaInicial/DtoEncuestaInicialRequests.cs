@@ -32,6 +32,7 @@ namespace AppLogic.Dtos.EncuestaInicial
         public bool? InstruccionMadreOrt { get; set; }
         public bool? InstruccionPadreOrt { get; set; }
         public bool? TrabajaActualmente { get; set; }
+        public long? TipoJornada { get; set; }
         public List<DtoEncuestaEmpresaRequest>? UniversidadesConsideradas { get; set; }
         public List<DtoEncuestaEmpresaRequest>? UniversidadesEducacionSuperior { get; set; }
         public List<DtoEncuestaPublicidadRequest>? OpcionesPublicidadSeleccionadas { get; set; }

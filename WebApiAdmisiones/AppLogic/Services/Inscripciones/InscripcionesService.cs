@@ -460,9 +460,9 @@ namespace AppLogic.Services.Inscripciones
             }
 
             EncuestaInicialAdmisionHelper.AplicarRequestAEncuesta(encuesta, request, persona, idComienzoResult.Data);
-            var actualizaTrabajaActualmente = AplicarTrabajaActualmente(persona, request);
+            var actualizaPersona = AplicarDatosLaborales(persona, request);
 
-            return PersistirEncuestaInicial(uow, persona, encuesta, request, codigoPersona, esNueva, actualizaTrabajaActualmente);
+            return PersistirEncuestaInicial(uow, persona, encuesta, request, codigoPersona, esNueva, actualizaPersona);
         }
 
         private static OperationResult<long?> ResolverIdComienzoEncuesta(
@@ -499,7 +499,7 @@ namespace AppLogic.Services.Inscripciones
             DtoGuardarEncuestaInicialRequest request,
             long codigoPersona,
             bool esNueva,
-            bool actualizaTrabajaActualmente)
+            bool actualizaPersona)
         {
             uow.BeginTransaction();
             try
@@ -510,7 +510,7 @@ namespace AppLogic.Services.Inscripciones
                 }
 
                 EncuestaInicialAdmisionHelper.AplicarListasHijas(uow, _dbConnectionContext, codigoPersona, request);
-                if (actualizaTrabajaActualmente)
+                if (actualizaPersona)
                 {
                     uow.Personas.Update(persona);
                 }
@@ -594,20 +594,28 @@ namespace AppLogic.Services.Inscripciones
             return OperationResult<bool>.Ok(completitud.Data, nameof(GuardarEncuestaInicial));
         }
 
-        private static bool AplicarTrabajaActualmente(BusinessLogic.Entities.Persona persona, DtoGuardarEncuestaInicialRequest request)
+        private static bool AplicarDatosLaborales(BusinessLogic.Entities.Persona persona, DtoGuardarEncuestaInicialRequest request)
         {
             if (!string.Equals(persona.TipoPersona, PersonaConstants.TipoPersonaSgi, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            if (request.TrabajaActualmente == null)
+            var actualizaPersona = false;
+
+            if (request.TrabajaActualmente.HasValue)
             {
-                return false;
+                persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
+                actualizaPersona = true;
             }
 
-            persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
-            return true;
+            if (request.TipoJornada.HasValue)
+            {
+                persona.TipoJornada = (byte)request.TipoJornada.Value;
+                actualizaPersona = true;
+            }
+
+            return actualizaPersona;
         }
 
         private OperationResult<bool> SincronizarBachilleratoPersona(

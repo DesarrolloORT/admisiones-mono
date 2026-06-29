@@ -136,6 +136,11 @@
       "type": "boolean",
       "allowedValues": [true, false]
     },
+    "TipoJornada": {
+      "type": "number",
+      "allowedValues": [1, 2],
+      "requiredWhen": "TrabajaActualmente == true"
+    },
     "UniversidadesConsideradas": {
       "type": "array",
       "catalogPath": "Universidades",

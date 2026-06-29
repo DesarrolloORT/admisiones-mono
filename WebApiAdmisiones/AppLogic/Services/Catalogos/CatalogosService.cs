@@ -72,12 +72,6 @@ namespace AppLogic.Services.Catalogos
                     Combo(6, "Estudios de postgrado"),
                     Combo(7, "Otros estudios")
                 ],
-                EstadoEducacionSuperior =
-                [
-                    Combo(3, "Egresado"),
-                    Combo(1, "En curso"),
-                    Combo(2, "Abandonado")
-                ],
                 AniosAprobadosEducacionSuperior =
                 [
                     Combo(13, "1 año"),

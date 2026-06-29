@@ -218,6 +218,14 @@ namespace UnitTesting.AppLogic.Helpers
         }
 
         [Fact]
+        public void Parcial_TipoJornadaInvalido_INS_EI_48()
+        {
+            var req = RequestValido();
+            req.TipoJornada = 3;
+            Assert.Equal("INS_EI_48", ErrorDe(new ParcialCtx(), req));
+        }
+
+        [Fact]
         public void Parcial_ValoracionAsesoramientoInvalida_INS_EI_16()
         {
             var req = RequestValido();
@@ -319,6 +327,14 @@ namespace UnitTesting.AppLogic.Helpers
             req.CodigoInstitucionBac = null; // evitar INS_EI_20 antes de llegar a las listas
             req.UniversidadesConsideradas = [new DtoEncuestaEmpresaRequest { CodigoEmpresa = 99 }];
             Assert.Equal("INS_EI_27", ErrorDe(ctx, req));
+        }
+
+        [Fact]
+        public void Parcial_TrabajaActualmenteSinTipoJornada_INS_EI_49()
+        {
+            var req = RequestValido();
+            req.TrabajaActualmente = true;
+            Assert.Equal("INS_EI_49", ErrorDe(new ParcialCtx(), req));
         }
 
         // ====================== ResolverCompletitud ======================

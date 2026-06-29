@@ -15,6 +15,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         private static readonly long[] UltimoAnioSecundariaCatalogo = [1, 2];
         private static readonly long[] NivelDecisionCatalogo = [1, 2];
         private static readonly long[] ValoracionesCatalogo = [1, 2, 3, 4, 5];
+        private static readonly long[] TipoJornadaCatalogo = [1, 2];
 
         private sealed record DatosAcademicosEncuesta(
             long? CodigoInstitucionBac,
@@ -109,6 +110,8 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
             if (ValorNoPermitido(request.NivelDecision, NivelDecisionCatalogo))
                 return OperationResult<bool>.IsFailed("INS_EI_15", methodName, "Nivel de decision invalido.", 400);
+            if (ValorNoPermitido(request.TipoJornada, TipoJornadaCatalogo))
+                return OperationResult<bool>.IsFailed("INS_EI_48", methodName, "Tipo jornada invalido.", 400);
             if (request.CodigoTitulo.HasValue && request.CodigoTitulo <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_21", methodName, "Titulo invalido.", 400);
             if (request.CodigoTitulo.HasValue && !TituloCatalogado(uow, request.CodigoTitulo.Value))
@@ -372,6 +375,8 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_46", methodName, "Debe indicar si la madre o tutor obtuvo el titulo en ORT.", 400);
             if (EsInstruccionAlta(request.InstruccionPadre ?? 0) && !request.InstruccionPadreOrt.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_47", methodName, "Debe indicar si el padre o tutor obtuvo el titulo en ORT.", 400);
+            if (request.TrabajaActualmente == true && !request.TipoJornada.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_49", methodName, "Debe indicar el tipo jornada.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
         }

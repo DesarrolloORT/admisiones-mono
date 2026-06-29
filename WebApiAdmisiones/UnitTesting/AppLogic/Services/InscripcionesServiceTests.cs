@@ -1036,11 +1036,42 @@ namespace UnitTesting.AppLogic.Services
 
             var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
             {
-                TrabajaActualmente = true
+                TrabajaActualmente = true,
+                TipoJornada = 1
             });
 
             Assert.True(result.Success);
             personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_ParcialSgiConTipoJornada_ActualizaPersona()
+        {
+            var persona = new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "DE",
+                Documento = "123",
+                TipoPersona = "SGI"
+            };
+            var personaRepo = new Mock<IPersonaRepository>();
+            personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(901);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                TipoJornada = 2
+            });
+
+            Assert.True(result.Success);
+            personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TipoJornada == 2)), Times.Once);
         }
 
         [Fact]
