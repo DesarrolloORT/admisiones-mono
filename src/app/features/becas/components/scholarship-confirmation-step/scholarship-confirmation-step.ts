@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import {
   OrtButtonModule,
   OrtCardModule,
@@ -6,6 +6,8 @@ import {
   OrtIconModule,
   OrtSnackbarModule,
 } from '@desarrolloort/components';
+
+import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
 
 @Component({
   selector: 'app-scholarship-confirmation-step',
@@ -20,4 +22,6 @@ export class ScholarshipConfirmationStep {
   protected onConfirmApplication(): void {
     this.confirmApplication.emit();
   }
+
+  readonly variant = input.required<ScholarshipVariant>();
 }

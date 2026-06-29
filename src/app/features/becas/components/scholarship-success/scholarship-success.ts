@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   OrtButtonModule,
@@ -7,6 +7,8 @@ import {
   OrtStatusIconModule,
 } from '@desarrolloort/components';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
+
+import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
 
 @Component({
   selector: 'app-scholarship-success',
@@ -23,4 +25,6 @@ export class ScholarshipSuccess {
   protected goHome(): void {
     void this.router.navigate(['/inicio']);
   }
+
+  readonly variant = input.required<ScholarshipVariant>();
 }

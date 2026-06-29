@@ -14,12 +14,16 @@
 
 .success-screen__content {
   padding-inline: var(--ort-sys-spacing-8);
-  padding-top: var(--ort-sys-spacing-64);
   text-align: center;
 }
 
 .success-screen {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--ort-sys-spacing-48);
-  margin: var(--ort-sys-spacing-24);
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  padding: var(--ort-sys-spacing-24);
 }

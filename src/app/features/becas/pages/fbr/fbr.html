@@ -18,7 +18,7 @@
   (logoutRequested)="logout()">
   <main class="scholarship-process__main">
     @switch (process.currentStep()) { @case ('info-postulacion') {
-    <app-scholarship-confirmation-step (confirmApplication)="showSuccess()" />
+    <app-scholarship-confirmation-step variant="fbr" (confirmApplication)="showSuccess()" />
     <!-- <app-scholarship-academic-step variant="fbr" /> -->
     } @case ('info-personal') {
     <app-scholarship-personal-step variant="fbr" />
@@ -28,5 +28,5 @@
   </main>
 </app-process-layout>
 } @else {
-<app-scholarship-success />
+<app-scholarship-success variant="fbc" />
 }

@@ -29,12 +29,20 @@
   <ort-card aria-label="Detalle de tu postulación" role="region">
     <ort-card-content>
       <h3 class="card-title" ortCardTitle>Detalle de tu postulación</h3>
+      @if (variant() === 'fexaCon' || variant() === 'fexaSin' || variant() === 'fbc') {
       <div class="card-item">
         <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
         <p class="card-item__text">
           <span class="card-item__label">Beca aplicada</span>
+          @switch (variant()) { @case('fexaCon'){
           <span class="card-item__value">Fondo de Excelencia Académica</span>
           <span class="card-item__label">Hasta 60%</span>
+          } @case('fexaSin'){
+          <span class="card-item__value">Fondo de Excelencia Académica</span>
+          <span class="card-item__label">Hasta 35%</span>
+          } @case('fbc'){
+          <span class="card-item__value">Fondo de becas concursables</span>
+          } }
         </p>
       </div>
       <div class="card-item">
@@ -51,6 +59,26 @@
           <span class="card-item__value">Lunes 24/07/2025</span>
         </p>
       </div>
+      } @else {
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Beca aplicada</span>
+          @if (variant() === 'fbr') {
+          <span class="card-item__value">Fondo de becas de reválidas</span>
+          }@else if (variant() === 'fcl') {
+          <span class="card-item__value">Fondo de beca de capacitación laboral</span>
+          }
+        </p>
+      </div>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="event" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Fecha de resolución</span>
+          <span class="card-item__value">Lunes 24/07/2025</span>
+        </p>
+      </div>
+      }
     </ort-card-content>
   </ort-card>
 
