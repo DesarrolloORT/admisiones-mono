@@ -39,6 +39,9 @@ namespace AppLogic.DevartDTOs
             target.IdNivelProducto = source.IdNivelProducto;
             target.NombreNivelProducto = source.NombreNivelProducto;
             target.OrdenListadoNivelProducto = source.OrdenListadoNivelProducto;
+            target.IdEscuela = source.IdEscuela;
+            target.NombreExtensoEscuela = source.NombreExtensoEscuela;
+            target.OrdenListadoEscuela = source.OrdenListadoEscuela;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -59,6 +62,9 @@ namespace AppLogic.DevartDTOs
             target.IdNivelProducto = source.IdNivelProducto;
             target.NombreNivelProducto = source.NombreNivelProducto;
             target.OrdenListadoNivelProducto = source.OrdenListadoNivelProducto;
+            target.IdEscuela = source.IdEscuela;
+            target.NombreExtensoEscuela = source.NombreExtensoEscuela;
+            target.OrdenListadoEscuela = source.OrdenListadoEscuela;
 
             // User-defined partial method
             OnEntityCreating(source, target);

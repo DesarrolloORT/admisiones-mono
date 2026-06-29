@@ -47290,7 +47290,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>2ff8dfde-f923-4bbc-9fb8-5834b0d5aad4</Path>
+                      <Path>3ac05b45-1210-4baf-ab43-c59616a72e9e</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
                     </Oid>
                   </Model>
@@ -47309,7 +47309,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>b1b076cb-df4a-482d-aa18-4f47a4d93799</Path>
+                      <Path>65b2af99-b447-4c31-819c-a9ce506017e1</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
                     </Oid>
                   </Model>
@@ -47328,7 +47328,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>3383817b-dde1-456a-915a-c0557ad101b2</Path>
+                      <Path>bdfc4775-155c-486b-9d99-e31eb346ae5d</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
                     </Oid>
                   </Model>
@@ -47347,7 +47347,7 @@
                       <Height>18 px</Height>
                     </Size>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>5a624cb1-3a00-4d8b-940c-57a841dd0661</Path>
+                      <Path>6cfddede-7105-406a-a617-53c1fffc6c04</Path>
                       <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
                     </Oid>
                   </Model>
@@ -47355,167 +47355,6 @@
                     <CustomProperties>
                       <OID>2452</OID>
                       <Parent>2447</Parent>
-                    </CustomProperties>
-                    <Children />
-                    <Location>
-                      <X>0.5 px</X>
-                      <Y>72.5 px</Y>
-                    </Location>
-                    <Size>
-                      <Width>144 px</Width>
-                      <Height>18 px</Height>
-                    </Size>
-                    <Oid xsi:type="SchemaModelOID">
-                      <Path>50b4cdd6-834e-4c0b-ac95-3490c8957e01</Path>
-                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
-                    </Oid>
-                  </Model>
-                </Children>
-                <Size>
-                  <Width>145 px</Width>
-                  <Height>91 px</Height>
-                </Size>
-                <MaxSize>
-                  <Width>0 px</Width>
-                  <Height>91 px</Height>
-                </MaxSize>
-              </Model>
-              <Model xsi:type="RelationPropertiesVwModel">
-                <CustomProperties>
-                  <OID>2453</OID>
-                  <Parent>2446</Parent>
-                </CustomProperties>
-                <Children />
-                <Location>
-                  <X>0 px</X>
-                  <Y>90 px</Y>
-                </Location>
-                <Size>
-                  <Width>145 px</Width>
-                  <Height>19 px</Height>
-                </Size>
-                <MaxSize>
-                  <Width>0 px</Width>
-                  <Height>19 px</Height>
-                </MaxSize>
-                <Hidden>false</Hidden>
-              </Model>
-            </Children>
-            <Location>
-              <X>3456 px</X>
-              <Y>2784 px</Y>
-            </Location>
-            <Size>
-              <Width>150 px</Width>
-              <Height>158 px</Height>
-            </Size>
-            <MinSize>
-              <Width>100 px</Width>
-              <Height>158 px</Height>
-            </MinSize>
-            <MaxSize>
-              <Width>800 px</Width>
-              <Height>158 px</Height>
-            </MaxSize>
-            <Ports />
-            <Oid xsi:type="SchemaModelOID">
-              <Path>f9ba9df9-9476-4b93-8dcc-2a955b0e4bb5</Path>
-              <TypeName>EntityDeveloper.EntityFrameworkCore.EntityClass</TypeName>
-            </Oid>
-            <FixedHeight>22 px</FixedHeight>
-          </Model>
-          <Model xsi:type="ClassVwModel">
-            <CustomProperties>
-              <OID>2454</OID>
-              <Parent>0</Parent>
-            </CustomProperties>
-            <Children>
-              <Model xsi:type="PropertiesVwModel">
-                <CustomProperties>
-                  <OID>2455</OID>
-                  <Parent>2454</Parent>
-                </CustomProperties>
-                <Children>
-                  <Model xsi:type="PropertyVwModel">
-                    <CustomProperties>
-                      <OID>2456</OID>
-                      <Parent>2455</Parent>
-                    </CustomProperties>
-                    <Children />
-                    <Location>
-                      <X>0.5 px</X>
-                      <Y>0.5 px</Y>
-                    </Location>
-                    <Size>
-                      <Width>144 px</Width>
-                      <Height>18 px</Height>
-                    </Size>
-                    <Oid xsi:type="SchemaModelOID">
-                      <Path>3ac05b45-1210-4baf-ab43-c59616a72e9e</Path>
-                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
-                    </Oid>
-                  </Model>
-                  <Model xsi:type="PropertyVwModel">
-                    <CustomProperties>
-                      <OID>2457</OID>
-                      <Parent>2455</Parent>
-                    </CustomProperties>
-                    <Children />
-                    <Location>
-                      <X>0.5 px</X>
-                      <Y>18.5 px</Y>
-                    </Location>
-                    <Size>
-                      <Width>144 px</Width>
-                      <Height>18 px</Height>
-                    </Size>
-                    <Oid xsi:type="SchemaModelOID">
-                      <Path>65b2af99-b447-4c31-819c-a9ce506017e1</Path>
-                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
-                    </Oid>
-                  </Model>
-                  <Model xsi:type="PropertyVwModel">
-                    <CustomProperties>
-                      <OID>2458</OID>
-                      <Parent>2455</Parent>
-                    </CustomProperties>
-                    <Children />
-                    <Location>
-                      <X>0.5 px</X>
-                      <Y>36.5 px</Y>
-                    </Location>
-                    <Size>
-                      <Width>144 px</Width>
-                      <Height>18 px</Height>
-                    </Size>
-                    <Oid xsi:type="SchemaModelOID">
-                      <Path>bdfc4775-155c-486b-9d99-e31eb346ae5d</Path>
-                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
-                    </Oid>
-                  </Model>
-                  <Model xsi:type="PropertyVwModel">
-                    <CustomProperties>
-                      <OID>2459</OID>
-                      <Parent>2455</Parent>
-                    </CustomProperties>
-                    <Children />
-                    <Location>
-                      <X>0.5 px</X>
-                      <Y>54.5 px</Y>
-                    </Location>
-                    <Size>
-                      <Width>144 px</Width>
-                      <Height>18 px</Height>
-                    </Size>
-                    <Oid xsi:type="SchemaModelOID">
-                      <Path>6cfddede-7105-406a-a617-53c1fffc6c04</Path>
-                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
-                    </Oid>
-                  </Model>
-                  <Model xsi:type="PropertyVwModel">
-                    <CustomProperties>
-                      <OID>2460</OID>
-                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47543,8 +47382,8 @@
               </Model>
               <Model xsi:type="RelationPropertiesVwModel">
                 <CustomProperties>
-                  <OID>2461</OID>
-                  <Parent>2454</Parent>
+                  <OID>2453</OID>
+                  <Parent>2446</Parent>
                 </CustomProperties>
                 <Children />
                 <Location>
@@ -47587,20 +47426,20 @@
           </Model>
           <Model xsi:type="ClassVwModel">
             <CustomProperties>
-              <OID>2462</OID>
+              <OID>2454</OID>
               <Parent>0</Parent>
             </CustomProperties>
             <Children>
               <Model xsi:type="PropertiesVwModel">
                 <CustomProperties>
-                  <OID>2463</OID>
-                  <Parent>2462</Parent>
+                  <OID>2455</OID>
+                  <Parent>2454</Parent>
                 </CustomProperties>
                 <Children>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2464</OID>
-                      <Parent>2463</Parent>
+                      <OID>2456</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47618,8 +47457,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2465</OID>
-                      <Parent>2463</Parent>
+                      <OID>2457</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47637,8 +47476,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2466</OID>
-                      <Parent>2463</Parent>
+                      <OID>2458</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47656,8 +47495,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2467</OID>
-                      <Parent>2463</Parent>
+                      <OID>2459</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47675,8 +47514,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2468</OID>
-                      <Parent>2463</Parent>
+                      <OID>2460</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47694,8 +47533,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2469</OID>
-                      <Parent>2463</Parent>
+                      <OID>2461</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47713,8 +47552,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2470</OID>
-                      <Parent>2463</Parent>
+                      <OID>2462</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47732,8 +47571,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2471</OID>
-                      <Parent>2463</Parent>
+                      <OID>2463</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47751,8 +47590,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2472</OID>
-                      <Parent>2463</Parent>
+                      <OID>2464</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47770,8 +47609,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2473</OID>
-                      <Parent>2463</Parent>
+                      <OID>2465</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47789,8 +47628,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2474</OID>
-                      <Parent>2463</Parent>
+                      <OID>2466</OID>
+                      <Parent>2455</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47818,8 +47657,8 @@
               </Model>
               <Model xsi:type="RelationPropertiesVwModel">
                 <CustomProperties>
-                  <OID>2475</OID>
-                  <Parent>2462</Parent>
+                  <OID>2467</OID>
+                  <Parent>2454</Parent>
                 </CustomProperties>
                 <Children />
                 <Location>
@@ -47862,20 +47701,20 @@
           </Model>
           <Model xsi:type="ClassVwModel">
             <CustomProperties>
-              <OID>2476</OID>
+              <OID>2468</OID>
               <Parent>0</Parent>
             </CustomProperties>
             <Children>
               <Model xsi:type="PropertiesVwModel">
                 <CustomProperties>
-                  <OID>2477</OID>
-                  <Parent>2476</Parent>
+                  <OID>2469</OID>
+                  <Parent>2468</Parent>
                 </CustomProperties>
                 <Children>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2478</OID>
-                      <Parent>2477</Parent>
+                      <OID>2470</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47893,8 +47732,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2479</OID>
-                      <Parent>2477</Parent>
+                      <OID>2471</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47912,8 +47751,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2480</OID>
-                      <Parent>2477</Parent>
+                      <OID>2472</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47931,8 +47770,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2481</OID>
-                      <Parent>2477</Parent>
+                      <OID>2473</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47950,8 +47789,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2482</OID>
-                      <Parent>2477</Parent>
+                      <OID>2474</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47969,8 +47808,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2483</OID>
-                      <Parent>2477</Parent>
+                      <OID>2475</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -47988,8 +47827,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2484</OID>
-                      <Parent>2477</Parent>
+                      <OID>2476</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48007,8 +47846,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2485</OID>
-                      <Parent>2477</Parent>
+                      <OID>2477</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48026,8 +47865,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2486</OID>
-                      <Parent>2477</Parent>
+                      <OID>2478</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48045,8 +47884,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2487</OID>
-                      <Parent>2477</Parent>
+                      <OID>2479</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48064,8 +47903,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2488</OID>
-                      <Parent>2477</Parent>
+                      <OID>2480</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48083,8 +47922,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2489</OID>
-                      <Parent>2477</Parent>
+                      <OID>2481</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48102,8 +47941,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2490</OID>
-                      <Parent>2477</Parent>
+                      <OID>2482</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48121,8 +47960,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2491</OID>
-                      <Parent>2477</Parent>
+                      <OID>2483</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48140,8 +47979,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2492</OID>
-                      <Parent>2477</Parent>
+                      <OID>2484</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48159,8 +47998,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2493</OID>
-                      <Parent>2477</Parent>
+                      <OID>2485</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48178,8 +48017,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2494</OID>
-                      <Parent>2477</Parent>
+                      <OID>2486</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48197,8 +48036,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2495</OID>
-                      <Parent>2477</Parent>
+                      <OID>2487</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48216,8 +48055,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2496</OID>
-                      <Parent>2477</Parent>
+                      <OID>2488</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48235,8 +48074,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2497</OID>
-                      <Parent>2477</Parent>
+                      <OID>2489</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48254,8 +48093,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2498</OID>
-                      <Parent>2477</Parent>
+                      <OID>2490</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48273,8 +48112,8 @@
                   </Model>
                   <Model xsi:type="PropertyVwModel">
                     <CustomProperties>
-                      <OID>2499</OID>
-                      <Parent>2477</Parent>
+                      <OID>2491</OID>
+                      <Parent>2469</Parent>
                     </CustomProperties>
                     <Children />
                     <Location>
@@ -48302,8 +48141,8 @@
               </Model>
               <Model xsi:type="RelationPropertiesVwModel">
                 <CustomProperties>
-                  <OID>2500</OID>
-                  <Parent>2476</Parent>
+                  <OID>2492</OID>
+                  <Parent>2468</Parent>
                 </CustomProperties>
                 <Children />
                 <Location>
@@ -48344,14 +48183,232 @@
             </Oid>
             <FixedHeight>22 px</FixedHeight>
           </Model>
+          <Model xsi:type="ClassVwModel">
+            <CustomProperties>
+              <OID>2493</OID>
+              <Parent>0</Parent>
+            </CustomProperties>
+            <Children>
+              <Model xsi:type="PropertiesVwModel">
+                <CustomProperties>
+                  <OID>2494</OID>
+                  <Parent>2493</Parent>
+                </CustomProperties>
+                <Children>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2495</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>0.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>3e0b2e6e-8450-4770-9e5b-503b549b0c60</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2496</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>18.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>545b28ff-4f94-4601-8a3a-65209df98135</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2497</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>36.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>e35aef75-7174-4f78-b3d9-5c769e277cf7</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2498</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>54.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>3f4d7534-13c8-490c-b081-5c2bdbf80804</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2499</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>72.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>b4e4045e-83b2-4215-bd4e-c5c8c856f131</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2500</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>90.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>555eb181-553b-44b8-92d8-9d822c60abf8</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2501</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>108.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>854ce4f1-e394-4a3a-b94f-cd09cef9268b</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                  <Model xsi:type="PropertyVwModel">
+                    <CustomProperties>
+                      <OID>2502</OID>
+                      <Parent>2494</Parent>
+                    </CustomProperties>
+                    <Children />
+                    <Location>
+                      <X>0.5 px</X>
+                      <Y>126.5 px</Y>
+                    </Location>
+                    <Size>
+                      <Width>144 px</Width>
+                      <Height>18 px</Height>
+                    </Size>
+                    <Oid xsi:type="SchemaModelOID">
+                      <Path>3be38e56-db2c-48ee-bb24-f2c3f3070c64</Path>
+                      <TypeName>EntityDeveloper.EntityFrameworkCore.EntityProperty</TypeName>
+                    </Oid>
+                  </Model>
+                </Children>
+                <Size>
+                  <Width>145 px</Width>
+                  <Height>145 px</Height>
+                </Size>
+                <MaxSize>
+                  <Width>0 px</Width>
+                  <Height>145 px</Height>
+                </MaxSize>
+              </Model>
+              <Model xsi:type="RelationPropertiesVwModel">
+                <CustomProperties>
+                  <OID>2503</OID>
+                  <Parent>2493</Parent>
+                </CustomProperties>
+                <Children />
+                <Location>
+                  <X>0 px</X>
+                  <Y>144 px</Y>
+                </Location>
+                <Size>
+                  <Width>145 px</Width>
+                  <Height>19 px</Height>
+                </Size>
+                <MaxSize>
+                  <Width>0 px</Width>
+                  <Height>19 px</Height>
+                </MaxSize>
+                <Hidden>false</Hidden>
+              </Model>
+            </Children>
+            <Location>
+              <X>3456 px</X>
+              <Y>2800 px</Y>
+            </Location>
+            <Size>
+              <Width>150 px</Width>
+              <Height>212 px</Height>
+            </Size>
+            <MinSize>
+              <Width>100 px</Width>
+              <Height>212 px</Height>
+            </MinSize>
+            <MaxSize>
+              <Width>800 px</Width>
+              <Height>212 px</Height>
+            </MaxSize>
+            <Ports />
+            <Oid xsi:type="SchemaModelOID">
+              <Path>d7814590-7f8d-4aba-8354-d1a3750ba326</Path>
+              <TypeName>EntityDeveloper.EntityFrameworkCore.EntityClass</TypeName>
+            </Oid>
+            <FixedHeight>22 px</FixedHeight>
+          </Model>
         </Children>
         <GridSize>8 px</GridSize>
         <ViewPort>
           <ScaleMode>Free</ScaleMode>
-          <Scale>1.18</Scale>
+          <Scale>0.78</Scale>
           <Location>
-            <X>3344.91541896063 px</X>
-            <Y>1974.57636099881 px</Y>
+            <X>3121.79498630163 px</X>
+            <Y>2276.92316030469 px</Y>
           </Location>
         </ViewPort>
         <Oid xsi:type="SchemaModelOID">

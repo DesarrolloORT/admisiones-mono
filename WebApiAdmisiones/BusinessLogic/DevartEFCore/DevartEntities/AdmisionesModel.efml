@@ -5350,23 +5350,6 @@
       <column name="ANTICIPADA70PORCIENTO_PROCESO" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
   </class>
-  <class name="VdProductosDisponibles1y2" entity-set="VdProductosDisponibles1y2s" table="VD_PRODUCTOS_DISPONIBLES_1Y2" schema="CREADOR" query-type="True" p1:Guid="f9ba9df9-9476-4b93-8dcc-2a955b0e4bb5">
-    <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="2ff8dfde-f923-4bbc-9fb8-5834b0d5aad4">
-      <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="NombreWebProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="b1b076cb-df4a-482d-aa18-4f47a4d93799">
-      <column name="NOMBRE_WEB_PRODUCTO" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdNivelProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="3383817b-dde1-456a-915a-c0557ad101b2">
-      <column name="ID_NIVEL_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="NombreNivelProducto" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="5a624cb1-3a00-4d8b-940c-57a841dd0661">
-      <column name="NOMBRE_NIVEL_PRODUCTO" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="OrdenListadoNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="50b4cdd6-834e-4c0b-ac95-3490c8957e01">
-      <column name="ORDEN_LISTADO_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-  </class>
   <class name="InscriptoSeniaMinimum" entity-set="InscriptoSeniaMinima" table="T_INSCRIPTO_SENIA_MINIMA" schema="CREADOR" p1:Guid="c68be5be-df92-4fd8-b5d0-3b308499caf6">
     <id name="IdInscripto" type="Int64" p1:ValidateRequired="true" p1:Guid="3ac05b45-1210-4baf-ab43-c59616a72e9e">
       <column name="ID_INSCRIPTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
@@ -5488,6 +5471,32 @@
     </property>
     <property name="DescripcionMateria" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="597a55eb-d57a-4bdf-8748-c500acdabd08">
       <column name="DESCRIPCION_MATERIA" not-null="True" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+  </class>
+  <class name="VdProductosDisponibles1y2" entity-set="VdProductosDisponibles1y2s" table="VD_PRODUCTOS_DISPONIBLES_1Y2" schema="CREADOR" query-type="True" p1:Guid="d7814590-7f8d-4aba-8354-d1a3750ba326">
+    <property name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="3e0b2e6e-8450-4770-9e5b-503b549b0c60">
+      <column name="ID_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreWebProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="545b28ff-4f94-4601-8a3a-65209df98135">
+      <column name="NOMBRE_WEB_PRODUCTO" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdNivelProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="e35aef75-7174-4f78-b3d9-5c769e277cf7">
+      <column name="ID_NIVEL_PRODUCTO" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreNivelProducto" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="3f4d7534-13c8-490c-b081-5c2bdbf80804">
+      <column name="NOMBRE_NIVEL_PRODUCTO" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="OrdenListadoNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b4e4045e-83b2-4215-bd4e-c5c8c856f131">
+      <column name="ORDEN_LISTADO_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdEscuela" type="Int64" p1:ValidateRequired="true" p1:Guid="555eb181-553b-44b8-92d8-9d822c60abf8">
+      <column name="ID_ESCUELA" not-null="True" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="NombreExtensoEscuela" type="String" p1:ValidateMaxLength="60" p1:ValidateRequired="true" p1:Guid="854ce4f1-e394-4a3a-b94f-cd09cef9268b">
+      <column name="NOMBRE_EXTENSO_ESCUELA" not-null="True" length="60" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="OrdenListadoEscuela" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="3be38e56-db2c-48ee-bb24-f2c3f3070c64">
+      <column name="ORDEN_LISTADO_ESCUELA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
   <associations>

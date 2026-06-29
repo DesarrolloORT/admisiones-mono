@@ -38,6 +38,15 @@ namespace AppLogic.DevartDTOs
 
         public long? OrdenListadoNivelProducto { get; set; }
 
+        [Required()]
+        public long IdEscuela { get; set; }
+
+        [StringLength(60)]
+        [Required()]
+        public string NombreExtensoEscuela { get; set; }
+
+        public long? OrdenListadoEscuela { get; set; }
+
         #endregion
     }
 
