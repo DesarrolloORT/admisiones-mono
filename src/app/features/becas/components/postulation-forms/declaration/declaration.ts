@@ -3,7 +3,9 @@ import { FormsModule } from '@angular/forms';
 import {
   OrtButton,
   OrtCardModule,
+  OrtDialogModule,
   OrtDrawer,
+  OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconButton,
   OrtIconModule,
@@ -20,6 +22,7 @@ type MonthlyExpense = {
 
 type Member = {
   id: number;
+  percibeIngresos: 'si' | 'no' | null;
 };
 
 @Component({
@@ -35,15 +38,19 @@ type Member = {
     OrtDrawer,
     OrtIconButton,
     OrtSelectModule,
+    OrtFileUploaderModule,
+    OrtDialogModule,
   ],
   templateUrl: './declaration.html',
   styleUrls: ['../../../pages/fbr/fbr.scss', './declaration.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Declaration {
+  openDialog: boolean = false;
   members = signal<Member[]>([
     {
       id: 1,
+      percibeIngresos: null,
     },
   ]);
 
@@ -54,6 +61,7 @@ export class Declaration {
       ...members,
       {
         id: this.nextMemberId++,
+        percibeIngresos: null,
       },
     ]);
   }

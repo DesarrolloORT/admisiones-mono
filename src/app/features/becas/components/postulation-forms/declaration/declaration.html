@@ -51,13 +51,42 @@
           <input ortNumberInput required [decimals]="0" />
         </ort-form-field>
 
-        <ort-radio-group legend="¿Percibe ingresos?" orientation="vertical" [required]="true">
+        <ort-radio-group
+          legend="¿Percibe ingresos?"
+          orientation="vertical"
+          [name]="'percibeIngresos-' + member.id"
+          [required]="true"
+          [(ngModel)]="member.percibeIngresos">
           <ort-radio-button class="inscription-radio-option" value="si">
             Si, percibe
           </ort-radio-button>
 
           <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
         </ort-radio-group>
+        @if (member.percibeIngresos === 'si') {
+        <ort-form-field>
+          <ort-label>Ingresos nominales</ort-label>
+          <span ortTextPrefix>$</span>
+          <input class="money-input" ortNumberInput required />
+          <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
+        </ort-form-field>
+
+        <ort-form-field>
+          <ort-label>Ingresos líquidos</ort-label>
+          <span ortTextPrefix>$</span>
+          <input class="money-input" ortNumberInput required />
+          <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
+        </ort-form-field>
+
+        <ort-file-uploader
+          display="inline"
+          label="Adjuntá comprobantes de ingresos"
+          [acceptedTypes]="['.pdf', '.jpg', '.png']" />
+
+        <button ort-button type="button" (click)="openDialog = true">
+          ¿Qué comprobante debo subir?
+        </button>
+        }
       </ort-card-content>
     </ort-card>
     }
@@ -66,6 +95,50 @@
       Agregar integrante
     </button>
   </section>
+
+  <ort-dialog
+    align="start"
+    class="scholarship-dialog"
+    showCloseButton="false"
+    title="Comprobantes de ingreso"
+    [(open)]="openDialog">
+    <p class="dialog-text">
+      Subí documentación que respalde los ingresos declarados. Revisa que tipo de comprobante
+      corresponde en cada caso:
+    </p>
+    <ul class="scholarship-dialog__list">
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Asalariado:</span>
+          recibo de sueldo.
+        </div>
+      </li>
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Independiente, comerciante o arrendador, u otro:</span>
+          constancia de ingresos certificada por escribano o contador público.
+        </div>
+      </li>
+      <li class="scholarship-dialog__list-item">
+        <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+          chevron_right
+        </ort-icon>
+        <div class="scholarship-dialog__list-item-content">
+          <span>Jubilado o pensionista:</span>
+          recibo de jubilación o pensión.
+        </div>
+      </li>
+    </ul>
+    <ng-container ortDialogFooter>
+      <button ort-primary-button type="button" (click)="openDialog = false">Entendido</button>
+    </ng-container>
+  </ort-dialog>
 
   <hr class="subsection-divider" />
 
@@ -129,14 +202,14 @@
 
     <ort-form-field>
       <ort-label>¿Cómo piensas solventar tus estudios?</ort-label>
-      <textarea ortInput required></textarea>
-      <ort-hint align="end">0/400</ort-hint>
+      <textarea #textareaStudies ortInput required></textarea>
+      <ort-hint align="end">{{textareaStudies.value.length}}/400</ort-hint>
     </ort-form-field>
 
     <ort-form-field>
       <ort-label>Otras observaciones</ort-label>
-      <textarea ortInput></textarea>
-      <ort-hint align="end">0/400</ort-hint>
+      <textarea #textareaObservations ortInput></textarea>
+      <ort-hint align="end">{{textareaObservations.value.length}}/400</ort-hint>
     </ort-form-field>
   </section>
 
