@@ -1,22 +1,29 @@
 using BusinessLogic.Entities;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 
 namespace AppLogic.Dtos.Catalogos
 {
+    [ExcludeFromCodeCoverage]
+    public class DtoCarrerasPorNivelResponse
+    {
+        public long IdNivelProducto { get; set; }
+        public string? NombreNivelProducto { get; set; }
+        public List<DtoCarrerasPorEscuelaResponse> Escuelas { get; set; } = [];
+    }
+
+    [ExcludeFromCodeCoverage]
+    public class DtoCarrerasPorEscuelaResponse
+    {
+        public long IdEscuela { get; set; }
+        public string? NombreEscuela { get; set; }
+        public List<DtoCarreraResponse> Productos { get; set; } = [];
+    }
+
     [ExcludeFromCodeCoverage]
     public class DtoCarreraResponse
     {
         public long IdProducto { get; set; }
         public string? NombreProducto { get; set; }
-        public long IdNivelProducto { get; set; }
-        public string? NombreNivelProducto { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public long? IdEscuela { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? NombreEscuela { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
@@ -35,9 +42,7 @@ namespace AppLogic.Dtos.Catalogos
             return new DtoCarreraResponse
             {
                 IdProducto = producto.IdProducto,
-                NombreProducto = producto.NombreWebProducto,
-                IdNivelProducto = producto.IdNivelProducto,
-                NombreNivelProducto = producto.NombreNivelProducto
+                NombreProducto = producto.NombreWebProducto
             };
         }
 
@@ -47,11 +52,7 @@ namespace AppLogic.Dtos.Catalogos
             return new DtoCarreraResponse
             {
                 IdProducto = oferta.IdProducto!.Value,
-                NombreProducto = oferta.NombreWebProducto,
-                IdNivelProducto = oferta.IdNivelProducto,
-                NombreNivelProducto = oferta.NombreNivelProducto,
-                IdEscuela = oferta.IdEscuela,
-                NombreEscuela = oferta.NombreExtensoEscuela
+                NombreProducto = oferta.NombreWebProducto
             };
         }
     }

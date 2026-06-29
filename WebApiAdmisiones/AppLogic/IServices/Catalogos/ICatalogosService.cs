@@ -12,7 +12,7 @@ namespace AppLogic.IServices.Catalogos
         // Versión asíncrona (preferida, soporta cache distribuido)
         Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
         OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
-        OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras(long codigoPersona);
+        OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona);
         OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera);
         Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso);
         OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos();

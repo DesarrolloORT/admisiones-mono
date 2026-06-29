@@ -46,7 +46,7 @@ namespace DataAccess.DevartRepositories
             return objectSet
                 .Where(v => !productosInteresFresco.Contains(v.IdProducto)
                     && !productosInscripto.Contains(v.IdProducto))
-                .OrderBy(v => v.IdNivelProducto)
+                .OrderBy(v => v.OrdenListadoEscuela)
                 .ThenBy(v => v.OrdenListadoNivelProducto)
                 .ToList();
         }

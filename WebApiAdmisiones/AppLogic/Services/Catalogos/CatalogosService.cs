@@ -158,17 +158,79 @@ namespace AppLogic.Services.Catalogos
             return Task.FromResult(ObtenerPaisesEstadosCiudades());
         }
 
-        public OperationResult<IEnumerable<DtoCarreraResponse>> ObtenerCarreras(long codigoPersona)
+        public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona)
         {
             using var uow = _uowFactory.Create();
 
             var nivel12 = uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona)
-                .Select(CarrerasMapper.ToAdmisionesDto);
+                .Select(ToCarreraCatalogoItem);
 
-            var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(CarrerasMapper.ToAdmisionesDto);
+            var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles()
+                .Select(ToCarreraCatalogoItem);
 
-            return OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(nivel12.Concat(nivel34), nameof(ObtenerCarreras));
+            var response = nivel12.Concat(nivel34)
+                .GroupBy(x => new { x.IdNivelProducto, x.NombreNivelProducto })
+                .OrderBy(g => g.Key.IdNivelProducto)
+                .Select(nivel => new DtoCarrerasPorNivelResponse
+                {
+                    IdNivelProducto = nivel.Key.IdNivelProducto,
+                    NombreNivelProducto = nivel.Key.NombreNivelProducto,
+                    Escuelas = nivel
+                        .GroupBy(x => new { x.IdEscuela, x.NombreEscuela })
+                        .OrderBy(g => g.Min(x => x.OrdenEscuela ?? long.MaxValue))
+                        .ThenBy(g => g.Key.NombreEscuela)
+                        .Select(escuela => new DtoCarrerasPorEscuelaResponse
+                        {
+                            IdEscuela = escuela.Key.IdEscuela,
+                            NombreEscuela = escuela.Key.NombreEscuela,
+                            Productos = escuela
+                                .GroupBy(x => x.IdProducto)
+                                .Select(g => g.First())
+                                .OrderBy(x => x.OrdenProducto ?? long.MaxValue)
+                                .ThenBy(x => x.NombreProducto)
+                                .Select(x => new DtoCarreraResponse
+                                {
+                                    IdProducto = x.IdProducto,
+                                    NombreProducto = x.NombreProducto
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.Ok(response, nameof(ObtenerCarreras));
         }
+
+        private static CarreraCatalogoItem ToCarreraCatalogoItem(VdProductosDisponibles1y2 producto) => new(
+            producto.IdProducto,
+            producto.NombreWebProducto,
+            producto.IdNivelProducto,
+            producto.NombreNivelProducto,
+            producto.IdEscuela,
+            producto.NombreExtensoEscuela,
+            producto.OrdenListadoEscuela,
+            producto.OrdenListadoNivelProducto);
+
+        private static CarreraCatalogoItem ToCarreraCatalogoItem(VdOfertasDisponibles3y4 oferta) => new(
+            oferta.IdProducto!.Value,
+            oferta.NombreWebProducto,
+            oferta.IdNivelProducto,
+            oferta.NombreNivelProducto,
+            oferta.IdEscuela,
+            oferta.NombreExtensoEscuela,
+            null,
+            null);
+
+        private sealed record CarreraCatalogoItem(
+            long IdProducto,
+            string? NombreProducto,
+            long IdNivelProducto,
+            string? NombreNivelProducto,
+            long IdEscuela,
+            string? NombreEscuela,
+            long? OrdenEscuela,
+            long? OrdenProducto);
 
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
         {
