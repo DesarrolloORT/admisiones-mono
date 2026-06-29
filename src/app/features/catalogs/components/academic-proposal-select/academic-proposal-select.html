@@ -41,7 +41,9 @@
       <span>{{ selection().careersLoadingMessage() }}</span>
     </output>
 
-    <ort-form-field [hideRequiredMarker]="!!form().controls.carrera.value">
+    <ort-form-field
+      class="academic-proposal-select__desktop-field"
+      [hideRequiredMarker]="!!form().controls.carrera.value">
       <ort-label>Carrera</ort-label>
       <ort-select
         aria-label="Carrera"
@@ -58,6 +60,38 @@
       }
     </ort-form-field>
 
+    <div class="academic-proposal-select__mobile-field">
+      <label class="academic-proposal-select__mobile-label" for="academic-proposal-career-mobile">
+        Carrera
+        <span aria-hidden="true">*</span>
+      </label>
+      <button
+        aria-haspopup="dialog"
+        class="academic-proposal-select__mobile-trigger"
+        id="academic-proposal-career-mobile"
+        type="button"
+        [attr.aria-describedby]="mobileFieldDescribedBy('career')"
+        [attr.aria-expanded]="mobileDrawerField() === 'career'"
+        [attr.aria-invalid]="mobileFieldInvalid('career') ? 'true' : null"
+        [disabled]="mobileFieldDisabled('career')"
+        (click)="openMobileDrawer('career')">
+        <span
+          class="academic-proposal-select__mobile-value"
+          [class.academic-proposal-select__mobile-value--placeholder]="!form().controls.carrera.value">
+          {{ mobileSelectedLabel('career') }}
+        </span>
+        <ort-icon aria-hidden="true">expand_more</ort-icon>
+      </button>
+      @if (mobileFieldInvalid('career')) {
+      <p
+        class="academic-proposal-select__error academic-proposal-select__mobile-error"
+        role="alert"
+        [id]="mobileFieldErrorId('career')">
+        {{ mobileFieldErrorMessage('career') }}
+      </p>
+      }
+    </div>
+
     <output class="academic-proposal-select__loading" [hidden]="!selection().loadingStarts()">
       <ort-spinner aria-label="Cargando comienzos" size="sm" />
       <span>{{ selection().startsLoadingMessage() }}</span>
@@ -65,7 +99,9 @@
 
     <div class="academic-proposal-select__row">
       <div class="academic-proposal-select__field-stack">
-        <ort-form-field [hideRequiredMarker]="!!form().controls.comienzo.value">
+        <ort-form-field
+          class="academic-proposal-select__desktop-field"
+          [hideRequiredMarker]="!!form().controls.comienzo.value">
           <ort-label>Comienzo</ort-label>
           <ort-select
             aria-label="Comienzo"
@@ -82,13 +118,49 @@
           }
         </ort-form-field>
 
+        <div class="academic-proposal-select__mobile-field">
+          <label
+            class="academic-proposal-select__mobile-label"
+            for="academic-proposal-start-mobile">
+            Comienzo
+            <span aria-hidden="true">*</span>
+          </label>
+          <button
+            aria-haspopup="dialog"
+            class="academic-proposal-select__mobile-trigger"
+            id="academic-proposal-start-mobile"
+            type="button"
+            [attr.aria-describedby]="mobileFieldDescribedBy('start')"
+            [attr.aria-expanded]="mobileDrawerField() === 'start'"
+            [attr.aria-invalid]="mobileFieldInvalid('start') ? 'true' : null"
+            [disabled]="mobileFieldDisabled('start')"
+            (click)="openMobileDrawer('start')">
+            <span
+              class="academic-proposal-select__mobile-value"
+              [class.academic-proposal-select__mobile-value--placeholder]="!form().controls.comienzo.value">
+              {{ mobileSelectedLabel('start') }}
+            </span>
+            <ort-icon aria-hidden="true">expand_more</ort-icon>
+          </button>
+          @if (mobileFieldInvalid('start')) {
+          <p
+            class="academic-proposal-select__error academic-proposal-select__mobile-error"
+            role="alert"
+            [id]="mobileFieldErrorId('start')">
+            {{ mobileFieldErrorMessage('start') }}
+          </p>
+          }
+        </div>
+
         <output class="academic-proposal-select__loading" [hidden]="!selection().loadingShifts()">
           <ort-spinner aria-label="Cargando turnos" size="sm" />
           <span>{{ selection().shiftsLoadingMessage() }}</span>
         </output>
       </div>
 
-      <ort-form-field [hideRequiredMarker]="!!form().controls.turno.value">
+      <ort-form-field
+        class="academic-proposal-select__desktop-field"
+        [hideRequiredMarker]="!!form().controls.turno.value">
         <ort-label>Turno</ort-label>
         <ort-select
           aria-label="Turno"
@@ -104,6 +176,91 @@
         <ort-error>Seleccioná un turno</ort-error>
         }
       </ort-form-field>
+
+      <div class="academic-proposal-select__mobile-field">
+        <label class="academic-proposal-select__mobile-label" for="academic-proposal-shift-mobile">
+          Turno
+          <span aria-hidden="true">*</span>
+        </label>
+        <button
+          aria-haspopup="dialog"
+          class="academic-proposal-select__mobile-trigger"
+          id="academic-proposal-shift-mobile"
+          type="button"
+          [attr.aria-describedby]="mobileFieldDescribedBy('shift')"
+          [attr.aria-expanded]="mobileDrawerField() === 'shift'"
+          [attr.aria-invalid]="mobileFieldInvalid('shift') ? 'true' : null"
+          [disabled]="mobileFieldDisabled('shift')"
+          (click)="openMobileDrawer('shift')">
+          <span
+            class="academic-proposal-select__mobile-value"
+            [class.academic-proposal-select__mobile-value--placeholder]="!form().controls.turno.value">
+            {{ mobileSelectedLabel('shift') }}
+          </span>
+          <ort-icon aria-hidden="true">expand_more</ort-icon>
+        </button>
+        @if (mobileFieldInvalid('shift')) {
+        <p
+          class="academic-proposal-select__error academic-proposal-select__mobile-error"
+          role="alert"
+          [id]="mobileFieldErrorId('shift')">
+          {{ mobileFieldErrorMessage('shift') }}
+        </p>
+        }
+      </div>
     </div>
   </div>
+
+  <ort-drawer
+    [aria-label]="'Seleccionar ' + mobileFieldLabel()"
+    [open]="mobileDrawerField() !== null"
+    [showTracker]="true"
+    (closed)="onMobileDrawerClosed()"
+    (openChange)="onMobileDrawerOpenChange($event)">
+    <div class="academic-proposal-select__drawer">
+      <ort-form-field class="academic-proposal-select__drawer-search">
+        <ort-icon aria-hidden="true" ortPrefix>search</ort-icon>
+        <input
+          ortInput
+          placeholder="Buscar..."
+          type="search"
+          [attr.aria-label]="'Buscar ' + mobileFieldLabel()"
+          [value]="mobileSearch()"
+          (input)="onMobileSearchInput($event)" />
+      </ort-form-field>
+
+      <div
+        class="academic-proposal-select__drawer-list"
+        role="radiogroup"
+        [attr.aria-label]="mobileFieldLabel()">
+        @for (option of filteredMobileOptions(); track option.value) {
+        <button
+          class="academic-proposal-select__drawer-option"
+          role="radio"
+          type="button"
+          [attr.aria-checked]="mobilePendingValue() === option.value"
+          [class.academic-proposal-select__drawer-option--selected]="
+            mobilePendingValue() === option.value
+          "
+          (click)="selectMobileOption(option.value)">
+          <span>{{ option.label }}</span>
+          <span aria-hidden="true" class="academic-proposal-select__drawer-radio"></span>
+        </button>
+        } @empty {
+        <p class="academic-proposal-select__drawer-empty" role="status">No hay resultados</p>
+        }
+      </div>
+    </div>
+
+    <ng-container ortDrawerFooter>
+      <button
+        class="academic-proposal-select__drawer-action"
+        ort-primary-button
+        type="button"
+        [disabled]="!mobilePendingValue()"
+        (click)="confirmMobileSelection()">
+        Seleccionar
+      </button>
+    </ng-container>
+  </ort-drawer>
 </div>

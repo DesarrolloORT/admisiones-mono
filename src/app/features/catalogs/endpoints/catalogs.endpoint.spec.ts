@@ -29,10 +29,9 @@ describe('CatalogsEndpoint', () => {
     apiMock.request.mockReturnValue(
       of([
         {
-          idProducto: 20,
           idNivelProducto: 1,
-          nombreProducto: 'Diseño',
           nombreNivelProducto: 'Carreras',
+          escuelas: [{ productos: [{ idProducto: 20, nombreProducto: 'Diseño' }] }],
         },
       ])
     );
@@ -52,34 +51,36 @@ describe('CatalogsEndpoint', () => {
   it('should map initial survey catalogs from API data', () => {
     apiMock.request.mockReturnValue(
       of({
-        aniosAprobadosEducacionSuperior: [{ value: 1, label: 'Un año' }],
-        compartidoCon: [{ value: 2, label: 'Familia' }],
-        decisionCarrera: [{ value: 3, label: 'Salida laboral' }],
-        decisionUniversidad: [{ value: 4, label: 'Prestigio' }],
-        estadoEducacionSuperior: [{ value: 5, label: 'Sin estudios previos' }],
-        formacionTutores: [{ value: 6, label: 'Universitaria completa' }],
-        nivelConocimiento: [{ value: 7, label: 'Alto' }],
-        motivosEleccion: [{ idMotivo: 8, nombreMotivo: 'Reputación' }],
-        publicidadesEleccion: [{ idPublicidad: 9, nombrePublicidad: 'Redes sociales' }],
-        universidades: [{ codigoEmpresa: 10, nombre: 'Universidad de la República' }],
-        aniosBachiller: [
-          {
-            idAnioBachiller: 11,
-            nombreAnioBachiller: '6º año',
-            bachilleratos: [
-              { codigoTitulo: 12, nombre: 'Científico', orientacionTitulo: 'Matemática' },
-            ],
-          },
-        ],
+        educacion: {
+          estadosEducacionSuperiorPrevia: [{ value: 5, label: 'Sin estudios previos' }],
+          nivelesFormacionTutores: [{ value: 6, label: 'Universitaria completa' }],
+          aniosBachillerato: [
+            {
+              value: 11,
+              label: '6º año',
+              orientaciones: [{ value: 12, label: 'Científico', orientacion: 'Matemática' }],
+            },
+          ],
+        },
+        decisionAcademica: {
+          apoyosDecision: [{ value: 2, label: 'Familia' }],
+          aniosEducacionMediaSuperior: [{ value: 3, label: 'Salida laboral' }],
+          nivelesDecision: [{ value: 7, label: 'Alto' }],
+          motivosEleccionOrt: [{ value: 8, label: 'Reputación' }],
+          universidades: [{ value: 10, label: 'Universidad de la República' }],
+        },
+        experienciaOrt: {
+          publicidadesOrt: [{ value: 9, label: 'Redes sociales' }],
+        },
       })
     );
 
     endpoint.getInitialSurveyCatalogs().subscribe(result => {
       expect(result).toEqual({
-        aniosAprobadosEducacionSuperior: [{ id: 1, label: 'Un año' }],
+        aniosAprobadosEducacionSuperior: [],
         compartidoCon: [{ id: 2, label: 'Familia' }],
         decisionCarrera: [{ id: 3, label: 'Salida laboral' }],
-        decisionUniversidad: [{ id: 4, label: 'Prestigio' }],
+        decisionUniversidad: [{ id: 3, label: 'Salida laboral' }],
         estadoEducacionSuperior: [{ id: 5, label: 'Sin estudios previos' }],
         formacionTutores: [{ id: 6, label: 'Universitaria completa' }],
         nivelConocimiento: [{ id: 7, label: 'Alto' }],
@@ -99,10 +100,7 @@ describe('CatalogsEndpoint', () => {
 
   it('should map bancos from API data', () => {
     apiMock.request.mockReturnValue(
-      of({
-        bancos: [{ idBanco: 1, nombreBanco: 'BROU', codigo: 'brou' }],
-        totalCount: 1,
-      })
+      of([{ idBanco: 1, nombreBanco: 'BROU', codigoBanco: 11, idBancoSistarbanc: 'brou' }])
     );
 
     endpoint.getBancos().subscribe(result => {

@@ -5,7 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { toBankOption } from '../models/inscripcion-bank-logo';
+import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscripcion-bank-logo';
 import type { MetodoPago, OpcionInscripcion } from '../models/inscripcion-flow';
 import { getResultadoPago, parseResultadoForzado } from '../models/inscripcion-flow-policy';
 import {
@@ -52,7 +52,6 @@ export class InscripcionPaymentFacade {
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
-  public readonly bankLoadError = signal<string | null>(null);
 
   private readonly submitted = signal(false);
   public readonly view = signal<InscripcionPaymentView>('editing');
@@ -117,7 +116,6 @@ export class InscripcionPaymentFacade {
 
   private loadBanks(): void {
     this.loadingBanks.set(true);
-    this.bankLoadError.set(null);
     this.catalogs
       .getBancos()
       .pipe(
@@ -125,9 +123,8 @@ export class InscripcionPaymentFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: banks => this.bankOptions.set(banks.map(toBankOption)),
-        error: () =>
-          this.bankLoadError.set('No se pudieron cargar los bancos. Intentá nuevamente.'),
+        next: banks => this.bankOptions.set(toBankOptions(banks)),
+        error: () => this.bankOptions.set(FALLBACK_BANK_OPTIONS),
       });
   }
 

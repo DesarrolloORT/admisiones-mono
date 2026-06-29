@@ -104,9 +104,9 @@ export function downloadJson(url, redirectCount = 0) {
         });
         response.on('end', () => {
           try {
-            resolvePromise(JSON.parse(raw));
+            resolvePromise(JSON.parse(raw.replace(/^\uFEFF/, '')));
           } catch (error) {
-            rejectPromise(new Error(`Swagger response is not valid JSON: ${error.message}`));
+            rejectPromise(new Error(`JSON response is not valid JSON: ${error.message}`));
           }
         });
       }

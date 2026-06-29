@@ -204,7 +204,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         confirmada: true,
         fechaVencimientoPago: '2027-04-15',
-        seniaInscripcion: 21000,
+        carritos: [{ senia: 21000 }],
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
     );

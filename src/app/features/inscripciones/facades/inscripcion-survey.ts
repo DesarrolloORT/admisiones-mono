@@ -707,6 +707,8 @@ export class InscripcionSurveyFacade {
   }
 
   private applyInitialSurveyCatalogs(catalogs: InitialSurveyCatalogs): void {
+    const baccalaureateYears = catalogs.aniosBachiller ?? [];
+
     this.previousCareerOptions.set(toCatalogOptions(catalogs.estadoEducacionSuperior));
     this.educationLevelOptions.set(toCatalogOptions(catalogs.formacionTutores));
     this.supportOptions.set(toCatalogOptions(catalogs.compartidoCon));
@@ -715,8 +717,8 @@ export class InscripcionSurveyFacade {
     this.motivesOptions.set(toCatalogOptions(catalogs.motivosEleccion));
     this.universityOptions.set(toCatalogOptions(catalogs.universidades));
     this.advertisingOptions.set(toCatalogOptions(catalogs.publicidadesEleccion));
-    this.baccalaureateYears.set(catalogs.aniosBachiller);
-    this.baccalaureateOptions.set(buildBaccalaureateOptions(catalogs.aniosBachiller));
+    this.baccalaureateYears.set(baccalaureateYears);
+    this.baccalaureateOptions.set(buildBaccalaureateOptions(baccalaureateYears));
     this.refreshOrientationOptions();
     this.updateConditionalValidators();
   }

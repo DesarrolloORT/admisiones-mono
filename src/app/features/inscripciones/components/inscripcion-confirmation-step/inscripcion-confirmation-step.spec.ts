@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
@@ -46,5 +48,19 @@ describe('InscripcionConfirmationStep', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(requestConfirmationSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps bank selection usable with logo options in the real template', () => {
+    const template = readFileSync(
+      'src/app/features/inscripciones/components/inscripcion-confirmation-step/inscripcion-confirmation-step.html',
+      'utf8'
+    );
+
+    expect(template).not.toContain('{{ facade.bankOptions()}}');
+    expect(template).toContain('[loading]="facade.loadingBanks()"');
+    expect(template).not.toContain(
+      '[disabled]="facade.loadingBanks() || facade.bankOptions().length === 0"'
+    );
+    expect(template).toContain('[src]="bank.icon"');
   });
 });

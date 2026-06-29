@@ -48,7 +48,7 @@ export class InscripcionesEndpoint {
           pagoPendiente: response.pagoPendiente
             ? {
                 idInscripcion: response.pagoPendiente.idInscripcion ?? null,
-                senia: response.pagoPendiente.senia ?? null,
+                senia: response.pagoPendiente.carritos?.[0]?.senia ?? null,
                 fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
@@ -175,7 +175,7 @@ export class InscripcionesEndpoint {
         map(response => ({
           confirmada: response.confirmada === true,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.seniaInscripcion ?? null,
+          seniaInscripcion: response.carritos?.[0]?.senia ?? null,
           resumen: response.resumen
             ? {
                 carrera: response.resumen.carrera ?? null,

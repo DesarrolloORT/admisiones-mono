@@ -25,6 +25,12 @@ describe('AcademicProposalSelect', () => {
                   nombreProducto: 'Licenciatura en Diseño Gráfico',
                   nombreNivelProducto: 'Carrera universitaria',
                 },
+                {
+                  idProducto: 30,
+                  idNivelProducto: 1,
+                  nombreProducto: 'Analista Programador',
+                  nombreNivelProducto: 'Carrera universitaria',
+                },
               ]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
@@ -43,6 +49,34 @@ describe('AcademicProposalSelect', () => {
 
   it('connects a form to its academic selection state', () => {
     expect(fixture.componentInstance.selection().initialized()).toBe(true);
+  });
+
+  it('selects a career from the mobile drawer', () => {
+    const component = fixture.componentInstance as unknown as {
+      confirmMobileSelection(): void;
+      filteredMobileOptions(): readonly { label: string; value: string }[];
+      mobileDrawerField(): 'career' | 'start' | 'shift' | null;
+      onMobileSearchInput(event: Event): void;
+      openMobileDrawer(field: 'career'): void;
+      selectMobileOption(value: string): void;
+    };
+
+    form.controls.tipoPropuesta.setValue('1');
+    fixture.detectChanges();
+
+    component.openMobileDrawer('career');
+    component.onMobileSearchInput({ target: { value: 'gráfico' } } as unknown as Event);
+
+    expect(component.filteredMobileOptions()).toEqual([
+      { value: '20', label: 'Licenciatura en Diseño Gráfico' },
+    ]);
+
+    component.selectMobileOption('20');
+    component.confirmMobileSelection();
+
+    expect(form.controls.carrera.value).toBe('20');
+    expect(form.controls.carrera.touched).toBe(true);
+    expect(component.mobileDrawerField()).toBeNull();
   });
 
   it('shows required errors after controls are touched', () => {

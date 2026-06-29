@@ -146,8 +146,8 @@
                     : null
                 "
                 [required]="true">
-                <ort-radio-card-button value="1">Nacional</ort-radio-card-button>
-                <ort-radio-card-button value="2">Internacional</ort-radio-card-button>
+                <ort-radio-card-button value="1">Uruguay</ort-radio-card-button>
+                <ort-radio-card-button value="2">En el exterior</ort-radio-card-button>
               </ort-radio-group>
               @if (facade.educationForm.controls.lugarSecundaria.touched &&
               facade.educationForm.controls.lugarSecundaria.hasError('required')) {
@@ -374,7 +374,7 @@
               <ort-select
                 aria-label="Apoyo en la decisión"
                 formControlName="apoyoDecision"
-                placeholder="Seleccioná una o más..."
+                placeholder="Seleccioná..."
                 [disabled]="facade.loadingInitialSurveyCatalogs()"
                 [multiple]="true">
                 @for (option of facade.supportOptions(); track option.value) {

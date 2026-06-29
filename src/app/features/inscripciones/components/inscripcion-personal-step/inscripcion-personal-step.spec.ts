@@ -73,5 +73,10 @@ describe('InscripcionPersonalStep', () => {
     expect(template).toContain(
       '<ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>'
     );
+    expect(template).not.toContain(
+      '<ort-radio-card-button value="1">Nacional</ort-radio-card-button>'
+    );
+    expect(template).toContain('formControlName="apoyoDecision"');
+    expect(template).toContain('placeholder="Seleccioná..."');
   });
 });
