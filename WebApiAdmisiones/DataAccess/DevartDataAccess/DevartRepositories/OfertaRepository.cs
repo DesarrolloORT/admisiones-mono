@@ -23,22 +23,5 @@ namespace DataAccess.DevartRepositories
                     .ThenInclude(s => s.Comienzo)
                 .FirstOrDefault(o => o.IdOferta == idOferta);
         }
-
-        /// <summary>
-        /// Materias de la oferta (T_OFERTA_CREDITO -> T_OFERTA_CREDITO_MATERIA -> T_MATERIA).
-        /// Para una inscripción fresca, la oferta es la del primer semestre, así que estas son
-        /// las materias a cursar en ese semestre.
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.Materia> GetMateriasPorOferta(long idOferta)
-        {
-            return objectSet
-                .AsNoTracking()
-                .Where(o => o.IdOferta == idOferta)
-                .SelectMany(o => o.OfertaCreditos)
-                .SelectMany(oc => oc.OfertaCreditoMaterias)
-                .Select(ocm => ocm.Materia)
-                .Distinct()
-                .ToList();
-        }
     }
 }

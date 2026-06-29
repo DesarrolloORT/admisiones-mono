@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Registro;
 using Utilities;
 using AppLogic.Services.Registro;
 
@@ -6,16 +6,16 @@ namespace AppLogic.IServices
 {
     public interface IRegistroService
     {
-        Task<OperationResult<RegistroEvaluacionResponse>> EvaluarDocumentoAsync(RegistroEvaluarDocumentoRequest request);
-        Task<OperationResult<object?>> VerificarIdentidadAsync(RegistroVerificarIdentidadRequest request);
-        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(RegistroPersonaRequest request);
-        Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(RegistroPersonaRequest request);
+        Task<OperationResult<DtoRegistroEvaluacionResponse>> EvaluarDocumentoAsync(DtoRegistroEvaluarDocumentoRequest request);
+        Task<OperationResult<object?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request);
+        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(DtoRegistroPersonaRequest request);
+        Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(DtoRegistroPersonaRequest request);
 
         /// <summary>
         /// Solo ejecuta las validaciones de ConfirmarNuevaPersona sin crear nada en DB ni LDAP.
         /// Usado por RegistroFlowService antes de almacenar en Redis.
         /// </summary>
-        Task<OperationResult<object?>> ValidarNuevaPersonaAsync(RegistroPersonaRequest request);
+        Task<OperationResult<object?>> ValidarNuevaPersonaAsync(DtoRegistroPersonaRequest request);
 
         /// <summary>
         /// Completa la creación de una nueva persona usando datos almacenados en Redis.
@@ -23,8 +23,8 @@ namespace AppLogic.IServices
         /// Retorna el CodigoPersona recien creado.
         /// </summary>
         Task<OperationResult<long>> CompletarNuevaPersonaAsync(
-            RegistroPendingPersona data,
+            DtoRegistroPendingPersona data,
             string passwordNueva,
-            RegistroDocumentoImagenesTemporales? imagenes = null);
+            DtoRegistroDocumentoImagenesTemporales? imagenes = null);
     }
 }

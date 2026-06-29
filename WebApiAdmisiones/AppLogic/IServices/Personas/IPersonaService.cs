@@ -1,6 +1,6 @@
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Personas;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
-using AppLogic.Requests;
 using Utilities;
 
 namespace AppLogic.IServices.Personas
@@ -8,13 +8,13 @@ namespace AppLogic.IServices.Personas
     public interface IPersonaService
     {
         OperationResult<DtoDatosPersona> ObtenerDatosPersona(long codigoPersona);
-        OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request);
+        OperationResult<bool> ActualizarDatosPersona(long codigoPersona, DtoActualizarDatosPersonaRequest request);
         OperationResult<bool> EsTelefonoValidoFront(DtoTelefono telefonoValidar, bool telefono1);
         OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona);
         Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request);
-        OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona);
+        OperationResult<DtoDocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona);
         OperationResult<byte[]> ObtenerFotoPersona(long codigoPersona);
         OperationResult<bool> SubirFotoPersona(long codigoPersona, byte[] fileContent, string fileName);
-        OperationResult<bool> SubirDocumentoPersona(long codigoPersona, DateTime fecha, DocumentoPersonaArchivoDto frente, DocumentoPersonaArchivoDto dorso);
+        OperationResult<bool> SubirDocumentoPersona(long codigoPersona, DateTime fecha, DtoDocumentoPersonaArchivo frente, DtoDocumentoPersonaArchivo dorso);
     }
 }

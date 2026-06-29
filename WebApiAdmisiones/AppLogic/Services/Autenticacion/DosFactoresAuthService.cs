@@ -1,7 +1,8 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.Helpers;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
+using AppLogic.Utilities;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -46,7 +47,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
     {
         try
         {
-            var normalizedDoc = NormalizeDoc(pendingAuth.Persona.Documento);
+            var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(pendingAuth.Persona.Documento);
             var initLimit = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxInitAttempts") ?? 3;
             var sessionMinutes = ObtenerSessionMinutes();
             var codeMinutes = ObtenerCodeMinutes();
@@ -77,7 +78,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
             var codigoHash = HashCodigo(codigo);
             var codigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(codeMinutes);
 
-            var session = new TwoFactorSession
+            var session = new DtoTwoFactorSession
             {
                 CodigoPersona = pendingAuth.Persona.CodigoPersona,
                 PrimerNombre = pendingAuth.Persona.PrimerNombre,
@@ -301,7 +302,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
 
             var sessionMinutes = ObtenerSessionMinutes();
             var initLimit = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxInitAttempts") ?? 3;
-            var normalizedDoc = NormalizeDoc(session.Documento);
+            var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(session.Documento);
             var allowed = await _rateLimiter.IsAllowedAsync(
                 $"2fa-init:{normalizedDoc}",
                 initLimit,
@@ -416,14 +417,14 @@ public class DosFactoresAuthService : IDosFactoresAuthService
     private int ObtenerCodeMinutes() =>
         _configuration.GetValue<int?>("Authentication:TwoFactor:CodeMinutes") ?? DefaultCodeMinutes;
 
-    private static bool CodigoExpirado(TwoFactorSession session) =>
+    private static bool CodigoExpirado(DtoTwoFactorSession session) =>
         session.CodigoExpiresAtUtc <= DateTime.UtcNow;
 
-    private async Task LimpiarRateLimitInicioAsync(TwoFactorSession session)
+    private async Task LimpiarRateLimitInicioAsync(DtoTwoFactorSession session)
     {
         try
         {
-            await _rateLimiter.ClearAsync($"2fa-init:{NormalizeDoc(session.Documento)}");
+            await _rateLimiter.ClearAsync($"2fa-init:{DocumentUtils.NormalizarDocumentoParaClave(session.Documento)}");
         }
         catch (Exception ex)
         {
@@ -432,14 +433,5 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                 "No se pudo limpiar el rate limit de inicio 2FA para la persona {CodigoPersona}.",
                 session.CodigoPersona);
         }
-    }
-
-    private static string NormalizeDoc(string? doc)
-    {
-        if (string.IsNullOrWhiteSpace(doc))
-            return "unknown";
-
-        return doc.Replace(".", "").Replace("-", "").Replace(" ", "")
-                  .Trim().ToLowerInvariant();
     }
 }

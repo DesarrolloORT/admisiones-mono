@@ -41,16 +41,5 @@ namespace DataAccess.DevartRepositories
                     && p.Documento.Trim() == normalizedDocumento);
         }
 
-        /// <summary>
-        /// Devuelve la persona con sus relaciones principales cargadas.
-        /// </summary>
-        public virtual BusinessLogic.Entities.Persona GetPersonaWithRelated(long codigoPersona)
-        {
-            return objectSet
-                .Where(p => p.CodigoPersona == codigoPersona)
-                .Include(p => p.Imagens)
-                .Include(p => p.Inscriptos)
-                .FirstOrDefault();
-        }
     }
 }

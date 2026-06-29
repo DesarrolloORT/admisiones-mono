@@ -12,6 +12,5 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IProductoRepository
     {
         bool EsProductoValidoParaInteres(long idProducto);
-        ICollection<Producto> GetProductosVigentes();
     }
 }

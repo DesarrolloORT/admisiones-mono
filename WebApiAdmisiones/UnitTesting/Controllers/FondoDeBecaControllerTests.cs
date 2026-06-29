@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Becas;
 using AppLogic.DevartDTOs;
 using AppLogic;
 using Microsoft.AspNetCore.Mvc;

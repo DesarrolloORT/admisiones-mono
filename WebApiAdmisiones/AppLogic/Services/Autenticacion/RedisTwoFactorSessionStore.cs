@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices.Autenticacion;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -31,13 +31,13 @@ public class RedisTwoFactorSessionStore : ITwoFactorSessionStore
         _logger = logger;
     }
 
-    public Task SaveAsync(string sessionId, TwoFactorSession session, TimeSpan ttl)
+    public Task SaveAsync(string sessionId, DtoTwoFactorSession session, TimeSpan ttl)
     {
         var json = JsonSerializer.Serialize(session, JsonOptions);
         return _db.StringSetAsync($"{KeyPrefix}{sessionId}", json, ttl);
     }
 
-    public async Task<TwoFactorSession?> GetAsync(string sessionId)
+    public async Task<DtoTwoFactorSession?> GetAsync(string sessionId)
     {
         var key = $"{KeyPrefix}{sessionId}";
         var value = await _db.StringGetAsync(key);
@@ -47,7 +47,7 @@ public class RedisTwoFactorSessionStore : ITwoFactorSessionStore
 
         try
         {
-            var session = JsonSerializer.Deserialize<TwoFactorSession>(value.ToString(), JsonOptions);
+            var session = JsonSerializer.Deserialize<DtoTwoFactorSession>(value.ToString(), JsonOptions);
             if (session != null)
                 return session;
         }
@@ -65,7 +65,7 @@ public class RedisTwoFactorSessionStore : ITwoFactorSessionStore
         => _db.KeyTimeToLiveAsync($"{KeyPrefix}{sessionId}");
 
     // En Redis, actualizar es la misma operación que guardar (SET sobrescribe la clave).
-    public Task UpdateAsync(string sessionId, TwoFactorSession session, TimeSpan ttl)
+    public Task UpdateAsync(string sessionId, DtoTwoFactorSession session, TimeSpan ttl)
         => SaveAsync(sessionId, session, ttl);
 
     public Task DeleteAsync(string sessionId)

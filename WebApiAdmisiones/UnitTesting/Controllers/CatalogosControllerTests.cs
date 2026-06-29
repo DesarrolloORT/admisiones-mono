@@ -1,5 +1,5 @@
+﻿using AppLogic.Dtos.Catalogos;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -95,7 +95,7 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
 
-            // Verificar que NO se llamó al servicio (porque cache devolvió datos)
+            // Verificar que NO se llamÃ³ al servicio (porque cache devolviÃ³ datos)
             _serviceMock.Verify(
                 s => s.ObtenerPaisesEstadosCiudadesAsync(),
                 Times.Never);
@@ -133,7 +133,7 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
 
-            // Verificar que SÍ se llamó al servicio (fallback porque cache devolvió null)
+            // Verificar que SÃ se llamÃ³ al servicio (fallback porque cache devolviÃ³ null)
             _serviceMock.Verify(
                 s => s.ObtenerPaisesEstadosCiudadesAsync(),
                 Times.Once);
@@ -150,10 +150,13 @@ namespace UnitTesting.Controllers
                 .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
                     new DtoEncuestaInicialCatalogosResponse
                     {
-                        OpcionesEMS =
-                        [
-                            new DtoComboOption { Value = 2, Label = "1° EMS (4° año)" }
-                        ]
+                        DecisionAcademica = new DtoEncuestaDecisionAcademicaCatalogos
+                        {
+                            AniosEducacionMediaSuperior =
+                            [
+                                new DtoComboOption { Value = 2, Label = "1\u00b0 EMS (4\u00b0 a\u00f1o)" }
+                            ]
+                        }
                     },
                     nameof(ICatalogosService.ObtenerEncuestaInicial)));
 
@@ -210,8 +213,23 @@ namespace UnitTesting.Controllers
             var controller = CreateController();
 
             _serviceMock.Setup(s => s.ObtenerCarreras(It.IsAny<long>()))
-                .Returns(OperationResult<IEnumerable<DtoCarreraResponse>>.Ok(
-                    [new DtoCarreraResponse { IdProducto = 10, NombreProducto = "ATI" }],
+                .Returns(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.Ok(
+                    [
+                        new DtoCarrerasPorNivelResponse
+                        {
+                            IdNivelProducto = 1,
+                            NombreNivelProducto = "Carrera",
+                            Escuelas =
+                            [
+                                new DtoCarrerasPorEscuelaResponse
+                                {
+                                    IdEscuela = 10,
+                                    NombreEscuela = "Facultad",
+                                    Productos = [new DtoCarreraResponse { IdProducto = 10, NombreProducto = "ATI" }]
+                                }
+                            ]
+                        }
+                    ],
                     nameof(ICatalogosService.ObtenerCarreras)));
 
             var response = controller.ObtenerCarreras();

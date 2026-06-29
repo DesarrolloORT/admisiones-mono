@@ -1,8 +1,8 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 
 namespace AppLogic.IServices.Autenticacion;
 
 public interface ILoginFlowService
 {
-    Task<LoginFlowResult> EjecutarAsync(AuthRequest request, string ipAddress, double recaptchaScore);
+    Task<DtoLoginFlowResult> EjecutarAsync(DtoAuthRequest request, string ipAddress, double recaptchaScore);
 }

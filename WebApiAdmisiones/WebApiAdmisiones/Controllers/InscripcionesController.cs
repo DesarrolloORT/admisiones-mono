@@ -1,5 +1,6 @@
+using AppLogic.Dtos.EncuestaInicial;
+using AppLogic.Dtos.Inscripciones;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices.Inscripciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +34,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
+        public IActionResult RegistrarInteresProducto([FromBody] DtoInteresProductoRequest request)
         {
             var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
@@ -68,7 +69,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult GuardarEncuestaInicial([FromBody] GuardarEncuestaInicialRequest request)
+        public IActionResult GuardarEncuestaInicial([FromBody] DtoGuardarEncuestaInicialRequest request)
         {
             var result = inscripcionesService.GuardarEncuestaInicial(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
@@ -85,13 +86,24 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="404">No se encontro la persona, encuesta o documento requerido.</response>
         /// <response code="409">La encuesta o el documento no estan vigentes o en estado valido.</response>
         [HttpPost("ConfirmarPreInscripcion")]
-        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 404)]
-        [ProducesResponseType(typeof(OperationResult<ConfirmarPreInscripcionResponse>), 409)]
-        public async Task<IActionResult> ConfirmarPreInscripcion([FromBody] ConfirmarPreInscripcionRequest request)
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ConfirmarPreInscripcion([FromBody] DtoConfirmarPreInscripcionRequest request)
         {
             var result = await inscripcionesService.ConfirmarPreInscripcion(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        [HttpPost("MetodoPago")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult GuardarMetodoPago([FromBody] DtoGuardarMetodoPagoRequest request)
+        {
+            var result = inscripcionesService.GuardarMetodoPago(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 
@@ -101,7 +113,7 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Estado de aceptación del reglamento y fecha de primera aceptación.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
         [HttpGet("ReglamentoEstudiantil")]
-        [ProducesResponseType(typeof(OperationResult<AceptacionReglamentoEstudiantilResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstudiantilResponse>), 200)]
         public IActionResult ObtenerAceptacionReglamentoEstudiantil()
         {
             var result = inscripcionesService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
@@ -117,8 +129,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Detalle obtenido correctamente.</response>
         /// <response code="404">No se encontró la inscripción para la persona.</response>
         [HttpGet("Detalle")]
-        [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DetalleInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoDetalleInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDetalleInscripcionResponse>), 404)]
         public async Task<IActionResult> ObtenerDetalleInscripcion([FromQuery] long idProducto, [FromQuery] long idProceso)
         {
             var result = await inscripcionesService.ObtenerDetalleInscripcion(_currentUser.GetUserId(), idProducto, idProceso);

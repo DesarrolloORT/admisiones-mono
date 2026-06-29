@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Registro;
 using System.Text.Json;
-using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -29,7 +29,7 @@ namespace UnitTesting.AppLogic.Services
             var redis = new Dictionary<string, string>
             {
                 [docKey] = oldFlowId,
-                [pendingKey] = JsonSerializer.Serialize(new RegistroPendingPersona
+                [pendingKey] = JsonSerializer.Serialize(new DtoRegistroPendingPersona
                 {
                     FlowId = oldFlowId,
                     TipoDocumento = "CI",
@@ -38,7 +38,7 @@ namespace UnitTesting.AppLogic.Services
                     TokenHash = "old-token-hash",
                     CreatedAt = DateTime.UtcNow
                 }, JsonOptions),
-                [flowSessionKey] = JsonSerializer.Serialize(new RegistroFlowSession
+                [flowSessionKey] = JsonSerializer.Serialize(new DtoRegistroFlowSession
                 {
                     FlowId = newFlowId,
                     TipoDocumento = "CI",
@@ -54,7 +54,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(redisDbMock.Object);
             var registroServiceMock = new Mock<IRegistroService>();
             registroServiceMock
-                .Setup(s => s.ValidarNuevaPersonaAsync(It.IsAny<RegistroPersonaRequest>()))
+                .Setup(s => s.ValidarNuevaPersonaAsync(It.IsAny<DtoRegistroPersonaRequest>()))
                 .ReturnsAsync(OperationResult<object?>.Ok(default, nameof(IRegistroService.ValidarNuevaPersonaAsync)));
             var passwordActivationMock = new Mock<IPasswordActivationService>();
             passwordActivationMock
@@ -74,7 +74,7 @@ namespace UnitTesting.AppLogic.Services
                 s => s.EnviarMailNuevaPersonaAsync(oldFlowId, "new@example.com", It.IsAny<string>()),
                 Times.Once);
             Assert.Equal(oldFlowId, redis[docKey]);
-            var pending = JsonSerializer.Deserialize<RegistroPendingPersona>(redis[pendingKey], JsonOptions);
+            var pending = JsonSerializer.Deserialize<DtoRegistroPendingPersona>(redis[pendingKey], JsonOptions);
             Assert.NotNull(pending);
             Assert.Equal(oldFlowId, pending!.FlowId);
             Assert.Equal("new@example.com", pending.Email);
@@ -186,7 +186,7 @@ namespace UnitTesting.AppLogic.Services
             return redisConnectionMock;
         }
 
-        private static RegistroPersonaRequest CrearRegistroPersonaRequest(string mail)
+        private static DtoRegistroPersonaRequest CrearRegistroPersonaRequest(string mail)
             => new()
             {
                 TipoDocumento = "CI",
@@ -204,7 +204,7 @@ namespace UnitTesting.AppLogic.Services
                 CodigoCiudad = 1
             };
 
-        private static RegistroPendingPersona CrearPendingPersona()
+        private static DtoRegistroPendingPersona CrearPendingPersona()
             => new()
             {
                 TipoDocumento = "CI",
@@ -221,12 +221,12 @@ namespace UnitTesting.AppLogic.Services
                 CodigoCiudad = 1
             };
 
-        private static RegistroDocumentoImagenesTemporales CrearImagenesTemporales()
+        private static DtoRegistroDocumentoImagenesTemporales CrearImagenesTemporales()
             => new()
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
-                DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                 {
                     Archivo = [0x25, 0x50, 0x44, 0x46, 1],
                     NombreArchivo = "documento.pdf",

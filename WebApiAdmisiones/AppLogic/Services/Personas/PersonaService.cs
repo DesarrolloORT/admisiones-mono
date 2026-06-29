@@ -1,10 +1,11 @@
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Personas;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Personas;
-using AppLogic.Requests;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -41,7 +42,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDatosPersona));
         }
 
-        public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, ActualizarDatosPersonaRequest request)
+        public OperationResult<bool> ActualizarDatosPersona(long codigoPersona, DtoActualizarDatosPersonaRequest request)
         {
             using var uow = uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -87,9 +88,9 @@ namespace AppLogic.Services.Personas
             persona.CodigoPais = request.CodigoPais;
             persona.CodigoEstado = request.CodigoEstado;
             persona.CodigoCiudad = request.CodigoCiudad;
-            persona.Direccion = FormatearTextoCapitalizado(request.Direccion);
-            persona.Telefono1 = request.Telefono1?.Trim();
-            persona.Email = request.Mail?.Trim();
+            persona.Direccion = DocumentUtils.FormatearTextoCapitalizado(request.Direccion);
+            persona.Telefono1 = DocumentUtils.NormalizarOpcional(request.Telefono1);
+            persona.Email = DocumentUtils.NormalizarOpcional(request.Mail);
 
             PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
             uow.Personas.Update(persona);
@@ -197,7 +198,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<byte[]>.Ok(imagen.BlobImagen, nameof(ObtenerFotoPersona));
         }
 
-        public OperationResult<DocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona)
+        public OperationResult<DtoDocumentoPersonaResponse> ObtenerDocumentoPersona(long codigoPersona)
         {
             using var uow = uowFactory.Create();
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -210,7 +211,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDocumentoPersona));
             if (!frente.Success)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     frente.ErrorCode,
                     nameof(ObtenerDocumentoPersona),
                     frente.Message,
@@ -225,7 +226,7 @@ namespace AppLogic.Services.Personas
                 nameof(ObtenerDocumentoPersona));
             if (!dorso.Success)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     dorso.ErrorCode,
                     nameof(ObtenerDocumentoPersona),
                     dorso.Message,
@@ -234,15 +235,15 @@ namespace AppLogic.Services.Personas
 
             if (frente.Data is null && dorso.Data is null)
             {
-                return OperationResult<DocumentoPersonaResponse>.IsFailed(
+                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
                     "GEN_DA_02",
                     nameof(ObtenerDocumentoPersona),
                     "Documento no encontrado.",
                     404);
             }
 
-            return OperationResult<DocumentoPersonaResponse>.Ok(
-                new DocumentoPersonaResponse
+            return OperationResult<DtoDocumentoPersonaResponse>.Ok(
+                new DtoDocumentoPersonaResponse
                 {
                     Frente = frente.Data?.Archivo,
                     Dorso = dorso.Data?.Archivo,
@@ -306,8 +307,8 @@ namespace AppLogic.Services.Personas
         public OperationResult<bool> SubirDocumentoPersona(
             long codigoPersona,
             DateTime fecha,
-            DocumentoPersonaArchivoDto frente,
-            DocumentoPersonaArchivoDto dorso)
+            DtoDocumentoPersonaArchivo frente,
+            DtoDocumentoPersonaArchivo dorso)
         {
             var validacionFrente = ValidarArchivoDocumentoPersona(frente, "frente");
             if (!validacionFrente.Success)
@@ -362,7 +363,7 @@ namespace AppLogic.Services.Personas
             long codigoPersona,
             int tipo,
             DateTime fecha,
-            DocumentoPersonaArchivoDto documento)
+            DtoDocumentoPersonaArchivo documento)
         {
             var fileContent = documento.Archivo ?? Array.Empty<byte>();
             var fileName = documento.NombreArchivo ?? string.Empty;
@@ -414,7 +415,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }
 
-        private static OperationResult<bool> ValidarArchivoDocumentoPersona(DocumentoPersonaArchivoDto? documento, string lado)
+        private static OperationResult<bool> ValidarArchivoDocumentoPersona(DtoDocumentoPersonaArchivo? documento, string lado)
         {
             if (documento?.Archivo == null || documento.Archivo.Length == 0)
             {
@@ -450,7 +451,7 @@ namespace AppLogic.Services.Personas
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }
 
-        private static OperationResult<bool> ValidarActualizarDatosPersona(ActualizarDatosPersonaRequest request)
+        private static OperationResult<bool> ValidarActualizarDatosPersona(DtoActualizarDatosPersonaRequest request)
         {
             if (request is null)
             {
@@ -560,19 +561,19 @@ namespace AppLogic.Services.Personas
             var mail = persona.Email ?? string.Empty;
             return new DtoDatosPersona
             {
-                TipoDocumento = persona.TipoDocumento?.Trim() ?? string.Empty,
-                Documento = persona.Documento?.Trim() ?? string.Empty,
-                PrimerNombre = persona.PrimerNombre?.Trim() ?? string.Empty,
-                SegundoNombre = persona.SegundoNombre?.Trim() ?? string.Empty,
-                PrimerApellido = persona.PrimerApellido?.Trim() ?? string.Empty,
-                SegundoApellido = persona.SegundoApellido?.Trim() ?? string.Empty,
+                TipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento),
+                Documento = DocumentUtils.Normalizar(persona.Documento),
+                PrimerNombre = DocumentUtils.Normalizar(persona.PrimerNombre),
+                SegundoNombre = DocumentUtils.Normalizar(persona.SegundoNombre),
+                PrimerApellido = DocumentUtils.Normalizar(persona.PrimerApellido),
+                SegundoApellido = DocumentUtils.Normalizar(persona.SegundoApellido),
                 FechaNacimiento = persona.FechaNacimiento ?? default,
-                Sexo = persona.Sexo?.Trim() ?? string.Empty,
+                Sexo = DocumentUtils.Normalizar(persona.Sexo),
                 CodigoPais = persona.CodigoPais ?? 0,
                 CodigoEstado = persona.CodigoEstado ?? 0,
                 CodigoCiudad = persona.CodigoCiudad ?? 0,
-                Direccion = persona.Direccion?.Trim() ?? string.Empty,
-                Telefono1 = persona.Telefono1?.Trim() ?? string.Empty,
+                Direccion = DocumentUtils.Normalizar(persona.Direccion),
+                Telefono1 = DocumentUtils.Normalizar(persona.Telefono1),
                 Mail = mail,
                 VerificacionMail = mail,
                 IdentidadRestringida = identidadRestringida
@@ -596,17 +597,6 @@ namespace AppLogic.Services.Personas
                 IdInscripto = source.IdInscripto,
                 EstadoInscripcion = source.EstadoInscripcion,
             };
-        }
-
-        private static string FormatearTextoCapitalizado(string? valor)
-        {
-            if (string.IsNullOrWhiteSpace(valor))
-            {
-                return string.Empty;
-            }
-
-            var texto = string.Join(" ", valor.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(texto.ToLower(CultureInfo.CurrentCulture));
         }
     }
 }

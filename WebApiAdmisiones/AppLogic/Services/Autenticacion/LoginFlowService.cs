@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +29,7 @@ public class LoginFlowService : ILoginFlowService
         _logger = logger;
     }
 
-    public async Task<LoginFlowResult> EjecutarAsync(AuthRequest request, string ipAddress, double recaptchaScore)
+    public async Task<DtoLoginFlowResult> EjecutarAsync(DtoAuthRequest request, string ipAddress, double recaptchaScore)
     {
         var maxAccountAttempts = _configuration.GetValue<int?>("Authentication:Login:RateLimitAccountAttempts") ?? 5;
         var windowMinutes = _configuration.GetValue<int?>("Authentication:Login:RateLimitWindowMinutes") ?? 15;
@@ -53,14 +53,14 @@ public class LoginFlowService : ILoginFlowService
                 maxAccountAttempts,
                 accountRateLimit.PartitionKey);
 
-            return LoginFlowResult.FalloConRateLimit(
+            return DtoLoginFlowResult.FalloConRateLimit(
                 OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "AUTH_RL_02",
                     nameof(EjecutarAsync),
                     $"Se superó el límite de intentos de inicio de sesión para esta cuenta. Por tu seguridad, intentá nuevamente más tarde.",
                     429,
                     default!),
-                new LoginRateLimitHeaders
+                new DtoLoginRateLimitHeaders
                 {
                     Limit = maxAccountAttempts,
                     Remaining = accountRateLimit.RemainingAttempts,
@@ -84,7 +84,7 @@ public class LoginFlowService : ILoginFlowService
         {
             _logger.LogWarning("Bloqueo por intentos fallidos activo para el documento {Doc}", normalizedDoc);
 
-            return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
+            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "AUTH_RL_03",
                 nameof(EjecutarAsync),
                 $"Se bloqueó el acceso temporalmente por múltiples intentos fallidos. Intentá nuevamente en {failWindowMinutes} minutos.",
@@ -97,7 +97,7 @@ public class LoginFlowService : ILoginFlowService
         {
             _logger.LogWarning("Bloqueo por intentos fallidos activo para la IP {IP}", ipAddress);
 
-            return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
+            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "AUTH_RL_04",
                 nameof(EjecutarAsync),
                 $"Se bloqueó el acceso temporalmente por múltiples intentos fallidos desde esta red. Intentá nuevamente en {failWindowMinutes} minutos.",
@@ -116,7 +116,7 @@ public class LoginFlowService : ILoginFlowService
                 _rateLimiter.IsAllowedAsync(failUserKey, failUserLimit, failWindow),
                 _rateLimiter.IsAllowedAsync(failIpKey, failIpLimit, failWindow));
 
-            return LoginFlowResult.Fallo(result);
+            return DtoLoginFlowResult.Fallo(result);
         }
 
         await Task.WhenAll(
@@ -135,7 +135,7 @@ public class LoginFlowService : ILoginFlowService
                     recaptchaScore);
             }
 
-            return LoginFlowResult.LoginExitoso(result);
+            return DtoLoginFlowResult.LoginExitoso(result);
         }
 
         if (string.IsNullOrWhiteSpace(result.Data.Persona.Email))
@@ -145,7 +145,7 @@ public class LoginFlowService : ILoginFlowService
                 recaptchaScore,
                 request.Documento);
 
-            return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
+            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "AUTH_2FA_NO_EMAIL",
                 nameof(EjecutarAsync),
                 "No es posible verificar tu identidad por este medio. Contactá a soporte.",
@@ -164,7 +164,7 @@ public class LoginFlowService : ILoginFlowService
         var twoFactorResult = await _dosFactoresService.IniciarAsync(result.Data, result.Data.Persona.Email);
         if (!twoFactorResult.Success)
         {
-            return LoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
+            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
                 twoFactorResult.ErrorCode,
                 nameof(EjecutarAsync),
                 twoFactorResult.Message,
@@ -172,7 +172,7 @@ public class LoginFlowService : ILoginFlowService
                 default!));
         }
 
-        return LoginFlowResult.Requiere2FA(
+        return DtoLoginFlowResult.Requiere2FA(
             OperationResult<DtoLogin2FARequired>.IsSuccess(
                 twoFactorResult.Data!,
                 nameof(EjecutarAsync),

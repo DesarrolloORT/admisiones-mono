@@ -36,9 +36,6 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         private const string JpegExtension = ".jpeg";
 
-        // Extensiones permitidas para validación de contenido (PDF, JPG, JPEG)
-        private static readonly string[] DefaultContentValidationExtensions = { ".pdf", ".jpg" };
-
         // Magic bytes para diferentes tipos de archivos
         private static readonly Dictionary<string, List<byte[]>> MagicBytes = new()
         {
@@ -341,23 +338,6 @@ namespace AppLogic.Helpers.ValidationHelpers
         }
 
         /// <summary>
-        /// Valida específicamente un archivo PDF.
-        /// Método de conveniencia que llama a ValidateFile con la whitelist de PDF.
-        /// </summary>
-        /// <param name="fileContent">Contenido del archivo PDF en bytes.</param>
-        /// <param name="fileName">Nombre del archivo incluyendo extensión.</param>
-        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
-        /// <returns>OperationResult indicando si el PDF es válido.</returns>
-        public static OperationResult<bool> ValidatePdfFile(
-            byte[] fileContent,
-            string fileName,
-            string originMethod)
-        {
-            var allowedExtensions = new List<string> { ".pdf" };
-            return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
-        }
-
-        /// <summary>
         /// Valida archivos de imagen (JPEG, PNG).
         /// </summary>
         /// <param name="fileContent">Contenido del archivo de imagen en bytes.</param>
@@ -415,105 +395,6 @@ namespace AppLogic.Helpers.ValidationHelpers
         {
             var allowedExtensions = new List<string> { ".pdf", ".jpg", JpegExtension, ".png" };
             return ValidateFile(fileContent, fileName, allowedExtensions, originMethod);
-        }
-
-        /// <summary>
-        /// Valida el contenido de un archivo (magic bytes) sin validar el nombre.
-        /// Útil cuando solo se tiene el contenido del archivo y se necesita verificar que sea de un tipo específico.
-        /// Valida que el contenido coincida con PDF, JPG o JPEG.
-        /// </summary>
-        /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
-        /// <returns>OperationResult indicando si el contenido del archivo es válido y qué tipo de archivo es.</returns>
-        public static OperationResult<string> ValidateFileContentOnly(
-            byte[] fileContent,
-            string originMethod)
-        {
-            // Validación 1: Verificar que el contenido no esté vacío
-            if (fileContent == null || fileContent.Length == 0)
-            {
-                return OperationResult<string>.IsFailed(
-                    "FILE_CONTENT_01",
-                    originMethod,
-                    "El archivo está vacío o no se pudo leer.",
-                    400);
-            }
-
-            // Validación 2: Verificar que tenga suficientes bytes para validar magic bytes
-            if (fileContent.Length < 4)
-            {
-                return OperationResult<string>.IsFailed(
-                    "FILE_CONTENT_02",
-                    originMethod,
-                    "El archivo es demasiado pequeño para ser válido.",
-                    400);
-            }
-
-            // Validación 3: Detectar tipo de archivo por magic bytes
-            var detectedType = DetectFileTypeByMagicBytes(fileContent, DefaultContentValidationExtensions);
-
-            if (detectedType != null)
-            {
-                return OperationResult<string>.Ok(detectedType, originMethod);
-            }
-
-            // Si no coincide con ningún magic byte conocido
-            return OperationResult<string>.IsFailed(
-                "FILE_CONTENT_03",
-                originMethod,
-                "El archivo no es un PDF, JPG o JPEG válido. El tipo de archivo no está permitido.",
-                400);
-        }
-
-        /// <summary>
-        /// Detecta el tipo de archivo basándose en sus magic bytes.
-        /// </summary>
-        /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="extensionsToCheck">Lista de extensiones a verificar.</param>
-        /// <returns>La extensión detectada o null si no coincide con ninguna.</returns>
-        private static string? DetectFileTypeByMagicBytes(byte[] fileContent, string[] extensionsToCheck)
-        {
-            return extensionsToCheck.FirstOrDefault(extension => TryMatchExtension(fileContent, extension));
-        }
-
-        /// <summary>
-        /// Intenta hacer match del contenido del archivo con los magic bytes de una extensión específica.
-        /// </summary>
-        /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="extension">Extensión a verificar (ej: ".pdf", ".jpg").</param>
-        /// <returns>True si el contenido coincide con algún magic byte de la extensión.</returns>
-        private static bool TryMatchExtension(byte[] fileContent, string extension)
-        {
-            if (!MagicBytes.TryGetValue(extension, out var magicBytesList))
-            {
-                return false;
-            }
-
-            return CheckMagicBytesMatch(fileContent, magicBytesList);
-        }
-
-        /// <summary>
-        /// Valida el contenido de un archivo (magic bytes) para formatos PDF, JPG o JPEG sin validar el nombre.
-        /// Método de conveniencia que valida el contenido y devuelve bool.
-        /// </summary>
-        /// <param name="fileContent">Contenido del archivo en bytes.</param>
-        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
-        /// <returns>OperationResult con bool indicando si el archivo es válido.</returns>
-        public static OperationResult<bool> ValidatePdfOrImageContent(
-            byte[] fileContent,
-            string originMethod)
-        {
-            var validationResult = ValidateFileContentOnly(fileContent, originMethod);
-            if (!validationResult.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    validationResult.ErrorCode,
-                    originMethod,
-                    validationResult.Message,
-                    validationResult.HttpCode);
-            }
-
-            return OperationResult<bool>.Ok(true, originMethod);
         }
 
         /// <summary>
@@ -786,34 +667,6 @@ namespace AppLogic.Helpers.ValidationHelpers
             }
 
             return OperationResult<string>.Ok(sanitizedName, originMethod);
-        }
-
-        /// <summary>
-        /// Sanitiza el nombre de un archivo PDF.
-        /// Método de conveniencia para archivos PDF.
-        /// </summary>
-        /// <param name="fileName">Nombre del archivo original.</param>
-        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
-        /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
-        public static OperationResult<string> SanitizePdfFileName(string fileName, string originMethod)
-        {
-            return SanitizeFileName(fileName, new List<string> { ".pdf" }, originMethod);
-        }
-
-        /// <summary>
-        /// Sanitiza el nombre de un archivo PDF cuando el nombre y la extensión vienen por separado.
-        /// Método de conveniencia para archivos PDF.
-        /// </summary>
-        /// <param name="fileNameWithoutExtension">Nombre del archivo SIN extensión.</param>
-        /// <param name="extension">Extensión del archivo (con o sin punto inicial).</param>
-        /// <param name="originMethod">Nombre del método que invoca esta validación.</param>
-        /// <returns>OperationResult con el nombre de archivo sanitizado.</returns>
-        public static OperationResult<string> SanitizePdfFileName(
-            string fileNameWithoutExtension, 
-            string extension, 
-            string originMethod)
-        {
-            return SanitizeFileName(fileNameWithoutExtension, extension, new List<string> { ".pdf" }, originMethod);
         }
 
         /// <summary>

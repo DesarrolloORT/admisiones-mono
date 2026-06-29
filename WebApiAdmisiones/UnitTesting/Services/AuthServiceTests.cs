@@ -1,4 +1,5 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
+using AppLogic.Dtos.Registro;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
@@ -628,16 +629,16 @@ namespace UnitTesting.AppLogic.Services
             {
                 PasswordNueva = "NuevaPassword1!"
             };
-            var imagenes = new RegistroDocumentoImagenesTemporales
+            var imagenes = new DtoRegistroDocumentoImagenesTemporales
             {
                 FechaVencimiento = new DateTime(2030, 1, 1),
-                DocumentoFrente = new RegistroDocumentoArchivoTemporal
+                DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                 {
                     Archivo = [0x25, 0x50, 0x44, 0x46, 1],
                     NombreArchivo = "documento.pdf",
                     ContentType = "application/pdf"
                 },
-                CaraPersona = new RegistroDocumentoArchivoTemporal
+                CaraPersona = new DtoRegistroDocumentoArchivoTemporal
                 {
                     Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
                     NombreArchivo = "cara.jpg",

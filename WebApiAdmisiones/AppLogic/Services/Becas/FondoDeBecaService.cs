@@ -1,6 +1,7 @@
+using AppLogic.Dtos.Becas;
+using AppLogic.Dtos.Catalogos;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Becas;
 using BusinessLogic.IDevartRepositories;

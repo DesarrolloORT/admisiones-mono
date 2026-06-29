@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Registro;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
@@ -12,7 +12,7 @@ namespace AppLogic.Helpers
     [ExcludeFromCodeCoverage]
     public static class RegistroEntityFactoryHelper
     {
-        public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, RegistroPersonaRequest request)
+        public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, DtoRegistroPersonaRequest request)
         {
             return new SolicitudAlta
             {
@@ -50,7 +50,7 @@ namespace AppLogic.Helpers
             };
         }
 
-        public static Persona CrearPersona(long codigoPersona, RegistroPersonaRequest request, Ciudad ciudad, DateTime now)
+        public static Persona CrearPersona(long codigoPersona, DtoRegistroPersonaRequest request, Ciudad ciudad, DateTime now)
         {
             var primerNombre = DocumentUtils.FormatoCapital(request.PrimerNombre);
             var segundoNombre = DocumentUtils.FormatoCapital(request.SegundoNombre);
@@ -93,7 +93,7 @@ namespace AppLogic.Helpers
         /// <summary>
         /// Crea una entidad Persona a partir de los datos de registro pendiente en Redis.
         /// </summary>
-        public static Persona CrearPersona(long codigoPersona, RegistroPendingPersona data, Ciudad ciudad, DateTime now)
+        public static Persona CrearPersona(long codigoPersona, DtoRegistroPendingPersona data, Ciudad ciudad, DateTime now)
         {
             var primerNombre = DocumentUtils.FormatoCapital(data.PrimerNombre);
             var segundoNombre = DocumentUtils.FormatoCapital(data.SegundoNombre);

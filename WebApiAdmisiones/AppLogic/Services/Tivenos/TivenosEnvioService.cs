@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.IServices.Tivenos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -8,21 +8,14 @@ namespace AppLogic.Services.Tivenos
 {
     public class TivenosEnvioService : ITivenosEnvioService
     {
-        private const long CodigoPersonaPruebaLegacy = 129329;
-
         public OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
             IUnitOfWork uow,
-            TivenosAltaInteresRequest request,
+            DtoTivenosAltaInteresRequest request,
             int idTivenos,
             string methodName)
         {
             ArgumentNullException.ThrowIfNull(uow);
             ArgumentNullException.ThrowIfNull(request);
-
-            if (!DebeEncolar(uow, request.CodigoPersona))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
 
             var envio = CrearEnvioAltaInteres(request);
             envio.IdEnvioParaTivenos = idTivenos;
@@ -34,17 +27,12 @@ namespace AppLogic.Services.Tivenos
 
         public OperationResult<bool> EncolarAltaDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName)
         {
             ArgumentNullException.ThrowIfNull(uow);
             ArgumentNullException.ThrowIfNull(request);
-
-            if (!DebeEncolar(uow, request.CodigoPersona))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
 
             var envio = CrearEnvioBachillerato(
                 request,
@@ -60,17 +48,12 @@ namespace AppLogic.Services.Tivenos
 
         public OperationResult<bool> EncolarModificacionDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName)
         {
             ArgumentNullException.ThrowIfNull(uow);
             ArgumentNullException.ThrowIfNull(request);
-
-            if (!DebeEncolar(uow, request.CodigoPersona))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
 
             var envio = CrearEnvioBachillerato(
                 request,
@@ -84,18 +67,7 @@ namespace AppLogic.Services.Tivenos
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        private static bool DebeEncolar(IUnitOfWork uow, long codigoPersona)
-        {
-            var seLiberoTivenos = uow.Parametros.ObtenerSeLiberoTivenos();
-            if (string.Equals(seLiberoTivenos?.Trim(), "SI", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            return codigoPersona == CodigoPersonaPruebaLegacy;
-        }
-
-        private static EnvioParaTiveno CrearEnvioAltaInteres(TivenosAltaInteresRequest request)
+        private static EnvioParaTiveno CrearEnvioAltaInteres(DtoTivenosAltaInteresRequest request)
         {
             return new EnvioParaTiveno
             {
@@ -116,7 +88,7 @@ namespace AppLogic.Services.Tivenos
         }
 
         private static EnvioParaTiveno CrearEnvioBachillerato(
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             string tipoProcesoLlamador,
             string disparador,
             string metodo)

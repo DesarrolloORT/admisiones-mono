@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Tivenos;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
@@ -8,19 +8,19 @@ namespace AppLogic.IServices.Tivenos
     {
         OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
             IUnitOfWork uow,
-            TivenosAltaInteresRequest request,
+            DtoTivenosAltaInteresRequest request,
             int idTivenos,
             string methodName);
 
         OperationResult<bool> EncolarAltaDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName);
 
         OperationResult<bool> EncolarModificacionDatosBachillerato(
             IUnitOfWork uow,
-            TivenosBachilleratoRequest request,
+            DtoTivenosBachilleratoRequest request,
             int idTivenos,
             string methodName);
     }

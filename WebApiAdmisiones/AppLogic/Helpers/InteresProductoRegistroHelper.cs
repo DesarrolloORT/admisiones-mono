@@ -1,5 +1,6 @@
+using AppLogic.Dtos.Inscripciones;
+using AppLogic.Dtos.Tivenos;
 using AppLogic.Constants;
-using AppLogic.DTOs;
 using AppLogic.IServices.Tivenos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -10,11 +11,11 @@ namespace AppLogic.Helpers
 {
     internal static class InteresProductoRegistroHelper
     {
-        public static OperationResult<TivenosAltaInteresRequest?> RegistrarInteresProducto(
+        public static OperationResult<DtoTivenosAltaInteresRequest?> RegistrarInteresProducto(
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            InteresProductoRequest request,
+            DtoInteresProductoRequest request,
             Oferta oferta,
             DateTime fechaActual,
             string methodName)
@@ -40,14 +41,14 @@ namespace AppLogic.Helpers
                 methodName);
             if (!resultadoEncuesta.Success)
             {
-                return OperationResult<TivenosAltaInteresRequest?>.IsFailed(
+                return OperationResult<DtoTivenosAltaInteresRequest?>.IsFailed(
                     resultadoEncuesta.ErrorCode,
                     methodName,
                     resultadoEncuesta.Message,
                     resultadoEncuesta.HttpCode);
             }
 
-            return OperationResult<TivenosAltaInteresRequest?>.Ok(
+            return OperationResult<DtoTivenosAltaInteresRequest?>.Ok(
                 CrearRequestTivenos(codigoPersona, request, operacionTivenos),
                 methodName);
         }
@@ -126,9 +127,9 @@ namespace AppLogic.Helpers
             return TivenosAltaInteresOperacion.ModificarActualizarInteres();
         }
 
-        private static TivenosAltaInteresRequest? CrearRequestTivenos(
+        private static DtoTivenosAltaInteresRequest? CrearRequestTivenos(
             long codigoPersona,
-            InteresProductoRequest request,
+            DtoInteresProductoRequest request,
             TivenosAltaInteresOperacion? operacion)
         {
             if (operacion == null)
@@ -136,7 +137,7 @@ namespace AppLogic.Helpers
                 return null;
             }
 
-            return new TivenosAltaInteresRequest
+            return new DtoTivenosAltaInteresRequest
             {
                 CodigoPersona = codigoPersona,
                 IdProducto = request.IdProducto,

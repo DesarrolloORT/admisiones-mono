@@ -1,5 +1,5 @@
+using AppLogic.Dtos.Catalogos;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.ApiClients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,8 +107,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Catalogo obtenido correctamente.</response>
         /// <response code="400">Solicitud invalida.</response>
         [HttpGet("Carreras")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarreraResponse>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>), 400)]
         public IActionResult ObtenerCarreras()
         {
             var result = catalogosService.ObtenerCarreras(_currentUser.GetUserId());

@@ -1,9 +1,9 @@
+using AppLogic.Dtos.Registro;
 using System;
 using System.Collections.Generic;
 using AzureService.DTOs;
 using AzureService.Interfaces;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -30,11 +30,11 @@ namespace UnitTesting.Controllers
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new RegistroEvaluarDocumentoRequest { TipoDocumento = "CI", Documento = "1234567-2" };
+            var request = new DtoRegistroEvaluarDocumentoRequest { TipoDocumento = "CI", Documento = "1234567-2" };
 
             serviceMock.Setup(s => s.EvaluarDocumentoAsync(request))
-                .ReturnsAsync(OperationResult<RegistroEvaluacionResponse>.Ok(
-                    new RegistroEvaluacionResponse { RequiereAltaPersona = true },
+                .ReturnsAsync(OperationResult<DtoRegistroEvaluacionResponse>.Ok(
+                    new DtoRegistroEvaluacionResponse { RequiereAltaPersona = true },
                     nameof(IRegistroService.EvaluarDocumentoAsync)));
 
             var response = await controller.EvaluarDocumento(request);
@@ -92,7 +92,7 @@ namespace UnitTesting.Controllers
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<RegistroController>>();
             var controller = new RegistroController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new RegistroVerificarIdentidadRequest
+            var request = new DtoRegistroVerificarIdentidadRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2",
@@ -165,15 +165,15 @@ namespace UnitTesting.Controllers
         {
             var serviceMock = new Mock<IRegistroService>();
             var controller = CrearController(serviceMock.Object);
-            var request = new RegistroEvaluarDocumentoRequest
+            var request = new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2"
             };
             serviceMock
                 .Setup(s => s.EvaluarDocumentoAsync(request))
-                .ReturnsAsync(OperationResult<RegistroEvaluacionResponse>.Ok(
-                    new RegistroEvaluacionResponse { RequiereAltaPersona = true },
+                .ReturnsAsync(OperationResult<DtoRegistroEvaluacionResponse>.Ok(
+                    new DtoRegistroEvaluacionResponse { RequiereAltaPersona = true },
                     nameof(IRegistroService.EvaluarDocumentoAsync)));
 
             var response = await controller.EvaluarDocumento(request);
@@ -189,22 +189,22 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IRegistroService>();
             var flowServiceMock = new Mock<IRegistroFlowService>();
             var controller = CrearController(serviceMock.Object, registroFlowService: flowServiceMock.Object);
-            var request = new RegistroEvaluarDocumentoRequest
+            var request = new DtoRegistroEvaluarDocumentoRequest
             {
                 TipoDocumento = "CI",
                 Documento = "1234567-2"
             };
             serviceMock
                 .Setup(s => s.EvaluarDocumentoAsync(request))
-                .ReturnsAsync(OperationResult<RegistroEvaluacionResponse>.Ok(
-                    new RegistroEvaluacionResponse { UsuarioExistente = true },
+                .ReturnsAsync(OperationResult<DtoRegistroEvaluacionResponse>.Ok(
+                    new DtoRegistroEvaluacionResponse { UsuarioExistente = true },
                     nameof(IRegistroService.EvaluarDocumentoAsync)));
 
             var response = await controller.EvaluarDocumento(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-            var body = Assert.IsType<OperationResult<RegistroEvaluacionResponse>>(okResult.Value);
+            var body = Assert.IsType<OperationResult<DtoRegistroEvaluacionResponse>>(okResult.Value);
             Assert.Null(body.Data!.FlowId);
             flowServiceMock.Verify(
                 s => s.CrearFlowSessionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long?>()),
@@ -303,7 +303,7 @@ namespace UnitTesting.Controllers
                 s => s.GuardarAsync(
                     "CI",
                     "12345672",
-                    It.Is<RegistroDocumentoImagenesTemporales>(i =>
+                    It.Is<DtoRegistroDocumentoImagenesTemporales>(i =>
                         i.DocumentoFrente.NombreArchivo == "documento.pdf"
                         && i.DocumentoFrente.Archivo.SequenceEqual(request.ArchivoAdjunto.Archivo!)
                         && i.CaraPersona != null
@@ -348,7 +348,7 @@ namespace UnitTesting.Controllers
                 s => s.GuardarAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<RegistroDocumentoImagenesTemporales>()),
+                    It.IsAny<DtoRegistroDocumentoImagenesTemporales>()),
                 Times.Never);
         }
 
@@ -361,7 +361,7 @@ namespace UnitTesting.Controllers
                 .Setup(s => s.GuardarAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<RegistroDocumentoImagenesTemporales>()))
+                    It.IsAny<DtoRegistroDocumentoImagenesTemporales>()))
                 .ThrowsAsync(new InvalidOperationException("Redis unavailable"));
             var controller = CrearController(
                 reconocimientoDocumentoService: reconocimientoMock.Object,
@@ -401,7 +401,7 @@ namespace UnitTesting.Controllers
                 .Setup(s => s.ValidarFlowSessionAsync(It.IsAny<string>(), "evaluado"))
                 .ReturnsAsync((OperationResult<object?>?)null);
             flowServiceMock
-                .Setup(s => s.ConfirmarNuevaPersonaAsync(It.IsAny<RegistroPersonaRequest>(), It.IsAny<string>()))
+                .Setup(s => s.ConfirmarNuevaPersonaAsync(It.IsAny<DtoRegistroPersonaRequest>(), It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<RegistroFlowResult>.IsSuccess(
                     new RegistroFlowResult("Registro realizado correctamente."),
                     nameof(IRegistroFlowService.ConfirmarNuevaPersonaAsync),
@@ -412,7 +412,7 @@ namespace UnitTesting.Controllers
                 HttpContext = new DefaultHttpContext()
             };
             controller.ControllerContext.HttpContext.Request.Headers["X-Flow-Id"] = "test-flow-id";
-            var request = new RegistroPersonaRequest
+            var request = new DtoRegistroPersonaRequest
             {
                 TipoDocumento = "PS",
                 Documento = "A123"
@@ -464,7 +464,7 @@ namespace UnitTesting.Controllers
                 .ReturnsAsync("test-flow-id");
             mock.Setup(f => f.ActualizarStepAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            mock.Setup(f => f.ConfirmarNuevaPersonaAsync(It.IsAny<RegistroPersonaRequest>(), It.IsAny<string>()))
+            mock.Setup(f => f.ConfirmarNuevaPersonaAsync(It.IsAny<DtoRegistroPersonaRequest>(), It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<RegistroFlowResult>.Ok(
                     new RegistroFlowResult("Registro realizado correctamente."),
                     "ConfirmarNuevaPersonaAsync"));

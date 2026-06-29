@@ -13,30 +13,6 @@ namespace DataAccess.DevartRepositories
 {
     public partial class VdEsFrescoAdmisionRepository
     {
-        /// <summary>
-        /// Devuelve true si la persona tiene una inscripción activa en VD_ES_FRESCO_ADMISION
-        /// para el producto y proceso indicados (proceso habilitado y comienzo vigente).
-        /// </summary>
-        public virtual bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
-        {
-            return
-            (
-                from fresco in objectSet
-                join procesoProducto in Context.Set<BusinessLogic.Entities.ProcesoProducto>()
-                    on fresco.IdProducto equals procesoProducto.IdProducto
-                join procesoComienzo in Context.Set<BusinessLogic.Entities.ProcesoComienzo>()
-                    on fresco.IdComienzo equals procesoComienzo.IdComienzo
-                join proceso in Context.Set<BusinessLogic.Entities.Proceso>()
-                    on procesoProducto.IdProceso equals proceso.IdProceso
-                where fresco.CodigoPersona == codigoPersona
-                      && fresco.IdProducto == idProducto
-                      && procesoProducto.IdProceso == idProceso
-                      && procesoComienzo.IdProceso == idProceso
-                      && proceso.HabilitadoInteresSitio == "SI"
-                select fresco.IdProducto
-            ).Count() > 0;
-        }
-
         public virtual bool ExistePorDocumento(string tipoDocumento, string documento)
         {
             var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;

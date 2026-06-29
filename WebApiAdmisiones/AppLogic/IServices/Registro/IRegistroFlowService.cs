@@ -1,4 +1,4 @@
-using AppLogic.DTOs;
+using AppLogic.Dtos.Registro;
 using Utilities;
 
 namespace AppLogic.IServices.Registro;
@@ -34,11 +34,11 @@ public interface IRegistroFlowService
     /// NO crea la persona en t_persona (se difiere a CompletarPassword).
     /// </summary>
     Task<OperationResult<RegistroFlowResult>> ConfirmarNuevaPersonaAsync(
-        RegistroPersonaRequest request,
+        DtoRegistroPersonaRequest request,
         string flowId);
 
     /// <summary>Retorna los datos de una persona pendiente en Redis, o null si no existe/expiró.</summary>
-    Task<RegistroPendingPersona?> GetPendingPersonaAsync(string flowId);
+    Task<DtoRegistroPendingPersona?> GetPendingPersonaAsync(string flowId);
 
     /// <summary>Elimina los datos de persona pendiente en Redis.</summary>
     Task DeletePendingPersonaAsync(string flowId);
@@ -48,7 +48,7 @@ public interface IRegistroFlowService
     /// Se llama desde CompletarPassword para el flujo de nueva persona.
     /// Retorna el CodigoPersona creado.
     /// </summary>
-    Task<OperationResult<long>> CompletarNuevaPersona(RegistroPendingPersona data, string passwordNueva);
+    Task<OperationResult<long>> CompletarNuevaPersona(DtoRegistroPendingPersona data, string passwordNueva);
 }
 
 /// <summary>Resultado de ConfirmarNuevaPersonaAsync.</summary>

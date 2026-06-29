@@ -1,7 +1,8 @@
+﻿using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
 using AppLogic.Services.Personas;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -48,18 +49,18 @@ namespace AppLogic.Helpers
         internal static EncuestaIniAdmision? ObtenerEncuestaParaGuardar(
             IUnitOfWork uow,
             long codigoPersona,
-            GuardarEncuestaInicialRequest request)
+            DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.IdProducto.HasValue && request.IdProceso.HasValue)
+            if (request.CarreraId.HasValue && request.ComienzoId.HasValue)
             {
                 var idComienzo = uow.ProcesoComienzos.GetComienzoActivoPorProcesoOProducto(
-                    request.IdProducto.Value,
-                    request.IdProceso.Value);
+                    request.CarreraId.Value,
+                    request.ComienzoId.Value);
                 if (idComienzo.HasValue && idComienzo.Value > 0)
                 {
                     var encuestaPorProductoComienzo = uow.EncuestaIniAdmisions.GetByPersonaProductoComienzo(
                         codigoPersona,
-                        request.IdProducto.Value,
+                        request.CarreraId.Value,
                         idComienzo.Value);
                     if (encuestaPorProductoComienzo != null)
                     {
@@ -95,7 +96,7 @@ namespace AppLogic.Helpers
 
         internal static void AplicarRequestAEncuesta(
             EncuestaIniAdmision encuesta,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             Persona persona,
             long? idComienzo)
         {
@@ -108,13 +109,13 @@ namespace AppLogic.Helpers
 
         private static void AplicarIdentificadores(
             EncuestaIniAdmision encuesta,
-            GuardarEncuestaInicialRequest request,
+            DtoGuardarEncuestaInicialRequest request,
             Persona persona,
             long? idComienzo)
         {
-            if (request.IdProducto.HasValue)
+            if (request.CarreraId.HasValue)
             {
-                encuesta.IdProducto = request.IdProducto.Value;
+                encuesta.IdProducto = request.CarreraId.Value;
             }
 
             if (idComienzo.HasValue)
@@ -122,9 +123,9 @@ namespace AppLogic.Helpers
                 encuesta.IdComienzo = idComienzo.Value;
             }
 
-            if (request.IdProceso.HasValue)
+            if (request.ComienzoId.HasValue)
             {
-                encuesta.IdProceso = request.IdProceso.Value;
+                encuesta.IdProceso = request.ComienzoId.Value;
             }
 
             if (encuesta.IdProducto.HasValue)
@@ -133,163 +134,164 @@ namespace AppLogic.Helpers
             }
         }
 
-        private static void AplicarFormacion(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarFormacion(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.NombreInstitucion != null)
+            if (request.NombreInstitucionSecundaria != null)
             {
-                encuesta.NombreInstSecEncuestaIni = NormalizarTextoOpcional(request.NombreInstitucion);
+                encuesta.NombreInstSecEncuestaIni = DocumentUtils.NormalizarOpcional(request.NombreInstitucionSecundaria);
             }
 
-            if (request.CodigoTitulo.HasValue)
+            if (request.OrientacionBachilleratoId.HasValue)
             {
-                encuesta.CodigoTitulo = request.CodigoTitulo.Value;
+                encuesta.CodigoTitulo = request.OrientacionBachilleratoId.Value;
             }
 
-            if (request.UltimoAnioSexto.HasValue)
+            if (request.AnioBachillerato.HasValue)
             {
-                encuesta.UltimoAnioSextoEncuestaIni = request.UltimoAnioSexto.Value.ToString();
+                encuesta.UltimoAnioSextoEncuestaIni = request.AnioBachillerato.Value.ToString();
             }
 
-            if (request.VecesSextoBool.HasValue)
+            if (request.RecursaAnioBachillerato.HasValue)
             {
-                encuesta.VecesSextoEncuestaIni = request.VecesSextoBool.Value
-                    ? request.VecesSexto?.ToString()
+                encuesta.VecesSextoEncuestaIni = request.RecursaAnioBachillerato.Value
+                    ? request.VecesRecursaAnioBachillerato?.ToString()
                     : null;
             }
-            else if (request.VecesSexto.HasValue)
+            else if (request.VecesRecursaAnioBachillerato.HasValue)
             {
-                encuesta.VecesSextoEncuestaIni = request.VecesSexto.Value.ToString();
+                encuesta.VecesSextoEncuestaIni = request.VecesRecursaAnioBachillerato.Value.ToString();
             }
 
-            if (request.InstruccionPadre.HasValue)
+            if (request.NivelFormacionPadreTutorId.HasValue)
             {
-                encuesta.InstruccionPadreEncuestaIni = request.InstruccionPadre.Value.ToString();
+                encuesta.InstruccionPadreEncuestaIni = request.NivelFormacionPadreTutorId.Value.ToString();
             }
 
-            if (request.InstruccionMadre.HasValue)
+            if (request.NivelFormacionMadreTutorId.HasValue)
             {
-                encuesta.InstruccionMadreEncuestaIni = request.InstruccionMadre.Value.ToString();
+                encuesta.InstruccionMadreEncuestaIni = request.NivelFormacionMadreTutorId.Value.ToString();
             }
 
-            if (request.DecisionCarrera.HasValue)
+            if (request.AnioDecisionCarreraId.HasValue)
             {
-                encuesta.DecisionCarreraEncuestaIni = request.DecisionCarrera.Value.ToString();
+                encuesta.DecisionCarreraEncuestaIni = request.AnioDecisionCarreraId.Value.ToString();
             }
 
-            if (request.DecisionUniversidad.HasValue)
+            if (request.AnioDecisionOrtId.HasValue)
             {
-                encuesta.DecisionUniverEncuestaIni = request.DecisionUniversidad.Value.ToString();
+                encuesta.DecisionUniverEncuestaIni = request.AnioDecisionOrtId.Value.ToString();
             }
         }
 
-        private static void AplicarInfoOtras(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarInfoOtras(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.InfoOtrasUniversidadesAntes != null)
+            if (request.SeInformoEnOtrasUniversidades.HasValue)
             {
-                encuesta.InforOtrasAntesEncuestaIni = NormalizarSiNo(request.InfoOtrasUniversidadesAntes);
+                encuesta.InforOtrasAntesEncuestaIni = ConvertirBoolASiNo(request.SeInformoEnOtrasUniversidades.Value);
             }
 
-            if (request.InfoOtrasLinea1 != null)
+            if (request.InformacionOtrasUniversidadesLinea1 != null)
             {
-                encuesta.InforOtrasLinea1Ini = NormalizarTextoOpcional(request.InfoOtrasLinea1);
+                encuesta.InforOtrasLinea1Ini = DocumentUtils.NormalizarOpcional(request.InformacionOtrasUniversidadesLinea1);
             }
 
-            if (request.InfoOtrasLinea2 != null)
+            if (request.InformacionOtrasUniversidadesLinea2 != null)
             {
-                encuesta.InforOtrasLinea2Ini = NormalizarTextoOpcional(request.InfoOtrasLinea2);
+                encuesta.InforOtrasLinea2Ini = DocumentUtils.NormalizarOpcional(request.InformacionOtrasUniversidadesLinea2);
             }
 
-            if (request.CompartidoCon.HasValue)
+            if (request.ApoyoDecisionId.HasValue)
             {
-                CargarConQuienCompartioDecision(encuesta, request.CompartidoCon.Value);
+                CargarConQuienCompartioDecision(encuesta, request.ApoyoDecisionId.Value);
             }
 
-            if (request.CodigoInstitucionBac.HasValue)
+            if (request.InstitucionSecundariaId.HasValue)
             {
-                encuesta.CodigoInstitucionBac = request.CodigoInstitucionBac.Value;
+                encuesta.CodigoInstitucionBac = request.InstitucionSecundariaId.Value;
             }
 
-            if (request.InformarEncuesta != null)
+            if (request.AutorizaInformarEncuesta.HasValue)
             {
-                encuesta.InformarEncuestaIni = NormalizarSiNo(request.InformarEncuesta);
+                encuesta.InformarEncuestaIni = ConvertirBoolASiNo(request.AutorizaInformarEncuesta.Value);
             }
 
-            if (request.UltimoAnioSecundaria.HasValue)
+            if (request.UbicacionUltimoAnioSecundariaId.HasValue)
             {
-                encuesta.UltimoanioSecundariaEncuestaIni = request.UltimoAnioSecundaria.Value == PersonaConstants.Parametros.UruguayCodigoPais;
+                encuesta.UltimoanioSecundariaEncuestaIni = request.UbicacionUltimoAnioSecundariaId.Value == PersonaConstants.Parametros.UruguayCodigoPais;
             }
 
-            if (request.TieneEducacionSuperior.HasValue)
+            if (request.EstadoEducacionSuperiorPreviaId.HasValue)
             {
-                encuesta.TieneEducacionSuperiorEncuestaIni = ConvertirBoolASiNo(request.TieneEducacionSuperior.Value);
+                encuesta.TieneEducacionSuperiorEncuestaIni =
+                    ConvertirBoolASiNo(request.EstadoEducacionSuperiorPreviaId.Value is 1 or 2);
             }
 
-            if (request.NivelDecision.HasValue)
+            if (request.NivelDecisionId.HasValue)
             {
-                encuesta.NivelDecisionEncuestaIni = request.NivelDecision.Value == 1;
+                encuesta.NivelDecisionEncuestaIni = request.NivelDecisionId.Value == 1;
             }
         }
 
-        private static void AplicarValoraciones(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarValoraciones(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.AsesoramientoOrt.HasValue)
+            if (request.TuvoAsesoramientoOrt.HasValue)
             {
-                encuesta.AsesoramientoOrtEncuestaIni = ConvertirBoolASiNo(request.AsesoramientoOrt.Value);
+                encuesta.AsesoramientoOrtEncuestaIni = ConvertirBoolASiNo(request.TuvoAsesoramientoOrt.Value);
             }
 
-            if (request.ValoracionAsesoramientoOrt.HasValue && request.AsesoramientoOrt == true)
+            if (request.ValoracionAsesoramientoOrtId.HasValue && request.TuvoAsesoramientoOrt == true)
             {
-                encuesta.ValoracionAsesoramientoOrtEncuestaIni = request.ValoracionAsesoramientoOrt.Value > 3;
+                encuesta.ValoracionAsesoramientoOrtEncuestaIni = request.ValoracionAsesoramientoOrtId.Value > 3;
             }
-            else if (request.AsesoramientoOrt == false)
+            else if (request.TuvoAsesoramientoOrt == false)
             {
                 encuesta.ValoracionAsesoramientoOrtEncuestaIni = null;
             }
 
-            if (request.VistaSitioWebOrt.HasValue)
+            if (request.VisitoSitioWebOrt.HasValue)
             {
-                encuesta.VistaSitioWebOrtEncuestaIni = ConvertirBoolASiNo(request.VistaSitioWebOrt.Value);
+                encuesta.VistaSitioWebOrtEncuestaIni = ConvertirBoolASiNo(request.VisitoSitioWebOrt.Value);
             }
 
-            if (request.ValoracionSitioWeb.HasValue && request.VistaSitioWebOrt == true)
+            if (request.ValoracionSitioWebOrtId.HasValue && request.VisitoSitioWebOrt == true)
             {
-                encuesta.ValoracionSitioWebOrtEncuestaIni = request.ValoracionSitioWeb.Value > 3;
+                encuesta.ValoracionSitioWebOrtEncuestaIni = request.ValoracionSitioWebOrtId.Value > 3;
             }
-            else if (request.VistaSitioWebOrt == false)
+            else if (request.VisitoSitioWebOrt == false)
             {
                 encuesta.ValoracionSitioWebOrtEncuestaIni = null;
             }
 
-            if (request.VistaInstalacionesOrt.HasValue)
+            if (request.VisitoInstalacionesOrt.HasValue)
             {
-                encuesta.VistaInstalacionesOrtEncuestaIni = ConvertirBoolASiNo(request.VistaInstalacionesOrt.Value);
+                encuesta.VistaInstalacionesOrtEncuestaIni = ConvertirBoolASiNo(request.VisitoInstalacionesOrt.Value);
             }
 
-            if (request.ValoracionInstalacionesOrt.HasValue && request.VistaInstalacionesOrt == true)
+            if (request.ValoracionInstalacionesOrtId.HasValue && request.VisitoInstalacionesOrt == true)
             {
-                encuesta.ValoracionInstalacionesOrtEncuestaIni = request.ValoracionInstalacionesOrt.Value > 3;
+                encuesta.ValoracionInstalacionesOrtEncuestaIni = request.ValoracionInstalacionesOrtId.Value > 3;
             }
-            else if (request.VistaInstalacionesOrt == false)
+            else if (request.VisitoInstalacionesOrt == false)
             {
                 encuesta.ValoracionInstalacionesOrtEncuestaIni = null;
             }
         }
 
-        private static void AplicarPublicidadEInstruccionOrt(EncuestaIniAdmision encuesta, GuardarEncuestaInicialRequest request)
+        private static void AplicarPublicidadEInstruccionOrt(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.PublicidadOrt.HasValue)
+            if (request.RecuerdaPublicidadOrt.HasValue)
             {
-                encuesta.PublicidadOrtEncuestaIni = ConvertirBoolASiNo(request.PublicidadOrt.Value);
+                encuesta.PublicidadOrtEncuestaIni = ConvertirBoolASiNo(request.RecuerdaPublicidadOrt.Value);
             }
 
-            if (request.InstruccionMadreOrt.HasValue)
+            if (request.MadreTutorEgresadoOrt.HasValue)
             {
-                encuesta.InstruccionMadreOrtEncuestaIni = ConvertirBoolASiNo(request.InstruccionMadreOrt.Value);
+                encuesta.InstruccionMadreOrtEncuestaIni = ConvertirBoolASiNo(request.MadreTutorEgresadoOrt.Value);
             }
 
-            if (request.InstruccionPadreOrt.HasValue)
+            if (request.PadreTutorEgresadoOrt.HasValue)
             {
-                encuesta.InstruccionPadreOrtEncuestaIni = ConvertirBoolASiNo(request.InstruccionPadreOrt.Value);
+                encuesta.InstruccionPadreOrtEncuestaIni = ConvertirBoolASiNo(request.PadreTutorEgresadoOrt.Value);
             }
         }
 
@@ -297,51 +299,51 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            GuardarEncuestaInicialRequest request)
+            DtoGuardarEncuestaInicialRequest request)
         {
-            if (string.Equals(NormalizarSiNo(request.InfoOtrasUniversidadesAntes), CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
+            if (request.SeInformoEnOtrasUniversidades == false)
             {
                 uow.EmpresaConsideradaAdmisions.RemoveByPersona(codigoPersona);
             }
-            else if (request.UniversidadesConsideradas != null)
+            else if (request.UniversidadConsideradaIds != null)
             {
-                ReemplazarUniversidadesConsideradas(uow, dbConnectionContext, codigoPersona, request.UniversidadesConsideradas);
+                ReemplazarUniversidadesConsideradas(uow, dbConnectionContext, codigoPersona, request.UniversidadConsideradaIds);
             }
 
-            if (request.TieneEducacionSuperior == false)
+            if (request.EstadoEducacionSuperiorPreviaId == 3)
             {
                 uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);
             }
-            else if (request.UniversidadesEducacionSuperior != null)
+            else if (request.UniversidadEducacionSuperiorIds != null)
             {
-                ReemplazarEducacionSuperior(uow, dbConnectionContext, codigoPersona, request.UniversidadesEducacionSuperior);
+                ReemplazarEducacionSuperior(uow, dbConnectionContext, codigoPersona, request.UniversidadEducacionSuperiorIds);
             }
 
-            if (request.OpcionesMotivosSeleccionados != null)
+            if (request.MotivoEleccionOrtIds != null)
             {
                 uow.MotivoEleccionAdmisions.RemoveByPersona(codigoPersona);
-                foreach (var motivo in request.OpcionesMotivosSeleccionados.DistinctBy(m => m.IdMotivo))
+                foreach (var motivoId in request.MotivoEleccionOrtIds.Distinct())
                 {
                     uow.MotivoEleccionAdmisions.Add(new MotivoEleccionAdmision
                     {
-                        IdMotivo = motivo.IdMotivo,
+                        IdMotivo = motivoId,
                         CodigoPersona = codigoPersona
                     });
                 }
             }
 
-            if (request.PublicidadOrt == false)
+            if (request.RecuerdaPublicidadOrt == false)
             {
                 uow.PublicidadEleccionAdmisions.RemoveByPersona(codigoPersona);
             }
-            else if (request.OpcionesPublicidadSeleccionadas != null)
+            else if (request.PublicidadOrtIds != null)
             {
                 uow.PublicidadEleccionAdmisions.RemoveByPersona(codigoPersona);
-                foreach (var publicidad in request.OpcionesPublicidadSeleccionadas.DistinctBy(p => p.IdPublicidad))
+                foreach (var publicidadId in request.PublicidadOrtIds.Distinct())
                 {
                     uow.PublicidadEleccionAdmisions.Add(new PublicidadEleccionAdmision
                     {
-                        IdPublicidad = publicidad.IdPublicidad,
+                        IdPublicidad = publicidadId,
                         CodigoPersona = codigoPersona
                     });
                 }
@@ -352,17 +354,16 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            IEnumerable<EncuestaEmpresaRequest> universidades)
+            IEnumerable<long> universidades)
         {
             uow.EmpresaConsideradaAdmisions.RemoveByPersona(codigoPersona);
-            foreach (var universidad in universidades)
+            foreach (var universidadId in universidades)
             {
                 uow.EmpresaConsideradaAdmisions.Add(new EmpresaConsideradaAdmision
                 {
                     IdEmpresaConsiderada = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION),
                     CodigoPersona = codigoPersona,
-                    CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
-                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
+                    CodigoEmpresa = universidadId
                 });
             }
         }
@@ -371,29 +372,18 @@ namespace AppLogic.Helpers
             IUnitOfWork uow,
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
-            IEnumerable<EncuestaEmpresaRequest> universidades)
+            IEnumerable<long> universidades)
         {
             uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);
-            foreach (var universidad in universidades)
+            foreach (var universidadId in universidades)
             {
                 uow.EducacionSuperiorAdmisions.Add(new EducacionSuperiorAdmision
                 {
                     IdEducacionSuperior = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION),
                     CodigoPersona = codigoPersona,
-                    CodigoEmpresa = universidad.CodigoEmpresa == 0 ? null : universidad.CodigoEmpresa,
-                    NombreOtraEmpresa = universidad.CodigoEmpresa == 0 ? universidad.Nombre?.Trim() : null
+                    CodigoEmpresa = universidadId
                 });
             }
-        }
-
-        private static string? NormalizarSiNo(string? valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
-        }
-
-        private static string? NormalizarTextoOpcional(string? valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
         }
 
         private static string ConvertirBoolASiNo(bool valor)
@@ -403,7 +393,7 @@ namespace AppLogic.Helpers
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)
         {
-            var input = $"{idProducto}/{documento?.Trim().ToUpperInvariant()}";
+            var input = $"{idProducto}/{DocumentUtils.NormalizarMayusculas(documento)}";
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
             return Convert.ToHexString(hash)[..30];
         }
@@ -418,3 +408,4 @@ namespace AppLogic.Helpers
         }
     }
 }
+

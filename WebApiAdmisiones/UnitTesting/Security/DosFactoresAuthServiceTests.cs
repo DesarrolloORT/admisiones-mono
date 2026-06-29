@@ -1,4 +1,4 @@
-﻿using AppLogic.DTOs;
+using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.Services.Autenticacion;
@@ -29,7 +29,7 @@ namespace UnitTesting.Security
                 e => e.SendAsync("gabriele@ort.edu.uy", It.IsAny<string>(), It.IsAny<string>()),
                 Times.Once);
             sessionStoreMock.Verify(
-                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()),
+                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()),
                 Times.Once);
         }
 
@@ -49,7 +49,7 @@ namespace UnitTesting.Security
             Assert.Equal(429, result.HttpCode);
             Assert.Equal("AUTH_2FA_INIT_01", result.ErrorCode);
             sessionStoreMock.Verify(
-                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()),
+                s => s.SaveAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()),
                 Times.Never);
         }
 
@@ -75,7 +75,7 @@ namespace UnitTesting.Security
         public async Task VerificarCodigoAsync_WhenSessionNotFound_Returns401()
         {
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
-            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((TwoFactorSession?)null);
+            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((DtoTwoFactorSession?)null);
             var service = CreateService(sessionStoreMock: sessionStoreMock);
 
             var result = await service.VerificarCodigoAsync("missing-session", "123456");
@@ -91,7 +91,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoHash = "any-hash",
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1),
@@ -115,7 +115,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoPersona = 123,
                     CodigoHash = hash,
@@ -142,7 +142,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoHash = hash,
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
@@ -164,7 +164,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoHash = "correct-hash",
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
@@ -174,10 +174,10 @@ namespace UnitTesting.Security
             sessionStoreMock
                 .Setup(s => s.GetTtlAsync("session-id"))
                 .ReturnsAsync(TimeSpan.FromMinutes(25));
-            TwoFactorSession? capturedSession = null;
+            DtoTwoFactorSession? capturedSession = null;
             sessionStoreMock
-                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
-                .Callback<string, TwoFactorSession, TimeSpan>((_, session, _) => capturedSession = session)
+                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()))
+                .Callback<string, DtoTwoFactorSession, TimeSpan>((_, session, _) => capturedSession = session)
                 .Returns(Task.CompletedTask);
             var service = CreateService(sessionStoreMock: sessionStoreMock);
 
@@ -196,7 +196,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoHash = "correct-hash",
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
@@ -217,7 +217,7 @@ namespace UnitTesting.Security
         public async Task ReenviarCodigoAsync_WhenSessionNotFound_Returns401()
         {
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
-            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((TwoFactorSession?)null);
+            sessionStoreMock.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync((DtoTwoFactorSession?)null);
             var service = CreateService(sessionStoreMock: sessionStoreMock);
 
             var result = await service.ReenviarCodigoAsync("missing-session");
@@ -235,7 +235,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
                 .Setup(s => s.GetAsync("session-id"))
-                .ReturnsAsync(new TwoFactorSession
+                .ReturnsAsync(new DtoTwoFactorSession
                 {
                     CodigoHash = originalHash,
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(5),
@@ -246,11 +246,11 @@ namespace UnitTesting.Security
             sessionStoreMock
                 .Setup(s => s.GetTtlAsync("session-id"))
                 .ReturnsAsync(remainingTtl);
-            TwoFactorSession? capturedSession = null;
+            DtoTwoFactorSession? capturedSession = null;
             TimeSpan capturedTtl = default;
             sessionStoreMock
-                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
-                .Callback<string, TwoFactorSession, TimeSpan>((_, session, ttl) =>
+                .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()))
+                .Callback<string, DtoTwoFactorSession, TimeSpan>((_, session, ttl) =>
                 {
                     capturedSession = session;
                     capturedTtl = ttl;
@@ -310,13 +310,13 @@ namespace UnitTesting.Security
             {
                 sessionStoreMock = new Mock<ITwoFactorSessionStore>();
                 sessionStoreMock
-                    .Setup(s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                    .Setup(s => s.SaveAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()))
                     .Returns(Task.CompletedTask);
                 sessionStoreMock
                     .Setup(s => s.DeleteAsync(It.IsAny<string>()))
                     .Returns(Task.CompletedTask);
                 sessionStoreMock
-                    .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
+                    .Setup(s => s.UpdateAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()))
                     .Returns(Task.CompletedTask);
             }
 
