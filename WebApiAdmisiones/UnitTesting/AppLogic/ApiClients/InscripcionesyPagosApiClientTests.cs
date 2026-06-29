@@ -101,6 +101,34 @@ namespace UnitTesting.AppLogic.ApiClients
         }
 
         [Fact]
+        public async Task ObtenerUrlCrearFacturaAsync_WithSuccess_PostsLegacyPayload()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
+            var client = CrearClient(handler);
+            var carritos = new List<ClaveValorCarrito>
+            {
+                new()
+                {
+                    ClaveCarrito = "123|10|1|7|555",
+                    CantidadCuotasAPagar = "Seña",
+                    Banco = "001"
+                }
+            };
+
+            var result = await client.ObtenerUrlCrearFacturaAsync(carritos, "SISTARBANC");
+
+            Assert.True(result.Success);
+            Assert.Equal("https://pagos.test/factura", result.Data);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Contains("Pagos/Carritos/UrlCrearFactura?tipoPago=SISTARBANC", request.RequestUri);
+            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", request.Body);
+            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", request.Body);
+            Assert.Contains("\"banco\":\"001\"", request.Body);
+        }
+
+        [Fact]
         public async Task ConfirmarPreInscripcionAsync_WithSuccess_ReturnsResponse()
         {
             var handler = new StubHttpMessageHandler(_ =>

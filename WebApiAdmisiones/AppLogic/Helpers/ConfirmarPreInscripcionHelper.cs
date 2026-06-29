@@ -286,7 +286,7 @@ namespace AppLogic.Helpers
                 Confirmada = source.Confirmada || source.Success,
                 IdInscripcion = source.IdInscripcion,
                 FechaVencimientoPago = source.FechaVencimientoPago,
-                Carritos = MapearCarritos(source),
+                Senia = SumarSenias(source.Carritos),
                 EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
                 Resumen = new DtoResumenInscripcion
                 {
@@ -301,11 +301,9 @@ namespace AppLogic.Helpers
             };
         }
 
-        private static List<DtoCarrito> MapearCarritos(ConfirmarPreInscripcionApiResponse source)
+        internal static decimal SumarSenias(IEnumerable<CarritoSeniaApiDto>? carritos)
         {
-            return source.Carritos?
-                .Select(c => new DtoCarrito { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                .ToList() ?? new List<DtoCarrito>();
+            return carritos?.Sum(c => c.Senia) ?? 0;
         }
 
         private static OperationResult<ContextoConfirmacionPreInscripcion> ErrorInteresOfertaNoEncontrado(string methodName)

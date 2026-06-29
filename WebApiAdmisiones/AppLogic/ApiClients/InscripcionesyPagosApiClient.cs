@@ -101,6 +101,9 @@ namespace AppLogic.ApiClients
     {
         public string Clave { get; set; } = string.Empty;
         public string Valor { get; set; } = string.Empty;
+        public string ClaveCarrito { get; set; } = string.Empty;
+        public string CantidadCuotasAPagar { get; set; } = string.Empty;
+        public string Banco { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -557,42 +560,40 @@ namespace AppLogic.ApiClients
         /// <param name="carritos">Lista de pares clave-valor con datos de los carritos</param>
         /// <param name="tipoPago">Tipo de pago (ej: "EANRED_...")</param>
         /// <returns>Resultado de la creación de factura</returns>
-        public async Task<OperationResult<CrearFacturaResponse>> CrearFacturaAsync(
+        public async Task<OperationResult<string>> ObtenerUrlCrearFacturaAsync(
             List<ClaveValorCarrito> carritos,
-            string tipoPago = "EANRED")
+            string tipoPago)
         {
             try
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                        "Creando factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
+                        "Obteniendo URL de factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
                         carritos.Count,
-                        tipoPago
-                    );
+                        tipoPago);
                 }
 
-                var url = $"ORTSecure/Pagos/Carritos/UltCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
+                var url = $"ORTSecure/Pagos/Carritos/UrlCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
                 var response = await _httpClient.PostAsJsonAsync(url, carritos);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<CrearFacturaResponse>();
-                    return OperationResult<CrearFacturaResponse>.Ok(result!, nameof(CrearFacturaAsync));
+                    var result = await response.Content.ReadFromJsonAsync<string>();
+                    return OperationResult<string>.Ok(result!, nameof(ObtenerUrlCrearFacturaAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<CrearFacturaResponse>.IsFailed(
-                    "CREAR_FACTURA_01",
-                    nameof(CrearFacturaAsync),
-                    $"La API rechazó la creación de factura: {response.StatusCode} - {errorContent}",
+                return OperationResult<string>.IsFailed(
+                    "URL_CREAR_FACTURA_01",
+                    nameof(ObtenerUrlCrearFacturaAsync),
+                    $"La API rechazó la creación de URL de factura: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
-                    default!
-                );
+                    default!);
             }
             catch (Exception ex)
             {
-                return HandleException<CrearFacturaResponse>(ex, nameof(CrearFacturaAsync));
+                return HandleException<string>(ex, nameof(ObtenerUrlCrearFacturaAsync));
             }
         }
 

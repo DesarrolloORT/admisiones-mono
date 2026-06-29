@@ -96,6 +96,16 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        [HttpPost("UrlFactura")]
+        [ProducesResponseType(typeof(OperationResult<string>), 200)]
+        [ProducesResponseType(typeof(OperationResult<string>), 400)]
+        [ProducesResponseType(typeof(OperationResult<string>), 404)]
+        public async Task<IActionResult> ObtenerUrlFactura([FromBody] DtoObtenerUrlFacturaRequest request)
+        {
+            var result = await inscripcionesService.ObtenerUrlFactura(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
         [HttpPost("MetodoPago")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]

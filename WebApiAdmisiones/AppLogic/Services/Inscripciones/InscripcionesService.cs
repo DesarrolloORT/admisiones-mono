@@ -20,6 +20,7 @@ namespace AppLogic.Services.Inscripciones
     public class InscripcionesService : IInscripcionesService
     {
         private const long CodigoOrientacionQuintoLegacy = 1304;
+        private const string CantidadCuotasSeniaLegacy = "Seña";
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
@@ -130,9 +131,7 @@ namespace AppLogic.Services.Inscripciones
                 Confirmada = true,
                 IdInscripcion = inscripto.IdInscripto,
                 FechaVencimientoPago = inscripto.FechaVtoInscr,
-                Carritos = carritos?.Carritos
-                    .Select(c => new DtoCarrito { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                    .ToList() ?? new List<DtoCarrito>(),
+                Senia = ConfirmarPreInscripcionHelper.SumarSenias(carritos?.Carritos),
                 EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
@@ -827,6 +826,65 @@ namespace AppLogic.Services.Inscripciones
         #endregion PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
         #region PASO 3 - PAGOS
+
+        public async Task<OperationResult<string>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
+        {
+            const string methodName = nameof(ObtenerUrlFactura);
+
+            if (request == null)
+            {
+                return OperationResult<string>.IsFailed("INS_UF_00", methodName, "Request invalido.", 400);
+            }
+
+            if (request.IdInscripto <= 0)
+            {
+                return OperationResult<string>.IsFailed("INS_UF_01", methodName, "IdInscripto invalido.", 400);
+            }
+
+            var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
+            if (tipoPago is not ("BANRED" or "SISTARBANC" or "GEOPAY"))
+            {
+                return OperationResult<string>.IsFailed("INS_UF_02", methodName, "TipoPago invalido.", 400);
+            }
+
+            var idBancoSistarbanc = request.IdBancoSistarbanc?.Trim();
+            if (tipoPago == "SISTARBANC" && string.IsNullOrWhiteSpace(idBancoSistarbanc))
+            {
+                return OperationResult<string>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            if (uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona) == null)
+            {
+                return OperationResult<string>.IsFailed("INS_UF_04", methodName, "No se encontro la inscripcion para la persona.", 404);
+            }
+
+            var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(request.IdInscripto);
+            if (!carritos.Success)
+            {
+                return OperationResult<string>.IsFailed(carritos.ErrorCode, methodName, carritos.Message, carritos.HttpCode);
+            }
+
+            if (carritos.Data?.Carritos == null || carritos.Data.Carritos.Count == 0)
+            {
+                return OperationResult<string>.IsFailed("INS_UF_05", methodName, "No hay carritos para la inscripcion.", 404);
+            }
+
+            var payload = carritos.Data.Carritos
+                .Select(c => new ClaveValorCarrito
+                {
+                    ClaveCarrito = c.IdCarrito,
+                    CantidadCuotasAPagar = CantidadCuotasSeniaLegacy,
+                    Banco = tipoPago == "SISTARBANC" ? idBancoSistarbanc! : string.Empty
+                })
+                .ToList();
+
+            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaAsync(payload, tipoPago);
+            return urlResult.Success
+                ? OperationResult<string>.Ok(urlResult.Data, methodName)
+                : OperationResult<string>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
+        }
 
         public OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
         {

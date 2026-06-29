@@ -30,7 +30,7 @@ namespace UnitTesting.Controllers
                 Confirmada = true,
                 IdInscripcion = 100,
                 FechaVencimientoPago = new DateTime(2026, 6, 30),
-                Carritos = [new DtoCarrito { IdCarrito = "1", Senia = 1500 }]
+                Senia = 1500
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
@@ -45,6 +45,31 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             serviceMock.Verify(s => s.ConfirmarPreInscripcion(1, request), Times.Once);
+        }
+
+        [Fact]
+        public async Task ObtenerUrlFactura_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoObtenerUrlFacturaRequest
+            {
+                IdInscripto = 555,
+                TipoPago = "BANRED"
+            };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ObtenerUrlFactura(1, request))
+                .ReturnsAsync(OperationResult<string>.Ok("https://pagos.test", nameof(IInscripcionesService.ObtenerUrlFactura)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = await controller.ObtenerUrlFactura(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ObtenerUrlFactura(1, request), Times.Once);
         }
 
         [Fact]
