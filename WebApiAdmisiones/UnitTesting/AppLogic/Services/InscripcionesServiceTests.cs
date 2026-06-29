@@ -2068,6 +2068,84 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task Pagar_WithCuentaPersonal_ReturnsPagoConfirmado()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(request =>
+                request.Method == HttpMethod.Get
+                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
+                    : JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+
+            Assert.True(result.Success);
+            Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
+            Assert.Single(result.Data.Mensajes);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", handler.Requests[1].RequestUri);
+        }
+
+        [Fact]
+        public async Task Pagar_WithAbitab_GuardaMetodoPago()
+        {
+            InscriptoSeniaMinimum? agregado = null;
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
+            seniaRepo.Setup(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()))
+                .Callback<InscriptoSeniaMinimum>(x => agregado = x);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = " abitab " });
+
+            Assert.True(result.Success);
+            Assert.Equal("METODO_GUARDADO", result.Data!.Resultado);
+            Assert.Equal("ABITAB", agregado!.MetodoPagoSeniaMinima);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public async Task Pagar_WithBanred_ReturnsUrlGenerada()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(request =>
+                request.Method == HttpMethod.Get
+                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
+                    : JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "BANRED" });
+
+            Assert.True(result.Success);
+            Assert.Equal("URL_GENERADA", result.Data!.Resultado);
+            Assert.Equal("https://pagos.test/factura", result.Data.UrlPago);
+            Assert.Contains("UrlCrearFactura?tipoPago=BANRED", handler.Requests[1].RequestUri);
+        }
+
+        [Fact]
+        public async Task Pagar_WithInvalidTipoPago_ReturnsBadRequest()
+        {
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "OTRO" });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_PAG_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _uowFactoryMock.Verify(f => f.Create(), Times.Never);
+        }
+
+        [Fact]
         public async Task PagarCuentaPersonal_WithValidData_PostsAllCarritosAndReturnsMessages()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();

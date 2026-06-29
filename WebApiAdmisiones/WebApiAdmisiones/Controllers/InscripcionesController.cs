@@ -96,34 +96,14 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        [HttpPost("UrlFactura")]
-        [ProducesResponseType(typeof(OperationResult<string>), 200)]
-        [ProducesResponseType(typeof(OperationResult<string>), 400)]
-        [ProducesResponseType(typeof(OperationResult<string>), 404)]
-        public async Task<IActionResult> ObtenerUrlFactura([FromBody] DtoObtenerUrlFacturaRequest request)
+        [HttpPost("Pagar")]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 409)]
+        public async Task<IActionResult> Pagar([FromBody] DtoPagarRequest request)
         {
-            var result = await inscripcionesService.ObtenerUrlFactura(_currentUser.GetUserId(), request);
-            return ValidateResponse(result);
-        }
-
-        [HttpPost("PagarCuentaPersonal")]
-        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 400)]
-        [ProducesResponseType(typeof(OperationResult<List<DtoMensajePagoCarrito>>), 404)]
-        public async Task<IActionResult> PagarCuentaPersonal([FromBody] DtoPagarCuentaPersonalRequest request)
-        {
-            var result = await inscripcionesService.PagarCuentaPersonal(_currentUser.GetUserId(), request);
-            return ValidateResponse(result);
-        }
-
-        [HttpPost("MetodoPago")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult GuardarMetodoPago([FromBody] DtoGuardarMetodoPagoRequest request)
-        {
-            var result = inscripcionesService.GuardarMetodoPago(_currentUser.GetUserId(), request);
+            var result = await inscripcionesService.Pagar(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 

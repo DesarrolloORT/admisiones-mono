@@ -20,6 +20,20 @@ namespace AppLogic.Dtos.Inscripciones
         public long IdInscripto { get; set; }
     }
 
+    public class DtoPagarRequest
+    {
+        public long IdInscripto { get; set; }
+        public string TipoPago { get; set; } = string.Empty;
+        public string? IdBancoSistarbanc { get; set; }
+    }
+
+    public class DtoPagarResponse
+    {
+        public string Resultado { get; set; } = string.Empty;
+        public string? UrlPago { get; set; }
+        public List<DtoMensajePagoCarrito> Mensajes { get; set; } = new();
+    }
+
     public class DtoMensajePagoCarrito
     {
         public string Clave { get; set; } = string.Empty;
