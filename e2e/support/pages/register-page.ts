@@ -38,7 +38,7 @@ export class RegisterPage {
     mimeType: string;
     buffer: Buffer;
   }): Promise<void> {
-    await this.page.locator('#document-file').setInputFiles(file);
+    await this.page.locator('ort-file-uploader input[type="file"]').setInputFiles(file);
   }
 
   public async continueFromIdentity(): Promise<void> {

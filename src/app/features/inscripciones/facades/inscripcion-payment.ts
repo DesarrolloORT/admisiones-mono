@@ -2,13 +2,11 @@ import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import type { OrtErrorItem } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { toBankOption } from '../models/inscripcion-bank-logo';
+import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscripcion-bank-logo';
 import type { MetodoPago, OpcionInscripcion } from '../models/inscripcion-flow';
-import { buildFormErrors } from '../models/inscripcion-flow-forms';
 import { getResultadoPago, parseResultadoForzado } from '../models/inscripcion-flow-policy';
 import {
   buildSummaryItems,
@@ -17,10 +15,22 @@ import {
   getReservationInstructions,
 } from '../models/inscripcion-flow-view';
 import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscripcion-process';
-import { COORDINATORS, PAYMENT_OPTIONS, SUBJECTS } from '../models/inscripcion-static-data';
+import {
+  COORDINATORS,
+  PAYMENT_OPTIONS,
+  type PaymentOption,
+  SANTANDER_ACCOUNT_URL,
+  STUDENT_SERVICE_LINKS,
+  SUBJECTS,
+} from '../models/inscripcion-static-data';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
+
+interface InscripcionErrorAlertState {
+  title: string;
+  message: string;
+}
 
 export class InscripcionPaymentFacade {
   private readonly route = inject(ActivatedRoute);
@@ -32,13 +42,16 @@ export class InscripcionPaymentFacade {
   private processingTimer: ReturnType<typeof setTimeout> | null = null;
 
   public readonly paymentForm = this.formsStore.paymentForm;
-  public readonly paymentOptions = PAYMENT_OPTIONS;
+  public readonly paymentOptions = computed<readonly PaymentOption[]>(() =>
+    PAYMENT_OPTIONS.flatMap(option => this.resolvePaymentOption(option))
+  );
   public readonly coordinators = COORDINATORS;
+  public readonly santanderAccountUrl = SANTANDER_ACCOUNT_URL;
   public readonly studentNumber = '397654';
+  public readonly studentServices = STUDENT_SERVICE_LINKS;
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
-  public readonly bankLoadError = signal<string | null>(null);
 
   private readonly submitted = signal(false);
   public readonly view = signal<InscripcionPaymentView>('editing');
@@ -50,14 +63,22 @@ export class InscripcionPaymentFacade {
     this.route.snapshot.queryParamMap.get('resultado')
   );
 
-  public readonly paymentErrors = computed<OrtErrorItem[]>(() =>
-    this.submitted()
-      ? buildFormErrors(this.paymentForm, [
-          { controlName: 'metodoPago', fieldId: '', label: 'Medio de pago' },
-          { controlName: 'banco', fieldId: '', label: 'Banco' },
-        ])
-      : []
-  );
+  public readonly paymentErrorAlert = computed<InscripcionErrorAlertState | null>(() => {
+    if (!this.submitted()) return null;
+    if (this.paymentForm.controls.metodoPago.hasError('required')) {
+      return {
+        title: 'Medio de pago requerido',
+        message: 'Elegí un medio de pago para poder continuar.',
+      };
+    }
+    if (this.paymentForm.controls.banco.hasError('required')) {
+      return {
+        title: 'Banco requerido',
+        message: 'Seleccioná tu banco para poder continuar.',
+      };
+    }
+    return null;
+  });
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
@@ -95,7 +116,6 @@ export class InscripcionPaymentFacade {
 
   private loadBanks(): void {
     this.loadingBanks.set(true);
-    this.bankLoadError.set(null);
     this.catalogs
       .getBancos()
       .pipe(
@@ -103,9 +123,8 @@ export class InscripcionPaymentFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: banks => this.bankOptions.set(banks.map(toBankOption)),
-        error: () =>
-          this.bankLoadError.set('No se pudieron cargar los bancos. Intentá nuevamente.'),
+        next: banks => this.bankOptions.set(toBankOptions(banks)),
+        error: () => this.bankOptions.set(FALLBACK_BANK_OPTIONS),
       });
   }
 
@@ -125,6 +144,11 @@ export class InscripcionPaymentFacade {
 
   public requestConfirmation(): void {
     this.submitted.set(true);
+    if (!this.isSelectedPaymentMethodAvailable()) {
+      this.paymentForm.controls.metodoPago.setValue('');
+      this.paymentForm.markAllAsTouched();
+      return;
+    }
     if (this.paymentForm.invalid) {
       this.paymentForm.markAllAsTouched();
       return;
@@ -162,6 +186,26 @@ export class InscripcionPaymentFacade {
     this.showAllSubjects.update(showAll => !showAll);
   }
 
+  private resolvePaymentOption(option: PaymentOption): readonly PaymentOption[] {
+    if (option.value !== 'cuenta-personal') return [option];
+
+    const amount = this.process.preEnrollmentResponse()?.seniaInscripcion;
+    if (!isPositiveAmount(amount)) return [];
+
+    return [
+      {
+        ...option,
+        disabled: amount > (option.availableAmount ?? 0),
+      },
+    ];
+  }
+
+  private isSelectedPaymentMethodAvailable(): boolean {
+    const selected = this.paymentForm.controls.metodoPago.value;
+    if (!selected) return true;
+    return this.paymentOptions().some(option => option.value === selected && !option.disabled);
+  }
+
   public restore(
     method: MetodoPago | '',
     response: ReturnType<InscripcionProcessStore['preEnrollmentResponse']>
@@ -176,4 +220,8 @@ export class InscripcionPaymentFacade {
     this.outcome.set(outcome);
     this.process.markCheckpoint();
   }
+}
+
+function isPositiveAmount(value: number | null | undefined): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }

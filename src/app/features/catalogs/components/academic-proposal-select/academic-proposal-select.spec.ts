@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { of } from 'rxjs';
 
 import type { AcademicProposalForm } from '../../models/academic-proposal';
@@ -8,6 +8,7 @@ import { AcademicProposalSelect } from './academic-proposal-select';
 
 describe('AcademicProposalSelect', () => {
   let fixture: ComponentFixture<AcademicProposalSelect>;
+  let form: FormGroup<AcademicProposalForm>;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -16,28 +17,95 @@ describe('AcademicProposalSelect', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () => of([]),
+            getCareers: () =>
+              of([
+                {
+                  idProducto: 20,
+                  idNivelProducto: 1,
+                  nombreProducto: 'Licenciatura en Diseño Gráfico',
+                  nombreNivelProducto: 'Carrera universitaria',
+                },
+                {
+                  idProducto: 30,
+                  idNivelProducto: 1,
+                  nombreProducto: 'Analista Programador',
+                  nombreNivelProducto: 'Carrera universitaria',
+                },
+              ]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
           },
         },
       ],
     });
+
+    form = createForm();
     fixture = TestBed.createComponent(AcademicProposalSelect);
-    fixture.componentRef.setInput('form', createForm());
+    fixture.componentRef.setInput('form', form);
+    fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('connects a form to its academic selection state', () => {
     expect(fixture.componentInstance.selection().initialized()).toBe(true);
   });
+
+  it('selects a career from the mobile drawer', () => {
+    const component = fixture.componentInstance as unknown as {
+      confirmMobileSelection(): void;
+      filteredMobileOptions(): readonly { label: string; value: string }[];
+      mobileDrawerField(): 'career' | 'start' | 'shift' | null;
+      onMobileSearchInput(event: Event): void;
+      openMobileDrawer(field: 'career'): void;
+      selectMobileOption(value: string): void;
+    };
+
+    form.controls.tipoPropuesta.setValue('1');
+    fixture.detectChanges();
+
+    component.openMobileDrawer('career');
+    component.onMobileSearchInput({ target: { value: 'gráfico' } } as unknown as Event);
+
+    expect(component.filteredMobileOptions()).toEqual([
+      { value: '20', label: 'Licenciatura en Diseño Gráfico' },
+    ]);
+
+    component.selectMobileOption('20');
+    component.confirmMobileSelection();
+
+    expect(form.controls.carrera.value).toBe('20');
+    expect(form.controls.carrera.touched).toBe(true);
+    expect(component.mobileDrawerField()).toBeNull();
+  });
+
+  it('shows required errors after controls are touched', () => {
+    form.markAllAsTouched();
+    form.updateValueAndValidity();
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Seleccioná una propuesta académica');
+    expect(
+      fixture.nativeElement.querySelector('ort-radio-group')?.getAttribute('aria-invalid')
+    ).toBe('true');
+    expect(
+      fixture.nativeElement.querySelector('ort-radio-card-button')?.getAttribute('aria-describedby')
+    ).toContain('academic-proposal-type-error');
+    expect(text).toContain('Seleccioná una carrera');
+    expect(text).toContain('Seleccioná un comienzo');
+    expect(text).toContain('Seleccioná un turno');
+  });
 });
 
 function createForm(): FormGroup<AcademicProposalForm> {
   return new FormGroup<AcademicProposalForm>({
-    tipoPropuesta: new FormControl('', { nonNullable: true }),
-    carrera: new FormControl('', { nonNullable: true }),
-    comienzo: new FormControl('', { nonNullable: true }),
-    turno: new FormControl('', { nonNullable: true }),
+    tipoPropuesta: new FormControl('', {
+      nonNullable: true,
+      validators: Validators.required,
+    }),
+    carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
   });
 }

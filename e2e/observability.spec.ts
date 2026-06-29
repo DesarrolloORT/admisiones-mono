@@ -120,8 +120,8 @@ test.describe('Backend observability probes', () => {
       }
 
       await page
-        .getByRole('button', { name: 'Escanear documento' })
-        .waitFor({ state: 'visible', timeout: 10_000 })
+        .getByText('Procesando documento...')
+        .waitFor({ state: 'hidden', timeout: 10_000 })
         .catch(() => undefined);
     }
 

@@ -53,7 +53,7 @@ export class InscripcionDialog implements OnDestroy {
       } else if (!isOpen && this.wasOpen && dialog.open) {
         dialog.close();
         this.unlockPageScroll();
-        setTimeout(() => this.previouslyFocusedElement?.focus());
+        this.restoreFocus();
       }
 
       this.wasOpen = isOpen;
@@ -74,6 +74,25 @@ export class InscripcionDialog implements OnDestroy {
     if (event.target === this.dialog()?.nativeElement) {
       this.requestClose(event);
     }
+  }
+
+  private restoreFocus(): void {
+    const target = this.previouslyFocusedElement;
+    this.previouslyFocusedElement = null;
+
+    if (!target || !target.isConnected || target.hasAttribute('disabled')) return;
+
+    const focusTarget = () => target.focus({ preventScroll: true });
+    const view = this.document.defaultView;
+    if (!view) {
+      focusTarget();
+      return;
+    }
+
+    view.requestAnimationFrame(() => {
+      focusTarget();
+      view.setTimeout(focusTarget, 0);
+    });
   }
 
   private focusFirstControl(): void {

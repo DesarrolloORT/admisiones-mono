@@ -8,6 +8,7 @@ const { values: flags } = nodeParseArgs({
   options: {
     env: { type: 'string', default: DEFAULT_ENVIRONMENT_FILE },
     'swagger-path': { type: 'string' },
+    'contracts-path': { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -18,10 +19,11 @@ Usage: node scripts/codegen/update-api.js [options]
 
 Options:
   --env <file>            Environment file inside src/environments/ (default: ${DEFAULT_ENVIRONMENT_FILE})
-  --swagger-path <path>   Swagger doc path appended to the API origin
+  --swagger-path <path>     Swagger doc path appended to the API origin
+  --contracts-path <path>   Contracts index path appended to the API origin
   -h, --help              Show this help
 
-The command updates models and endpoints, then compiles the Angular serving
+The command updates models, endpoints and form contracts, then compiles the Angular serving
 configuration to report API incompatibilities before npm start.
 `);
   process.exit(0);
@@ -30,6 +32,11 @@ configuration to report API incompatibilities before npm start.
 const sharedArgs = ['--env', flags.env];
 if (flags['swagger-path']) {
   sharedArgs.push('--swagger-path', flags['swagger-path']);
+}
+
+const contractsArgs = ['--env', flags.env];
+if (flags['contracts-path']) {
+  contractsArgs.push('--contracts-path', flags['contracts-path']);
 }
 
 runNodeStage({
@@ -49,6 +56,16 @@ runNodeStage({
   failure: {
     what: 'No se pudieron regenerar los endpoints desde Swagger.',
     where: 'scripts/codegen/update-endpoints.js y src/app/shared/api/generated/endpoints/',
+  },
+});
+
+runNodeStage({
+  label: 'Actualizando contratos de formulario',
+  script: 'update-contracts.js',
+  args: contractsArgs,
+  failure: {
+    what: 'No se pudieron regenerar los contratos de formulario desde /contracts.',
+    where: 'scripts/codegen/update-contracts.js y src/app/shared/api/generated/contracts/',
   },
 });
 

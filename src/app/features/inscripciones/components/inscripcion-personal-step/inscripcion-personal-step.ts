@@ -1,12 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, forwardRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtAccordionModule,
   OrtButtonModule,
   OrtCheckboxModule,
   OrtDatePickerModule,
-  OrtFileUploader,
+  OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
@@ -16,6 +16,7 @@ import {
 } from '@desarrolloort/components';
 
 import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
+import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-error-alert';
 
 @Component({
   selector: 'app-inscripcion-personal-step',
@@ -24,15 +25,16 @@ import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
     OrtButtonModule,
     OrtCheckboxModule,
     OrtDatePickerModule,
-    forwardRef(() => OrtFileUploader),
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
+    InscripcionErrorAlert,
     OrtRadioModule,
     OrtRatingModule,
     OrtSelectModule,
     ReactiveFormsModule,
     DatePipe,
+    OrtFileUploaderModule,
   ],
   templateUrl: './inscripcion-personal-step.html',
   styleUrl: '../../pages/inscripcion/inscripcion.scss',
@@ -41,8 +43,19 @@ import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 export class InscripcionPersonalStep {
   protected readonly facade = inject(InscripcionSurveyFacade);
 
+  protected onFormEnter(event: Event): void {
+    if (event.target instanceof HTMLInputElement && event.target.type === 'radio') {
+      event.preventDefault();
+    }
+  }
+
   protected onSubmit(event: SubmitEvent): void {
     event.preventDefault();
     this.facade.continue();
+  }
+
+  protected openRegulationReader(event: Event): void {
+    event.preventDefault();
+    this.facade.openRegulationReader();
   }
 }

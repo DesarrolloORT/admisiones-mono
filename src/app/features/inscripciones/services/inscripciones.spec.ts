@@ -103,8 +103,14 @@ describe('Inscripciones', () => {
       idProducto: 20,
       idProceso: 200,
       ultimoAnioSecundaria: null,
+      codigoTitulo: null,
+      ultimoAnioSexto: null,
+      codigoInstitucionBac: null,
+      informarEncuesta: null,
       instruccionPadre: null,
       instruccionMadre: null,
+      instruccionPadreOrt: null,
+      instruccionMadreOrt: null,
       decisionCarrera: null,
       decisionUniversidad: null,
       infoOtrasUniversidadesAntes: null,
@@ -116,6 +122,7 @@ describe('Inscripciones', () => {
       vistaInstalacionesOrt: null,
       publicidadOrt: null,
       trabajaActualmente: null,
+      tipoJornadaLaboral: null,
       opcionesMotivosSeleccionados: null,
     };
 

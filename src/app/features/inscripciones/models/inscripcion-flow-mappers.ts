@@ -22,6 +22,9 @@ const SURVEY_SECTION_ALIASES: Readonly<Record<string, SeccionEncuestaId>> = {
   reglamento: 'reglamento',
 };
 
+export const SECONDARY_PLACE_NATIONAL = '1';
+export const SECONDARY_PLACE_INTERNATIONAL = '2';
+
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
   careers: readonly Career[];
@@ -31,6 +34,7 @@ export interface BackendSurveyPatchContext {
 export interface InitialSurveyPayloadContext {
   forms: InscripcionForms;
   previousCareerOptions: readonly OpcionInscripcion[];
+  educationLevelOptions: readonly OpcionInscripcion[];
   motivesOptions: readonly OpcionInscripcion[];
 }
 
@@ -67,17 +71,17 @@ export function patchBackendSurveyForms(
           : survey.ultimoanioSecundariaEncuestaIni === false
             ? 'no-cursando'
             : '',
-      lugarSecundaria: survey.codigoInstitucionBac
-        ? 'uruguay'
-        : survey.nombreInstSecEncuestaIni
-          ? 'exterior'
-          : '',
+      anioSecundaria: survey.ultimoAnioSextoEncuestaIni ?? '',
+      tipoBachillerato: survey.codigoTitulo?.toString() ?? '',
+      lugarSecundaria: getSecondaryPlaceValue(survey),
       estadoEducacionSuperior: findHigherEducationOption(
         hasHigherEducation,
         context.previousCareerOptions
       ),
       formacionMadre: survey.instruccionMadreEncuestaIni ?? '',
+      tituloOrtMadre: toYesNoValue(survey.instruccionMadreOrtEncuestaIni),
       formacionPadre: survey.instruccionPadreEncuestaIni ?? '',
+      tituloOrtPadre: toYesNoValue(survey.instruccionPadreOrtEncuestaIni),
     },
     { emitEvent: false }
   );
@@ -112,25 +116,52 @@ export function patchBackendSurveyForms(
 
 export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) {
   const { forms } = context;
+  const education = forms.educationForm.controls;
   const selectedMotives = forms.academicDecisionForm.controls.motivosOrt.value;
-  const decisionUniversity = toNullableNumber(selectedMotives[0] ?? '');
   const higherEducation = hasHigherEducation(
-    forms.educationForm.controls.estadoEducacionSuperior.value,
+    education.estadoEducacionSuperior.value,
     context.previousCareerOptions
   );
+  const currentlyInSecondarySchool = education.cursaSecundaria.value === 'cursando';
+  const secondaryPlace = toBackendSecondaryPlace(education.lugarSecundaria.value);
+  const motherHasCompleteUniversity = hasCompleteUniversityEducation(
+    education.formacionMadre.value,
+    context.educationLevelOptions
+  );
+  const fatherHasCompleteUniversity = hasCompleteUniversityEducation(
+    education.formacionPadre.value,
+    context.educationLevelOptions
+  );
+  const works = forms.workForm.controls.situacionLaboral.value === 'trabaja';
 
   return {
     idProducto: toNullableNumber(forms.academicForm.controls.carrera.value),
     idProceso: toNullableNumber(forms.academicForm.controls.comienzo.value),
-    ultimoAnioSecundaria: toSecondaryCurrentYear(
-      forms.educationForm.controls.cursaSecundaria.value
-    ),
+    ultimoAnioSecundaria: toSecondaryCurrentYear(education.cursaSecundaria.value),
+    codigoTitulo: currentlyInSecondarySchool
+      ? toNullableNumber(education.tipoBachillerato.value)
+      : null,
+    ultimoAnioSexto: currentlyInSecondarySchool
+      ? toNullableNumber(education.anioSecundaria.value)
+      : null,
+    codigoInstitucionBac: isNationalSecondaryPlace(education.lugarSecundaria.value)
+      ? toNullableNumber(education.institucionEducativa.value)
+      : null,
+    informarEncuesta: secondaryPlace,
     instruccionPadre: toNullableNumber(forms.educationForm.controls.formacionPadre.value),
     instruccionMadre: toNullableNumber(forms.educationForm.controls.formacionMadre.value),
+    instruccionPadreOrt: fatherHasCompleteUniversity
+      ? toNullableBoolean(education.tituloOrtPadre.value)
+      : null,
+    instruccionMadreOrt: motherHasCompleteUniversity
+      ? toNullableBoolean(education.tituloOrtMadre.value)
+      : null,
     decisionCarrera: toNullableNumber(
       forms.academicDecisionForm.controls.anioDecisionCarrera.value
     ),
-    decisionUniversidad: decisionUniversity,
+    decisionUniversidad: toNullableNumber(
+      forms.academicDecisionForm.controls.anioDecisionOrt.value
+    ),
     infoOtrasUniversidadesAntes: toBackendYesNo(
       forms.academicDecisionForm.controls.otrasUniversidades.value
     ),
@@ -151,6 +182,7 @@ export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) 
     vistaInstalacionesOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoSede.value),
     publicidadOrt: toNullableBoolean(forms.ortExperienceForm.controls.recuerdaPublicidad.value),
     trabajaActualmente: toWorkStatusFlag(forms.workForm.controls.situacionLaboral.value),
+    tipoJornadaLaboral: works ? forms.workForm.controls.tipoJornadaLaboral.value || null : null,
     opcionesMotivosSeleccionados:
       selectedMotives.length === 0
         ? null
@@ -270,6 +302,24 @@ export function toNullableNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function isNationalSecondaryPlace(value: string): boolean {
+  return toBackendSecondaryPlace(value) === SECONDARY_PLACE_NATIONAL;
+}
+
+function toBackendSecondaryPlace(value: string): string | null {
+  if (value === 'uruguay') return SECONDARY_PLACE_NATIONAL;
+  if (value === 'exterior') return SECONDARY_PLACE_INTERNATIONAL;
+  return value || null;
+}
+
+function getSecondaryPlaceValue(survey: InscripcionBackendSurvey): string {
+  const value = toBackendSecondaryPlace(survey.informarEncuestaIni ?? '');
+  if (value) return value;
+  if (survey.codigoInstitucionBac) return SECONDARY_PLACE_NATIONAL;
+  if (survey.nombreInstSecEncuestaIni) return SECONDARY_PLACE_INTERNATIONAL;
+  return '';
+}
+
 function findHigherEducationOption(
   value: boolean | null,
   options: readonly OpcionInscripcion[]
@@ -280,6 +330,20 @@ function findHigherEducationOption(
     return value ? !isNegative : isNegative;
   });
   return option?.value ?? '';
+}
+
+export function hasCompleteUniversityEducation(
+  value: string,
+  options: readonly OpcionInscripcion[]
+): boolean {
+  if (!value) return false;
+  const label = normalizeBackendState(getOptionLabel(options, value, value));
+  return (
+    !!label &&
+    !label.startsWith('no') &&
+    !label.includes('nouniversitaria') &&
+    label.endsWith('universitariacompleta')
+  );
 }
 
 function hasHigherEducation(value: string, options: readonly OpcionInscripcion[]): boolean | null {

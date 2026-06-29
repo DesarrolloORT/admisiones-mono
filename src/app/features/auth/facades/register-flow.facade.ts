@@ -83,10 +83,7 @@ export class RegisterFlowFacade {
     });
   }
 
-  public async onDocumentSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement | null;
-    const selectedFile = input?.files?.item(0) ?? null;
-
+  public async onDocumentSelected(selectedFile: File | null): Promise<void> {
     this.selectedFileName.set(selectedFile?.name ?? null);
     this.clearRegistrationFlow();
     this.clearRecognizedFields();

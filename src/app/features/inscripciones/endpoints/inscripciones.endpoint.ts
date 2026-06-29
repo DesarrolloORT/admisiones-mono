@@ -48,7 +48,7 @@ export class InscripcionesEndpoint {
           pagoPendiente: response.pagoPendiente
             ? {
                 idInscripcion: response.pagoPendiente.idInscripcion ?? null,
-                senia: response.pagoPendiente.senia ?? null,
+                senia: response.pagoPendiente.carritos?.[0]?.senia ?? null,
                 fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
@@ -113,27 +113,36 @@ export class InscripcionesEndpoint {
   }
 
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
+    const body = {
+      idProducto: payload.idProducto,
+      idProceso: payload.idProceso,
+      ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
+      codigoTitulo: payload.codigoTitulo,
+      ultimoAnioSexto: payload.ultimoAnioSexto,
+      codigoInstitucionBac: payload.codigoInstitucionBac,
+      informarEncuesta: payload.informarEncuesta,
+      instruccionPadre: payload.instruccionPadre,
+      instruccionMadre: payload.instruccionMadre,
+      decisionCarrera: payload.decisionCarrera,
+      decisionUniversidad: payload.decisionUniversidad,
+      infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
+      compartidoCon: payload.compartidoCon,
+      tieneEducacionSuperior: payload.tieneEducacionSuperior,
+      nivelDecision: payload.nivelDecision,
+      asesoramientoOrt: payload.asesoramientoOrt,
+      vistaSitioWebOrt: payload.vistaSitioWebOrt,
+      vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
+      publicidadOrt: payload.publicidadOrt,
+      trabajaActualmente: payload.trabajaActualmente,
+      opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
+      instruccionMadreOrt: payload.instruccionMadreOrt,
+      instruccionPadreOrt: payload.instruccionPadreOrt,
+      tipoJornadaLaboral: payload.tipoJornadaLaboral,
+    };
+
     return this.api
       .request(postInscripcionesEncuestaInicialEndpoint, {
-        body: {
-          idProducto: payload.idProducto,
-          idProceso: payload.idProceso,
-          ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
-          instruccionPadre: payload.instruccionPadre,
-          instruccionMadre: payload.instruccionMadre,
-          decisionCarrera: payload.decisionCarrera,
-          decisionUniversidad: payload.decisionUniversidad,
-          infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
-          compartidoCon: payload.compartidoCon,
-          tieneEducacionSuperior: payload.tieneEducacionSuperior,
-          nivelDecision: payload.nivelDecision,
-          asesoramientoOrt: payload.asesoramientoOrt,
-          vistaSitioWebOrt: payload.vistaSitioWebOrt,
-          vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
-          publicidadOrt: payload.publicidadOrt,
-          trabajaActualmente: payload.trabajaActualmente,
-          opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
-        },
+        body,
         showLoader: true,
       })
       .pipe(
@@ -166,7 +175,7 @@ export class InscripcionesEndpoint {
         map(response => ({
           confirmada: response.confirmada === true,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.seniaInscripcion ?? null,
+          seniaInscripcion: response.carritos?.[0]?.senia ?? null,
           resumen: response.resumen
             ? {
                 carrera: response.resumen.carrera ?? null,
@@ -203,11 +212,16 @@ export class InscripcionesEndpoint {
         ? { idNivelProducto: survey.producto.idNivelProducto ?? null }
         : null,
       ultimoanioSecundariaEncuestaIni: survey.ultimoanioSecundariaEncuestaIni ?? null,
+      codigoTitulo: survey.codigoTitulo ?? null,
+      ultimoAnioSextoEncuestaIni: survey.ultimoAnioSextoEncuestaIni ?? null,
       codigoInstitucionBac: survey.codigoInstitucionBac ?? null,
+      informarEncuestaIni: survey.informarEncuestaIni ?? null,
       nombreInstSecEncuestaIni: survey.nombreInstSecEncuestaIni ?? null,
       tieneEducacionSuperiorEncuestaIni: survey.tieneEducacionSuperiorEncuestaIni ?? null,
       instruccionMadreEncuestaIni: survey.instruccionMadreEncuestaIni ?? null,
       instruccionPadreEncuestaIni: survey.instruccionPadreEncuestaIni ?? null,
+      instruccionMadreOrtEncuestaIni: survey.instruccionMadreOrtEncuestaIni ?? null,
+      instruccionPadreOrtEncuestaIni: survey.instruccionPadreOrtEncuestaIni ?? null,
       decisionCarreraEncuestaIni: survey.decisionCarreraEncuestaIni ?? null,
       decisionUniverEncuestaIni: survey.decisionUniverEncuestaIni ?? null,
       inforOtrasAntesEncuestaIni: survey.inforOtrasAntesEncuestaIni ?? null,

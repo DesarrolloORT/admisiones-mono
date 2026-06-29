@@ -1,7 +1,7 @@
 import type { CatalogItem } from '../../catalogs/models/catalog.interface';
 import type { OpcionInscripcion } from './inscripcion-flow';
 
-export function toCatalogOptions(items: readonly CatalogItem[]): OpcionInscripcion[] {
+export function toCatalogOptions(items: readonly CatalogItem[] = []): OpcionInscripcion[] {
   return items.map(item => ({ value: item.id.toString(), label: item.label }));
 }
 

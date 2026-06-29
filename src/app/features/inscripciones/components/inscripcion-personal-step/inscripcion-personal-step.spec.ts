@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
@@ -22,8 +24,12 @@ describe('InscripcionPersonalStep', () => {
     }).overrideComponent(InscripcionPersonalStep, {
       set: {
         imports: [],
-        template:
-          '<form (submit)="onSubmit($event)"><button type="submit">Continuar</button></form>',
+        template: `
+          <form (keydown.enter)="onFormEnter($event)" (submit)="onSubmit($event)">
+            <input type="radio" name="personal" />
+            <button type="submit">Continuar</button>
+          </form>
+        `,
       },
     });
 
@@ -39,5 +45,38 @@ describe('InscripcionPersonalStep', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(continueSpy).toHaveBeenCalledOnce();
+  });
+
+  it('does not continue when Enter is pressed from a focused radio', () => {
+    const radio = fixture.nativeElement.querySelector('input[type="radio"]') as HTMLInputElement;
+    const event = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    });
+
+    radio.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(continueSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps baccalaureate options bound in the real template', () => {
+    const template = readFileSync(
+      'src/app/features/inscripciones/components/inscripcion-personal-step/inscripcion-personal-step.html',
+      'utf8'
+    );
+
+    expect(template).toContain(
+      '@for (option of facade.baccalaureateOptions(); track option.value)'
+    );
+    expect(template).toContain(
+      '<ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>'
+    );
+    expect(template).not.toContain(
+      '<ort-radio-card-button value="1">Nacional</ort-radio-card-button>'
+    );
+    expect(template).toContain('formControlName="apoyoDecision"');
+    expect(template).toContain('placeholder="Seleccioná..."');
   });
 });

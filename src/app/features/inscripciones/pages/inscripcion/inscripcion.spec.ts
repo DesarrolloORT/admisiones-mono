@@ -36,6 +36,8 @@ describe('Inscripcion', () => {
             getComienzos: vi
               .fn()
               .mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }])),
+            getCountryLocations: vi.fn().mockReturnValue(of([])),
+            getBancos: vi.fn().mockReturnValue(of([])),
             getInitialSurveyCatalogs: vi.fn().mockReturnValue(
               of({
                 aniosAprobadosEducacionSuperior: [],

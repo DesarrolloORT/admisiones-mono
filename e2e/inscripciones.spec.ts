@@ -40,6 +40,7 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillEducation();
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
+    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
@@ -56,7 +57,7 @@ test.describe('Inscripción inicial', () => {
       idOfertaSeleccionada: 300,
     });
 
-    await inscription.selectPayment('cuenta-bancaria');
+    await inscription.selectPayment('cuenta-personal');
     await inscription.confirmPayment();
 
     await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
@@ -88,7 +89,7 @@ test.describe('Inscripción inicial', () => {
       idOfertaSeleccionada: 300,
     });
 
-    await inscription.selectPayment('cuenta-bancaria');
+    await inscription.selectPayment('cuenta-personal');
     await inscription.confirmPayment();
 
     await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
@@ -110,6 +111,7 @@ test.describe('Inscripción inicial', () => {
 
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
+    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
@@ -243,7 +245,9 @@ test.describe('Inscripción inicial', () => {
 
     await new InscripcionPage(page).goto();
 
-    await expect(page.getByRole('heading', { name: 'Confirmación' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Confirmación', exact: true, level: 1 })
+    ).toBeVisible();
     await expect(page.getByText('$ 15.500').first()).toBeVisible();
   });
 });

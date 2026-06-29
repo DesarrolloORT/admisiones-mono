@@ -11,12 +11,14 @@ import {
   getCatalogosPaisesEstadosCiudadesEndpoint,
   getCatalogosTurnosEndpoint,
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
+import type { DtoAnioBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoAnioBachilleratoCatalogo';
 import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoBachilleratoCatalogo';
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
 
 import {
+  BaccalaureateOption,
   BaccalaureateYearGroup,
   Bank,
   Career,
@@ -60,12 +62,16 @@ export class CatalogsEndpoint {
   public getCareers(): Observable<Career[]> {
     return this.api.request(getCatalogosCarrerasEndpoint).pipe(
       map(data =>
-        this.fromData(data, item => ({
-          idProducto: item.idProducto ?? 0,
-          idNivelProducto: item.idNivelProducto ?? 0,
-          nombreProducto: item.nombreProducto ?? '',
-          nombreNivelProducto: item.nombreNivelProducto ?? '',
-        }))
+        this.fromData(data, nivel =>
+          (nivel.escuelas ?? []).flatMap(escuela =>
+            (escuela.productos ?? []).map(producto => ({
+              idProducto: producto.idProducto ?? 0,
+              idNivelProducto: nivel.idNivelProducto ?? 0,
+              nombreProducto: producto.nombreProducto ?? '',
+              nombreNivelProducto: nivel.nombreNivelProducto ?? '',
+            }))
+          )
+        ).flat()
       )
     );
   }
@@ -84,26 +90,23 @@ export class CatalogsEndpoint {
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
     return this.api.request(getCatalogosEncuestaInicialEndpoint).pipe(
       map(data => ({
-        aniosAprobadosEducacionSuperior: this.toCatalogItems(data?.aniosAprobadosEducacionSuperior),
-        compartidoCon: this.toCatalogItems(data?.compartidoCon),
-        decisionCarrera: this.toCatalogItems(data?.decisionCarrera),
-        decisionUniversidad: this.toCatalogItems(data?.decisionUniversidad),
-        estadoEducacionSuperior: this.toCatalogItems(data?.estadoEducacionSuperior),
-        formacionTutores: this.toCatalogItems(data?.formacionTutores),
-        nivelConocimiento: this.toCatalogItems(data?.nivelConocimiento),
-        motivosEleccion: (data?.motivosEleccion ?? []).map(item => ({
-          id: item.idMotivo,
-          label: item.nombreMotivo,
-        })),
-        publicidadesEleccion: (data?.publicidadesEleccion ?? []).map(item => ({
-          id: item.idPublicidad,
-          label: item.nombrePublicidad,
-        })),
-        universidades: (data?.universidades ?? []).map(item => ({
-          id: item.codigoEmpresa ?? 0,
-          label: item.nombre ?? '',
-        })),
-        aniosBachiller: (data?.aniosBachiller ?? []).map(year => this.toBaccalaureateYear(year)),
+        aniosAprobadosEducacionSuperior: [],
+        compartidoCon: this.toCatalogItems(data?.decisionAcademica?.apoyosDecision),
+        decisionCarrera: this.toCatalogItems(data?.decisionAcademica?.aniosEducacionMediaSuperior),
+        decisionUniversidad: this.toCatalogItems(
+          data?.decisionAcademica?.aniosEducacionMediaSuperior
+        ),
+        estadoEducacionSuperior: this.toCatalogItems(
+          data?.educacion?.estadosEducacionSuperiorPrevia
+        ),
+        formacionTutores: this.toCatalogItems(data?.educacion?.nivelesFormacionTutores),
+        nivelConocimiento: this.toCatalogItems(data?.decisionAcademica?.nivelesDecision),
+        motivosEleccion: this.toCatalogItems(data?.decisionAcademica?.motivosEleccionOrt),
+        publicidadesEleccion: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
+        universidades: this.toCatalogItems(data?.decisionAcademica?.universidades),
+        aniosBachiller: (data?.educacion?.aniosBachillerato ?? []).map(year =>
+          this.toBaccalaureateYear(year)
+        ),
       }))
     );
   }
@@ -111,10 +114,10 @@ export class CatalogsEndpoint {
   public getBancos(): Observable<Bank[]> {
     return this.api.request(getCatalogosBancosEndpoint).pipe(
       map(data =>
-        (data?.bancos ?? []).map(banco => ({
+        this.fromData(data, banco => ({
           id: banco.idBanco ?? 0,
           label: banco.nombreBanco ?? '',
-          code: banco.codigo ?? null,
+          code: banco.idBancoSistarbanc ?? banco.codigoBanco?.toString() ?? null,
         }))
       )
     );
@@ -183,19 +186,19 @@ export class CatalogsEndpoint {
     };
   }
 
-  private toBaccalaureateYear(year: {
-    idAnioBachiller?: number;
-    nombreAnioBachiller?: string | null;
-    bachilleratos?: DtoBachilleratoCatalogo[] | null;
-  }): BaccalaureateYearGroup {
+  private toBaccalaureateYear(year: DtoAnioBachilleratoCatalogo): BaccalaureateYearGroup {
     return {
-      id: year.idAnioBachiller ?? 0,
-      label: year.nombreAnioBachiller ?? '',
-      baccalaureates: (year.bachilleratos ?? []).map(item => ({
-        id: item.codigoTitulo ?? 0,
-        label: item.nombre ?? '',
-        orientation: item.orientacionTitulo ?? null,
-      })),
+      id: year.value ?? 0,
+      label: year.label ?? '',
+      baccalaureates: (year.orientaciones ?? []).map(item => this.toBaccalaureate(item)),
+    };
+  }
+
+  private toBaccalaureate(item: DtoBachilleratoCatalogo): BaccalaureateOption {
+    return {
+      id: item.value ?? 0,
+      label: item.label ?? '',
+      orientation: item.orientacion ?? item.orientacionNueva ?? null,
     };
   }
 

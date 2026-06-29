@@ -1,6 +1,7 @@
-import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
+import { afterEach, vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
@@ -12,6 +13,11 @@ import { InscripcionProposalFacade } from './inscripcion-proposal';
 
 describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
+  let process: InscripcionProcessStore;
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -38,6 +44,7 @@ describe('InscripcionPaymentFacade', () => {
       ],
     });
     facade = TestBed.inject(InscripcionPaymentFacade);
+    process = TestBed.inject(InscripcionProcessStore);
   });
 
   it('uses a confirmation subview without changing the process step', () => {
@@ -49,7 +56,8 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.outcome()).toBe('reserva');
   });
 
-  it('shows processing before completing an immediate payment', fakeAsync(() => {
+  it('shows processing before completing an immediate payment', () => {
+    vi.useFakeTimers();
     facade.paymentForm.controls.metodoPago.setValue('cuenta-bancaria');
     facade.paymentForm.controls.banco.setValue('1');
 
@@ -57,9 +65,21 @@ describe('InscripcionPaymentFacade', () => {
     facade.confirm();
 
     expect(facade.view()).toBe('processing');
-    tick(1000);
+    vi.advanceTimersByTime(1000);
     expect(facade.outcome()).toBe('inscripcion-confirmada');
-  }));
+  });
+
+  it('shows a reusable error alert when no payment method is selected', () => {
+    expect(facade.paymentForm.controls.metodoPago.value).toBe('');
+
+    facade.requestConfirmation();
+
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'Medio de pago requerido',
+      message: 'Elegí un medio de pago para poder continuar.',
+    });
+  });
 
   it('requires a bank when paying from a bank account', () => {
     facade.paymentForm.controls.metodoPago.setValue('cuenta-bancaria');
@@ -69,6 +89,31 @@ describe('InscripcionPaymentFacade', () => {
 
     expect(facade.view()).toBe('editing');
     expect(facade.paymentForm.controls.banco.hasError('required')).toBe(true);
+    expect(facade.paymentErrorAlert()?.title).toBe('Banco requerido');
+  });
+
+  it('hides personal account payment when no deposit amount is available', () => {
+    process.preEnrollmentResponse.set({
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: null,
+      resumen: null,
+    });
+
+    expect(facade.paymentOptions().some(option => option.value === 'cuenta-personal')).toBe(false);
+  });
+
+  it('disables personal account payment when its balance does not cover the deposit', () => {
+    process.preEnrollmentResponse.set({
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 100000,
+      resumen: null,
+    });
+
+    expect(facade.paymentOptions().find(option => option.value === 'cuenta-personal')).toEqual(
+      expect.objectContaining({ disabled: true })
+    );
   });
 
   it('loads bank options with their logos', () => {

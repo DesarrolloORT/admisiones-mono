@@ -43,6 +43,16 @@ export class InscripcionProcessFacade {
     const step = this.stepItems()[this.process.flow.currentIndex()];
     return `Paso ${this.stepNumber()} de ${this.stepItems().length} - ${step.title}`;
   });
+  public readonly backLabel = computed(() => {
+    if (this.currentStep() === 'pago') return 'Volver al paso 2';
+    if (this.currentStep() !== 'encuesta') return 'Volver al paso anterior';
+    if (this.survey.readerOpen()) return 'Volver a Reglamento estudiantil';
+
+    const sections = this.survey.visibleSections();
+    return sections.indexOf(this.survey.activeSection()) > 0
+      ? 'Volver a la sección anterior'
+      : 'Volver al paso 1';
+  });
   public readonly exitConfirmationOpen = signal(false);
   public readonly surveySaveError = signal<string | null>(null);
   public readonly savingSurvey = signal(false);

@@ -1,8 +1,9 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <app-process-layout
-  closeLabel="Cerrar inscripción"
+  closeLabel="Cerrar"
   processTitle="Inscripción a carrera"
   stepperAriaLabel="Progreso de inscripción"
+  [backLabel]="process.backLabel()"
   [currentStepId]="process.currentStep()"
   [showBack]="process.canGoBack()"
   [showStepper]="process.showStepper()"
@@ -49,8 +50,8 @@
   </section>
   } @else if (payment.view() === 'processing') {
   <section aria-labelledby="processing-title" class="inscription-screen inscription-terminal">
-    <ort-spinner aria-label="Procesando inscripción" />
-    <h1 id="processing-title">Estamos procesando el pago</h1>
+    <ort-spinner aria-hidden="true" />
+    <h1 id="processing-title" role="status">Estamos procesando el pago</h1>
     <p>No cierres esta pantalla. La operación puede demorar unos segundos.</p>
   </section>
   } @else { @switch (process.currentStep()) { @case ('propuesta') {

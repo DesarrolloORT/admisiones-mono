@@ -1,4 +1,9 @@
-import { resolveBankLogo, toBankOption } from './inscripcion-bank-logo';
+import {
+  FALLBACK_BANK_OPTIONS,
+  resolveBankLogo,
+  toBankOption,
+  toBankOptions,
+} from './inscripcion-bank-logo';
 
 describe('inscripcion-bank-logo', () => {
   it('resolves a known bank by code', () => {
@@ -24,6 +29,16 @@ describe('inscripcion-bank-logo', () => {
   it('maps a catalog bank into a combo option with its logo', () => {
     expect(toBankOption({ id: 7, label: 'Santander', code: 'santander' })).toEqual({
       value: '7',
+      label: 'Santander',
+      icon: 'assets/banks/santander.svg',
+    });
+  });
+
+  it('uses fallback bank options when the catalog has no usable banks', () => {
+    expect(toBankOptions([])).toBe(FALLBACK_BANK_OPTIONS);
+    expect(toBankOptions([{ id: 1, label: ' ', code: null }])).toBe(FALLBACK_BANK_OPTIONS);
+    expect(FALLBACK_BANK_OPTIONS).toContainEqual({
+      value: 'santander',
       label: 'Santander',
       icon: 'assets/banks/santander.svg',
     });

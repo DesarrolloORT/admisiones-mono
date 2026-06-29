@@ -167,8 +167,14 @@ describe('InscripcionesEndpoint', () => {
       idProducto: 20,
       idProceso: 200,
       ultimoAnioSecundaria: null,
+      codigoTitulo: null,
+      ultimoAnioSexto: null,
+      codigoInstitucionBac: null,
+      informarEncuesta: null,
       instruccionPadre: null,
       instruccionMadre: null,
+      instruccionPadreOrt: null,
+      instruccionMadreOrt: null,
       decisionCarrera: null,
       decisionUniversidad: null,
       infoOtrasUniversidadesAntes: null,
@@ -180,6 +186,7 @@ describe('InscripcionesEndpoint', () => {
       vistaInstalacionesOrt: null,
       publicidadOrt: null,
       trabajaActualmente: null,
+      tipoJornadaLaboral: null,
       opcionesMotivosSeleccionados: null,
     };
 
@@ -197,7 +204,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         confirmada: true,
         fechaVencimientoPago: '2027-04-15',
-        seniaInscripcion: 21000,
+        carritos: [{ senia: 21000 }],
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
     );

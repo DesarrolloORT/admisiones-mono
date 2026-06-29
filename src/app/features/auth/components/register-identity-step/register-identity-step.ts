@@ -14,6 +14,8 @@ import { RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
   type OrtErrorItem,
+  OrtFileUploaderChange,
+  OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
@@ -36,6 +38,7 @@ import { IdentityForm } from '../../forms/auth-forms';
   imports: [
     AsyncPipe,
     OrtButtonModule,
+    OrtFileUploaderModule,
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
@@ -54,14 +57,18 @@ export class RegisterIdentityStep {
   public readonly documentTypes = input.required<Observable<DocumentType[]>>();
   public readonly isCedulaInput = input(false);
   public readonly documentNumberLabel = input('Nro. de documento');
-  public readonly selectedFileName = input<string | null>(null);
+  public readonly acceptedDocumentTypes = input<string[]>(['image/*', 'application/pdf']);
   public readonly isSubmitting = input(false);
   public readonly isRecognizingDocument = input(false);
   public readonly showLoginAction = input(false);
 
-  public readonly documentSelected = output<Event>();
+  public readonly documentSelected = output<File | null>();
   public readonly continueStep = output<void>();
   public readonly loginAction = output<void>();
+
+  public onDocumentFilesChanged(change: OrtFileUploaderChange): void {
+    this.documentSelected.emit(change.value.find(file => file.isValid)?.file ?? null);
+  }
 
   public readonly submitted = signal(false);
   public readonly errorSummary = signal<OrtErrorItem[]>([]);

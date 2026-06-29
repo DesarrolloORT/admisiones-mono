@@ -10,6 +10,16 @@ import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 
+interface InscripcionErrorAlertState {
+  title: string;
+  message: string;
+}
+
+const INCOMPLETE_INSCRIPTION_ERROR_ALERT: InscripcionErrorAlertState = {
+  title: 'Información incompleta',
+  message: 'Revisá y completá los campos obligatorios para continuar.',
+};
+
 export class InscripcionProposalFacade {
   private readonly inscripciones = inject(Inscripciones);
   private readonly destroyRef = inject(DestroyRef);
@@ -40,6 +50,12 @@ export class InscripcionProposalFacade {
     ]);
     const interestError = this.productInterestError();
     return interestError ? [...formErrors, { message: interestError }] : formErrors;
+  });
+  public readonly academicErrorAlert = computed<InscripcionErrorAlertState | null>(() => {
+    const interestError = this.productInterestError();
+    if (interestError) return { title: 'No pudimos continuar', message: interestError };
+
+    return this.academicErrors().length > 0 ? INCOMPLETE_INSCRIPTION_ERROR_ALERT : null;
   });
 
   constructor() {

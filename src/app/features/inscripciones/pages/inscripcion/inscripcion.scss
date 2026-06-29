@@ -18,6 +18,7 @@
 }
 
 .inscription-screen__header h1,
+.inscription-screen__header h2,
 .inscription-terminal h1 {
   margin: 0;
   color: var(--ort-sys-base-text-color-headline);
@@ -30,7 +31,7 @@
 .inscription-screen__header p,
 .inscription-screen__header span,
 .inscription-terminal p,
-.inscription-card p {
+ort-card p {
   margin: 0;
   color: var(--ort-sys-base-text-color-body);
   font-size: var(--ort-sys-body-text-size);
@@ -53,7 +54,6 @@
   gap: var(--ort-sys-spacing-16);
 }
 
-.inscription-form__card,
 .inscription-form__row {
   display: grid;
   gap: var(--ort-sys-spacing-16);
@@ -89,8 +89,16 @@
 
 .inscription-footer button,
 .inscription-footer a,
-.inscription-card button {
+ort-card button,
+ort-card a[ort-secondary-button],
+ort-card a[ort-tonal-button],
+ort-card a[ort-primary-button] {
   width: 100%;
+}
+
+.inscription-accordion__title {
+  margin: 0;
+  font: inherit;
 }
 
 .inscription-accordion__content {
@@ -116,7 +124,12 @@
 }
 
 .inscription-subsection h2,
-.inscription-card h2 {
+.inscription-subsection h3,
+.inscription-subsection h4,
+.inscription-subsection h5,
+ort-card h2,
+ort-card h3,
+ort-card h4 {
   margin: 0;
   color: var(--ort-sys-base-text-color-headline);
   font-weight: 700;
@@ -125,13 +138,11 @@
   line-height: var(--ort-sys-heading-level5-line-height);
 }
 
-.inscription-card {
-  display: grid;
-  gap: var(--ort-sys-spacing-12);
-  padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
-  border: 1px solid var(--ort-sys-base-border-dim-color);
-  border-radius: var(--ort-sys-border-radius-12);
-  background: var(--ort-sys-base-surface-background);
+.inscription-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .inscription-dialog-error {
@@ -195,16 +206,6 @@
     gap: var(--ort-sys-spacing-24);
   }
 
-  .inscription-form__card {
-    gap: var(--ort-sys-spacing-24);
-    padding: var(--ort-sys-accordeon-padding-block) var(--ort-sys-accordeon-padding-inline);
-    border-radius: var(--ort-sys-accordeon-border-radius);
-    background: var(--ort-sys-base-surface-background);
-    box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
-      var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
-      var(--ort-sys-elevation-sm-color);
-  }
-
   .inscription-form__row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--ort-sys-spacing-24);
@@ -224,7 +225,10 @@
 
   .inscription-footer button,
   .inscription-footer a,
-  .inscription-card button {
+  ort-card button,
+  ort-card a[ort-secondary-button],
+  ort-card a[ort-tonal-button],
+  ort-card a[ort-primary-button] {
     width: auto;
     min-width: 7.5rem;
   }

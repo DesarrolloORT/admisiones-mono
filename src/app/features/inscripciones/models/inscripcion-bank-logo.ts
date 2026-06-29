@@ -20,6 +20,18 @@ const KNOWN_BANK_LOGOS = [
 
 const DEFAULT_BANK_LOGO = 'default';
 
+const FALLBACK_BANKS: readonly Bank[] = [
+  { id: 'brou', label: 'BROU', code: 'brou' },
+  { id: 'santander', label: 'Santander', code: 'santander' },
+  { id: 'itau', label: 'Itaú', code: 'itau' },
+  { id: 'bbva', label: 'BBVA', code: 'bbva' },
+  { id: 'hsbc', label: 'HSBC', code: 'hsbc' },
+  { id: 'scotiabank', label: 'Scotiabank', code: 'scotiabank' },
+  { id: 'heritage', label: 'Heritage', code: 'heritage' },
+];
+
+export const FALLBACK_BANK_OPTIONS: readonly OpcionInscripcion[] = FALLBACK_BANKS.map(toBankOption);
+
 /**
  * Resuelve la ruta del logo de un banco a partir de su código o nombre,
  * cayendo a `default.svg` cuando no hay coincidencia.
@@ -36,6 +48,11 @@ export function toBankOption(bank: Bank): OpcionInscripcion {
     label: bank.label,
     icon: resolveBankLogo(bank),
   };
+}
+
+export function toBankOptions(banks: readonly Bank[]): readonly OpcionInscripcion[] {
+  const options = banks.filter(bank => bank.label.trim()).map(toBankOption);
+  return options.length > 0 ? options : FALLBACK_BANK_OPTIONS;
 }
 
 function matchBankLogo(value: string | null | undefined): string | null {
