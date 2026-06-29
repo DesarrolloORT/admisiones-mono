@@ -1,0 +1,102 @@
+<section aria-labelledby="scholarship-postulation-title" class="scholarship-screen">
+  <header class="scholarship-screen__header">
+    <h2 class="scholarship-postulation-title" id="scholarship-postulation-title">
+      Confirmá tu postulación
+    </h2>
+    <p>Revisá que los datos sean correctos antes de enviar tu solicitud</p>
+  </header>
+
+  <ort-card aria-label="Inscripción" role="region">
+    <ort-card-content>
+      <h3 class="card-title" ortCardTitle>Licenciatura en Diseño Gráfico</h3>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="calendar_today" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Comienzo</span>
+          <span class="card-item__value">Marzo 2026</span>
+        </p>
+      </div>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="schedule" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Turno</span>
+          <span class="card-item__value">Matutino 08:00 - 14:00</span>
+        </p>
+      </div>
+    </ort-card-content>
+  </ort-card>
+
+  <ort-card aria-label="Detalle de tu postulación" role="region">
+    <ort-card-content>
+      <h3 class="card-title" ortCardTitle>Detalle de tu postulación</h3>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Beca aplicada</span>
+          <span class="card-item__value">Fondo de Excelencia Académica</span>
+          <span class="card-item__label">Hasta 60%</span>
+        </p>
+      </div>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="today" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Fecha de prueba</span>
+          <span class="card-item__value">Viernes 13/06/2025</span>
+        </p>
+      </div>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="event" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Fecha de resultados</span>
+          <span class="card-item__value">Lunes 24/07/2025</span>
+        </p>
+      </div>
+    </ort-card-content>
+  </ort-card>
+
+  <section aria-labelledby="exam-section__title" class="exam-section">
+    <div class="exam-section__text">
+      <h3 class="exam-section__title" id="exam-section__title">Prueba de aptitud académica</h3>
+      <p>
+        La prueba de aptitud académica (PAA) evalúa habilidades de razonamiento verbal y matemático.
+      </p>
+      <p>
+        Deberás presentarte el
+        <strong>13 de junio</strong>
+        en las instalaciones de ORT para rendirla. Es un requisito obligatorio para la asignación de
+        la beca.
+      </p>
+    </div>
+    <button aria-label="Descargar material de estudio (ZIP/PDF)" ort-secondary-button type="button">
+      <ort-icon name="file_download" size="sm" />
+      Descargar material de estudio
+    </button>
+    <ort-snackbar
+      message="Entrevista pendiente"
+      role="status"
+      supportingText="Como parte del proceso de evaluación, deberás realizar una entrevista con un asesor académico de la carrera."
+      variant="information"
+      [autoDismiss]="false"
+      [closeable]="false" />
+  </section>
+  <section
+    aria-labelledby="terms-and-conditions-section__title"
+    class="terms-and-conditions-section">
+    <h3 class="terms-and-conditions-section__title" id="terms-and-conditions-section__title">
+      Términos y condiciones
+    </h3>
+    <p>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Perferendis nam reprehenderit cum rem
+      architecto sed asperiores
+    </p>
+    <button ort-tonal-button type="button">Leer términos y condiciones</button>
+    <ort-checkbox required>
+      <p>
+        He leído y acepto los
+        <span class="terms-and-conditions-section__link">términos y condiciones</span>
+        de la postulación.
+      </p>
+    </ort-checkbox>
+  </section>
+  <button ort-primary-button type="button">Confirmar postulación</button>
+</section>
