@@ -6,30 +6,7 @@ import {
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
 } from 'src/app/shared/forms/form-error-summary';
 
-import type {
-  ArchivosIdentidad,
-  FormularioDecisionAcademica,
-  FormularioEducacion,
-  FormularioExperienciaOrt,
-  FormularioIdentidad,
-  FormularioPago,
-  FormularioPropuesta,
-  FormularioReglamento,
-  FormularioSituacionLaboral,
-  MetodoPago,
-  SeccionEncuestaId,
-} from './inscripcion-flow';
-
-export interface InscripcionForms {
-  academicForm: FormGroup<FormularioPropuesta>;
-  educationForm: FormGroup<FormularioEducacion>;
-  academicDecisionForm: FormGroup<FormularioDecisionAcademica>;
-  ortExperienceForm: FormGroup<FormularioExperienciaOrt>;
-  workForm: FormGroup<FormularioSituacionLaboral>;
-  identityForm: FormGroup<FormularioIdentidad>;
-  regulationForm: FormGroup<FormularioReglamento>;
-  paymentForm: FormGroup<FormularioPago>;
-}
+import type { ArchivosIdentidad, MetodoPago, SeccionEncuestaId } from './inscripcion-flow';
 
 export interface SectionConfig {
   label: string;
@@ -42,9 +19,9 @@ export type IdentityFileTarget = keyof ArchivosIdentidad;
 
 export type IdentityPreloadedFileMap = Record<IdentityFileTarget, OrtPreloadedFile | null>;
 
-export function createInscripcionForms(): InscripcionForms {
+export function createInscripcionForms() {
   return {
-    academicForm: new FormGroup<FormularioPropuesta>({
+    academicForm: new FormGroup({
       tipoPropuesta: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -53,7 +30,7 @@ export function createInscripcionForms(): InscripcionForms {
       comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
       turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
     }),
-    educationForm: new FormGroup<FormularioEducacion>({
+    educationForm: new FormGroup({
       cursaSecundaria: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -71,6 +48,7 @@ export function createInscripcionForms(): InscripcionForms {
         nonNullable: true,
         validators: Validators.required,
       }),
+      universidadesEducacionSuperior: new FormControl<string[]>([], { nonNullable: true }),
       formacionMadre: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -82,12 +60,12 @@ export function createInscripcionForms(): InscripcionForms {
       }),
       tituloOrtPadre: new FormControl('', { nonNullable: true }),
     }),
-    academicDecisionForm: new FormGroup<FormularioDecisionAcademica>({
+    academicDecisionForm: new FormGroup({
       anioDecisionCarrera: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
-      apoyoDecision: new FormControl<string[]>([], {
+      apoyoDecision: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
@@ -106,7 +84,7 @@ export function createInscripcionForms(): InscripcionForms {
         validators: Validators.required,
       }),
     }),
-    ortExperienceForm: new FormGroup<FormularioExperienciaOrt>({
+    ortExperienceForm: new FormGroup({
       reunionAsesoramiento: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -115,29 +93,30 @@ export function createInscripcionForms(): InscripcionForms {
       visitoWeb: new FormControl('', { nonNullable: true, validators: Validators.required }),
       calificacionWeb: new FormControl<number | null>(null),
       visitoSede: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      calificacionSede: new FormControl<number | null>(null),
       recuerdaPublicidad: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
       mediosPublicidad: new FormControl<string[]>([], { nonNullable: true }),
     }),
-    workForm: new FormGroup<FormularioSituacionLaboral>({
+    workForm: new FormGroup({
       situacionLaboral: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
       tipoJornadaLaboral: new FormControl('', { nonNullable: true }),
     }),
-    identityForm: new FormGroup<FormularioIdentidad>({
+    identityForm: new FormGroup({
       vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
     }),
-    regulationForm: new FormGroup<FormularioReglamento>({
+    regulationForm: new FormGroup({
       aceptaReglamento: new FormControl(false, {
         nonNullable: true,
         validators: Validators.requiredTrue,
       }),
     }),
-    paymentForm: new FormGroup<FormularioPago>({
+    paymentForm: new FormGroup({
       metodoPago: new FormControl<MetodoPago | ''>('', {
         nonNullable: true,
         validators: Validators.required,
@@ -146,6 +125,8 @@ export function createInscripcionForms(): InscripcionForms {
     }),
   };
 }
+
+export type InscripcionForms = ReturnType<typeof createInscripcionForms>;
 
 export function createSectionConfig(
   forms: InscripcionForms
@@ -167,6 +148,11 @@ export function createSectionConfig(
           controlName: 'estadoEducacionSuperior',
           fieldId: '',
           label: 'Estado de educación superior',
+        },
+        {
+          controlName: 'universidadesEducacionSuperior',
+          fieldId: '',
+          label: 'Universidades de educación superior',
         },
         { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
         { controlName: 'tituloOrtMadre', fieldId: '', label: 'Título en ORT de madre o tutor' },
@@ -210,6 +196,7 @@ export function createSectionConfig(
         { controlName: 'visitoWeb', fieldId: '', label: 'Visita al sitio web' },
         { controlName: 'calificacionWeb', fieldId: '', label: 'Calificación del sitio web' },
         { controlName: 'visitoSede', fieldId: '', label: 'Visita a instalaciones' },
+        { controlName: 'calificacionSede', fieldId: '', label: 'Calificación de instalaciones' },
         { controlName: 'recuerdaPublicidad', fieldId: '', label: 'Publicidad de ORT' },
         { controlName: 'mediosPublicidad', fieldId: '', label: 'Origen de la publicidad' },
       ],

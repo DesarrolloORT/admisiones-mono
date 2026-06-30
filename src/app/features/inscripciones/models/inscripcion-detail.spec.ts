@@ -8,6 +8,7 @@ describe('detailToPreEnrollment', () => {
       pagoPendiente: {
         idInscripcion: 1072704,
         senia: 3339,
+        saldoCuenta: 70000,
         fechaVencimientoPago: '2026-06-26T16:29:20',
         resumen: summary(),
       },
@@ -18,6 +19,7 @@ describe('detailToPreEnrollment', () => {
       confirmada: false,
       fechaVencimientoPago: '2026-06-26T16:29:20',
       seniaInscripcion: 3339,
+      saldoCuenta: 70000,
       resumen: { carrera: 'Arquitectura', comienzo: 'Marzo-abril 2027', turno: 'Matutino' },
     });
   });
@@ -39,6 +41,7 @@ describe('detailToPreEnrollment', () => {
       confirmada: true,
       fechaVencimientoPago: null,
       seniaInscripcion: null,
+      saldoCuenta: null,
       resumen: { carrera: 'Arquitectura', comienzo: 'Marzo-abril 2027', turno: 'Matutino' },
     });
   });

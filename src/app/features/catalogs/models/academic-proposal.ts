@@ -12,6 +12,7 @@ export interface AcademicProposalForm {
 export interface AcademicProposalOption {
   value: string;
   label: string;
+  school?: string;
   icon?: string;
   hint?: string;
 }
@@ -62,7 +63,11 @@ export function getAcademicCareerOptions(
 
   return careers
     .filter(career => levelIds.includes(career.idNivelProducto))
-    .map(career => ({ value: career.idProducto.toString(), label: career.nombreProducto }));
+    .map(career => ({
+      value: career.idProducto.toString(),
+      label: career.nombreProducto,
+      school: career.nombreEscuela,
+    }));
 }
 
 export function getAcademicProposalLevelIds(value: string): readonly number[] {

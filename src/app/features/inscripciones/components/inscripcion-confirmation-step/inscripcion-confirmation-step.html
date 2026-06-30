@@ -64,7 +64,7 @@
             indicatorPosition="left"
             legend="Medio de pago"
             name="payment-method"
-            orientation="vertical"
+            [orientation]="radioGroupOrientation()"
             [required]="true">
             @for (option of facade.paymentOptions(); track option.value) {
             <ort-radio-card-button

@@ -44,6 +44,7 @@ describe('AcademicProposalSelection', () => {
                   idNivelProducto: 2,
                   nombreProducto: 'Analista Programador',
                   nombreNivelProducto: 'Tecnicatura',
+                  nombreEscuela: 'Facultad de Ingeniería',
                 },
               ]),
             getComienzos,
@@ -59,7 +60,9 @@ describe('AcademicProposalSelection', () => {
 
   it('loads options following the proposal, career and start cascade', () => {
     form.controls.tipoPropuesta.setValue('2');
-    expect(selection.careerOptions()).toEqual([{ value: '20', label: 'Analista Programador' }]);
+    expect(selection.careerOptions()).toEqual([
+      { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
+    ]);
 
     form.controls.carrera.setValue('20');
     expect(getComienzos).toHaveBeenCalledWith(20);

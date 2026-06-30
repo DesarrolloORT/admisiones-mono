@@ -123,7 +123,7 @@ describe('InscripcionPersonalStep', () => {
     );
 
     expect(template).toContain(
-      '@for (option of facade.baccalaureateTypeOptions; track option.value)'
+      '@for (option of facade.baccalaureateOptions(); track option.value)'
     );
     expect(template).toContain(
       '<ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>'

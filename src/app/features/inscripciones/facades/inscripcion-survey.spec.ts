@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import type { InscripcionInitialSurvey } from '../models/inscripcion-flow';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
@@ -21,8 +22,11 @@ describe('InscripcionSurveyFacade', () => {
   it('resumes an incomplete backend survey at its active section', () => {
     const { survey, process } = createFacade({
       tieneDerechoEncuesta: true,
-      encuesta: { estadoEncuestaIniAdmision: 'decision' },
-      opcionesMotivosSeleccionados: null,
+      encuesta: createInitialSurvey({ seccionActiva: 'decision-academica' }),
+      universidadesConsideradas: [],
+      universidadesEducacionSuperior: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
     });
 
     expect(process.flow.currentStep()).toBe('encuesta');
@@ -33,7 +37,10 @@ describe('InscripcionSurveyFacade', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: false,
       encuesta: null,
-      opcionesMotivosSeleccionados: null,
+      universidadesConsideradas: [],
+      universidadesEducacionSuperior: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
     });
 
     expect(survey.visibleSections()).toEqual(['identidad', 'reglamento']);
@@ -41,7 +48,74 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
-  function createFacade(initialSurvey: unknown): {
+  it('uses school years and only asks baccalaureate details after 1 EMS', () => {
+    const { survey } = createFacade(
+      {
+        tieneDerechoEncuesta: true,
+        encuesta: null,
+        universidadesConsideradas: [],
+        universidadesEducacionSuperior: [],
+        opcionesMotivosSeleccionados: [],
+        opcionesPublicidadSeleccionadas: [],
+      },
+      {
+        educacion: {
+          ubicacionesUltimoAnioSecundaria: [],
+          estadosEducacionSuperiorPrevia: [],
+          universidades: [],
+          nivelesFormacionTutores: [],
+          aniosBachillerato: [
+            { id: 10, label: '1 EMS', baccalaureates: [] },
+            {
+              id: 11,
+              label: '2 EMS',
+              baccalaureates: [{ id: 20, label: 'Nacional', orientation: 'Cientifico' }],
+            },
+            {
+              id: 12,
+              label: '3 EMS',
+              baccalaureates: [{ id: 30, label: 'Nacional', orientation: 'Economia' }],
+            },
+          ],
+        },
+      }
+    );
+
+    expect(survey.schoolYearOptions()).toEqual([
+      { value: '10', label: '1 EMS' },
+      { value: '11', label: '2 EMS' },
+      { value: '12', label: '3 EMS' },
+    ]);
+
+    survey.educationForm.patchValue({ cursaSecundaria: 'cursando', anioSecundaria: '10' });
+
+    expect(survey.shouldAskBaccalaureateType()).toBe(false);
+    expect(survey.baccalaureateOptions()).toEqual([]);
+    expect(survey.orientationOptions()).toEqual([]);
+
+    survey.educationForm.controls.anioSecundaria.setValue('11');
+
+    expect(survey.shouldAskBaccalaureateType()).toBe(true);
+    expect(survey.baccalaureateOptions()).toEqual([{ value: '20', label: 'Nacional' }]);
+
+    survey.educationForm.controls.tipoBachillerato.setValue('20');
+
+    expect(survey.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
+
+    survey.educationForm.controls.anioSecundaria.setValue('12');
+
+    expect(survey.baccalaureateOptions()).toEqual([{ value: '30', label: 'Nacional' }]);
+    expect(survey.educationForm.controls.tipoBachillerato.value).toBe('');
+
+    survey.educationForm.controls.tipoBachillerato.setValue('30');
+
+    expect(survey.orientationOptions()).toEqual([{ value: '30', label: 'Economia' }]);
+  });
+
+  function createFacade(
+    initialSurvey: unknown,
+    catalogOverrides: Record<string, unknown> = {}
+  ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
   } {
@@ -71,17 +145,23 @@ describe('InscripcionSurveyFacade', () => {
             getInstituciones: () => of([]),
             getInitialSurveyCatalogs: () =>
               of({
-                aniosAprobadosEducacionSuperior: [],
-                compartidoCon: [],
-                decisionCarrera: [],
-                decisionUniversidad: [],
-                estadoEducacionSuperior: [],
-                formacionTutores: [],
-                nivelConocimiento: [],
-                motivosEleccion: [],
-                publicidadesEleccion: [],
-                universidades: [],
-                aniosBachiller: [],
+                educacion: {
+                  ubicacionesUltimoAnioSecundaria: [],
+                  aniosBachillerato: [],
+                  estadosEducacionSuperiorPrevia: [],
+                  universidades: [],
+                  nivelesFormacionTutores: [],
+                },
+                decisionAcademica: {
+                  aniosEducacionMediaSuperior: [],
+                  apoyosDecision: [],
+                  nivelesDecision: [],
+                  universidades: [],
+                  motivosEleccionOrt: [],
+                },
+                experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+                situacionLaboral: { tiposJornada: [] },
+                ...catalogOverrides,
               }),
           },
         },
@@ -103,6 +183,47 @@ describe('InscripcionSurveyFacade', () => {
     return {
       survey: TestBed.inject(InscripcionSurveyFacade),
       process: TestBed.inject(InscripcionProcessStore),
+    };
+  }
+
+  function createInitialSurvey(
+    values: Partial<InscripcionInitialSurvey> = {}
+  ): InscripcionInitialSurvey {
+    return {
+      carreraId: null,
+      comienzoId: null,
+      turnoId: null,
+      nivelProductoId: null,
+      completa: false,
+      seccionActiva: null,
+      cursaSecundaria: null,
+      orientacionBachilleratoId: null,
+      anioBachilleratoId: null,
+      institucionSecundariaId: null,
+      ubicacionSecundariaId: null,
+      nombreInstitucionSecundaria: null,
+      tieneEducacionSuperior: null,
+      nivelFormacionMadreId: null,
+      nivelFormacionPadreId: null,
+      madreEgresadaOrt: null,
+      padreEgresadoOrt: null,
+      anioDecisionCarreraId: null,
+      anioDecisionOrtId: null,
+      seInformoEnOtrasUniversidades: null,
+      apoyoPadres: null,
+      apoyoOtros: null,
+      apoyoAmigosFamiliares: null,
+      apoyoNadie: null,
+      apoyoAmigoPropuesta: null,
+      decisionConfirmada: null,
+      tuvoAsesoramientoOrt: null,
+      valoracionAsesoramientoOrt: null,
+      visitoSitioWebOrt: null,
+      valoracionSitioWebOrt: null,
+      visitoInstalacionesOrt: null,
+      valoracionInstalacionesOrt: null,
+      recuerdaPublicidadOrt: null,
+      ...values,
     };
   }
 });

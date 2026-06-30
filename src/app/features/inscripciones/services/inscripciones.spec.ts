@@ -25,6 +25,7 @@ describe('Inscripciones', () => {
           confirmada: true,
           fechaVencimientoPago: null,
           seniaInscripcion: null,
+          saldoCuenta: null,
           resumen: null,
         })
       ),
@@ -35,11 +36,16 @@ describe('Inscripciones', () => {
         ),
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
-      getInitialSurvey: vi
-        .fn()
-        .mockReturnValue(
-          of({ tieneDerechoEncuesta: true, encuesta: null, opcionesMotivosSeleccionados: null })
-        ),
+      getInitialSurvey: vi.fn().mockReturnValue(
+        of({
+          tieneDerechoEncuesta: true,
+          encuesta: null,
+          universidadesConsideradas: [],
+          universidadesEducacionSuperior: [],
+          opcionesMotivosSeleccionados: [],
+          opcionesPublicidadSeleccionadas: [],
+        })
+      ),
       getStudentRegulationAcceptance: vi
         .fn()
         .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })),
@@ -100,30 +106,41 @@ describe('Inscripciones', () => {
 
   it('delegates initial survey loading and saving', () => {
     const payload = {
-      idProducto: 20,
-      idProceso: 200,
-      ultimoAnioSecundaria: null,
-      codigoTitulo: null,
-      ultimoAnioSexto: null,
-      codigoInstitucionBac: null,
-      informarEncuesta: null,
-      instruccionPadre: null,
-      instruccionMadre: null,
-      instruccionPadreOrt: null,
-      instruccionMadreOrt: null,
-      decisionCarrera: null,
-      decisionUniversidad: null,
-      infoOtrasUniversidadesAntes: null,
-      compartidoCon: null,
-      tieneEducacionSuperior: null,
-      nivelDecision: null,
-      asesoramientoOrt: null,
-      vistaSitioWebOrt: null,
-      vistaInstalacionesOrt: null,
-      publicidadOrt: null,
+      carreraId: 20,
+      comienzoId: 200,
+      orientacionBachilleratoId: null,
+      anioBachillerato: null,
+      vecesRecursaAnioBachillerato: null,
+      recursaAnioBachillerato: null,
+      nivelFormacionPadreTutorId: null,
+      nivelFormacionMadreTutorId: null,
+      anioDecisionCarreraId: null,
+      anioDecisionOrtId: null,
+      seInformoEnOtrasUniversidades: null,
+      informacionOtrasUniversidadesLinea1: null,
+      informacionOtrasUniversidadesLinea2: null,
+      apoyoDecisionId: null,
+      institucionSecundariaId: null,
+      autorizaInformarEncuesta: null,
+      nombreInstitucionSecundaria: null,
+      ubicacionUltimoAnioSecundariaId: null,
+      estadoEducacionSuperiorPreviaId: null,
+      nivelDecisionId: null,
+      tuvoAsesoramientoOrt: null,
+      valoracionAsesoramientoOrtId: null,
+      visitoSitioWebOrt: null,
+      valoracionSitioWebOrtId: null,
+      visitoInstalacionesOrt: null,
+      valoracionInstalacionesOrtId: null,
+      recuerdaPublicidadOrt: null,
+      madreTutorEgresadoOrt: null,
+      padreTutorEgresadoOrt: null,
       trabajaActualmente: null,
-      tipoJornadaLaboral: null,
-      opcionesMotivosSeleccionados: null,
+      tipoJornadaId: null,
+      universidadConsideradaIds: null,
+      universidadEducacionSuperiorIds: null,
+      publicidadOrtIds: null,
+      motivoEleccionOrtIds: null,
     };
 
     service.getInitialSurvey().subscribe();

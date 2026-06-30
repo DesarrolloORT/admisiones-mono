@@ -69,6 +69,13 @@ ort-card p {
   gap: var(--ort-sys-radio-label-gap);
 }
 
+.inscription-choice-list > ort-radio-button:not(:first-of-type),
+.inscription-choice-list > ort-radio-card-button:not(:first-of-type),
+.inscription-radio-list--cards > ort-radio-card-button:not(:first-of-type) {
+  border-top: 1px solid var(--ort-sys-base-border-subtle-color);
+  padding-block-start: var(--ort-sys-spacing-8);
+}
+
 [inscripcionDialogActions] {
   display: grid;
   gap: var(--ort-sys-spacing-8);
@@ -182,7 +189,16 @@ ort-card h4 {
   color: inherit;
 }
 
-@media (width >= 52.5rem) {
+@media (width >=48rem) {
+  .inscription-choice-list > ort-radio-button:not(:first-of-type),
+  .inscription-choice-list > ort-radio-card-button:not(:first-of-type),
+  .inscription-radio-list--cards > ort-radio-card-button:not(:first-of-type) {
+    border-top: 0;
+    padding-block-start: 0;
+  }
+}
+
+@media (width >=52.5rem) {
   .inscription-screen {
     gap: var(--ort-sys-spacing-40);
     padding: 0;

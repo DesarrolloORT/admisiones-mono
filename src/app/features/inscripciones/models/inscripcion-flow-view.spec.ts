@@ -11,6 +11,7 @@ describe('inscripcion flow view', () => {
         confirmada: true,
         fechaVencimientoPago: '2027-03-04',
         seniaInscripcion: 15500,
+        saldoCuenta: 70000,
         resumen: { carrera: 'Sistemas', comienzo: 'Agosto', turno: 'Nocturno' },
       },
       selectedCareer: '',

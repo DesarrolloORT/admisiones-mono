@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtButtonModule,
@@ -8,6 +15,7 @@ import {
   OrtRadioModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
 import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
@@ -32,7 +40,14 @@ import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-er
 })
 export class InscripcionConfirmationStep {
   protected readonly facade = inject(InscripcionPaymentFacade);
+  private readonly breakpointService = inject(BreakpointService);
   private readonly paymentSubmit = viewChild<ElementRef<HTMLButtonElement>>('paymentSubmit');
+
+  protected readonly radioGroupOrientation = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
+  });
 
   protected closeConfirmationDialog(): void {
     this.facade.cancelConfirmation();

@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { vi } from 'vitest';
 
 import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
@@ -8,13 +10,33 @@ import { InscripcionConfirmationStep } from './inscripcion-confirmation-step';
 
 describe('InscripcionConfirmationStep', () => {
   const requestConfirmationSpy = vi.fn();
+  const breakpoint = signal({
+    isXSmall: true,
+    isSmall: false,
+    isMedium: false,
+    isLarge: false,
+    currentBreakpoint: 'xs',
+    screenWidth: 375,
+  });
 
   beforeEach(() => {
     requestConfirmationSpy.mockClear();
+    breakpoint.set({
+      isXSmall: true,
+      isSmall: false,
+      isMedium: false,
+      isLarge: false,
+      currentBreakpoint: 'xs',
+      screenWidth: 375,
+    });
 
     TestBed.configureTestingModule({
       imports: [InscripcionConfirmationStep],
       providers: [
+        {
+          provide: BreakpointService,
+          useValue: { breakpoint },
+        },
         {
           provide: InscripcionPaymentFacade,
           useValue: { requestConfirmation: requestConfirmationSpy },
@@ -48,6 +70,43 @@ describe('InscripcionConfirmationStep', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(requestConfirmationSpy).not.toHaveBeenCalled();
+  });
+
+  it('uses vertical radio groups on small breakpoints', () => {
+    const fixture = TestBed.createComponent(InscripcionConfirmationStep);
+    const component = fixture.componentInstance as unknown as {
+      radioGroupOrientation: () => 'vertical' | 'horizontal';
+    };
+
+    expect(component.radioGroupOrientation()).toBe('vertical');
+  });
+
+  it('uses horizontal radio groups from medium and large breakpoints', () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 768,
+    });
+    const fixture = TestBed.createComponent(InscripcionConfirmationStep);
+    const component = fixture.componentInstance as unknown as {
+      radioGroupOrientation: () => 'vertical' | 'horizontal';
+    };
+
+    expect(component.radioGroupOrientation()).toBe('horizontal');
+
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: false,
+      isLarge: true,
+      currentBreakpoint: 'lg',
+      screenWidth: 1280,
+    });
+
+    expect(component.radioGroupOrientation()).toBe('horizontal');
   });
 
   it('keeps bank selection usable with logo options in the real template', () => {
