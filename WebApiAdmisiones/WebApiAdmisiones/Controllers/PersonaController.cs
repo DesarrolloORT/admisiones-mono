@@ -56,6 +56,14 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Valida un telefono informado por el front para los datos de la persona.
+        /// </summary>
+        /// <param name="telefonoValidar">Telefono normalizado o ingresado por el usuario.</param>
+        /// <param name="telefono1">Indica si se valida como telefono principal.</param>
+        /// <returns><c>true</c> si el telefono es valido para guardar.</returns>
+        /// <response code="200">Telefono validado correctamente.</response>
+        /// <response code="400">Telefono invalido o solicitud incompleta.</response>
         [HttpPost("ValidarTelefono")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -187,6 +195,7 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Frente y dorso del documento disponibles.</returns>
         /// <response code="200">Imagen obtenida correctamente.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
+        /// <response code="409">El documento existe pero no esta en un estado valido para ser devuelto.</response>
         [HttpGet("Documento")]
         [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 404)]

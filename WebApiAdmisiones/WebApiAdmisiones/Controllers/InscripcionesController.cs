@@ -20,15 +20,15 @@ namespace WebApiAdmisiones.Controllers
     {
         #region INSCRIPCIONES
 
-        ///// <summary>
-        ///// Registra o actualiza el interés de la persona autenticada para un producto y proceso habilitado.
-        ///// </summary>
-        ///// <param name="request">Producto y proceso seleccionados.</param>
-        ///// <returns>Resultado de la actualización del interés.</returns>
-        ///// <response code="200">Interés registrado correctamente.</response>
-        ///// <response code="400">Producto o proceso inválido.</response>
-        ///// <response code="404">Persona no encontrada.</response>
-        ///// <response code="409">La persona ya tuvo inscripción o tiene una pendiente para ese producto.</response>
+        /// <summary>
+        /// Registra o actualiza el interes de la persona autenticada para un producto, proceso y oferta habilitados.
+        /// </summary>
+        /// <param name="request">Producto, proceso y oferta seleccionados.</param>
+        /// <returns><c>true</c> si el interes se registro correctamente.</returns>
+        /// <response code="200">Interes registrado correctamente.</response>
+        /// <response code="400">Producto, proceso, oferta o solicitud invalida.</response>
+        /// <response code="404">Persona no encontrada.</response>
+        /// <response code="409">La persona ya tuvo inscripcion o tiene una pendiente para ese producto.</response>
         [HttpPost("InteresProducto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
@@ -96,6 +96,18 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
+        /// <summary>
+        /// Inicia o confirma el pago de una inscripcion de la persona autenticada.
+        /// </summary>
+        /// <remarks>
+        /// Tipos de pago admitidos: <c>CUENTA_PERSONAL</c>, <c>ABITAB</c>, <c>PAGANZA</c>, <c>BANRED</c>, <c>GEOPAY</c> y <c>SISTARBANC</c>. Para <c>SISTARBANC</c> se debe enviar <c>IdBancoSistarbanc</c>.
+        /// </remarks>
+        /// <param name="request">Inscripcion y tipo de pago seleccionado por el front.</param>
+        /// <returns>Resultado del pago, metodo guardado o URL generada para continuar el pago externo.</returns>
+        /// <response code="200">Pago procesado, metodo guardado o URL de pago generada correctamente.</response>
+        /// <response code="400">Solicitud invalida o tipo de pago no admitido.</response>
+        /// <response code="404">No se encontro la inscripcion de la persona autenticada.</response>
+        /// <response code="409">La inscripcion no esta en un estado valido para pagar.</response>
         [HttpPost("Pagar")]
         [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 400)]
