@@ -4011,13 +4011,13 @@
     <property name="NombreOtraEmpresa" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="e7b4a720-2e9a-40cc-8b45-4b6bd7e816de">
       <column name="NOMBRE_OTRA_EMPRESA" not-null="False" length="90" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="71f27913-3696-4e1d-b388-5933e3b373a4">
+    <property name="FechaIngreso" type="DateTime" p1:ValidateRequired="true" p1:Guid="71f27913-3696-4e1d-b388-5933e3b373a4">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="1c3702bc-2484-4a57-b4cc-dd47ce9ee925">
+    <property name="HoraIngreso" type="String" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="1c3702bc-2484-4a57-b4cc-dd47ce9ee925">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="f168fa77-53be-4852-93f1-4019d45c028d">
+    <property name="UsuarioIngreso" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="f168fa77-53be-4852-93f1-4019d45c028d">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -4034,13 +4034,13 @@
     <property name="NombreOtraEmpresa" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="9306170a-5641-4ab0-9e55-a1c90ea6c59e">
       <column name="NOMBRE_OTRA_EMPRESA" not-null="False" length="90" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="816d8bbe-72a0-4ee5-8bd2-0f90e00ee242">
+    <property name="FechaIngreso" type="DateTime" p1:ValidateRequired="true" p1:Guid="816d8bbe-72a0-4ee5-8bd2-0f90e00ee242">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="b52dd5a1-a85d-4868-b61b-594eb65c29e3">
+    <property name="HoraIngreso" type="String" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="b52dd5a1-a85d-4868-b61b-594eb65c29e3">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="6ad72306-ed3c-455e-ab96-f267ea07a7d9">
+    <property name="UsuarioIngreso" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="6ad72306-ed3c-455e-ab96-f267ea07a7d9">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -4053,13 +4053,13 @@
         <column name="CODIGO_PERSONA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
       </key-property>
     </composite-id>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="46a093a9-49fb-44c7-acbc-95c653ad9d7c">
+    <property name="FechaIngreso" type="DateTime" p1:ValidateRequired="true" p1:Guid="46a093a9-49fb-44c7-acbc-95c653ad9d7c">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="92a21952-e2ca-4344-a6dd-86853a817df5">
+    <property name="HoraIngreso" type="String" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="92a21952-e2ca-4344-a6dd-86853a817df5">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="6d9236ad-ddc6-4706-915e-1274427ea851">
+    <property name="UsuarioIngreso" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="6d9236ad-ddc6-4706-915e-1274427ea851">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
@@ -4072,13 +4072,13 @@
         <column name="CODIGO_PERSONA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
       </key-property>
     </composite-id>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="7d99a173-4ce8-4c1e-b041-a6e95d34ea6c">
+    <property name="FechaIngreso" type="DateTime" p1:ValidateRequired="true" p1:Guid="7d99a173-4ce8-4c1e-b041-a6e95d34ea6c">
       <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="9e957837-d600-4119-b190-c8b8bdc11ee5">
+    <property name="HoraIngreso" type="String" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="9e957837-d600-4119-b190-c8b8bdc11ee5">
       <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="d04dafee-eb4d-4819-824d-50fa8f97b606">
+    <property name="UsuarioIngreso" type="String" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="d04dafee-eb4d-4819-824d-50fa8f97b606">
       <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
   </class>
