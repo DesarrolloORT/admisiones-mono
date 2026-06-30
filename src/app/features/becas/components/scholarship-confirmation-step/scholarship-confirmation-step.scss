@@ -57,6 +57,9 @@
 }
 
 .terms-and-conditions-section__link {
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--ort-sys-color-primary-500);
   text-decoration: underline;
 }

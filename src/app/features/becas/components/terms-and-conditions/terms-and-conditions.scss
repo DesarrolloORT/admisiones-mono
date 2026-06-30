@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.terms-and-conditions {
+  display: grid;
+  gap: var(--ort-sys-spacing-24);
+}
+
+.terms-and-conditions__title {
+  margin: 0;
+  font-size: var(--ort-sys-font-size-24);
+}
+
+.terms-and-conditions__subsection {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+}
+
+.terms-and-conditions__subsection-title {
+  margin: 0;
+  font-size: var(--ort-sys-font-size-16);
+}
+
+.terms-and-conditions p {
+  color: var(--ort-sys-base-text-color-body);
+}
+
+.terms-and-conditions button {
+  margin-block: var(--ort-sys-spacing-16);
+}

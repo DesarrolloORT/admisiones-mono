@@ -1,3 +1,5 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+@if (!showTermsAndConditions()) {
 <section aria-labelledby="scholarship-postulation-title" class="scholarship-screen">
   <header class="scholarship-screen__header">
     <h2 class="scholarship-postulation-title" id="scholarship-postulation-title">
@@ -117,11 +119,18 @@
       Lorem ipsum dolor sit amet consectetur adipisicing elit. Perferendis nam reprehenderit cum rem
       architecto sed asperiores
     </p>
-    <button ort-tonal-button type="button">Leer términos y condiciones</button>
-    <ort-checkbox required>
+    <button ort-tonal-button type="button" (click)="openTermsAndConditions()">
+      Leer términos y condiciones
+    </button>
+    <ort-checkbox required [checked]="termsAccepted()">
       <p>
         He leído y acepto los
-        <span class="terms-and-conditions-section__link">términos y condiciones</span>
+        <button
+          class="terms-and-conditions-section__link"
+          type="button"
+          (click)="openTermsAndConditions()">
+          términos y condiciones
+        </button>
         de la postulación.
       </p>
     </ort-checkbox>
@@ -130,3 +139,6 @@
     Confirmar postulación
   </button>
 </section>
+} @else {
+<app-terms-and-conditions (accepted)="acceptTermsAndConditions()" />
+}
