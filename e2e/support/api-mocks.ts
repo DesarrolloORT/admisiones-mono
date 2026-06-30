@@ -390,23 +390,34 @@ function profileData(): unknown {
 
 function initialSurveyCatalogs(): unknown {
   return {
-    aniosAprobadosEducacionSuperior: [{ value: 1, label: 'Un año' }],
-    aniosBachiller: [
-      {
-        idAnioBachiller: 6,
-        nombreAnioBachiller: '6º año',
-        bachilleratos: [
-          { codigoTitulo: 12, nombre: 'Científico', orientacionTitulo: 'Matemática' },
-        ],
-      },
-    ],
-    compartidoCon: [{ value: 1, label: 'Familia' }],
-    decisionCarrera: [{ value: 1, label: 'Durante secundaria' }],
-    decisionUniversidad: [{ value: 1, label: 'Propuesta académica' }],
-    estadoEducacionSuperior: [{ value: 3, label: 'No cursé estudios superiores' }],
-    formacionTutores: [{ value: 4, label: 'Universitaria completa' }],
-    motivosEleccion: [{ idMotivo: 1, nombreMotivo: 'Propuesta académica' }],
-    nivelConocimiento: [{ value: 1, label: 'Conocía bien la propuesta' }],
+    educacion: {
+      ubicacionesUltimoAnioSecundaria: [
+        { value: 1, label: 'Uruguay' },
+        { value: 2, label: 'En el exterior' },
+      ],
+      aniosBachillerato: [
+        {
+          value: 11,
+          label: 'Durante secundaria',
+          orientaciones: [{ value: 12, label: 'Científico', orientacion: 'Matemática' }],
+        },
+      ],
+      estadosEducacionSuperiorPrevia: [{ value: 3, label: 'No cursé estudios superiores' }],
+      universidades: [],
+      nivelesFormacionTutores: [{ value: 5, label: 'Universitaria completa' }],
+    },
+    decisionAcademica: {
+      aniosEducacionMediaSuperior: [
+        { value: 1, label: 'Durante secundaria' },
+        { value: 2, label: '2º EMS (5º año)' },
+      ],
+      apoyosDecision: [{ value: 1, label: 'Familia' }],
+      nivelesDecision: [{ value: 1, label: 'Decidido/a' }],
+      universidades: [],
+      motivosEleccionOrt: [{ value: 1, label: 'Propuesta académica' }],
+    },
+    experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+    situacionLaboral: { tiposJornada: [] },
   };
 }
 
