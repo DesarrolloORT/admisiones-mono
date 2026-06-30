@@ -190,12 +190,15 @@ export class InscripcionPaymentFacade {
     if (option.value !== 'cuenta-personal') return [option];
 
     const amount = this.process.preEnrollmentResponse()?.seniaInscripcion;
+    const availableAmount = this.process.preEnrollmentResponse()?.saldoCuenta;
     if (!isPositiveAmount(amount)) return [];
 
     return [
       {
         ...option,
-        disabled: amount > (option.availableAmount ?? 0),
+        hint: `Monto disponible ${formatInscriptionAmount(availableAmount)}`,
+        availableAmount: availableAmount ?? undefined,
+        disabled: amount > (availableAmount ?? 0),
       },
     ];
   }

@@ -97,6 +97,7 @@ describe('InscripcionPaymentFacade', () => {
       confirmada: false,
       fechaVencimientoPago: null,
       seniaInscripcion: null,
+      saldoCuenta: null,
       resumen: null,
     });
 
@@ -108,6 +109,7 @@ describe('InscripcionPaymentFacade', () => {
       confirmada: false,
       fechaVencimientoPago: null,
       seniaInscripcion: 100000,
+      saldoCuenta: 70000,
       resumen: null,
     });
 
