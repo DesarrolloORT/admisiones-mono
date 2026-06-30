@@ -156,6 +156,11 @@ ort-form-field.academic-proposal-select__desktop-field {
   cursor: pointer;
 }
 
+.academic-proposal-select__drawer-group {
+  margin: 0;
+  padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
+}
+
 .academic-proposal-select__drawer-option:hover,
 .academic-proposal-select__drawer-option:focus-visible {
   background: var(--ort-sys-menu-item-background-on-hover);
@@ -175,6 +180,7 @@ ort-form-field.academic-proposal-select__desktop-field {
   flex: 0 0 auto;
   width: 1.5rem;
   height: 1.5rem;
+  margin-left: auto;
   border: var(--ort-sys-radio-border-width) solid var(--ort-sys-radio-border-color);
   border-radius: var(--ort-sys-border-radius-round);
 }

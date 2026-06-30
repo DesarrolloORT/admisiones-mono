@@ -71,4 +71,3 @@ if (process.exitCode && process.exitCode !== 0) {
   console.log('✅ Generación de archivos de testing completada');
   process.exit(0);
 }
-

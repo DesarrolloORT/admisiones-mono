@@ -51,8 +51,12 @@
         id="academic-proposal-career"
         [disabled]="!selection().canSelectCareer()">
         <ort-option value="">Seleccioná...</ort-option>
-        @for (option of selection().careerOptions(); track option.value) {
-        <ort-option [value]="option.value">{{ option.label }}</ort-option>
+        @for (group of careerOptionGroups(); track group.label) {
+        <ort-optgroup [label]="group.label">
+          @for (option of group.options; track option.value) {
+          <ort-option [value]="option.value">{{ option.label }}</ort-option>
+          }
+        </ort-optgroup>
         }
       </ort-select>
       @if (form().controls.carrera.touched && form().controls.carrera.hasError('required')) {
@@ -233,7 +237,9 @@
         class="academic-proposal-select__drawer-list"
         role="radiogroup"
         [attr.aria-label]="mobileFieldLabel()">
-        @for (option of filteredMobileOptions(); track option.value) {
+        @for (group of filteredMobileOptionGroups(); track group.label) { @if (group.label) {
+        <p class="academic-proposal-select__drawer-group">{{ group.label }}</p>
+        } @for (option of group.options; track option.value) {
         <button
           class="academic-proposal-select__drawer-option"
           role="radio"
@@ -246,7 +252,7 @@
           <span>{{ option.label }}</span>
           <span aria-hidden="true" class="academic-proposal-select__drawer-radio"></span>
         </button>
-        } @empty {
+        } } @empty {
         <p class="academic-proposal-select__drawer-empty" role="status">No hay resultados</p>
         }
       </div>

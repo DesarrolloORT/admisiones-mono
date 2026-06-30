@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import type { FormControl, FormGroup } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
@@ -16,6 +24,11 @@ import type { AcademicProposalForm, AcademicProposalOption } from '../../models/
 import { AcademicProposalSelection } from '../../services/academic-proposal-selection';
 
 type MobileSelectField = 'career' | 'start' | 'shift';
+
+interface MobileOptionGroup {
+  label: string;
+  options: readonly AcademicProposalOption[];
+}
 
 @Component({
   selector: 'app-academic-proposal-select',
@@ -42,6 +55,12 @@ export class AcademicProposalSelect implements OnInit {
   protected readonly mobileDrawerField = signal<MobileSelectField | null>(null);
   protected readonly mobilePendingValue = signal('');
   protected readonly mobileSearch = signal('');
+  protected readonly careerOptionGroups = computed(() =>
+    groupCareerOptions(this.selection().careerOptions())
+  );
+  protected readonly filteredMobileOptionGroups = computed(() =>
+    groupMobileOptions(this.filteredMobileOptions(), this.mobileDrawerField())
+  );
 
   ngOnInit(): void {
     this.selection().connect(this.form());
@@ -195,4 +214,24 @@ export class AcademicProposalSelect implements OnInit {
         return this.selection().shiftOptions();
     }
   }
+}
+
+function groupMobileOptions(
+  options: readonly AcademicProposalOption[],
+  field: MobileSelectField | null
+): readonly MobileOptionGroup[] {
+  if (options.length === 0) return [];
+  return field === 'career' ? groupCareerOptions(options) : [{ label: '', options }];
+}
+
+function groupCareerOptions(
+  options: readonly AcademicProposalOption[]
+): readonly MobileOptionGroup[] {
+  const groups = new Map<string, AcademicProposalOption[]>();
+  for (const option of options) {
+    const school = option.school?.trim() || 'Sin escuela';
+    groups.set(school, [...(groups.get(school) ?? []), option]);
+  }
+
+  return [...groups].map(([label, groupOptions]) => ({ label, options: groupOptions }));
 }

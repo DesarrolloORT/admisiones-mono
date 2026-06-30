@@ -1,10 +1,11 @@
-import { AppConfigurationClient } from '@azure/app-configuration';
-import { AzureCliCredential } from '@azure/identity';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+
+import { AppConfigurationClient } from '@azure/app-configuration';
+import { AzureCliCredential } from '@azure/identity';
 
 function getArg(name, defaultValue = undefined) {
   const index = process.argv.indexOf(`--${name}`);
@@ -351,4 +352,3 @@ async function main() {
 main().catch(error => {
   fail('Error inesperado ejecutando env-sync.', error);
 });
-

@@ -3,7 +3,9 @@
     Confirmá tus datos para continuar acceder al sitio.
   </p>
 
-  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.primerApellido.value">
+  <ort-form-field
+    class="auth-field--wide"
+    [hideRequiredMarker]="!!form().controls.primerApellido.value">
     <ort-label>Primer apellido</ort-label>
     <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
     @if (form().controls.primerApellido.touched &&
