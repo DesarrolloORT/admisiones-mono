@@ -51,4 +51,3 @@ export class CaptchaTokenService {
     return 'Unknown reCAPTCHA error.';
   }
 }
-
