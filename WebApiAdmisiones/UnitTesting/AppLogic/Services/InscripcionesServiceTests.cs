@@ -1973,23 +1973,8 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(request =>
-            {
-                if (request.Method == HttpMethod.Get)
-                {
-                    return JsonResponse(HttpStatusCode.OK,
-                        """
-                        {
-                          "carritos": [
-                            { "idCarrito": "123|10|1|7|555", "senia": 1500.50 },
-                            { "idCarrito": "123|10|1|7|556", "senia": 700 }
-                          ]
-                        }
-                        """);
-                }
-
-                return JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\"");
-            });
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
             var service = CrearServiceConApi(handler);
 
             var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
@@ -2001,13 +1986,9 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal("https://pagos.test/factura", result.Data);
-            Assert.Equal(2, handler.Requests.Count);
-            Assert.Contains("Pagos/Carritos?idInscripcion=555", handler.Requests[0].RequestUri);
-            Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC", handler.Requests[1].RequestUri);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", handler.Requests[1].Body);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|556\"", handler.Requests[1].Body);
-            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", handler.Requests[1].Body);
-            Assert.Contains("\"banco\":\"001\"", handler.Requests[1].Body);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
+            Assert.Equal(string.Empty, request.Body);
         }
 
         [Fact]
@@ -2053,7 +2034,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"carritos":[]}"""));
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
             var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
@@ -2063,8 +2044,8 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.False(result.Success);
-            Assert.Equal("INS_UF_05", result.ErrorCode);
-            Assert.Equal(404, result.HttpCode);
+            Assert.Equal("URL_CREAR_FACTURA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]
@@ -2076,10 +2057,8 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(request =>
-                request.Method == HttpMethod.Get
-                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
-                    : JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
             var service = CrearServiceConApi(handler);
 
             var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
@@ -2087,7 +2066,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
             Assert.Single(result.Data.Mensajes);
-            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", handler.Requests[1].RequestUri);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
         }
 
         [Fact]
@@ -2120,10 +2100,8 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(request =>
-                request.Method == HttpMethod.Get
-                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
-                    : JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
             var service = CrearServiceConApi(handler);
 
             var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "BANRED" });
@@ -2131,7 +2109,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("URL_GENERADA", result.Data!.Resultado);
             Assert.Equal("https://pagos.test/factura", result.Data.UrlPago);
-            Assert.Contains("UrlCrearFactura?tipoPago=BANRED", handler.Requests[1].RequestUri);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("UrlCrearFactura?tipoPago=BANRED&idInscripcion=555&banco=", request.RequestUri);
         }
 
         [Fact]
@@ -2154,29 +2133,14 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(request =>
-            {
-                if (request.Method == HttpMethod.Get)
-                {
-                    return JsonResponse(HttpStatusCode.OK,
-                        """
-                        {
-                          "carritos": [
-                            { "idCarrito": "123|10|1|7|555", "senia": 1500.50 },
-                            { "idCarrito": "123|10|1|7|556", "senia": 700 }
-                          ]
-                        }
-                        """);
-                }
-
-                return JsonResponse(HttpStatusCode.OK,
-                    """
-                    [
-                      { "clave": "123|10|1|7|555", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." },
-                      { "clave": "123|10|1|7|556", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." }
-                    ]
-                    """);
-            });
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK,
+                """
+                [
+                  { "clave": "123|10|1|7|555", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." },
+                  { "clave": "123|10|1|7|556", "valor": "Tu pago con Cuenta Personal se realizó exitosamente." }
+                ]
+                """));
             var service = CrearServiceConApi(handler);
 
             var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
@@ -2184,13 +2148,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal(2, result.Data!.Count);
             Assert.Equal("123|10|1|7|555", result.Data[0].Clave);
-            Assert.Equal(2, handler.Requests.Count);
-            Assert.Contains("Pagos/Carritos?idInscripcion=555", handler.Requests[0].RequestUri);
-            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", handler.Requests[1].RequestUri);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", handler.Requests[1].Body);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|556\"", handler.Requests[1].Body);
-            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", handler.Requests[1].Body);
-            Assert.Contains("\"banco\":\"\"", handler.Requests[1].Body);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
+            Assert.Equal(string.Empty, request.Body);
         }
 
         [Fact]
@@ -2218,14 +2178,14 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"carritos":[]}"""));
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
             var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
 
             Assert.False(result.Success);
-            Assert.Equal("INS_PC_03", result.ErrorCode);
-            Assert.Equal(404, result.HttpCode);
+            Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]
@@ -2237,10 +2197,8 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(request =>
-                request.Method == HttpMethod.Get
-                    ? JsonResponse(HttpStatusCode.OK, """{"carritos":[{"idCarrito":"123|10|1|7|555","senia":1500.50}]}""")
-                    : JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
             var service = CrearServiceConApi(handler);
 
             var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });

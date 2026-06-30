@@ -495,9 +495,9 @@ namespace AppLogic.ApiClients
             }
         }
 
-        /// <summary>Procesa pagos de carritos contra la API legacy.</summary>
-        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCarritosAsync(
-            List<ClaveValorCarrito> carritos,
+        /// <summary>Procesa el pago de los carritos de seña de una inscripción contra la API legacy.</summary>
+        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCarritosPorInscripcionAsync(
+            long idInscripcion,
             string tipoPago = "PAGO_CUENTA_CORRIENTE")
         {
             try
@@ -505,24 +505,24 @@ namespace AppLogic.ApiClients
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                    "Procesando pago de {CantidadCarritos} carritos con tipo de pago: {TipoPago}",
-                    carritos.Count,
+                    "Procesando pago de carritos de la inscripción {IdInscripcion} con tipo de pago: {TipoPago}",
+                    idInscripcion,
                     tipoPago
                     );
                 }
-                var url = $"ORTSecure/Pagos/Carritos/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}";
-                var response = await _httpClient.PostAsJsonAsync(url, carritos);
+                var url = $"ORTSecure/Pagos/Carritos/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}&idInscripcion={idInscripcion}";
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<List<DtoMensajePagoCarrito>>();
-                    return OperationResult<List<DtoMensajePagoCarrito>>.Ok(result!, nameof(PagarCarritosAsync));
+                    return OperationResult<List<DtoMensajePagoCarrito>>.Ok(result!, nameof(PagarCarritosPorInscripcionAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
                 return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(
                     "PAGAR_CARRITOS_01",
-                    nameof(PagarCarritosAsync),
+                    nameof(PagarCarritosPorInscripcionAsync),
                     $"La API rechazó el pago: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!
@@ -530,51 +530,46 @@ namespace AppLogic.ApiClients
             }
             catch (Exception ex)
             {
-                return HandleException<List<DtoMensajePagoCarrito>>(ex, nameof(PagarCarritosAsync));
+                return HandleException<List<DtoMensajePagoCarrito>>(ex, nameof(PagarCarritosPorInscripcionAsync));
             }
         }
 
-        /// <summary>
-        /// Crea una factura para los carritos especificados.
-        /// Corresponde a: POST /Carritos/UltCrearFactura
-        /// </summary>
-        /// <param name="carritos">Lista de pares clave-valor con datos de los carritos</param>
-        /// <param name="tipoPago">Tipo de pago (ej: "EANRED_...")</param>
-        /// <returns>Resultado de la creación de factura</returns>
-        public async Task<OperationResult<string>> ObtenerUrlCrearFacturaAsync(
-            List<ClaveValorCarrito> carritos,
-            string tipoPago)
+
+        public async Task<OperationResult<string>> ObtenerUrlCrearFacturaPorInscripcionAsync(
+            long idInscripcion,
+            string tipoPago,
+            string banco = "")
         {
             try
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                        "Obteniendo URL de factura con {CantidadCarritos} carritos y tipo de pago: {TipoPago}",
-                        carritos.Count,
+                        "Obteniendo URL de factura de la inscripción {IdInscripcion} con tipo de pago: {TipoPago}",
+                        idInscripcion,
                         tipoPago);
                 }
 
-                var url = $"ORTSecure/Pagos/Carritos/UrlCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}";
-                var response = await _httpClient.PostAsJsonAsync(url, carritos);
+                var url = $"ORTSecure/Pagos/Carritos/UrlCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}&idInscripcion={idInscripcion}&banco={Uri.EscapeDataString(banco)}";
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<string>();
-                    return OperationResult<string>.Ok(result!, nameof(ObtenerUrlCrearFacturaAsync));
+                    return OperationResult<string>.Ok(result!, nameof(ObtenerUrlCrearFacturaPorInscripcionAsync));
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
                 return OperationResult<string>.IsFailed(
                     "URL_CREAR_FACTURA_01",
-                    nameof(ObtenerUrlCrearFacturaAsync),
+                    nameof(ObtenerUrlCrearFacturaPorInscripcionAsync),
                     $"La API rechazó la creación de URL de factura: {response.StatusCode} - {errorContent}",
                     (int)response.StatusCode,
                     default!);
             }
             catch (Exception ex)
             {
-                return HandleException<string>(ex, nameof(ObtenerUrlCrearFacturaAsync));
+                return HandleException<string>(ex, nameof(ObtenerUrlCrearFacturaPorInscripcionAsync));
             }
         }
 

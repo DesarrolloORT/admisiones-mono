@@ -79,35 +79,7 @@ namespace UnitTesting.AppLogic.ApiClients
         }
 
         [Fact]
-        public async Task ObtenerUrlCrearFacturaAsync_WithSuccess_PostsLegacyPayload()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
-            var client = CrearClient(handler);
-            var carritos = new List<ClaveValorCarrito>
-            {
-                new()
-                {
-                    ClaveCarrito = "123|10|1|7|555",
-                    CantidadCuotasAPagar = "Seña",
-                    Banco = "001"
-                }
-            };
-
-            var result = await client.ObtenerUrlCrearFacturaAsync(carritos, "SISTARBANC");
-
-            Assert.True(result.Success);
-            Assert.Equal("https://pagos.test/factura", result.Data);
-            var request = Assert.Single(handler.Requests);
-            Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Contains("Pagos/Carritos/UrlCrearFactura?tipoPago=SISTARBANC", request.RequestUri);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", request.Body);
-            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", request.Body);
-            Assert.Contains("\"banco\":\"001\"", request.Body);
-        }
-
-        [Fact]
-        public async Task PagarCarritosAsync_WithSuccess_PostsLegacyPayloadAndReturnsMessages()
+        public async Task PagarCarritosPorInscripcionAsync_WithCustomPaymentType_PostsOnlyInscription()
         {
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """
@@ -116,28 +88,35 @@ namespace UnitTesting.AppLogic.ApiClients
                 ]
                 """));
             var client = CrearClient(handler);
-            var carritos = new List<ClaveValorCarrito>
-            {
-                new()
-                {
-                    ClaveCarrito = "123|10|1|7|555",
-                    CantidadCuotasAPagar = "Seña",
-                    Banco = string.Empty
-                }
-            };
-
-            var result = await client.PagarCarritosAsync(carritos);
+            var result = await client.PagarCarritosPorInscripcionAsync(555, "PAGO/CUENTA");
 
             Assert.True(result.Success);
-            var mensaje = Assert.Single(result.Data!);
-            Assert.Equal("123|10|1|7|555", mensaje.Clave);
-            Assert.Contains("Cuenta Personal", mensaje.Valor);
+            Assert.Single(result.Data!);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", request.RequestUri);
-            Assert.Contains("\"claveCarrito\":\"123|10|1|7|555\"", request.Body);
-            Assert.Contains("\"cantidadCuotasAPagar\":\"Se\\u00F1a\"", request.Body);
-            Assert.Contains("\"banco\":\"\"", request.Body);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO%2FCUENTA&idInscripcion=555", request.RequestUri);
+            Assert.Equal(string.Empty, request.Body);
+        }
+
+        [Fact]
+        public async Task PagarCarritosPorInscripcionAsync_WithSuccess_PostsOnlyInscription()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  { "clave": "123|10|1|7|555", "valor": "ok" }
+                ]
+                """));
+            var client = CrearClient(handler);
+
+            var result = await client.PagarCarritosPorInscripcionAsync(555);
+
+            Assert.True(result.Success);
+            Assert.Single(result.Data!);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
+            Assert.Equal(string.Empty, request.Body);
         }
 
         [Fact]
@@ -232,6 +211,23 @@ namespace UnitTesting.AppLogic.ApiClients
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Get, request.Method);
             Assert.Contains("Pagos/Carritos?idInscripcion=55", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerUrlCrearFacturaPorInscripcionAsync_WithSuccess_PostsOnlyInscriptionAndBank()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerUrlCrearFacturaPorInscripcionAsync(555, "SISTARBANC", "001");
+
+            Assert.True(result.Success);
+            Assert.Equal("https://pagos.test/factura", result.Data);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Contains("Pagos/Carritos/UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
+            Assert.Equal(string.Empty, request.Body);
         }
 
         private static InscripcionesyPagosApiClient CrearClient(HttpMessageHandler handler)

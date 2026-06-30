@@ -20,7 +20,6 @@ namespace AppLogic.Services.Inscripciones
     public class InscripcionesService : IInscripcionesService
     {
         private const long CodigoOrientacionQuintoLegacy = 1304;
-        private const string CantidadCuotasSeniaLegacy = "Seña";
         private static readonly HashSet<string> TiposPagoFactura = ["BANRED", "SISTARBANC", "GEOPAY"];
         private static readonly HashSet<string> MetodosPagoExternos = ["ABITAB", "PAGANZA"];
 
@@ -842,7 +841,6 @@ namespace AppLogic.Services.Inscripciones
             switch (tipoPago)
             {
                 case "CUENTA_PERSONAL":
-                case "PAGO_CUENTA_CORRIENTE":
                 {
                     var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripto = request.IdInscripto });
                     return result.Success
@@ -900,11 +898,15 @@ namespace AppLogic.Services.Inscripciones
                 return OperationResult<string>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
             }
 
-            var payloadResult = await ObtenerPayloadCarritosSenia(codigoPersona, request.IdInscripto, methodName, "INS_UF_04", "INS_UF_05", tipoPagoNormalizado == "SISTARBANC" ? idBancoSistarbanc! : string.Empty);
-            if (!payloadResult.Success)
-                return OperationResult<string>.IsFailed(payloadResult.ErrorCode, methodName, payloadResult.Message, payloadResult.HttpCode);
+            using (var uow = _uowFactory.Create())
+            {
+                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripto, codigoPersona, "INS_UF_04", methodName);
+                if (!pertenencia.Success)
+                    return OperationResult<string>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+            }
 
-            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaAsync(payloadResult.Data!, tipoPagoNormalizado);
+            var banco = tipoPagoNormalizado == "SISTARBANC" ? idBancoSistarbanc! : string.Empty;
+            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripto, tipoPagoNormalizado, banco);
             return urlResult.Success
                 ? OperationResult<string>.Ok(urlResult.Data, methodName)
                 : OperationResult<string>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
@@ -918,11 +920,14 @@ namespace AppLogic.Services.Inscripciones
             if (!validacion.Success)
                 return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
-            var payloadResult = await ObtenerPayloadCarritosSenia(codigoPersona, request.IdInscripto, methodName, "INS_PC_02", "INS_PC_03");
-            if (!payloadResult.Success)
-                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(payloadResult.ErrorCode, methodName, payloadResult.Message, payloadResult.HttpCode);
+            using (var uow = _uowFactory.Create())
+            {
+                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripto, codigoPersona, "INS_PC_02", methodName);
+                if (!pertenencia.Success)
+                    return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+            }
 
-            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosAsync(payloadResult.Data!);
+            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdInscripto);
             return pagoResult.Success
                 ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
                 : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
@@ -992,39 +997,6 @@ namespace AppLogic.Services.Inscripciones
             return uow.Inscriptos.GetDetalleByKey(idInscripto, codigoPersona) != null
                 ? OperationResult<bool>.Ok(true, methodName)
                 : OperationResult<bool>.IsFailed(codigoError, methodName, "No se encontro la inscripcion para la persona.", 404);
-        }
-
-        private async Task<OperationResult<List<ClaveValorCarrito>>> ObtenerPayloadCarritosSenia(
-            long codigoPersona,
-            long idInscripto,
-            string methodName,
-            string codigoInscriptoNoEncontrado,
-            string codigoSinCarritos,
-            string banco = "")
-        {
-            using var uow = _uowFactory.Create();
-
-            var pertenencia = ValidarPertenenciaInscripto(uow, idInscripto, codigoPersona, codigoInscriptoNoEncontrado, methodName);
-            if (!pertenencia.Success)
-                return OperationResult<List<ClaveValorCarrito>>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
-
-            var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(idInscripto);
-            if (!carritos.Success)
-                return OperationResult<List<ClaveValorCarrito>>.IsFailed(carritos.ErrorCode, methodName, carritos.Message, carritos.HttpCode);
-
-            if (carritos.Data?.Carritos == null || carritos.Data.Carritos.Count == 0)
-                return OperationResult<List<ClaveValorCarrito>>.IsFailed(codigoSinCarritos, methodName, "No hay carritos para la inscripcion.", 404);
-
-            var payload = carritos.Data.Carritos
-                .Select(c => new ClaveValorCarrito
-                {
-                    ClaveCarrito = c.IdCarrito,
-                    CantidadCuotasAPagar = CantidadCuotasSeniaLegacy,
-                    Banco = banco
-                })
-                .ToList();
-
-            return OperationResult<List<ClaveValorCarrito>>.Ok(payload, methodName);
         }
 
         #endregion PASO 3 - PAGOS
