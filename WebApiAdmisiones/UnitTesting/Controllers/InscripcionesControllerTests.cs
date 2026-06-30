@@ -30,7 +30,7 @@ namespace UnitTesting.Controllers
                 Confirmada = true,
                 IdInscripcion = 100,
                 FechaVencimientoPago = new DateTime(2026, 6, 30),
-                Carritos = [new DtoCarrito { IdCarrito = "1", Senia = 1500 }]
+                Senia = 1500
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
@@ -48,28 +48,26 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public void GuardarMetodoPago_DelegatesToServiceWithAuthenticatedUser()
+        public async Task Pagar_DelegatesToServiceWithAuthenticatedUser()
         {
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new DtoGuardarMetodoPagoRequest
-            {
-                IdInscripto = 555,
-                MetodoPago = "ABITAB"
-            };
+            var request = new DtoPagarRequest { IdInscripto = 555, TipoPago = "BANRED" };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             serviceMock
-                .Setup(s => s.GuardarMetodoPago(1, request))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.GuardarMetodoPago)));
+                .Setup(s => s.Pagar(1, request))
+                .ReturnsAsync(OperationResult<DtoPagarResponse>.Ok(
+                    new DtoPagarResponse { Resultado = "URL_GENERADA", UrlPago = "https://pagos.test" },
+                    nameof(IInscripcionesService.Pagar)));
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            var response = controller.GuardarMetodoPago(request);
+            var response = await controller.Pagar(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-            serviceMock.Verify(s => s.GuardarMetodoPago(1, request), Times.Once);
+            serviceMock.Verify(s => s.Pagar(1, request), Times.Once);
         }
 
         [Fact]

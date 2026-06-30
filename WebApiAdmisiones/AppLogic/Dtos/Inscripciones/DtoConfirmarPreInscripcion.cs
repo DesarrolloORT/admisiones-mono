@@ -8,6 +8,38 @@ namespace AppLogic.Dtos.Inscripciones
         public string MetodoPago { get; set; } = string.Empty;
     }
 
+    public class DtoObtenerUrlFacturaRequest
+    {
+        public long IdInscripto { get; set; }
+        public string TipoPago { get; set; } = string.Empty;
+        public string? IdBancoSistarbanc { get; set; }
+    }
+
+    public class DtoPagarCuentaPersonalRequest
+    {
+        public long IdInscripto { get; set; }
+    }
+
+    public class DtoPagarRequest
+    {
+        public long IdInscripto { get; set; }
+        public string TipoPago { get; set; } = string.Empty;
+        public string? IdBancoSistarbanc { get; set; }
+    }
+
+    public class DtoPagarResponse
+    {
+        public string Resultado { get; set; } = string.Empty;
+        public string? UrlPago { get; set; }
+        public List<DtoMensajePagoCarrito> Mensajes { get; set; } = new();
+    }
+
+    public class DtoMensajePagoCarrito
+    {
+        public string Clave { get; set; } = string.Empty;
+        public string Valor { get; set; } = string.Empty;
+    }
+
     public class DtoConfirmarPreInscripcionRequest
     {
         public bool AceptoReglamento { get; set; }
@@ -19,15 +51,9 @@ namespace AppLogic.Dtos.Inscripciones
         public bool Confirmada { get; set; }
         public long? IdInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
-        public List<DtoCarrito> Carritos { get; set; } = new();
+        public decimal Senia { get; set; }
         public DtoResumenInscripcion Resumen { get; set; } = new();
         public DtoEstadoCuenta? EstadoCuenta { get; set; }
-    }
-
-    public class DtoCarrito
-    {
-        public string IdCarrito { get; set; } = string.Empty;
-        public decimal Senia { get; set; }
     }
 
     public class DtoResumenInscripcion

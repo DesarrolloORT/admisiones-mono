@@ -96,14 +96,14 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        [HttpPost("MetodoPago")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult GuardarMetodoPago([FromBody] DtoGuardarMetodoPagoRequest request)
+        [HttpPost("Pagar")]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 409)]
+        public async Task<IActionResult> Pagar([FromBody] DtoPagarRequest request)
         {
-            var result = inscripcionesService.GuardarMetodoPago(_currentUser.GetUserId(), request);
+            var result = await inscripcionesService.Pagar(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 

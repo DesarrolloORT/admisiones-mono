@@ -13,6 +13,9 @@ namespace AppLogic.IServices.Inscripciones
         OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona);
         OperationResult<bool> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request);
         Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, DtoConfirmarPreInscripcionRequest request);
+        Task<OperationResult<DtoPagarResponse>> Pagar(long codigoPersona, DtoPagarRequest request);
+        Task<OperationResult<string>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request);
+        Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request);
         OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request);
     }
 }

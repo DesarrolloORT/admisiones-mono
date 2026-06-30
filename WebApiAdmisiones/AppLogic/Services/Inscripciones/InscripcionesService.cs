@@ -20,6 +20,9 @@ namespace AppLogic.Services.Inscripciones
     public class InscripcionesService : IInscripcionesService
     {
         private const long CodigoOrientacionQuintoLegacy = 1304;
+        private const string CantidadCuotasSeniaLegacy = "Seña";
+        private static readonly HashSet<string> TiposPagoFactura = ["BANRED", "SISTARBANC", "GEOPAY"];
+        private static readonly HashSet<string> MetodosPagoExternos = ["ABITAB", "PAGANZA"];
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
@@ -130,9 +133,7 @@ namespace AppLogic.Services.Inscripciones
                 Confirmada = true,
                 IdInscripcion = inscripto.IdInscripto,
                 FechaVencimientoPago = inscripto.FechaVtoInscr,
-                Carritos = carritos?.Carritos
-                    .Select(c => new DtoCarrito { IdCarrito = c.IdCarrito, Senia = c.Senia })
-                    .ToList() ?? new List<DtoCarrito>(),
+                Senia = ConfirmarPreInscripcionHelper.SumarSenias(carritos?.Carritos),
                 EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
@@ -828,22 +829,116 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 3 - PAGOS
 
+        public async Task<OperationResult<DtoPagarResponse>> Pagar(long codigoPersona, DtoPagarRequest request)
+        {
+            const string methodName = nameof(Pagar);
+
+            if (request == null)
+            {
+                return OperationResult<DtoPagarResponse>.IsFailed("INS_PAG_00", methodName, "Request invalido.", 400);
+            }
+
+            var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
+            switch (tipoPago)
+            {
+                case "CUENTA_PERSONAL":
+                case "PAGO_CUENTA_CORRIENTE":
+                {
+                    var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripto = request.IdInscripto });
+                    return result.Success
+                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "PAGO_CONFIRMADO", Mensajes = result.Data ?? new() }, methodName)
+                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                }
+
+                case "ABITAB":
+                case "PAGANZA":
+                {
+                    var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripto = request.IdInscripto, MetodoPago = tipoPago });
+                    return result.Success
+                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "METODO_GUARDADO" }, methodName)
+                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                }
+
+                case "BANRED":
+                case "GEOPAY":
+                case "SISTARBANC":
+                {
+                    var result = await ObtenerUrlFactura(codigoPersona, new DtoObtenerUrlFacturaRequest
+                    {
+                        IdInscripto = request.IdInscripto,
+                        TipoPago = tipoPago,
+                        IdBancoSistarbanc = request.IdBancoSistarbanc
+                    });
+                    return result.Success
+                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "URL_GENERADA", UrlPago = result.Data }, methodName)
+                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                }
+
+                default:
+                    return OperationResult<DtoPagarResponse>.IsFailed("INS_PAG_01", methodName, "TipoPago invalido.", 400);
+            }
+        }
+
+        public async Task<OperationResult<string>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
+        {
+            const string methodName = nameof(ObtenerUrlFactura);
+
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_UF_00", "INS_UF_01", methodName);
+            if (!validacion.Success)
+                return OperationResult<string>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+
+            var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
+            var tipoPagoNormalizado = tipoPago ?? string.Empty;
+            if (!TiposPagoFactura.Contains(tipoPagoNormalizado))
+            {
+                return OperationResult<string>.IsFailed("INS_UF_02", methodName, "TipoPago invalido.", 400);
+            }
+
+            var idBancoSistarbanc = request.IdBancoSistarbanc?.Trim();
+            if (tipoPagoNormalizado == "SISTARBANC" && string.IsNullOrWhiteSpace(idBancoSistarbanc))
+            {
+                return OperationResult<string>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
+            }
+
+            var payloadResult = await ObtenerPayloadCarritosSenia(codigoPersona, request.IdInscripto, methodName, "INS_UF_04", "INS_UF_05", tipoPagoNormalizado == "SISTARBANC" ? idBancoSistarbanc! : string.Empty);
+            if (!payloadResult.Success)
+                return OperationResult<string>.IsFailed(payloadResult.ErrorCode, methodName, payloadResult.Message, payloadResult.HttpCode);
+
+            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaAsync(payloadResult.Data!, tipoPagoNormalizado);
+            return urlResult.Success
+                ? OperationResult<string>.Ok(urlResult.Data, methodName)
+                : OperationResult<string>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
+        }
+
+        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request)
+        {
+            const string methodName = nameof(PagarCuentaPersonal);
+
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_PC_00", "INS_PC_01", methodName);
+            if (!validacion.Success)
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+
+            var payloadResult = await ObtenerPayloadCarritosSenia(codigoPersona, request.IdInscripto, methodName, "INS_PC_02", "INS_PC_03");
+            if (!payloadResult.Success)
+                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(payloadResult.ErrorCode, methodName, payloadResult.Message, payloadResult.HttpCode);
+
+            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosAsync(payloadResult.Data!);
+            return pagoResult.Success
+                ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
+                : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
+        }
+
         public OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
         {
             const string methodName = nameof(GuardarMetodoPago);
 
-            if (request == null)
-            {
-                return OperationResult<bool>.IsFailed("INS_MP_00", methodName, "Request invalido.", 400);
-            }
-
-            if (request.IdInscripto <= 0)
-            {
-                return OperationResult<bool>.IsFailed("INS_MP_01", methodName, "IdInscripto invalido.", 400);
-            }
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_MP_00", "INS_MP_01", methodName);
+            if (!validacion.Success)
+                return OperationResult<bool>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
             var metodoPago = request.MetodoPago?.Trim().ToUpperInvariant();
-            if (metodoPago is not ("ABITAB" or "PAGANZA"))
+            var metodoPagoNormalizado = metodoPago ?? string.Empty;
+            if (!MetodosPagoExternos.Contains(metodoPagoNormalizado))
             {
                 return OperationResult<bool>.IsFailed("INS_MP_02", methodName, "MetodoPago invalido.", 400);
             }
@@ -863,11 +958,73 @@ namespace AppLogic.Services.Inscripciones
             uow.InscriptoSeniaMinima.Add(new InscriptoSeniaMinimum
             {
                 IdInscripto = request.IdInscripto,
-                MetodoPagoSeniaMinima = metodoPago
+                MetodoPagoSeniaMinima = metodoPagoNormalizado
             });
             uow.Save();
 
             return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        private static OperationResult<long> ValidarRequestInscripcion<TRequest>(
+            TRequest request,
+            Func<TRequest, long> obtenerIdInscripto,
+            string codigoRequestInvalido,
+            string codigoIdInvalido,
+            string methodName)
+            where TRequest : class
+        {
+            if (request == null)
+                return OperationResult<long>.IsFailed(codigoRequestInvalido, methodName, "Request invalido.", 400);
+
+            var idInscripto = obtenerIdInscripto(request);
+            return idInscripto > 0
+                ? OperationResult<long>.Ok(idInscripto, methodName)
+                : OperationResult<long>.IsFailed(codigoIdInvalido, methodName, "IdInscripto invalido.", 400);
+        }
+
+        private static OperationResult<bool> ValidarPertenenciaInscripto(
+            IUnitOfWork uow,
+            long idInscripto,
+            long codigoPersona,
+            string codigoError,
+            string methodName)
+        {
+            return uow.Inscriptos.GetDetalleByKey(idInscripto, codigoPersona) != null
+                ? OperationResult<bool>.Ok(true, methodName)
+                : OperationResult<bool>.IsFailed(codigoError, methodName, "No se encontro la inscripcion para la persona.", 404);
+        }
+
+        private async Task<OperationResult<List<ClaveValorCarrito>>> ObtenerPayloadCarritosSenia(
+            long codigoPersona,
+            long idInscripto,
+            string methodName,
+            string codigoInscriptoNoEncontrado,
+            string codigoSinCarritos,
+            string banco = "")
+        {
+            using var uow = _uowFactory.Create();
+
+            var pertenencia = ValidarPertenenciaInscripto(uow, idInscripto, codigoPersona, codigoInscriptoNoEncontrado, methodName);
+            if (!pertenencia.Success)
+                return OperationResult<List<ClaveValorCarrito>>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+
+            var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(idInscripto);
+            if (!carritos.Success)
+                return OperationResult<List<ClaveValorCarrito>>.IsFailed(carritos.ErrorCode, methodName, carritos.Message, carritos.HttpCode);
+
+            if (carritos.Data?.Carritos == null || carritos.Data.Carritos.Count == 0)
+                return OperationResult<List<ClaveValorCarrito>>.IsFailed(codigoSinCarritos, methodName, "No hay carritos para la inscripcion.", 404);
+
+            var payload = carritos.Data.Carritos
+                .Select(c => new ClaveValorCarrito
+                {
+                    ClaveCarrito = c.IdCarrito,
+                    CantidadCuotasAPagar = CantidadCuotasSeniaLegacy,
+                    Banco = banco
+                })
+                .ToList();
+
+            return OperationResult<List<ClaveValorCarrito>>.Ok(payload, methodName);
         }
 
         #endregion PASO 3 - PAGOS
