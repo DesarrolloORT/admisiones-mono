@@ -134,27 +134,27 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? NuevaversionEncuestaIni { get; set; }
 
-        public bool? UltimoanioSecundariaEncuestaIni { get; set; }
+        public short? UltimoanioSecundariaEncuestaIni { get; set; }
 
         [StringLength(2)]
         public string? TieneEducacionSuperiorEncuestaIni { get; set; }
 
-        public bool? NivelDecisionEncuestaIni { get; set; }
+        public short? NivelDecisionEncuestaIni { get; set; }
 
         [StringLength(2)]
         public string? AsesoramientoOrtEncuestaIni { get; set; }
 
-        public bool? ValoracionAsesoramientoOrtEncuestaIni { get; set; }
+        public short? ValoracionAsesoramientoOrtEncuestaIni { get; set; }
 
         [StringLength(2)]
         public string? VistaSitioWebOrtEncuestaIni { get; set; }
 
-        public bool? ValoracionSitioWebOrtEncuestaIni { get; set; }
+        public short? ValoracionSitioWebOrtEncuestaIni { get; set; }
 
         [StringLength(2)]
         public string? VistaInstalacionesOrtEncuestaIni { get; set; }
 
-        public bool? ValoracionInstalacionesOrtEncuestaIni { get; set; }
+        public short? ValoracionInstalacionesOrtEncuestaIni { get; set; }
 
         [StringLength(2)]
         public string? PublicidadOrtEncuestaIni { get; set; }

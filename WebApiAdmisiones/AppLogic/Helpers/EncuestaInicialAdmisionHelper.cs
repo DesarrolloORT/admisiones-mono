@@ -217,7 +217,8 @@ namespace AppLogic.Helpers
 
             if (request.UbicacionUltimoAnioSecundariaId.HasValue)
             {
-                encuesta.UltimoanioSecundariaEncuestaIni = request.UbicacionUltimoAnioSecundariaId.Value == PersonaConstants.Parametros.UruguayCodigoPais;
+                encuesta.UltimoanioSecundariaEncuestaIni = ConvertirBoolANumero(
+                    request.UbicacionUltimoAnioSecundariaId.Value == PersonaConstants.Parametros.UruguayCodigoPais);
             }
 
             if (request.EstadoEducacionSuperiorPreviaId.HasValue)
@@ -228,7 +229,7 @@ namespace AppLogic.Helpers
 
             if (request.NivelDecisionId.HasValue)
             {
-                encuesta.NivelDecisionEncuestaIni = request.NivelDecisionId.Value == 1;
+                encuesta.NivelDecisionEncuestaIni = ConvertirBoolANumero(request.NivelDecisionId.Value == 1);
             }
         }
 
@@ -241,7 +242,7 @@ namespace AppLogic.Helpers
 
             if (request.ValoracionAsesoramientoOrtId.HasValue && request.TuvoAsesoramientoOrt == true)
             {
-                encuesta.ValoracionAsesoramientoOrtEncuestaIni = request.ValoracionAsesoramientoOrtId.Value > 3;
+                encuesta.ValoracionAsesoramientoOrtEncuestaIni = ConvertirBoolANumero(request.ValoracionAsesoramientoOrtId.Value > 3);
             }
             else if (request.TuvoAsesoramientoOrt == false)
             {
@@ -255,7 +256,7 @@ namespace AppLogic.Helpers
 
             if (request.ValoracionSitioWebOrtId.HasValue && request.VisitoSitioWebOrt == true)
             {
-                encuesta.ValoracionSitioWebOrtEncuestaIni = request.ValoracionSitioWebOrtId.Value > 3;
+                encuesta.ValoracionSitioWebOrtEncuestaIni = ConvertirBoolANumero(request.ValoracionSitioWebOrtId.Value > 3);
             }
             else if (request.VisitoSitioWebOrt == false)
             {
@@ -269,7 +270,7 @@ namespace AppLogic.Helpers
 
             if (request.ValoracionInstalacionesOrtId.HasValue && request.VisitoInstalacionesOrt == true)
             {
-                encuesta.ValoracionInstalacionesOrtEncuestaIni = request.ValoracionInstalacionesOrtId.Value > 3;
+                encuesta.ValoracionInstalacionesOrtEncuestaIni = ConvertirBoolANumero(request.ValoracionInstalacionesOrtId.Value > 3);
             }
             else if (request.VisitoInstalacionesOrt == false)
             {
@@ -389,6 +390,11 @@ namespace AppLogic.Helpers
         private static string ConvertirBoolASiNo(bool valor)
         {
             return valor ? CommonConstants.Booleanos.Si : CommonConstants.Booleanos.No;
+        }
+
+        private static short ConvertirBoolANumero(bool valor)
+        {
+            return valor ? (short)1 : (short)0;
         }
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)

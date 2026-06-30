@@ -420,7 +420,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             var nombreInstitucion = encuesta.NombreInstSecEncuestaIni;
             long? codigoTitulo = encuesta.CodigoTitulo;
 
-            if (encuesta.UltimoanioSecundariaEncuestaIni == true)
+            if (encuesta.UltimoanioSecundariaEncuestaIni == 1)
             {
                 if (!codigoInstitucionBac.HasValue || codigoInstitucionBac.Value <= 0)
                 {
