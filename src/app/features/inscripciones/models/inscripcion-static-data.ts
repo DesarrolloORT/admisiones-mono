@@ -6,7 +6,6 @@ import type {
   StudentServiceLink,
 } from './inscripcion-flow';
 
-export const STUDENT_ACCOUNT_AVAILABLE_AMOUNT = 70000;
 export const SANTANDER_ACCOUNT_URL = 'https://www.santander.com.uy/personas/cuentas/cuenta-soy';
 
 export type PaymentOption = OpcionInscripcion & {
@@ -31,8 +30,7 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
   {
     value: 'cuenta-personal',
     label: 'Cuenta personal',
-    hint: 'Monto disponible $70.000,00',
-    availableAmount: STUDENT_ACCOUNT_AVAILABLE_AMOUNT,
+    hint: 'Monto disponible no informado',
   },
   {
     value: 'banred',
