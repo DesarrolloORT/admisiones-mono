@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtAccordionModule,
   OrtButtonModule,
   OrtCheckboxModule,
   OrtDatePickerModule,
+  OrtDivider,
   OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
@@ -14,6 +15,7 @@ import {
   OrtRatingModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
 import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-error-alert';
@@ -25,6 +27,7 @@ import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-er
     OrtButtonModule,
     OrtCheckboxModule,
     OrtDatePickerModule,
+    OrtDivider,
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
@@ -42,6 +45,13 @@ import { InscripcionErrorAlert } from '../inscripcion-error-alert/inscripcion-er
 })
 export class InscripcionPersonalStep {
   protected readonly facade = inject(InscripcionSurveyFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
+  protected readonly radioGroupOrientation = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
+  });
 
   protected onFormEnter(event: Event): void {
     if (event.target instanceof HTMLInputElement && event.target.type === 'radio') {
