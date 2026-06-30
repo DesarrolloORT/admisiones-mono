@@ -17,7 +17,11 @@ namespace AppLogic.Services.Catalogos
         public OperationResult<DateTime> CalcularFechaVencimientoAdmisiones(long codigoPersona, long idProceso)
         {
             using var uow = _uowFactory.Create();
+            return CalcularFechaVencimientoAdmisiones(uow, codigoPersona, idProceso);
+        }
 
+        public OperationResult<DateTime> CalcularFechaVencimientoAdmisiones(IUnitOfWork uow, long codigoPersona, long idProceso)
+        {
             var proceso = uow.Procesos.GetByKey(idProceso);
             if (proceso?.ComienzoSemestre1Proceso == null)
             {

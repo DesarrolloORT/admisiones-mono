@@ -561,7 +561,7 @@ namespace AppLogic.Services.Inscripciones
 
             if (encuesta.IdProceso.HasValue && encuesta.IdProducto.HasValue)
             {
-                var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(codigoPersona, encuesta.IdProceso.Value);
+                var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(uow, codigoPersona, encuesta.IdProceso.Value);
                 if (!fechaVencimientoResult.Success)
                 {
                     return OperationResult<bool>.IsFailed(

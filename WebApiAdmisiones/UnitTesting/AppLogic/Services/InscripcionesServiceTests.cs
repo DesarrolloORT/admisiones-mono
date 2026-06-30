@@ -42,6 +42,9 @@ namespace UnitTesting.AppLogic.Services
             _generalServiceMock
                 .Setup(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<long>(), It.IsAny<long>()))
                 .Returns(global::Utilities.OperationResult<DateTime>.Ok(FechaBase.AddDays(5), nameof(IGeneralService.CalcularFechaVencimientoAdmisiones)));
+            _generalServiceMock
+                .Setup(s => s.CalcularFechaVencimientoAdmisiones(It.IsAny<IUnitOfWork>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(global::Utilities.OperationResult<DateTime>.Ok(FechaBase.AddDays(5), nameof(IGeneralService.CalcularFechaVencimientoAdmisiones)));
             var encuestaIniRepo = new Mock<IEncuestaIniRepository>();
             encuestaIniRepo
                 .Setup(r => r.GetByPersona(It.IsAny<long>()))
