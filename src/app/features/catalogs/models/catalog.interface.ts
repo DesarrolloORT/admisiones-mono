@@ -45,6 +45,7 @@ export interface Career {
   idNivelProducto: number;
   nombreProducto: string;
   nombreNivelProducto: string;
+  nombreEscuela?: string;
 }
 
 export interface Comienzo {
@@ -94,17 +95,27 @@ export interface BaccalaureateYearGroup extends CatalogItem {
 }
 
 export interface InitialSurveyCatalogs {
-  aniosAprobadosEducacionSuperior: CatalogItem[];
-  compartidoCon: CatalogItem[];
-  decisionCarrera: CatalogItem[];
-  decisionUniversidad: CatalogItem[];
-  estadoEducacionSuperior: CatalogItem[];
-  formacionTutores: CatalogItem[];
-  nivelConocimiento: CatalogItem[];
-  motivosEleccion: CatalogItem[];
-  publicidadesEleccion: CatalogItem[];
-  universidades: CatalogItem[];
-  aniosBachiller: BaccalaureateYearGroup[];
+  educacion: {
+    ubicacionesUltimoAnioSecundaria: CatalogItem[];
+    aniosBachillerato: BaccalaureateYearGroup[];
+    estadosEducacionSuperiorPrevia: CatalogItem[];
+    universidades: CatalogItem[];
+    nivelesFormacionTutores: CatalogItem[];
+  };
+  decisionAcademica: {
+    aniosEducacionMediaSuperior: CatalogItem[];
+    apoyosDecision: CatalogItem[];
+    nivelesDecision: CatalogItem[];
+    universidades: CatalogItem[];
+    motivosEleccionOrt: CatalogItem[];
+  };
+  experienciaOrt: {
+    valoraciones: CatalogItem[];
+    publicidadesOrt: CatalogItem[];
+  };
+  situacionLaboral: {
+    tiposJornada: CatalogItem[];
+  };
 }
 
 /** Banco disponible para el pago de la seña. */

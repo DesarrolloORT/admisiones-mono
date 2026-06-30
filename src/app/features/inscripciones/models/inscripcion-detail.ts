@@ -13,6 +13,7 @@ export interface InscripcionSummary {
 export interface InscripcionPendingPaymentDetail {
   idInscripcion: number | null;
   senia: number | null;
+  saldoCuenta: number | null;
   fechaVencimientoPago: string | null;
   resumen: InscripcionSummary | null;
 }
@@ -52,6 +53,7 @@ export function detailToPreEnrollment(
     confirmada: detail.confirmada !== null,
     fechaVencimientoPago: detail.pagoPendiente?.fechaVencimientoPago ?? null,
     seniaInscripcion: detail.pagoPendiente?.senia ?? null,
+    saldoCuenta: detail.pagoPendiente?.saldoCuenta ?? null,
     resumen: resumen
       ? { carrera: resumen.carrera, comienzo: resumen.comienzo, turno: resumen.turno }
       : null,

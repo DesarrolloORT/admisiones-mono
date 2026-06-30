@@ -79,6 +79,29 @@ describe('InscripcionesEndpoint', () => {
     });
   });
 
+  it('maps pending payment account balance from inscription detail', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'Pago pendiente',
+        pagoPendiente: {
+          idInscripcion: 1072704,
+          fechaVencimientoPago: '2026-06-26T16:29:20',
+          carritos: [{ senia: 3339 }],
+          estadoCuenta: { saldoActual: 70000 },
+          resumen: { carrera: 'Arquitectura' },
+        },
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.getDetail(719, 1398))).resolves.toEqual(
+      expect.objectContaining({
+        pagoPendiente: expect.objectContaining({
+          senia: 3339,
+          saldoCuenta: 70000,
+        }),
+      })
+    );
+  });
   it('maps identity document fields to the feature contract', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
@@ -115,10 +138,20 @@ describe('InscripcionesEndpoint', () => {
           estadoEncuestaIniAdmision: 'completa',
           producto: { idNivelProducto: 4 },
         },
+        universidadesConsideradas: [
+          { codigoEmpresa: 10, empresa: { codigoEmpresa: 10, nombre: 'Udelar' } },
+        ],
+        universidadesEducacionSuperior: [{ codigoEmpresa: 20, nombreOtraEmpresa: 'Otra U' }],
         opcionesMotivosSeleccionados: [
           {
             idMotivo: 8,
             motivoOpcionesAdmision: { idMotivo: 5, nombreMotivo: 'Plan de estudios' },
+          },
+        ],
+        opcionesPublicidadSeleccionadas: [
+          {
+            idPublicidad: 9,
+            publicidadOpcionesAdmision: { idPublicidad: 7, nombrePublicidad: 'Redes' },
           },
         ],
       })
@@ -130,11 +163,14 @@ describe('InscripcionesEndpoint', () => {
       expect.objectContaining({
         tieneDerechoEncuesta: true,
         encuesta: expect.objectContaining({
-          idProducto: 20,
-          estadoEncuestaIniAdmision: 'completa',
-          producto: { idNivelProducto: 4 },
+          carreraId: 20,
+          nivelProductoId: 4,
+          completa: true,
         }),
-        opcionesMotivosSeleccionados: [{ idMotivo: 5, nombreMotivo: 'Plan de estudios' }],
+        universidadesConsideradas: [10],
+        universidadesEducacionSuperior: [20],
+        opcionesMotivosSeleccionados: [5],
+        opcionesPublicidadSeleccionadas: [7],
       })
     );
     expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesEncuestaInicialEndpoint, {
@@ -164,30 +200,41 @@ describe('InscripcionesEndpoint', () => {
 
   it('maps the survey payload and invalidates cached API responses', async () => {
     const payload: InscripcionInitialSurveyPayload = {
-      idProducto: 20,
-      idProceso: 200,
-      ultimoAnioSecundaria: null,
-      codigoTitulo: null,
-      ultimoAnioSexto: null,
-      codigoInstitucionBac: null,
-      informarEncuesta: null,
-      instruccionPadre: null,
-      instruccionMadre: null,
-      instruccionPadreOrt: null,
-      instruccionMadreOrt: null,
-      decisionCarrera: null,
-      decisionUniversidad: null,
-      infoOtrasUniversidadesAntes: null,
-      compartidoCon: null,
-      tieneEducacionSuperior: null,
-      nivelDecision: null,
-      asesoramientoOrt: null,
-      vistaSitioWebOrt: null,
-      vistaInstalacionesOrt: null,
-      publicidadOrt: null,
+      carreraId: 20,
+      comienzoId: 200,
+      orientacionBachilleratoId: null,
+      anioBachillerato: null,
+      vecesRecursaAnioBachillerato: null,
+      recursaAnioBachillerato: null,
+      nivelFormacionPadreTutorId: null,
+      nivelFormacionMadreTutorId: null,
+      anioDecisionCarreraId: null,
+      anioDecisionOrtId: null,
+      seInformoEnOtrasUniversidades: null,
+      informacionOtrasUniversidadesLinea1: null,
+      informacionOtrasUniversidadesLinea2: null,
+      apoyoDecisionId: null,
+      institucionSecundariaId: null,
+      autorizaInformarEncuesta: null,
+      nombreInstitucionSecundaria: null,
+      ubicacionUltimoAnioSecundariaId: null,
+      estadoEducacionSuperiorPreviaId: null,
+      nivelDecisionId: null,
+      tuvoAsesoramientoOrt: null,
+      valoracionAsesoramientoOrtId: null,
+      visitoSitioWebOrt: null,
+      valoracionSitioWebOrtId: null,
+      visitoInstalacionesOrt: null,
+      valoracionInstalacionesOrtId: null,
+      recuerdaPublicidadOrt: null,
+      madreTutorEgresadoOrt: null,
+      padreTutorEgresadoOrt: null,
       trabajaActualmente: null,
-      tipoJornadaLaboral: null,
-      opcionesMotivosSeleccionados: null,
+      tipoJornadaId: null,
+      universidadConsideradaIds: null,
+      universidadEducacionSuperiorIds: null,
+      publicidadOrtIds: null,
+      motivoEleccionOrtIds: null,
     };
 
     await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe(true);
@@ -205,6 +252,7 @@ describe('InscripcionesEndpoint', () => {
         confirmada: true,
         fechaVencimientoPago: '2027-04-15',
         carritos: [{ senia: 21000 }],
+        estadoCuenta: { saldoActual: 70000 },
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
     );
@@ -214,6 +262,7 @@ describe('InscripcionesEndpoint', () => {
       confirmada: true,
       fechaVencimientoPago: '2027-04-15',
       seniaInscripcion: 21000,
+      saldoCuenta: 70000,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {

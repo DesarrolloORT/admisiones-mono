@@ -40,13 +40,24 @@ describe('Inscripcion', () => {
             getBancos: vi.fn().mockReturnValue(of([])),
             getInitialSurveyCatalogs: vi.fn().mockReturnValue(
               of({
-                aniosAprobadosEducacionSuperior: [],
-                compartidoCon: [{ id: 5, label: 'Familia' }],
-                decisionCarrera: [],
-                decisionUniversidad: [{ id: 2, label: 'Prestigio académico' }],
-                estadoEducacionSuperior: [{ id: 3, label: 'No cursé estudios superiores' }],
-                formacionTutores: [{ id: 4, label: 'Universitaria completa' }],
-                nivelConocimiento: [],
+                educacion: {
+                  ubicacionesUltimoAnioSecundaria: [],
+                  aniosBachillerato: [],
+                  estadosEducacionSuperiorPrevia: [
+                    { id: 3, label: 'No cursé estudios superiores' },
+                  ],
+                  universidades: [],
+                  nivelesFormacionTutores: [{ id: 5, label: 'Universitaria completa' }],
+                },
+                decisionAcademica: {
+                  aniosEducacionMediaSuperior: [{ id: 2, label: 'Prestigio académico' }],
+                  apoyosDecision: [{ id: 5, label: 'Familia' }],
+                  nivelesDecision: [],
+                  universidades: [],
+                  motivosEleccionOrt: [],
+                },
+                experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+                situacionLaboral: { tiposJornada: [] },
               })
             ),
             getTurnos: vi.fn().mockReturnValue(
@@ -69,6 +80,7 @@ describe('Inscripcion', () => {
                 confirmada: true,
                 fechaVencimientoPago: null,
                 seniaInscripcion: null,
+                saldoCuenta: null,
                 resumen: null,
               })
             ),
@@ -84,7 +96,10 @@ describe('Inscripcion', () => {
               of({
                 tieneDerechoEncuesta: true,
                 encuesta: null,
-                opcionesMotivosSeleccionados: null,
+                universidadesConsideradas: [],
+                universidadesEducacionSuperior: [],
+                opcionesMotivosSeleccionados: [],
+                opcionesPublicidadSeleccionadas: [],
               })
             ),
             registerProductInterest: vi.fn().mockReturnValue(of(true)),

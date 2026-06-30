@@ -8,9 +8,9 @@ describe('InscripcionForms', () => {
   it('creates the complete personal-information form', () => {
     const forms = createInscripcionForms();
 
-    expect(Object.keys(forms.educationForm.controls)).toContain('institucionEducativa');
+    expect(Object.keys(forms.educationForm.controls)).toContain('universidadesEducacionSuperior');
     expect(Object.keys(forms.academicDecisionForm.controls)).toContain('universidadesInformadas');
-    expect(Object.keys(forms.ortExperienceForm.controls)).toContain('calificacionAsesoramiento');
+    expect(Object.keys(forms.ortExperienceForm.controls)).toContain('calificacionSede');
   });
 
   it('supports required validation for draft controls', () => {

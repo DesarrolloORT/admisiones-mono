@@ -1,59 +1,41 @@
 import { getAcademicProposalTypeByLevel } from '../../catalogs/models/academic-proposal';
 import type { Career } from '../../catalogs/models/catalog.interface';
 import type {
-  InscripcionBackendSurvey,
+  InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
   OpcionInscripcion,
-  SeccionEncuestaId,
   ValoresEncuesta,
 } from './inscripcion-flow';
 import type { InscripcionForms } from './inscripcion-flow-forms';
-import { getOptionLabel } from './inscripcion-flow-options';
 
-const SURVEY_SECTION_ALIASES: Readonly<Record<string, SeccionEncuestaId>> = {
-  educacion: 'educacion',
-  education: 'educacion',
-  decision: 'decision-academica',
-  decisionacademica: 'decision-academica',
-  experiencia: 'experiencia-ort',
-  experienciaort: 'experiencia-ort',
-  identidad: 'identidad',
-  verificacionidentidad: 'identidad',
-  reglamento: 'reglamento',
-};
-
-export const SECONDARY_PLACE_NATIONAL = '1';
-export const SECONDARY_PLACE_INTERNATIONAL = '2';
+const SCHOOL_PLACE_NATIONAL = '1';
+const SCHOOL_PLACE_INTERNATIONAL = '2';
+const FIRST_EMS_SCHOOL_YEAR = '10';
 
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
   careers: readonly Career[];
   previousCareerOptions: readonly OpcionInscripcion[];
-}
-
-export interface InitialSurveyPayloadContext {
-  forms: InscripcionForms;
-  previousCareerOptions: readonly OpcionInscripcion[];
-  educationLevelOptions: readonly OpcionInscripcion[];
-  motivesOptions: readonly OpcionInscripcion[];
+  supportOptions: readonly OpcionInscripcion[];
 }
 
 export function patchBackendSurveyForms(
-  survey: InscripcionBackendSurvey,
+  survey: InscripcionInitialSurvey,
   response: InscripcionInitialSurveyResponse,
   context: BackendSurveyPatchContext
 ): string {
   const { forms } = context;
-  const productId = survey.idProducto?.toString() ?? '';
-  const processId = survey.idProceso?.toString() ?? '';
+  const productId = toFormValue(survey.carreraId);
+  const processId = toFormValue(survey.comienzoId);
   const levelId =
-    survey.producto?.idNivelProducto ??
-    context.careers.find(career => career.idProducto === survey.idProducto)?.idNivelProducto;
+    survey.nivelProductoId ??
+    context.careers.find(career => career.idProducto === survey.carreraId)?.idNivelProducto;
   const proposalType =
     levelId === undefined
       ? forms.academicForm.controls.tipoPropuesta.value
       : (getAcademicProposalTypeByLevel(levelId)?.value ?? '');
-  const hasHigherEducation = fromBackendBoolean(survey.tieneEducacionSuperiorEncuestaIni);
+  const schoolInstitution =
+    survey.institucionSecundariaId ?? survey.nombreInstitucionSecundaria ?? '';
 
   forms.academicForm.patchValue(
     {
@@ -66,47 +48,53 @@ export function patchBackendSurveyForms(
   forms.educationForm.patchValue(
     {
       cursaSecundaria:
-        survey.ultimoanioSecundariaEncuestaIni === true
+        survey.cursaSecundaria === true
           ? 'cursando'
-          : survey.ultimoanioSecundariaEncuestaIni === false
+          : survey.cursaSecundaria === false
             ? 'no-cursando'
             : '',
-      anioSecundaria: survey.ultimoAnioSextoEncuestaIni ?? '',
-      tipoBachillerato: survey.codigoTitulo?.toString() ?? '',
-      lugarSecundaria: getSecondaryPlaceValue(survey),
+      anioSecundaria: toFormValue(survey.anioBachilleratoId),
+      tipoBachillerato: toFormValue(survey.orientacionBachilleratoId),
+      orientacion: toFormValue(survey.orientacionBachilleratoId),
+      lugarSecundaria: getSchoolPlaceValue(survey),
+      institucionEducativa: schoolInstitution.toString(),
       estadoEducacionSuperior: findHigherEducationOption(
-        hasHigherEducation,
+        survey.tieneEducacionSuperior,
         context.previousCareerOptions
       ),
-      formacionMadre: survey.instruccionMadreEncuestaIni ?? '',
-      tituloOrtMadre: toYesNoValue(survey.instruccionMadreOrtEncuestaIni),
-      formacionPadre: survey.instruccionPadreEncuestaIni ?? '',
-      tituloOrtPadre: toYesNoValue(survey.instruccionPadreOrtEncuestaIni),
+      universidadesEducacionSuperior: toSelectedOptionValues(
+        response.universidadesEducacionSuperior
+      ),
+      formacionMadre: toFormValue(survey.nivelFormacionMadreId),
+      tituloOrtMadre: toYesNoValue(survey.madreEgresadaOrt),
+      formacionPadre: toFormValue(survey.nivelFormacionPadreId),
+      tituloOrtPadre: toYesNoValue(survey.padreEgresadoOrt),
     },
     { emitEvent: false }
   );
   forms.academicDecisionForm.patchValue(
     {
-      anioDecisionCarrera: survey.decisionCarreraEncuestaIni ?? '',
-      anioDecisionOrt: survey.decisionUniverEncuestaIni ?? '',
-      otrasUniversidades: toYesNoValue(survey.inforOtrasAntesEncuestaIni),
+      anioDecisionCarrera: toFormValue(survey.anioDecisionCarreraId),
+      apoyoDecision: findSupportOption(survey, context.supportOptions),
+      anioDecisionOrt: toFormValue(survey.anioDecisionOrtId),
+      otrasUniversidades: toYesNoValue(survey.seInformoEnOtrasUniversidades),
+      universidadesInformadas: toSelectedOptionValues(response.universidadesConsideradas),
       certezaDecision:
-        survey.nivelDecisionEncuestaIni === true
-          ? 'decidido'
-          : survey.nivelDecisionEncuestaIni === false
-            ? 'con-dudas'
-            : '',
-      motivosOrt:
-        response.opcionesMotivosSeleccionados?.map(option => option.idMotivo.toString()) ?? [],
+        survey.decisionConfirmada === true ? '1' : survey.decisionConfirmada === false ? '2' : '',
+      motivosOrt: toSelectedOptionValues(response.opcionesMotivosSeleccionados),
     },
     { emitEvent: false }
   );
   forms.ortExperienceForm.patchValue(
     {
-      reunionAsesoramiento: toYesNoValue(survey.asesoramientoOrtEncuestaIni),
-      visitoWeb: toYesNoValue(survey.vistaSitioWebOrtEncuestaIni),
-      visitoSede: toYesNoValue(survey.vistaInstalacionesOrtEncuestaIni),
-      recuerdaPublicidad: toYesNoValue(survey.publicidadOrtEncuestaIni),
+      reunionAsesoramiento: toYesNoValue(survey.tuvoAsesoramientoOrt),
+      calificacionAsesoramiento: survey.valoracionAsesoramientoOrt,
+      visitoWeb: toYesNoValue(survey.visitoSitioWebOrt),
+      calificacionWeb: survey.valoracionSitioWebOrt,
+      visitoSede: toYesNoValue(survey.visitoInstalacionesOrt),
+      calificacionSede: survey.valoracionInstalacionesOrt,
+      recuerdaPublicidad: toYesNoValue(survey.recuerdaPublicidadOrt),
+      mediosPublicidad: toSelectedOptionValues(response.opcionesPublicidadSeleccionadas),
     },
     { emitEvent: false }
   );
@@ -114,89 +102,82 @@ export function patchBackendSurveyForms(
   return proposalType;
 }
 
-export function buildInitialSurveyPayload(context: InitialSurveyPayloadContext) {
-  const { forms } = context;
+export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const education = forms.educationForm.controls;
-  const selectedMotives = forms.academicDecisionForm.controls.motivosOrt.value;
-  const higherEducation = hasHigherEducation(
-    education.estadoEducacionSuperior.value,
-    context.previousCareerOptions
-  );
-  const currentlyInSecondarySchool = education.cursaSecundaria.value === 'cursando';
-  const secondaryPlace = toBackendSecondaryPlace(education.lugarSecundaria.value);
+  const decision = forms.academicDecisionForm.controls;
+  const experience = forms.ortExperienceForm.controls;
+  const work = forms.workForm.controls;
+  const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
+  const nationalSchoolPlace = education.lugarSecundaria.value === SCHOOL_PLACE_NATIONAL;
   const motherHasCompleteUniversity = hasCompleteUniversityEducation(
-    education.formacionMadre.value,
-    context.educationLevelOptions
+    education.formacionMadre.value
   );
   const fatherHasCompleteUniversity = hasCompleteUniversityEducation(
-    education.formacionPadre.value,
-    context.educationLevelOptions
+    education.formacionPadre.value
   );
-  const works = forms.workForm.controls.situacionLaboral.value === 'trabaja';
+  const works = work.situacionLaboral.value === 'trabaja';
+  const informedOtherUniversities = decision.otrasUniversidades.value === 'si';
+  const hasPreviousHigherEducation = education.estadoEducacionSuperior.value === '1';
+  const remembersAdvertising = experience.recuerdaPublicidad.value === 'si';
 
   return {
-    idProducto: toNullableNumber(forms.academicForm.controls.carrera.value),
-    idProceso: toNullableNumber(forms.academicForm.controls.comienzo.value),
-    ultimoAnioSecundaria: toSecondaryCurrentYear(education.cursaSecundaria.value),
-    codigoTitulo: currentlyInSecondarySchool
-      ? toNullableNumber(education.tipoBachillerato.value)
-      : null,
-    ultimoAnioSexto: currentlyInSecondarySchool
-      ? toNullableNumber(education.anioSecundaria.value)
-      : null,
-    codigoInstitucionBac: isNationalSecondaryPlace(education.lugarSecundaria.value)
+    carreraId: toNullableNumber(forms.academicForm.controls.carrera.value),
+    comienzoId: toNullableNumber(forms.academicForm.controls.comienzo.value),
+    orientacionBachilleratoId:
+      currentlyInSchool && education.anioSecundaria.value !== FIRST_EMS_SCHOOL_YEAR
+        ? toNullableNumber(education.orientacion.value)
+        : null,
+    anioBachillerato: currentlyInSchool ? toNullableNumber(education.anioSecundaria.value) : null,
+    vecesRecursaAnioBachillerato: null,
+    recursaAnioBachillerato: null,
+    nivelFormacionPadreTutorId: toNullableNumber(education.formacionPadre.value),
+    nivelFormacionMadreTutorId: toNullableNumber(education.formacionMadre.value),
+    anioDecisionCarreraId: toNullableNumber(decision.anioDecisionCarrera.value),
+    anioDecisionOrtId: toNullableNumber(decision.anioDecisionOrt.value),
+    seInformoEnOtrasUniversidades: toNullableBoolean(decision.otrasUniversidades.value),
+    informacionOtrasUniversidadesLinea1: null,
+    informacionOtrasUniversidadesLinea2: null,
+    apoyoDecisionId: toNullableNumber(decision.apoyoDecision.value),
+    institucionSecundariaId: nationalSchoolPlace
       ? toNullableNumber(education.institucionEducativa.value)
       : null,
-    informarEncuesta: secondaryPlace,
-    instruccionPadre: toNullableNumber(forms.educationForm.controls.formacionPadre.value),
-    instruccionMadre: toNullableNumber(forms.educationForm.controls.formacionMadre.value),
-    instruccionPadreOrt: fatherHasCompleteUniversity
-      ? toNullableBoolean(education.tituloOrtPadre.value)
-      : null,
-    instruccionMadreOrt: motherHasCompleteUniversity
+    autorizaInformarEncuesta: null,
+    nombreInstitucionSecundaria: nationalSchoolPlace
+      ? null
+      : toNullableText(education.institucionEducativa.value),
+    ubicacionUltimoAnioSecundariaId: toNullableNumber(education.lugarSecundaria.value),
+    estadoEducacionSuperiorPreviaId: toNullableNumber(education.estadoEducacionSuperior.value),
+    nivelDecisionId: toNullableNumber(decision.certezaDecision.value),
+    tuvoAsesoramientoOrt: toNullableBoolean(experience.reunionAsesoramiento.value),
+    valoracionAsesoramientoOrtId:
+      experience.reunionAsesoramiento.value === 'si'
+        ? experience.calificacionAsesoramiento.value
+        : null,
+    visitoSitioWebOrt: toNullableBoolean(experience.visitoWeb.value),
+    valoracionSitioWebOrtId:
+      experience.visitoWeb.value === 'si' ? experience.calificacionWeb.value : null,
+    visitoInstalacionesOrt: toNullableBoolean(experience.visitoSede.value),
+    valoracionInstalacionesOrtId:
+      experience.visitoSede.value === 'si' ? experience.calificacionSede.value : null,
+    recuerdaPublicidadOrt: toNullableBoolean(experience.recuerdaPublicidad.value),
+    madreTutorEgresadoOrt: motherHasCompleteUniversity
       ? toNullableBoolean(education.tituloOrtMadre.value)
       : null,
-    decisionCarrera: toNullableNumber(
-      forms.academicDecisionForm.controls.anioDecisionCarrera.value
-    ),
-    decisionUniversidad: toNullableNumber(
-      forms.academicDecisionForm.controls.anioDecisionOrt.value
-    ),
-    infoOtrasUniversidadesAntes: toBackendYesNo(
-      forms.academicDecisionForm.controls.otrasUniversidades.value
-    ),
-    compartidoCon: toNullableNumber(
-      forms.academicDecisionForm.controls.apoyoDecision.value[0] ?? ''
-    ),
-    tieneEducacionSuperior: higherEducation,
-    nivelDecision:
-      forms.academicDecisionForm.controls.certezaDecision.value === 'decidido'
-        ? 1
-        : forms.academicDecisionForm.controls.certezaDecision.value === 'con-dudas'
-          ? 0
-          : null,
-    asesoramientoOrt: toNullableBoolean(
-      forms.ortExperienceForm.controls.reunionAsesoramiento.value
-    ),
-    vistaSitioWebOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoWeb.value),
-    vistaInstalacionesOrt: toNullableBoolean(forms.ortExperienceForm.controls.visitoSede.value),
-    publicidadOrt: toNullableBoolean(forms.ortExperienceForm.controls.recuerdaPublicidad.value),
-    trabajaActualmente: toWorkStatusFlag(forms.workForm.controls.situacionLaboral.value),
-    tipoJornadaLaboral: works ? forms.workForm.controls.tipoJornadaLaboral.value || null : null,
-    opcionesMotivosSeleccionados:
-      selectedMotives.length === 0
-        ? null
-        : selectedMotives.flatMap(value => {
-            const idMotivo = toNullableNumber(value);
-            return idMotivo === null
-              ? []
-              : [
-                  {
-                    idMotivo,
-                    nombreMotivo: getOptionLabel(context.motivesOptions, value, ''),
-                  },
-                ];
-          }),
+    padreTutorEgresadoOrt: fatherHasCompleteUniversity
+      ? toNullableBoolean(education.tituloOrtPadre.value)
+      : null,
+    trabajaActualmente: toWorkStatusFlag(work.situacionLaboral.value),
+    tipoJornadaId: works ? toNullableNumber(work.tipoJornadaLaboral.value) : null,
+    universidadConsideradaIds: informedOtherUniversities
+      ? toNumberArray(decision.universidadesInformadas.value)
+      : null,
+    universidadEducacionSuperiorIds: hasPreviousHigherEducation
+      ? toNumberArray(education.universidadesEducacionSuperior.value)
+      : null,
+    publicidadOrtIds: remembersAdvertising
+      ? toNumberArray(experience.mediosPublicidad.value)
+      : null,
+    motivoEleccionOrtIds: toNumberArray(decision.motivosOrt.value),
   };
 }
 
@@ -243,39 +224,8 @@ export function parseDate(value: string | null | undefined): Date | null {
   return createValidDate(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
 }
 
-export function isBackendSurveyComplete(survey: InscripcionBackendSurvey): boolean {
-  const state = normalizeBackendState(survey.estadoEncuestaIniAdmision);
-  return (
-    state.includes('complet') || state.includes('finaliz') || !!survey.fechaProcesadoEncuestaIni
-  );
-}
-
-export function resolveBackendSection(value: string | null | undefined): SeccionEncuestaId | null {
-  const state = normalizeBackendState(value);
-  return (
-    Object.entries(SURVEY_SECTION_ALIASES).find(([alias]) => state.includes(alias))?.[1] ?? null
-  );
-}
-
-export function normalizeBackendState(value: string | null | undefined): string {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-}
-
-export function fromBackendBoolean(value: string | boolean | null | undefined): boolean | null {
-  if (typeof value === 'boolean') return value;
-  const normalized = normalizeBackendState(value);
-  if (['s', 'si', 'true', '1'].includes(normalized)) return true;
-  if (['n', 'no', 'false', '0'].includes(normalized)) return false;
-  return null;
-}
-
-export function toYesNoValue(value: string | boolean | null | undefined): string {
-  const parsed = fromBackendBoolean(value);
-  return parsed === null ? '' : parsed ? 'si' : 'no';
+export function toYesNoValue(value: boolean | null): string {
+  return value === null ? '' : value ? 'si' : 'no';
 }
 
 export function toNullableBoolean(value: string): boolean | null {
@@ -286,37 +236,16 @@ export function toWorkStatusFlag(value: string): boolean | null {
   return value ? value === 'trabaja' : null;
 }
 
-export function toBackendYesNo(value: string): string | null {
-  return value === 'si' ? 'S' : value === 'no' ? 'N' : null;
-}
-
-export function toSecondaryCurrentYear(value: string): number | null {
-  if (value === 'cursando') return 1;
-  if (value === 'no-cursando') return 0;
-  return null;
-}
-
 export function toNullableNumber(value: string): number | null {
   if (!value) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function isNationalSecondaryPlace(value: string): boolean {
-  return toBackendSecondaryPlace(value) === SECONDARY_PLACE_NATIONAL;
-}
-
-function toBackendSecondaryPlace(value: string): string | null {
-  if (value === 'uruguay') return SECONDARY_PLACE_NATIONAL;
-  if (value === 'exterior') return SECONDARY_PLACE_INTERNATIONAL;
-  return value || null;
-}
-
-function getSecondaryPlaceValue(survey: InscripcionBackendSurvey): string {
-  const value = toBackendSecondaryPlace(survey.informarEncuestaIni ?? '');
-  if (value) return value;
-  if (survey.codigoInstitucionBac) return SECONDARY_PLACE_NATIONAL;
-  if (survey.nombreInstSecEncuestaIni) return SECONDARY_PLACE_INTERNATIONAL;
+function getSchoolPlaceValue(survey: InscripcionInitialSurvey): string {
+  if (survey.ubicacionSecundariaId) return survey.ubicacionSecundariaId.toString();
+  if (survey.institucionSecundariaId) return SCHOOL_PLACE_NATIONAL;
+  if (survey.nombreInstitucionSecundaria) return SCHOOL_PLACE_INTERNATIONAL;
   return '';
 }
 
@@ -332,24 +261,50 @@ function findHigherEducationOption(
   return option?.value ?? '';
 }
 
-export function hasCompleteUniversityEducation(
-  value: string,
+function findSupportOption(
+  survey: InscripcionInitialSurvey,
   options: readonly OpcionInscripcion[]
-): boolean {
-  if (!value) return false;
-  const label = normalizeBackendState(getOptionLabel(options, value, value));
+): string {
+  const selected = [
+    { value: survey.apoyoPadres, aliases: ['padre', 'madre', 'famil'] },
+    { value: survey.apoyoAmigosFamiliares, aliases: ['amigo', 'famil'] },
+    { value: survey.apoyoAmigoPropuesta, aliases: ['amigo'] },
+    { value: survey.apoyoNadie, aliases: ['nadie'] },
+    { value: survey.apoyoOtros, aliases: ['otro'] },
+  ].find(item => item.value === true);
+  if (!selected) return '';
+
   return (
-    !!label &&
-    !label.startsWith('no') &&
-    !label.includes('nouniversitaria') &&
-    label.endsWith('universitariacompleta')
+    options.find(option => {
+      const label = option.label.toLowerCase();
+      return selected.aliases.some(alias => label.includes(alias));
+    })?.value ?? ''
   );
 }
 
-function hasHigherEducation(value: string, options: readonly OpcionInscripcion[]): boolean | null {
-  if (!value) return null;
-  const label = getOptionLabel(options, value, '').toLowerCase();
-  return label ? !label.trim().startsWith('no ') : null;
+export function hasCompleteUniversityEducation(value: string): boolean {
+  return value === '5' || value === '6';
+}
+
+function toNullableText(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function toNumberArray(values: readonly string[]): number[] | null {
+  const numbers = values.flatMap(value => {
+    const parsed = toNullableNumber(value);
+    return parsed === null ? [] : [parsed];
+  });
+  return numbers.length > 0 ? numbers : null;
+}
+
+function toSelectedOptionValues(ids: readonly number[]): string[] {
+  return ids.map(String);
+}
+
+function toFormValue(value: number | null): string {
+  return value?.toString() ?? '';
 }
 
 function createValidDate(year: number, month: number, day: number): Date | null {

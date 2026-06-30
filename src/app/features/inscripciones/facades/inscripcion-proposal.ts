@@ -4,7 +4,7 @@ import type { OrtErrorItem } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import type { InscripcionBackendSurvey } from '../models/inscripcion-flow';
+import type { InscripcionInitialSurvey } from '../models/inscripcion-flow';
 import { buildFormErrors } from '../models/inscripcion-flow-forms';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
@@ -111,12 +111,8 @@ export class InscripcionProposalFacade {
     this.selection.setProposalType(value);
   }
 
-  public loadAcademicOptionsForSurvey(survey: InscripcionBackendSurvey): void {
-    this.selection.loadOptions(
-      survey.idProducto ?? null,
-      survey.idProceso ?? null,
-      survey.idTurno ?? null
-    );
+  public loadAcademicOptionsForSurvey(survey: InscripcionInitialSurvey): void {
+    this.selection.loadOptions(survey.carreraId, survey.comienzoId, survey.turnoId);
   }
 
   private buildProductInterestPayload(): {

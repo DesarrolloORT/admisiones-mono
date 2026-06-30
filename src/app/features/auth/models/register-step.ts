@@ -32,4 +32,3 @@ export const REGISTER_STEP_VIEW_MODELS: Record<RegisterStep, RegisterStepViewMod
     cardSize: 'long',
   },
 };
-

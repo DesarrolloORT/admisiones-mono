@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { vi } from 'vitest';
 
 import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
@@ -9,13 +11,33 @@ import { InscripcionPersonalStep } from './inscripcion-personal-step';
 describe('InscripcionPersonalStep', () => {
   let fixture: ComponentFixture<InscripcionPersonalStep>;
   const continueSpy = vi.fn();
+  const breakpoint = signal({
+    isXSmall: true,
+    isSmall: false,
+    isMedium: false,
+    isLarge: false,
+    currentBreakpoint: 'xs',
+    screenWidth: 375,
+  });
 
   beforeEach(() => {
     continueSpy.mockClear();
+    breakpoint.set({
+      isXSmall: true,
+      isSmall: false,
+      isMedium: false,
+      isLarge: false,
+      currentBreakpoint: 'xs',
+      screenWidth: 375,
+    });
 
     TestBed.configureTestingModule({
       imports: [InscripcionPersonalStep],
       providers: [
+        {
+          provide: BreakpointService,
+          useValue: { breakpoint },
+        },
         {
           provide: InscripcionSurveyFacade,
           useValue: { continue: continueSpy },
@@ -60,7 +82,40 @@ describe('InscripcionPersonalStep', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(continueSpy).not.toHaveBeenCalled();
   });
+  it('uses vertical radio groups on small breakpoints', () => {
+    const component = fixture.componentInstance as unknown as {
+      radioGroupOrientation: () => 'vertical' | 'horizontal';
+    };
 
+    expect(component.radioGroupOrientation()).toBe('vertical');
+  });
+
+  it('uses horizontal radio groups from medium and large breakpoints', () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 768,
+    });
+    const component = fixture.componentInstance as unknown as {
+      radioGroupOrientation: () => 'vertical' | 'horizontal';
+    };
+
+    expect(component.radioGroupOrientation()).toBe('horizontal');
+
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: false,
+      isLarge: true,
+      currentBreakpoint: 'lg',
+      screenWidth: 1280,
+    });
+
+    expect(component.radioGroupOrientation()).toBe('horizontal');
+  });
   it('keeps baccalaureate options bound in the real template', () => {
     const template = readFileSync(
       'src/app/features/inscripciones/components/inscripcion-personal-step/inscripcion-personal-step.html',

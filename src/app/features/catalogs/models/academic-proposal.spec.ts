@@ -13,6 +13,7 @@ describe('academic proposal options', () => {
       idNivelProducto: 2,
       nombreProducto: 'Analista Programador',
       nombreNivelProducto: 'Tecnicatura',
+      nombreEscuela: 'Facultad de Ingeniería',
     },
   ];
 
@@ -25,7 +26,7 @@ describe('academic proposal options', () => {
 
   it('filters careers by proposal type', () => {
     expect(getAcademicCareerOptions(careers, '2')).toEqual([
-      { value: '20', label: 'Analista Programador' },
+      { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);
   });
 });

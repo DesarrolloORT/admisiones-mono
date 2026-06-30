@@ -6,8 +6,8 @@ import test from 'node:test';
 
 import {
   checkApiContracts,
-  findUnsafeAssertionsInSource,
   findUnknownResponsesInSource,
+  findUnsafeAssertionsInSource,
 } from './check-api-contracts.js';
 
 test('detects response unknown only at the endpoint response boundary', () => {

@@ -22,7 +22,10 @@ export const inscripcionInitialSurveyResolver: ResolveFn<InscripcionInitialSurve
               initialSurvey: {
                 tieneDerechoEncuesta: true,
                 encuesta: null,
-                opcionesMotivosSeleccionados: null,
+                universidadesConsideradas: [],
+                universidadesEducacionSuperior: [],
+                opcionesMotivosSeleccionados: [],
+                opcionesPublicidadSeleccionadas: [],
               },
               loadFailed: false,
             })
