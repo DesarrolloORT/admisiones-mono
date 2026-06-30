@@ -36,9 +36,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdPublicidad = source.IdPublicidad;
             target.CodigoPersona = source.CodigoPersona;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // Navigation Properties
             if (level > 0) {
@@ -62,9 +59,6 @@ namespace AppLogic.DevartDTOs
             // Properties
             target.IdPublicidad = source.IdPublicidad;
             target.CodigoPersona = source.CodigoPersona;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);
