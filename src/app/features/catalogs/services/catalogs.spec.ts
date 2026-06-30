@@ -95,17 +95,22 @@ describe('Catalogs', () => {
 
   it('should delegate getInitialSurveyCatalogs to the endpoint', () => {
     const result = {
-      aniosAprobadosEducacionSuperior: [],
-      compartidoCon: [],
-      decisionCarrera: [],
-      decisionUniversidad: [],
-      estadoEducacionSuperior: [],
-      formacionTutores: [],
-      nivelConocimiento: [],
-      motivosEleccion: [],
-      publicidadesEleccion: [],
-      universidades: [],
-      aniosBachiller: [],
+      educacion: {
+        ubicacionesUltimoAnioSecundaria: [],
+        aniosBachillerato: [],
+        estadosEducacionSuperiorPrevia: [],
+        universidades: [],
+        nivelesFormacionTutores: [],
+      },
+      decisionAcademica: {
+        aniosEducacionMediaSuperior: [],
+        apoyosDecision: [],
+        nivelesDecision: [],
+        universidades: [],
+        motivosEleccionOrt: [],
+      },
+      experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+      situacionLaboral: { tiposJornada: [] },
     };
     endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
 

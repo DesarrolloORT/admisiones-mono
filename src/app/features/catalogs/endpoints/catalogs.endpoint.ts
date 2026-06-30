@@ -69,6 +69,7 @@ export class CatalogsEndpoint {
               idNivelProducto: nivel.idNivelProducto ?? 0,
               nombreProducto: producto.nombreProducto ?? '',
               nombreNivelProducto: nivel.nombreNivelProducto ?? '',
+              nombreEscuela: escuela.nombreEscuela ?? '',
             }))
           )
         ).flat()
@@ -90,23 +91,35 @@ export class CatalogsEndpoint {
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
     return this.api.request(getCatalogosEncuestaInicialEndpoint).pipe(
       map(data => ({
-        aniosAprobadosEducacionSuperior: [],
-        compartidoCon: this.toCatalogItems(data?.decisionAcademica?.apoyosDecision),
-        decisionCarrera: this.toCatalogItems(data?.decisionAcademica?.aniosEducacionMediaSuperior),
-        decisionUniversidad: this.toCatalogItems(
-          data?.decisionAcademica?.aniosEducacionMediaSuperior
-        ),
-        estadoEducacionSuperior: this.toCatalogItems(
-          data?.educacion?.estadosEducacionSuperiorPrevia
-        ),
-        formacionTutores: this.toCatalogItems(data?.educacion?.nivelesFormacionTutores),
-        nivelConocimiento: this.toCatalogItems(data?.decisionAcademica?.nivelesDecision),
-        motivosEleccion: this.toCatalogItems(data?.decisionAcademica?.motivosEleccionOrt),
-        publicidadesEleccion: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
-        universidades: this.toCatalogItems(data?.decisionAcademica?.universidades),
-        aniosBachiller: (data?.educacion?.aniosBachillerato ?? []).map(year =>
-          this.toBaccalaureateYear(year)
-        ),
+        educacion: {
+          ubicacionesUltimoAnioSecundaria: this.toCatalogItems(
+            data?.educacion?.ubicacionesUltimoAnioSecundaria
+          ),
+          aniosBachillerato: (data?.educacion?.aniosBachillerato ?? []).map(year =>
+            this.toBaccalaureateYear(year)
+          ),
+          estadosEducacionSuperiorPrevia: this.toCatalogItems(
+            data?.educacion?.estadosEducacionSuperiorPrevia
+          ),
+          universidades: this.toCatalogItems(data?.educacion?.universidades),
+          nivelesFormacionTutores: this.toCatalogItems(data?.educacion?.nivelesFormacionTutores),
+        },
+        decisionAcademica: {
+          aniosEducacionMediaSuperior: this.toCatalogItems(
+            data?.decisionAcademica?.aniosEducacionMediaSuperior
+          ),
+          apoyosDecision: this.toCatalogItems(data?.decisionAcademica?.apoyosDecision),
+          nivelesDecision: this.toCatalogItems(data?.decisionAcademica?.nivelesDecision),
+          universidades: this.toCatalogItems(data?.decisionAcademica?.universidades),
+          motivosEleccionOrt: this.toCatalogItems(data?.decisionAcademica?.motivosEleccionOrt),
+        },
+        experienciaOrt: {
+          valoraciones: this.toCatalogItems(data?.experienciaOrt?.valoraciones),
+          publicidadesOrt: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
+        },
+        situacionLaboral: {
+          tiposJornada: this.toCatalogItems(data?.situacionLaboral?.tiposJornada),
+        },
       }))
     );
   }

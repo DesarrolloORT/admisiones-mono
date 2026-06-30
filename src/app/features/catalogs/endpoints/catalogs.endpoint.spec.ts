@@ -31,7 +31,12 @@ describe('CatalogsEndpoint', () => {
         {
           idNivelProducto: 1,
           nombreNivelProducto: 'Carreras',
-          escuelas: [{ productos: [{ idProducto: 20, nombreProducto: 'Diseño' }] }],
+          escuelas: [
+            {
+              nombreEscuela: 'Facultad de Diseño',
+              productos: [{ idProducto: 20, nombreProducto: 'Diseño' }],
+            },
+          ],
         },
       ])
     );
@@ -43,6 +48,7 @@ describe('CatalogsEndpoint', () => {
           idNivelProducto: 1,
           nombreProducto: 'Diseño',
           nombreNivelProducto: 'Carreras',
+          nombreEscuela: 'Facultad de Diseño',
         },
       ]);
     });
@@ -52,7 +58,9 @@ describe('CatalogsEndpoint', () => {
     apiMock.request.mockReturnValue(
       of({
         educacion: {
+          ubicacionesUltimoAnioSecundaria: [{ value: 1, label: 'Uruguay' }],
           estadosEducacionSuperiorPrevia: [{ value: 5, label: 'Sin estudios previos' }],
+          universidades: [{ value: 11, label: 'ORT' }],
           nivelesFormacionTutores: [{ value: 6, label: 'Universitaria completa' }],
           aniosBachillerato: [
             {
@@ -70,30 +78,44 @@ describe('CatalogsEndpoint', () => {
           universidades: [{ value: 10, label: 'Universidad de la República' }],
         },
         experienciaOrt: {
+          valoraciones: [{ value: 4, label: 'Muy bueno' }],
           publicidadesOrt: [{ value: 9, label: 'Redes sociales' }],
+        },
+        situacionLaboral: {
+          tiposJornada: [{ value: 12, label: 'Tiempo completo' }],
         },
       })
     );
 
     endpoint.getInitialSurveyCatalogs().subscribe(result => {
       expect(result).toEqual({
-        aniosAprobadosEducacionSuperior: [],
-        compartidoCon: [{ id: 2, label: 'Familia' }],
-        decisionCarrera: [{ id: 3, label: 'Salida laboral' }],
-        decisionUniversidad: [{ id: 3, label: 'Salida laboral' }],
-        estadoEducacionSuperior: [{ id: 5, label: 'Sin estudios previos' }],
-        formacionTutores: [{ id: 6, label: 'Universitaria completa' }],
-        nivelConocimiento: [{ id: 7, label: 'Alto' }],
-        motivosEleccion: [{ id: 8, label: 'Reputación' }],
-        publicidadesEleccion: [{ id: 9, label: 'Redes sociales' }],
-        universidades: [{ id: 10, label: 'Universidad de la República' }],
-        aniosBachiller: [
-          {
-            id: 11,
-            label: '6º año',
-            baccalaureates: [{ id: 12, label: 'Científico', orientation: 'Matemática' }],
-          },
-        ],
+        educacion: {
+          ubicacionesUltimoAnioSecundaria: [{ id: 1, label: 'Uruguay' }],
+          estadosEducacionSuperiorPrevia: [{ id: 5, label: 'Sin estudios previos' }],
+          universidades: [{ id: 11, label: 'ORT' }],
+          nivelesFormacionTutores: [{ id: 6, label: 'Universitaria completa' }],
+          aniosBachillerato: [
+            {
+              id: 11,
+              label: '6º año',
+              baccalaureates: [{ id: 12, label: 'Científico', orientation: 'Matemática' }],
+            },
+          ],
+        },
+        decisionAcademica: {
+          apoyosDecision: [{ id: 2, label: 'Familia' }],
+          aniosEducacionMediaSuperior: [{ id: 3, label: 'Salida laboral' }],
+          nivelesDecision: [{ id: 7, label: 'Alto' }],
+          motivosEleccionOrt: [{ id: 8, label: 'Reputación' }],
+          universidades: [{ id: 10, label: 'Universidad de la República' }],
+        },
+        experienciaOrt: {
+          valoraciones: [{ id: 4, label: 'Muy bueno' }],
+          publicidadesOrt: [{ id: 9, label: 'Redes sociales' }],
+        },
+        situacionLaboral: {
+          tiposJornada: [{ id: 12, label: 'Tiempo completo' }],
+        },
       });
     });
   });

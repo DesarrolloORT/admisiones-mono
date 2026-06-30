@@ -18,14 +18,15 @@ import type { DtoEncuestaIniAdmisionDevart } from 'src/app/shared/api/generated/
 
 import type { InscripcionDetail, InscripcionSummary } from '../models/inscripcion-detail';
 import type {
-  InscripcionBackendSurvey,
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocument,
+  InscripcionInitialSurvey,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
+  SeccionEncuestaId,
 } from '../models/inscripcion-flow';
 
 @Injectable({
@@ -49,6 +50,7 @@ export class InscripcionesEndpoint {
             ? {
                 idInscripcion: response.pagoPendiente.idInscripcion ?? null,
                 senia: response.pagoPendiente.carritos?.[0]?.senia ?? null,
+                saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
                 fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
@@ -103,41 +105,61 @@ export class InscripcionesEndpoint {
       map(response => ({
         tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
         encuesta: response.encuesta ? this.toInitialSurvey(response.encuesta) : null,
+        universidadesConsideradas: this.toSelectedCompanyIds(response.universidadesConsideradas),
+        universidadesEducacionSuperior: this.toSelectedCompanyIds(
+          response.universidadesEducacionSuperior
+        ),
         opcionesMotivosSeleccionados:
-          response.opcionesMotivosSeleccionados?.map(item => ({
-            idMotivo: item.motivoOpcionesAdmision?.idMotivo ?? item.idMotivo,
-            nombreMotivo: item.motivoOpcionesAdmision?.nombreMotivo ?? null,
-          })) ?? null,
+          response.opcionesMotivosSeleccionados?.flatMap(item => {
+            const id = item.motivoOpcionesAdmision?.idMotivo ?? item.idMotivo;
+            return id === undefined ? [] : [id];
+          }) ?? [],
+        opcionesPublicidadSeleccionadas:
+          response.opcionesPublicidadSeleccionadas?.flatMap(item => {
+            const id = item.publicidadOpcionesAdmision?.idPublicidad ?? item.idPublicidad;
+            return id === undefined ? [] : [id];
+          }) ?? [],
       }))
     );
   }
 
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     const body = {
-      idProducto: payload.idProducto,
-      idProceso: payload.idProceso,
-      ultimoAnioSecundaria: payload.ultimoAnioSecundaria,
-      codigoTitulo: payload.codigoTitulo,
-      ultimoAnioSexto: payload.ultimoAnioSexto,
-      codigoInstitucionBac: payload.codigoInstitucionBac,
-      informarEncuesta: payload.informarEncuesta,
-      instruccionPadre: payload.instruccionPadre,
-      instruccionMadre: payload.instruccionMadre,
-      decisionCarrera: payload.decisionCarrera,
-      decisionUniversidad: payload.decisionUniversidad,
-      infoOtrasUniversidadesAntes: payload.infoOtrasUniversidadesAntes,
-      compartidoCon: payload.compartidoCon,
-      tieneEducacionSuperior: payload.tieneEducacionSuperior,
-      nivelDecision: payload.nivelDecision,
-      asesoramientoOrt: payload.asesoramientoOrt,
-      vistaSitioWebOrt: payload.vistaSitioWebOrt,
-      vistaInstalacionesOrt: payload.vistaInstalacionesOrt,
-      publicidadOrt: payload.publicidadOrt,
+      carreraId: payload.carreraId,
+      comienzoId: payload.comienzoId,
+      orientacionBachilleratoId: payload.orientacionBachilleratoId,
+      anioBachillerato: payload.anioBachillerato,
+      vecesRecursaAnioBachillerato: payload.vecesRecursaAnioBachillerato,
+      recursaAnioBachillerato: payload.recursaAnioBachillerato,
+      nivelFormacionPadreTutorId: payload.nivelFormacionPadreTutorId,
+      nivelFormacionMadreTutorId: payload.nivelFormacionMadreTutorId,
+      anioDecisionCarreraId: payload.anioDecisionCarreraId,
+      anioDecisionOrtId: payload.anioDecisionOrtId,
+      seInformoEnOtrasUniversidades: payload.seInformoEnOtrasUniversidades,
+      informacionOtrasUniversidadesLinea1: payload.informacionOtrasUniversidadesLinea1,
+      informacionOtrasUniversidadesLinea2: payload.informacionOtrasUniversidadesLinea2,
+      apoyoDecisionId: payload.apoyoDecisionId,
+      institucionSecundariaId: payload.institucionSecundariaId,
+      autorizaInformarEncuesta: payload.autorizaInformarEncuesta,
+      nombreInstitucionSecundaria: payload.nombreInstitucionSecundaria,
+      ubicacionUltimoAnioSecundariaId: payload.ubicacionUltimoAnioSecundariaId,
+      estadoEducacionSuperiorPreviaId: payload.estadoEducacionSuperiorPreviaId,
+      nivelDecisionId: payload.nivelDecisionId,
+      tuvoAsesoramientoOrt: payload.tuvoAsesoramientoOrt,
+      valoracionAsesoramientoOrtId: payload.valoracionAsesoramientoOrtId,
+      visitoSitioWebOrt: payload.visitoSitioWebOrt,
+      valoracionSitioWebOrtId: payload.valoracionSitioWebOrtId,
+      visitoInstalacionesOrt: payload.visitoInstalacionesOrt,
+      valoracionInstalacionesOrtId: payload.valoracionInstalacionesOrtId,
+      recuerdaPublicidadOrt: payload.recuerdaPublicidadOrt,
+      madreTutorEgresadoOrt: payload.madreTutorEgresadoOrt,
+      padreTutorEgresadoOrt: payload.padreTutorEgresadoOrt,
       trabajaActualmente: payload.trabajaActualmente,
-      opcionesMotivosSeleccionados: payload.opcionesMotivosSeleccionados,
-      instruccionMadreOrt: payload.instruccionMadreOrt,
-      instruccionPadreOrt: payload.instruccionPadreOrt,
-      tipoJornadaLaboral: payload.tipoJornadaLaboral,
+      tipoJornadaId: payload.tipoJornadaId,
+      universidadConsideradaIds: payload.universidadConsideradaIds,
+      universidadEducacionSuperiorIds: payload.universidadEducacionSuperiorIds,
+      publicidadOrtIds: payload.publicidadOrtIds,
+      motivoEleccionOrtIds: payload.motivoEleccionOrtIds,
     };
 
     return this.api
@@ -176,6 +198,7 @@ export class InscripcionesEndpoint {
           confirmada: response.confirmada === true,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
           seniaInscripcion: response.carritos?.[0]?.senia ?? null,
+          saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
           resumen: response.resumen
             ? {
                 carrera: response.resumen.carrera ?? null,
@@ -201,36 +224,59 @@ export class InscripcionesEndpoint {
       .pipe(map(result => result === true));
   }
 
-  private toInitialSurvey(survey: DtoEncuestaIniAdmisionDevart): InscripcionBackendSurvey {
+  private toInitialSurvey(survey: DtoEncuestaIniAdmisionDevart): InscripcionInitialSurvey {
     return {
-      idProducto: survey.idProducto ?? null,
-      idProceso: survey.idProceso ?? null,
-      idTurno: survey.idTurno ?? null,
-      estadoEncuestaIniAdmision: survey.estadoEncuestaIniAdmision ?? null,
-      fechaProcesadoEncuestaIni: survey.fechaProcesadoEncuestaIni ?? null,
-      producto: survey.producto
-        ? { idNivelProducto: survey.producto.idNivelProducto ?? null }
-        : null,
-      ultimoanioSecundariaEncuestaIni: survey.ultimoanioSecundariaEncuestaIni ?? null,
-      codigoTitulo: survey.codigoTitulo ?? null,
-      ultimoAnioSextoEncuestaIni: survey.ultimoAnioSextoEncuestaIni ?? null,
-      codigoInstitucionBac: survey.codigoInstitucionBac ?? null,
-      informarEncuestaIni: survey.informarEncuestaIni ?? null,
-      nombreInstSecEncuestaIni: survey.nombreInstSecEncuestaIni ?? null,
-      tieneEducacionSuperiorEncuestaIni: survey.tieneEducacionSuperiorEncuestaIni ?? null,
-      instruccionMadreEncuestaIni: survey.instruccionMadreEncuestaIni ?? null,
-      instruccionPadreEncuestaIni: survey.instruccionPadreEncuestaIni ?? null,
-      instruccionMadreOrtEncuestaIni: survey.instruccionMadreOrtEncuestaIni ?? null,
-      instruccionPadreOrtEncuestaIni: survey.instruccionPadreOrtEncuestaIni ?? null,
-      decisionCarreraEncuestaIni: survey.decisionCarreraEncuestaIni ?? null,
-      decisionUniverEncuestaIni: survey.decisionUniverEncuestaIni ?? null,
-      inforOtrasAntesEncuestaIni: survey.inforOtrasAntesEncuestaIni ?? null,
-      nivelDecisionEncuestaIni: survey.nivelDecisionEncuestaIni ?? null,
-      asesoramientoOrtEncuestaIni: survey.asesoramientoOrtEncuestaIni ?? null,
-      vistaSitioWebOrtEncuestaIni: survey.vistaSitioWebOrtEncuestaIni ?? null,
-      vistaInstalacionesOrtEncuestaIni: survey.vistaInstalacionesOrtEncuestaIni ?? null,
-      publicidadOrtEncuestaIni: survey.publicidadOrtEncuestaIni ?? null,
+      carreraId: survey.idProducto ?? null,
+      comienzoId: survey.idProceso ?? null,
+      turnoId: survey.idTurno ?? null,
+      nivelProductoId: survey.producto?.idNivelProducto ?? null,
+      completa:
+        survey.estadoEncuestaIniAdmision === 'completa' || survey.fechaProcesadoEncuestaIni != null,
+      seccionActiva: toSurveySection(survey.estadoEncuestaIniAdmision),
+      cursaSecundaria: survey.ultimoanioSecundariaEncuestaIni ?? null,
+      orientacionBachilleratoId: survey.codigoTitulo ?? null,
+      anioBachilleratoId: toNumber(survey.ultimoAnioSextoEncuestaIni),
+      institucionSecundariaId: survey.codigoInstitucionBac ?? null,
+      ubicacionSecundariaId: toNumber(survey.informarEncuestaIni),
+      nombreInstitucionSecundaria: survey.nombreInstSecEncuestaIni ?? null,
+      tieneEducacionSuperior: toBoolean(survey.tieneEducacionSuperiorEncuestaIni),
+      nivelFormacionMadreId: toNumber(survey.instruccionMadreEncuestaIni),
+      nivelFormacionPadreId: toNumber(survey.instruccionPadreEncuestaIni),
+      madreEgresadaOrt: toBoolean(survey.instruccionMadreOrtEncuestaIni),
+      padreEgresadoOrt: toBoolean(survey.instruccionPadreOrtEncuestaIni),
+      anioDecisionCarreraId: toNumber(survey.decisionCarreraEncuestaIni),
+      anioDecisionOrtId: toNumber(survey.decisionUniverEncuestaIni),
+      seInformoEnOtrasUniversidades: toBoolean(survey.inforOtrasAntesEncuestaIni),
+      apoyoPadres: toBoolean(survey.comparPadresEncuestaIni),
+      apoyoOtros: toBoolean(survey.comparOtrosEncuestaIni),
+      apoyoAmigosFamiliares: toBoolean(survey.comparAmigoFamEncuestaIni),
+      apoyoNadie: toBoolean(survey.comparNadieEncuestaIni),
+      apoyoAmigoPropuesta: toBoolean(survey.comparAmigoPropEncuestaIni),
+      decisionConfirmada: survey.nivelDecisionEncuestaIni ?? null,
+      tuvoAsesoramientoOrt: toBoolean(survey.asesoramientoOrtEncuestaIni),
+      valoracionAsesoramientoOrt: toNumber(survey.valoracionAsesoramientoOrtEncuestaIni),
+      visitoSitioWebOrt: toBoolean(survey.vistaSitioWebOrtEncuestaIni),
+      valoracionSitioWebOrt: toNumber(survey.valoracionSitioWebOrtEncuestaIni),
+      visitoInstalacionesOrt: toBoolean(survey.vistaInstalacionesOrtEncuestaIni),
+      valoracionInstalacionesOrt: toNumber(survey.valoracionInstalacionesOrtEncuestaIni),
+      recuerdaPublicidadOrt: toBoolean(survey.publicidadOrtEncuestaIni),
     };
+  }
+
+  private toSelectedCompanyIds(
+    items:
+      | Array<{
+          codigoEmpresa?: number | null;
+          nombreOtraEmpresa?: string | null;
+          empresa?: { codigoEmpresa: number; nombre: string };
+        }>
+      | null
+      | undefined
+  ): number[] {
+    return (items ?? []).flatMap(item => {
+      const id = item.codigoEmpresa ?? item.empresa?.codigoEmpresa ?? null;
+      return id === null ? [] : [id];
+    });
   }
 
   private toSummary(
@@ -258,5 +304,31 @@ export class InscripcionesEndpoint {
           turno: summary.turno ?? null,
         }
       : null;
+  }
+}
+
+function toBoolean(value: unknown): boolean | null {
+  if (value === true || value === 'S') return true;
+  if (value === false || value === 'N') return false;
+  return null;
+}
+
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function toSurveySection(value: string | null | undefined): SeccionEncuestaId | null {
+  switch (value) {
+    case 'educacion':
+    case 'decision-academica':
+    case 'experiencia-ort':
+    case 'situacion-laboral':
+    case 'identidad':
+    case 'reglamento':
+      return value;
+    default:
+      return null;
   }
 }
