@@ -1,5 +1,5 @@
 ﻿{
-  "version": 3,
+  "version": 4,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "sections": [
@@ -11,6 +11,7 @@
         "institucionSecundariaId",
         "nombreInstitucionSecundaria",
         "anioBachillerato",
+        "tipoBachilleratoId",
         "orientacionBachilleratoId",
         "recursaAnioBachillerato",
         "vecesRecursaAnioBachillerato",
@@ -126,6 +127,21 @@
       "catalogPath": "educacion.aniosBachillerato",
       "valueField": "value",
       "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "tipoBachilleratoId": {
+      "section": "educacion",
+      "type": "number",
+      "allowedOptions": [
+        {
+          "value": 1,
+          "label": "Nacional"
+        },
+        {
+          "value": 2,
+          "label": "Internacional"
+        }
+      ],
       "requiredForDefinitivo": true
     },
     "orientacionBachilleratoId": {

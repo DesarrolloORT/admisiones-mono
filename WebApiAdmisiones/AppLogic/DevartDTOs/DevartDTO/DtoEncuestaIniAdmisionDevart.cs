@@ -168,6 +168,8 @@ namespace AppLogic.DevartDTOs
         [StringLength(100)]
         public string? EstadoEncuestaIniAdmision { get; set; }
 
+        public decimal? TipoBachillerato { get; set; }
+
         #endregion
 
         #region Navigation Properties

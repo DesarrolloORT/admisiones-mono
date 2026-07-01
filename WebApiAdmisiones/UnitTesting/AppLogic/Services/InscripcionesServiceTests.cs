@@ -1051,6 +1051,7 @@ namespace UnitTesting.AppLogic.Services
                 IdProducto = 1981,
                 IdProceso = 110,
                 EstadoEncuestaIniAdmision = "DEFINITIVO",
+                TipoBachillerato = 2,
                 VecesSextoEncuestaIni = "2",
                 TieneEducacionSuperiorEncuestaIni = "SE",
                 ComparAmigoFamEncuestaIni = "S",
@@ -1097,6 +1098,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("DEFINITIVO", encuesta.Estado);
             Assert.Equal(1981, encuesta.CarreraId);
             Assert.Equal(110, encuesta.ProcesoId);
+            Assert.Equal(2, encuesta.TipoBachilleratoId);
             Assert.True(encuesta.RecursaAnioBachillerato);
             Assert.Equal(2, encuesta.VecesRecursaAnioBachillerato);
             Assert.Equal(2, encuesta.EstadoEducacionSuperiorPreviaId);
@@ -1144,6 +1146,47 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(400, result.HttpCode);
             Assert.Equal("INS_EI_63", result.ErrorCode);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_TipoBachilleratoInvalido_Falla()
+        {
+            SetupPersonaValida();
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                TipoBachilleratoId = 3
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_64", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_TipoBachilleratoValido_GuardaEnEncuesta()
+        {
+            SetupPersonaValida();
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(900);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                TipoBachilleratoId = 2
+            });
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal(2, encuestaAgregada!.TipoBachillerato);
         }
 
         [Fact]
@@ -1328,6 +1371,22 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("trabajaActualmente", result.Data.CamposPendientes);
             bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
             personaRepo.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaSinTipoBachillerato_QuedaTemporal()
+        {
+            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+
+            var request = RequestEncuestaDefinitiva();
+            request.TipoBachilleratoId = null;
+
+            var result = _service.GuardarEncuestaInicial(123, request);
+
+            Assert.True(result.Success);
+            Assert.Equal("TEMPORAL", result.Data!.Estado);
+            Assert.Contains("tipoBachilleratoId", result.Data.CamposPendientes);
+            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
         }
 
         [Fact]
@@ -1566,6 +1625,7 @@ namespace UnitTesting.AppLogic.Services
             {
                 CarreraId = 10,
                 ProcesoId = 20,
+                TipoBachilleratoId = 1,
                 OrientacionBachilleratoId = codigoTitulo,
                 AnioBachillerato = ultimoAnioSexto,
                 NivelFormacionPadreTutorId = 1,

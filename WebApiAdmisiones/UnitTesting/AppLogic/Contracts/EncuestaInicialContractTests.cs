@@ -14,7 +14,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(3, Contract["version"]!.GetValue<int>());
+            Assert.Equal(4, Contract["version"]!.GetValue<int>());
             Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
             Assert.NotNull(Contract["sections"]);
@@ -92,9 +92,11 @@ namespace UnitTesting.AppLogic.Contracts
         {
             Assert.Equal([1, 2], AllowedOptionNumbers("ubicacionUltimoAnioSecundariaId"));
             Assert.Equal([1, 2, 3], AllowedOptionNumbers("estadoEducacionSuperiorPreviaId"));
+            Assert.Equal([1, 2], AllowedOptionNumbers("tipoBachilleratoId"));
             Assert.Equal([1, 2], AllowedOptionNumbers("nivelDecisionId"));
             Assert.Equal(["Uruguay", "En el exterior"], AllowedOptionLabels("ubicacionUltimoAnioSecundariaId"));
             Assert.Equal(["S\u00ed, en Uruguay", "S\u00ed, en el exterior", "No"], AllowedOptionLabels("estadoEducacionSuperiorPreviaId"));
+            Assert.Equal(["Nacional", "Internacional"], AllowedOptionLabels("tipoBachilleratoId"));
             Assert.Equal(["Decidido/a", "Con dudas"], AllowedOptionLabels("nivelDecisionId"));
         }
 

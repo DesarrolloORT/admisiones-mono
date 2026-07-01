@@ -35,6 +35,8 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_14", methodName, "Ultimo anio de secundaria invalido.", 400);
             if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.EstadosEducacionSuperiorPrevia, request.EstadoEducacionSuperiorPreviaId))
                 return OperationResult<bool>.IsFailed("INS_EI_50", methodName, "Educacion superior previa invalida.", 400);
+            if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.TiposBachillerato, request.TipoBachilleratoId))
+                return OperationResult<bool>.IsFailed("INS_EI_64", methodName, "Tipo de bachillerato invalido.", 400);
             if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.NivelesFormacionTutores, request.NivelFormacionPadreTutorId))
                 return OperationResult<bool>.IsFailed("INS_EI_08", methodName, "Instruccion padre invalida.", 400);
             if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.NivelesFormacionTutores, request.NivelFormacionMadreTutorId))

@@ -239,6 +239,8 @@ namespace AppLogic.DevartDTOs
         [StringLength(2)]
         public string? InstruccionPadreOrtEncuestaIni { get; set; }
 
+        public decimal? TipoBachillerato { get; set; }
+
         #endregion
 
         #region Navigation Properties

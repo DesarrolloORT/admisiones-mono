@@ -54,6 +54,7 @@ namespace AppLogic.Services.Catalogos
                     OpcionesSiNo = EncuestaInicialOpciones.OpcionesSiNo,
                     UbicacionesUltimoAnioSecundaria = EncuestaInicialOpciones.UbicacionesUltimoAnioSecundaria,
                     EstadosEducacionSuperiorPrevia = EncuestaInicialOpciones.EstadosEducacionSuperiorPrevia,
+                    TiposBachillerato = EncuestaInicialOpciones.TiposBachillerato,
                     AniosBachillerato = uow.AnioBachillers.GetAllWithRelated()
                         .Select(a => new DtoAnioBachilleratoCatalogo
                         {

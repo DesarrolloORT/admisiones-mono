@@ -34,6 +34,12 @@ namespace AppLogic.Helpers
             Combo(7, "Otros estudios")
         ];
 
+        public static IReadOnlyList<DtoComboOption> TiposBachillerato { get; } =
+        [
+            Combo(1, "Nacional"),
+            Combo(2, "Internacional")
+        ];
+
         public static IReadOnlyList<DtoComboOption> AniosEducacionMediaSuperior { get; } =
         [
             Combo(2, "1° EMS (4° año)"),
@@ -76,6 +82,9 @@ namespace AppLogic.Helpers
             => !valor.HasValue || opciones.Any(o => o.Value == valor.Value);
 
         public static bool Contiene(IReadOnlyList<DtoComboOption> opciones, int? valor)
+            => !valor.HasValue || opciones.Any(o => o.Value == valor.Value);
+
+        public static bool Contiene(IReadOnlyList<DtoComboOption> opciones, decimal? valor)
             => !valor.HasValue || opciones.Any(o => o.Value == valor.Value);
 
         private static DtoComboOption Combo(long value, string label) => new()

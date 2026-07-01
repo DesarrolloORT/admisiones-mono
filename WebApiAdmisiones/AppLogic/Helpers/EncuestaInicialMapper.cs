@@ -63,6 +63,9 @@ namespace AppLogic.Helpers
                 encuesta.UltimoAnioSextoEncuestaIni = value;
             }
 
+            if (request.TipoBachilleratoId.HasValue)
+                encuesta.TipoBachillerato = request.TipoBachilleratoId.Value;
+
             if (request.OrientacionBachilleratoId.HasValue)
                 encuesta.CodigoTitulo = request.OrientacionBachilleratoId.Value;
 
@@ -180,6 +183,7 @@ namespace AppLogic.Helpers
                 OrientacionBachilleratoId = encuesta.CodigoTitulo,
                 AnioBachillerato = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
                     ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni),
+                TipoBachilleratoId = LeerTipoBachillerato(encuesta.TipoBachillerato),
                 VecesRecursaAnioBachillerato = vecesRecursa,
                 RecursaAnioBachillerato = vecesRecursa.HasValue ? true : null,
                 NivelFormacionPadreTutorId = EncuestaInicialState.LeerInt(encuesta.InstruccionPadreEncuestaIni),
@@ -223,6 +227,13 @@ namespace AppLogic.Helpers
                 return 3;
 
             return null;
+        }
+
+        private static long? LeerTipoBachillerato(decimal? value)
+        {
+            return value.HasValue && EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.TiposBachillerato, value)
+                ? (long)value.Value
+                : null;
         }
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)
