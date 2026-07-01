@@ -1138,7 +1138,7 @@ namespace UnitTesting.AppLogic.Services
         {
             SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
 
-            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva(ultimoAnioSexto: 5, codigoTitulo: null));
+            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva(ultimoAnioSexto: 11, codigoTitulo: null));
 
             Assert.True(result.Success);
             bachilleratoRepo.Verify(r => r.Add(It.Is<BachilleratoPersona>(b =>
@@ -1357,18 +1357,18 @@ namespace UnitTesting.AppLogic.Services
             var anioRepo = new Mock<IAnioBachillerRepository>();
             anioRepo.Setup(r => r.GetAll()).Returns(new List<AnioBachiller>
             {
-                AnioBachiller(4),
-                AnioBachiller(5),
-                AnioBachiller(6)
+                AnioBachiller(4, 10),
+                AnioBachiller(5, 11),
+                AnioBachiller(6, 12)
             });
             anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
             {
-                AnioBachiller(4),
-                AnioBachiller(5),
+                AnioBachiller(4, 10),
+                AnioBachiller(5, 11),
                 new()
                 {
                     IdAnioBachiller = 6,
-                    CantAniosAnioBachiller = 6,
+                    CantAniosAnioBachiller = 12,
                     NombreAnioBachiller = "6",
                     UsuarioIngreso = string.Empty,
                     FechaIngreso = FechaBase,
@@ -1388,7 +1388,7 @@ namespace UnitTesting.AppLogic.Services
                     ]
                 }
             });
-            anioRepo.Setup(r => r.GetByKey(6)).Returns(AnioBachiller(6));
+            anioRepo.Setup(r => r.GetByKey(6)).Returns(AnioBachiller(6, 12));
             _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
 
             var motivoOpcionesRepo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
@@ -1425,7 +1425,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         private static DtoGuardarEncuestaInicialRequest RequestEncuestaDefinitiva(
-            long ultimoAnioSexto = 6,
+            long ultimoAnioSexto = 12,
             long? codigoTitulo = 1300)
         {
             return new DtoGuardarEncuestaInicialRequest
@@ -1453,11 +1453,11 @@ namespace UnitTesting.AppLogic.Services
             };
         }
 
-        private static AnioBachiller AnioBachiller(long cantAnios)
+        private static AnioBachiller AnioBachiller(long idAnio, long cantAnios)
         {
             return new AnioBachiller
             {
-                IdAnioBachiller = cantAnios,
+                IdAnioBachiller = idAnio,
                 CantAniosAnioBachiller = cantAnios,
                 NombreAnioBachiller = cantAnios.ToString(),
                 UsuarioIngreso = string.Empty,

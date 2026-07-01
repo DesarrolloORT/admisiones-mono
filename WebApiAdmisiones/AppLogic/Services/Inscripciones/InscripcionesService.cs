@@ -697,6 +697,8 @@ namespace AppLogic.Services.Inscripciones
                     400);
             }
 
+            ultimoAnio = ResolverUltimoAnioBachilleratoLegacy(ultimoAnio);
+
             if (ultimoAnio is < 4 or > 6)
             {
                 return OperationResult<DatosBachilleratoPersona>.IsFailed(
@@ -729,6 +731,11 @@ namespace AppLogic.Services.Inscripciones
                     ultimoAnio.ToString(),
                     codigoOrientacion),
                 methodName);
+        }
+
+        private static long ResolverUltimoAnioBachilleratoLegacy(long valor)
+        {
+            return valor is >= 10 and <= 12 ? valor - 6 : valor;
         }
 
         private static bool CambioBachillerato(

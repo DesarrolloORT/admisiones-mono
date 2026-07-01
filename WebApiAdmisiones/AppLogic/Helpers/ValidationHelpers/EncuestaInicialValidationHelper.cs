@@ -22,9 +22,11 @@ namespace AppLogic.Helpers.ValidationHelpers
             long? CodigoInstitucionBac,
             string? NombreInstitucion,
             long? CodigoTitulo,
+            long ValorEncuesta,
             long UltimoAnioSexto);
 
         private sealed record TituloAnioResuelto(long? CodigoTitulo, long UltimoAnioSexto);
+        private sealed record AnioBachillerResuelto(long ValorEncuesta, long UltimoAnioSexto);
 
         public static OperationResult<bool> ValidarConsistenciaParcial(
             IUnitOfWork uow,
@@ -56,7 +58,7 @@ namespace AppLogic.Helpers.ValidationHelpers
             if (!validacionListas.Success)
                 return validacionListas;
 
-            return ValidarCondicionesRequest(request, methodName);
+            return ValidarCondicionesRequest(uow, request, methodName);
         }
 
         private static OperationResult<bool> ValidarProductoBachillerato(
@@ -74,7 +76,11 @@ namespace AppLogic.Helpers.ValidationHelpers
             if (producto == null)
                 return OperationResult<bool>.IsFailed("INS_EI_03", methodName, "El producto indicado es invalido.", 400);
 
-            if (producto.IdNivelProducto == 1 && request.AnioBachillerato == 4)
+            var anioBachillerato = request.AnioBachillerato.HasValue
+                ? ResolverAnioBachiller(uow, request.AnioBachillerato.Value)
+                : null;
+
+            if (producto.IdNivelProducto == 1 && anioBachillerato?.UltimoAnioSexto == 4)
                 return OperationResult<bool>.IsFailed(
                     "INS_EI_04",
                     methodName,
@@ -152,13 +158,19 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.Ok(false, methodName);
             }
 
+            var anioBachillerato = ResolverAnioBachiller(uow, ultimoAnioResult.Value);
+            if (anioBachillerato == null)
+            {
+                return OperationResult<bool>.Ok(false, methodName);
+            }
+
             var producto = uow.Productos.GetByKey(encuesta.IdProducto!.Value);
             if (producto == null || !uow.Productos.EsProductoValidoParaInteres(encuesta.IdProducto.Value))
             {
                 return OperationResult<bool>.IsFailed("INS_EI_28", methodName, "El producto indicado es invalido.", 400);
             }
 
-            if (producto.IdNivelProducto == 1 && ultimoAnioResult.Value == 4)
+            if (producto.IdNivelProducto == 1 && anioBachillerato.UltimoAnioSexto == 4)
             {
                 return OperationResult<bool>.IsFailed(
                     "INS_EI_29",
@@ -167,7 +179,12 @@ namespace AppLogic.Helpers.ValidationHelpers
                     400);
             }
 
-            var datosAcademicos = ResolverDatosAcademicosEncuesta(uow, encuesta, ultimoAnioResult.Value, methodName);
+            var datosAcademicos = ResolverDatosAcademicosEncuesta(
+                uow,
+                encuesta,
+                anioBachillerato.ValorEncuesta,
+                anioBachillerato.UltimoAnioSexto,
+                methodName);
             if (!datosAcademicos.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -185,9 +202,9 @@ namespace AppLogic.Helpers.ValidationHelpers
             encuesta.CodigoInstitucionBac = datosAcademicos.Data!.CodigoInstitucionBac;
             encuesta.NombreInstSecEncuestaIni = datosAcademicos.Data.NombreInstitucion;
             encuesta.CodigoTitulo = datosAcademicos.Data.CodigoTitulo;
-            encuesta.UltimoAnioSextoEncuestaIni = datosAcademicos.Data.UltimoAnioSexto.ToString();
+            encuesta.UltimoAnioSextoEncuestaIni = datosAcademicos.Data.ValorEncuesta.ToString();
 
-            if (!CompletoEducacionYListas(uow, encuesta, codigoPersona, ultimoAnioResult.Value))
+            if (!CompletoEducacionYListas(uow, encuesta, codigoPersona, anioBachillerato.UltimoAnioSexto))
             {
                 return OperationResult<bool>.Ok(false, methodName);
             }
@@ -353,14 +370,19 @@ namespace AppLogic.Helpers.ValidationHelpers
         }
 
         private static OperationResult<bool> ValidarCondicionesRequest(
+            IUnitOfWork uow,
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
+            var anioBachillerato = request.AnioBachillerato.HasValue
+                ? ResolverAnioBachiller(uow, request.AnioBachillerato.Value)
+                : null;
+
             if (request.SeInformoEnOtrasUniversidades == true && request.UniversidadConsideradaIds is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_39", methodName, "Debe indicar universidades consideradas.", 400);
             if (request.EstadoEducacionSuperiorPreviaId is 1 or 2 && request.UniversidadEducacionSuperiorIds is { Count: 0 })
                 return OperationResult<bool>.IsFailed("INS_EI_40", methodName, "Debe indicar universidades de educacion superior.", 400);
-            if (request.AnioBachillerato == 6 && !request.OrientacionBachilleratoId.HasValue)
+            if (anioBachillerato?.UltimoAnioSexto == 6 && !request.OrientacionBachilleratoId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_41", methodName, "Debe indicar orientacion de bachillerato.", 400);
             if (request.TuvoAsesoramientoOrt == true && !request.ValoracionAsesoramientoOrtId.HasValue)
                 return OperationResult<bool>.IsFailed("INS_EI_42", methodName, "Debe indicar valoracion de asesoramiento.", 400);
@@ -413,6 +435,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         private static OperationResult<DatosAcademicosEncuesta> ResolverDatosAcademicosEncuesta(
             IUnitOfWork uow,
             EncuestaIniAdmision encuesta,
+            long valorEncuesta,
             long ultimoAnioSexto,
             string methodName)
         {
@@ -464,6 +487,7 @@ namespace AppLogic.Helpers.ValidationHelpers
                     codigoInstitucionBac,
                     nombreInstitucion,
                     tituloAnio.Data!.CodigoTitulo,
+                    valorEncuesta,
                     tituloAnio.Data.UltimoAnioSexto),
                 methodName);
         }
@@ -501,14 +525,14 @@ namespace AppLogic.Helpers.ValidationHelpers
             {
                 codigoTitulo = null;
                 var anioBachiller = uow.AnioBachillers.GetAll()
-                    .FirstOrDefault(a => a.CantAniosAnioBachiller == ultimoAnioSexto);
+                    .FirstOrDefault(a => EsAnioBachiller(a, ultimoAnioSexto));
                 if (anioBachiller == null)
                 {
                     return OperationResult<TituloAnioResuelto?>.IsFailed(
                         "INS_EI_33", methodName, "El bachillerato indicado es invalido.", 400);
                 }
 
-                ultimoAnioSexto = (long)(anioBachiller.CantAniosAnioBachiller ?? ultimoAnioSexto);
+                ultimoAnioSexto = (long)anioBachiller.IdAnioBachiller;
             }
 
             return OperationResult<TituloAnioResuelto?>.Ok(
@@ -534,7 +558,23 @@ namespace AppLogic.Helpers.ValidationHelpers
             }
 
             return OperationResult<long>.Ok(
-                (long)(anioTitulo.CantAniosAnioBachiller ?? ultimoAnioSexto), methodName);
+                (long)anioTitulo.IdAnioBachiller, methodName);
+        }
+
+        private static AnioBachillerResuelto? ResolverAnioBachiller(IUnitOfWork uow, long valor)
+        {
+            var anio = uow.AnioBachillers.GetAllWithRelated()
+                .FirstOrDefault(a => EsAnioBachiller(a, valor));
+
+            return anio == null
+                ? null
+                : new AnioBachillerResuelto(valor, (long)anio.IdAnioBachiller);
+        }
+
+        private static bool EsAnioBachiller(AnioBachiller anio, long valor)
+        {
+            return anio.IdAnioBachiller == valor
+                || anio.CantAniosAnioBachiller == valor;
         }
 
         private static long? LeerLong(string? valor)
@@ -560,7 +600,7 @@ namespace AppLogic.Helpers.ValidationHelpers
         private static bool AnioBachillerCatalogado(IUnitOfWork uow, long ultimoAnio)
         {
             return uow.AnioBachillers.GetAllWithRelated()
-                .Any(a => a.CantAniosAnioBachiller == ultimoAnio);
+                .Any(a => EsAnioBachiller(a, ultimoAnio));
         }
 
         private static bool TituloCatalogado(IUnitOfWork uow, long codigoTitulo)

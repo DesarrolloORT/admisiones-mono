@@ -39,9 +39,9 @@ namespace UnitTesting.AppLogic.Helpers
                 Titulos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Titulo { CodigoTitulo = 1300 });
                 Anios.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
                 {
-                    AnioBachillerCatalogo(4),
-                    AnioBachillerCatalogo(5),
-                    AnioBachillerCatalogo(6, new Titulo { CodigoTitulo = 1300 })
+                    AnioBachillerCatalogo(4, 10),
+                    AnioBachillerCatalogo(5, 11),
+                    AnioBachillerCatalogo(6, 12, new Titulo { CodigoTitulo = 1300 })
                 });
                 MotivoOpc.Setup(r => r.GetAll()).Returns(new List<MotivoOpcionesAdmision> { new() { IdMotivo = 1 } });
                 PublOpc.Setup(r => r.GetAll()).Returns(new List<PublicidadOpcionesAdmision> { new() { IdPublicidad = 1 } });
@@ -54,22 +54,25 @@ namespace UnitTesting.AppLogic.Helpers
             }
         }
 
-        private static AnioBachiller AnioBachillerCatalogo(long cantAnios, params Titulo[] titulos)
+        private static AnioBachiller AnioBachillerCatalogo(long idAnio, long cantAnios, params Titulo[] titulos)
         {
             return new AnioBachiller
             {
-                IdAnioBachiller = cantAnios,
+                IdAnioBachiller = idAnio,
                 CantAniosAnioBachiller = cantAnios,
                 Titulos = titulos.ToList()
             };
         }
+
+        private static AnioBachiller AnioBachillerCatalogo(long cantAnios, params Titulo[] titulos)
+            => AnioBachillerCatalogo(cantAnios, cantAnios, titulos);
 
         private static DtoGuardarEncuestaInicialRequest RequestValido() => new()
         {
             CarreraId = 10,
             ComienzoId = 20,
             OrientacionBachilleratoId = 1300,
-            AnioBachillerato = 6,
+            AnioBachillerato = 12,
             NivelFormacionPadreTutorId = 1,
             NivelFormacionMadreTutorId = 1,
             AnioDecisionCarreraId = 2,
@@ -122,7 +125,7 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new ParcialCtx();
             ctx.Productos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             var req = RequestValido();
-            req.AnioBachillerato = 4;
+            req.AnioBachillerato = 10;
             Assert.Equal("INS_EI_04", ErrorDe(ctx, req));
         }
 
@@ -142,6 +145,14 @@ namespace UnitTesting.AppLogic.Helpers
             var req = RequestValido();
             req.AnioBachillerato = valor;
             Assert.Equal("INS_EI_06", ErrorDe(new ParcialCtx(), req));
+        }
+
+        [Fact]
+        public void Parcial_BachilleratoLegacySextoSinOrientacion_INS_EI_41()
+        {
+            var req = RequestValido();
+            req.OrientacionBachilleratoId = null;
+            Assert.Equal("INS_EI_41", ErrorDe(new ParcialCtx(), req));
         }
 
         [Fact]
@@ -280,9 +291,9 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new ParcialCtx();
             ctx.Anios.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
             {
-                AnioBachillerCatalogo(4),
-                AnioBachillerCatalogo(5),
-                AnioBachillerCatalogo(6)
+                AnioBachillerCatalogo(4, 10),
+                AnioBachillerCatalogo(5, 11),
+                AnioBachillerCatalogo(6, 12)
             });
             Assert.Equal("INS_EI_22", ErrorDe(ctx, RequestValido()));
         }
@@ -358,6 +369,19 @@ namespace UnitTesting.AppLogic.Helpers
                 Productos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Producto { IdProducto = 10, IdNivelProducto = 2 });
                 Empresas.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Empresa { CodigoEmpresa = 50, Nombre = "Liceo" });
                 Titulos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Titulo { CodigoTitulo = 1300 });
+                Anios.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
+                {
+                    AnioBachillerCatalogo(4, 10),
+                    AnioBachillerCatalogo(5, 11),
+                    AnioBachillerCatalogo(6, 12, new Titulo { CodigoTitulo = 1300 })
+                });
+                Anios.Setup(r => r.GetAll()).Returns(new List<AnioBachiller>
+                {
+                    AnioBachillerCatalogo(4, 10),
+                    AnioBachillerCatalogo(5, 11),
+                    AnioBachillerCatalogo(6, 12)
+                });
+                Anios.Setup(r => r.GetByKey(6)).Returns(AnioBachillerCatalogo(6, 12));
                 EmpresaConsiderada.Setup(r => r.GetByPersona(It.IsAny<long>())).Returns(new List<EmpresaConsideradaAdmision>());
                 MotivoEleccion.Setup(r => r.GetByPersona(It.IsAny<long>())).Returns(new List<MotivoEleccionAdmision> { new() { CodigoPersona = 123, IdMotivo = 1 } });
                 PublicidadEleccion.Setup(r => r.GetByPersona(It.IsAny<long>())).Returns(new List<PublicidadEleccionAdmision>());
@@ -379,7 +403,7 @@ namespace UnitTesting.AppLogic.Helpers
             IdProducto = 10,
             IdProceso = 20,
             IdComienzo = 30,
-            UltimoAnioSextoEncuestaIni = "6",
+            UltimoAnioSextoEncuestaIni = "12",
             InstruccionPadreEncuestaIni = "1",
             InstruccionMadreEncuestaIni = "1",
             DecisionCarreraEncuestaIni = "2",
@@ -440,7 +464,7 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new CompletitudCtx();
             ctx.Productos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             var e = EncuestaCompletable();
-            e.UltimoAnioSextoEncuestaIni = "4";
+            e.UltimoAnioSextoEncuestaIni = "10";
             var r = Completar(ctx, e, PersonaNoSgi());
             Assert.Equal("INS_EI_29", r.error);
         }
@@ -508,7 +532,7 @@ namespace UnitTesting.AppLogic.Helpers
         {
             var ctx = new CompletitudCtx();
             ctx.Titulos.Setup(r => r.GetByKey(It.IsAny<long>())).Returns(new Titulo { CodigoTitulo = 1300, IdAnioBachiller = 6 });
-            // Anios.GetByKey(6) no configurado -> null -> INS_EI_32
+            ctx.Anios.Setup(r => r.GetByKey(6)).Returns((AnioBachiller)null!);
             var r = Completar(ctx, EncuestaCompletable(), PersonaNoSgi());
             Assert.Equal("INS_EI_32", r.error);
         }
@@ -519,7 +543,7 @@ namespace UnitTesting.AppLogic.Helpers
             var ctx = new CompletitudCtx();
             ctx.Anios.Setup(r => r.GetAll()).Returns(new List<AnioBachiller>());
             var e = EncuestaCompletable();
-            e.UltimoAnioSextoEncuestaIni = "5"; // != 6 -> rama else -> GetAll().FirstOrDefault -> null -> INS_EI_33
+            e.UltimoAnioSextoEncuestaIni = "11"; // quinto legacy -> rama else -> GetAll().FirstOrDefault -> null -> INS_EI_33
             var r = Completar(ctx, e, PersonaNoSgi());
             Assert.Equal("INS_EI_33", r.error);
         }

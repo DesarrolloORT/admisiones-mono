@@ -165,8 +165,8 @@ namespace UnitTesting.AppLogic.Services
             [
                 new AnioBachiller
                 {
-                    IdAnioBachiller = 10,
-                    CantAniosAnioBachiller = 6,
+                    IdAnioBachiller = 6,
+                    CantAniosAnioBachiller = 12,
                     NombreAnioBachiller = "6 anio",
                     Titulos =
                     [
@@ -192,7 +192,7 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.ObtenerEncuestaInicial();
 
             var anio = Assert.Single(result.Data!.Educacion.AniosBachillerato);
-            Assert.Equal(6, anio.Value);
+            Assert.Equal(12, anio.Value);
             Assert.Equal("6 anio", anio.Label);
             var orientacion = Assert.Single(anio.Orientaciones);
             Assert.Equal(20, orientacion.Value);
