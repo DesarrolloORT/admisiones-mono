@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OrtButtonModule } from '@desarrolloort/components';
 
-import { AcademicProposalSelect } from '../../../catalogs/components/academic-proposal-select/academic-proposal-select';
+import { AcademicProposalSelect } from '../../../inscriptions/components/academic-proposal-select/academic-proposal-select';
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
 
 @Component({

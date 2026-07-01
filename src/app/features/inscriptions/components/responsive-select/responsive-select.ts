@@ -1,0 +1,311 @@
+import {
+  booleanAttribute,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { ControlValueAccessor, NgControl, Validators } from '@angular/forms';
+import {
+  OrtButton,
+  OrtDrawer,
+  OrtFormFieldModule,
+  OrtIconModule,
+  OrtInputModule,
+  OrtSelectModule,
+} from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
+
+export interface ResponsiveSelectOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
+export interface ResponsiveSelectOptionGroup {
+  label: string;
+  options: readonly ResponsiveSelectOption[];
+}
+
+type ResponsiveSelectValue = string | string[] | null;
+
+let nextResponsiveSelectId = 0;
+
+@Component({
+  selector: 'app-responsive-select',
+  imports: [
+    OrtButton,
+    OrtDrawer,
+    OrtFormFieldModule,
+    OrtIconModule,
+    OrtInputModule,
+    OrtSelectModule,
+  ],
+  templateUrl: './responsive-select.html',
+  styleUrl: './responsive-select.scss',
+})
+export class ResponsiveSelect implements ControlValueAccessor {
+  public readonly label = input.required<string>();
+  public readonly options = input<readonly ResponsiveSelectOption[]>([]);
+  public readonly optionGroups = input<readonly ResponsiveSelectOptionGroup[] | null>(null);
+  public readonly id = input(`responsive-select-${nextResponsiveSelectId++}`);
+  public readonly placeholder = input('Seleccioná...');
+  public readonly errorText = input('Seleccioná una opción');
+  public readonly noOptionsText = input('No hay opciones');
+  public readonly loadingText = input('Cargando...');
+  public readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
+  public readonly disabled = input(false, { transform: booleanAttribute });
+  public readonly loading = input(false, { transform: booleanAttribute });
+  public readonly multiple = input(false, { transform: booleanAttribute });
+  public readonly searchable = input(false, { transform: booleanAttribute });
+  public readonly required = input<boolean | null>(null);
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly breakpointService = inject(BreakpointService);
+  private readonly ngControl = inject(NgControl, { optional: true, self: true });
+  private readonly disabledFromForms = signal(false);
+  private readonly mobileTrigger = viewChild<ElementRef<HTMLButtonElement>>('mobileTrigger');
+
+  protected readonly isMobile = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
+  });
+  protected readonly value = signal<ResponsiveSelectValue>('');
+  protected readonly pendingValue = signal<ResponsiveSelectValue>('');
+  protected readonly drawerOpen = signal(false);
+  protected readonly search = signal('');
+
+  private onChange: (value: ResponsiveSelectValue) => void = () => undefined;
+  private onTouched: () => void = () => undefined;
+
+  constructor() {
+    if (this.ngControl) this.ngControl.valueAccessor = this;
+  }
+
+  writeValue(value: unknown): void {
+    this.value.set(this.normalizeValue(value));
+  }
+
+  registerOnChange(fn: (value: ResponsiveSelectValue) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabledFromForms.set(isDisabled);
+  }
+
+  protected fieldId(): string {
+    return this.id();
+  }
+
+  protected mobileId(): string {
+    return `${this.id()}-mobile`;
+  }
+
+  protected drawerId(): string {
+    return `${this.id()}-drawer`;
+  }
+
+  protected errorId(): string {
+    return `${this.id()}-error`;
+  }
+
+  protected drawerTitle(): string {
+    return `Seleccionar ${this.label().toLocaleLowerCase('es-UY')}`;
+  }
+
+  protected isDisabled(): boolean {
+    return this.disabled() || this.disabledFromForms();
+  }
+
+  protected isRequired(): boolean {
+    return this.required() ?? !!this.ngControl?.control?.hasValidator(Validators.required);
+  }
+
+  protected invalid(): boolean {
+    const control = this.ngControl?.control;
+    return !!control && control.invalid && control.touched;
+  }
+
+  protected hasValue(): boolean {
+    const value = this.value();
+    return Array.isArray(value) ? value.length > 0 : !!value;
+  }
+
+  protected groups(): readonly ResponsiveSelectOptionGroup[] {
+    const groups = this.optionGroups();
+    return groups ?? [{ label: '', options: this.options() }];
+  }
+
+  protected filteredGroups(): readonly ResponsiveSelectOptionGroup[] {
+    const query = this.search().trim().toLocaleLowerCase('es-UY');
+    if (!query) return this.groups();
+
+    return this.groups()
+      .map(group => ({
+        ...group,
+        options: group.options.filter(option =>
+          option.label.toLocaleLowerCase('es-UY').includes(query)
+        ),
+      }))
+      .filter(group => group.options.length > 0);
+  }
+
+  protected showSearch(): boolean {
+    return this.searchable() && this.allOptions().length >= 6;
+  }
+
+  protected selectedLabel(): string {
+    const selected = this.selectedOptions();
+    return selected.length > 0
+      ? selected.map(option => option.label).join(', ')
+      : this.placeholder();
+  }
+
+  protected selectedOptions(): readonly ResponsiveSelectOption[] {
+    const value = this.value();
+    const values = Array.isArray(value) ? value : value ? [value] : [];
+    return this.allOptions().filter(option => values.includes(option.value));
+  }
+
+  protected onDesktopValueChange(value: unknown): void {
+    this.commitValue(value);
+  }
+
+  protected onDesktopOpenedChange(open: boolean): void {
+    if (!open) this.onTouched();
+  }
+
+  protected openDrawer(): void {
+    if (this.isDisabled()) return;
+
+    this.pendingValue.set(this.cloneValue(this.value()));
+    this.search.set('');
+    this.drawerOpen.set(true);
+  }
+
+  protected onDrawerOpenChange(open: boolean): void {
+    if (!open) this.closeDrawer(true, true);
+  }
+
+  protected onDrawerClosed(): void {
+    this.closeDrawer(true, true);
+  }
+
+  protected onSearchInput(event: Event): void {
+    this.search.set((event.target as HTMLInputElement).value);
+  }
+
+  protected toggleOption(value: string): void {
+    if (!this.multiple()) {
+      this.pendingValue.set(value);
+      return;
+    }
+
+    const pendingValue = this.pendingValue();
+    const current = Array.isArray(pendingValue) ? [...pendingValue] : [];
+    this.pendingValue.set(
+      current.includes(value) ? current.filter(item => item !== value) : [...current, value]
+    );
+  }
+
+  protected pendingSelected(value: string): boolean {
+    const pendingValue = this.pendingValue();
+    return Array.isArray(pendingValue) ? pendingValue.includes(value) : pendingValue === value;
+  }
+
+  protected confirmDrawerValue(): void {
+    this.commitValue(this.pendingValue());
+    this.closeDrawer(false, true);
+  }
+
+  protected optionRole(): 'checkbox' | 'radio' {
+    return this.multiple() ? 'checkbox' : 'radio';
+  }
+
+  protected onDrawerOptionKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        this.focusRelativeOption(event, 1);
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        this.focusRelativeOption(event, -1);
+        break;
+      case 'Home':
+        this.focusOptionAt(event, 0);
+        break;
+      case 'End':
+        this.focusOptionAt(event, this.drawerOptions().length - 1);
+        break;
+    }
+  }
+
+  private focusRelativeOption(event: KeyboardEvent, offset: number): void {
+    const options = this.drawerOptions();
+    const currentIndex = options.indexOf(event.currentTarget as HTMLButtonElement);
+    const nextIndex = (currentIndex + offset + options.length) % options.length;
+    this.focusOptionAt(event, nextIndex);
+  }
+
+  private focusOptionAt(event: KeyboardEvent, index: number): void {
+    const option = this.drawerOptions()[index];
+    if (!option) return;
+
+    event.preventDefault();
+    option.focus();
+  }
+
+  private closeDrawer(markTouched: boolean, restoreFocus = false): void {
+    if (markTouched) this.onTouched();
+    this.drawerOpen.set(false);
+    this.search.set('');
+    if (restoreFocus) this.restoreMobileFocus();
+  }
+
+  private commitValue(value: unknown): void {
+    const normalizedValue = this.normalizeValue(value);
+    this.value.set(normalizedValue);
+    this.onChange(normalizedValue);
+    this.onTouched();
+  }
+
+  private normalizeValue(value: unknown): ResponsiveSelectValue {
+    if (this.multiple()) {
+      return Array.isArray(value)
+        ? value.filter((item): item is string => typeof item === 'string')
+        : [];
+    }
+
+    return typeof value === 'string' ? value : '';
+  }
+
+  private cloneValue(value: ResponsiveSelectValue): ResponsiveSelectValue {
+    return Array.isArray(value) ? [...value] : value;
+  }
+
+  private allOptions(): readonly ResponsiveSelectOption[] {
+    return this.groups().flatMap(group => group.options);
+  }
+
+  private drawerOptions(): HTMLButtonElement[] {
+    return Array.from(
+      this.host.nativeElement.querySelectorAll<HTMLButtonElement>(
+        '.responsive-select__drawer-option'
+      )
+    );
+  }
+
+  private restoreMobileFocus(): void {
+    setTimeout(() => this.mobileTrigger()?.nativeElement.focus());
+  }
+}
