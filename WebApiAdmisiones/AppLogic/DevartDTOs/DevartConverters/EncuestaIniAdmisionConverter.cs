@@ -87,6 +87,8 @@ namespace AppLogic.DevartDTOs
             target.InstruccionMadreOrtEncuestaIni = source.InstruccionMadreOrtEncuestaIni;
             target.InstruccionPadreOrtEncuestaIni = source.InstruccionPadreOrtEncuestaIni;
             target.EstadoEncuestaIniAdmision = source.EstadoEncuestaIniAdmision;
+            target.TipoBachillerato = source.TipoBachillerato;
+            target.CursaSecundariaActualmenteEncuestaIni = source.CursaSecundariaActualmenteEncuestaIni;
 
             // Navigation Properties
             if (level > 0) {
@@ -164,6 +166,8 @@ namespace AppLogic.DevartDTOs
             target.InstruccionMadreOrtEncuestaIni = source.InstruccionMadreOrtEncuestaIni;
             target.InstruccionPadreOrtEncuestaIni = source.InstruccionPadreOrtEncuestaIni;
             target.EstadoEncuestaIniAdmision = source.EstadoEncuestaIniAdmision;
+            target.TipoBachillerato = source.TipoBachillerato;
+            target.CursaSecundariaActualmenteEncuestaIni = source.CursaSecundariaActualmenteEncuestaIni;
 
             // User-defined partial method
             OnEntityCreating(source, target);

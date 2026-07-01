@@ -1,6 +1,7 @@
 using AppLogic.Dtos.Catalogos;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
+using AppLogic.Helpers;
 using AppLogic.IServices.Catalogos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -38,7 +39,6 @@ namespace AppLogic.Services.Catalogos
         {
             using var uow = _uowFactory.Create();
 
-            var opcionesSiNo = new[] { Combo(1, "Sí"), Combo(2, "No") };
             var universidades = uow.Empresas.GetUniversidades()
                 .Select(e => new DtoUniversidadCatalogo
                 {
@@ -51,18 +51,9 @@ namespace AppLogic.Services.Catalogos
             {
                 Educacion = new DtoEncuestaEducacionCatalogos
                 {
-                    OpcionesSiNo = opcionesSiNo,
-                    UbicacionesUltimoAnioSecundaria =
-                    [
-                        Combo(1, "Uruguay"),
-                        Combo(2, "En el exterior")
-                    ],
-                    EstadosEducacionSuperiorPrevia =
-                    [
-                        Combo(1, "Sí, en Uruguay"),
-                        Combo(2, "Sí, en el exterior"),
-                        Combo(3, "No")
-                    ],
+                    OpcionesSiNo = EncuestaInicialOpciones.OpcionesSiNo,
+                    UbicacionesUltimoAnioSecundaria = EncuestaInicialOpciones.UbicacionesUltimoAnioSecundaria,
+                    EstadosEducacionSuperiorPrevia = EncuestaInicialOpciones.EstadosEducacionSuperiorPrevia,
                     AniosBachillerato = uow.AnioBachillers.GetAllWithRelated()
                         .Select(a => new DtoAnioBachilleratoCatalogo
                         {
@@ -80,39 +71,13 @@ namespace AppLogic.Services.Catalogos
                         })
                         .ToList(),
                     Universidades = universidades,
-                    NivelesFormacionTutores =
-                    [
-                        Combo(1, "Primaria"),
-                        Combo(2, "Secundaria"),
-                        Combo(3, "Formación técnica"),
-                        Combo(4, "Formación universitaria incompleta"),
-                        Combo(5, "Formación universitaria completa"),
-                        Combo(6, "Estudios de postgrado"),
-                        Combo(7, "Otros estudios")
-                    ]
+                    NivelesFormacionTutores = EncuestaInicialOpciones.NivelesFormacionTutores
                 },
                 DecisionAcademica = new DtoEncuestaDecisionAcademicaCatalogos
                 {
-                    AniosEducacionMediaSuperior =
-                    [
-                        Combo(2, "1° EMS (4° año)"),
-                        Combo(3, "2° EMS (5° año)"),
-                        Combo(4, "3° EMS (6° año)"),
-                        Combo(0, "Otro")
-                    ],
-                    ApoyosDecision =
-                    [
-                        Combo(1, "Padres u otros familiares"),
-                        Combo(2, "Amigos de la familia"),
-                        Combo(3, "Amigos propios, compañeros"),
-                        Combo(4, "Otros"),
-                        Combo(5, "Nadie")
-                    ],
-                    NivelesDecision =
-                    [
-                        Combo(1, "Decidido/a"),
-                        Combo(2, "Con dudas")
-                    ],
+                    AniosEducacionMediaSuperior = EncuestaInicialOpciones.AniosEducacionMediaSuperior,
+                    ApoyosDecision = EncuestaInicialOpciones.ApoyosDecision,
+                    NivelesDecision = EncuestaInicialOpciones.NivelesDecision,
                     Universidades = universidades,
                     MotivosEleccionOrt = uow.MotivoOpcionesAdmisions.GetAll()
                         .Select(m => Combo(m.IdMotivo, m.NombreMotivo))
@@ -120,27 +85,16 @@ namespace AppLogic.Services.Catalogos
                 },
                 ExperienciaOrt = new DtoEncuestaExperienciaOrtCatalogos
                 {
-                    OpcionesSiNo = opcionesSiNo,
-                    Valoraciones =
-                    [
-                        Combo(1, "1"),
-                        Combo(2, "2"),
-                        Combo(3, "3"),
-                        Combo(4, "4"),
-                        Combo(5, "5")
-                    ],
+                    OpcionesSiNo = EncuestaInicialOpciones.OpcionesSiNo,
+                    Valoraciones = EncuestaInicialOpciones.Valoraciones,
                     PublicidadesOrt = uow.PublicidadOpcionesAdmisions.GetAll()
                         .Select(p => Combo(p.IdPublicidad, p.NombrePublicidad))
                         .ToList()
                 },
                 SituacionLaboral = new DtoEncuestaSituacionLaboralCatalogos
                 {
-                    OpcionesSiNo = opcionesSiNo,
-                    TiposJornada =
-                    [
-                        Combo(1, "Tiempo completo"),
-                        Combo(2, "Tiempo parcial")
-                    ]
+                    OpcionesSiNo = EncuestaInicialOpciones.OpcionesSiNo,
+                    TiposJornada = EncuestaInicialOpciones.TiposJornada
                 }
             };
 

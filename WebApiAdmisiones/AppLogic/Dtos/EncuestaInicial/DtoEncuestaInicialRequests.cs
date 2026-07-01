@@ -1,11 +1,12 @@
 namespace AppLogic.Dtos.EncuestaInicial
 {
-    public sealed class DtoGuardarEncuestaInicialRequest
+    public class DtoGuardarEncuestaInicialRequest
     {
         public long? CarreraId { get; set; }
-        public long? ComienzoId { get; set; }
+        public long? ProcesoId { get; set; }
         public long? OrientacionBachilleratoId { get; set; }
         public long? AnioBachillerato { get; set; }
+        public bool? CursaSecundariaActualmente { get; set; }
         public int? VecesRecursaAnioBachillerato { get; set; }
         public bool? RecursaAnioBachillerato { get; set; }
         public int? NivelFormacionPadreTutorId { get; set; }
@@ -17,7 +18,6 @@ namespace AppLogic.Dtos.EncuestaInicial
         public string? InformacionOtrasUniversidadesLinea2 { get; set; }
         public int? ApoyoDecisionId { get; set; }
         public long? InstitucionSecundariaId { get; set; }
-        public bool? AutorizaInformarEncuesta { get; set; }
         public string? NombreInstitucionSecundaria { get; set; }
         public long? UbicacionUltimoAnioSecundariaId { get; set; }
         public long? EstadoEducacionSuperiorPreviaId { get; set; }
@@ -37,5 +37,13 @@ namespace AppLogic.Dtos.EncuestaInicial
         public List<long>? UniversidadEducacionSuperiorIds { get; set; }
         public List<long>? PublicidadOrtIds { get; set; }
         public List<long>? MotivoEleccionOrtIds { get; set; }
+    }
+
+    public sealed class DtoGuardarEncuestaInicialResponse
+    {
+        public long IdEncuestaIni { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public List<string> SeccionesPendientes { get; set; } = [];
+        public List<string> CamposPendientes { get; set; } = [];
     }
 }

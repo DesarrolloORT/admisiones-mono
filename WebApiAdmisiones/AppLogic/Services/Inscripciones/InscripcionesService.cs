@@ -3,6 +3,7 @@ using AppLogic.Dtos.Inscripciones;
 using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
 using AppLogic.Constants;
+using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
@@ -14,12 +15,12 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
+using AppLogic.Services.Inscripciones.Encuesta;
 
 namespace AppLogic.Services.Inscripciones
 {
     public class InscripcionesService : IInscripcionesService
     {
-        private const long CodigoOrientacionQuintoLegacy = 1304;
         private static readonly HashSet<string> TiposPagoFactura = ["BANRED", "SISTARBANC", "GEOPAY"];
         private static readonly HashSet<string> MetodosPagoExternos = ["ABITAB", "PAGANZA"];
 
@@ -382,375 +383,27 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
-        public OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona)
+        public OperationResult<DtoObtenerEncuestaInicialResponse> ObtenerEncuestaInicial(long codigoPersona)
         {
-            using var uow = _uowFactory.Create();
+            var encuestaInicialService = new EncuestaInicialService(
+                _uowFactory,
+                _dbConnectionContext,
+                _generalService,
+                _tivenosEnvioService);
 
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona == null)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
-                    "GEN_OEI_01",
-                    nameof(ObtenerEncuestaInicial),
-                    "Persona no encontrada.",
-                    404);
-
-            var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
-            if (!validacionDocumento.IsValid)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
-                    "GEN_OEI_02",
-                    nameof(ObtenerEncuestaInicial),
-                    validacionDocumento.Message,
-                    400);
-
-            var tipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento);
-            var documento = DocumentUtils.Normalizar(persona.Documento);
-
-            if (!EncuestaInicialAdmisionHelper.TieneDerechoAEncuestaInicial(tipoDocumento, documento, uow))
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
-                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = false },
-                    nameof(ObtenerEncuestaInicial),
-                    "La persona no tiene derecho a encuesta inicial.",
-                    200);
-
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
-                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = true },
-                    nameof(ObtenerEncuestaInicial),
-                    "La Persona ya completó la encuesta inicial.",
-                    200);
-
-            return OperationResult<DtoEncuestaInicialAdmisionResponse>.Ok(
-                EncuestaInicialAdmisionHelper.CrearRespuestaEncuestaInicial(uow, codigoPersona, encuesta),
-                nameof(ObtenerEncuestaInicial));
+            return encuestaInicialService.ObtenerEncuestaInicial(codigoPersona);
         }
 
-        public OperationResult<bool> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request)
+        public OperationResult<DtoGuardarEncuestaInicialResponse> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request)
         {
-            using var uow = _uowFactory.Create();
+            var encuestaInicialService = new EncuestaInicialService(
+                _uowFactory,
+                _dbConnectionContext,
+                _generalService,
+                _tivenosEnvioService);
 
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona == null)
-            {
-                return OperationResult<bool>.IsFailed(
-                    "INS_EI_01",
-                    nameof(GuardarEncuestaInicial),
-                    PersonaConstants.PersonaNoEncontradaMessage,
-                    404);
-            }
-
-            var validacionConsistencia = EncuestaInicialValidationHelper.ValidarConsistenciaParcial(uow, request, nameof(GuardarEncuestaInicial));
-            if (!validacionConsistencia.Success)
-            {
-                return validacionConsistencia;
-            }
-
-            var encuesta = EncuestaInicialAdmisionHelper.ObtenerEncuestaParaGuardar(uow, codigoPersona, request);
-            var esNueva = encuesta == null;
-            encuesta ??= EncuestaInicialAdmisionHelper.CrearEncuestaInicial(_dbConnectionContext, persona, codigoPersona);
-
-            var idComienzoResult = ResolverIdComienzoEncuesta(uow, request, encuesta);
-            if (!idComienzoResult.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    idComienzoResult.ErrorCode,
-                    nameof(GuardarEncuestaInicial),
-                    idComienzoResult.Message,
-                    idComienzoResult.HttpCode);
-            }
-
-            EncuestaInicialAdmisionHelper.AplicarRequestAEncuesta(encuesta, request, persona, idComienzoResult.Data);
-            var actualizaPersona = AplicarDatosLaborales(persona, request);
-
-            return PersistirEncuestaInicial(uow, persona, encuesta, request, codigoPersona, esNueva, actualizaPersona);
+            return encuestaInicialService.GuardarEncuestaInicial(codigoPersona, request);
         }
-
-        private static OperationResult<long?> ResolverIdComienzoEncuesta(
-            IUnitOfWork uow,
-            DtoGuardarEncuestaInicialRequest request,
-            BusinessLogic.Entities.EncuestaIniAdmision encuesta)
-        {
-            var idProducto = request.CarreraId ?? encuesta.IdProducto;
-            var idProceso = request.ComienzoId ?? encuesta.IdProceso;
-            long? idComienzo = encuesta.IdComienzo;
-
-            if (idProducto.HasValue && idProceso.HasValue)
-            {
-                var idComienzoResult = EncuestaInicialValidationHelper.ObtenerIdComienzoValido(uow, idProducto.Value, idProceso.Value, nameof(GuardarEncuestaInicial));
-                if (!idComienzoResult.Success)
-                {
-                    return OperationResult<long?>.IsFailed(
-                        idComienzoResult.ErrorCode,
-                        nameof(GuardarEncuestaInicial),
-                        idComienzoResult.Message,
-                        idComienzoResult.HttpCode);
-                }
-
-                idComienzo = idComienzoResult.Data;
-            }
-
-            return OperationResult<long?>.Ok(idComienzo, nameof(GuardarEncuestaInicial));
-        }
-
-        private OperationResult<bool> PersistirEncuestaInicial(
-            IUnitOfWork uow,
-            BusinessLogic.Entities.Persona persona,
-            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
-            DtoGuardarEncuestaInicialRequest request,
-            long codigoPersona,
-            bool esNueva,
-            bool actualizaPersona)
-        {
-            uow.BeginTransaction();
-            try
-            {
-                if (esNueva)
-                {
-                    uow.EncuestaIniAdmisions.Add(encuesta);
-                }
-
-                EncuestaInicialAdmisionHelper.AplicarListasHijas(uow, _dbConnectionContext, codigoPersona, request);
-                if (actualizaPersona)
-                {
-                    uow.Personas.Update(persona);
-                }
-
-                uow.Save();
-
-                var finalizacion = FinalizarEncuesta(uow, persona, encuesta, codigoPersona);
-                if (!finalizacion.Success)
-                {
-                    uow.Rollback();
-                    return finalizacion;
-                }
-
-                if (!esNueva)
-                {
-                    uow.EncuestaIniAdmisions.Update(encuesta);
-                }
-
-                uow.Commit();
-                return OperationResult<bool>.Ok(true, nameof(GuardarEncuestaInicial));
-            }
-            catch
-            {
-                uow.Rollback();
-                throw;
-            }
-        }
-
-        private OperationResult<bool> FinalizarEncuesta(
-            IUnitOfWork uow,
-            BusinessLogic.Entities.Persona persona,
-            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
-            long codigoPersona)
-        {
-            var completitud = EncuestaInicialValidationHelper.ResolverCompletitud(uow, encuesta, persona, codigoPersona, nameof(GuardarEncuestaInicial));
-            if (!completitud.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    completitud.ErrorCode,
-                    nameof(GuardarEncuestaInicial),
-                    completitud.Message,
-                    completitud.HttpCode);
-            }
-
-            encuesta.EstadoEncuestaIniAdmision = completitud.Data
-                ? EncuestaInicialAdmisionHelper.EstadoDefinitivo
-                : EncuestaInicialAdmisionHelper.EstadoTemporal;
-
-            if (encuesta.IdProceso.HasValue && encuesta.IdProducto.HasValue)
-            {
-                var fechaVencimientoResult = _generalService.CalcularFechaVencimientoAdmisiones(uow, codigoPersona, encuesta.IdProceso.Value);
-                if (!fechaVencimientoResult.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        fechaVencimientoResult.ErrorCode,
-                        nameof(GuardarEncuestaInicial),
-                        fechaVencimientoResult.Message,
-                        fechaVencimientoResult.HttpCode);
-                }
-
-                encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
-            }
-
-            if (completitud.Data)
-            {
-                var sincronizacionBachillerato = SincronizarBachilleratoPersona(
-                    uow,
-                    encuesta,
-                    codigoPersona,
-                    nameof(GuardarEncuestaInicial));
-                if (!sincronizacionBachillerato.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        sincronizacionBachillerato.ErrorCode,
-                        nameof(GuardarEncuestaInicial),
-                        sincronizacionBachillerato.Message,
-                        sincronizacionBachillerato.HttpCode);
-                }
-            }
-
-            return OperationResult<bool>.Ok(completitud.Data, nameof(GuardarEncuestaInicial));
-        }
-
-        private static bool AplicarDatosLaborales(BusinessLogic.Entities.Persona persona, DtoGuardarEncuestaInicialRequest request)
-        {
-            if (!string.Equals(persona.TipoPersona, PersonaConstants.TipoPersonaSgi, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            var actualizaPersona = false;
-
-            if (request.TrabajaActualmente.HasValue)
-            {
-                persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
-                actualizaPersona = true;
-            }
-
-            if (request.TipoJornadaId.HasValue)
-            {
-                persona.TipoJornada = (byte)request.TipoJornadaId.Value;
-                actualizaPersona = true;
-            }
-
-            return actualizaPersona;
-        }
-
-        private OperationResult<bool> SincronizarBachilleratoPersona(
-            IUnitOfWork uow,
-            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
-            long codigoPersona,
-            string methodName)
-        {
-            var datos = ObtenerDatosBachilleratoDefinitivo(encuesta, methodName);
-            if (!datos.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    datos.ErrorCode,
-                    methodName,
-                    datos.Message,
-                    datos.HttpCode);
-            }
-
-            var datosBachillerato = datos.Data!;
-            var fechaActual = _dbConnectionContext.CurrentDateTime();
-            var existente = uow.BachilleratoPersonas.GetByKey(codigoPersona);
-            if (existente == null)
-            {
-                uow.BachilleratoPersonas.Add(new BusinessLogic.Entities.BachilleratoPersona
-                {
-                    CodigoPersona = codigoPersona,
-                    CodigoInstitucion = datosBachillerato.CodigoInstitucion,
-                    AnioBachillerPer = datosBachillerato.AnioBachiller,
-                    CodigoOrientacion = datosBachillerato.CodigoOrientacion,
-                    ActualizacionBachillerPer = fechaActual,
-                    UsuarioIngreso = string.Empty,
-                    FechaIngreso = fechaActual,
-                    HoraIngreso = fechaActual.ToString("HH:mm:ss")
-                });
-
-                return _tivenosEnvioService.EncolarAltaDatosBachillerato(
-                uow,
-                new DtoTivenosBachilleratoRequest
-                {
-                    CodigoPersona = codigoPersona,
-                    CodigoOrientacion = datosBachillerato.CodigoOrientacion
-                },
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
-                methodName);
-            }
-
-            if (!CambioBachillerato(existente, datosBachillerato))
-            {
-                return OperationResult<bool>.Ok(false, methodName);
-            }
-
-            existente.CodigoInstitucion = datosBachillerato.CodigoInstitucion;
-            existente.AnioBachillerPer = datosBachillerato.AnioBachiller;
-            existente.CodigoOrientacion = datosBachillerato.CodigoOrientacion;
-            existente.ActualizacionBachillerPer = fechaActual;
-            uow.BachilleratoPersonas.Update(existente);
-
-            return _tivenosEnvioService.EncolarModificacionDatosBachillerato(
-                uow,
-                new DtoTivenosBachilleratoRequest
-                {
-                    CodigoPersona = codigoPersona,
-                    CodigoOrientacion = datosBachillerato.CodigoOrientacion
-                },
-                _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
-                methodName);
-        }
-
-        private static OperationResult<DatosBachilleratoPersona> ObtenerDatosBachilleratoDefinitivo(
-            BusinessLogic.Entities.EncuestaIniAdmision encuesta,
-            string methodName)
-        {
-            if (!long.TryParse(encuesta.UltimoAnioSextoEncuestaIni, out var ultimoAnio))
-            {
-                return OperationResult<DatosBachilleratoPersona>.IsFailed(
-                    "INS_EI_36",
-                    methodName,
-                    "No se pudo resolver el anio de bachillerato para la persona.",
-                    400);
-            }
-
-            ultimoAnio = ResolverUltimoAnioBachilleratoLegacy(ultimoAnio);
-
-            if (ultimoAnio is < 4 or > 6)
-            {
-                return OperationResult<DatosBachilleratoPersona>.IsFailed(
-                    "INS_EI_37",
-                    methodName,
-                    "Anio de bachillerato invalido para la persona.",
-                    400);
-            }
-
-            var codigoOrientacion = ultimoAnio switch
-            {
-                4 => null,
-                5 => CodigoOrientacionQuintoLegacy,
-                6 => encuesta.CodigoTitulo,
-                _ => null
-            };
-
-            if (ultimoAnio == 6 && (!codigoOrientacion.HasValue || codigoOrientacion.Value <= 0))
-            {
-                return OperationResult<DatosBachilleratoPersona>.IsFailed(
-                    "INS_EI_38",
-                    methodName,
-                    "No se pudo resolver la orientacion de bachillerato para la persona.",
-                    400);
-            }
-
-            return OperationResult<DatosBachilleratoPersona>.Ok(
-                new DatosBachilleratoPersona(
-                    encuesta.CodigoInstitucionBac,
-                    ultimoAnio.ToString(),
-                    codigoOrientacion),
-                methodName);
-        }
-
-        private static long ResolverUltimoAnioBachilleratoLegacy(long valor)
-        {
-            return valor is >= 10 and <= 12 ? valor - 6 : valor;
-        }
-
-        private static bool CambioBachillerato(
-            BusinessLogic.Entities.BachilleratoPersona existente,
-            DatosBachilleratoPersona datos)
-        {
-            return existente.CodigoInstitucion != datos.CodigoInstitucion
-                || !string.Equals(existente.AnioBachillerPer, datos.AnioBachiller, StringComparison.Ordinal)
-                || existente.CodigoOrientacion != datos.CodigoOrientacion;
-        }
-
-        private sealed record DatosBachilleratoPersona(
-            long? CodigoInstitucion,
-            string AnioBachiller,
-            long? CodigoOrientacion);
 
         public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, DtoConfirmarPreInscripcionRequest request)
         {
