@@ -1,5 +1,5 @@
 ﻿{
-  "version": 4,
+  "version": 5,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "sections": [
@@ -10,6 +10,7 @@
         "ubicacionUltimoAnioSecundariaId",
         "institucionSecundariaId",
         "nombreInstitucionSecundaria",
+        "cursaSecundariaActualmente",
         "anioBachillerato",
         "tipoBachilleratoId",
         "orientacionBachilleratoId",
@@ -127,6 +128,22 @@
       "catalogPath": "educacion.aniosBachillerato",
       "valueField": "value",
       "labelField": "label",
+      "requiredWhen": "cursaSecundariaActualmente == true",
+      "clearWhen": "cursaSecundariaActualmente == false"
+    },
+    "cursaSecundariaActualmente": {
+      "section": "educacion",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
       "requiredForDefinitivo": true
     },
     "tipoBachilleratoId": {
@@ -142,7 +159,8 @@
           "label": "Internacional"
         }
       ],
-      "requiredForDefinitivo": true
+      "requiredWhen": "cursaSecundariaActualmente == true",
+      "clearWhen": "cursaSecundariaActualmente == false"
     },
     "orientacionBachilleratoId": {
       "section": "educacion",
@@ -150,7 +168,8 @@
       "catalogPath": "educacion.aniosBachillerato[].orientaciones",
       "valueField": "value",
       "labelField": "label",
-      "requiredWhen": "selectedAnioBachillerato.orientaciones.length > 0"
+      "requiredWhen": "cursaSecundariaActualmente == true && selectedAnioBachillerato.orientaciones.length > 0",
+      "clearWhen": "cursaSecundariaActualmente == false"
     },
     "recursaAnioBachillerato": {
       "section": "educacion",

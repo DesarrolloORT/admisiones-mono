@@ -83,10 +83,11 @@ namespace AppLogic.Helpers.ValidationHelpers
                 return OperationResult<bool>.IsFailed("INS_EI_34", methodName, "No existe un proceso habilitado para el producto indicado.", 404);
             }
 
-            if (request.AnioBachillerato.HasValue && ResolverAnioBachiller(uow, request.AnioBachillerato.Value) == null)
+            var aplicaBachillerato = request.CursaSecundariaActualmente != false;
+            if (aplicaBachillerato && request.AnioBachillerato.HasValue && ResolverAnioBachiller(uow, request.AnioBachillerato.Value) == null)
                 return OperationResult<bool>.IsFailed("INS_EI_06", methodName, "Ultimo anio de bachillerato invalido.", 400);
 
-            if (request.OrientacionBachilleratoId.HasValue && !TituloCatalogado(uow, request.OrientacionBachilleratoId.Value))
+            if (aplicaBachillerato && request.OrientacionBachilleratoId.HasValue && !TituloCatalogado(uow, request.OrientacionBachilleratoId.Value))
                 return OperationResult<bool>.IsFailed("INS_EI_22", methodName, "El titulo indicado es invalido.", 400);
 
             if (request.InstitucionSecundariaId is <= 0)

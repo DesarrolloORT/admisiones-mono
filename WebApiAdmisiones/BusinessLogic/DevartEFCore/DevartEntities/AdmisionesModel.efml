@@ -1038,6 +1038,9 @@
     <property name="TipoBachillerato" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="459ee79f-8ec9-4e9d-ab5e-ee8d74e8e3a9">
       <column name="TIPO_BACHILLERATO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
+    <property name="CursaSecundariaActualmenteEncuestaIni" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="c0890d03-9f5a-4c7c-ac73-ed78d0fd7993">
+      <column name="CURSA_SECUNDARIA_ACTUALMENTE_ENCUESTA_INI" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
   </class>
   <class name="Producto" entity-set="Productos" table="T_PRODUCTO" schema="CREADOR" p1:Guid="e1ec1c7a-6aa8-47b5-9c7f-d16b3475777e">
     <id name="IdProducto" type="Int64" p1:ValidateRequired="true" p1:Guid="89e7ebc0-56cd-4187-97cc-fc18df2fc423">

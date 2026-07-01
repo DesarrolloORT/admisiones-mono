@@ -47,12 +47,16 @@ namespace AppLogic.Services.Inscripciones.Encuesta
             if (encuesta.UltimoanioSecundariaEncuestaIni == 2)
                 pendientes.AddSi(string.IsNullOrWhiteSpace(encuesta.NombreInstSecEncuestaIni), section, "nombreInstitucionSecundaria");
 
-            var anio = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
-                ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni);
-            pendientes.AddSi(!anio.HasValue, section, "anioBachillerato");
-            pendientes.AddSi(!TieneTipoBachilleratoRespondido(encuesta.TipoBachillerato), section, "tipoBachilleratoId");
-            if (anio.HasValue && EncuestaInicialCatalogValidator.AnioBachillerTieneOrientaciones(uow, anio.Value))
-                pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
+            pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(encuesta.CursaSecundariaActualmenteEncuestaIni), section, "cursaSecundariaActualmente");
+            if (EncuestaInicialState.SNToBool(encuesta.CursaSecundariaActualmenteEncuestaIni) == true)
+            {
+                var anio = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
+                    ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni);
+                pendientes.AddSi(!anio.HasValue, section, "anioBachillerato");
+                pendientes.AddSi(!TieneTipoBachilleratoRespondido(encuesta.TipoBachillerato), section, "tipoBachilleratoId");
+                if (anio.HasValue && EncuestaInicialCatalogValidator.AnioBachillerTieneOrientaciones(uow, anio.Value))
+                    pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
+            }
 
             pendientes.AddSi(!TieneEducacionSuperiorRespondido(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
             if (string.Equals(encuesta.TieneEducacionSuperiorEncuestaIni, "SI", StringComparison.OrdinalIgnoreCase))

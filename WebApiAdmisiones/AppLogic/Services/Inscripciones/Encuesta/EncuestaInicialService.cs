@@ -140,7 +140,7 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                     request.ProcesoId ?? encuesta.IdProceso,
                     contexto.Data?.IdComienzo ?? encuesta.IdComienzo,
                     contexto.Data?.IdTurno ?? encuesta.IdTurno);
-                EncuestaInicialMapper.AplicarEducacion(encuesta, request);
+                EncuestaInicialMapper.AplicarEducacion(uow, encuesta, request);
                 EncuestaInicialMapper.AplicarDecisionAcademica(encuesta, request);
                 EncuestaInicialMapper.AplicarExperienciaOrt(encuesta, request);
                 var actualizaPersona = EncuestaInicialMapper.AplicarSituacionLaboral(persona, request);
@@ -296,7 +296,9 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
             }
 
-            return SincronizarBachilleratoPersona(uow, encuesta, codigoPersona, nameof(GuardarEncuestaInicial));
+            return EncuestaInicialState.SNToBool(encuesta.CursaSecundariaActualmenteEncuestaIni) == false
+                ? OperationResult<bool>.Ok(true, nameof(GuardarEncuestaInicial))
+                : SincronizarBachilleratoPersona(uow, encuesta, codigoPersona, nameof(GuardarEncuestaInicial));
         }
 
         private OperationResult<bool> SincronizarBachilleratoPersona(

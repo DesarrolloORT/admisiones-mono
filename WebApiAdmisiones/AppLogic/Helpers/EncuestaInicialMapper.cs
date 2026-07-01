@@ -1,5 +1,6 @@
 using AppLogic.Constants;
 using AppLogic.Dtos.EncuestaInicial;
+using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using System.Security.Cryptography;
@@ -39,7 +40,7 @@ namespace AppLogic.Helpers
                 encuesta.IdTurno = idTurno.Value;
         }
 
-        internal static void AplicarEducacion(EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
+        internal static void AplicarEducacion(IUnitOfWork uow, EncuestaIniAdmision encuesta, DtoGuardarEncuestaInicialRequest request)
         {
             if (request.UbicacionUltimoAnioSecundariaId.HasValue)
             {
@@ -56,18 +57,30 @@ namespace AppLogic.Helpers
             if (request.NombreInstitucionSecundaria != null)
                 encuesta.NombreInstSecEncuestaIni = EncuestaInicialState.NormalizarTexto(request.NombreInstitucionSecundaria);
 
-            if (request.AnioBachillerato.HasValue)
+            if (request.CursaSecundariaActualmente.HasValue)
+                encuesta.CursaSecundariaActualmenteEncuestaIni = EncuestaInicialState.BoolToSN(request.CursaSecundariaActualmente.Value);
+
+            if (request.CursaSecundariaActualmente == false)
             {
-                var value = request.AnioBachillerato.Value.ToString();
-                encuesta.AniosInstruccionEncuestaIni = value;
-                encuesta.UltimoAnioSextoEncuestaIni = value;
+                encuesta.AniosInstruccionEncuestaIni = null;
+                encuesta.UltimoAnioSextoEncuestaIni = null;
+                encuesta.CodigoTitulo = null;
+                encuesta.TipoBachillerato = null;
             }
+            else
+            {
+                if (request.AnioBachillerato.HasValue)
+                {
+                    var value = ResolverCantAniosAnioBachiller(uow, request.AnioBachillerato.Value).ToString();
+                    encuesta.UltimoAnioSextoEncuestaIni = value;
+                }
 
-            if (request.TipoBachilleratoId.HasValue)
-                encuesta.TipoBachillerato = request.TipoBachilleratoId.Value;
+                if (request.TipoBachilleratoId.HasValue)
+                    encuesta.TipoBachillerato = request.TipoBachilleratoId.Value;
 
-            if (request.OrientacionBachilleratoId.HasValue)
-                encuesta.CodigoTitulo = request.OrientacionBachilleratoId.Value;
+                if (request.OrientacionBachilleratoId.HasValue)
+                    encuesta.CodigoTitulo = request.OrientacionBachilleratoId.Value;
+            }
 
             if (request.RecursaAnioBachillerato.HasValue)
             {
@@ -180,6 +193,7 @@ namespace AppLogic.Helpers
                 Estado = encuesta.EstadoEncuestaIniAdmision ?? EncuestaInicialState.EstadoTemporal,
                 CarreraId = encuesta.IdProducto,
                 ProcesoId = encuesta.IdProceso,
+                CursaSecundariaActualmente = EncuestaInicialState.SNToBool(encuesta.CursaSecundariaActualmenteEncuestaIni),
                 OrientacionBachilleratoId = encuesta.CodigoTitulo,
                 AnioBachillerato = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
                     ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni),
@@ -235,6 +249,9 @@ namespace AppLogic.Helpers
                 ? (long)value.Value
                 : null;
         }
+
+        private static decimal ResolverCantAniosAnioBachiller(IUnitOfWork uow, long value)
+            => EncuestaInicialCatalogValidator.ResolverAnioBachiller(uow, value)?.CantAniosAnioBachiller ?? value;
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)
         {

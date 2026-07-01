@@ -1038,7 +1038,7 @@ namespace UnitTesting.AppLogic.Services
                 CodigoPersona = 123,
                 TipoDocumento = "DE",
                 Documento = "123",
-                TrabajaActualmente = "S",
+                TrabajaActualmente = "SI",
                 TipoJornada = 2
             });
 
@@ -1052,10 +1052,11 @@ namespace UnitTesting.AppLogic.Services
                 IdProceso = 110,
                 EstadoEncuestaIniAdmision = "DEFINITIVO",
                 TipoBachillerato = 2,
+                CursaSecundariaActualmenteEncuestaIni = "SI",
                 VecesSextoEncuestaIni = "2",
                 TieneEducacionSuperiorEncuestaIni = "SE",
-                ComparAmigoFamEncuestaIni = "S",
-                InforOtrasAntesEncuestaIni = "N"
+                ComparAmigoFamEncuestaIni = "SI",
+                InforOtrasAntesEncuestaIni = "NO"
             });
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
             SetupReposDerechoEncuesta();
@@ -1098,6 +1099,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("DEFINITIVO", encuesta.Estado);
             Assert.Equal(1981, encuesta.CarreraId);
             Assert.Equal(110, encuesta.ProcesoId);
+            Assert.True(encuesta.CursaSecundariaActualmente);
             Assert.Equal(2, encuesta.TipoBachilleratoId);
             Assert.True(encuesta.RecursaAnioBachillerato);
             Assert.Equal(2, encuesta.VecesRecursaAnioBachillerato);
@@ -1108,7 +1110,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal([8], encuesta.PublicidadOrtIds);
             Assert.True(encuesta.TrabajaActualmente);
             Assert.Equal(2, encuesta.TipoJornadaId);
-            Assert.NotEmpty(encuesta.CamposPendientes);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Never);
@@ -1190,6 +1191,74 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarEncuestaInicial_AnioBachilleratoPorId_GuardaCantAnios()
+        {
+            SetupPersonaValida();
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(901);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>
+            {
+                AnioBachiller(6, 12)
+            });
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                CursaSecundariaActualmente = true,
+                AnioBachillerato = 6
+            });
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal("12", encuestaAgregada!.AniosInstruccionEncuestaIni);
+            Assert.Equal("12", encuestaAgregada.UltimoAnioSextoEncuestaIni);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_NoCursaSecundaria_LimpiaBachillerato()
+        {
+            SetupPersonaValida();
+
+            var encuesta = new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 10,
+                CodigoPersona = 123,
+                AniosInstruccionEncuestaIni = "12",
+                UltimoAnioSextoEncuestaIni = "12",
+                TipoBachillerato = 1,
+                CodigoTitulo = 1300
+            };
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(encuesta);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                CursaSecundariaActualmente = false,
+                AnioBachillerato = 12,
+                TipoBachilleratoId = 1,
+                OrientacionBachilleratoId = 1300
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("NO", encuesta.CursaSecundariaActualmenteEncuestaIni);
+            Assert.Null(encuesta.AniosInstruccionEncuestaIni);
+            Assert.Null(encuesta.UltimoAnioSextoEncuestaIni);
+            Assert.Null(encuesta.TipoBachillerato);
+            Assert.Null(encuesta.CodigoTitulo);
+        }
+
+        [Fact]
         public void GuardarEncuestaInicial_ParcialSgiConTrabajaActualmente_ActualizaPersonaNormalizado()
         {
             var persona = new Persona
@@ -1218,7 +1287,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             personaRepo.As<IRepository<Persona>>()
-                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
+                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "SI")), Times.Once);
         }
 
         [Fact]
@@ -1374,18 +1443,39 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarEncuestaInicial_DefinitivaSinTipoBachillerato_QuedaTemporal()
+        public void GuardarEncuestaInicial_DefinitivaSinCursaSecundaria_QuedaTemporal()
         {
             SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
 
             var request = RequestEncuestaDefinitiva();
-            request.TipoBachilleratoId = null;
+            request.CursaSecundariaActualmente = null;
 
             var result = _service.GuardarEncuestaInicial(123, request);
 
             Assert.True(result.Success);
             Assert.Equal("TEMPORAL", result.Data!.Estado);
-            Assert.Contains("tipoBachilleratoId", result.Data.CamposPendientes);
+            Assert.Contains("cursaSecundariaActualmente", result.Data.CamposPendientes);
+            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaNoCursaSecundaria_NoExigeBachillerato()
+        {
+            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+
+            var request = RequestEncuestaDefinitiva();
+            request.CursaSecundariaActualmente = false;
+            request.AnioBachillerato = null;
+            request.TipoBachilleratoId = null;
+            request.OrientacionBachilleratoId = null;
+
+            var result = _service.GuardarEncuestaInicial(123, request);
+
+            Assert.True(result.Success);
+            Assert.Equal("DEFINITIVO", result.Data!.Estado);
+            Assert.DoesNotContain("anioBachillerato", result.Data.CamposPendientes);
+            Assert.DoesNotContain("tipoBachilleratoId", result.Data.CamposPendientes);
+            Assert.DoesNotContain("orientacionBachilleratoId", result.Data.CamposPendientes);
             bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
         }
 
@@ -1625,6 +1715,7 @@ namespace UnitTesting.AppLogic.Services
             {
                 CarreraId = 10,
                 ProcesoId = 20,
+                CursaSecundariaActualmente = true,
                 TipoBachilleratoId = 1,
                 OrientacionBachilleratoId = codigoTitulo,
                 AnioBachillerato = ultimoAnioSexto,
