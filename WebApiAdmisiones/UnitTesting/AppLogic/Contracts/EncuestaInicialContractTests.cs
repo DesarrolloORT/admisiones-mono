@@ -14,10 +14,10 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(2, Contract["version"]!.GetValue<int>());
+            Assert.Equal(3, Contract["version"]!.GetValue<int>());
             Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
-            Assert.NotNull(Contract["catalogSections"]);
+            Assert.NotNull(Contract["sections"]);
         }
 
         [Fact]
@@ -42,8 +42,7 @@ namespace UnitTesting.AppLogic.Contracts
                 .Select(JsonName)
                 .ToHashSet();
 
-            var sections = Contract["catalogSections"]!.AsArray()
-                .Select(s => s!.GetValue<string>())
+            var sections = CatalogSectionKeys()
                 .ToHashSet();
 
             Assert.Subset(catalogProperties, sections);
@@ -52,8 +51,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_CatalogPathsReferenceCatalogSections()
         {
-            var catalogSections = Contract["catalogSections"]!.AsArray()
-                .Select(s => s!.GetValue<string>())
+            var catalogSections = CatalogSectionKeys()
                 .ToHashSet();
 
             foreach (var field in Contract["fields"]!.AsObject())
@@ -143,6 +141,12 @@ namespace UnitTesting.AppLogic.Contracts
                 .AsArray()
                 .Select(v => v!["value"]!.GetValue<bool>())
                 .ToList();
+        }
+
+        private static IEnumerable<string> CatalogSectionKeys()
+        {
+            return Contract["sections"]!.AsArray()
+                .Select(s => s!["key"]!.GetValue<string>());
         }
 
         private static string ContractPath()

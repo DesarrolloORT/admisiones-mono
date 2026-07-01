@@ -61,14 +61,14 @@ namespace WebApiAdmisiones.Controllers
         /// Guarda parcial o completamente la encuesta inicial de admision.
         /// </summary>
         /// <param name="request">Campos de encuesta enviados por el front.</param>
-        /// <returns><c>true</c> si la encuesta se guardo correctamente.</returns>
+        /// <returns>Estado actualizado y campos pendientes de la encuesta.</returns>
         /// <response code="200">Encuesta guardada correctamente.</response>
         /// <response code="400">Los datos enviados son invalidos.</response>
         /// <response code="404">No se encontro la persona, producto o proceso indicado.</response>
         [HttpPost("EncuestaInicial")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 404)]
         public IActionResult GuardarEncuestaInicial([FromBody] DtoGuardarEncuestaInicialRequest request)
         {
             var result = inscripcionesService.GuardarEncuestaInicial(_currentUser.GetUserId(), request);

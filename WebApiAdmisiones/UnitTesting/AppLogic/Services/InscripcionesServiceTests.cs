@@ -1042,11 +1042,12 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
+            personaRepo.As<IRepository<Persona>>()
+                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
         }
 
         [Fact]
-        public void GuardarEncuestaInicial_ParcialSgiConTipoJornada_ActualizaPersona()
+        public void GuardarEncuestaInicial_ParcialSgiConTipoJornadaSinTrabajaActualmente_NoTocaPersona()
         {
             var persona = new Persona
             {
@@ -1072,7 +1073,8 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            personaRepo.Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TipoJornada == 2)), Times.Once);
+            personaRepo.As<IRepository<Persona>>()
+                .Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
         [Fact]
@@ -1160,7 +1162,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarEncuestaInicial_DefinitivaSgiSinTrabajaActualmente_NoBloqueaDefinitiva()
+        public void GuardarEncuestaInicial_DefinitivaSinTrabajaActualmente_QuedaTemporal()
         {
             SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
 
@@ -1182,12 +1184,17 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
 
-            var result = _service.GuardarEncuestaInicial(123, RequestEncuestaDefinitiva());
+            var request = RequestEncuestaDefinitiva();
+            request.TrabajaActualmente = null;
+
+            var result = _service.GuardarEncuestaInicial(123, request);
 
             Assert.True(result.Success);
             Assert.NotNull(encuestaAgregada);
-            Assert.Equal("DEFINITIVO", encuestaAgregada!.EstadoEncuestaIniAdmision);
-            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Once);
+            Assert.Equal("TEMPORAL", encuestaAgregada!.EstadoEncuestaIniAdmision);
+            Assert.Equal("TEMPORAL", result.Data!.Estado);
+            Assert.Contains("trabajaActualmente", result.Data.CamposPendientes);
+            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
             personaRepo.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
@@ -1326,16 +1333,11 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var procesoComienzoRepo = new Mock<IProcesoComienzoRepository>();
-            procesoComienzoRepo.Setup(r => r.GetComienzoActivoPorProcesoOProducto(10, 20)).Returns(30);
-            _uowMock.Setup(u => u.ProcesoComienzos).Returns(procesoComienzoRepo.Object);
-
-            var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.GetProcesosHabilitadosPorProducto(10)).Returns(new List<Proceso>
-            {
-                new() { IdProceso = 20 }
-            });
-            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.GetOfertasSeleccionadas(123, 10, 20))
+                .Returns(new List<Oferta> { OfertaValida(99, 10, 30, 1) });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
 
             var empresaRepo = new Mock<IEmpresaRepository>();
             empresaRepo.Setup(r => r.GetByKey(50)).Returns(new Empresa { CodigoEmpresa = 50, Nombre = "Liceo" });
@@ -1431,7 +1433,7 @@ namespace UnitTesting.AppLogic.Services
             return new DtoGuardarEncuestaInicialRequest
             {
                 CarreraId = 10,
-                ComienzoId = 20,
+                ProcesoId = 20,
                 OrientacionBachilleratoId = codigoTitulo,
                 AnioBachillerato = ultimoAnioSexto,
                 NivelFormacionPadreTutorId = 1,
@@ -1441,7 +1443,6 @@ namespace UnitTesting.AppLogic.Services
                 SeInformoEnOtrasUniversidades = false,
                 ApoyoDecisionId = 1,
                 InstitucionSecundariaId = 50,
-                AutorizaInformarEncuesta = false,
                 UbicacionUltimoAnioSecundariaId = 1,
                 EstadoEducacionSuperiorPreviaId = 3,
                 NivelDecisionId = 1,
@@ -1449,6 +1450,7 @@ namespace UnitTesting.AppLogic.Services
                 VisitoSitioWebOrt = false,
                 VisitoInstalacionesOrt = false,
                 RecuerdaPublicidadOrt = false,
+                TrabajaActualmente = false,
                 MotivoEleccionOrtIds = [1]
             };
         }

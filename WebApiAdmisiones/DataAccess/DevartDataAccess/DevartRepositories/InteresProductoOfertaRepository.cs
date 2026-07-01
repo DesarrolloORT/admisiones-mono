@@ -37,20 +37,29 @@ namespace DataAccess.DevartRepositories
 
         public virtual Oferta? GetOfertaSeleccionada(long codigoPersona, long idProducto, long idProceso)
         {
-            var idOferta =
+            return GetOfertasSeleccionadas(codigoPersona, idProducto, idProceso).FirstOrDefault();
+        }
+
+        public virtual ICollection<Oferta> GetOfertasSeleccionadas(long codigoPersona, long idProducto, long idProceso)
+        {
+            var idsOferta =
             (
                 from interesProductoOferta in objectSet.AsNoTracking()
                 join interes in Context.Set<Intere>().AsNoTracking()
                     on (decimal)interesProductoOferta.IdInteres equals interes.IdInteres
+                join interesProducto in Context.Set<InteresProducto>().AsNoTracking()
+                    on new { interes.IdInteres, interesProductoOferta.IdProducto }
+                    equals new { interesProducto.IdInteres, interesProducto.IdProducto }
                 where interes.CodigoPersona == codigoPersona
                     && interes.IdProceso == idProceso
                     && interesProductoOferta.IdProducto == idProducto
-                select (long?)interesProductoOferta.IdOferta
-            ).FirstOrDefault();
+                    && interesProducto.IdGradoInteres == 4m
+                select interesProductoOferta.IdOferta
+            ).Distinct().ToList();
 
-            if (idOferta == null)
+            if (idsOferta.Count == 0)
             {
-                return null;
+                return new List<Oferta>();
             }
 
             return Context.Set<Oferta>()
@@ -58,7 +67,8 @@ namespace DataAccess.DevartRepositories
                 .Include(o => o.Turno)
                 .Include(o => o.Supraoferta).ThenInclude(s => s.Comienzo)
                 .Include(o => o.Supraoferta).ThenInclude(s => s.Paquete).ThenInclude(p => p.Producto)
-                .FirstOrDefault(o => o.IdOferta == idOferta.Value);
+                .Where(o => idsOferta.Contains(o.IdOferta))
+                .ToList();
         }
     }
 }
