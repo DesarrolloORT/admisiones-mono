@@ -9,6 +9,10 @@ import type {
 } from '@desarrolloort/components';
 import { merge, Observable, of } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
+import {
+  DEFAULT_ERROR_ALERT,
+  type ErrorAlertState,
+} from 'src/app/shared/ui/error-alert/error-alert';
 
 import type {
   BaccalaureateYearGroup,
@@ -45,16 +49,6 @@ import { Inscripciones, type InscripcionIdentityPreload } from '../services/insc
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
-
-interface InscripcionErrorAlertState {
-  title: string;
-  message: string;
-}
-
-const INCOMPLETE_INSCRIPTION_ERROR_ALERT: InscripcionErrorAlertState = {
-  title: 'Información incompleta',
-  message: 'Revisá y completá los campos obligatorios para continuar.',
-};
 
 const FIRST_EMS_SCHOOL_YEAR = '10';
 const URUGUAY_COUNTRY_CODE = 1;
@@ -177,8 +171,8 @@ export class InscripcionSurveyFacade {
       ...(!files.selfie ? [{ message: 'Foto del rostro es obligatoria.' }] : []),
     ];
   });
-  public readonly activeSectionErrorAlert = computed<InscripcionErrorAlertState | null>(() =>
-    this.activeSectionErrors().length > 0 ? INCOMPLETE_INSCRIPTION_ERROR_ALERT : null
+  public readonly activeSectionErrorAlert = computed<ErrorAlertState | null>(() =>
+    this.activeSectionErrors().length > 0 ? DEFAULT_ERROR_ALERT : null
   );
 
   constructor() {

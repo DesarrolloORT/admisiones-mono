@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscripcion-bank-logo';
@@ -26,11 +27,6 @@ import {
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
 import { InscripcionProposalFacade } from './inscripcion-proposal';
-
-interface InscripcionErrorAlertState {
-  title: string;
-  message: string;
-}
 
 export class InscripcionPaymentFacade {
   private readonly route = inject(ActivatedRoute);
@@ -63,7 +59,7 @@ export class InscripcionPaymentFacade {
     this.route.snapshot.queryParamMap.get('resultado')
   );
 
-  public readonly paymentErrorAlert = computed<InscripcionErrorAlertState | null>(() => {
+  public readonly paymentErrorAlert = computed<ErrorAlertState | null>(() => {
     if (!this.submitted()) return null;
     if (this.paymentForm.controls.metodoPago.hasError('required')) {
       return {

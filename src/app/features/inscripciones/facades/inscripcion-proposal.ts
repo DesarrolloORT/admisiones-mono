@@ -2,6 +2,10 @@ import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { OrtErrorItem } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
+import {
+  DEFAULT_ERROR_ALERT,
+  type ErrorAlertState,
+} from 'src/app/shared/ui/error-alert/error-alert';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import type { InscripcionInitialSurvey } from '../models/inscripcion-flow';
@@ -9,16 +13,6 @@ import { buildFormErrors } from '../models/inscripcion-flow-forms';
 import { Inscripciones } from '../services/inscripciones';
 import { InscripcionFormsStore } from '../store/inscripcion-forms';
 import { InscripcionProcessStore } from '../store/inscripcion-process';
-
-interface InscripcionErrorAlertState {
-  title: string;
-  message: string;
-}
-
-const INCOMPLETE_INSCRIPTION_ERROR_ALERT: InscripcionErrorAlertState = {
-  title: 'Información incompleta',
-  message: 'Revisá y completá los campos obligatorios para continuar.',
-};
 
 export class InscripcionProposalFacade {
   private readonly inscripciones = inject(Inscripciones);
@@ -51,11 +45,11 @@ export class InscripcionProposalFacade {
     const interestError = this.productInterestError();
     return interestError ? [...formErrors, { message: interestError }] : formErrors;
   });
-  public readonly academicErrorAlert = computed<InscripcionErrorAlertState | null>(() => {
+  public readonly academicErrorAlert = computed<ErrorAlertState | null>(() => {
     const interestError = this.productInterestError();
     if (interestError) return { title: 'No pudimos continuar', message: interestError };
 
-    return this.academicErrors().length > 0 ? INCOMPLETE_INSCRIPTION_ERROR_ALERT : null;
+    return this.academicErrors().length > 0 ? DEFAULT_ERROR_ALERT : null;
   });
 
   constructor() {
