@@ -1,6 +1,7 @@
 using AppLogic.Constants;
 using AppLogic.Dtos.EncuestaInicial;
 using BusinessLogic.Entities;
+using BusinessLogic.IDevartRepositories;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -74,9 +75,13 @@ namespace AppLogic.Helpers
 
             if (request.EstadoEducacionSuperiorPreviaId.HasValue)
             {
-                encuesta.TieneEducacionSuperiorEncuestaIni = request.EstadoEducacionSuperiorPreviaId.Value is 1 or 2
-                    ? CommonConstants.Booleanos.Si
-                    : CommonConstants.Booleanos.No;
+                encuesta.TieneEducacionSuperiorEncuestaIni = request.EstadoEducacionSuperiorPreviaId.Value switch
+                {
+                    1 => CommonConstants.Booleanos.Si,
+                    2 => "SE",
+                    3 => CommonConstants.Booleanos.No,
+                    _ => encuesta.TieneEducacionSuperiorEncuestaIni
+                };
             }
 
             if (request.NivelFormacionPadreTutorId.HasValue)
@@ -155,6 +160,69 @@ namespace AppLogic.Helpers
                 : null;
 
             return true;
+        }
+
+        internal static DtoEncuestaInicialLectura MapearLectura(
+            IUnitOfWork uow,
+            EncuestaIniAdmision encuesta,
+            Persona persona,
+            long codigoPersona,
+            DtoGuardarEncuestaInicialResponse pendientes)
+        {
+            var vecesRecursa = EncuestaInicialState.LeerInt(encuesta.VecesSextoEncuestaIni);
+
+            return new DtoEncuestaInicialLectura
+            {
+                IdEncuestaIni = encuesta.IdEncuestaIni,
+                Estado = encuesta.EstadoEncuestaIniAdmision ?? EncuestaInicialState.EstadoTemporal,
+                CarreraId = encuesta.IdProducto,
+                ProcesoId = encuesta.IdProceso,
+                OrientacionBachilleratoId = encuesta.CodigoTitulo,
+                AnioBachillerato = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
+                    ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni),
+                VecesRecursaAnioBachillerato = vecesRecursa,
+                RecursaAnioBachillerato = vecesRecursa.HasValue ? true : null,
+                NivelFormacionPadreTutorId = EncuestaInicialState.LeerInt(encuesta.InstruccionPadreEncuestaIni),
+                NivelFormacionMadreTutorId = EncuestaInicialState.LeerInt(encuesta.InstruccionMadreEncuestaIni),
+                AnioDecisionCarreraId = EncuestaInicialState.LeerInt(encuesta.DecisionCarreraEncuestaIni),
+                AnioDecisionOrtId = EncuestaInicialState.LeerInt(encuesta.DecisionUniverEncuestaIni),
+                SeInformoEnOtrasUniversidades = EncuestaInicialState.SNToBool(encuesta.InforOtrasAntesEncuestaIni),
+                InformacionOtrasUniversidadesLinea1 = encuesta.InforOtrasLinea1Ini,
+                InformacionOtrasUniversidadesLinea2 = encuesta.InforOtrasLinea2Ini,
+                ApoyoDecisionId = EncuestaInicialState.LeerApoyoDecision(encuesta),
+                InstitucionSecundariaId = encuesta.CodigoInstitucionBac,
+                NombreInstitucionSecundaria = encuesta.NombreInstSecEncuestaIni,
+                UbicacionUltimoAnioSecundariaId = encuesta.UltimoanioSecundariaEncuestaIni,
+                EstadoEducacionSuperiorPreviaId = LeerEstadoEducacionSuperior(encuesta.TieneEducacionSuperiorEncuestaIni),
+                NivelDecisionId = encuesta.NivelDecisionEncuestaIni,
+                TuvoAsesoramientoOrt = EncuestaInicialState.SNToBool(encuesta.AsesoramientoOrtEncuestaIni),
+                ValoracionAsesoramientoOrtId = encuesta.ValoracionAsesoramientoOrtEncuestaIni,
+                VisitoSitioWebOrt = EncuestaInicialState.SNToBool(encuesta.VistaSitioWebOrtEncuestaIni),
+                ValoracionSitioWebOrtId = encuesta.ValoracionSitioWebOrtEncuestaIni,
+                VisitoInstalacionesOrt = EncuestaInicialState.SNToBool(encuesta.VistaInstalacionesOrtEncuestaIni),
+                ValoracionInstalacionesOrtId = encuesta.ValoracionInstalacionesOrtEncuestaIni,
+                RecuerdaPublicidadOrt = EncuestaInicialState.SNToBool(encuesta.PublicidadOrtEncuestaIni),
+                MadreTutorEgresadoOrt = EncuestaInicialState.SNToBool(encuesta.InstruccionMadreOrtEncuestaIni),
+                PadreTutorEgresadoOrt = EncuestaInicialState.SNToBool(encuesta.InstruccionPadreOrtEncuestaIni),
+                TrabajaActualmente = EncuestaInicialState.SNToBool(persona.TrabajaActualmente),
+                TipoJornadaId = persona.TipoJornada,
+                UniversidadConsideradaIds = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
+                UniversidadEducacionSuperiorIds = uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
+                PublicidadOrtIds = uow.PublicidadEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(p => p.IdPublicidad).ToList(),
+                MotivoEleccionOrtIds = uow.MotivoEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(m => m.IdMotivo).ToList()
+            };
+        }
+
+        private static long? LeerEstadoEducacionSuperior(string? value)
+        {
+            if (string.Equals(value, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase))
+                return 1;
+            if (string.Equals(value, "SE", StringComparison.OrdinalIgnoreCase))
+                return 2;
+            if (string.Equals(value, CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
+                return 3;
+
+            return null;
         }
 
         private static string GenerarClaveEncuesta(long idProducto, string? documento)

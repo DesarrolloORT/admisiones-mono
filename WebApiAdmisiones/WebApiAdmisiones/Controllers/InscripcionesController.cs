@@ -48,9 +48,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
         /// <response code="400">Solicitud inválida.</response>
         [HttpGet("EncuestaInicial")]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialAdmisionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 404)]
         public IActionResult ObtenerEncuestaInicialAdmision()
         {
             var result = inscripcionesService.ObtenerEncuestaInicial(_currentUser.GetUserId());

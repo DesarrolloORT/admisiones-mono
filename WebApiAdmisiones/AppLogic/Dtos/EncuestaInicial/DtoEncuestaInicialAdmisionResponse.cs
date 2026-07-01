@@ -1,25 +1,18 @@
-using AppLogic.DevartDTOs;
 using System.Text.Json.Serialization;
 
 namespace AppLogic.Dtos.EncuestaInicial
 {
-    public class DtoEncuestaInicialAdmisionResponse
+    public sealed class DtoObtenerEncuestaInicialResponse
     {
         public bool TieneDerechoEncuesta { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DtoEncuestaIniAdmisionDevart? Encuesta { get; set; }
+        public DtoEncuestaInicialLectura? Encuesta { get; set; }
+    }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<DtoEmpresaConsideradaAdmisionDevart>? UniversidadesConsideradas { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<DtoEducacionSuperiorAdmisionDevart>? UniversidadesEducacionSuperior { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<DtoMotivoEleccionAdmisionDevart>? OpcionesMotivosSeleccionados { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<DtoPublicidadEleccionAdmisionDevart>? OpcionesPublicidadSeleccionadas { get; set; }
+    public sealed class DtoEncuestaInicialLectura : DtoGuardarEncuestaInicialRequest
+    {
+        public long IdEncuestaIni { get; set; }
+        public string Estado { get; set; } = string.Empty;
     }
 }

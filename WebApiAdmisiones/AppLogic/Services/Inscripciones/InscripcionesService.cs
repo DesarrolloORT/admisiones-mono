@@ -383,75 +383,15 @@ namespace AppLogic.Services.Inscripciones
 
         #region PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
-        public OperationResult<DtoEncuestaInicialAdmisionResponse> ObtenerEncuestaInicial(long codigoPersona)
+        public OperationResult<DtoObtenerEncuestaInicialResponse> ObtenerEncuestaInicial(long codigoPersona)
         {
-            using var uow = _uowFactory.Create();
+            var encuestaInicialService = new EncuestaInicialService(
+                _uowFactory,
+                _dbConnectionContext,
+                _generalService,
+                _tivenosEnvioService);
 
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            if (persona == null)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
-                    "GEN_OEI_01",
-                    nameof(ObtenerEncuestaInicial),
-                    "Persona no encontrada.",
-                    404);
-
-            var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
-            if (!validacionDocumento.IsValid)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsFailed(
-                    "GEN_OEI_02",
-                    nameof(ObtenerEncuestaInicial),
-                    validacionDocumento.Message,
-                    400);
-
-            var tipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento);
-            var documento = DocumentUtils.Normalizar(persona.Documento);
-
-            if (!TieneDerechoAEncuestaInicial(tipoDocumento, documento, uow))
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
-                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = false },
-                    nameof(ObtenerEncuestaInicial),
-                    "La persona no tiene derecho a encuesta inicial.",
-                    200);
-
-            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
-            if (encuesta == null)
-                return OperationResult<DtoEncuestaInicialAdmisionResponse>.IsSuccess(
-                    new DtoEncuestaInicialAdmisionResponse { TieneDerechoEncuesta = true },
-                    nameof(ObtenerEncuestaInicial),
-                    "La Persona ya completó la encuesta inicial.",
-                    200);
-
-            return OperationResult<DtoEncuestaInicialAdmisionResponse>.Ok(
-                CrearRespuestaEncuestaInicial(uow, codigoPersona, encuesta),
-                nameof(ObtenerEncuestaInicial));
-        }
-
-        private static bool TieneDerechoAEncuestaInicial(string tipoDocumento, string documento, IUnitOfWork uow)
-        {
-            if (uow.VdEsFrescoAdmisions.ExistePorDocumento(tipoDocumento, documento))
-                return false;
-            if (uow.EncuestaInis.ExistePorDocumento(tipoDocumento, documento))
-                return false;
-            if (uow.EncuestaIniAdmisions.ExisteCompletaPorDocumento(tipoDocumento, documento))
-                return false;
-
-            return true;
-        }
-
-        private static DtoEncuestaInicialAdmisionResponse CrearRespuestaEncuestaInicial(
-            IUnitOfWork uow,
-            long codigoPersona,
-            EncuestaIniAdmision encuesta)
-        {
-            return new DtoEncuestaInicialAdmisionResponse
-            {
-                TieneDerechoEncuesta = true,
-                Encuesta = encuesta.ToDtoWithRelated(1),
-                UniversidadesConsideradas = uow.EmpresaConsideradaAdmisions.GetByPersona(codigoPersona).ToDtos(),
-                UniversidadesEducacionSuperior = uow.EducacionSuperiorAdmisions.GetByPersona(codigoPersona).ToDtos(),
-                OpcionesMotivosSeleccionados = uow.MotivoEleccionAdmisions.GetByPersona(codigoPersona).ToDtos(),
-                OpcionesPublicidadSeleccionadas = uow.PublicidadEleccionAdmisions.GetByPersona(codigoPersona).ToDtos()
-            };
+            return encuestaInicialService.ObtenerEncuestaInicial(codigoPersona);
         }
 
         public OperationResult<DtoGuardarEncuestaInicialResponse> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request)

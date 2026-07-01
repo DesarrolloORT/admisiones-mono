@@ -1015,6 +1015,138 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void ObtenerEncuestaInicial_ConDerechoSinEncuesta_DevuelveEncuestaNullReadOnly()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta();
+
+            var result = _service.ObtenerEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.TieneDerechoEncuesta);
+            Assert.Null(result.Data.Encuesta);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerEncuestaInicial_ConEncuesta_MapeaDtoFuncionalYEstadoPersistido()
+        {
+            SetupPersona(new Persona
+            {
+                CodigoPersona = 123,
+                TipoDocumento = "DE",
+                Documento = "123",
+                TrabajaActualmente = "S",
+                TipoJornada = 2
+            });
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.ExisteCompletaPorDocumento("DE", "123")).Returns(false);
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                IdProducto = 1981,
+                IdProceso = 110,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                VecesSextoEncuestaIni = "2",
+                TieneEducacionSuperiorEncuestaIni = "SE",
+                ComparAmigoFamEncuestaIni = "S",
+                InforOtrasAntesEncuestaIni = "N"
+            });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            SetupReposDerechoEncuesta();
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>());
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaConsideradaAdmisionRepository>();
+            empresaRepo.Setup(r => r.GetByPersona(123)).Returns(new List<EmpresaConsideradaAdmision>
+            {
+                new() { CodigoEmpresa = 55 }
+            });
+            _uowMock.Setup(u => u.EmpresaConsideradaAdmisions).Returns(empresaRepo.Object);
+
+            var educacionRepo = new Mock<IEducacionSuperiorAdmisionRepository>();
+            educacionRepo.Setup(r => r.GetByPersona(123)).Returns(new List<EducacionSuperiorAdmision>());
+            _uowMock.Setup(u => u.EducacionSuperiorAdmisions).Returns(educacionRepo.Object);
+
+            var motivoRepo = new Mock<IMotivoEleccionAdmisionRepository>();
+            motivoRepo.Setup(r => r.GetByPersona(123)).Returns(new List<MotivoEleccionAdmision>
+            {
+                new() { IdMotivo = 7 }
+            });
+            _uowMock.Setup(u => u.MotivoEleccionAdmisions).Returns(motivoRepo.Object);
+
+            var publicidadRepo = new Mock<IPublicidadEleccionAdmisionRepository>();
+            publicidadRepo.Setup(r => r.GetByPersona(123)).Returns(new List<PublicidadEleccionAdmision>
+            {
+                new() { IdPublicidad = 8 }
+            });
+            _uowMock.Setup(u => u.PublicidadEleccionAdmisions).Returns(publicidadRepo.Object);
+
+            var result = _service.ObtenerEncuestaInicial(123);
+
+            Assert.True(result.Success);
+            var encuesta = result.Data!.Encuesta!;
+            Assert.Equal(900, encuesta.IdEncuestaIni);
+            Assert.Equal("DEFINITIVO", encuesta.Estado);
+            Assert.Equal(1981, encuesta.CarreraId);
+            Assert.Equal(110, encuesta.ProcesoId);
+            Assert.True(encuesta.RecursaAnioBachillerato);
+            Assert.Equal(2, encuesta.VecesRecursaAnioBachillerato);
+            Assert.Equal(2, encuesta.EstadoEducacionSuperiorPreviaId);
+            Assert.Equal(2, encuesta.ApoyoDecisionId);
+            Assert.Equal([55], encuesta.UniversidadConsideradaIds);
+            Assert.Equal([7], encuesta.MotivoEleccionOrtIds);
+            Assert.Equal([8], encuesta.PublicidadOrtIds);
+            Assert.True(encuesta.TrabajaActualmente);
+            Assert.Equal(2, encuesta.TipoJornadaId);
+            Assert.NotEmpty(encuesta.CamposPendientes);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_SinDerecho_CortaAntesDeValidarRequest()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta(existeFresco: true);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                NivelDecisionId = 99
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(403, result.HttpCode);
+            Assert.Equal("INS_EI_56", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_EducacionSuperiorUruguaySinUniversidades_Falla()
+        {
+            SetupPersonaValida();
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                EstadoEducacionSuperiorPreviaId = 1,
+                UniversidadEducacionSuperiorIds = []
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_63", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
         public void GuardarEncuestaInicial_ParcialSgiConTrabajaActualmente_ActualizaPersonaNormalizado()
         {
             var persona = new Persona

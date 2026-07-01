@@ -17,7 +17,7 @@ namespace AppLogic.Services.Inscripciones.Encuesta
             var pendientes = new PendingBuilder(encuesta.IdEncuestaIni);
 
             ValidarDatosTecnicos(encuesta, pendientes);
-            ValidarEducacion(uow, encuesta, pendientes);
+            ValidarEducacion(uow, encuesta, codigoPersona, pendientes);
             ValidarDecisionAcademica(uow, encuesta, codigoPersona, pendientes);
             ValidarExperienciaOrt(uow, encuesta, codigoPersona, pendientes);
             ValidarSituacionLaboral(persona, pendientes);
@@ -36,6 +36,7 @@ namespace AppLogic.Services.Inscripciones.Encuesta
         private static void ValidarEducacion(
             IUnitOfWork uow,
             EncuestaIniAdmision encuesta,
+            long codigoPersona,
             PendingBuilder pendientes)
         {
             var section = EncuestaInicialState.Educacion;
@@ -52,7 +53,9 @@ namespace AppLogic.Services.Inscripciones.Encuesta
             if (anio.HasValue && EncuestaInicialCatalogValidator.AnioBachillerTieneOrientaciones(uow, anio.Value))
                 pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
 
-            pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
+            pendientes.AddSi(!TieneEducacionSuperiorRespondido(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
+            if (string.Equals(encuesta.TieneEducacionSuperiorEncuestaIni, "SI", StringComparison.OrdinalIgnoreCase))
+                pendientes.AddSi((uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Count ?? 0) == 0, section, "universidadEducacionSuperiorIds");
 
             var padre = EncuestaInicialState.LeerInt(encuesta.InstruccionPadreEncuestaIni);
             var madre = EncuestaInicialState.LeerInt(encuesta.InstruccionMadreEncuestaIni);
@@ -113,6 +116,13 @@ namespace AppLogic.Services.Inscripciones.Encuesta
             pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(persona.TrabajaActualmente), section, "trabajaActualmente");
             if (EncuestaInicialState.SNToBool(persona.TrabajaActualmente) == true)
                 pendientes.AddSi(!persona.TipoJornada.HasValue, section, "tipoJornadaId");
+        }
+
+        private static bool TieneEducacionSuperiorRespondido(string? value)
+        {
+            return string.Equals(value, "SI", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, "SE", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, "NO", StringComparison.OrdinalIgnoreCase);
         }
 
         private sealed class PendingBuilder(long idEncuestaIni)

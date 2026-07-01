@@ -121,8 +121,28 @@ namespace AppLogic.Helpers.ValidationHelpers
             DtoGuardarEncuestaInicialRequest request,
             string methodName)
         {
-            if (request.RecursaAnioBachillerato == true && !request.VecesRecursaAnioBachillerato.HasValue)
-                return OperationResult<bool>.IsFailed("INS_EI_52", methodName, "Debe indicar veces que recursa el anio de bachillerato.", 400);
+            if (request.RecursaAnioBachillerato == true
+                && (!request.VecesRecursaAnioBachillerato.HasValue || request.VecesRecursaAnioBachillerato.Value < 1))
+                return OperationResult<bool>.IsFailed("INS_EI_52", methodName, "Debe indicar una cantidad valida de veces que recursa el anio de bachillerato.", 400);
+
+            if (request.EstadoEducacionSuperiorPreviaId == 1
+                && (request.UniversidadEducacionSuperiorIds == null || request.UniversidadEducacionSuperiorIds.Count == 0))
+                return OperationResult<bool>.IsFailed("INS_EI_63", methodName, "Debe indicar al menos una universidad de educacion superior.", 400);
+
+            if (request.TuvoAsesoramientoOrt == true && !request.ValoracionAsesoramientoOrtId.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_57", methodName, "Debe indicar valoracion de asesoramiento ORT.", 400);
+            if (request.VisitoSitioWebOrt == true && !request.ValoracionSitioWebOrtId.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_58", methodName, "Debe indicar valoracion del sitio web ORT.", 400);
+            if (request.VisitoInstalacionesOrt == true && !request.ValoracionInstalacionesOrtId.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_59", methodName, "Debe indicar valoracion de instalaciones ORT.", 400);
+
+            if (request.TrabajaActualmente == true && !request.TipoJornadaId.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_60", methodName, "Debe indicar tipo de jornada.", 400);
+
+            if (EncuestaInicialState.EsInstruccionAlta(request.NivelFormacionPadreTutorId) && !request.PadreTutorEgresadoOrt.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_61", methodName, "Debe indicar si padre/tutor es egresado ORT.", 400);
+            if (EncuestaInicialState.EsInstruccionAlta(request.NivelFormacionMadreTutorId) && !request.MadreTutorEgresadoOrt.HasValue)
+                return OperationResult<bool>.IsFailed("INS_EI_62", methodName, "Debe indicar si madre/tutor es egresada ORT.", 400);
 
             return OperationResult<bool>.Ok(true, methodName);
         }
@@ -133,6 +153,8 @@ namespace AppLogic.Helpers.ValidationHelpers
             string methodName)
         {
             if (empresas == null)
+                return OperationResult<bool>.Ok(true, methodName);
+            if (empresas.Count == 0)
                 return OperationResult<bool>.Ok(true, methodName);
 
             var universidades = uow.Empresas.GetUniversidades();

@@ -5,6 +5,7 @@ using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Tivenos;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -20,6 +21,53 @@ namespace AppLogic.Services.Inscripciones.Encuesta
     {
         private const long CodigoOrientacionQuintoLegacy = 1304;
 
+        public OperationResult<DtoObtenerEncuestaInicialResponse> ObtenerEncuestaInicial(long codigoPersona)
+        {
+            using var uow = uowFactory.Create();
+
+            var persona = uow.Personas.GetByKey(codigoPersona);
+            if (persona == null)
+                return OperationResult<DtoObtenerEncuestaInicialResponse>.IsFailed(
+                    "GEN_OEI_01",
+                    nameof(ObtenerEncuestaInicial),
+                    "Persona no encontrada.",
+                    404);
+
+            var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
+            if (!validacionDocumento.IsValid)
+                return OperationResult<DtoObtenerEncuestaInicialResponse>.IsFailed(
+                    "GEN_OEI_02",
+                    nameof(ObtenerEncuestaInicial),
+                    validacionDocumento.Message,
+                    400);
+
+            var tipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(persona.Documento);
+            if (!TieneDerechoAEncuestaInicial(tipoDocumento, documento, uow))
+                return OperationResult<DtoObtenerEncuestaInicialResponse>.IsSuccess(
+                    new DtoObtenerEncuestaInicialResponse { TieneDerechoEncuesta = false },
+                    nameof(ObtenerEncuestaInicial),
+                    "La persona no tiene derecho a encuesta inicial.",
+                    200);
+
+            var encuesta = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
+            if (encuesta == null)
+                return OperationResult<DtoObtenerEncuestaInicialResponse>.IsSuccess(
+                    new DtoObtenerEncuestaInicialResponse { TieneDerechoEncuesta = true },
+                    nameof(ObtenerEncuestaInicial),
+                    "La persona no tiene encuesta inicial.",
+                    200);
+
+            var pendientes = EncuestaInicialValidator.ValidarCompletitudDesdeBase(uow, encuesta, persona, codigoPersona);
+            return OperationResult<DtoObtenerEncuestaInicialResponse>.Ok(
+                new DtoObtenerEncuestaInicialResponse
+                {
+                    TieneDerechoEncuesta = true,
+                    Encuesta = EncuestaInicialMapper.MapearLectura(uow, encuesta, persona, codigoPersona, pendientes)
+                },
+                nameof(ObtenerEncuestaInicial));
+        }
+
         public OperationResult<DtoGuardarEncuestaInicialResponse> GuardarEncuestaInicial(
             long codigoPersona,
             DtoGuardarEncuestaInicialRequest request)
@@ -34,6 +82,27 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                     nameof(GuardarEncuestaInicial),
                     PersonaConstants.PersonaNoEncontradaMessage,
                     404);
+            }
+
+            var validacionDocumento = DocumentUtils.ValidarDocumentoBase(persona.TipoDocumento, persona.Documento);
+            if (!validacionDocumento.IsValid)
+            {
+                return OperationResult<DtoGuardarEncuestaInicialResponse>.IsFailed(
+                    "INS_EI_55",
+                    nameof(GuardarEncuestaInicial),
+                    validacionDocumento.Message,
+                    400);
+            }
+
+            var tipoDocumento = DocumentUtils.Normalizar(persona.TipoDocumento);
+            var documento = DocumentUtils.Normalizar(persona.Documento);
+            if (!TieneDerechoAEncuestaInicial(tipoDocumento, documento, uow))
+            {
+                return OperationResult<DtoGuardarEncuestaInicialResponse>.IsFailed(
+                    "INS_EI_56",
+                    nameof(GuardarEncuestaInicial),
+                    "La persona no tiene derecho a guardar encuesta inicial.",
+                    403);
             }
 
             var validacion = EncuestaInicialCatalogValidator.ValidarRequestParcial(uow, request, nameof(GuardarEncuestaInicial));
@@ -117,6 +186,18 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 uow.Rollback();
                 throw;
             }
+        }
+
+        private static bool TieneDerechoAEncuestaInicial(string tipoDocumento, string documento, IUnitOfWork uow)
+        {
+            if (uow.VdEsFrescoAdmisions?.ExistePorDocumento(tipoDocumento, documento) == true)
+                return false;
+            if (uow.EncuestaInis?.ExistePorDocumento(tipoDocumento, documento) == true)
+                return false;
+            if (uow.EncuestaIniAdmisions?.ExisteCompletaPorDocumento(tipoDocumento, documento) == true)
+                return false;
+
+            return true;
         }
 
         private static OperationResult<ContextoAdmision?> ResolverContextoAdmision(

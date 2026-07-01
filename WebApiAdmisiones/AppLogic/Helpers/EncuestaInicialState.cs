@@ -9,8 +9,8 @@ namespace AppLogic.Helpers
         internal const string EstadoTemporal = "TEMPORAL";
         internal const string EstadoDefinitivo = "DEFINITIVO";
         internal const string TipoInscripcionSoloEncuesta = "SOLO_ENCUESTA_INI";
-        internal const string Si = "S";
-        internal const string No = "N";
+        internal const string Si = "SI";
+        internal const string No = "NO";
 
         internal const string Educacion = "educacion";
         internal const string DecisionAcademica = "decisionAcademica";
@@ -58,6 +58,22 @@ namespace AppLogic.Helpers
                 || SNToBool(encuesta.ComparAmigoPropEncuestaIni) == true
                 || SNToBool(encuesta.ComparOtrosEncuestaIni) == true
                 || SNToBool(encuesta.ComparNadieEncuestaIni) == true;
+        }
+
+        internal static int? LeerApoyoDecision(EncuestaIniAdmision encuesta)
+        {
+            if (SNToBool(encuesta.ComparPadresEncuestaIni) == true)
+                return PersonaConstants.CompartidoCon.Padres;
+            if (SNToBool(encuesta.ComparAmigoFamEncuestaIni) == true)
+                return PersonaConstants.CompartidoCon.AmigoFamilia;
+            if (SNToBool(encuesta.ComparAmigoPropEncuestaIni) == true)
+                return PersonaConstants.CompartidoCon.AmigoPropio;
+            if (SNToBool(encuesta.ComparOtrosEncuestaIni) == true)
+                return PersonaConstants.CompartidoCon.Otros;
+            if (SNToBool(encuesta.ComparNadieEncuestaIni) == true)
+                return PersonaConstants.CompartidoCon.Nadie;
+
+            return null;
         }
 
         internal static string? NormalizarTexto(string? value)

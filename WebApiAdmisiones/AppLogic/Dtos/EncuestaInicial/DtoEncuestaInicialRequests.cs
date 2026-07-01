@@ -1,6 +1,6 @@
 namespace AppLogic.Dtos.EncuestaInicial
 {
-    public sealed class DtoGuardarEncuestaInicialRequest
+    public class DtoGuardarEncuestaInicialRequest
     {
         public long? CarreraId { get; set; }
         public long? ProcesoId { get; set; }
