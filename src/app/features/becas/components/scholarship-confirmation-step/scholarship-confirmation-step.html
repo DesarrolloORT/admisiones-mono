@@ -115,15 +115,18 @@
     <h3 class="terms-and-conditions-section__title" id="terms-and-conditions-section__title">
       Términos y condiciones
     </h3>
-    <p>
+    <p class="terms-and-conditions-section__text">
       Lorem ipsum dolor sit amet consectetur adipisicing elit. Perferendis nam reprehenderit cum rem
       architecto sed asperiores
     </p>
     <button ort-tonal-button type="button" (click)="openTermsAndConditions()">
       Leer términos y condiciones
     </button>
-    <ort-checkbox required [checked]="termsAccepted()">
-      <p>
+    <ort-checkbox
+      required
+      [checked]="termsAccepted()"
+      (checkedChange)="onTermsAcceptedChange($event)">
+      <p class="terms-and-conditions-section__text">
         He leído y acepto los
         <button
           class="terms-and-conditions-section__link"
@@ -134,6 +137,9 @@
         de la postulación.
       </p>
     </ort-checkbox>
+    @if (termsError()) {
+    <ort-error>Debes leer y aceptar los términos y condiciones</ort-error>
+    }
   </section>
   <button ort-primary-button type="button" (click)="onConfirmApplication()">
     Confirmar postulación

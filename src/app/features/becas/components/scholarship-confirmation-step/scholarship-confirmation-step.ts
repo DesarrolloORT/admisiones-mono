@@ -3,6 +3,7 @@ import {
   OrtButtonModule,
   OrtCardModule,
   OrtCheckboxModule,
+  OrtError,
   OrtIconModule,
   OrtSnackbarModule,
 } from '@desarrolloort/components';
@@ -19,6 +20,7 @@ import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions
     OrtSnackbarModule,
     OrtCheckboxModule,
     TermsAndConditions,
+    OrtError,
   ],
   templateUrl: './scholarship-confirmation-step.html',
   styleUrls: ['./scholarship-confirmation-step.scss', '../../pages/fbr/fbr.scss'],
@@ -27,12 +29,23 @@ import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions
 export class ScholarshipConfirmationStep {
   showTermsAndConditions = signal(false);
   termsAccepted = signal(false);
+  readonly termsError = signal(false);
 
+  onTermsAcceptedChange(value: string | boolean): void {
+    const checked = value === true || value === 'true';
+
+    this.termsAccepted.set(checked);
+
+    if (checked) {
+      this.termsError.set(false);
+    }
+  }
   openTermsAndConditions(): void {
     this.showTermsAndConditions.set(true);
   }
 
   acceptTermsAndConditions(): void {
+    this.termsError.set(false);
     this.termsAccepted.set(true);
     this.showTermsAndConditions.set(false);
   }
@@ -40,6 +53,11 @@ export class ScholarshipConfirmationStep {
   readonly confirmApplication = output<void>();
 
   protected onConfirmApplication(): void {
+    if (!this.termsAccepted()) {
+      this.termsError.set(true);
+      return;
+    }
+    this.termsError.set(false);
     this.confirmApplication.emit();
   }
 
