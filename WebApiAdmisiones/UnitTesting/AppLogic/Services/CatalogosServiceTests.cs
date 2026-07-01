@@ -119,7 +119,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(2, result.Data.Educacion.OpcionesSiNo.Count);
             Assert.Equal(2, result.Data.Educacion.UbicacionesUltimoAnioSecundaria.Count);
             Assert.Equal(3, result.Data.Educacion.EstadosEducacionSuperiorPrevia.Count);
-            Assert.Equal(2, result.Data.Educacion.TiposBachillerato.Count);
             Assert.Equal(7, result.Data.Educacion.NivelesFormacionTutores.Count);
             Assert.Equal(4, result.Data.DecisionAcademica.AniosEducacionMediaSuperior.Count);
             Assert.Equal(5, result.Data.DecisionAcademica.ApoyosDecision.Count);

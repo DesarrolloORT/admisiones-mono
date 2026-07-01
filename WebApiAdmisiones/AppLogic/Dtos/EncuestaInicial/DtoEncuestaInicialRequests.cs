@@ -6,7 +6,6 @@ namespace AppLogic.Dtos.EncuestaInicial
         public long? ProcesoId { get; set; }
         public long? OrientacionBachilleratoId { get; set; }
         public long? AnioBachillerato { get; set; }
-        public long? TipoBachilleratoId { get; set; }
         public bool? CursaSecundariaActualmente { get; set; }
         public int? VecesRecursaAnioBachillerato { get; set; }
         public bool? RecursaAnioBachillerato { get; set; }

@@ -53,7 +53,6 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 var anio = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
                     ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni);
                 pendientes.AddSi(!anio.HasValue, section, "anioBachillerato");
-                pendientes.AddSi(!TieneTipoBachilleratoRespondido(encuesta.TipoBachillerato), section, "tipoBachilleratoId");
                 if (anio.HasValue && EncuestaInicialCatalogValidator.AnioBachillerTieneOrientaciones(uow, anio.Value))
                     pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
             }
@@ -129,9 +128,6 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 || string.Equals(value, "SE", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(value, "NO", StringComparison.OrdinalIgnoreCase);
         }
-
-        private static bool TieneTipoBachilleratoRespondido(decimal? value)
-            => value.HasValue && EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.TiposBachillerato, value);
 
         private sealed class PendingBuilder(long idEncuestaIni)
         {

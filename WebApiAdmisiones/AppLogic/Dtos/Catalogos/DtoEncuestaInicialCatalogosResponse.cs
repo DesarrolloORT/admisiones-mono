@@ -32,7 +32,6 @@ namespace AppLogic.Dtos.Catalogos
         public IReadOnlyList<DtoComboOption> OpcionesSiNo { get; init; } = [];
         public IReadOnlyList<DtoComboOption> UbicacionesUltimoAnioSecundaria { get; init; } = [];
         public IReadOnlyList<DtoAnioBachilleratoCatalogo> AniosBachillerato { get; init; } = [];
-        public IReadOnlyList<DtoComboOption> TiposBachillerato { get; init; } = [];
         public IReadOnlyList<DtoComboOption> EstadosEducacionSuperiorPrevia { get; init; } = [];
         public IReadOnlyList<DtoUniversidadCatalogo> Universidades { get; init; } = [];
         public IReadOnlyList<DtoComboOption> NivelesFormacionTutores { get; init; } = [];
