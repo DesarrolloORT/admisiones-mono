@@ -1,0 +1,141 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+@if (!isMobile()) {
+<ort-form-field
+  class="responsive-select__desktop"
+  [hideRequiredMarker]="!isRequired() || hasValue()">
+  <ort-label>{{ label() }}</ort-label>
+  <ort-select
+    [attr.aria-label]="ariaLabel()"
+    [disabled]="isDisabled()"
+    [id]="fieldId()"
+    [loading]="loading()"
+    [loadingText]="loadingText()"
+    [multiple]="multiple()"
+    [noOptionsText]="noOptionsText()"
+    [placeholder]="placeholder()"
+    [required]="isRequired()"
+    [valueModel]="value()"
+    (openedChange)="onDesktopOpenedChange($event)"
+    (valueModelChange)="onDesktopValueChange($event)">
+    @if (!multiple()) {
+    <ort-option value="">{{ placeholder() }}</ort-option>
+    } @for (group of groups(); track group.label) { @if (group.label) {
+    <ort-optgroup [label]="group.label">
+      @for (option of group.options; track option.value) {
+      <ort-option [textValue]="option.label" [value]="option.value">
+        @if (option.icon) {
+        <span class="responsive-select__option-with-icon">
+          <img alt="" [src]="option.icon" />
+          <span>{{ option.label }}</span>
+        </span>
+        } @else { {{ option.label }} }
+      </ort-option>
+      }
+    </ort-optgroup>
+    } @else { @for (option of group.options; track option.value) {
+    <ort-option [textValue]="option.label" [value]="option.value">
+      @if (option.icon) {
+      <span class="responsive-select__option-with-icon">
+        <img alt="" [src]="option.icon" />
+        <span>{{ option.label }}</span>
+      </span>
+      } @else { {{ option.label }} }
+    </ort-option>
+    } } }
+  </ort-select>
+  @if (invalid()) {
+  <ort-error>{{ errorText() }}</ort-error>
+  }
+</ort-form-field>
+} @else {
+<div class="responsive-select__mobile">
+  <label class="responsive-select__mobile-label" [for]="mobileId()">
+    {{ label() }} @if (isRequired()) {
+    <span aria-hidden="true">*</span>
+    }
+  </label>
+  <button
+    #mobileTrigger
+    aria-haspopup="dialog"
+    class="responsive-select__mobile-trigger"
+    type="button"
+    [attr.aria-controls]="drawerOpen() ? drawerId() : null"
+    [attr.aria-describedby]="invalid() ? errorId() : null"
+    [attr.aria-expanded]="drawerOpen()"
+    [attr.aria-invalid]="invalid() ? 'true' : null"
+    [disabled]="isDisabled()"
+    [id]="mobileId()"
+    (click)="openDrawer()">
+    <span
+      class="responsive-select__mobile-value"
+      [class.responsive-select__mobile-value--placeholder]="!hasValue()">
+      {{ selectedLabel() }}
+    </span>
+    <ort-icon aria-hidden="true">expand_more</ort-icon>
+  </button>
+  @if (invalid()) {
+  <p class="responsive-select__error" role="alert" [id]="errorId()">{{ errorText() }}</p>
+  }
+</div>
+
+<ort-drawer
+  [aria-label]="drawerTitle()"
+  [attr.id]="drawerId()"
+  [open]="drawerOpen()"
+  [showTracker]="true"
+  (closed)="onDrawerClosed()"
+  (openChange)="onDrawerOpenChange($event)">
+  <div class="responsive-select__drawer">
+    @if (showSearch()) {
+    <ort-form-field>
+      <ort-icon aria-hidden="true" ortPrefix>search</ort-icon>
+      <input
+        ortInput
+        placeholder="Buscar..."
+        type="search"
+        [attr.aria-label]="'Buscar ' + label().toLocaleLowerCase('es-UY')"
+        [value]="search()"
+        (input)="onSearchInput($event)" />
+    </ort-form-field>
+    }
+
+    <div
+      class="responsive-select__drawer-list"
+      [attr.aria-label]="label()"
+      [attr.role]="multiple() ? 'group' : 'radiogroup'">
+      @if (loading()) {
+      <p class="responsive-select__drawer-empty" role="status">{{ loadingText() }}</p>
+      } @else { @for (group of filteredGroups(); track group.label) { @if (group.label) {
+      <p class="responsive-select__drawer-group">{{ group.label }}</p>
+      } @for (option of group.options; track option.value) {
+      <button
+        class="responsive-select__drawer-option"
+        type="button"
+        [attr.aria-checked]="pendingSelected(option.value)"
+        [attr.role]="optionRole()"
+        [class.responsive-select__drawer-option--selected]="pendingSelected(option.value)"
+        (click)="toggleOption(option.value)"
+        (keydown)="onDrawerOptionKeydown($event)">
+        @if (option.icon) {
+        <img alt="" class="responsive-select__drawer-icon" [src]="option.icon" />
+        }
+        <span>{{ option.label }}</span>
+        <span aria-hidden="true" class="responsive-select__drawer-radio"></span>
+      </button>
+      } } @empty {
+      <p class="responsive-select__drawer-empty" role="status">{{ noOptionsText() }}</p>
+      } }
+    </div>
+  </div>
+
+  <ng-container ortDrawerFooter>
+    <button
+      class="responsive-select__drawer-action"
+      ort-primary-button
+      type="button"
+      (click)="confirmDrawerValue()">
+      Seleccionar
+    </button>
+  </ng-container>
+</ort-drawer>
+}

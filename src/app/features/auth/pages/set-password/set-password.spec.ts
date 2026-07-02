@@ -76,6 +76,7 @@ describe('SetPassword', () => {
   });
 
   it('should render accessible visibility toggles for both password fields', () => {
+    setup();
     const buttons = fixture.nativeElement.querySelectorAll('.password-visibility-toggle');
 
     expect(buttons).toHaveLength(2);
@@ -97,6 +98,29 @@ describe('SetPassword', () => {
     expect(passwordActivationMock.completePassword).toHaveBeenCalledWith('NuevaPassword1!');
     expect(authSessionMock.hydrateAuthenticatedSession).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith('/inicio');
+  });
+
+  it('should complete recovery and return to login without creating a session', () => {
+    setup({ token: 'token-123', flow: 'recovery' });
+    const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    component['form'].setValue({
+      password: 'NuevaPassword1!',
+      confirmPassword: 'NuevaPassword1!',
+    });
+    component['submit']();
+
+    expect(authSessionMock.hydrateAuthenticatedSession).not.toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith('/iniciar-sesion');
+  });
+
+  it('should report an expired or already used token', () => {
+    setup();
+    passwordActivationMock.activateLink.mockReturnValue(throwError(() => new Error('expired')));
+
+    component['activateToken']();
+
+    expect(component['tokenError']()).toContain('expiró');
   });
 
   it('should enable submit only when the password form is valid', () => {

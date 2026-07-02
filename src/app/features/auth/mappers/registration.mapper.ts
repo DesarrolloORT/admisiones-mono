@@ -33,19 +33,19 @@ export function toAuthRegisterPersonalData(
   value: RegisterPersonalFormValue
 ): AuthRegisterPersonalData {
   return {
-    primerNombre: value.primerNombre,
-    segundoNombre: value.segundoNombre,
-    primerApellido: value.primerApellido,
-    segundoApellido: value.segundoApellido,
+    primerNombre: value.primerNombre.trim(),
+    segundoNombre: value.segundoNombre.trim(),
+    primerApellido: value.primerApellido.trim(),
+    segundoApellido: value.segundoApellido.trim(),
     fechaNacimiento: toIsoDateOnly(value.fechaNacimiento),
     sexo: value.sexo,
     codigoPais: value.location.codigoPais,
     codigoEstado: value.location.codigoEstado,
     codigoCiudad: value.location.codigoCiudad,
-    direccion: value.direccion,
+    direccion: value.direccion.trim(),
     telefono1: toBackendPhone(value.telefono1),
-    mail: value.mail,
-    verificacionMail: value.verificacionMail,
+    mail: value.mail.trim().toLowerCase(),
+    verificacionMail: value.verificacionMail.trim().toLowerCase(),
   };
 }
 
@@ -116,7 +116,7 @@ export function toVerifyIdentityPayload(
   return {
     tipoDocumento: input.identity.documentType,
     documento: formatDocumentForBackend(input.identity.documentType, input.identity.documentNumber),
-    primerApellido: input.primerApellido,
-    mail: input.mail,
+    primerApellido: input.primerApellido.trim(),
+    mail: input.mail.trim().toLowerCase(),
   };
 }

@@ -56,7 +56,6 @@
       <ort-form-field [hideRequiredMarker]="!!form.controls.password.value">
         <ort-label>Contraseña</ort-label>
         <input
-          #passwordInput
           formControlName="password"
           ortInput
           [attr.autocomplete]="'current-password'"
@@ -76,12 +75,7 @@
         }
       </ort-form-field>
 
-      <a
-        class="auth-link"
-        routerLink="/recuperar-acceso"
-        [queryParams]="{ tipoDoc: form.controls.documentType.value, doc: form.controls.documentNumber.value }">
-        ¿Olvidaste tu usuario o contraseña?
-      </a>
+      <a class="auth-link" routerLink="/recuperar-acceso">¿Olvidaste tu usuario o contraseña?</a>
     </section>
 
     <button

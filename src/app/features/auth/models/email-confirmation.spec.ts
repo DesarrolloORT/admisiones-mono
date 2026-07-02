@@ -1,5 +1,11 @@
+import { isEmailConfirmationData, RECOVER_ACCESS_EMAIL_CONFIRMATION } from './email-confirmation';
+
 describe('EmailConfirmationData', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('accepts complete confirmation data', () => {
+    expect(isEmailConfirmationData(RECOVER_ACCESS_EMAIL_CONFIRMATION)).toBe(true);
+  });
+
+  it('rejects incomplete confirmation data', () => {
+    expect(isEmailConfirmationData({ title: 'Incomplete' })).toBe(false);
   });
 });

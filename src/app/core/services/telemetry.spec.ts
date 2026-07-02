@@ -93,7 +93,10 @@ describe('TelemetryService', () => {
   it('buffers http response and error telemetry', () => {
     service.initialize();
     const request = service.addHttpHeaders(
-      new HttpRequest('GET', new URL('/Persona/DatosPersona', environment.API_URL).toString())
+      new HttpRequest(
+        'GET',
+        new URL('/Persona/DatosPersona?token=secret-token', environment.API_URL).toString()
+      )
     );
     const startedAt = service.startHttpRequest(request);
 
@@ -111,5 +114,6 @@ describe('TelemetryService', () => {
         expect.objectContaining({ name: 'admisiones.http.error' }),
       ])
     );
+    expect(JSON.stringify(window.__ADMISIONES_TELEMETRY__)).not.toContain('secret-token');
   });
 });

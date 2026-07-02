@@ -1,0 +1,22 @@
+.inscription-screen__header h2 {
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-heading-level4-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.inscription-subsection > h2,
+.inscription-subsection > h3,
+.inscription-subsection > h4 {
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-heading-level6-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level6-line-height);
+}
+
+.inscription-form__stack > h5 {
+  font-weight: var(--ort-sys-font-weight-semibold);
+  font-size: var(--ort-sys-body-text-size);
+  font-family: var(--ort-sys-font-family-plain);
+  line-height: var(--ort-sys-body-line-height);
+}

@@ -1,18 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
-  ElementRef,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
   OrtFormFieldModule,
@@ -52,11 +49,8 @@ import { AuthSessionService } from '../../services/auth-session';
 export class Login {
   private readonly document = inject(DOCUMENT);
   private readonly authSession = inject(AuthSessionService);
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
-  private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
-
   protected readonly form = createLoginForm();
   protected readonly isSubmitting = signal(false);
   protected readonly showPassword = signal(false);
@@ -95,20 +89,10 @@ export class Login {
   });
 
   protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
-  protected readonly prefilled = signal(false);
-
   constructor() {
-    window.__TEST_RUN_ID__ = 'manual-front-telemetry-20260529-1';
-
     effect(() => {
       syncDocumentNumberValidators(this.form.controls.documentNumber, this.documentTypeValue());
     });
-
-    this.prefillFromQueryParams();
-
-    if (this.prefilled()) {
-      afterNextRender(() => this.passwordInput()?.nativeElement.focus());
-    }
   }
 
   protected togglePasswordVisibility(): void {
@@ -141,14 +125,7 @@ export class Login {
           if (outcome.kind === 'twoFactorRequired') {
             this.form.controls.password.reset('');
             this.router
-              .navigate(['/confirmacion-correo/verificar-codigo'], {
-                state: {
-                  email: outcome.maskedEmail,
-                  sessionId: outcome.sessionId,
-                  documentType,
-                  documentNumber: cleanedDocumentNumber,
-                },
-              })
+              .navigateByUrl('/confirmacion-correo/verificar-codigo')
               .finally(() => this.isSubmitting.set(false));
             return;
           }
@@ -162,23 +139,6 @@ export class Login {
           this.snackbar.error(message);
         },
       });
-  }
-
-  private prefillFromQueryParams(): void {
-    const params = this.route.snapshot.queryParamMap;
-    const tipoDoc = params.get('tipoDoc');
-    const doc = params.get('doc');
-
-    if (tipoDoc) {
-      this.form.controls.documentType.setValue(tipoDoc);
-    }
-    if (doc) {
-      this.form.controls.documentNumber.setValue(doc);
-    }
-
-    if (tipoDoc && doc) {
-      this.prefilled.set(true);
-    }
   }
 
   private getApiErrorMessage(error: unknown, fallback: string): string {

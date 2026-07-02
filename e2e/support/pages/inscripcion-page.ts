@@ -61,7 +61,7 @@ export class InscripcionPage {
   public async fillEducation(): Promise<void> {
     await this.chooseRadio('cursaSecundaria', 'Sí, estoy cursando');
     await this.chooseRadio('anioSecundaria', 'Durante secundaria');
-    await this.chooseRadio('tipoBachillerato', 'Científico');
+    await this.select('tipoBachillerato', 'Científico');
     await this.select('orientacion', 'Matemática');
     await this.chooseRadio('lugarSecundaria', 'Uruguay');
     await this.chooseRadio('estadoEducacionSuperior', 'No cursé estudios superiores');
@@ -175,7 +175,7 @@ export class InscripcionPage {
     await this.expectMainFocus();
     await this.chooseRadioWithKeyboard('cursaSecundaria', 'Sí, estoy cursando');
     await this.chooseRadioWithKeyboard('anioSecundaria', 'Durante secundaria');
-    await this.chooseRadioWithKeyboard('tipoBachillerato', 'Científico');
+    await this.selectWithKeyboard('tipoBachillerato', 'Científico');
     await this.selectWithKeyboard('orientacion', 'Matemática');
     await this.chooseRadioWithKeyboard('lugarSecundaria', 'Uruguay');
     await this.chooseRadioWithKeyboard('estadoEducacionSuperior', 'No cursé estudios superiores');
@@ -303,13 +303,45 @@ export class InscripcionPage {
   }
 
   private async select(controlName: string, option: string): Promise<void> {
+    const responsiveSelect = this.responsiveSelect(controlName);
+    if ((await responsiveSelect.count()) > 0) {
+      const mobileTrigger = responsiveSelect.locator('.responsive-select__mobile-trigger');
+      if (await mobileTrigger.isVisible()) {
+        await this.selectFromResponsiveDrawer(mobileTrigger, option);
+        return;
+      }
+
+      const combobox = responsiveSelect.locator('ort-select');
+      await expect(combobox).toBeEnabled();
+      await selectOrtOption(this.page, combobox, option);
+      return;
+    }
+
     const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
     await expect(combobox).toBeEnabled();
     await selectOrtOption(this.page, combobox, option);
   }
 
   private async selectWithKeyboard(controlName: string, option: string): Promise<void> {
-    const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
+    const responsiveSelect = this.responsiveSelect(controlName);
+    if ((await responsiveSelect.count()) > 0) {
+      const mobileTrigger = responsiveSelect.locator('.responsive-select__mobile-trigger');
+      if (await mobileTrigger.isVisible()) {
+        await this.selectFromResponsiveDrawerWithKeyboard(mobileTrigger, option);
+        return;
+      }
+
+      await this.selectOrtWithKeyboard(responsiveSelect.locator('ort-select'), option);
+      return;
+    }
+
+    await this.selectOrtWithKeyboard(
+      this.page.locator(`ort-select[formcontrolname="${controlName}"]`),
+      option
+    );
+  }
+
+  private async selectOrtWithKeyboard(combobox: Locator, option: string): Promise<void> {
     await expect(combobox).toBeEnabled();
     await this.tabTo(combobox);
     await this.page.keyboard.press('Enter');
@@ -339,6 +371,50 @@ export class InscripcionPage {
     }
 
     throw new Error(`No se pudo seleccionar "${option}" con teclado.`);
+  }
+
+  private async selectFromResponsiveDrawer(trigger: Locator, option: string): Promise<void> {
+    await expect(trigger).toBeEnabled();
+    await trigger.click();
+    await expect(this.page.getByRole('dialog', { name: /Seleccionar/ })).toBeVisible();
+
+    const drawerOption = await this.responsiveDrawerOption(option);
+    await expect(drawerOption).toBeVisible();
+    await drawerOption.click();
+    await this.page.getByRole('button', { name: 'Seleccionar' }).click();
+    await expect(trigger).toContainText(option);
+  }
+
+  private async selectFromResponsiveDrawerWithKeyboard(
+    trigger: Locator,
+    option: string
+  ): Promise<void> {
+    await expect(trigger).toBeEnabled();
+    await this.tabTo(trigger);
+    await this.page.keyboard.press('Enter');
+    await expect(this.page.getByRole('dialog', { name: /Seleccionar/ })).toBeVisible();
+
+    const drawerOption = await this.responsiveDrawerOption(option);
+    await expect(drawerOption).toBeVisible();
+    await drawerOption.focus();
+    await this.page.keyboard.press('Space');
+    await expect(drawerOption).toHaveAttribute('aria-checked', 'true');
+
+    const confirmButton = this.page.getByRole('button', { name: 'Seleccionar' });
+    await this.tabTo(confirmButton);
+    await this.page.keyboard.press('Enter');
+    await expect(trigger).toBeFocused();
+  }
+  private responsiveSelect(controlName: string): Locator {
+    return this.page.locator(`app-responsive-select[formcontrolname="${controlName}"]`);
+  }
+
+  private async responsiveDrawerOption(option: string): Promise<Locator> {
+    const name = new RegExp(`^${escapeRegExp(option)}(?:\\s|$)`);
+    return this.page
+      .getByRole('radio', { name })
+      .or(this.page.getByRole('checkbox', { name }))
+      .first();
   }
 
   private async chooseRadio(controlName: string, label: string): Promise<void> {

@@ -48,6 +48,7 @@ describe('AccountEndpoint', () => {
         phone: '99123456',
         email: 'gabrielaortiz@gmail.com',
         emailVerification: 'gabrielaortiz@gmail.com',
+        identityRestricted: false,
       });
     });
 

@@ -6,9 +6,10 @@ export async function selectOrtOption(
   optionName: string | RegExp
 ): Promise<void> {
   await trigger.evaluate((element: HTMLElement) =>
-    element.scrollIntoView({ block: 'center', inline: 'nearest' })
+    element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   );
-  await trigger.click();
+  await trigger.focus();
+  await page.keyboard.press('Enter');
 
   const optionByRole = page.getByRole('option', { name: optionName });
 
@@ -26,7 +27,10 @@ export async function selectOrtOption(
 }
 
 export async function clickRadioByName(page: Page, name: string | RegExp): Promise<void> {
-  const radioCard = page.locator('ort-radio-button').filter({ hasText: name }).first();
+  const radioCard = page
+    .locator('ort-radio-button, ort-radio-card-button')
+    .filter({ hasText: name })
+    .first();
 
   if ((await radioCard.count()) > 0) {
     await radioCard.click();
@@ -36,7 +40,7 @@ export async function clickRadioByName(page: Page, name: string | RegExp): Promi
   const radio = page.getByRole('radio', { name });
 
   if ((await radio.count()) > 0) {
-    await radio.first().check({ force: true });
+    await radio.first().evaluate((element: HTMLInputElement) => element.click());
     return;
   }
 

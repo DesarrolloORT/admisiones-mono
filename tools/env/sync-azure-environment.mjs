@@ -23,10 +23,6 @@ function getArg(name, defaultValue = undefined) {
   return value;
 }
 
-function hasFlag(name) {
-  return process.argv.includes(`--${name}`);
-}
-
 function info(message) {
   console.log(`[env-sync] ${message}`);
 }
@@ -45,24 +41,6 @@ function fail(message, error = undefined) {
 
   console.error('');
   process.exit(1);
-}
-
-async function readJsonIfExists(filePath) {
-  try {
-    const content = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
-}
-
-async function fileExists(filePath) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function validateRequiredArgs({ project, env, endpoint }) {
@@ -187,60 +165,84 @@ function assertAzureCliAvailable() {
   );
 }
 
-async function writeGeneratedEnvironment(outputPath, config, metadata) {
-  const fileContent = `// AUTO-GENERATED — DO NOT EDIT MANUALLY
-// Source: Azure App Configuration
-// Key: ${metadata.key}
-// Label: ${metadata.label}
-// ETag: ${metadata.etag}
-// LastModified: ${metadata.lastModified ?? 'unknown'}
-// GeneratedAtUtc: ${new Date().toISOString()}
+async function writeGeneratedEnvironment(outputPath, config) {
+  const fileContent = `export const generatedEnvironment = ${JSON.stringify(config, null, 2)} as const;\n`;
 
-export const generatedEnvironment = ${JSON.stringify(config, null, 2)} as const;
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, fileContent, 'utf8');
+}
+
+function escapeXmlAttribute(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function getCspPolicy(config) {
+  const policy = config.CSP_POLICY ?? config.cspPolicy;
+  return typeof policy === 'string' && policy.trim() ? policy.trim() : null;
+}
+
+async function writeWebConfig(outputPath, cspPolicy) {
+  const fileContent = `<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <httpProtocol>
+      <customHeaders>
+        <add name="Cache-Control" value="no-cache" />
+        <add name="X-Content-Type-Options" value="nosniff" />
+        <add name="X-Frame-Options" value="SAMEORIGIN" />
+        <add name="Content-Security-Policy" value="${escapeXmlAttribute(cspPolicy)}" />
+        <add name="Referrer-Policy" value="no-referrer" />
+        <add name="Permissions-Policy" value="camera=(), geolocation=(), microphone=()" />
+        <add name="Strict-Transport-Security" value="max-age=31536000; includeSubDomains" />
+      </customHeaders>
+    </httpProtocol>
+    <staticContent>
+      <remove fileExtension=".json" />
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+      <remove fileExtension=".webmanifest" />
+      <mimeMap fileExtension=".webmanifest" mimeType="application/manifest+json" />
+    </staticContent>
+    <rewrite>
+      <rules>
+        <rule name="Angular Routes" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
 `;
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, fileContent, 'utf8');
 }
 
-async function writeCache(cachePath, metadata) {
-  const cache = {
-    project: metadata.project,
-    environment: metadata.env,
-    key: metadata.key,
-    label: metadata.label,
-    etag: metadata.etag,
-    lastModified: metadata.lastModified,
-    syncedAtUtc: new Date().toISOString(),
-  };
-
-  await fs.mkdir(path.dirname(cachePath), { recursive: true });
-  await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), 'utf8');
-}
-
 async function main() {
   const project = getArg('project');
   const env = getArg('env');
   const endpoint = getArg('endpoint', process.env.AZURE_APPCONFIG_ENDPOINT);
-  const force = hasFlag('force');
 
   validateRequiredArgs({ project, env, endpoint });
 
   const key = getArg('key', `frontend:${project}:environment`);
   const label = getArg('label', env);
   const customAzureCliDir = getArg('azure-cli-dir', undefined);
-
   const outputPath = getArg('output', path.normalize('src/environments/generated-environment.ts'));
-
-  const cachePath = getArg('cache', path.normalize(`.ort/env-cache/${project}-${env}.json`));
+  const webConfigPath = getArg('web-config', path.normalize('src/web.config'));
 
   info(`Project: ${project}`);
   info(`Environment: ${env}`);
-  info(`Azure endpoint: ${endpoint}`);
-  info(`Azure key: ${key}`);
-  info(`Azure label: ${label}`);
   info(`Output: ${outputPath}`);
-  info(`Cache: ${cachePath}`);
+  info(`Web config: ${webConfigPath}`);
 
   ensureAzureCliInPathOnWindows(customAzureCliDir);
   assertAzureCliAvailable();
@@ -274,27 +276,9 @@ async function main() {
     );
   }
 
-  const remoteEtag = setting.etag;
-  const remoteLastModified = setting.lastModified ? setting.lastModified.toISOString() : undefined;
-
   if (!setting.value || setting.value.trim().length === 0) {
     fail(`La key "${key}" con label "${label}" no tiene value.`);
   }
-
-  const localCache = await readJsonIfExists(cachePath);
-  const outputExists = await fileExists(outputPath);
-
-  if (!force && outputExists && localCache?.etag && localCache.etag === remoteEtag) {
-    info(`OK. Environment local actualizado. ETag=${remoteEtag}`);
-
-    if (remoteLastModified) {
-      info(`Última modificación en Azure: ${remoteLastModified}`);
-    }
-
-    return;
-  }
-
-  info('Environment nuevo o modificado. Regenerando archivo local...');
 
   if (setting.contentType && !setting.contentType.includes('application/json')) {
     warn(`El content type recibido es "${setting.contentType}". Se esperaba "application/json".`);
@@ -324,29 +308,16 @@ async function main() {
 
   validateJsonConfig(config);
 
-  await writeGeneratedEnvironment(outputPath, config, {
-    key,
-    label,
-    etag: remoteEtag,
-    lastModified: remoteLastModified,
-  });
+  const cspPolicy = getCspPolicy(config);
+  if (!cspPolicy) {
+    fail('El environment de Azure debe incluir CSP_POLICY o cspPolicy para generar web.config.');
+  }
 
-  await writeCache(cachePath, {
-    project,
-    env,
-    key,
-    label,
-    etag: remoteEtag,
-    lastModified: remoteLastModified,
-  });
+  await writeGeneratedEnvironment(outputPath, config);
+  await writeWebConfig(webConfigPath, cspPolicy);
 
   info(`Generado: ${outputPath}`);
-  info(`Cache actualizada: ${cachePath}`);
-  info(`ETag actual: ${remoteEtag}`);
-
-  if (remoteLastModified) {
-    info(`Última modificación en Azure: ${remoteLastModified}`);
-  }
+  info(`Generado: ${webConfigPath}`);
 }
 
 main().catch(error => {

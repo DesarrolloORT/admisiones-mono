@@ -79,4 +79,26 @@ describe('RecoverAccess', () => {
       'No se pudo procesar la solicitud. Intentá nuevamente.'
     );
   });
+
+  it('does not reveal whether an account exists', () => {
+    passwordServiceMock.recoverPassword.mockReturnValue(
+      throwError(() => ({
+        status: 404,
+        message: 'Account not found',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('not found'),
+      }))
+    );
+    component['form'].setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      primerApellido: 'Silva',
+    });
+
+    component['submit']();
+
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/recuperar-acceso');
+    expect(snackbarMock.error).not.toHaveBeenCalled();
+  });
 });

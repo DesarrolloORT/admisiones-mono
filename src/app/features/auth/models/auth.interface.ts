@@ -5,13 +5,11 @@ export interface AuthLoginRequest {
   password: string;
 }
 
-// Frontend session model used by local state and storage.
+// Cookie-backed session metadata kept only in memory.
 export interface AuthSession {
-  token: string | null;
   documentType: string;
   documentNumber: string;
   primerNombre: string;
-  expiresAt: string | null;
 }
 
 export interface AuthIdentityData {

@@ -14,7 +14,6 @@ describe('Login', () => {
     login: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
-  let navigateSpy: ReturnType<typeof vi.spyOn>;
   let snackbarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
@@ -23,11 +22,9 @@ describe('Login', () => {
         of({
           kind: 'authenticated',
           session: {
-            token: 'token-123',
             documentType: 'CI',
             documentNumber: '12345678',
             primerNombre: 'Ana',
-            expiresAt: null,
           },
         })
       ),
@@ -44,7 +41,6 @@ describe('Login', () => {
     });
 
     navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -116,7 +112,7 @@ describe('Login', () => {
     expect(snackbarMock.error).toHaveBeenCalledWith('Credenciales inválidas.');
   });
 
-  it('should navigate to email confirmation with state when 2FA is required', () => {
+  it('should navigate to email confirmation without putting identity in router state', () => {
     authMock.login.mockReturnValue(
       of({
         kind: 'twoFactorRequired',
@@ -133,15 +129,7 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/confirmacion-correo/verificar-codigo'], {
-      state: {
-        email: 'c******a@gmail.******',
-        sessionId: 'ab4df653422a4c19be2867c08355fa27',
-        documentType: 'CI',
-        documentNumber: '11111111',
-      },
-    });
-    expect(navigateByUrlSpy).not.toHaveBeenCalled();
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/verificar-codigo');
     expect(component['form'].controls.password.value).toBe('');
   });
 });

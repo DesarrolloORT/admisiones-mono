@@ -1,0 +1,38 @@
+<dialog
+  #dialog
+  aria-modal="true"
+  class="inscripcion-dialog"
+  role="dialog"
+  [attr.aria-describedby]="helperText() ? descriptionId : null"
+  [attr.aria-labelledby]="titleId"
+  (cancel)="requestClose($event)"
+  (click)="onDialogClick($event)"
+  (keydown)="onDialogKeydown($event)">
+  <section class="inscripcion-dialog__sheet">
+    <span aria-hidden="true" class="inscripcion-dialog__tracker"></span>
+
+    <header class="inscripcion-dialog__header">
+      <div>
+        <h2 [id]="titleId">{{ title() }}</h2>
+        @if (helperText()) {
+        <p [id]="descriptionId">{{ helperText() }}</p>
+        }
+      </div>
+      <button
+        ort-icon-button
+        type="button"
+        [attr.aria-label]="closeLabel()"
+        (click)="requestClose()">
+        <ort-icon aria-hidden="true">close</ort-icon>
+      </button>
+    </header>
+
+    <div class="inscripcion-dialog__content">
+      <ng-content />
+    </div>
+
+    <footer class="inscripcion-dialog__actions">
+      <ng-content select="[inscripcionDialogActions]" />
+    </footer>
+  </section>
+</dialog>

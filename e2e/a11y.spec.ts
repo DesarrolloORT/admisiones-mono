@@ -5,6 +5,7 @@ import { mockApi } from './support/api-mocks';
 import { HomePage } from './support/pages/home-page';
 import { InscripcionPage } from './support/pages/inscripcion-page';
 import { LoginPage } from './support/pages/login-page';
+import { clickRadioByName } from './support/pages/ort-controls';
 import { RegisterPage } from './support/pages/register-page';
 import { addAuthenticatedSession } from './support/session';
 
@@ -130,6 +131,40 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     );
   });
 
+  test('opens the enrollment select drawer with keyboard on mobile @a11y', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile drawer behavior only.');
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await clickRadioByName(page, /^Carrera universitaria/);
+
+    const trigger = page.locator('#academic-proposal-career-mobile');
+    await expect(trigger).toBeEnabled();
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+
+    const dialog = page.getByRole('dialog', { name: 'Seleccionar carrera' });
+    await expect(dialog).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(trigger).toHaveAttribute('aria-controls', 'academic-proposal-career-drawer');
+    await expectNoAxeViolations(page);
+
+    const option = dialog.getByRole('radio', { name: 'Licenciatura en Diseño Gráfico' });
+    await option.focus();
+    await page.keyboard.press('Space');
+    await expect(option).toHaveAttribute('aria-checked', 'true');
+
+    const confirm = page.getByRole('button', { name: 'Seleccionar' });
+    await confirm.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+    await expect(trigger).toContainText('Licenciatura en Diseño Gráfico');
+  });
   test('keeps the enrollment survey, payment and confirmation dialog accessible @a11y', async ({
     page,
   }) => {

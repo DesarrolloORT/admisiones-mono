@@ -74,14 +74,17 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     if (path === '/Catalogos/PaisesEstadosCiudades') {
       return fulfillOperation(route, countryLocations());
     }
-
     if (path === '/Catalogos/Carreras') {
       return fulfillOperation(route, [
         {
-          idProducto: 20,
           idNivelProducto: 1,
-          nombreProducto: 'Licenciatura en Diseño Gráfico',
           nombreNivelProducto: 'Carrera universitaria',
+          escuelas: [
+            {
+              nombreEscuela: 'Facultad de Diseño',
+              productos: [{ idProducto: 20, nombreProducto: 'Licenciatura en Diseño Gráfico' }],
+            },
+          ],
         },
       ]);
     }

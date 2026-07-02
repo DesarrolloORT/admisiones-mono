@@ -9,6 +9,11 @@ import {
 import { LocationValue } from '../../catalogs/models/location-value';
 import { isCedulaDocumentType } from '../models/document-number';
 
+const DOCUMENT_TYPE_VALIDATORS = [Validators.required, Validators.pattern(/^(CI|PS|DE)$/)];
+const NAME_MAX_LENGTH = 100;
+const EMAIL_MAX_LENGTH = 254;
+const ADDRESS_MAX_LENGTH = 200;
+
 export interface LoginForm {
   documentType: FormControl<string>;
   documentNumber: FormControl<string>;
@@ -44,7 +49,7 @@ export function createLoginForm(): FormGroup<LoginForm> {
   return new FormGroup<LoginForm>({
     documentType: new FormControl('CI', {
       nonNullable: true,
-      validators: [Validators.required],
+      validators: DOCUMENT_TYPE_VALIDATORS,
     }),
     documentNumber: new FormControl('', {
       nonNullable: true,
@@ -72,6 +77,7 @@ export function createIdentityForm(): FormGroup<IdentityForm> {
 
 export const NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
   Validators.required,
+  Validators.maxLength(30),
   Validators.pattern(/^[0-9A-Za-z-]+$/),
 ];
 
@@ -97,10 +103,22 @@ export function syncDocumentNumberValidators(
 export function createPersonalForm(): FormGroup<PersonalForm> {
   return new FormGroup<PersonalForm>(
     {
-      primerNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      segundoNombre: new FormControl('', { nonNullable: true }),
-      primerApellido: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      segundoApellido: new FormControl('', { nonNullable: true }),
+      primerNombre: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
+      }),
+      segundoNombre: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.maxLength(NAME_MAX_LENGTH)],
+      }),
+      primerApellido: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
+      }),
+      segundoApellido: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.maxLength(NAME_MAX_LENGTH)],
+      }),
       fechaNacimiento: new FormControl<string | Date | null>(null, {
         validators: [Validators.required],
       }),
@@ -109,18 +127,21 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
         { codigoPais: null, codigoEstado: null, codigoCiudad: null },
         { nonNullable: true }
       ),
-      direccion: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      direccion: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.maxLength(ADDRESS_MAX_LENGTH)],
+      }),
       telefono1: new FormControl<PhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
         updateOn: 'blur',
       }),
       mail: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.email],
+        validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX_LENGTH)],
       }),
       verificacionMail: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.email],
+        validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX_LENGTH)],
       }),
     },
     {
@@ -143,7 +164,7 @@ export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
   return new FormGroup<RecoverAccessForm>({
     documentType: new FormControl('CI', {
       nonNullable: true,
-      validators: [Validators.required],
+      validators: DOCUMENT_TYPE_VALIDATORS,
     }),
     documentNumber: new FormControl('', {
       nonNullable: true,
@@ -151,7 +172,7 @@ export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
     }),
     primerApellido: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required],
+      validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
     }),
   });
 }

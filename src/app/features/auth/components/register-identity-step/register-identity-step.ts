@@ -57,7 +57,11 @@ export class RegisterIdentityStep {
   public readonly documentTypes = input.required<Observable<DocumentType[]>>();
   public readonly isCedulaInput = input(false);
   public readonly documentNumberLabel = input('Nro. de documento');
-  public readonly acceptedDocumentTypes = input<string[]>(['image/*', 'application/pdf']);
+  public readonly acceptedDocumentTypes = input<string[]>([
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+  ]);
   public readonly isSubmitting = input(false);
   public readonly isRecognizingDocument = input(false);
   public readonly showLoginAction = input(false);

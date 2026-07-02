@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -49,6 +49,7 @@ interface SetPasswordForm {
 })
 export class SetPassword {
   private readonly document = inject(DOCUMENT);
+  private readonly location = inject(Location);
   private readonly passwordActivation = inject(PasswordActivationService);
   private readonly authSession = inject(AuthSessionService);
   private readonly route = inject(ActivatedRoute);
@@ -179,6 +180,14 @@ export class SetPassword {
           ? 'Contraseña actualizada correctamente.'
           : 'Cuenta activada correctamente.';
         this.snackbar.success(message);
+
+        if (this.isRecovery) {
+          void this.router
+            .navigateByUrl('/iniciar-sesion')
+            .finally(() => this.isSubmittingState.set(false));
+          return;
+        }
+
         this.authSession.hydrateAuthenticatedSession().subscribe({
           next: () => {
             void this.router
@@ -204,6 +213,11 @@ export class SetPassword {
       this.tokenErrorState.set('El enlace no es válido. Verificá que copiaste la URL completa.');
       return;
     }
+
+    this.location.replaceState(
+      this.router.url.split('?')[0] || '/crear-password',
+      this.isRecovery ? 'flow=recovery' : ''
+    );
 
     this.passwordActivation.activateLink(token).subscribe({
       error: () =>

@@ -134,7 +134,7 @@ export class RegisterFlowFacade {
       }
 
       if (flow === 'user-exists' || flow === 'application-exists') {
-        this.showGoToLoginSnackbar(result.message, identity.documentType, identity.documentNumber);
+        this.showGoToLoginSnackbar(result.message);
         return;
       }
 
@@ -153,10 +153,7 @@ export class RegisterFlowFacade {
   }
 
   public navigateToLogin(): void {
-    const identity = this.getCleanIdentityValues();
-    void this.router.navigate(['/iniciar-sesion'], {
-      queryParams: { tipoDoc: identity.documentType, doc: identity.documentNumber },
-    });
+    void this.router.navigateByUrl('/iniciar-sesion');
   }
 
   public submitPersonalData(): void {
@@ -321,11 +318,7 @@ export class RegisterFlowFacade {
     this.snackbar.error(message);
   }
 
-  private showGoToLoginSnackbar(
-    backendMessage: string | null,
-    documentType: string,
-    documentNumber: string
-  ): void {
+  private showGoToLoginSnackbar(backendMessage: string | null): void {
     const message = backendMessage ?? 'Ya existe un registro con este documento.';
     this.snackbar.show({
       message,
@@ -333,9 +326,7 @@ export class RegisterFlowFacade {
       actionLabel: 'Iniciar sesión',
       duration: 10000,
       action: () => {
-        void this.router.navigate(['/iniciar-sesion'], {
-          queryParams: { tipoDoc: documentType, doc: documentNumber },
-        });
+        void this.router.navigateByUrl('/iniciar-sesion');
       },
     });
   }

@@ -13,7 +13,7 @@ export const routes: Routes = [
     path: 'inscripciones',
     canMatch: [authMatchGuard],
     canActivate: [authGuard],
-    loadChildren: () => import('./features/inscripciones/inscripciones.routes').then(m => m.routes),
+    loadChildren: () => import('./features/inscriptions/inscriptions.routes').then(m => m.routes),
   },
   {
     path: 'becas',
