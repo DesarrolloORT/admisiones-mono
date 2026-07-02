@@ -27,7 +27,7 @@ npm run test:e2e:smoke
 Si corresponde actualizar snapshots:
 
 ```bash
-npm run test:snapshot
+npm run test:ci
 ```
 
 ## Commits y pre-commit

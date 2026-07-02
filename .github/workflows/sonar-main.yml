@@ -74,10 +74,5 @@ jobs:
             -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
             -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
             -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
-            -D "sonar.scm.disabled=true" ^
-            -D "sonar.sources=src" ^
-            -D "sonar.tests=src" ^
-            -D "sonar.exclusions=**/*.spec.ts,src/environments/**" ^
-            -D "sonar.javascript.lcov.reportPaths=coverage/admisiones/lcov.info" ^
-            -D "sonar.test.inclusions=**/*.spec.ts" ^
-            -D "sonar.sourceEncoding=UTF-8"
+            -D "sonar.qualitygate.wait=true" ^
+            -D "sonar.qualitygate.timeout=300"

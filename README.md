@@ -166,27 +166,38 @@ de validacion, criterios manuales y gaps de ORT Components estan documentados en
 Estos son algunos de los scripts disponibles para el proyecto:
 
 - `start`: inicia el servidor local de desarrollo.
-- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
 - `start:o`: inicia el servidor local y abre el navegador.
+- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
 - `build`: compila la aplicacion para produccion.
 - `build:dev`: compila la aplicacion para desarrollo.
+- `build:staging`: compila la aplicacion para preproduccion (mismas keys inyectadas por CI).
+- `build:prod`: compila la aplicacion para produccion con refresh de env.
 - `lint`: revisa y corrige el estilo del codigo.
 - `lint:check`: valida formato, disables justificados, estilo y contratos sin modificar archivos.
 - `check-disable-comments`: valida que `eslint-disable` y `stylelint-disable` indiquen regla concreta y motivo.
 - `test`: ejecuta las pruebas unitarias.
+- `test:watch`: ejecuta pruebas en modo observacion.
 - `test:ci`: ejecuta las pruebas unitarias para CI.
+- `test:coverage`: ejecuta pruebas con reporte de cobertura.
+- `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
 - `test:a11y`: ejecuta Playwright + axe en desktop y mobile.
 - `test:e2e:smoke`: ejecuta los E2E rapidos y bloqueantes para PR.
 - `test:e2e:regression`: ejecuta manualmente flujos completos antes de releases,
   hotfixes delicados o cambios en registro/login/datos personales.
 - `test:e2e:ui`: abre Playwright UI para elegir y observar cualquier E2E.
 - `test:e2e:report`: abre el reporte HTML de la ultima corrida Playwright.
-- `test:coverage`: ejecuta pruebas con reporte de cobertura.
-- `test:watch`: ejecuta pruebas en modo observacion.
-- `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
-- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, tests, build dev).
-- `sonar:local`: ejecuta coverage y SonarQube local si estan configurados `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y `sonar-scanner`.
 - `ci`: ejecuta validaciones principales de CI (`lint:check`, `test:ci`, `build`, `test:a11y`, `test:e2e:smoke`).
+- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, `check-missing-tests`, tests, build dev).
+- `check-missing-tests`: verifica que cada fuente tenga su spec asociado.
+- `generate-tests`: genera specs faltantes a partir de las fuentes sin cobertura.
+- `sonar:local`: ejecuta coverage y SonarQube local si estan configurados `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y `sonar-scanner`.
+- `sonar:gate-local`: quality gate local (lint, cobertura con umbral y duplicacion) sin servidor ni token.
+- `update-api`: regenera contratos de API desde el swagger.
+- `check-api-contracts`: valida que los adapters no filtren tipos generados.
+- `env:sync`: sincroniza variables de entorno desde Azure App Configuration.
+- `env:refresh`: fuerza refresco del cache de variables de entorno.
+- `env:offline`: usa el cache local sin conectar a Azure.
+- `env:cache:clear`: limpia el cache local de variables de entorno.
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
