@@ -22,9 +22,11 @@ namespace AppLogic.Helpers
 
         internal static bool? SNToBool(string? value)
         {
-            if (string.Equals(value, Si, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(value, Si, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, "S", StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (string.Equals(value, No, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(value, No, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, "N", StringComparison.OrdinalIgnoreCase))
                 return false;
 
             return null;

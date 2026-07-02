@@ -166,7 +166,7 @@ namespace AppLogic.Helpers
             if (!request.TrabajaActualmente.HasValue)
                 return false;
 
-            persona.TrabajaActualmente = EncuestaInicialState.BoolToSN(request.TrabajaActualmente.Value);
+            persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
             persona.TipoJornada = request.TrabajaActualmente.Value
                 ? request.TipoJornadaId.HasValue ? (byte)request.TipoJornadaId.Value : persona.TipoJornada
                 : null;

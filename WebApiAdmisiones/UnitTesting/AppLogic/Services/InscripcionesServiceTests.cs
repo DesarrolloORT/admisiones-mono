@@ -1038,7 +1038,7 @@ namespace UnitTesting.AppLogic.Services
                 CodigoPersona = 123,
                 TipoDocumento = "DE",
                 Documento = "123",
-                TrabajaActualmente = "SI",
+                TrabajaActualmente = "S",
                 TipoJornada = 2
             });
 
@@ -1240,7 +1240,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             personaRepo.As<IRepository<Persona>>()
-                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "SI")), Times.Once);
+                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
         }
 
         [Fact]
