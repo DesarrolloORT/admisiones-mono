@@ -3,12 +3,15 @@
 Este proyecto obtiene la configuración frontend desde Azure App Configuration.
 Azure es la fuente de verdad; el repo no guarda valores reales de ambiente.
 
-Flujo local:
+Flujo local por defecto:
 
 ```text
 npm start
-  → npm run generate-env:desa
-  → lee Azure App Configuration
+  → prestart
+  → npm run env:sync -- --env desa
+  → usa cache local si tiene menos de 60 minutos
+  → si no hay cache fresco, lee Azure App Configuration una vez
+  → cachea todos los labels disponibles para la key
   → genera src/environments/generated-environment.ts
   → actualiza src/web.config con la CSP del ambiente
   → ejecuta ng serve
@@ -38,20 +41,63 @@ Rol mínimo:
 App Configuration Data Reader
 ```
 
-## Script
+## Guardrails
+
+Defaults del script:
 
 ```text
-tools/env/sync-azure-environment.mjs
+Cache local: tmp/env/azure-environment-cache.json
+TTL: 60 minutos
+Máximo local por día: 50 lecturas Azure
+Máximo cache stale de fallback: 24 horas
+Label filter: *
 ```
 
-Que hace el script?
+La lectura Azure usa `listConfigurationSettings` con la key `frontend:<project>:environment` y `labelFilter=*`, por lo que normalmente baja todos los ambientes en una sola página/request y después elige localmente el label pedido con `--env`.
 
-1. Valida que Azure CLI esté disponible.
-2. Usa la sesión de `az login`.
-3. Lee la key JSON desde Azure App Configuration.
-4. Valida que el value sea JSON.
-5. Genera `src/environments/generated-environment.ts`.
-6. Genera `src/web.config` usando `CSP_POLICY` o `cspPolicy` del JSON.
+Si Azure devuelve más de 100 labels, el script falla en vez de seguir paginando para no gastar requests sin querer. En ese caso usar `--label-filter desa,prod` o un label concreto.
+
+## Scripts
+
+```text
+npm start                # sync cacheado de desa + ng serve
+npm run start:o          # sync cacheado de desa + ng serve -o
+npm run build:dev        # sync cacheado de desa + build development
+npm run build:prod       # refresh prod + build production
+npm run env:sync -- --env desa
+npm run env:refresh -- --env desa
+npm run env:offline -- --env desa
+npm run env:cache:clear
+npm run test:env-sync
+```
+
+`generate-env:desa` queda como alias compatible de `env:sync -- --env desa`.
+
+## Forzar o evitar Azure
+
+Para pedir explícitamente lo último:
+
+```powershell
+npm run env:refresh -- --env desa
+```
+
+Para compilar con lo que haya cacheado sin tocar Azure:
+
+```powershell
+npm run env:offline -- --env desa
+```
+
+Para cambiar el TTL en una corrida:
+
+```powershell
+npm run env:sync -- --env desa --cache-ttl-minutes 15
+```
+
+Para limpiar cache y contador local:
+
+```powershell
+npm run env:cache:clear
+```
 
 ## Environment de Angular
 
@@ -71,28 +117,7 @@ Ignorado por Git:
 src/environments/generated-environment.ts
 ```
 
-## Ejecutar
-
-```powershell
-npm start
-```
-
-Script en `package.json`:
-
-```json
-{
-  "scripts": {
-    "generate-env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io",
-    "start": "npm run generate-env:desa && ng serve -o"
-  }
-}
-```
-
-Para regenerar sin levantar Angular:
-
-```powershell
-npm run generate-env:desa
-```
+El cache vive bajo `tmp/`, que también está ignorado por Git.
 
 ## CSP
 
