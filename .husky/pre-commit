@@ -1,1 +1,1 @@
-node scripts/testing/check-missing-tests.js --staged && npx lint-staged
+node scripts/hooks/pre-commit.js
