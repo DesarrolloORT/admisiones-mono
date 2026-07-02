@@ -19,6 +19,7 @@ applyTo: '**/*.tsx, **/*.jsx, **/*.vue, **/*.svelte, **/*.astro, **/*.html, **/*
 - Consulta primero las docs del design system declaradas por el repo o inferidas por convencion.
 - Usa tokens, aliases semanticos o variables del design system para color, spacing, radius, typography, shadows y z-index cuando existan.
 - No hardcodees valores visuales si el repo ya define un token equivalente.
+- En SCSS, antes de entregar, valida contra `.stylelintrc.json`: no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`; usa tokens del design system o `rem` permitido.
 - Si falta el componente exacto y el repo declara `designSystem.figmaMcpServer`, consulta Figma MCP antes de inventar variantes.
 - Si no encuentras el token exacto, revisa docs, themes, tokens y reglas de estilo antes de introducir un valor nuevo.
 - Si no hay docs ni Figma, reutiliza primitives, tokens, layouts y patrones locales; explicita el supuesto y cualquier gap.

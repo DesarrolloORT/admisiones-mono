@@ -4,7 +4,7 @@
   aria-busy="true"
   aria-label="Cargando datos personales"
   class="personal-data-form personal-data-loading">
-  <span class="personal-data-sr-only">Cargando datos personales</span>
+  <span class="sr-only">Cargando datos personales</span>
   <ort-skeleton height="56px" variant="rectangular" width="100%" />
   <ort-skeleton height="56px" variant="rectangular" width="100%" />
   <ort-skeleton height="56px" variant="rectangular" width="100%" />
@@ -16,7 +16,7 @@
 <fdp-datos-personales class="personal-data-form" [isStandalone]="true" />
 } @else {
 <form class="personal-data-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-  <h2 class="personal-data-sr-only">Datos personales</h2>
+  <h2 class="sr-only">Datos personales</h2>
 
   <section aria-label="Datos personales" class="personal-data-section">
     <ort-form-field>

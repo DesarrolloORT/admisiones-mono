@@ -3,15 +3,15 @@
 }
 
 .home-layout {
-  --home-primary: var(--ort-sys-base-surface-primary-background);
-  --home-surface: var(--ort-sys-base-surface-background);
   --home-page: var(--ort-sys-base-surface-background-page);
   --home-heading: var(--ort-sys-base-text-color-headline);
   --home-body: var(--ort-sys-base-text-color-body);
   --home-display: var(--ort-sys-font-family-display);
   --home-border: var(--ort-sys-base-border-primary-color);
   --home-tonal: var(--ort-sys-button-tonal-background);
-  --home-shadow: 0 0 8px rgb(13 13 28 / 8%);
+  --home-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
+    var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
+    var(--ort-sys-elevation-sm-color);
 
   min-height: 100dvh;
   background: var(--home-page);

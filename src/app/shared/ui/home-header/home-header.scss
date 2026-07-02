@@ -1,6 +1,6 @@
 /* stylelint-disable declaration-property-unit-allowed-list -- Header and drawer follow Figma px measurements and ORT token fallbacks. */
 :host {
-  --header-primary: var(--home-primary, var(--ort-sys-base-surface-primary-background, #0055b8));
+  --header-primary: var(--ort-sys-base-surface-primary-background);
 
   display: block;
 }
@@ -15,12 +15,12 @@
 .home-header__content {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr) 48px;
-  gap: 10px;
+  gap: var(--ort-sys-spacing-12);
   align-items: center;
   width: 100%;
   height: 80px;
   margin: 0;
-  padding: 8px;
+  padding: var(--ort-sys-spacing-8);
 }
 
 .home-header__content--no-back {
@@ -43,7 +43,7 @@
 
 .home-brand {
   display: flex;
-  gap: var(--ort-sys-spacing-16, 16px);
+  gap: var(--ort-sys-spacing-16);
   justify-content: center;
   align-items: center;
   justify-self: center;
@@ -65,11 +65,11 @@
   width: 1px;
   height: 28px;
   border-radius: var(--ort-sys-border-radius-round, 9999px);
-  background: var(--ort-sys-base-surface-background, #fff);
+  background: var(--ort-sys-base-surface-background);
 }
 
 .home-brand__name {
-  color: var(--ort-sys-base-text-on-color-header, #fff);
+  color: var(--ort-sys-base-text-on-color-header);
   font-weight: 700;
   font-size: var(--ort-sys-body-text-size, 16px);
   line-height: normal;
@@ -92,7 +92,7 @@
   border: 0;
   border-radius: var(--ort-sys-border-radius-round, 9999px);
   background: transparent;
-  color: var(--ort-sys-base-text-on-color-header, #fff);
+  color: var(--ort-sys-base-text-on-color-header);
   cursor: pointer;
 
   ort-icon {
@@ -128,7 +128,7 @@
 .home-avatar:focus-visible,
 .home-header__back:focus-visible,
 .home-profile-menu__item:focus-visible {
-  outline: 2px solid var(--ort-sys-base-border-color-on-focus, #2563eb);
+  outline: var(--ort-sys-border-width-2) solid var(--ort-sys-base-border-color-on-focus);
   outline-offset: 2px;
 }
 
@@ -147,21 +147,9 @@
   padding-block: var(--ort-sys-menu-item-padding-block);
   border-radius: var(--ort-sys-menu-border-radius);
   background: var(--ort-sys-menu-background);
-  box-shadow:
-    0 0 12px rgb(13 13 28 / 12%),
-    0 0 8px rgb(13 13 28 / 12%);
-}
-
-.home-profile-menu__title {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  white-space: nowrap;
+  box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
+    var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
+    var(--ort-sys-elevation-sm-color);
 }
 
 .home-profile-menu__list {
@@ -177,7 +165,7 @@
   min-height: 48px;
   padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
   border: 0;
-  border-bottom: 1px solid var(--ort-sys-base-border-subtle-color, #e3e8ef);
+  border-bottom: var(--ort-sys-border-width-1) solid var(--ort-sys-base-border-subtle-color);
   background: transparent;
   color: var(--ort-sys-menu-item-color);
   font: inherit;
@@ -192,7 +180,7 @@
   }
 
   ort-icon {
-    color: var(--ort-sys-base-icon-color-subtle, #697586);
+    color: var(--ort-sys-base-icon-color-subtle);
     font-size: 24px;
   }
 }
@@ -200,7 +188,7 @@
 @media (width <=760px) {
   .home-header__content {
     height: 111px;
-    padding: 47px 16px 0;
+    padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) 0;
   }
 
   .home-header__content--no-back {
@@ -216,18 +204,17 @@
     width: min(100%, 327px);
     min-width: 112px;
     margin: 0 auto;
-    padding-block: var(--ort-sys-menu-item-padding-block, 8px);
-    border-radius: var(--ort-sys-menu-border-radius, 4px);
-    background: var(--ort-sys-menu-background, #fff);
+    padding-block: var(--ort-sys-menu-item-padding-block);
+    border-radius: var(--ort-sys-menu-border-radius);
+    background: var(--ort-sys-menu-background);
   }
 
   .home-profile-menu__item {
     min-height: 48px;
-    padding: var(--ort-sys-menu-item-padding-block, 12px)
-      var(--ort-sys-menu-item-padding-inline, 12px);
+    padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
     border-bottom: 0;
-    color: var(--ort-sys-menu-item-color, #364152);
-    font-size: var(--ort-sys-menu-item-font-size, 16px);
+    color: var(--ort-sys-menu-item-color);
+    font-size: var(--ort-sys-menu-item-font-size);
     line-height: var(--ort-sys-menu-item-line-height, 24px);
   }
 }
