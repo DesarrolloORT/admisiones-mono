@@ -3,13 +3,13 @@ import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import type { InscripcionDetail } from '../models/inscripcion-detail';
-import { Inscripciones } from '../services/inscripciones';
+import type { InscripcionDetail } from '../models/inscription-detail';
+import { Inscripciones } from '../services/inscriptions';
 
 // Resuelve el contexto de una inscripción retomada desde el panel para posicionar
 // el flujo común en el paso correcto. Sin query params válidos o ante un error se
 // resuelve a null: el flujo arranca normalmente desde la propuesta académica.
-export const inscripcionDetailResolver: ResolveFn<InscripcionDetail | null> = route => {
+export const inscriptionDetailResolver: ResolveFn<InscripcionDetail | null> = route => {
   const idProducto = toPositiveInteger(route.queryParamMap.get('idProducto'));
   const idProceso = toPositiveInteger(route.queryParamMap.get('idProceso'));
 

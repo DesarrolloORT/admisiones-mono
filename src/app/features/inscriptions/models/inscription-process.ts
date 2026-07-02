@@ -2,7 +2,7 @@ import type { ProcessStepDefinition } from 'src/app/shared/process-flow/process-
 
 export type InscripcionStep = 'propuesta' | 'encuesta' | 'pago';
 
-export type InscripcionOutcome = 'reserva' | 'inscripcion-confirmada' | 'inscripcion-en-proceso';
+export type InscripcionOutcome = 'reserva' | 'inscription-confirmada' | 'inscription-en-proceso';
 
 export type InscripcionPaymentView = 'editing' | 'confirming' | 'processing';
 

@@ -6,16 +6,16 @@ import { finalize } from 'rxjs/operators';
 import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscripcion-bank-logo';
-import type { MetodoPago, OpcionInscripcion } from '../models/inscripcion-flow';
-import { getResultadoPago, parseResultadoForzado } from '../models/inscripcion-flow-policy';
+import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscription-bank-logo';
+import type { MetodoPago, OpcionInscripcion } from '../models/inscription-flow';
+import { getResultadoPago, parseResultadoForzado } from '../models/inscription-flow-policy';
 import {
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
   getReservationInstructions,
-} from '../models/inscripcion-flow-view';
-import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscripcion-process';
+} from '../models/inscription-flow-view';
+import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscription-process';
 import {
   COORDINATORS,
   PAYMENT_OPTIONS,
@@ -23,10 +23,10 @@ import {
   SANTANDER_ACCOUNT_URL,
   STUDENT_SERVICE_LINKS,
   SUBJECTS,
-} from '../models/inscripcion-static-data';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
+} from '../models/inscription-static-data';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionProposalFacade } from './inscription-proposal';
 
 export class InscripcionPaymentFacade {
   private readonly route = inject(ActivatedRoute);
@@ -167,14 +167,14 @@ export class InscripcionPaymentFacade {
       return;
     }
     if (result === 'en-proceso') {
-      this.finishAt('inscripcion-en-proceso');
+      this.finishAt('inscription-en-proceso');
       return;
     }
 
     this.view.set('processing');
     this.processingTimer = setTimeout(() => {
       this.processingTimer = null;
-      this.finishAt('inscripcion-confirmada');
+      this.finishAt('inscription-confirmada');
     }, 1000);
   }
 

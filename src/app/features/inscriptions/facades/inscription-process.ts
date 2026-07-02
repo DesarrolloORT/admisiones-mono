@@ -4,15 +4,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { merge } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
-import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscripcion-detail';
-import type { BorradorInscripcion, EscenarioInscripcion } from '../models/inscripcion-flow';
-import { getSurveyValues, parseDate, serializeDate } from '../models/inscripcion-flow-mappers';
-import { InscripcionDraft } from '../services/inscripcion-draft';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionPaymentFacade } from './inscripcion-payment';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
-import { InscripcionSurveyFacade } from './inscripcion-survey';
+import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscription-detail';
+import type { BorradorInscripcion, EscenarioInscripcion } from '../models/inscription-flow';
+import { getSurveyValues, parseDate, serializeDate } from '../models/inscription-flow-mappers';
+import { InscripcionDraft } from '../services/inscription-draft';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionPaymentFacade } from './inscription-payment';
+import { InscripcionProposalFacade } from './inscription-proposal';
+import { InscripcionSurveyFacade } from './inscription-survey';
 
 const DRAFT_SCENARIOS: readonly EscenarioInscripcion[] = [
   'primera-vez',
@@ -177,9 +177,9 @@ export class InscripcionProcessFacade {
       );
       this.forms.regulationForm.patchValue(saved.reglamento, { emitEvent: false });
       this.survey.restoreSectionState(saved.seccionActiva, saved.seccionesCompletas);
-      this.payment.restore(saved.pago.metodoPago, saved.preinscripcion);
+      this.payment.restore(saved.pago.metodoPago, saved.preinscription);
       this.process.flow.goTo(
-        saved.paso === 'pago' && !saved.preinscripcion ? 'encuesta' : saved.paso
+        saved.paso === 'pago' && !saved.preinscription ? 'encuesta' : saved.paso
       );
     }
     this.applyResumeContext();
@@ -199,7 +199,7 @@ export class InscripcionProcessFacade {
     if (preEnrollment) this.process.preEnrollmentResponse.set(preEnrollment);
 
     if (detail.estado === 'Pago pendiente') this.process.flow.goTo('pago');
-    else this.payment.outcome.set('inscripcion-confirmada');
+    else this.payment.outcome.set('inscription-confirmada');
   }
 
   private observeDraftChanges(): void {
@@ -276,7 +276,7 @@ export class InscripcionProcessFacade {
       },
       reglamento: this.forms.regulationForm.getRawValue(),
       pago: this.forms.paymentForm.getRawValue(),
-      preinscripcion: this.process.preEnrollmentResponse(),
+      preinscription: this.process.preEnrollmentResponse(),
     };
   }
 

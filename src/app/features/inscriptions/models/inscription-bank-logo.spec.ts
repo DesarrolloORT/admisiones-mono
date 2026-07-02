@@ -3,9 +3,9 @@ import {
   resolveBankLogo,
   toBankOption,
   toBankOptions,
-} from './inscripcion-bank-logo';
+} from './inscription-bank-logo';
 
-describe('inscripcion-bank-logo', () => {
+describe('inscription-bank-logo', () => {
   it('resolves a known bank by code', () => {
     expect(resolveBankLogo({ label: 'Banco BROU', code: 'brou' })).toBe('assets/banks/brou.svg');
   });

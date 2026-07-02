@@ -5,7 +5,7 @@ import {
   SeccionEncuestaId,
   SECCIONES_ENCUESTA,
   SECCIONES_ENCUESTA_COMPLETA,
-} from './inscripcion-flow';
+} from './inscription-flow';
 
 const ESCENARIOS: readonly EscenarioInscripcion[] = ['primera-vez', 'parcial', 'encuesta-completa'];
 

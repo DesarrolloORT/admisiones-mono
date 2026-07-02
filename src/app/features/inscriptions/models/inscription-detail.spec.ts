@@ -1,4 +1,4 @@
-import { detailToPreEnrollment, type InscripcionDetail } from './inscripcion-detail';
+import { detailToPreEnrollment, type InscripcionDetail } from './inscription-detail';
 
 describe('detailToPreEnrollment', () => {
   it('reconstructs the payment context from a pending payment detail', () => {

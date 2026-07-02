@@ -1,4 +1,4 @@
-import { PAYMENT_OPTIONS } from './inscripcion-static-data';
+import { PAYMENT_OPTIONS } from './inscription-static-data';
 
 describe('PAYMENT_OPTIONS', () => {
   it('keeps payment values stable for the flow policy', () => {

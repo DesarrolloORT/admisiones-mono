@@ -1,12 +1,12 @@
 import '@angular/compiler';
 
-import type { InscripcionInitialSurvey } from './inscripcion-flow';
-import { createInscripcionForms } from './inscripcion-flow-forms';
+import type { InscripcionInitialSurvey } from './inscription-flow';
+import { createInscripcionForms } from './inscription-flow-forms';
 import {
   buildInitialSurveyPayload,
   hasCompleteUniversityEducation,
   patchBackendSurveyForms,
-} from './inscripcion-flow-mappers';
+} from './inscription-flow-mappers';
 
 const emptySurveyResponse = {
   tieneDerechoEncuesta: true,
@@ -30,6 +30,7 @@ const emptySurvey: InscripcionInitialSurvey = {
   institucionSecundariaId: null,
   ubicacionSecundariaId: null,
   nombreInstitucionSecundaria: null,
+  estadoEducacionSuperiorPreviaId: null,
   tieneEducacionSuperior: null,
   nivelFormacionMadreId: null,
   nivelFormacionPadreId: null,
@@ -38,11 +39,13 @@ const emptySurvey: InscripcionInitialSurvey = {
   anioDecisionCarreraId: null,
   anioDecisionOrtId: null,
   seInformoEnOtrasUniversidades: null,
+  apoyoDecisionId: null,
   apoyoPadres: null,
   apoyoOtros: null,
   apoyoAmigosFamiliares: null,
   apoyoNadie: null,
   apoyoAmigoPropuesta: null,
+  nivelDecisionId: null,
   decisionConfirmada: null,
   tuvoAsesoramientoOrt: null,
   valoracionAsesoramientoOrt: null,
@@ -53,7 +56,7 @@ const emptySurvey: InscripcionInitialSurvey = {
   recuerdaPublicidadOrt: null,
 };
 
-describe('inscripcion flow mappers', () => {
+describe('inscription flow mappers', () => {
   it('maps every initial survey contract field when building the payload', () => {
     const forms = createInscripcionForms();
     forms.academicForm.patchValue({ carrera: '20', comienzo: '200' });
@@ -103,9 +106,9 @@ describe('inscripcion flow mappers', () => {
         'anioDecisionCarreraId',
         'anioDecisionOrtId',
         'apoyoDecisionId',
-        'autorizaInformarEncuesta',
         'carreraId',
         'comienzoId',
+        'cursaSecundariaActualmente',
         'estadoEducacionSuperiorPreviaId',
         'informacionOtrasUniversidadesLinea1',
         'informacionOtrasUniversidadesLinea2',
@@ -141,6 +144,7 @@ describe('inscripcion flow mappers', () => {
       comienzoId: 200,
       orientacionBachilleratoId: 12,
       anioBachillerato: 11,
+      cursaSecundariaActualmente: true,
       institucionSecundariaId: 99,
       nombreInstitucionSecundaria: null,
       nivelFormacionMadreTutorId: 5,

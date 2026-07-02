@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { createProcessFlow } from 'src/app/shared/process-flow/process-flow';
 
-import type { InscripcionPreEnrollmentResponse } from '../models/inscripcion-flow';
-import { INSCRIPCION_STEPS } from '../models/inscripcion-process';
+import type { InscripcionPreEnrollmentResponse } from '../models/inscription-flow';
+import { INSCRIPCION_STEPS } from '../models/inscription-process';
 
 export class InscripcionProcessStore {
   public readonly flow = createProcessFlow(INSCRIPCION_STEPS, 'propuesta');

@@ -1,18 +1,19 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { forkJoin, from, Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
-import { InscripcionesEndpoint } from '../endpoints/inscripciones.endpoint';
-import type { InscripcionDetail } from '../models/inscripcion-detail';
+import { InscripcionesEndpoint } from '../endpoints/inscriptions.endpoint';
+import type { InscripcionDetail } from '../models/inscription-detail';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocumentFile,
+  InscripcionIdentityUploadFile,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
-} from '../models/inscripcion-flow';
+} from '../models/inscription-flow';
 
 export interface InscripcionIdentityPreload {
   frente: File | null;
@@ -45,6 +46,26 @@ export class Inscripciones {
     );
   }
 
+  public uploadIdentityDocument(payload: {
+    fecha: string;
+    frente: File;
+    dorso: File;
+  }): Observable<boolean> {
+    return from(
+      Promise.all([this.toUploadFile(payload.frente), this.toUploadFile(payload.dorso)])
+    ).pipe(
+      switchMap(([frente, dorso]) =>
+        this.endpoint.uploadIdentityDocument({ fecha: payload.fecha, frente, dorso })
+      )
+    );
+  }
+
+  public uploadIdentityPhoto(file: File): Observable<boolean> {
+    return from(this.toUploadFile(file)).pipe(
+      switchMap(archivoAdjunto => this.endpoint.uploadIdentityPhoto({ archivoAdjunto }))
+    );
+  }
+
   public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
     return this.endpoint.getInitialSurvey();
   }
@@ -67,6 +88,47 @@ export class Inscripciones {
     return this.endpoint.registerProductInterest(payload);
   }
 
+  private async toUploadFile(file: File): Promise<InscripcionIdentityUploadFile> {
+    const mimeType = file.type || this.inferUploadMimeType(file.name);
+    if (mimeType !== 'image/jpeg' && mimeType !== 'image/png') {
+      throw new Error('Invalid identity image type.');
+    }
+
+    return {
+      nombreArchivo: this.safeFileName(file.name, 'identidad.jpg'),
+      archivo: await this.readFileAsBase64(file),
+    };
+  }
+
+  private inferUploadMimeType(fileName: string): string | null {
+    const extension = fileName.split('.').at(-1)?.toLowerCase();
+    if (extension === 'png') return 'image/png';
+    if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg';
+    return null;
+  }
+
+  private readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== 'string') {
+          reject(new Error('Could not read identity file.'));
+          return;
+        }
+
+        const [, base64] = result.split(',', 2);
+        if (!base64) {
+          reject(new Error('Could not read identity file.'));
+          return;
+        }
+
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error('Could not read identity file.'));
+      reader.readAsDataURL(file);
+    });
+  }
   private toFile(
     file: InscripcionIdentityDocumentFile | null | undefined,
     fallbackName: string

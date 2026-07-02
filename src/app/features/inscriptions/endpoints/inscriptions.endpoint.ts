@@ -13,13 +13,17 @@ import {
 import {
   getPersonaDocumentoEndpoint,
   getPersonaFotoEndpoint,
+  postPersonaSubirDocumentoEndpoint,
+  postPersonaSubirFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
-import type { DtoEncuestaIniAdmisionDevart } from 'src/app/shared/api/generated/models/dtoEncuestaIniAdmisionDevart';
+import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
 
-import type { InscripcionDetail, InscripcionSummary } from '../models/inscripcion-detail';
+import type { InscripcionDetail, InscripcionSummary } from '../models/inscription-detail';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocument,
+  InscripcionIdentityDocumentUploadPayload,
+  InscripcionIdentityPhotoUploadPayload,
   InscripcionInitialSurvey,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
@@ -27,7 +31,7 @@ import type {
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
   SeccionEncuestaId,
-} from '../models/inscripcion-flow';
+} from '../models/inscription-flow';
 
 @Injectable({
   providedIn: 'root',
@@ -100,35 +104,53 @@ export class InscripcionesEndpoint {
     return this.api.request(getPersonaFotoEndpoint, { cache: false, responseType: 'blob' });
   }
 
-  public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
-    return this.api.request(getInscripcionesEncuestaInicialEndpoint, { cache: false }).pipe(
-      map(response => ({
-        tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
-        encuesta: response.encuesta ? this.toInitialSurvey(response.encuesta) : null,
-        universidadesConsideradas: this.toSelectedCompanyIds(response.universidadesConsideradas),
-        universidadesEducacionSuperior: this.toSelectedCompanyIds(
-          response.universidadesEducacionSuperior
-        ),
-        opcionesMotivosSeleccionados:
-          response.opcionesMotivosSeleccionados?.flatMap(item => {
-            const id = item.motivoOpcionesAdmision?.idMotivo ?? item.idMotivo;
-            return id === undefined ? [] : [id];
-          }) ?? [],
-        opcionesPublicidadSeleccionadas:
-          response.opcionesPublicidadSeleccionadas?.flatMap(item => {
-            const id = item.publicidadOpcionesAdmision?.idPublicidad ?? item.idPublicidad;
-            return id === undefined ? [] : [id];
-          }) ?? [],
-      }))
-    );
+  public uploadIdentityDocument(
+    payload: InscripcionIdentityDocumentUploadPayload
+  ): Observable<boolean> {
+    return this.api
+      .request(postPersonaSubirDocumentoEndpoint, {
+        body: {
+          fecha: payload.fecha,
+          frente: payload.frente,
+          dorso: payload.dorso,
+        },
+        showLoader: true,
+      })
+      .pipe(tap(() => this.api.clearCache()));
   }
 
+  public uploadIdentityPhoto(payload: InscripcionIdentityPhotoUploadPayload): Observable<boolean> {
+    return this.api
+      .request(postPersonaSubirFotoEndpoint, {
+        body: { archivoAdjunto: payload.archivoAdjunto },
+        showLoader: true,
+      })
+      .pipe(tap(() => this.api.clearCache()));
+  }
+
+  public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
+    return this.api.request(getInscripcionesEncuestaInicialEndpoint, { cache: false }).pipe(
+      map(response => {
+        const survey = response.encuesta;
+
+        return {
+          tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
+          encuesta: survey ? this.toInitialSurvey(survey) : null,
+          universidadesConsideradas: survey?.universidadConsideradaIds ?? [],
+          universidadesEducacionSuperior: survey?.universidadEducacionSuperiorIds ?? [],
+          opcionesMotivosSeleccionados: survey?.motivoEleccionOrtIds ?? [],
+          opcionesPublicidadSeleccionadas: survey?.publicidadOrtIds ?? [],
+        };
+      })
+    );
+  }
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     const body = {
       carreraId: payload.carreraId,
-      comienzoId: payload.comienzoId,
+      procesoId: payload.comienzoId,
       orientacionBachilleratoId: payload.orientacionBachilleratoId,
       anioBachillerato: payload.anioBachillerato,
+      cursaSecundariaActualmente: payload.cursaSecundariaActualmente,
       vecesRecursaAnioBachillerato: payload.vecesRecursaAnioBachillerato,
       recursaAnioBachillerato: payload.recursaAnioBachillerato,
       nivelFormacionPadreTutorId: payload.nivelFormacionPadreTutorId,
@@ -140,7 +162,6 @@ export class InscripcionesEndpoint {
       informacionOtrasUniversidadesLinea2: payload.informacionOtrasUniversidadesLinea2,
       apoyoDecisionId: payload.apoyoDecisionId,
       institucionSecundariaId: payload.institucionSecundariaId,
-      autorizaInformarEncuesta: payload.autorizaInformarEncuesta,
       nombreInstitucionSecundaria: payload.nombreInstitucionSecundaria,
       ubicacionUltimoAnioSecundariaId: payload.ubicacionUltimoAnioSecundariaId,
       estadoEducacionSuperiorPreviaId: payload.estadoEducacionSuperiorPreviaId,
@@ -168,7 +189,7 @@ export class InscripcionesEndpoint {
         showLoader: true,
       })
       .pipe(
-        map(result => result === true),
+        map(() => true),
         tap(() => this.api.clearCache())
       );
   }
@@ -221,64 +242,49 @@ export class InscripcionesEndpoint {
         },
         showLoader: true,
       })
-      .pipe(map(result => result === true));
+      .pipe(map(() => true));
   }
 
-  private toInitialSurvey(survey: DtoEncuestaIniAdmisionDevart): InscripcionInitialSurvey {
+  private toInitialSurvey(survey: DtoEncuestaInicialLectura): InscripcionInitialSurvey {
     return {
-      carreraId: survey.idProducto ?? null,
-      comienzoId: survey.idProceso ?? null,
-      turnoId: survey.idTurno ?? null,
-      nivelProductoId: survey.producto?.idNivelProducto ?? null,
-      completa:
-        survey.estadoEncuestaIniAdmision === 'completa' || survey.fechaProcesadoEncuestaIni != null,
-      seccionActiva: toSurveySection(survey.estadoEncuestaIniAdmision),
-      cursaSecundaria: survey.ultimoanioSecundariaEncuestaIni ?? null,
-      orientacionBachilleratoId: survey.codigoTitulo ?? null,
-      anioBachilleratoId: toNumber(survey.ultimoAnioSextoEncuestaIni),
-      institucionSecundariaId: survey.codigoInstitucionBac ?? null,
-      ubicacionSecundariaId: toNumber(survey.informarEncuestaIni),
-      nombreInstitucionSecundaria: survey.nombreInstSecEncuestaIni ?? null,
-      tieneEducacionSuperior: toBoolean(survey.tieneEducacionSuperiorEncuestaIni),
-      nivelFormacionMadreId: toNumber(survey.instruccionMadreEncuestaIni),
-      nivelFormacionPadreId: toNumber(survey.instruccionPadreEncuestaIni),
-      madreEgresadaOrt: toBoolean(survey.instruccionMadreOrtEncuestaIni),
-      padreEgresadoOrt: toBoolean(survey.instruccionPadreOrtEncuestaIni),
-      anioDecisionCarreraId: toNumber(survey.decisionCarreraEncuestaIni),
-      anioDecisionOrtId: toNumber(survey.decisionUniverEncuestaIni),
-      seInformoEnOtrasUniversidades: toBoolean(survey.inforOtrasAntesEncuestaIni),
-      apoyoPadres: toBoolean(survey.comparPadresEncuestaIni),
-      apoyoOtros: toBoolean(survey.comparOtrosEncuestaIni),
-      apoyoAmigosFamiliares: toBoolean(survey.comparAmigoFamEncuestaIni),
-      apoyoNadie: toBoolean(survey.comparNadieEncuestaIni),
-      apoyoAmigoPropuesta: toBoolean(survey.comparAmigoPropEncuestaIni),
-      decisionConfirmada: survey.nivelDecisionEncuestaIni ?? null,
-      tuvoAsesoramientoOrt: toBoolean(survey.asesoramientoOrtEncuestaIni),
-      valoracionAsesoramientoOrt: toNumber(survey.valoracionAsesoramientoOrtEncuestaIni),
-      visitoSitioWebOrt: toBoolean(survey.vistaSitioWebOrtEncuestaIni),
-      valoracionSitioWebOrt: toNumber(survey.valoracionSitioWebOrtEncuestaIni),
-      visitoInstalacionesOrt: toBoolean(survey.vistaInstalacionesOrtEncuestaIni),
-      valoracionInstalacionesOrt: toNumber(survey.valoracionInstalacionesOrtEncuestaIni),
-      recuerdaPublicidadOrt: toBoolean(survey.publicidadOrtEncuestaIni),
+      carreraId: survey.carreraId ?? null,
+      comienzoId: survey.procesoId ?? null,
+      turnoId: null,
+      nivelProductoId: null,
+      completa: survey.estado === 'completa',
+      seccionActiva: toSurveySection(survey.estado),
+      cursaSecundaria: survey.cursaSecundariaActualmente ?? null,
+      orientacionBachilleratoId: survey.orientacionBachilleratoId ?? null,
+      anioBachilleratoId: survey.anioBachillerato ?? null,
+      institucionSecundariaId: survey.institucionSecundariaId ?? null,
+      ubicacionSecundariaId: survey.ubicacionUltimoAnioSecundariaId ?? null,
+      nombreInstitucionSecundaria: survey.nombreInstitucionSecundaria ?? null,
+      estadoEducacionSuperiorPreviaId: survey.estadoEducacionSuperiorPreviaId ?? null,
+      tieneEducacionSuperior: toHigherEducationFlag(survey.estadoEducacionSuperiorPreviaId),
+      nivelFormacionMadreId: survey.nivelFormacionMadreTutorId ?? null,
+      nivelFormacionPadreId: survey.nivelFormacionPadreTutorId ?? null,
+      madreEgresadaOrt: survey.madreTutorEgresadoOrt ?? null,
+      padreEgresadoOrt: survey.padreTutorEgresadoOrt ?? null,
+      anioDecisionCarreraId: survey.anioDecisionCarreraId ?? null,
+      anioDecisionOrtId: survey.anioDecisionOrtId ?? null,
+      seInformoEnOtrasUniversidades: survey.seInformoEnOtrasUniversidades ?? null,
+      apoyoDecisionId: survey.apoyoDecisionId ?? null,
+      apoyoPadres: null,
+      apoyoOtros: null,
+      apoyoAmigosFamiliares: null,
+      apoyoNadie: null,
+      apoyoAmigoPropuesta: null,
+      nivelDecisionId: survey.nivelDecisionId ?? null,
+      decisionConfirmada: toDecisionConfirmed(survey.nivelDecisionId),
+      tuvoAsesoramientoOrt: survey.tuvoAsesoramientoOrt ?? null,
+      valoracionAsesoramientoOrt: survey.valoracionAsesoramientoOrtId ?? null,
+      visitoSitioWebOrt: survey.visitoSitioWebOrt ?? null,
+      valoracionSitioWebOrt: survey.valoracionSitioWebOrtId ?? null,
+      visitoInstalacionesOrt: survey.visitoInstalacionesOrt ?? null,
+      valoracionInstalacionesOrt: survey.valoracionInstalacionesOrtId ?? null,
+      recuerdaPublicidadOrt: survey.recuerdaPublicidadOrt ?? null,
     };
   }
-
-  private toSelectedCompanyIds(
-    items:
-      | Array<{
-          codigoEmpresa?: number | null;
-          nombreOtraEmpresa?: string | null;
-          empresa?: { codigoEmpresa: number; nombre: string };
-        }>
-      | null
-      | undefined
-  ): number[] {
-    return (items ?? []).flatMap(item => {
-      const id = item.codigoEmpresa ?? item.empresa?.codigoEmpresa ?? null;
-      return id === null ? [] : [id];
-    });
-  }
-
   private toSummary(
     summary:
       | {
@@ -307,18 +313,6 @@ export class InscripcionesEndpoint {
   }
 }
 
-function toBoolean(value: unknown): boolean | null {
-  if (value === true || value === 'S') return true;
-  if (value === false || value === 'N') return false;
-  return null;
-}
-
-function toNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === '') return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
 function toSurveySection(value: string | null | undefined): SeccionEncuestaId | null {
   switch (value) {
     case 'educacion':
@@ -331,4 +325,15 @@ function toSurveySection(value: string | null | undefined): SeccionEncuestaId | 
     default:
       return null;
   }
+}
+
+function toHigherEducationFlag(value: number | null | undefined): boolean | null {
+  if (value === null || value === undefined) return null;
+  return value === 1;
+}
+
+function toDecisionConfirmed(value: number | null | undefined): boolean | null {
+  if (value === 1) return true;
+  if (value === 2) return false;
+  return null;
 }

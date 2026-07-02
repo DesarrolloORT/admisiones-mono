@@ -5,8 +5,8 @@ import { TestBed } from '@angular/core/testing';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { vi } from 'vitest';
 
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
-import { InscripcionConfirmationStep } from './inscripcion-confirmation-step';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
+import { InscripcionConfirmationStep } from './inscription-confirmation-step';
 
 describe('InscripcionConfirmationStep', () => {
   const requestConfirmationSpy = vi.fn();
@@ -111,7 +111,7 @@ describe('InscripcionConfirmationStep', () => {
 
   it('keeps bank selection usable with logo options in the real template', () => {
     const template = readFileSync(
-      'src/app/features/inscripciones/components/inscripcion-confirmation-step/inscripcion-confirmation-step.html',
+      'src/app/features/inscriptions/components/inscription-confirmation-step/inscription-confirmation-step.html',
       'utf8'
     );
 

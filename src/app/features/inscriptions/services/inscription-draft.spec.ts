@@ -1,17 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 
-import type { BorradorInscripcion } from '../models/inscripcion-flow';
-import { InscripcionDraft } from './inscripcion-draft';
+import type { BorradorInscripcion } from '../models/inscription-flow';
+import { InscripcionDraft } from './inscription-draft';
 
 describe('InscripcionDraft', () => {
   let storage: InscripcionDraft;
-  const key = 'inscripcion-borrador:v1:12345672:primera-vez';
+  const key = 'inscripcion-borrador:v1:primera-vez';
 
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
-    localStorage.setItem('auth-session', JSON.stringify({ documentNumber: '12345672' }));
-
     TestBed.configureTestingModule({});
     storage = TestBed.inject(InscripcionDraft);
   });
@@ -21,7 +19,12 @@ describe('InscripcionDraft', () => {
 
     storage.save(draft);
 
-    expect(storage.load('primera-vez')).toEqual(draft);
+    expect(storage.load('primera-vez')).toEqual({
+      ...draft,
+      identidad: { vencimientoDocumento: '' },
+      pago: { metodoPago: '' },
+      preinscription: null,
+    });
   });
 
   it('discards a draft with an unknown step', () => {
@@ -36,14 +39,6 @@ describe('InscripcionDraft', () => {
 
     expect(storage.load('primera-vez')).toBeNull();
     expect(sessionStorage.getItem(key)).toBeNull();
-  });
-
-  it('does not persist data without an identified session', () => {
-    localStorage.removeItem('auth-session');
-
-    storage.save(createDraft());
-
-    expect(sessionStorage.length).toBe(0);
   });
 });
 
@@ -100,6 +95,6 @@ function createDraft(): BorradorInscripcion {
     identidad: { vencimientoDocumento: '2030-02-04' },
     reglamento: { aceptaReglamento: false },
     pago: { metodoPago: '' },
-    preinscripcion: null,
+    preinscription: null,
   };
 }

@@ -3,15 +3,15 @@ import { ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
-import type { InscripcionInitialSurveyResponse } from '../models/inscripcion-flow';
-import { Inscripciones } from '../services/inscripciones';
+import type { InscripcionInitialSurveyResponse } from '../models/inscription-flow';
+import { Inscripciones } from '../services/inscriptions';
 
 export interface InscripcionInitialSurveyResolved {
   initialSurvey: InscripcionInitialSurveyResponse | null;
   loadFailed: boolean;
 }
 
-export const inscripcionInitialSurveyResolver: ResolveFn<InscripcionInitialSurveyResolved> = () =>
+export const inscriptionInitialSurveyResolver: ResolveFn<InscripcionInitialSurveyResolved> = () =>
   inject(Inscripciones)
     .getInitialSurvey()
     .pipe(

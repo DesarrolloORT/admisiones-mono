@@ -6,7 +6,7 @@ import {
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
 } from 'src/app/shared/forms/form-error-summary';
 
-import type { ArchivosIdentidad, MetodoPago, SeccionEncuestaId } from './inscripcion-flow';
+import type { ArchivosIdentidad, MetodoPago, SeccionEncuestaId } from './inscription-flow';
 
 export interface SectionConfig {
   label: string;
@@ -109,6 +109,7 @@ export function createInscripcionForms() {
     }),
     identityForm: new FormGroup({
       vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
+      identidadCorrecta: new FormControl(false, { nonNullable: true }),
     }),
     regulationForm: new FormGroup({
       aceptaReglamento: new FormControl(false, {
@@ -219,6 +220,11 @@ export function createSectionConfig(
           controlName: 'vencimientoDocumento',
           fieldId: '',
           label: 'Vencimiento del documento',
+        },
+        {
+          controlName: 'identidadCorrecta',
+          fieldId: '',
+          label: 'Verificación de identidad correcta',
         },
       ],
     },

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
-import { InscripcionProposalFacade } from '../../facades/inscripcion-proposal';
-import { InscripcionAcademicStep } from './inscripcion-academic-step';
+import { InscripcionProposalFacade } from '../../facades/inscription-proposal';
+import { InscripcionAcademicStep } from './inscription-academic-step';
 
 describe('InscripcionAcademicStep', () => {
   const continueSpy = vi.fn();

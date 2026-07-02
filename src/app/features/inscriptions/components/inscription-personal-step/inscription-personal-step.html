@@ -1,4 +1,4 @@
-<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -- Formulario dinamico de encuesta; dividir al extraer subcomponentes por seccion. -->
 <section aria-labelledby="inscription-personal-title" class="inscription-screen">
   <header class="inscription-screen__header">
     <h2 id="inscription-personal-title">Información personal</h2>
@@ -781,7 +781,18 @@
                 (filesChanged)="facade.updateIdentityFile('selfie', $event)" />
               @if (facade.isIdentityFileMissing('selfie')) {
               <p class="inscription-field-error" role="alert">Adjuntá tu imagen de perfil</p>
-              }
+              } @if (facade.requiresIdentityConfirmation()) {
+              <ort-checkbox
+                class="inscription-identity-confirmation"
+                formControlName="identidadCorrecta">
+                Verifico que la identidad es correcta
+              </ort-checkbox>
+              @if (facade.identityForm.controls.identidadCorrecta.touched &&
+              facade.identityForm.controls.identidadCorrecta.hasError('required')) {
+              <p class="inscription-field-error" role="alert">
+                Confirmá que la identidad es correcta
+              </p>
+              } }
             </section>
           </div>
         </ort-accordion-body>

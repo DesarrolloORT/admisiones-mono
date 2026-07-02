@@ -4,7 +4,7 @@ import type {
   MetodoPago,
   OpcionInscripcion,
   StudentServiceLink,
-} from './inscripcion-flow';
+} from './inscription-flow';
 
 export const SANTANDER_ACCOUNT_URL = 'https://www.santander.com.uy/personas/cuentas/cuenta-soy';
 

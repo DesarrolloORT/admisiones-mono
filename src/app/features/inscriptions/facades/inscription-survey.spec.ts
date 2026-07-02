@@ -5,18 +5,40 @@ import { vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
-import type { InscripcionInitialSurvey } from '../models/inscripcion-flow';
-import { Inscripciones } from '../services/inscripciones';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
-import { InscripcionSurveyFacade } from './inscripcion-survey';
+import type { InscripcionInitialSurvey } from '../models/inscription-flow';
+import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionProposalFacade } from './inscription-proposal';
+import { InscripcionSurveyFacade } from './inscription-survey';
 
 describe('InscripcionSurveyFacade', () => {
   const saveInitialSurvey = vi.fn();
+  const confirmPreEnrollment = vi.fn();
+  const uploadIdentityDocument = vi.fn();
+  const uploadIdentityPhoto = vi.fn();
+  const getIdentityPreload = vi.fn();
+  const getStudentRegulationAcceptance = vi.fn();
 
   beforeEach(() => {
     saveInitialSurvey.mockReset().mockReturnValue(of(true));
+    confirmPreEnrollment.mockReset().mockReturnValue(
+      of({
+        confirmada: true,
+        fechaVencimientoPago: null,
+        seniaInscripcion: null,
+        saldoCuenta: null,
+        resumen: null,
+      })
+    );
+    uploadIdentityDocument.mockReset().mockReturnValue(of(true));
+    uploadIdentityPhoto.mockReset().mockReturnValue(of(true));
+    getIdentityPreload
+      .mockReset()
+      .mockReturnValue(of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null }));
+    getStudentRegulationAcceptance
+      .mockReset()
+      .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null }));
   });
 
   it('resumes an incomplete backend survey at its active section', () => {
@@ -46,6 +68,84 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.visibleSections()).toEqual(['identidad', 'reglamento']);
     await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
     expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  it('requires identity confirmation when backend preload is complete', () => {
+    const { survey } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesEducacionSuperior: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    const file = preloadFile('identidad.png');
+
+    applyIdentityPreload(survey, {
+      frente: file,
+      dorso: file,
+      selfie: file,
+      fechaVencimiento: '2030-02-04',
+    });
+
+    expect(survey.requiresIdentityConfirmation()).toBe(true);
+    expect(survey.identityForm.controls.identidadCorrecta.hasError('required')).toBe(true);
+  });
+  it('does not confirm when a previous visible section is invalid', () => {
+    const { survey } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesEducacionSuperior: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+    survey.activeSection.set('reglamento');
+
+    survey.continue();
+
+    expect(confirmPreEnrollment).not.toHaveBeenCalled();
+    expect(survey.activeSection()).toBe('identidad');
+    expect(survey.preEnrollmentError()).toBe(
+      'Completá la información pendiente antes de confirmar la preinscripción.'
+    );
+  });
+
+  it('uploads touched identity files before confirming pre-enrollment', () => {
+    const { survey, forms } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesEducacionSuperior: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    const frente = new File(['front'], 'frente.png', { type: 'image/png' });
+    const dorso = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
+
+    survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+    survey.identityForm.controls.vencimientoDocumento.markAsDirty();
+    survey.updateIdentityFile('frente', fileEvent(frente));
+    survey.updateIdentityFile('dorso', fileEvent(dorso));
+    survey.updateIdentityFile('selfie', fileEvent(selfie));
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+    forms.academicForm.controls.turno.setValue('300');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).toHaveBeenCalledWith({
+      fecha: '2030-02-04',
+      frente,
+      dorso,
+    });
+    expect(uploadIdentityPhoto).toHaveBeenCalledWith(selfie);
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
   });
 
   it('uses school years and only asks baccalaureate details after 1 EMS', () => {
@@ -118,6 +218,7 @@ describe('InscripcionSurveyFacade', () => {
   ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
+    forms: InscripcionFormsStore;
   } {
     TestBed.configureTestingModule({
       providers: [
@@ -168,13 +269,13 @@ describe('InscripcionSurveyFacade', () => {
         {
           provide: Inscripciones,
           useValue: {
-            getStudentRegulationAcceptance: () =>
-              of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null }),
-            getIdentityPreload: () =>
-              of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null }),
+            getStudentRegulationAcceptance,
+            getIdentityPreload,
             getInitialSurvey: () => of(initialSurvey),
             saveInitialSurvey,
-            confirmPreEnrollment: vi.fn(),
+            uploadIdentityDocument,
+            uploadIdentityPhoto,
+            confirmPreEnrollment,
             registerProductInterest: vi.fn(),
           },
         },
@@ -183,7 +284,33 @@ describe('InscripcionSurveyFacade', () => {
     return {
       survey: TestBed.inject(InscripcionSurveyFacade),
       process: TestBed.inject(InscripcionProcessStore),
+      forms: TestBed.inject(InscripcionFormsStore),
     };
+  }
+
+  function preloadFile(name: string): File {
+    const bytes = new Uint8Array([1, 2, 3]).buffer;
+    return {
+      name,
+      size: 3,
+      type: 'image/png',
+      arrayBuffer: () => Promise.resolve(bytes),
+    } as File;
+  }
+  function applyIdentityPreload(
+    survey: InscripcionSurveyFacade,
+    preload: InscripcionIdentityPreload
+  ): void {
+    (
+      survey as unknown as {
+        applyIdentityPreload(preload: InscripcionIdentityPreload): void;
+      }
+    ).applyIdentityPreload(preload);
+  }
+  function fileEvent(file: File): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+    return { value: [{ isValid: true, file }] } as Parameters<
+      InscripcionSurveyFacade['updateIdentityFile']
+    >[1];
   }
 
   function createInitialSurvey(
@@ -202,6 +329,7 @@ describe('InscripcionSurveyFacade', () => {
       institucionSecundariaId: null,
       ubicacionSecundariaId: null,
       nombreInstitucionSecundaria: null,
+      estadoEducacionSuperiorPreviaId: null,
       tieneEducacionSuperior: null,
       nivelFormacionMadreId: null,
       nivelFormacionPadreId: null,
@@ -210,11 +338,13 @@ describe('InscripcionSurveyFacade', () => {
       anioDecisionCarreraId: null,
       anioDecisionOrtId: null,
       seInformoEnOtrasUniversidades: null,
+      apoyoDecisionId: null,
       apoyoPadres: null,
       apoyoOtros: null,
       apoyoAmigosFamiliares: null,
       apoyoNadie: null,
       apoyoAmigoPropuesta: null,
+      nivelDecisionId: null,
       decisionConfirmada: null,
       tuvoAsesoramientoOrt: null,
       valoracionAsesoramientoOrt: null,

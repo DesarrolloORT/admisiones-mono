@@ -5,11 +5,11 @@ import { afterEach, vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { Inscripciones } from '../services/inscripciones';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionPaymentFacade } from './inscripcion-payment';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
+import { Inscripciones } from '../services/inscriptions';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionPaymentFacade } from './inscription-payment';
+import { InscripcionProposalFacade } from './inscription-proposal';
 
 describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
@@ -66,7 +66,7 @@ describe('InscripcionPaymentFacade', () => {
 
     expect(facade.view()).toBe('processing');
     vi.advanceTimersByTime(1000);
-    expect(facade.outcome()).toBe('inscripcion-confirmada');
+    expect(facade.outcome()).toBe('inscription-confirmada');
   });
 
   it('shows a reusable error alert when no payment method is selected', () => {

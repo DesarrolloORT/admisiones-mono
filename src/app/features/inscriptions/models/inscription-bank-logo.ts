@@ -1,5 +1,5 @@
 import type { Bank } from '../../catalogs/models/catalog.interface';
-import type { OpcionInscripcion } from './inscripcion-flow';
+import type { OpcionInscripcion } from './inscription-flow';
 
 /** Carpeta servida por angular.json desde @desarrolloort/fdp-components/assets/icons/banks. */
 const BANK_LOGO_BASE_PATH = 'assets/banks';

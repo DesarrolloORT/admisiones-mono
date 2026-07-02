@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { InscripcionesEndpoint } from '../endpoints/inscripciones.endpoint';
-import { Inscripciones } from './inscripciones';
+import { InscripcionesEndpoint } from '../endpoints/inscriptions.endpoint';
+import { Inscripciones } from './inscriptions';
 
 describe('Inscripciones', () => {
   let service: Inscripciones;
@@ -12,6 +12,8 @@ describe('Inscripciones', () => {
     getDetail: ReturnType<typeof vi.fn>;
     getIdentityDocument: ReturnType<typeof vi.fn>;
     getIdentityPhoto: ReturnType<typeof vi.fn>;
+    uploadIdentityDocument: ReturnType<typeof vi.fn>;
+    uploadIdentityPhoto: ReturnType<typeof vi.fn>;
     getInitialSurvey: ReturnType<typeof vi.fn>;
     getStudentRegulationAcceptance: ReturnType<typeof vi.fn>;
     saveInitialSurvey: ReturnType<typeof vi.fn>;
@@ -36,6 +38,8 @@ describe('Inscripciones', () => {
         ),
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
+      uploadIdentityDocument: vi.fn().mockReturnValue(of(true)),
+      uploadIdentityPhoto: vi.fn().mockReturnValue(of(true)),
       getInitialSurvey: vi.fn().mockReturnValue(
         of({
           tieneDerechoEncuesta: true,
@@ -104,12 +108,37 @@ describe('Inscripciones', () => {
     });
   });
 
+  it('uploads identity document files as base64', async () => {
+    const frente = new File(['front'], 'frente.png', { type: 'image/png' });
+    const dorso = new File(['back'], 'dorso.jpg', { type: 'image/jpeg' });
+
+    await expect(
+      firstValueFrom(service.uploadIdentityDocument({ fecha: '2030-02-04', frente, dorso }))
+    ).resolves.toBe(true);
+
+    expect(endpointMock.uploadIdentityDocument).toHaveBeenCalledWith({
+      fecha: '2030-02-04',
+      frente: { nombreArchivo: 'frente.png', archivo: 'ZnJvbnQ=' },
+      dorso: { nombreArchivo: 'dorso.jpg', archivo: 'YmFjaw==' },
+    });
+  });
+
+  it('uploads identity photo as base64', async () => {
+    const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
+
+    await expect(firstValueFrom(service.uploadIdentityPhoto(selfie))).resolves.toBe(true);
+
+    expect(endpointMock.uploadIdentityPhoto).toHaveBeenCalledWith({
+      archivoAdjunto: { nombreArchivo: 'selfie.png', archivo: 'cGhvdG8=' },
+    });
+  });
   it('delegates initial survey loading and saving', () => {
     const payload = {
       carreraId: 20,
       comienzoId: 200,
       orientacionBachilleratoId: null,
       anioBachillerato: null,
+      cursaSecundariaActualmente: null,
       vecesRecursaAnioBachillerato: null,
       recursaAnioBachillerato: null,
       nivelFormacionPadreTutorId: null,
@@ -121,7 +150,6 @@ describe('Inscripciones', () => {
       informacionOtrasUniversidadesLinea2: null,
       apoyoDecisionId: null,
       institucionSecundariaId: null,
-      autorizaInformarEncuesta: null,
       nombreInstitucionSecundaria: null,
       ubicacionUltimoAnioSecundariaId: null,
       estadoEducacionSuperiorPreviaId: null,

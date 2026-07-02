@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
-import { InscripcionSuccessStep } from './inscripcion-success-step';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
+import { InscripcionSuccessStep } from './inscription-success-step';
 
 describe('InscripcionSuccessStep', () => {
   it('creates with its step facade', () => {

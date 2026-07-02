@@ -17,11 +17,11 @@ import {
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
-import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
+import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
 import { ResponsiveSelect } from '../responsive-select/responsive-select';
 
 @Component({
-  selector: 'app-inscripcion-personal-step',
+  selector: 'app-inscription-personal-step',
   imports: [
     DatePipe,
     ErrorAlert,
@@ -39,8 +39,8 @@ import { ResponsiveSelect } from '../responsive-select/responsive-select';
     ReactiveFormsModule,
     ResponsiveSelect,
   ],
-  templateUrl: './inscripcion-personal-step.html',
-  styleUrls: ['../../pages/inscripcion/inscripcion.scss', './inscripcion-personal-step.scss'],
+  templateUrl: './inscription-personal-step.html',
+  styleUrls: ['../../pages/inscription/inscription.scss', './inscription-personal-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionPersonalStep {

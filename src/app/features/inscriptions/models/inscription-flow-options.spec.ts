@@ -1,4 +1,4 @@
-import { getOptionLabel, toCatalogOptions } from './inscripcion-flow-options';
+import { getOptionLabel, toCatalogOptions } from './inscription-flow-options';
 
 describe('inscription flow options', () => {
   it('maps catalog items to form options', () => {

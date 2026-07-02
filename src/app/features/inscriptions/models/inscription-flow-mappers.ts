@@ -5,8 +5,8 @@ import type {
   InscripcionInitialSurveyResponse,
   OpcionInscripcion,
   ValoresEncuesta,
-} from './inscripcion-flow';
-import type { InscripcionForms } from './inscripcion-flow-forms';
+} from './inscription-flow';
+import type { InscripcionForms } from './inscription-flow-forms';
 
 const SCHOOL_PLACE_NATIONAL = '1';
 const SCHOOL_PLACE_INTERNATIONAL = '2';
@@ -58,10 +58,10 @@ export function patchBackendSurveyForms(
       orientacion: toFormValue(survey.orientacionBachilleratoId),
       lugarSecundaria: getSchoolPlaceValue(survey),
       institucionEducativa: schoolInstitution.toString(),
-      estadoEducacionSuperior: findHigherEducationOption(
-        survey.tieneEducacionSuperior,
-        context.previousCareerOptions
-      ),
+      estadoEducacionSuperior:
+        survey.estadoEducacionSuperiorPreviaId !== null
+          ? toFormValue(survey.estadoEducacionSuperiorPreviaId)
+          : findHigherEducationOption(survey.tieneEducacionSuperior, context.previousCareerOptions),
       universidadesEducacionSuperior: toSelectedOptionValues(
         response.universidadesEducacionSuperior
       ),
@@ -75,12 +75,21 @@ export function patchBackendSurveyForms(
   forms.academicDecisionForm.patchValue(
     {
       anioDecisionCarrera: toFormValue(survey.anioDecisionCarreraId),
-      apoyoDecision: findSupportOption(survey, context.supportOptions),
+      apoyoDecision:
+        survey.apoyoDecisionId !== null
+          ? toFormValue(survey.apoyoDecisionId)
+          : findSupportOption(survey, context.supportOptions),
       anioDecisionOrt: toFormValue(survey.anioDecisionOrtId),
       otrasUniversidades: toYesNoValue(survey.seInformoEnOtrasUniversidades),
       universidadesInformadas: toSelectedOptionValues(response.universidadesConsideradas),
       certezaDecision:
-        survey.decisionConfirmada === true ? '1' : survey.decisionConfirmada === false ? '2' : '',
+        survey.nivelDecisionId !== null
+          ? toFormValue(survey.nivelDecisionId)
+          : survey.decisionConfirmada === true
+            ? '1'
+            : survey.decisionConfirmada === false
+              ? '2'
+              : '',
       motivosOrt: toSelectedOptionValues(response.opcionesMotivosSeleccionados),
     },
     { emitEvent: false }
@@ -128,6 +137,7 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
         ? toNullableNumber(education.orientacion.value)
         : null,
     anioBachillerato: currentlyInSchool ? toNullableNumber(education.anioSecundaria.value) : null,
+    cursaSecundariaActualmente: currentlyInSchool,
     vecesRecursaAnioBachillerato: null,
     recursaAnioBachillerato: null,
     nivelFormacionPadreTutorId: toNullableNumber(education.formacionPadre.value),
@@ -141,7 +151,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
     institucionSecundariaId: nationalSchoolPlace
       ? toNullableNumber(education.institucionEducativa.value)
       : null,
-    autorizaInformarEncuesta: null,
     nombreInstitucionSecundaria: nationalSchoolPlace
       ? null
       : toNullableText(education.institucionEducativa.value),

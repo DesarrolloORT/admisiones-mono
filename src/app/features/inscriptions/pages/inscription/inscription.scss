@@ -76,12 +76,12 @@ ort-card p {
   padding-block-start: var(--ort-sys-spacing-8);
 }
 
-[inscripcionDialogActions] {
+[inscriptionDialogActions] {
   display: grid;
   gap: var(--ort-sys-spacing-8);
 }
 
-[inscripcionDialogActions] button {
+[inscriptionDialogActions] button {
   width: 100%;
 }
 
@@ -115,12 +115,12 @@ ort-card a[ort-primary-button] {
 }
 
 .inscription-accordion-item--complete .inscription-accordion__state-icon {
-  color: var(--ort-sys-color-success, #079455);
+  color: var(--ort-sys-base-text-success-color);
 }
 
 .inscription-field-error {
   margin: calc(var(--ort-sys-spacing-8) * -1) 0 0;
-  color: var(--ort-sys-base-text-error-color, #b42318);
+  color: var(--ort-sys-base-text-error-color);
   font-size: var(--ort-sys-body-sm-text-size);
   line-height: var(--ort-sys-body-sm-line-height);
 }
@@ -154,7 +154,7 @@ ort-card h4 {
 
 .inscription-dialog-error {
   margin: 0;
-  color: var(--ort-sys-base-text-error-color, #b42318);
+  color: var(--ort-sys-base-text-error-color);
   font-weight: 600;
 }
 
@@ -180,8 +180,8 @@ ort-card h4 {
 }
 
 .inscription-error-heading__icon {
-  background: var(--ort-sys-alert-background-error, #fef3f2);
-  color: var(--ort-sys-base-icon-error-color, #d92d20);
+  background: var(--ort-sys-alert-background-error);
+  color: var(--ort-sys-base-icon-error-color);
 }
 
 .inscription-error-heading__icon ort-icon {
