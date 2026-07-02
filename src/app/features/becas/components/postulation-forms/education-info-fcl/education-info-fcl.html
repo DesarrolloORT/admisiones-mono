@@ -1,6 +1,13 @@
-<div class="scholarship-accordion__content">
-  <ort-radio-group legend="¿Cursaste otros estudios?" orientation="vertical" [required]="true">
+<div class="scholarship-accordion__content" [formGroup]="educationInfoFclForm">
+  <ort-radio-group
+    formControlName="otherStudies"
+    legend="¿Cursaste otros estudios?"
+    orientation="vertical"
+    [required]="true">
     <ort-radio-button class="inscription-radio-option" value="si">Si, cursé</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
   </ort-radio-group>
+  @if (otherStudiesControl.invalid && (submitted() || otherStudiesControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 </div>

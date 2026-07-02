@@ -1,5 +1,6 @@
-<div class="scholarship-accordion__content">
+<div class="scholarship-accordion__content" [formGroup]="personalDataForm">
   <ort-radio-group
+    formControlName="attendanceMode"
     legend="Si comenzás la carrera, ¿cómo asistirás?"
     orientation="vertical"
     [required]="true">
@@ -10,4 +11,8 @@
       Viajaré para asistir a clases
     </ort-radio-button>
   </ort-radio-group>
+
+  @if (attendanceModeControl.invalid && (submitted() || attendanceModeControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 </div>

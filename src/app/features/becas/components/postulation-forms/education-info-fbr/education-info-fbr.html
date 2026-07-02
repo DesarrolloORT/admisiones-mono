@@ -1,5 +1,8 @@
-<div class="scholarship-accordion__content">
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+
+<div class="scholarship-accordion__content" [formGroup]="educationInfoFbrForm">
   <ort-radio-group
+    formControlName="schoolLocation"
     legend="¿Dónde cursaste el último año de secundaria?"
     orientation="vertical"
     [required]="true">
@@ -8,8 +11,15 @@
       En el exterior
     </ort-radio-button>
   </ort-radio-group>
+  @if (schoolLocationControl.invalid && (submitted() || schoolLocationControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 
-  <ort-radio-group legend="Indica el último año cursado" orientation="vertical" [required]="true">
+  <ort-radio-group
+    formControlName="lastYear"
+    legend="Indica el último año cursado"
+    orientation="vertical"
+    [required]="true">
     <ort-radio-button class="inscription-radio-option" value="2ems">
       2º EMS (5º año)
     </ort-radio-button>
@@ -17,8 +27,12 @@
       3º EMS (6º año)
     </ort-radio-button>
   </ort-radio-group>
+  @if (lastYearControl.invalid && (submitted() || lastYearControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 
   <ort-radio-group
+    formControlName="universityLocation"
     legend="¿Dónde cursaste los estudios universitarios a revalidar?"
     orientation="vertical"
     [required]="true">
@@ -27,36 +41,59 @@
       En el exterior
     </ort-radio-button>
   </ort-radio-group>
+  @if (universityLocationControl.invalid && (submitted() || universityLocationControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 
   <ort-form-field>
     <ort-label>Carrera cursada o en curso</ort-label>
-    <input ortInput required />
+    <input formControlName="career" ortInput required />
   </ort-form-field>
+  @if (careerControl.invalid && (submitted() || careerControl.touched)) {
+  <ort-error>Ingresá la carrera cursada o en curso</ort-error>
+  }
 
   <ort-form-field>
     <ort-label>Cantidad de materias aprobadas</ort-label>
-    <input ortInput required />
+    <input formControlName="approvedSubjects" ortNumberInput required />
   </ort-form-field>
+  @if (approvedSubjectsControl.invalid && (submitted() || approvedSubjectsControl.touched)) {
+  <ort-error>Ingresá la cantidad de materias aprobadas</ort-error>
+  }
 
   <ort-form-field>
     <ort-label>Cantidad de materias</ort-label>
-    <input ortInput required />
+    <input formControlName="totalSubjects" ortNumberInput required />
   </ort-form-field>
+  @if (totalSubjectsControl.invalid && (submitted() || totalSubjectsControl.touched)) {
+  <ort-error>Ingresá la cantidad de materias</ort-error>
+  }
 
   <ort-form-field>
     <ort-label>Promedio de calificaciones</ort-label>
-    <input ortInput required />
+    <input formControlName="average" ortNumberInput required />
     <ort-hint>Considerando materias y exámenes aprobados.</ort-hint>
   </ort-form-field>
+  @if (averageControl.invalid && (submitted() || averageControl.touched)) {
+  <ort-error>Ingresá el promedio de calificaciones</ort-error>
+  }
 
   <ort-form-field>
-    <ort-label>Carrera cursada o en curso</ort-label>
-    <input ortInput required />
+    <ort-label>Promedio total de calificaciones</ort-label>
+    <input formControlName="averageRevalidation" ortNumberInput required />
     <ort-hint>Considerando materias y exámenes aprobados y reprobados.</ort-hint>
   </ort-form-field>
+  @if (averageRevalidationControl.invalid && (submitted() || averageRevalidationControl.touched)) {
+  <ort-error>Ingresá el promedio total de calificaciones</ort-error>
+  }
 
   <ort-file-uploader
     display="inline"
     label="Formulario de reválidas *"
-    [acceptedTypes]="['.pdf']" />
+    [acceptedTypes]="['.pdf']"
+    (filesChanged)="onRevalidationFormFilesChanged($event)" />
+  @if (revalidationFormFileControl.invalid && (submitted() || revalidationFormFileControl.touched))
+  {
+  <ort-error>Adjuntá el formulario de reválidas</ort-error>
+  }
 </div>

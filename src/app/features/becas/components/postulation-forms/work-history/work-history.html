@@ -1,9 +1,14 @@
-<div class="scholarship-accordion__content">
+<div class="scholarship-accordion__content" [formGroup]="workHistoryForm">
   <ort-radio-group
+    formControlName="workHistory"
     legend="¿Contás con experiencia laboral?"
     orientation="vertical"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="si">Si</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
   </ort-radio-group>
+
+  @if (workHistoryControl.invalid && (submitted() || workHistoryControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
 </div>
