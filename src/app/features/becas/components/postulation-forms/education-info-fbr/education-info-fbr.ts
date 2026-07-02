@@ -30,10 +30,10 @@ export class EducationInfoFbr {
     lastYear: new FormControl<string | null>(null, Validators.required),
     universityLocation: new FormControl<string | null>(null, Validators.required),
     career: new FormControl<string | null>(null, Validators.required),
-    approvedSubjects: new FormControl<string | null>(null, Validators.required),
-    totalSubjects: new FormControl<string | null>(null, Validators.required),
-    average: new FormControl<string | null>(null, Validators.required),
-    averageRevalidation: new FormControl<string | null>(null, Validators.required),
+    approvedSubjects: new FormControl<number | null>(null, Validators.required),
+    totalSubjects: new FormControl<number | null>(null, Validators.required),
+    average: new FormControl<number | null>(null, Validators.required),
+    averageRevalidation: new FormControl<number | null>(null, Validators.required),
     revalidationFormFile: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly schoolLocationControl = this.educationInfoFbrForm.controls.schoolLocation;

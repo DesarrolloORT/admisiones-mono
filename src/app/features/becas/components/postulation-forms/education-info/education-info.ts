@@ -24,8 +24,8 @@ import {
 export class EducationInfo {
   protected readonly submitted = signal(false);
   protected readonly educationInfoForm = new FormGroup({
-    averageSecondYear: new FormControl<string | null>(null, Validators.required),
-    averageThirdYear: new FormControl<string | null>(null, Validators.required),
+    averageSecondYear: new FormControl<number | null>(null, Validators.required),
+    averageThirdYear: new FormControl<number | null>(null, Validators.required),
     certificateFile: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly averageSecondYearControl = this.educationInfoForm.controls.averageSecondYear;
