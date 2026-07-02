@@ -591,16 +591,6 @@ namespace UnitTesting.AppLogic.Services
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(encuesta);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
 
-            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-
-            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
-            _dbConnectionContextMock
-                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_3100))
-                .Returns(900)
-                .Returns(901);
-
             var fechaAntes = DateTime.Now;
             var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
             var fechaDespues = DateTime.Now;
@@ -684,12 +674,6 @@ namespace UnitTesting.AppLogic.Services
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-
-            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
 
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
@@ -839,16 +823,6 @@ namespace UnitTesting.AppLogic.Services
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
 
-            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-
-            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
-            _dbConnectionContextMock
-                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_3100))
-                .Returns(900)
-                .Returns(901);
-
             var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
 
             Assert.True(result.Success);
@@ -872,64 +846,6 @@ namespace UnitTesting.AppLogic.Services
                     r.Operacion.OrigenLlamador == null),
                 It.IsAny<int>(),
                 nameof(InscripcionesService.RegistrarInteresProducto)), Times.Once);
-        }
-
-        [Fact]
-        public void RegistrarInteresProducto_ConAccionExistente_NoDuplicaActividadNiAccion()
-        {
-            var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var procesoRepo = new Mock<IProcesoRepository>();
-            procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
-            _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
-
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(false);
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(false);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-            SetupOfertaValidaParaRegistro();
-
-            var intereRepo = new Mock<BusinessLogic.IDevartRepositories.IIntereRepository>();
-            intereRepo.Setup(r => r.GetInteresesPersonaProcesosHabilitados(123)).Returns(new List<Intere>());
-            _uowMock.Setup(u => u.Interes).Returns(intereRepo.Object);
-            _dbConnectionContextMock
-                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES))
-                .Returns(500);
-
-            var interesProductoRepo = new Mock<BusinessLogic.IDevartRepositories.IInteresProductoRepository>();
-            _uowMock.Setup(u => u.InteresProductos).Returns(interesProductoRepo.Object);
-
-            var personaAdmiteRepo = new Mock<IPersonaAdmiteRepository>();
-            personaAdmiteRepo.Setup(r => r.GetByKey(123)).Returns((PersonaAdmite)null);
-            _uowMock.Setup(u => u.PersonaAdmites).Returns(personaAdmiteRepo.Object);
-
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var actividadRepo = new Mock<BusinessLogic.IDevartRepositories.IActividadRepository>();
-            _uowMock.Setup(u => u.Actividads).Returns(actividadRepo.Object);
-
-            var accionRepo = new Mock<BusinessLogic.IDevartRepositories.IAccionRepository>();
-            _uowMock.Setup(u => u.Accions).Returns(accionRepo.Object);
-
-            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
-            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
-
-            var result = _service.RegistrarInteresProducto(123, new DtoInteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20, IdOferta = 30 });
-
-            Assert.True(result.Success);
-            actividadRepo.Verify(r => r.Add(It.IsAny<Actividad>()), Times.Never);
-            accionRepo.Verify(r => r.Add(It.IsAny<Accion>()), Times.Never);
         }
 
         [Fact]

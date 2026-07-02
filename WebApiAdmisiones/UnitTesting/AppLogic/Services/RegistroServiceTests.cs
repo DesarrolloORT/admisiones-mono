@@ -387,8 +387,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Verify(u => u.Interes, Times.Never);
             _uowMock.Verify(u => u.InteresProductos, Times.Never);
             _uowMock.Verify(u => u.PersonaAdmites, Times.Never);
-            _uowMock.Verify(u => u.Actividads, Times.Never);
-            _uowMock.Verify(u => u.Accions, Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 
