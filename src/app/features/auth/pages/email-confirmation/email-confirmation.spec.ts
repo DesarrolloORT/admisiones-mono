@@ -30,25 +30,12 @@ describe('EmailConfirmation', () => {
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/iniciar-sesion');
   });
 
-  it('continues a two-factor flow preserving the router state', () => {
-    const state = {
-      documentNumber: '11111111',
-      documentType: 'CI',
-      email: 'c******a@gmail.******',
-      sessionId: 'session-123',
-    };
-    history.replaceState(state, '');
+  it('continues a two-factor flow without router state', () => {
     setup(TWO_FACTOR_EMAIL_CONFIRMATION);
 
     clickPrimaryButton(fixture.nativeElement as HTMLElement);
 
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/verificar-codigo', { state });
-  });
-
-  it('redirects to login when two-factor state is missing', () => {
-    setup(TWO_FACTOR_EMAIL_CONFIRMATION);
-
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/iniciar-sesion');
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/verificar-codigo');
   });
 
   function setup(confirmation: unknown): void {

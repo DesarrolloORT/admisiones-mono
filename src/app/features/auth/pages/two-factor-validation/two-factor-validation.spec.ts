@@ -13,12 +13,19 @@ describe('TwoFactorValidationPage', () => {
   let authSessionMock: {
     completeTwoFactor: ReturnType<typeof vi.fn>;
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
+    takePendingTwoFactorContext: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
   let snackbarMock: { error: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn> };
 
-  function setup(state: unknown = { email: 'a@b.com', sessionId: 'abc-123' }): void {
-    history.replaceState(state, '');
+  function setup(
+    context: unknown = {
+      documentNumber: '12345678',
+      documentType: 'CI',
+      email: 'a@b.com',
+      sessionId: 'abc-123',
+    }
+  ): void {
     authSessionMock = {
       completeTwoFactor: vi
         .fn()
@@ -30,6 +37,7 @@ describe('TwoFactorValidationPage', () => {
           message: 'Código reenviado.',
         })
       ),
+      takePendingTwoFactorContext: vi.fn().mockReturnValue(context),
     };
     snackbarMock = { error: vi.fn(), success: vi.fn() };
     TestBed.configureTestingModule({
@@ -60,15 +68,21 @@ describe('TwoFactorValidationPage', () => {
   });
 
   it('redirects to login when no session id is provided', () => {
-    setup({});
+    setup(null);
 
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/iniciar-sesion');
   });
 
-  it('restores email and session from history state', () => {
-    setup({ email: 'john.doe@example.com', sessionId: 'abc-123' });
+  it('takes the pending context from the in-memory auth session', () => {
+    setup({
+      documentNumber: '12345678',
+      documentType: 'CI',
+      email: 'john.doe@example.com',
+      sessionId: 'abc-123',
+    });
 
     expect(component['email']()).toBe('john.doe@example.com');
+    expect(authSessionMock.takePendingTwoFactorContext).toHaveBeenCalledOnce();
   });
 
   it('completes 2FA via auth session and navigates home on success', () => {
@@ -91,7 +105,7 @@ describe('TwoFactorValidationPage', () => {
   });
 
   it('shows a snackbar when verification fails', () => {
-    setup({ email: 'a@b.com', sessionId: 'abc-123' });
+    setup();
     authSessionMock.completeTwoFactor.mockReturnValue(throwError(() => new Error('boom')));
 
     component['verify']('111111');
@@ -116,19 +130,12 @@ describe('TwoFactorValidationPage', () => {
     expect(authSessionMock.resendTwoFactorCode).toHaveBeenCalledWith('abc-123');
     expect(component['email']()).toBe('a***@example.com');
     expect(component['isSubmitting']()).toBe(false);
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/verificar-codigo', {
-      state: {
-        email: 'a***@example.com',
-        sessionId: 'session-456',
-        documentType: 'CI',
-        documentNumber: '12345678',
-      },
-    });
-    expect(snackbarMock.success).not.toHaveBeenCalled();
+    expect(navigateByUrlSpy).not.toHaveBeenCalled();
+    expect(snackbarMock.success).toHaveBeenCalledWith('Código reenviado.');
   });
 
   it('shows a snackbar when resending fails', () => {
-    setup({ email: 'a@b.com', sessionId: 'abc-123' });
+    setup();
     authSessionMock.resendTwoFactorCode.mockReturnValue(throwError(() => new Error('boom')));
 
     component['resend']();

@@ -106,7 +106,7 @@ describe('DocumentRecognition', () => {
 
     const file = fileWithSize(
       new File(['original'], 'cedula.png', { type: 'image/png' }),
-      DocumentRecognition.MAX_FILE_SIZE_BYTES + 1
+      DocumentRecognition.IMAGE_COMPRESSION_THRESHOLD_BYTES + 1
     );
 
     const payload = await service.createRequestFromFile(file);
@@ -140,6 +140,14 @@ describe('DocumentRecognition', () => {
     await expect(service.createRequestFromFile(new File(['content'], 'documento'))).rejects.toEqual(
       new DocumentRecognitionFileError('invalidMimeType')
     );
+  });
+
+  it('should reject active or unsupported image formats', async () => {
+    await expect(
+      service.createRequestFromFile(
+        new File(['<svg/>'], 'documento.svg', { type: 'image/svg+xml' })
+      )
+    ).rejects.toEqual(new DocumentRecognitionFileError('invalidMimeType'));
   });
 });
 

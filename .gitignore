@@ -56,5 +56,3 @@ Thumbs.db
 # Azure-generated frontend environment
 src/environments/generated-environment.ts
 
-# Local sync cache
-.ort/env-cache/

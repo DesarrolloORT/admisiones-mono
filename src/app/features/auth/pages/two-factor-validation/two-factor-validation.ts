@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
@@ -7,13 +6,6 @@ import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
 import { AuthSessionService } from '../../services/auth-session';
-
-interface TwoFactorRouterState {
-  email?: unknown;
-  sessionId?: unknown;
-  documentType?: unknown;
-  documentNumber?: unknown;
-}
 
 @Component({
   selector: 'app-two-factor-validation-page',
@@ -26,7 +18,6 @@ export class TwoFactorValidationPage {
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
-  private readonly document = inject(DOCUMENT);
 
   protected readonly email = signal<string>('');
   protected readonly isSubmitting = signal<boolean>(false);
@@ -92,16 +83,8 @@ export class TwoFactorValidationPage {
           this.email.set(result.maskedEmail);
         }
 
-        void this.router
-          .navigateByUrl('/confirmacion-correo/verificar-codigo', {
-            state: {
-              email: this.email(),
-              sessionId: this.sessionId(),
-              documentType: this.documentType(),
-              documentNumber: this.documentNumber(),
-            },
-          })
-          .finally(() => this.isSubmitting.set(false));
+        this.snackbar.success('Código reenviado.');
+        this.isSubmitting.set(false);
       },
       error: error => {
         const message = isNormalizedApiError(error)
@@ -114,26 +97,16 @@ export class TwoFactorValidationPage {
   }
 
   private restoreStateFromNavigation(): void {
-    const navigation = this.router.getCurrentNavigation();
-    const navigationState = navigation?.extras.state as TwoFactorRouterState | undefined;
-    const historyState = this.document.defaultView?.history.state as
-      | TwoFactorRouterState
-      | undefined;
-    const state = navigationState ?? historyState ?? {};
+    const context = this.authSession.takePendingTwoFactorContext();
 
-    const email = typeof state.email === 'string' ? state.email : '';
-    const sessionId = typeof state.sessionId === 'string' ? state.sessionId : '';
-    const documentType = typeof state.documentType === 'string' ? state.documentType : '';
-    const documentNumber = typeof state.documentNumber === 'string' ? state.documentNumber : '';
-
-    if (!sessionId) {
+    if (!context) {
       void this.router.navigateByUrl('/iniciar-sesion');
       return;
     }
 
-    this.email.set(email);
-    this.sessionId.set(sessionId);
-    this.documentType.set(documentType);
-    this.documentNumber.set(documentNumber);
+    this.email.set(context.email);
+    this.sessionId.set(context.sessionId);
+    this.documentType.set(context.documentType);
+    this.documentNumber.set(context.documentNumber);
   }
 }

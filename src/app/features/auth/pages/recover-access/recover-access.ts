@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
   OrtFormFieldModule,
@@ -48,7 +48,6 @@ import { PasswordActivationService } from '../../services/password-activation';
 export class RecoverAccess {
   private readonly document = inject(DOCUMENT);
   private readonly passwordService = inject(PasswordActivationService);
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -86,8 +85,6 @@ export class RecoverAccess {
     effect(() => {
       syncDocumentNumberValidators(this.form.controls.documentNumber, this.documentTypeValue());
     });
-
-    this.prefillFromQueryParams();
   }
 
   protected submit(): void {
@@ -109,37 +106,23 @@ export class RecoverAccess {
       .recoverPassword({
         tipoDocumento: documentType,
         documento: formatDocumentForBackend(documentType, documentNumber),
-        primerApellido,
+        primerApellido: primerApellido.trim(),
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: () => {
-          void this.router.navigateByUrl('/confirmacion-correo/recuperar-acceso');
-        },
+        next: () => this.completeRequest(),
         error: error => {
-          const message = this.getApiErrorMessage(
-            error,
-            'No se pudo procesar la solicitud. Intentá nuevamente.'
-          );
-          this.snackbar.error(message);
+          if (isNormalizedApiError(error) && error.status >= 400 && error.status < 500) {
+            this.completeRequest();
+            return;
+          }
+
+          this.snackbar.error('No se pudo procesar la solicitud. Intentá nuevamente.');
         },
       });
   }
 
-  private prefillFromQueryParams(): void {
-    const params = this.route.snapshot.queryParamMap;
-    const tipoDoc = params.get('tipoDoc');
-    const doc = params.get('doc');
-
-    if (tipoDoc) {
-      this.form.controls.documentType.setValue(tipoDoc);
-    }
-    if (doc) {
-      this.form.controls.documentNumber.setValue(doc);
-    }
-  }
-
-  private getApiErrorMessage(error: unknown, fallback: string): string {
-    return isNormalizedApiError(error) ? error.message : fallback;
+  private completeRequest(): void {
+    void this.router.navigateByUrl('/confirmacion-correo/recuperar-acceso');
   }
 }

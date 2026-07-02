@@ -5,6 +5,10 @@ import { vi } from 'vitest';
 const mockStorage = () => {
   let storage: Record<string, string> = {};
   return {
+    get length() {
+      return Object.keys(storage).length;
+    },
+    key: (index: number) => Object.keys(storage)[index] ?? null,
     getItem: (key: string) => (key in storage ? storage[key] : null),
     setItem: (key: string, value: string) => {
       storage[key] = value;

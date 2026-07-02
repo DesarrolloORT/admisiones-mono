@@ -15,23 +15,18 @@ export class DocumentRecognition {
   public static readonly MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
   public static readonly IMAGE_COMPRESSION_THRESHOLD_BYTES = 5 * 1024 * 1024;
 
-  private static readonly MAX_COMPRESSIBLE_IMAGE_SIZE_BYTES =
-    DocumentRecognition.MAX_FILE_SIZE_BYTES * 2;
   private static readonly COMPRESSED_IMAGE_MAX_SIDE_PX = 2000;
   private static readonly COMPRESSED_IMAGE_QUALITY = 0.82;
   private static readonly COMPRESSED_IMAGE_TYPE = 'image/jpeg';
-  private static readonly MIME_PATTERN = /^[\w.+-]+\/[\w.+-]+$/;
   private static readonly MIME_BY_EXTENSION: Record<string, string> = {
     pdf: 'application/pdf',
     jpg: 'image/jpeg',
     jpeg: 'image/jpeg',
     png: 'image/png',
-    tif: 'image/tiff',
-    tiff: 'image/tiff',
-    bmp: 'image/bmp',
-    webp: 'image/webp',
-    heic: 'image/heic',
   };
+  private static readonly ALLOWED_MIME_TYPES = new Set(
+    Object.values(DocumentRecognition.MIME_BY_EXTENSION)
+  );
 
   private readonly endpoint = inject(AuthEndpoint);
 
@@ -51,10 +46,7 @@ export class DocumentRecognition {
       throw new DocumentRecognitionFileError('invalidMimeType');
     }
 
-    if (
-      file.size > DocumentRecognition.MAX_FILE_SIZE_BYTES &&
-      !this.shouldCompressImage(file, tipoMime)
-    ) {
+    if (file.size > DocumentRecognition.MAX_FILE_SIZE_BYTES) {
       throw new DocumentRecognitionFileError('maxFileSize');
     }
 
@@ -88,7 +80,7 @@ export class DocumentRecognition {
   private shouldCompressImage(file: File, tipoMime: string): boolean {
     return (
       file.size > DocumentRecognition.IMAGE_COMPRESSION_THRESHOLD_BYTES &&
-      file.size <= DocumentRecognition.MAX_COMPRESSIBLE_IMAGE_SIZE_BYTES &&
+      file.size <= DocumentRecognition.MAX_FILE_SIZE_BYTES &&
       tipoMime.startsWith('image/')
     );
   }
@@ -167,8 +159,12 @@ export class DocumentRecognition {
   }
 
   private inferMimeType(file: File): string | null {
-    if (file.type && DocumentRecognition.MIME_PATTERN.test(file.type)) {
+    if (DocumentRecognition.ALLOWED_MIME_TYPES.has(file.type)) {
       return file.type;
+    }
+
+    if (file.type) {
+      return null;
     }
 
     const extension = this.getFileExtension(file.name);
