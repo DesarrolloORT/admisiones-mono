@@ -4,28 +4,25 @@
 }
 
 .personal-data-shell {
-  --personal-data-heading: var(--ort-sys-base-text-color-headline, #121926);
-  --personal-data-body: var(--ort-sys-base-text-color-body, #364152);
-
-  color: var(--personal-data-heading);
+  color: var(--ort-sys-base-text-color-headline);
   font-family: var(--ort-sys-font-family-open-sans, 'Open Sans', sans-serif);
 }
 
 .personal-data-form {
   display: grid;
-  gap: 24px;
-  width: min(480px, calc(100% - 32px));
+  gap: var(--ort-sys-spacing-24);
+  width: 100%;
   margin: 0 auto;
-  padding: 24px 0;
+  padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
 }
 
 .personal-data-section {
   display: grid;
-  gap: 16px;
+  gap: var(--ort-sys-spacing-16);
 }
 
 .personal-data-section__title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--ort-sys-spacing-8);
   font-weight: 700;
   font-size: var(--ort-sys-heading-level5-text-size, 20px);
   font-family: var(--ort-sys-font-family-display, Montserrat, sans-serif);
@@ -33,37 +30,9 @@
   letter-spacing: 0;
 }
 
-.personal-data-phone-prefix {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--personal-data-heading);
-  white-space: nowrap;
-}
-
-.personal-data-phone-flag {
-  display: inline-block;
-  width: 24px;
-  height: 18px;
-  border: 1px solid var(--ort-sys-base-border-subtle-color, #cdd5df);
-  border-radius: 50%;
-  background: linear-gradient(
-    to bottom,
-    #fff 0 11%,
-    #2f80ed 11% 22%,
-    #fff 22% 33%,
-    #2f80ed 33% 44%,
-    #fff 44% 55%,
-    #2f80ed 55% 66%,
-    #fff 66% 77%,
-    #2f80ed 77% 88%,
-    #fff 88% 100%
-  );
-}
-
 .personal-data-actions {
   display: grid;
-  gap: 8px;
+  gap: var(--ort-sys-spacing-8);
 }
 
 .personal-data-actions button {
@@ -72,24 +41,12 @@
 
 .personal-data-loading {
   display: grid;
-  gap: 16px;
+  gap: var(--ort-sys-spacing-16);
 }
 
-.personal-data-sr-only {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  white-space: nowrap;
-}
-
-@media (width <= 760px) {
+@media (width >= 761px) {
   .personal-data-form {
-    width: 100%;
-    padding: 24px 16px;
+    width: min(480px, calc(100% - 32px));
+    padding: var(--ort-sys-spacing-24) 0;
   }
 }

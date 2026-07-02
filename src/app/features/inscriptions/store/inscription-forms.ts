@@ -1,4 +1,4 @@
-import { createInscripcionForms, createSectionConfig } from '../models/inscripcion-flow-forms';
+import { createInscripcionForms, createSectionConfig } from '../models/inscription-flow-forms';
 
 export class InscripcionFormsStore {
   public readonly forms = createInscripcionForms();

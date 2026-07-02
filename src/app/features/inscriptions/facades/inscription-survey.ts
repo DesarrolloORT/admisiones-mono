@@ -7,8 +7,8 @@ import type {
   OrtFileUploaderChange,
   OrtPreloadedFile,
 } from '@desarrolloort/components';
-import { merge, Observable, of } from 'rxjs';
-import { finalize, switchMap } from 'rxjs/operators';
+import { forkJoin, merge, Observable, of } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -29,33 +29,35 @@ import type {
   InscripcionStudentRegulationAcceptance,
   OpcionInscripcion,
   SeccionEncuestaId,
-} from '../models/inscripcion-flow';
+} from '../models/inscription-flow';
 import {
   buildFormErrors,
   type IdentityFileTarget,
   type IdentityPreloadedFileMap,
-} from '../models/inscripcion-flow-forms';
+} from '../models/inscription-flow-forms';
 import {
   buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
   hasCompleteUniversityEducation,
   parseDate,
   patchBackendSurveyForms,
-} from '../models/inscripcion-flow-mappers';
-import { toCatalogOptions } from '../models/inscripcion-flow-options';
-import { getSeccionesVisibles } from '../models/inscripcion-flow-policy';
-import type { InscripcionInitialSurveyResolved } from '../resolvers/inscripcion-initial-survey.resolver';
-import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscripciones';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
+  serializeDate,
+} from '../models/inscription-flow-mappers';
+import { toCatalogOptions } from '../models/inscription-flow-options';
+import { getSeccionesVisibles } from '../models/inscription-flow-policy';
+import type { InscripcionInitialSurveyResolved } from '../resolvers/inscription-initial-survey.resolver';
+import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionProposalFacade } from './inscription-proposal';
 
 const FIRST_EMS_SCHOOL_YEAR = '10';
 const URUGUAY_COUNTRY_CODE = 1;
+const IDENTITY_SAVE_ERROR = 'identity-save';
 
 export class InscripcionSurveyFacade {
   private readonly catalogs = inject(Catalogs);
-  private readonly inscripciones = inject(Inscripciones);
+  private readonly inscriptions = inject(Inscripciones);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formsStore = inject(InscripcionFormsStore);
@@ -100,6 +102,7 @@ export class InscripcionSurveyFacade {
     dorso: null,
     selfie: null,
   });
+  public readonly requiresIdentityConfirmation = signal(false);
   public readonly hasAcceptedStudentRegulation = signal(false);
   public readonly submittedAcceptanceDate = signal<Date | null>(null);
 
@@ -218,8 +221,7 @@ export class InscripcionSurveyFacade {
     }
 
     this.completeSection(section);
-    const sections = this.visibleSections();
-    const nextSection = sections[sections.indexOf(section) + 1];
+    const nextSection = this.findNextInvalidSection(section);
     if (nextSection) {
       this.activeSection.set(nextSection);
       this.process.markCheckpoint();
@@ -321,7 +323,7 @@ export class InscripcionSurveyFacade {
 
   public savePartial(): Observable<boolean> {
     if (!this.hasInitialSurveyRight()) return of(true);
-    return this.inscripciones.saveInitialSurvey(this.getInitialSurveyPayload());
+    return this.inscriptions.saveInitialSurvey(this.getInitialSurveyPayload());
   }
 
   public restoreSectionState(
@@ -340,6 +342,8 @@ export class InscripcionSurveyFacade {
   }
 
   private finishSurveyStep(): void {
+    if (!this.ensureAllVisibleSectionsValid()) return;
+
     const confirmPayload = buildConfirmPreEnrollmentPayload(this.formsStore.forms);
     if (!confirmPayload) {
       this.preEnrollmentError.set(
@@ -354,7 +358,11 @@ export class InscripcionSurveyFacade {
       .pipe(
         switchMap(saved => {
           if (!saved) throw new Error('No se pudo guardar la encuesta inicial final.');
-          return this.inscripciones.confirmPreEnrollment(confirmPayload);
+          return this.saveIdentityChanges();
+        }),
+        switchMap(savedIdentity => {
+          if (!savedIdentity) throw new Error(IDENTITY_SAVE_ERROR);
+          return this.inscriptions.confirmPreEnrollment(confirmPayload);
         }),
         finalize(() => this.finalizingPreEnrollment.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -372,11 +380,68 @@ export class InscripcionSurveyFacade {
           this.process.flow.next();
           this.process.markCheckpoint();
         },
-        error: () =>
+        error: error =>
           this.preEnrollmentError.set(
-            'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+            error instanceof Error && error.message === IDENTITY_SAVE_ERROR
+              ? 'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
+              : 'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
           ),
       });
+  }
+
+  private findNextInvalidSection(section: SeccionEncuestaId): SeccionEncuestaId | undefined {
+    const sections = this.visibleSections();
+    return sections.slice(sections.indexOf(section) + 1).find(next => !this.isSectionValid(next));
+  }
+
+  private ensureAllVisibleSectionsValid(): boolean {
+    const invalidSection = this.visibleSections().find(section => !this.isSectionValid(section));
+    if (!invalidSection) return true;
+
+    this.markSectionSubmitted(invalidSection);
+    this.activeSection.set(invalidSection);
+    this.sectionConfig[invalidSection].form.markAllAsTouched();
+    this.preEnrollmentError.set(
+      'Completá la información pendiente antes de confirmar la preinscripción.'
+    );
+    return false;
+  }
+
+  private markSectionSubmitted(section: SeccionEncuestaId): void {
+    this.submittedSections.update(sections =>
+      sections.includes(section) ? sections : [...sections, section]
+    );
+  }
+
+  private saveIdentityChanges(): Observable<boolean> {
+    const files = this.identityFiles();
+    const expiration = serializeDate(this.identityForm.controls.vencimientoDocumento.value);
+    const uploads: Observable<boolean>[] = [];
+
+    if (
+      expiration &&
+      files.frente &&
+      files.dorso &&
+      (this.identityFileTouched.has('frente') ||
+        this.identityFileTouched.has('dorso') ||
+        this.identityForm.controls.vencimientoDocumento.dirty)
+    ) {
+      uploads.push(
+        this.inscriptions.uploadIdentityDocument({
+          fecha: expiration,
+          frente: files.frente,
+          dorso: files.dorso,
+        })
+      );
+    }
+
+    if (files.selfie && this.identityFileTouched.has('selfie')) {
+      uploads.push(this.inscriptions.uploadIdentityPhoto(files.selfie));
+    }
+
+    return uploads.length === 0
+      ? of(true)
+      : forkJoin(uploads).pipe(map(results => results.every(Boolean)));
   }
 
   private completeSection(section: SeccionEncuestaId): void {
@@ -502,7 +567,7 @@ export class InscripcionSurveyFacade {
   }
 
   private loadStudentRegulationAcceptance(): void {
-    this.inscripciones
+    this.inscriptions
       .getStudentRegulationAcceptance()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -529,7 +594,7 @@ export class InscripcionSurveyFacade {
         return;
       }
       this.identityPreloadRequested = true;
-      this.inscripciones
+      this.inscriptions
         .getIdentityPreload()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -539,12 +604,24 @@ export class InscripcionSurveyFacade {
     });
   }
 
+  private setIdentityConfirmationRequired(required: boolean): void {
+    this.requiresIdentityConfirmation.set(required);
+    const control = this.identityForm.controls.identidadCorrecta;
+    control.setValidators(required ? Validators.requiredTrue : null);
+    if (!required) control.setValue(false, { emitEvent: false });
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
   private applyIdentityPreload(preload: InscripcionIdentityPreload): void {
+    const expiration = parseDate(preload.fechaVencimiento);
+    this.setIdentityConfirmationRequired(
+      !!preload.frente && !!preload.dorso && !!preload.selfie && !!expiration
+    );
+
     this.applyPreloadedIdentityFile('frente', preload.frente);
     this.applyPreloadedIdentityFile('dorso', preload.dorso);
     this.applyPreloadedIdentityFile('selfie', preload.selfie);
 
-    const expiration = parseDate(preload.fechaVencimiento);
     const expirationControl = this.identityForm.controls.vencimientoDocumento;
     if (expiration && !expirationControl.value && !expirationControl.dirty) {
       expirationControl.setValue(expiration);
@@ -585,7 +662,7 @@ export class InscripcionSurveyFacade {
     if (this.loadingSurveyState()) return;
     this.surveyLoadError.set(null);
     this.loadingSurveyState.set(true);
-    this.inscripciones
+    this.inscriptions
       .getInitialSurvey()
       .pipe(
         finalize(() => this.loadingSurveyState.set(false)),

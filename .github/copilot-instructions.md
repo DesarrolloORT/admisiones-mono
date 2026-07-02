@@ -21,6 +21,7 @@ applyTo: '**'
 - Respuesta breve: `.github/instructions/toolkit/response-economy.instructions.md`
 - Markdown: `.github/instructions/toolkit/markdown.instructions.md`
 - Seguridad: `.github/instructions/toolkit/secure-code.instructions.md`
+- UI/SCSS: antes de entregar, respeta `.stylelintrc.json`; no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`. Usa tokens `--ort-sys-*` o `rem` permitido.
 
 ## Arquitectura Angular/API
 

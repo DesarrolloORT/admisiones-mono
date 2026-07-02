@@ -2,9 +2,9 @@ import {
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
-} from './inscripcion-flow-view';
+} from './inscription-flow-view';
 
-describe('inscripcion flow view', () => {
+describe('inscription flow view', () => {
   it('uses backend summary values and formats payment data', () => {
     const items = buildSummaryItems({
       response: {

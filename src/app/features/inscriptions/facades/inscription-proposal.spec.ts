@@ -4,10 +4,10 @@ import { vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
-import { Inscripciones } from '../services/inscripciones';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
-import { InscripcionProposalFacade } from './inscripcion-proposal';
+import { Inscripciones } from '../services/inscriptions';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionProposalFacade } from './inscription-proposal';
 
 describe('InscripcionProposalFacade', () => {
   const registerProductInterest = vi.fn();

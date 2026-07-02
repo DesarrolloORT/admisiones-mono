@@ -35,7 +35,7 @@
 
 .scholarship-requirements__list-item {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--ort-sys-spacing-8);
   align-items: flex-start;
 }
 

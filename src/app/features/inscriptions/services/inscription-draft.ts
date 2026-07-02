@@ -6,7 +6,7 @@ import {
   type BorradorInscripcion,
   type EscenarioInscripcion,
   SECCIONES_ENCUESTA,
-} from '../models/inscripcion-flow';
+} from '../models/inscription-flow';
 
 const PASOS_PERSISTIBLES: readonly BorradorInscripcion['paso'][] = [
   'propuesta',
@@ -48,7 +48,15 @@ export class InscripcionDraft {
     const key = this.getKey(draft.escenario);
     if (!key) return;
     try {
-      this.storage?.setItem(key, JSON.stringify(draft));
+      this.storage?.setItem(
+        key,
+        JSON.stringify({
+          ...draft,
+          identidad: { vencimientoDocumento: '' },
+          pago: { metodoPago: '' },
+          preinscription: null,
+        } satisfies BorradorInscripcion)
+      );
     } catch {
       // El guardado local es auxiliar; el backend sigue siendo la persistencia autoritativa.
     }
@@ -82,7 +90,7 @@ export class InscripcionDraft {
       this.isRecord(draft.identidad) &&
       this.isRecord(draft.reglamento) &&
       this.isRecord(draft.pago) &&
-      (draft.preinscripcion === null || this.isRecord(draft.preinscripcion))
+      (draft.preinscription === null || this.isRecord(draft.preinscription))
     );
   }
 
@@ -91,25 +99,7 @@ export class InscripcionDraft {
   }
 
   private getKey(scenario: EscenarioInscripcion): string | null {
-    const userKey = this.getUserKey();
-    return userKey ? `${storageKeys.inscriptionDraft}:${userKey}:${scenario}` : null;
-  }
-
-  private getUserKey(): string | null {
-    const rawSession = this.document.defaultView?.localStorage.getItem(storageKeys.session);
-
-    if (!rawSession) {
-      return null;
-    }
-
-    try {
-      const session = JSON.parse(rawSession) as { documentNumber?: unknown };
-      return typeof session.documentNumber === 'string' && session.documentNumber
-        ? session.documentNumber
-        : null;
-    } catch {
-      return null;
-    }
+    return `${storageKeys.inscriptionDraft}:${scenario}`;
   }
 
   private get storage(): Storage | null {

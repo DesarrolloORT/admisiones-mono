@@ -14,6 +14,7 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - Ponytail (lazy senior dev): .github/instructions/toolkit/ponytail.instructions.md
 - Respuesta breve: .github/instructions/toolkit/response-economy.instructions.md
 - Seguridad: .github/instructions/toolkit/secure-code.instructions.md
+- UI/SCSS: antes de entregar, respeta `.stylelintrc.json`; no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`. Usa tokens `--ort-sys-*` o `rem` permitido.
 
 ## Arquitectura Angular/API
 

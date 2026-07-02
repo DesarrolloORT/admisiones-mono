@@ -1,11 +1,11 @@
-import type { InstruccionReserva, ItemResumenInscripcion } from './inscripcion-flow';
+import type { InstruccionReserva, ItemResumenInscripcion } from './inscription-flow';
 import {
   InscripcionPreEnrollmentResponse,
   MetodoPago,
   OpcionInscripcion,
-} from './inscripcion-flow';
-import { getOptionLabel } from './inscripcion-flow-options';
-import { RESERVATION_INSTRUCTIONS } from './inscripcion-static-data';
+} from './inscription-flow';
+import { getOptionLabel } from './inscription-flow-options';
+import { RESERVATION_INSTRUCTIONS } from './inscription-static-data';
 
 export function buildSummaryItems(context: {
   response: InscripcionPreEnrollmentResponse | null;

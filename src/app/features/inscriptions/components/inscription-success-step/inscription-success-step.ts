@@ -2,13 +2,13 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtCardModule, OrtIconModule } from '@desarrolloort/components';
 
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
 
 @Component({
-  selector: 'app-inscripcion-success-step',
+  selector: 'app-inscription-success-step',
   imports: [OrtButtonModule, OrtCardModule, OrtIconModule, RouterLink],
-  templateUrl: './inscripcion-success-step.html',
-  styleUrls: ['../../pages/inscripcion/inscripcion.scss', '../inscripcion-result-step.scss'],
+  templateUrl: './inscription-success-step.html',
+  styleUrls: ['../../pages/inscription/inscription.scss', '../inscription-result-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionSuccessStep {

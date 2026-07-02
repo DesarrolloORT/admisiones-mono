@@ -87,7 +87,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Ejecutar `envs login` (una sola vez) y luego usar `npm run start` o `npm run start:dev` para generar automaticamente `environment.generated.ts`.
+   Ejecutar `az login` (una sola vez) y luego usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration con cache local.
 
 ## Ejecutar la aplicacion en un servidor local
 
@@ -169,11 +169,10 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
 - `start:o`: inicia el servidor local y abre el navegador.
 - `build`: compila la aplicacion para produccion.
-- `build:staging`: compila la aplicacion para preproduccion.
 - `build:dev`: compila la aplicacion para desarrollo.
-- `copy-web-config`: copia configuracion de IIS para builds `dev` y `staging`.
 - `lint`: revisa y corrige el estilo del codigo.
-- `lint:check`: valida formato y estilo sin modificar archivos.
+- `lint:check`: valida formato, disables justificados, estilo y contratos sin modificar archivos.
+- `check-disable-comments`: valida que `eslint-disable` y `stylelint-disable` indiquen regla concreta y motivo.
 - `test`: ejecuta las pruebas unitarias.
 - `test:ci`: ejecuta las pruebas unitarias para CI.
 - `test:a11y`: ejecuta Playwright + axe en desktop y mobile.
@@ -185,6 +184,8 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `test:coverage`: ejecuta pruebas con reporte de cobertura.
 - `test:watch`: ejecuta pruebas en modo observacion.
 - `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
+- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, tests, build dev).
+- `sonar:local`: ejecuta coverage y SonarQube local si estan configurados `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y `sonar-scanner`.
 - `ci`: ejecuta validaciones principales de CI (`lint:check`, `test:ci`, `build`, `test:a11y`, `test:e2e:smoke`).
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
@@ -195,8 +196,7 @@ Estos son algunos de los scripts disponibles para el proyecto:
 
 ## Pre-commit hook
 
-Al realizar un commit, el hook de pre-commit valida formato y estilo con
-`lint-staged`, y revisa tests faltantes solo para archivos fuente staged.
+Al realizar un commit, el hook de pre-commit revisa tests faltantes para archivos fuente staged y despues ejecuta `lint-staged`. Si falla, muestra el bloque responsable: tests faltantes o ESLint/Prettier/Stylelint.
 
 ## Generacion de archivos de testing
 

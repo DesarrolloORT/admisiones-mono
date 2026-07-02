@@ -1,6 +1,6 @@
-import { type EscenarioInscripcion, SECCIONES_ENCUESTA } from './inscripcion-flow';
+import { type EscenarioInscripcion, SECCIONES_ENCUESTA } from './inscription-flow';
 
-describe('inscripcion flow model', () => {
+describe('inscription flow model', () => {
   it('keeps the supported inscription scenarios explicit', () => {
     const scenarios: EscenarioInscripcion[] = ['primera-vez', 'parcial', 'encuesta-completa'];
 

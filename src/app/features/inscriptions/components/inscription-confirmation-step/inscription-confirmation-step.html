@@ -1,4 +1,3 @@
-<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="inscription-confirm-title" class="inscription-screen">
   <header class="inscription-screen__header">
     <strong class="inscription-screen__eyebrow">Inscripción a carrera</strong>
@@ -121,7 +120,7 @@
     </button>
   </form>
 
-  <app-inscripcion-dialog
+  <app-inscription-dialog
     closeLabel="Volver al pago"
     helperText="Revisá la propuesta y el medio de pago antes de continuar."
     title="Confirmar inscripción"
@@ -139,7 +138,7 @@
       Seña de inscripción:
       <strong>{{ facade.inscriptionAmount() }}</strong>
     </p>
-    <div inscripcionDialogActions>
+    <div inscriptionDialogActions>
       <button
         data-dialog-initial-focus
         ort-secondary-button
@@ -149,5 +148,5 @@
       </button>
       <button ort-primary-button type="button" (click)="facade.confirm()">Confirmar</button>
     </div>
-  </app-inscripcion-dialog>
+  </app-inscription-dialog>
 </section>

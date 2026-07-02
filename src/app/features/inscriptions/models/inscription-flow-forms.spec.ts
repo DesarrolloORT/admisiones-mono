@@ -2,7 +2,7 @@ import '@angular/compiler';
 
 import { Validators } from '@angular/forms';
 
-import { createInscripcionForms } from './inscripcion-flow-forms';
+import { createInscripcionForms } from './inscription-flow-forms';
 
 describe('InscripcionForms', () => {
   it('creates the complete personal-information form', () => {

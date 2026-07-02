@@ -5,8 +5,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { vi } from 'vitest';
 
-import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
-import { InscripcionPersonalStep } from './inscripcion-personal-step';
+import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
+import { InscripcionPersonalStep } from './inscription-personal-step';
 
 describe('InscripcionPersonalStep', () => {
   let fixture: ComponentFixture<InscripcionPersonalStep>;
@@ -118,7 +118,7 @@ describe('InscripcionPersonalStep', () => {
   });
   it('keeps baccalaureate options bound in the real template', () => {
     const template = readFileSync(
-      'src/app/features/inscripciones/components/inscripcion-personal-step/inscripcion-personal-step.html',
+      'src/app/features/inscriptions/components/inscription-personal-step/inscription-personal-step.html',
       'utf8'
     );
 

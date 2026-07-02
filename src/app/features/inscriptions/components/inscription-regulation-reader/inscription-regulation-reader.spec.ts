@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
-import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
-import { InscripcionRegulationReader } from './inscripcion-regulation-reader';
+import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
+import { InscripcionRegulationReader } from './inscription-regulation-reader';
 
 describe('InscripcionRegulationReader', () => {
   it('creates with its step facade', () => {

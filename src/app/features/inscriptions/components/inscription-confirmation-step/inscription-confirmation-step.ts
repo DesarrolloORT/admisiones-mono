@@ -16,12 +16,12 @@ import {
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
-import { InscripcionDialog } from '../inscripcion-dialog/inscripcion-dialog';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
+import { InscripcionDialog } from '../inscription-dialog/inscription-dialog';
 import { ResponsiveSelect } from '../responsive-select/responsive-select';
 
 @Component({
-  selector: 'app-inscripcion-confirmation-step',
+  selector: 'app-inscription-confirmation-step',
   imports: [
     InscripcionDialog,
     ErrorAlert,
@@ -32,8 +32,8 @@ import { ResponsiveSelect } from '../responsive-select/responsive-select';
     ReactiveFormsModule,
     ResponsiveSelect,
   ],
-  templateUrl: './inscripcion-confirmation-step.html',
-  styleUrls: ['../../pages/inscripcion/inscripcion.scss', './inscripcion-confirmation-step.scss'],
+  templateUrl: './inscription-confirmation-step.html',
+  styleUrls: ['../../pages/inscription/inscription.scss', './inscription-confirmation-step.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionConfirmationStep {

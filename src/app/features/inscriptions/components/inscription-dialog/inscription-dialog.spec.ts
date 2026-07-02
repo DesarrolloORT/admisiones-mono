@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { InscripcionDialog } from './inscripcion-dialog';
+import { InscripcionDialog } from './inscription-dialog';
 
 describe('InscripcionDialog', () => {
   it('creates', () => {

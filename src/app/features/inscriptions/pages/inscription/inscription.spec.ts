@@ -4,10 +4,10 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Catalogs } from '../../../catalogs/services/catalogs';
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
-import { Inscripciones } from '../../services/inscripciones';
-import { InscripcionProcessStore } from '../../store/inscripcion-process';
-import { Inscripcion } from './inscripcion';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
+import { Inscripciones } from '../../services/inscriptions';
+import { InscripcionProcessStore } from '../../store/inscription-process';
+import { Inscripcion } from './inscription';
 
 describe('Inscripcion', () => {
   let fixture: ComponentFixture<Inscripcion>;
@@ -133,7 +133,7 @@ describe('Inscripcion', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Confirmación');
 
-    payment.outcome.set('inscripcion-en-proceso');
+    payment.outcome.set('inscription-en-proceso');
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Inscripción en proceso');
   });

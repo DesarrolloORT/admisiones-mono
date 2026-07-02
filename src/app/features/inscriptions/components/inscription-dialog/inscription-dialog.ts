@@ -15,17 +15,17 @@ import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 let nextDialogId = 0;
 
 @Component({
-  selector: 'app-inscripcion-dialog',
+  selector: 'app-inscription-dialog',
   imports: [OrtButtonModule, OrtIconModule],
-  templateUrl: './inscripcion-dialog.html',
-  styleUrl: './inscripcion-dialog.scss',
+  templateUrl: './inscription-dialog.html',
+  styleUrl: './inscription-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionDialog implements OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
-  private readonly dialogId = `inscripcion-dialog-${nextDialogId++}`;
+  private readonly dialogId = `inscription-dialog-${nextDialogId++}`;
   private previouslyFocusedElement: HTMLElement | null = null;
   private previousBodyOverflow: string | null = null;
   private wasOpen = false;

@@ -1,4 +1,3 @@
-<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <app-process-layout
   closeLabel="Cerrar"
   processTitle="Inscripción a carrera"
@@ -33,10 +32,10 @@
     </footer>
   </section>
   } @else if (payment.outcome() === 'reserva') {
-  <app-inscripcion-reservation-step />
-  } @else if (payment.outcome() === 'inscripcion-confirmada') {
-  <app-inscripcion-success-step />
-  } @else if (payment.outcome() === 'inscripcion-en-proceso') {
+  <app-inscription-reservation-step />
+  } @else if (payment.outcome() === 'inscription-confirmada') {
+  <app-inscription-success-step />
+  } @else if (payment.outcome() === 'inscription-en-proceso') {
   <section aria-labelledby="in-process-title" class="inscription-screen inscription-terminal">
     <span aria-hidden="true" class="inscription-success-heading__icon">
       <ort-icon>pending_actions</ort-icon>
@@ -55,17 +54,17 @@
     <p>No cierres esta pantalla. La operación puede demorar unos segundos.</p>
   </section>
   } @else { @switch (process.currentStep()) { @case ('propuesta') {
-  <app-inscripcion-academic-step />
+  <app-inscription-academic-step />
   } @case ('encuesta') { @if (survey.readerOpen()) {
-  <app-inscripcion-regulation-reader />
+  <app-inscription-regulation-reader />
   } @else {
-  <app-inscripcion-personal-step />
+  <app-inscription-personal-step />
   } } @case ('pago') {
-  <app-inscripcion-confirmation-step />
+  <app-inscription-confirmation-step />
   } } }
 </app-process-layout>
 
-<app-inscripcion-dialog
+<app-inscription-dialog
   closeLabel="Continuar con la inscripción"
   helperText="Guardaremos tus avances para que puedas continuar más tarde."
   title="¿Querés salir de la inscripción?"
@@ -75,7 +74,7 @@
   @if (process.surveySaveError()) {
   <p class="inscription-dialog-error" role="alert">{{ process.surveySaveError() }}</p>
   }
-  <div inscripcionDialogActions>
+  <div inscriptionDialogActions>
     <button
       data-dialog-initial-focus
       ort-secondary-button
@@ -91,4 +90,4 @@
       {{ process.savingSurvey() ? 'Guardando…' : 'Guardar y salir' }}
     </button>
   </div>
-</app-inscripcion-dialog>
+</app-inscription-dialog>

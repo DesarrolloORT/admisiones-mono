@@ -4,9 +4,9 @@ import {
   getSeccionesVisibles,
   parseEscenario,
   parseResultadoForzado,
-} from './inscripcion-flow-policy';
+} from './inscription-flow-policy';
 
-describe('inscripcion flow policy', () => {
+describe('inscription flow policy', () => {
   it('uses safe defaults for unknown query parameters', () => {
     expect(parseEscenario('desconocido')).toBe('primera-vez');
     expect(parseResultadoForzado('error')).toBeNull();

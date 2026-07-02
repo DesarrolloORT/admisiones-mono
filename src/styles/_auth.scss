@@ -1,8 +1,6 @@
 /* stylelint-disable declaration-property-unit-allowed-list -- Figma frames provide fixed px measurements for this auth surface. */
 /* Auth classes are global because auth pages project content through app-auth-form. */
 .auth-shell {
-  --auth-primary: var(--ort-sys-base-surface-primary-background);
-  --auth-primary-dark: var(--ort-sys-base-surface-primary-background);
   --auth-text: var(--ort-sys-base-text-color-headline);
   --auth-body: var(--ort-sys-base-text-color-body);
   --auth-caption: var(--ort-sys-base-text-color-caption);
@@ -25,7 +23,7 @@
   overflow: hidden;
   height: 100dvh;
   min-height: 100dvh;
-  background: var(--auth-primary);
+  background: var(--ort-sys-base-surface-primary-background);
   color: var(--auth-text);
   font-family: var(--ort-sys-font-family-plain);
 }
@@ -51,7 +49,7 @@
 .auth-shell__layout {
   position: relative;
   display: flex;
-  gap: 24px;
+  gap: var(--ort-sys-spacing-24);
   align-items: stretch;
   overflow: hidden;
   height: 100%;
@@ -100,7 +98,7 @@
   ort-icon {
     width: 32px;
     height: 32px;
-    margin-bottom: 8px;
+    margin-bottom: var(--ort-sys-spacing-8);
     color: var(--ort-sys-base-text-on-color-header);
     font-size: 32px;
   }
@@ -119,7 +117,7 @@
   }
 
   p {
-    margin-top: 8px;
+    margin-top: var(--ort-sys-spacing-8);
     color: var(--ort-sys-base-text-on-color-body);
     font-size: var(--ort-sys-font-size-20);
     line-height: var(--ort-sys-line-height-30);
@@ -166,7 +164,7 @@
 
 .auth-card__header,
 .auth-card__stepper {
-  margin-bottom: 40px;
+  margin-bottom: var(--ort-sys-spacing-40);
 
   h1,
   p {
@@ -183,7 +181,7 @@
 }
 
 .auth-card__header p {
-  margin-top: 8px;
+  margin-top: var(--ort-sys-spacing-8);
   color: var(--auth-body);
   font-size: var(--ort-sys-font-size-16);
   line-height: var(--ort-sys-line-height-24);
@@ -206,7 +204,7 @@
 .auth-progress {
   overflow: hidden;
   height: 8px;
-  margin-top: 16px;
+  margin-top: var(--ort-sys-spacing-16);
   border-radius: var(--ort-sys-border-radius-4);
   background: var(--ort-sys-color-secondary-300);
 
@@ -215,7 +213,7 @@
     width: 50%;
     height: 100%;
     border-radius: inherit;
-    background: var(--auth-primary);
+    background: var(--ort-sys-base-surface-primary-background);
   }
 }
 
@@ -226,17 +224,17 @@
 .auth-form-body,
 .auth-form-section {
   display: grid;
-  gap: 24px;
+  gap: var(--ort-sys-spacing-24);
 }
 
 .auth-form-section--compact {
-  gap: 16px;
+  gap: var(--ort-sys-spacing-16);
 }
 
 .auth-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px 16px;
+  gap: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
 }
 
 .auth-field--wide {
@@ -251,10 +249,9 @@
 }
 
 .auth-error,
-.auth-success,
 .auth-selected-file {
   margin: 0;
-  padding-inline: 4px;
+  padding-inline: var(--ort-sys-spacing-4);
   font-size: var(--ort-sys-font-size-14);
   line-height: var(--ort-sys-line-height-20);
 }
@@ -267,18 +264,8 @@
   color: var(--ort-sys-base-text-error-color);
 }
 
-.auth-success {
-  color: var(--auth-primary);
-}
-
-.auth-phone-control {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .auth-link {
-  color: var(--auth-primary);
+  color: var(--ort-sys-base-text-primary-color);
   font-size: var(--ort-sys-font-size-14);
   line-height: var(--ort-sys-line-height-20);
   text-decoration: underline;
@@ -287,7 +274,7 @@
 
 .auth-divider {
   display: flex;
-  gap: 12px;
+  gap: var(--ort-sys-spacing-12);
   align-items: center;
   color: var(--auth-body);
   font-weight: var(--ort-sys-font-weight-semibold);
@@ -306,20 +293,20 @@
 
 .auth-actions {
   display: flex;
-  gap: 16px;
+  gap: var(--ort-sys-spacing-16);
   justify-content: space-between;
   align-items: center;
 }
 
 .auth-stack {
   display: grid;
-  gap: 16px;
+  gap: var(--ort-sys-spacing-16);
 }
 
 .auth-capture {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--ort-sys-spacing-12);
+  padding: var(--ort-sys-spacing-16);
   background: var(--ort-sys-base-surface-background);
 
   h2,
@@ -351,18 +338,9 @@
 }
 
 .auth-login-switch a {
-  color: var(--auth-primary);
+  color: var(--ort-sys-base-text-primary-color);
   font-weight: var(--ort-sys-font-weight-semibold);
   text-decoration: underline;
-}
-
-.auth-hidden-file {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  white-space: nowrap;
 }
 
 .auth-contact-title {
@@ -372,34 +350,6 @@
       var(--ort-sys-font-family-display),
     sans-serif;
   letter-spacing: 0;
-}
-
-.auth-phone-prefix {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--ort-sys-base-text-color-headline);
-  white-space: nowrap;
-}
-
-.auth-phone-flag {
-  display: inline-block;
-  width: 24px;
-  height: 18px;
-  border: 1px solid var(--ort-sys-color-secondary-300);
-  border-radius: 50%;
-  background: linear-gradient(
-    to bottom,
-    var(--ort-sys-color-white) 0 11%,
-    #2f80ed 11% 22%,
-    var(--ort-sys-color-white) 22% 33%,
-    #2f80ed 33% 44%,
-    var(--ort-sys-color-white) 44% 55%,
-    #2f80ed 55% 66%,
-    var(--ort-sys-color-white) 66% 77%,
-    #2f80ed 77% 88%,
-    var(--ort-sys-color-white) 88% 100%
-  );
 }
 
 @media (width <=760px) {
@@ -428,7 +378,7 @@
     z-index: 2;
     display: block;
     min-height: 111px;
-    background: var(--auth-primary-dark);
+    background: var(--ort-sys-base-surface-primary-background);
     color: var(--ort-sys-base-text-on-color-header);
   }
 
@@ -440,7 +390,7 @@
     display: flex;
     justify-content: space-between;
     height: 47px;
-    padding: 14px 16px 0;
+    padding: var(--ort-sys-spacing-14) var(--ort-sys-spacing-16) 0;
     font-weight: var(--ort-sys-font-weight-semibold);
     font-size: var(--ort-sys-font-size-16);
     line-height: var(--ort-sys-line-height-20);
@@ -448,7 +398,7 @@
 
   .auth-statusbar__icons {
     display: flex;
-    gap: 5px;
+    gap: var(--ort-sys-spacing-4);
     align-items: center;
 
     span {
@@ -499,7 +449,7 @@
 
     .auth-progress {
       height: 8px;
-      margin-top: 16px;
+      margin-top: var(--ort-sys-spacing-16);
       border-radius: 0;
     }
   }
@@ -517,11 +467,11 @@
   }
 
   .auth-card__content {
-    padding: 40px 16px 24px;
+    padding: var(--ort-sys-spacing-40) var(--ort-sys-spacing-16) var(--ort-sys-spacing-24);
   }
 
   .auth-shell--step .auth-card__content {
-    padding-top: 24px;
+    padding-top: var(--ort-sys-spacing-24);
   }
 
   .auth-card__stepper {
@@ -529,7 +479,7 @@
   }
 
   .auth-card__header {
-    margin-bottom: 24px;
+    margin-bottom: var(--ort-sys-spacing-24);
 
     h1 {
       font-size: 24px;
@@ -539,16 +489,16 @@
 
   .auth-form-body,
   .auth-form-section {
-    gap: 24px;
+    gap: var(--ort-sys-spacing-24);
   }
 
   .auth-form-section--compact {
-    gap: 16px;
+    gap: var(--ort-sys-spacing-16);
   }
 
   .auth-form-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--ort-sys-spacing-16);
   }
 
   .auth-form-body button[ort-primary-button],
@@ -559,7 +509,7 @@
 
   .auth-actions {
     flex-direction: column;
-    gap: 8px;
+    gap: var(--ort-sys-spacing-8);
   }
 
   .auth-actions button[ort-primary-button],

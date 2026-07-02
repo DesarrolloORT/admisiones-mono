@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- jsdom mocks need loose browser API shapes. */
 import { vi } from 'vitest';
 
 /* Global mocks for jsdom */

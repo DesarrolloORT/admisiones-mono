@@ -2,7 +2,7 @@
   display: contents;
 }
 
-.inscripcion-dialog {
+.inscription-dialog {
   position: fixed;
   inset: 0;
   justify-content: center;
@@ -19,15 +19,15 @@
   color: inherit;
 }
 
-.inscripcion-dialog[open] {
+.inscription-dialog[open] {
   display: flex;
 }
 
-.inscripcion-dialog::backdrop {
-  background: var(--ort-sys-drawer-overlay-background, rgb(13 13 28 / 60%));
+.inscription-dialog::backdrop {
+  background: var(--ort-sys-drawer-overlay-background);
 }
 
-.inscripcion-dialog__sheet {
+.inscription-dialog__sheet {
   position: relative;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -39,30 +39,32 @@
     calc(var(--ort-sys-spacing-16) + env(safe-area-inset-bottom));
   border-radius: var(--ort-sys-border-radius-24) var(--ort-sys-border-radius-24) 0 0;
   background: var(--ort-sys-base-surface-background);
-  box-shadow: 0 0 24px rgb(13 13 28 / 24%);
+  box-shadow: var(--ort-sys-elevation-lg-x) var(--ort-sys-elevation-lg-y)
+    var(--ort-sys-elevation-lg-blur) var(--ort-sys-elevation-lg-spread)
+    var(--ort-sys-elevation-lg-color);
 }
 
-.inscripcion-dialog__tracker {
+.inscription-dialog__tracker {
   width: 3.125rem;
   height: 0.375rem;
   margin: 0 auto;
   border-radius: var(--ort-sys-border-radius-round);
-  background: var(--ort-sys-color-neutral-400, #a4a7ae);
+  background: var(--ort-sys-color-neutral-400);
 }
 
-.inscripcion-dialog__header {
+.inscription-dialog__header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--ort-sys-spacing-12);
   align-items: start;
 }
 
-.inscripcion-dialog__header h2,
-.inscripcion-dialog__header p {
+.inscription-dialog__header h2,
+.inscription-dialog__header p {
   margin: 0;
 }
 
-.inscripcion-dialog__header h2 {
+.inscription-dialog__header h2 {
   color: var(--ort-sys-base-text-color-headline);
   font-weight: var(--ort-sys-heading-level5-font-weight);
   font-size: var(--ort-sys-heading-level5-text-size);
@@ -70,34 +72,34 @@
   line-height: var(--ort-sys-heading-level5-line-height);
 }
 
-.inscripcion-dialog__header p {
+.inscription-dialog__header p {
   margin-top: var(--ort-sys-spacing-4);
   color: var(--ort-sys-base-text-color-body);
   font-size: var(--ort-sys-body-sm-text-size);
   line-height: var(--ort-sys-body-sm-line-height);
 }
 
-.inscripcion-dialog__content {
+.inscription-dialog__content {
   overflow: auto;
   color: var(--ort-sys-base-text-color-body);
 }
 
-.inscripcion-dialog__actions {
+.inscription-dialog__actions {
   display: grid;
   gap: var(--ort-sys-spacing-8);
 }
 
-.inscripcion-dialog__actions:empty {
+.inscription-dialog__actions:empty {
   display: none;
 }
 
 @media (width >= 40rem) {
-  .inscripcion-dialog {
+  .inscription-dialog {
     align-items: center;
     padding: var(--ort-sys-spacing-24);
   }
 
-  .inscripcion-dialog__sheet {
+  .inscription-dialog__sheet {
     max-height: calc(100dvh - var(--ort-sys-spacing-48));
     border-radius: var(--ort-sys-border-radius-24);
   }

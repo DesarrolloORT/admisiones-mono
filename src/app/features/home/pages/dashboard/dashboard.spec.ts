@@ -17,11 +17,9 @@ describe('Dashboard', () => {
           useValue: {
             logout: vi.fn(),
             session: signal<AuthSession | null>({
-              token: null,
               documentType: 'CI',
               documentNumber: '12345678',
               primerNombre: 'Ana',
-              expiresAt: null,
             }),
           },
         },

@@ -1,4 +1,4 @@
-import type { InscripcionPreEnrollmentResponse } from './inscripcion-flow';
+import type { InscripcionPreEnrollmentResponse } from './inscription-flow';
 
 export interface InscripcionSummary {
   idOferta: number | null;

@@ -285,6 +285,7 @@ export class ApiHttpClient {
     return (
       options.cache !== false &&
       endpoint.method === 'GET' &&
+      !endpoint.requiresAuth &&
       !this.hasObjectValues(options.pathParams) &&
       !params?.keys().length
     );

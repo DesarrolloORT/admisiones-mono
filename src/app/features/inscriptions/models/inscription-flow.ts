@@ -1,4 +1,4 @@
-import type { InscripcionStep } from './inscripcion-process';
+import type { InscripcionStep } from './inscription-process';
 
 export type EscenarioInscripcion = 'primera-vez' | 'parcial' | 'encuesta-completa';
 
@@ -37,6 +37,7 @@ export interface InscripcionInitialSurvey {
   institucionSecundariaId: number | null;
   ubicacionSecundariaId: number | null;
   nombreInstitucionSecundaria: string | null;
+  estadoEducacionSuperiorPreviaId: number | null;
   tieneEducacionSuperior: boolean | null;
   nivelFormacionMadreId: number | null;
   nivelFormacionPadreId: number | null;
@@ -45,11 +46,13 @@ export interface InscripcionInitialSurvey {
   anioDecisionCarreraId: number | null;
   anioDecisionOrtId: number | null;
   seInformoEnOtrasUniversidades: boolean | null;
+  apoyoDecisionId: number | null;
   apoyoPadres: boolean | null;
   apoyoOtros: boolean | null;
   apoyoAmigosFamiliares: boolean | null;
   apoyoNadie: boolean | null;
   apoyoAmigoPropuesta: boolean | null;
+  nivelDecisionId: number | null;
   decisionConfirmada: boolean | null;
   tuvoAsesoramientoOrt: boolean | null;
   valoracionAsesoramientoOrt: number | null;
@@ -59,7 +62,6 @@ export interface InscripcionInitialSurvey {
   valoracionInstalacionesOrt: number | null;
   recuerdaPublicidadOrt: boolean | null;
 }
-
 export interface InscripcionInitialSurveyResponse {
   tieneDerechoEncuesta: boolean;
   encuesta: InscripcionInitialSurvey | null;
@@ -74,6 +76,7 @@ export interface InscripcionInitialSurveyPayload {
   comienzoId: number | null;
   orientacionBachilleratoId: number | null;
   anioBachillerato: number | null;
+  cursaSecundariaActualmente: boolean | null;
   vecesRecursaAnioBachillerato: number | null;
   recursaAnioBachillerato: boolean | null;
   nivelFormacionPadreTutorId: number | null;
@@ -85,7 +88,6 @@ export interface InscripcionInitialSurveyPayload {
   informacionOtrasUniversidadesLinea2: string | null;
   apoyoDecisionId: number | null;
   institucionSecundariaId: number | null;
-  autorizaInformarEncuesta: boolean | null;
   nombreInstitucionSecundaria: string | null;
   ubicacionUltimoAnioSecundariaId: number | null;
   estadoEducacionSuperiorPreviaId: number | null;
@@ -112,6 +114,20 @@ export interface InscripcionConfirmPreEnrollmentPayload {
   idOfertaSeleccionada: number;
 }
 
+export interface InscripcionIdentityUploadFile {
+  nombreArchivo: string;
+  archivo: string;
+}
+
+export interface InscripcionIdentityDocumentUploadPayload {
+  fecha: string;
+  frente: InscripcionIdentityUploadFile;
+  dorso: InscripcionIdentityUploadFile;
+}
+
+export interface InscripcionIdentityPhotoUploadPayload {
+  archivoAdjunto: InscripcionIdentityUploadFile;
+}
 export interface InscripcionProductInterestPayload {
   idOferta: number;
   idProcesoSeleccionado: number;
@@ -223,7 +239,7 @@ export interface BorradorInscripcion {
   pago: {
     metodoPago: MetodoPago | '';
   };
-  preinscripcion: InscripcionPreEnrollmentResponse | null;
+  preinscription: InscripcionPreEnrollmentResponse | null;
 }
 
 export interface EnvioInscripcion {

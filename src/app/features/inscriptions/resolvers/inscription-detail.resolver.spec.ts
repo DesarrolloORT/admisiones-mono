@@ -8,11 +8,11 @@ import {
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import type { InscripcionDetail } from '../models/inscripcion-detail';
-import { Inscripciones } from '../services/inscripciones';
-import { inscripcionDetailResolver } from './inscripcion-detail.resolver';
+import type { InscripcionDetail } from '../models/inscription-detail';
+import { Inscripciones } from '../services/inscriptions';
+import { inscriptionDetailResolver } from './inscription-detail.resolver';
 
-describe('inscripcionDetailResolver', () => {
+describe('inscriptionDetailResolver', () => {
   let getDetail: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe('inscripcionDetailResolver', () => {
     const route = new ActivatedRouteSnapshot();
     Object.defineProperty(route, 'queryParamMap', { value: convertToParamMap(queryParams) });
     const result = TestBed.runInInjectionContext(() =>
-      inscripcionDetailResolver(route, {} as RouterStateSnapshot)
+      inscriptionDetailResolver(route, {} as RouterStateSnapshot)
     );
     return firstValueFrom(result as Observable<InscripcionDetail | null>);
   }

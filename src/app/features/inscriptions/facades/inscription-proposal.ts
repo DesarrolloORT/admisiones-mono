@@ -8,14 +8,14 @@ import {
 } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import type { InscripcionInitialSurvey } from '../models/inscripcion-flow';
-import { buildFormErrors } from '../models/inscripcion-flow-forms';
-import { Inscripciones } from '../services/inscripciones';
-import { InscripcionFormsStore } from '../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../store/inscripcion-process';
+import type { InscripcionInitialSurvey } from '../models/inscription-flow';
+import { buildFormErrors } from '../models/inscription-flow-forms';
+import { Inscripciones } from '../services/inscriptions';
+import { InscripcionFormsStore } from '../store/inscription-forms';
+import { InscripcionProcessStore } from '../store/inscription-process';
 
 export class InscripcionProposalFacade {
-  private readonly inscripciones = inject(Inscripciones);
+  private readonly inscriptions = inject(Inscripciones);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
@@ -73,7 +73,7 @@ export class InscripcionProposalFacade {
     }
 
     this.registeringProductInterest.set(true);
-    this.inscripciones
+    this.inscriptions
       .registerProductInterest(payload)
       .pipe(
         finalize(() => this.registeringProductInterest.set(false)),

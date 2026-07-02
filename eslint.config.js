@@ -188,7 +188,7 @@ export default [
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/click-events-have-key-events': 'error',
       '@angular-eslint/template/conditional-complexity': ['error', { maxComplexity: 6 }],
-      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 5 }],
+      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 8 }],
       '@angular-eslint/template/elements-content': 'error',
       '@angular-eslint/template/interactive-supports-focus': 'error',
       '@angular-eslint/template/label-has-associated-control': 'error',

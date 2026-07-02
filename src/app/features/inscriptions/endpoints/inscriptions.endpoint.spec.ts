@@ -14,9 +14,11 @@ import {
 import {
   getPersonaDocumentoEndpoint,
   getPersonaFotoEndpoint,
+  postPersonaSubirDocumentoEndpoint,
+  postPersonaSubirFotoEndpoint,
 } from '../../../shared/api/generated/endpoints/persona.endpoints';
-import type { InscripcionInitialSurveyPayload } from '../models/inscripcion-flow';
-import { InscripcionesEndpoint } from './inscripciones.endpoint';
+import type { InscripcionInitialSurveyPayload } from '../models/inscription-flow';
+import { InscripcionesEndpoint } from './inscriptions.endpoint';
 
 describe('InscripcionesEndpoint', () => {
   let endpoint: InscripcionesEndpoint;
@@ -86,7 +88,7 @@ describe('InscripcionesEndpoint', () => {
         pagoPendiente: {
           idInscripcion: 1072704,
           fechaVencimientoPago: '2026-06-26T16:29:20',
-          carritos: [{ senia: 3339 }],
+          senia: 3339,
           estadoCuenta: { saldoActual: 70000 },
           resumen: { carrera: 'Arquitectura' },
         },
@@ -128,32 +130,50 @@ describe('InscripcionesEndpoint', () => {
     });
   });
 
+  it('uploads identity document files and clears API cache', async () => {
+    const payload = {
+      fecha: '2030-02-04',
+      frente: { nombreArchivo: 'frente.png', archivo: 'front' },
+      dorso: { nombreArchivo: 'dorso.png', archivo: 'back' },
+    };
+
+    await expect(firstValueFrom(endpoint.uploadIdentityDocument(payload))).resolves.toBe(true);
+
+    expect(apiMock.request).toHaveBeenCalledWith(postPersonaSubirDocumentoEndpoint, {
+      body: payload,
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
+  it('uploads identity photo and clears API cache', async () => {
+    const payload = { archivoAdjunto: { nombreArchivo: 'selfie.png', archivo: 'photo' } };
+
+    await expect(firstValueFrom(endpoint.uploadIdentityPhoto(payload))).resolves.toBe(true);
+
+    expect(apiMock.request).toHaveBeenCalledWith(postPersonaSubirFotoEndpoint, {
+      body: payload,
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
   it('maps the initial survey to the feature contract', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
         tieneDerechoEncuesta: true,
         encuesta: {
           idEncuestaIni: 1,
-          idProducto: 20,
-          estadoEncuestaIniAdmision: 'completa',
-          producto: { idNivelProducto: 4 },
+          carreraId: 20,
+          procesoId: 200,
+          estado: 'completa',
+          cursaSecundariaActualmente: true,
+          estadoEducacionSuperiorPreviaId: 1,
+          nivelDecisionId: 1,
+          universidadConsideradaIds: [10],
+          universidadEducacionSuperiorIds: [20],
+          motivoEleccionOrtIds: [5],
+          publicidadOrtIds: [7],
         },
-        universidadesConsideradas: [
-          { codigoEmpresa: 10, empresa: { codigoEmpresa: 10, nombre: 'Udelar' } },
-        ],
-        universidadesEducacionSuperior: [{ codigoEmpresa: 20, nombreOtraEmpresa: 'Otra U' }],
-        opcionesMotivosSeleccionados: [
-          {
-            idMotivo: 8,
-            motivoOpcionesAdmision: { idMotivo: 5, nombreMotivo: 'Plan de estudios' },
-          },
-        ],
-        opcionesPublicidadSeleccionadas: [
-          {
-            idPublicidad: 9,
-            publicidadOpcionesAdmision: { idPublicidad: 7, nombrePublicidad: 'Redes' },
-          },
-        ],
       })
     );
 
@@ -164,8 +184,12 @@ describe('InscripcionesEndpoint', () => {
         tieneDerechoEncuesta: true,
         encuesta: expect.objectContaining({
           carreraId: 20,
-          nivelProductoId: 4,
+          comienzoId: 200,
           completa: true,
+          cursaSecundaria: true,
+          estadoEducacionSuperiorPreviaId: 1,
+          nivelDecisionId: 1,
+          decisionConfirmada: true,
         }),
         universidadesConsideradas: [10],
         universidadesEducacionSuperior: [20],
@@ -177,7 +201,6 @@ describe('InscripcionesEndpoint', () => {
       cache: false,
     });
   });
-
   it('preserves the regulation acceptance date and normalizes missing values', async () => {
     apiMock.request.mockReturnValueOnce(
       of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '2026-06-01' })
@@ -204,6 +227,7 @@ describe('InscripcionesEndpoint', () => {
       comienzoId: 200,
       orientacionBachilleratoId: null,
       anioBachillerato: null,
+      cursaSecundariaActualmente: null,
       vecesRecursaAnioBachillerato: null,
       recursaAnioBachillerato: null,
       nivelFormacionPadreTutorId: null,
@@ -215,7 +239,6 @@ describe('InscripcionesEndpoint', () => {
       informacionOtrasUniversidadesLinea2: null,
       apoyoDecisionId: null,
       institucionSecundariaId: null,
-      autorizaInformarEncuesta: null,
       nombreInstitucionSecundaria: null,
       ubicacionUltimoAnioSecundariaId: null,
       estadoEducacionSuperiorPreviaId: null,
@@ -240,7 +263,11 @@ describe('InscripcionesEndpoint', () => {
     await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe(true);
 
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesEncuestaInicialEndpoint, {
-      body: payload,
+      body: expect.objectContaining({
+        carreraId: 20,
+        procesoId: 200,
+        cursaSecundariaActualmente: null,
+      }),
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -251,7 +278,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         confirmada: true,
         fechaVencimientoPago: '2027-04-15',
-        carritos: [{ senia: 21000 }],
+        senia: 21000,
         estadoCuenta: { saldoActual: 70000 },
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })

@@ -21,16 +21,16 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Configurar `envs-cli` (una sola vez por maquina):
+2. Configurar Azure CLI (una sola vez por maquina):
 
    ```bash
-   envs config --repo-url https://github.com/DesarrolloORT/front-envs.git
-   envs login
+   az login
+   az account show
    ```
 
-   Los scripts `npm run start`, `start:local` y `start:preprod` generan automaticamente `src/environments/environment.generated.ts` mediante `envs run`.
+   `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 
-   El archivo `src/environments/environment.generated.ts` esta ignorado por [`.gitignore`](../.gitignore).
+   El archivo `src/environments/generated-environment.ts` esta ignorado por [`.gitignore`](../.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
 3. Actualizar contratos generados si el backend Swagger ya esta disponible:
 
@@ -78,9 +78,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 Antes del primer PR del repositorio nuevo conviene ejecutar:
 
 ```bash
-npm run lint:check
-npm run test
-npm run build
+npm run quality:local
 ```
 
 Antes de abrir un PR, validar que los adapters mantengan encapsulados los contratos
@@ -92,6 +90,12 @@ npm run check-api-contracts
 
 Ese comando es de solo lectura: revisa los endpoints generados locales y las
 firmas publicas de adapters.
+
+Si se quiere anticipar el Quality Gate antes del PR, configurar `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y un `sonar-scanner` local, y ejecutar:
+
+```bash
+npm run sonar:local
+```
 
 ## Dev Container
 

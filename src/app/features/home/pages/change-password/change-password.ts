@@ -1,13 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import type { OrtErrorItem } from '@desarrolloort/components';
 import {
@@ -18,6 +11,11 @@ import {
 } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
+import { matchingFieldsValidator } from '../../../../shared/forms/matching-fields.validator';
+import {
+  buildOrtPasswordRequirements,
+  ORT_PASSWORD_VALIDATORS,
+} from '../../../../shared/forms/password-validation';
 import { AccountService } from '../../../auth/services/account';
 
 interface ChangePasswordForm {
@@ -57,19 +55,20 @@ export class ChangePassword {
       }),
       password: new FormControl('', {
         nonNullable: true,
-        validators: [
-          Validators.required,
-          Validators.minLength(12),
-          Validators.maxLength(20),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$%@_.!-])/),
-        ],
+        validators: ORT_PASSWORD_VALIDATORS,
       }),
       confirmPassword: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required],
       }),
     },
-    { validators: [passwordMatchValidator] }
+    {
+      validators: [
+        matchingFieldsValidator('password', 'confirmPassword', {
+          errorKey: 'confirmPasswordMismatch',
+        }),
+      ],
+    }
   );
 
   private readonly isSubmittingState = signal(false);
@@ -140,14 +139,8 @@ export class ChangePassword {
   });
 
   protected readonly requirements = computed<PasswordRequirement[]>(() => {
-    const value = this.password();
-    return [
-      { label: '12 caracteres', met: value.length >= 12 },
-      { label: 'Una letra mayúscula', met: /[A-Z]/.test(value) },
-      { label: 'Una letra minúscula', met: /[a-z]/.test(value) },
-      { label: 'Un número', met: /\d/.test(value) },
-      { label: 'Un caracter especial ($%@_!.-)', met: /[$%@_.!-]/.test(value) },
-    ];
+    this.password();
+    return buildOrtPasswordRequirements(this.form.controls.password);
   });
 
   protected toggleCurrentPasswordVisibility(): void {
@@ -185,14 +178,4 @@ export class ChangePassword {
           ),
       });
   }
-}
-
-function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
-  const password = group.get('password')?.value;
-  const confirm = group.get('confirmPassword')?.value;
-  if (password && confirm && password !== confirm) {
-    group.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-    return { passwordMismatch: true };
-  }
-  return null;
 }

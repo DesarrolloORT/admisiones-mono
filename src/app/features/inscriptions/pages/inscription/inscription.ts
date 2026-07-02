@@ -5,22 +5,22 @@ import { OrtButtonModule, OrtIconModule, OrtSpinnerModule } from '@desarrolloort
 
 import { ProcessLayout } from '../../../../shared/ui/process-layout/process-layout';
 import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
-import { InscripcionAcademicStep } from '../../components/inscripcion-academic-step/inscripcion-academic-step';
-import { InscripcionConfirmationStep } from '../../components/inscripcion-confirmation-step/inscripcion-confirmation-step';
-import { InscripcionDialog } from '../../components/inscripcion-dialog/inscripcion-dialog';
-import { InscripcionPersonalStep } from '../../components/inscripcion-personal-step/inscripcion-personal-step';
-import { InscripcionRegulationReader } from '../../components/inscripcion-regulation-reader/inscripcion-regulation-reader';
-import { InscripcionReservationStep } from '../../components/inscripcion-reservation-step/inscripcion-reservation-step';
-import { InscripcionSuccessStep } from '../../components/inscripcion-success-step/inscripcion-success-step';
-import { InscripcionPaymentFacade } from '../../facades/inscripcion-payment';
-import { InscripcionProcessFacade } from '../../facades/inscripcion-process';
-import { InscripcionProposalFacade } from '../../facades/inscripcion-proposal';
-import { InscripcionSurveyFacade } from '../../facades/inscripcion-survey';
-import { InscripcionFormsStore } from '../../store/inscripcion-forms';
-import { InscripcionProcessStore } from '../../store/inscripcion-process';
+import { InscripcionAcademicStep } from '../../components/inscription-academic-step/inscription-academic-step';
+import { InscripcionConfirmationStep } from '../../components/inscription-confirmation-step/inscription-confirmation-step';
+import { InscripcionDialog } from '../../components/inscription-dialog/inscription-dialog';
+import { InscripcionPersonalStep } from '../../components/inscription-personal-step/inscription-personal-step';
+import { InscripcionRegulationReader } from '../../components/inscription-regulation-reader/inscription-regulation-reader';
+import { InscripcionReservationStep } from '../../components/inscription-reservation-step/inscription-reservation-step';
+import { InscripcionSuccessStep } from '../../components/inscription-success-step/inscription-success-step';
+import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
+import { InscripcionProcessFacade } from '../../facades/inscription-process';
+import { InscripcionProposalFacade } from '../../facades/inscription-proposal';
+import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
+import { InscripcionFormsStore } from '../../store/inscription-forms';
+import { InscripcionProcessStore } from '../../store/inscription-process';
 
 @Component({
-  selector: 'app-inscripcion',
+  selector: 'app-inscription',
   imports: [
     InscripcionAcademicStep,
     InscripcionConfirmationStep,
@@ -44,8 +44,8 @@ import { InscripcionProcessStore } from '../../store/inscripcion-process';
     InscripcionPaymentFacade,
     InscripcionProcessFacade,
   ],
-  templateUrl: './inscripcion.html',
-  styleUrl: './inscripcion.scss',
+  templateUrl: './inscription.html',
+  styleUrl: './inscription.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Inscripcion {
