@@ -7,6 +7,7 @@ import {
   OrtInputModule,
   OrtRadioModule,
 } from '@desarrolloort/components';
+import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
 // eslint-disable-next-line no-restricted-imports
 import {
@@ -25,6 +26,7 @@ import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-per
     OrtFormFieldModule,
     OrtInputModule,
     OrtRadioModule,
+    ErrorAlert,
   ],
   templateUrl: './scholarship-academic-step.html',
   styleUrls: ['../../pages/fbr/fbr.scss'],
@@ -95,5 +97,9 @@ export class ScholarshipAcademicStep {
 
   private emptyAcademicStepData(): ScholarshipAcademicStepData {
     return { carrera: '', comienzo: '', turno: '' };
+  }
+
+  protected showErrorAlert(): boolean {
+    return this.submitted() && this.inscriptionForm.invalid;
   }
 }

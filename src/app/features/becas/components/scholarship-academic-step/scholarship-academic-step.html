@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="scholarship-academic-title" class="scholarship-screen">
   <header class="scholarship-screen__header">
     <h1 id="scholarship-academic-title">Postulación a beca</h1>
@@ -5,6 +6,9 @@
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
+  @if (showErrorAlert()) {
+  <app-error-alert />
+  }
   <form novalidate [formGroup]="inscriptionForm" (ngSubmit)="onContinue()">
     <ort-accordion>
       <ort-accordion-item [expanded]="true">

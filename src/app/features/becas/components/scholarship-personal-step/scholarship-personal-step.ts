@@ -1,5 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, input, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { OrtAccordionModule, OrtButton, OrtIconModule } from '@desarrolloort/components';
+import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
 import { Declaration } from '../postulation-forms/declaration/declaration';
@@ -23,16 +31,19 @@ export type ScholarshipVariant = 'fbr' | 'fbc' | 'fcl' | 'fexaCon' | 'fexaSin';
     EducationInfo,
     EducationInfoFcl,
     WorkHistory,
+    ErrorAlert,
   ],
   templateUrl: './scholarship-personal-step.html',
   styleUrls: ['../../pages/fbr/fbr.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipPersonalStep {
+  protected readonly showErrorAlert = signal(false);
   private readonly facade = inject(ScholarshipProcessFacade);
   readonly variant = input.required<ScholarshipVariant>();
   private readonly personalDataComponent = viewChild(PersonalData);
   private readonly workHistoryComponent = viewChild(WorkHistory);
+  private readonly declarationComponent = viewChild(Declaration);
   private readonly educationInfoComponent = viewChild(EducationInfo);
   private readonly educationInfoFbrComponent = viewChild(EducationInfoFbr);
   private readonly educationInfoFclComponent = viewChild(EducationInfoFcl);
@@ -48,6 +59,11 @@ export class ScholarshipPersonalStep {
     const isWorkHistoryValid =
       variant === 'fcl' ? (this.workHistoryComponent()?.validateAndMarkTouched() ?? false) : true;
 
+    const isDeclarationValid =
+      variant === 'fexaSin'
+        ? true
+        : (this.declarationComponent()?.validateAndMarkTouched() ?? false);
+
     let isEducationInfoValid = true;
 
     if (variant === 'fbr') {
@@ -58,7 +74,10 @@ export class ScholarshipPersonalStep {
       isEducationInfoValid = this.educationInfoComponent()?.validateAndMarkTouched() ?? false;
     }
 
-    const isValid = isPersonalDataValid && isWorkHistoryValid && isEducationInfoValid;
+    const isValid =
+      isPersonalDataValid && isWorkHistoryValid && isDeclarationValid && isEducationInfoValid;
+
+    this.showErrorAlert.set(!isValid);
 
     if (!isValid) {
       return;

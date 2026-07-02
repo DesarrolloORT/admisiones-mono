@@ -7,7 +7,9 @@
     </p>
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
-
+  @if (showErrorAlert()) {
+  <app-error-alert />
+  }
   <form>
     <ort-accordion>
       @if (variant() !== 'fcl' && variant() !== 'fexaSin') {
