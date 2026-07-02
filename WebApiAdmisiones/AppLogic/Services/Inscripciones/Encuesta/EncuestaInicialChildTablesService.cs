@@ -31,16 +31,27 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 return;
             }
 
-            if (request.SeInformoEnOtrasUniversidades == true && request.UniversidadConsideradaIds != null)
+            if (request.SeInformoEnOtrasUniversidades == true
+                && (request.UniversidadConsideradaIds != null || TieneOtros(request.UniversidadConsideradaOtros)))
             {
                 uow.EmpresaConsideradaAdmisions.RemoveByPersona(codigoPersona);
-                foreach (var id in request.UniversidadConsideradaIds.Distinct())
+                foreach (var id in (request.UniversidadConsideradaIds ?? []).Where(id => id > 0).Distinct())
                 {
                     uow.EmpresaConsideradaAdmisions.Add(new EmpresaConsideradaAdmision
                     {
                         IdEmpresaConsiderada = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION),
                         CodigoPersona = codigoPersona,
                         CodigoEmpresa = id
+                    });
+                }
+
+                foreach (var nombre in OtrosNormalizados(request.UniversidadConsideradaOtros))
+                {
+                    uow.EmpresaConsideradaAdmisions.Add(new EmpresaConsideradaAdmision
+                    {
+                        IdEmpresaConsiderada = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION),
+                        CodigoPersona = codigoPersona,
+                        NombreOtraEmpresa = nombre
                     });
                 }
             }
@@ -58,16 +69,27 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 return;
             }
 
-            if (request.EstadoEducacionSuperiorPreviaId == 1 && request.UniversidadEducacionSuperiorIds != null)
+            if (request.EstadoEducacionSuperiorPreviaId == 1
+                && (request.UniversidadEducacionSuperiorIds != null || TieneOtros(request.UniversidadEducacionSuperiorOtros)))
             {
                 uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);
-                foreach (var id in request.UniversidadEducacionSuperiorIds.Distinct())
+                foreach (var id in (request.UniversidadEducacionSuperiorIds ?? []).Where(id => id > 0).Distinct())
                 {
                     uow.EducacionSuperiorAdmisions.Add(new EducacionSuperiorAdmision
                     {
                         IdEducacionSuperior = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION),
                         CodigoPersona = codigoPersona,
                         CodigoEmpresa = id
+                    });
+                }
+
+                foreach (var nombre in OtrosNormalizados(request.UniversidadEducacionSuperiorOtros))
+                {
+                    uow.EducacionSuperiorAdmisions.Add(new EducacionSuperiorAdmision
+                    {
+                        IdEducacionSuperior = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION),
+                        CodigoPersona = codigoPersona,
+                        NombreOtraEmpresa = nombre
                     });
                 }
             }
@@ -116,5 +138,18 @@ namespace AppLogic.Services.Inscripciones.Encuesta
                 }
             }
         }
+
+        private static IEnumerable<string> OtrosNormalizados(IEnumerable<string>? otros)
+        {
+            return otros?
+                .Select(o => o?.Trim())
+                .Where(o => !string.IsNullOrWhiteSpace(o))
+                .Select(o => o!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                ?? [];
+        }
+
+        private static bool TieneOtros(IEnumerable<string>? otros)
+            => otros?.Any(o => !string.IsNullOrWhiteSpace(o)) == true;
     }
 }

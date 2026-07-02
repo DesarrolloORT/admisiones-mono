@@ -34,7 +34,9 @@ namespace AppLogic.Dtos.EncuestaInicial
         public bool? TrabajaActualmente { get; set; }
         public long? TipoJornadaId { get; set; }
         public List<long>? UniversidadConsideradaIds { get; set; }
+        public List<string>? UniversidadConsideradaOtros { get; set; }
         public List<long>? UniversidadEducacionSuperiorIds { get; set; }
+        public List<string>? UniversidadEducacionSuperiorOtros { get; set; }
         public List<long>? PublicidadOrtIds { get; set; }
         public List<long>? MotivoEleccionOrtIds { get; set; }
     }

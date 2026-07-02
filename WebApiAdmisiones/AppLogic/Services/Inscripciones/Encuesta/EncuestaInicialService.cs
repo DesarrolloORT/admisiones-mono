@@ -314,7 +314,7 @@ namespace AppLogic.Services.Inscripciones.Encuesta
             }
 
             var datosBachillerato = datos.Data!;
-            var fechaActual = dbConnectionContext.CurrentDateTime();
+            var fechaActual = DateTime.Now;
             var existente = uow.BachilleratoPersonas.GetByKey(codigoPersona);
             if (existente == null)
             {

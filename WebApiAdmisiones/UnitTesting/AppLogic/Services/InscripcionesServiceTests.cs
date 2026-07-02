@@ -1148,6 +1148,162 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void GuardarEncuestaInicial_CarreraUniversitariaConCuarto_Falla()
+        {
+            SetupPersonaValida();
+
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller> { AnioBachiller(4, 10) });
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                CarreraId = 10,
+                CursaSecundariaActualmente = true,
+                AnioBachillerato = 10
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_64", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_SecundariaExterior_AplicaDefaultsLegacy()
+        {
+            SetupPersonaValida();
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(902);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller> { AnioBachiller(6, 12) });
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                UbicacionUltimoAnioSecundariaId = 2,
+                CursaSecundariaActualmente = true,
+                AnioBachillerato = 12
+            });
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal(2898, encuestaAgregada!.CodigoInstitucionBac);
+            Assert.Equal(5, encuestaAgregada.CodigoTitulo);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_UniversidadOtro_GuardaNombreEnTablasHijas()
+        {
+            SetupPersonaValida();
+
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 10,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "TEMPORAL"
+            });
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var consideradaRepo = new Mock<IEmpresaConsideradaAdmisionRepository>();
+            _uowMock.Setup(u => u.EmpresaConsideradaAdmisions).Returns(consideradaRepo.Object);
+
+            var superiorRepo = new Mock<IEducacionSuperiorAdmisionRepository>();
+            _uowMock.Setup(u => u.EducacionSuperiorAdmisions).Returns(superiorRepo.Object);
+
+            _dbConnectionContextMock
+                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_EMPRESA_CONSIDERADA_ADMISION))
+                .Returns(501);
+            _dbConnectionContextMock
+                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_EDUCACION_SUPERIOR_ADMISION))
+                .Returns(601);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                SeInformoEnOtrasUniversidades = true,
+                UniversidadConsideradaIds = [0],
+                UniversidadConsideradaOtros = [" Otra universidad "],
+                EstadoEducacionSuperiorPreviaId = 1,
+                UniversidadEducacionSuperiorIds = [0],
+                UniversidadEducacionSuperiorOtros = [" Otra superior "]
+            });
+
+            Assert.True(result.Success);
+            consideradaRepo.Verify(r => r.Add(It.Is<EmpresaConsideradaAdmision>(e =>
+                e.IdEmpresaConsiderada == 501 &&
+                e.CodigoPersona == 123 &&
+                e.CodigoEmpresa == null &&
+                e.NombreOtraEmpresa == "Otra universidad")), Times.Once);
+            superiorRepo.Verify(r => r.Add(It.Is<EducacionSuperiorAdmision>(e =>
+                e.IdEducacionSuperior == 601 &&
+                e.CodigoPersona == 123 &&
+                e.CodigoEmpresa == null &&
+                e.NombreOtraEmpresa == "Otra superior")), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_EducacionSuperiorExteriorConUniversidad_Falla()
+        {
+            SetupPersonaValida();
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                EstadoEducacionSuperiorPreviaId = 2,
+                UniversidadEducacionSuperiorIds = [0],
+                UniversidadEducacionSuperiorOtros = ["Otra superior"]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_25", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_UniversidadOtroSinSeleccionOtra_Falla()
+        {
+            SetupPersonaValida();
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>
+            {
+                new() { CodigoEmpresa = 55, Nombre = "Universidad" }
+            });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                SeInformoEnOtrasUniversidades = true,
+                UniversidadConsideradaIds = [55],
+                UniversidadConsideradaOtros = ["Otra universidad"]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("INS_EI_25", result.ErrorCode);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
         public void GuardarEncuestaInicial_AnioBachilleratoPorId_GuardaCantAnios()
         {
             SetupPersonaValida();

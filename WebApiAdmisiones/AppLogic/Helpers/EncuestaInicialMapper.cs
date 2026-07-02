@@ -10,6 +10,9 @@ namespace AppLogic.Helpers
 {
     internal static class EncuestaInicialMapper
     {
+        private const long CodigoInstitucionExteriorLegacy = 2898;
+        private const long CodigoTituloExteriorSextoLegacy = 5;
+
         internal static void AplicarDatosTecnicos(
             EncuestaIniAdmision encuesta,
             Persona persona,
@@ -48,7 +51,7 @@ namespace AppLogic.Helpers
                 if (request.UbicacionUltimoAnioSecundariaId.Value == PersonaConstants.Parametros.UruguayCodigoPais)
                     encuesta.NombreInstSecEncuestaIni = null;
                 else
-                    encuesta.CodigoInstitucionBac = null;
+                    encuesta.CodigoInstitucionBac = CodigoInstitucionExteriorLegacy;
             }
 
             if (request.InstitucionSecundariaId.HasValue)
@@ -76,6 +79,10 @@ namespace AppLogic.Helpers
 
                 if (request.OrientacionBachilleratoId.HasValue)
                     encuesta.CodigoTitulo = request.OrientacionBachilleratoId.Value;
+                else if (encuesta.UltimoanioSecundariaEncuestaIni != PersonaConstants.Parametros.UruguayCodigoPais
+                    && request.AnioBachillerato.HasValue
+                    && ResolverCantAniosAnioBachiller(uow, request.AnioBachillerato.Value) == 12)
+                    encuesta.CodigoTitulo = CodigoTituloExteriorSextoLegacy;
             }
 
             if (request.RecursaAnioBachillerato.HasValue)
@@ -182,6 +189,7 @@ namespace AppLogic.Helpers
             DtoGuardarEncuestaInicialResponse pendientes)
         {
             var vecesRecursa = EncuestaInicialState.LeerInt(encuesta.VecesSextoEncuestaIni);
+            var estadoEducacionSuperior = LeerEstadoEducacionSuperior(encuesta.TieneEducacionSuperiorEncuestaIni);
 
             return new DtoEncuestaInicialLectura
             {
@@ -206,7 +214,7 @@ namespace AppLogic.Helpers
                 InstitucionSecundariaId = encuesta.CodigoInstitucionBac,
                 NombreInstitucionSecundaria = encuesta.NombreInstSecEncuestaIni,
                 UbicacionUltimoAnioSecundariaId = encuesta.UltimoanioSecundariaEncuestaIni,
-                EstadoEducacionSuperiorPreviaId = LeerEstadoEducacionSuperior(encuesta.TieneEducacionSuperiorEncuestaIni),
+                EstadoEducacionSuperiorPreviaId = estadoEducacionSuperior,
                 NivelDecisionId = encuesta.NivelDecisionEncuestaIni,
                 TuvoAsesoramientoOrt = EncuestaInicialState.SNToBool(encuesta.AsesoramientoOrtEncuestaIni),
                 ValoracionAsesoramientoOrtId = encuesta.ValoracionAsesoramientoOrtEncuestaIni,
@@ -220,7 +228,9 @@ namespace AppLogic.Helpers
                 TrabajaActualmente = EncuestaInicialState.SNToBool(persona.TrabajaActualmente),
                 TipoJornadaId = persona.TipoJornada,
                 UniversidadConsideradaIds = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
-                UniversidadEducacionSuperiorIds = uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
+                UniversidadConsideradaOtros = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList(),
+                UniversidadEducacionSuperiorIds = estadoEducacionSuperior == 1 ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,
+                UniversidadEducacionSuperiorOtros = estadoEducacionSuperior == 1 ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList() : null,
                 PublicidadOrtIds = uow.PublicidadEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(p => p.IdPublicidad).ToList(),
                 MotivoEleccionOrtIds = uow.MotivoEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(m => m.IdMotivo).ToList()
             };

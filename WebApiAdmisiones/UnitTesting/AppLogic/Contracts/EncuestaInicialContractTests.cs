@@ -14,7 +14,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(6, Contract["version"]!.GetValue<int>());
+            Assert.Equal(8, Contract["version"]!.GetValue<int>());
             Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
             Assert.NotNull(Contract["sections"]);

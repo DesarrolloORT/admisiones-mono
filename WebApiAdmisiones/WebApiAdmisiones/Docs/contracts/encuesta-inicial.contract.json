@@ -1,5 +1,5 @@
 ﻿{
-  "version": 6,
+  "version": 8,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "sections": [
@@ -17,6 +17,7 @@
         "vecesRecursaAnioBachillerato",
         "estadoEducacionSuperiorPreviaId",
         "universidadEducacionSuperiorIds",
+        "universidadEducacionSuperiorOtros",
         "nivelFormacionPadreTutorId",
         "padreTutorEgresadoOrt",
         "nivelFormacionMadreTutorId",
@@ -32,6 +33,7 @@
         "nivelDecisionId",
         "seInformoEnOtrasUniversidades",
         "universidadConsideradaIds",
+        "universidadConsideradaOtros",
         "informacionOtrasUniversidadesLinea1",
         "informacionOtrasUniversidadesLinea2",
         "apoyoDecisionId",
@@ -200,8 +202,15 @@
       "catalogPath": "educacion.universidades",
       "itemValueField": "value",
       "itemLabelField": "label",
-      "requiredWhen": "estadoEducacionSuperiorPreviaId in [1, 2]",
-      "clearWhen": "estadoEducacionSuperiorPreviaId == 3"
+      "requiredWhen": "estadoEducacionSuperiorPreviaId == 1",
+      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]"
+    },
+    "universidadEducacionSuperiorOtros": {
+      "section": "educacion",
+      "type": "array",
+      "itemType": "string",
+      "requiredWhen": "universidadEducacionSuperiorIds contains 0",
+      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]"
     },
     "nivelFormacionPadreTutorId": {
       "section": "educacion",
@@ -304,6 +313,13 @@
       "itemValueField": "value",
       "itemLabelField": "label",
       "requiredWhen": "seInformoEnOtrasUniversidades == true",
+      "clearWhen": "seInformoEnOtrasUniversidades == false"
+    },
+    "universidadConsideradaOtros": {
+      "section": "decisionAcademica",
+      "type": "array",
+      "itemType": "string",
+      "requiredWhen": "universidadConsideradaIds contains 0",
       "clearWhen": "seInformoEnOtrasUniversidades == false"
     },
     "informacionOtrasUniversidadesLinea1": {
