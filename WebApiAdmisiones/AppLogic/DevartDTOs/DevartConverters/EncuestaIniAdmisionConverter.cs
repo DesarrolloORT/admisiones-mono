@@ -87,7 +87,6 @@ namespace AppLogic.DevartDTOs
             target.InstruccionMadreOrtEncuestaIni = source.InstruccionMadreOrtEncuestaIni;
             target.InstruccionPadreOrtEncuestaIni = source.InstruccionPadreOrtEncuestaIni;
             target.EstadoEncuestaIniAdmision = source.EstadoEncuestaIniAdmision;
-            target.TipoBachillerato = source.TipoBachillerato;
             target.CursaSecundariaActualmenteEncuestaIni = source.CursaSecundariaActualmenteEncuestaIni;
 
             // Navigation Properties
@@ -166,7 +165,6 @@ namespace AppLogic.DevartDTOs
             target.InstruccionMadreOrtEncuestaIni = source.InstruccionMadreOrtEncuestaIni;
             target.InstruccionPadreOrtEncuestaIni = source.InstruccionPadreOrtEncuestaIni;
             target.EstadoEncuestaIniAdmision = source.EstadoEncuestaIniAdmision;
-            target.TipoBachillerato = source.TipoBachillerato;
             target.CursaSecundariaActualmenteEncuestaIni = source.CursaSecundariaActualmenteEncuestaIni;
 
             // User-defined partial method
