@@ -81,8 +81,6 @@ namespace AppLogic.DevartDTOs
 
         public DtoIntereDevart Intere { get; set; }
 
-        public List<DtoActividadDevart> Actividads { get; set; }
-
         #endregion
     }
 

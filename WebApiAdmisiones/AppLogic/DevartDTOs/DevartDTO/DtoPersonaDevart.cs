@@ -517,8 +517,6 @@ namespace AppLogic.DevartDTOs
 
         public DtoBachilleratoPersonaDevart BachilleratoPersona { get; set; }
 
-        public List<DtoAccionDevart> Accions { get; set; }
-
         public List<DtoDeclaracionJuradaWebDevart> DeclaracionJuradaWebs { get; set; }
 
         public List<DtoInscriptoPruebaDevart> InscriptoPruebas { get; set; }

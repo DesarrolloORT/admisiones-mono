@@ -222,7 +222,6 @@ namespace AppLogic.DevartDTOs
               target.InstanciaWorkflows = source.InstanciaWorkflows.ToDtosWithRelated(level - 1);
               target.AccesoSitiosantanders = source.AccesoSitiosantanders.ToDtosWithRelated(level - 1);
               target.BachilleratoPersona = source.BachilleratoPersona.ToDtoWithRelated(level - 1);
-              target.Accions = source.Accions.ToDtosWithRelated(level - 1);
               target.DeclaracionJuradaWebs = source.DeclaracionJuradaWebs.ToDtosWithRelated(level - 1);
               target.InscriptoPruebas = source.InscriptoPruebas.ToDtosWithRelated(level - 1);
               target.AceptacionReglamentoEsts = source.AceptacionReglamentoEsts.ToDtosWithRelated(level - 1);

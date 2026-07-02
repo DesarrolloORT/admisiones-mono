@@ -2585,50 +2585,6 @@
       <column name="CANT_ANIOS_ANIO_BACHILLER" not-null="False" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
-  <class name="Accion" entity-set="Accions" table="T_ACCION" schema="CREADOR" p1:Guid="0f3e66ea-a40a-4146-873c-e3c28f3186f3">
-    <id name="IdAccion" type="Decimal" p1:ValidateRequired="true" p1:Guid="d356564a-3fdb-44f7-9e27-466663526821">
-      <column name="ID_ACCION" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </id>
-    <property name="UsuarioLockeadorAccion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="67937ca2-db33-4c84-8a8f-2b05cc78dc60">
-      <column name="USUARIO_LOCKEADOR_ACCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="ProcesoLockeadorAccion" type="String" p1:nullable="True" p1:ValidateMaxLength="12" p1:ValidateRequired="false" p1:Guid="202f33a6-2d35-4bd2-89c2-6db3a1e47b64">
-      <column name="PROCESO_LOCKEADOR_ACCION" not-null="False" length="12" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdActividad" type="Decimal" p1:ValidateRequired="true" p1:Guid="c65f82e7-d3e4-4cbc-95d1-a4bb2ef1ce14">
-      <column name="ID_ACTIVIDAD" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="CodigoPersona" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0c9f5783-6c12-44f0-a3e7-43470da15702">
-      <column name="CODIGO_PERSONA" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="77193699-fa33-42c5-8bd9-adbc5eb575f3" p1:GenerateDTO="False">
-      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaRealizadoAccion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="dd8e17dc-d6c3-4cdf-8465-5085374a5cb2">
-      <column name="FECHA_REALIZADO_ACCION" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="33241567-43ef-42e6-8528-eeb9a7159cdf" p1:GenerateDTO="False">
-      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="0cc2a719-f40e-4a72-bc73-c6c766df6ad3" p1:GenerateDTO="False">
-      <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="IdEstadoAccion" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="09c551dc-ad7d-4164-9bd3-cb422fda43b8">
-      <column name="ID_ESTADO_ACCION" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="UsuarioRealizadoAccion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="2ad8305f-e60f-4eda-b2c1-9dec9d72d451">
-      <column name="USUARIO_REALIZADO_ACCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdAccionResultado" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1f49f036-a0e6-4522-8c32-075fd293585d">
-      <column name="ID_ACCION_RESULTADO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="ObservacionesAccion" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="ae211eba-7d8d-41bf-9c73-4a9e8e803ea3">
-      <column name="OBSERVACIONES_ACCION" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdPrueba" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6bd0c516-4a91-481c-bc09-67dd84d2191e">
-      <column name="ID_PRUEBA" not-null="False" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-  </class>
   <class name="DeclaracionJuradaWeb" entity-set="DeclaracionJuradaWebs" table="T_DECLARACION_JURADA_WEB" schema="CREADOR" p1:Guid="239008a3-3274-4ea9-a4aa-31b4638d09a9">
     <id name="IdDeclaracionjuradaWeb" type="Decimal" p1:ValidateRequired="true" p1:Guid="ea35eeef-0e3d-4823-bc2c-0273a52a5e03">
       <column name="ID_DECLARACIONJURADA_WEB" not-null="True" sql-type="NUMBER" p1:unicode="False" />
@@ -3444,74 +3400,6 @@
     </property>
     <property name="FechaFrescoPersonaAdmite" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="82cc8891-b92c-4bd2-b869-85053f38c180">
       <column name="FECHA_FRESCO_PERSONA_ADMITE" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-  </class>
-  <class name="Actividad" entity-set="Actividads" table="T_ACTIVIDAD" schema="CREADOR" p1:Guid="c8bfb534-76b7-4468-a9a6-971322f21478">
-    <id name="IdActividad" type="Decimal" p1:ValidateRequired="true" p1:Guid="c1865e85-416d-4537-a505-f0d86d1db51a">
-      <column name="ID_ACTIVIDAD" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </id>
-    <property name="IdFormaContacto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="fb4f4dae-c240-4c45-a719-193c6bcec4ea">
-      <column name="ID_FORMA_CONTACTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdTipoActividad" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="40ac0d2b-9935-481a-9152-26dfcd103a2f">
-      <column name="ID_TIPO_ACTIVIDAD" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdTipoAccion" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5c782cf7-5160-4d20-b227-ab2e5fe4741c">
-      <column name="ID_TIPO_ACCION" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdSeleccionPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c17b88bd-8730-4e51-bbd6-fd8702319169">
-      <column name="ID_SELECCION_PERSONA" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="UsernameAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="31" p1:ValidateRequired="false" p1:Guid="cb31e594-1585-4055-9746-13dae2641767">
-      <column name="USERNAME_ASIGNADO_ACTIVIDAD" not-null="False" length="31" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdGrupoTrabajo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="a906a82b-39fa-48aa-bc1f-4feb67011132">
-      <column name="ID_GRUPO_TRABAJO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="FechaDesdeAsignadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="32960f2e-b3a4-4039-be90-6defc396ac3c">
-      <column name="FECHA_DESDE_ASIGNADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="FechaHastaAsignadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="405d1900-af0d-43d7-8a2e-3d19483fbaab">
-      <column name="FECHA_HASTA_ASIGNADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="HoraDesdeAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="43b81543-daf0-4406-ab24-58f8583c2724">
-      <column name="HORA_DESDE_ASIGNADO_ACTIVIDAD" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="HoraHastaAsignadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="1743c4ee-d984-4c71-bcee-852e7823457e">
-      <column name="HORA_HASTA_ASIGNADO_ACTIVIDAD" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdEstadoAccion" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="dfb6bb7a-bc25-4c35-91a1-79906170f285">
-      <column name="ID_ESTADO_ACCION" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="UsernameGeneradorActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="31" p1:ValidateRequired="false" p1:Guid="57c45db5-cf62-4f11-8358-bca0378e00fe">
-      <column name="USERNAME_GENERADOR_ACTIVIDAD" not-null="False" length="31" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaGeneradorActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0bd3aafe-4045-4fe4-af9f-f1d81a328ddf">
-      <column name="FECHA_GENERADOR_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="ObservacionesActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="500" p1:ValidateRequired="false" p1:Guid="09a490cd-4141-4734-b383-14a5cd3356c9">
-      <column name="OBSERVACIONES_ACTIVIDAD" not-null="False" length="500" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaRealizadoActividad" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e202fec0-7f32-45e6-95e6-ae5b6850e752">
-      <column name="FECHA_REALIZADO_ACTIVIDAD" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="UsernameRealizadoActividad" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="7732a3c3-4656-4f61-93ee-b03426c25089">
-      <column name="USERNAME_REALIZADO_ACTIVIDAD" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="UsuarioIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="61c12e43-9b9b-443a-a21d-9c41870647f8" p1:GenerateDTO="False">
-      <column name="USUARIO_INGRESO" default="user" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaIngreso" type="DateTime" p1:nullable="True" value-generated="OnAdd" p1:ValidateRequired="false" p1:Guid="68642589-284d-4a26-8021-842491e0067e" p1:GenerateDTO="False">
-      <column name="FECHA_INGRESO" default="to_date(to_char(sysdate,'yyyy-mm-dd'),'yyyy-mm-dd')" not-null="False" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="HoraIngreso" type="String" p1:nullable="True" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="false" p1:Guid="246392d3-68a0-4516-9f79-36a974bd0b99" p1:GenerateDTO="False">
-      <column name="HORA_INGRESO" default="to_char(sysdate,'hh24:mi:ss')" not-null="False" length="8" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="IdEvento" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="7f0cca1a-da99-4663-bf5d-73c5c36c9dea">
-      <column name="ID_EVENTO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdProceso" type="Int64" p1:ValidateRequired="true" p1:Guid="61a6ed1e-823d-405a-b13d-0337ee3cc911">
-      <column name="ID_PROCESO" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
   <class name="IngresoMensualNfDj" entity-set="IngresoMensualNfDjs" table="T_INGRESO_MENSUAL_NF_DJ" schema="CREADOR" p1:Guid="b8d7df5a-abec-4a26-9aef-ee4ebb9a8ba5">
@@ -5897,14 +5785,6 @@
         <property name="IdAnioBachiller" />
       </end2>
     </association>
-    <association name="Persona_Accion" cardinality="OneToMany" p1:Guid="407fec45-6eda-4a6b-94f2-0a25847b1539">
-      <end1 multiplicity="ZeroOrOne" name="Persona" class="Accion" relation-class="Persona" constrained="True" lazy="False" p1:Guid="3ff17209-d0e9-4e60-96db-0fbb7270965b">
-        <property name="CodigoPersona" />
-      </end1>
-      <end2 multiplicity="Many" name="Accions" class="Persona" relation-class="Accion" lazy="False" p1:Guid="804cc4e6-e446-4fde-a34c-1a1dfe1cc3c2">
-        <property name="CodigoPersona" />
-      </end2>
-    </association>
     <association name="Persona_DeclaracionJuradaWeb" cardinality="OneToMany" p1:Guid="0ca98a05-019a-4e1d-8e8b-0564cbe550f0">
       <end1 multiplicity="One" name="Persona" class="DeclaracionJuradaWeb" relation-class="Persona" constrained="True" lazy="False" p1:Guid="62e5b465-644b-45b4-8282-2b40cb4a9667">
         <property name="CodigoPersona" />
@@ -5977,14 +5857,6 @@
         <property name="IdTipoBeca" />
       </end2>
     </association>
-    <association name="Prueba_Accion" cardinality="OneToMany" p1:Guid="14c253a8-1553-4df9-9d7a-bb2a38f09736">
-      <end1 multiplicity="ZeroOrOne" name="Prueba" class="Accion" relation-class="Prueba" constrained="True" lazy="False" p1:Guid="939b7c7f-e7d8-466f-9388-aecd5a66e853">
-        <property name="IdPrueba" />
-      </end1>
-      <end2 multiplicity="Many" name="Accions" class="Prueba" relation-class="Accion" lazy="False" p1:Guid="9af3d857-cd4d-44ae-978a-ba554ae75495" p1:GenerateDTO="False">
-        <property name="IdPrueba" />
-      </end2>
-    </association>
     <association name="Prueba_InscriptoPrueba" cardinality="OneToMany" p1:Guid="aff11ab8-b5dd-4788-9e8d-46c2571046f9">
       <end1 multiplicity="One" name="Prueba" class="InscriptoPrueba" relation-class="Prueba" constrained="True" lazy="False" p1:Guid="08b0d845-5095-437e-b9a9-228bc3473fe0">
         <property name="IdPrueba" />
@@ -6031,22 +5903,6 @@
       </end1>
       <end2 multiplicity="Many" name="Personas_IdCaracteristicaPaisTel2" class="CaracteristicaPai" relation-class="Persona" lazy="False" p1:Guid="41f6083e-e424-4344-a5c6-77e746c3660f">
         <property name="IdCaracteristicaPaisTel2" />
-      </end2>
-    </association>
-    <association name="Proceso_Actividad" cardinality="OneToMany" p1:Guid="42bb0c57-d6d2-477f-a6d3-1be17a59bbf8">
-      <end1 multiplicity="One" name="Proceso" class="Actividad" relation-class="Proceso" constrained="True" lazy="False" p1:Guid="878e8dde-609a-493f-a90c-3a5ddd8ff2f0">
-        <property name="IdProceso" />
-      </end1>
-      <end2 multiplicity="Many" name="Actividads" class="Proceso" relation-class="Actividad" lazy="False" p1:Guid="55932075-2059-42ce-a45f-52a2e85d3bce">
-        <property name="IdProceso" />
-      </end2>
-    </association>
-    <association name="Actividad_Accion" cardinality="OneToMany" p1:Guid="d0b62376-966b-4907-949e-8a934bec8530">
-      <end1 multiplicity="One" name="Actividad" class="Accion" relation-class="Actividad" constrained="True" lazy="False" p1:Guid="9028f791-3fb3-46b0-bcff-5835af34fc55">
-        <property name="IdActividad" />
-      </end1>
-      <end2 multiplicity="Many" name="Accions" class="Actividad" relation-class="Accion" lazy="False" p1:Guid="3c0883c2-897f-4bf8-b0c5-b76435a9c234">
-        <property name="IdActividad" />
       </end2>
     </association>
     <association name="TipoEgresoDj_EgresoMensualNfDj" cardinality="OneToMany" p1:Guid="9b0e2685-9d30-4c0d-a2b9-c1db461f77c8">

@@ -25,18 +25,12 @@ namespace AppLogic.IServices.Becas
 
         #endregion
 
-        #region UNIVERSIDADES
+
 
         /// <summary>
         /// Devuelve las universidades disponibles. Valida que el país indicado exista.
         /// </summary>
         OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerUniversidades(long codigoPais);
-
-        OperationResult<IEnumerable<DtoDeclaracionJuradaAdmisiones>> ObtenerFormulariosDeclaracionJuradaWeb(long codigoPersona);
-
-        OperationResult<DtoDeclaracionJuradaWebDevart> ObtenerFormularioDeclaracionJuradaWebDetalle(long codigoPersona, long idInscriptoPrueba);
-
-        OperationResult<bool> GuardarFormularioDeclaracionJuradaWeb(long codigoPersona,DtoDeclaracionJuradaWebDevart declaracionModificada,bool confirmar);
 
         OperationResult<bool> SubirArchivoIngreso(long codigoPersona, long idIngresoMensualNF, byte[] fileContent, string fileName);
 
@@ -56,6 +50,5 @@ namespace AppLogic.IServices.Becas
 
         OperationResult<bool> EliminarArchivoRevalidaDJ(long codigoPersona, long idDeclaracionJuradaWeb);
 
-        #endregion
     }
 }
