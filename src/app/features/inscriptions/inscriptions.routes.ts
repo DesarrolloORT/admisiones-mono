@@ -1,16 +1,16 @@
 import { Routes } from '@angular/router';
 
-import { Inscripcion } from './pages/inscripcion/inscripcion';
-import { inscripcionDetailResolver } from './resolvers/inscripcion-detail.resolver';
-import { inscripcionInitialSurveyResolver } from './resolvers/inscripcion-initial-survey.resolver';
+import { Inscripcion } from './pages/inscription/inscription';
+import { inscriptionDetailResolver } from './resolvers/inscription-detail.resolver';
+import { inscriptionInitialSurveyResolver } from './resolvers/inscription-initial-survey.resolver';
 
 export const routes: Routes = [
   {
     path: '',
     component: Inscripcion,
     resolve: {
-      initialSurvey: inscripcionInitialSurveyResolver,
-      inscriptionDetail: inscripcionDetailResolver,
+      initialSurvey: inscriptionInitialSurveyResolver,
+      inscriptionDetail: inscriptionDetailResolver,
     },
   },
 ];
