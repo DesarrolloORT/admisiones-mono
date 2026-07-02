@@ -71,8 +71,6 @@ npm run env:cache:clear
 npm run test:env-sync
 ```
 
-`generate-env:desa` queda como alias compatible de `env:sync -- --env desa`.
-
 ## Forzar o evitar Azure
 
 Para pedir explícitamente lo último:
