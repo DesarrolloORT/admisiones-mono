@@ -1,4 +1,5 @@
 using AppLogic.Helpers.ValidationHelpers;
+using Utilities;
 using Xunit;
 
 namespace UnitTesting.AppLogic.Helpers
@@ -13,7 +14,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "photo.jpg";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(jpegContent, fileName, nameof(ValidateImageFile_ValidJpeg_ReturnsSuccess));
+            var result = FileValidator.ValidateImageFile(jpegContent, fileName, nameof(ValidateImageFile_ValidJpeg_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -28,9 +29,23 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "image.png";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(pngContent, fileName, nameof(ValidateImageFile_ValidPng_ReturnsSuccess));
+            var result = FileValidator.ValidateImageFile(pngContent, fileName, nameof(ValidateImageFile_ValidPng_ReturnsSuccess));
 
             // Assert
+            Assert.True(result.Success);
+            Assert.True(result.Data);
+        }
+
+        [Theory]
+        [InlineData("image.jpg")]
+        [InlineData("image.exe")]
+        [InlineData("image")]
+        public void ValidateImageFile_PngBytesIgnoresFileNameExtension_ReturnsSuccess(string fileName)
+        {
+            var pngContent = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+            var result = FileValidator.ValidateImageFile(pngContent, fileName, nameof(ValidateImageFile_PngBytesIgnoresFileNameExtension_ReturnsSuccess));
+
             Assert.True(result.Success);
             Assert.True(result.Data);
         }
@@ -43,7 +58,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "fake.jpg";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(pdfContent, fileName, nameof(ValidateImageFile_PdfAsImage_ReturnsFailed));
+            var result = FileValidator.ValidateImageFile(pdfContent, fileName, nameof(ValidateImageFile_PdfAsImage_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -58,7 +73,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "document.pdf";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(pdfContent, fileName, nameof(ValidateDocumentFile_ValidPdf_ReturnsSuccess));
+            var result = FileValidator.ValidateDocumentFile(pdfContent, fileName, nameof(ValidateDocumentFile_ValidPdf_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -73,7 +88,7 @@ namespace UnitTesting.AppLogic.Helpers
             var whitelist = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.ValidateFile(pdfContent, fileName, whitelist, nameof(ValidateFile_CustomWhitelist_ReturnsSuccess));
+            var result = FileValidator.ValidateFile(pdfContent, fileName, whitelist, nameof(ValidateFile_CustomWhitelist_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -88,11 +103,33 @@ namespace UnitTesting.AppLogic.Helpers
             var whitelist = new System.Collections.Generic.List<string> { ".jpg", ".png" }; // PDF no está en la whitelist
 
             // Act
-            var result = FileValidationHelper.ValidateFile(pdfContent, fileName, whitelist, nameof(ValidateFile_NotInWhitelist_ReturnsFailed));
+            var result = FileValidator.ValidateFile(pdfContent, fileName, whitelist, nameof(ValidateFile_NotInWhitelist_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("FILE_VAL_04", result.ErrorCode);
+            Assert.Equal("FILE_VAL_06", result.ErrorCode);
+        }
+
+        [Fact]
+        public void ValidateFile_EmptyContent_ReturnsFailed()
+        {
+            var whitelist = new System.Collections.Generic.List<string> { ".pdf", ".jpg", ".png" };
+
+            var result = FileValidator.ValidateFile(Array.Empty<byte>(), "documento.jpg", whitelist, nameof(ValidateFile_EmptyContent_ReturnsFailed));
+
+            Assert.False(result.Success);
+            Assert.Equal("FILE_VAL_01", result.ErrorCode);
+        }
+
+        [Fact]
+        public void ValidateFile_InvalidBytes_ReturnsFailed()
+        {
+            var whitelist = new System.Collections.Generic.List<string> { ".pdf", ".jpg", ".png" };
+
+            var result = FileValidator.ValidateFile(new byte[] { 0x01, 0x02, 0x03, 0x04 }, "documento.jpg", whitelist, nameof(ValidateFile_InvalidBytes_ReturnsFailed));
+
+            Assert.False(result.Success);
+            Assert.Equal("FILE_VAL_06", result.ErrorCode);
         }
 
         #region SanitizeFileName Overload Tests (Separate Name and Extension)
@@ -106,7 +143,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_ValidInput_ReturnsSuccess));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_ValidInput_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -122,7 +159,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_ExtensionWithoutDot_ReturnsSuccess));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_ExtensionWithoutDot_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -138,7 +175,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_EmptyName_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_EmptyName_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -154,7 +191,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NullName_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NullName_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -170,7 +207,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_EmptyExtension_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_EmptyExtension_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -186,7 +223,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NullExtension_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NullExtension_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -202,7 +239,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NotInWhitelist_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_NotInWhitelist_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -218,7 +255,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_TooLong_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_TooLong_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -234,7 +271,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_WithDangerousExtension_ReturnsFailed));
+            var result = FileValidator.SanitizeFileName(fileNameWithoutExt, extension, allowedExtensions, nameof(SanitizeFileName_SeparateParams_WithDangerousExtension_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -253,7 +290,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "photo_exif.jpg";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(jpegExifContent, fileName, nameof(ValidateImageFile_JpegExif_ReturnsSuccess));
+            var result = FileValidator.ValidateImageFile(jpegExifContent, fileName, nameof(ValidateImageFile_JpegExif_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -267,7 +304,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "photo_canon.jpeg";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(jpegCanonContent, fileName, nameof(ValidateImageFile_JpegCanon_ReturnsSuccess));
+            var result = FileValidator.ValidateImageFile(jpegCanonContent, fileName, nameof(ValidateImageFile_JpegCanon_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -281,7 +318,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "document.doc";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(docContent, fileName, nameof(ValidateDocumentFile_ValidDoc_ReturnsSuccess));
+            var result = FileValidator.ValidateDocumentFile(docContent, fileName, nameof(ValidateDocumentFile_ValidDoc_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -295,7 +332,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "document.docx";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(docxContent, fileName, nameof(ValidateDocumentFile_ValidDocx_ReturnsSuccess));
+            var result = FileValidator.ValidateDocumentFile(docxContent, fileName, nameof(ValidateDocumentFile_ValidDocx_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -309,7 +346,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "empty.docx";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(docxEmptyContent, fileName, nameof(ValidateDocumentFile_DocxEmptyZip_ReturnsSuccess));
+            var result = FileValidator.ValidateDocumentFile(docxEmptyContent, fileName, nameof(ValidateDocumentFile_DocxEmptyZip_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -323,7 +360,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "spanned.docx";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(docxSpannedContent, fileName, nameof(ValidateDocumentFile_DocxSpannedZip_ReturnsSuccess));
+            var result = FileValidator.ValidateDocumentFile(docxSpannedContent, fileName, nameof(ValidateDocumentFile_DocxSpannedZip_ReturnsSuccess));
 
             // Assert
             Assert.True(result.Success);
@@ -338,7 +375,7 @@ namespace UnitTesting.AppLogic.Helpers
             var whitelist = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.ValidateFile(tinyContent, fileName, whitelist, nameof(ValidateFile_FileTooSmallForMagicBytes_ReturnsFailed));
+            var result = FileValidator.ValidateFile(tinyContent, fileName, whitelist, nameof(ValidateFile_FileTooSmallForMagicBytes_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -357,7 +394,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "large.jpg";
 
             // Act
-            var result = FileValidationHelper.ValidateImageFile(largeContent, fileName, nameof(ValidateImageFile_LargeImage_ReturnsFailed));
+            var result = FileValidator.ValidateImageFile(largeContent, fileName, nameof(ValidateImageFile_LargeImage_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -380,7 +417,7 @@ namespace UnitTesting.AppLogic.Helpers
             var fileName = "large.doc";
 
             // Act
-            var result = FileValidationHelper.ValidateDocumentFile(largeContent, fileName, nameof(ValidateDocumentFile_LargeDoc_ReturnsFailed));
+            var result = FileValidator.ValidateDocumentFile(largeContent, fileName, nameof(ValidateDocumentFile_LargeDoc_ReturnsFailed));
 
             // Assert
             Assert.False(result.Success);
@@ -399,7 +436,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithMultipleSpaces_CollapsesToSingleUnderscore));
+            var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithMultipleSpaces_CollapsesToSingleUnderscore));
 
             // Assert
             Assert.True(result.Success);
@@ -414,7 +451,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithLeadingTrailingSpaces_TrimsCorrectly));
+            var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithLeadingTrailingSpaces_TrimsCorrectly));
 
             // Assert
             Assert.True(result.Success);
@@ -429,7 +466,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithControlCharacters_RemovesControlChars));
+            var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithControlCharacters_RemovesControlChars));
 
             // Assert
             Assert.True(result.Success);
@@ -453,7 +490,7 @@ namespace UnitTesting.AppLogic.Helpers
                 var fileName = $"archivo.{ext}.pdf";
 
                 // Act
-                var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_AllDangerousExtensions_ReturnsFailed));
+                var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_AllDangerousExtensions_ReturnsFailed));
 
                 // Assert
                 Assert.False(result.Success, $"IsFailed for extension: {ext}");
@@ -478,7 +515,7 @@ namespace UnitTesting.AppLogic.Helpers
                 var fileName = $"{reserved}.pdf";
 
                 // Act
-                var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_AllReservedNames_ReturnsFailed));
+                var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_AllReservedNames_ReturnsFailed));
 
                 // Assert
                 Assert.False(result.Success, $"IsFailed for reserved name: {reserved}");
@@ -496,7 +533,7 @@ namespace UnitTesting.AppLogic.Helpers
             foreach (var fileName in testCases)
             {
                 // Act
-                var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_ReservedNameCaseInsensitive_ReturnsFailed));
+                var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_ReservedNameCaseInsensitive_ReturnsFailed));
 
                 // Assert
                 Assert.False(result.Success, $"IsFailed for: {fileName}");
@@ -512,7 +549,7 @@ namespace UnitTesting.AppLogic.Helpers
             var allowedExtensions = new System.Collections.Generic.List<string> { ".pdf" };
 
             // Act
-            var result = FileValidationHelper.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithMultipleUnderscores_CollapsesToSingle));
+            var result = FileValidator.SanitizeFileName(fileName, allowedExtensions, nameof(SanitizeFileName_WithMultipleUnderscores_CollapsesToSingle));
 
             // Assert
             Assert.True(result.Success);

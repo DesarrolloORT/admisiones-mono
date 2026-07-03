@@ -247,7 +247,7 @@ namespace AppLogic.Services.Personas
             }
 
             var cara = imagenes.CaraPersona;
-            return FileValidationHelper.ValidateImageFile(
+            return FileValidator.ValidateImageFile(
                 cara.Archivo,
                 ResolverNombreArchivo(cara.NombreArchivo, "cara.jpg"),
                 methodName);

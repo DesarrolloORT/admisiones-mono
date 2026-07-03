@@ -490,7 +490,7 @@ namespace AppLogic.Services.Personas
             if (fileContent == null || fileContent.Length == 0)
                 return OperationResult<Imagen>.IsFailed("GEN_SFA_03", nameof(GuardarFotoPersona), "La imagen no puede estar vacía.", 400);
 
-            var imageValidation = FileValidationHelper.ValidateImageFile(
+            var imageValidation = FileValidator.ValidateImageFile(
                 fileContent,
                 fileName,
                 nameof(GuardarFotoPersona));
@@ -523,7 +523,7 @@ namespace AppLogic.Services.Personas
             if (fileContent == null || fileContent.Length == 0)
                 return OperationResult<bool>.IsFailed("GEN_SFA_04", nameof(ModificarFotoPersona), "La imagen no puede estar vacía.", 400);
 
-            var imageValidation = FileValidationHelper.ValidateImageFile(
+            var imageValidation = FileValidator.ValidateImageFile(
                 fileContent,
                 fileName,
                 nameof(ModificarFotoPersona));

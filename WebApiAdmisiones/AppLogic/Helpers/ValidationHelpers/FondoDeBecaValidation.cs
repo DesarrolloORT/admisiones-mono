@@ -56,7 +56,7 @@ namespace AppLogic.Helpers.ValidationHelpers
 
         public static OperationResult<string> ValidarArchivoAdjunto(byte[] fileContent, string fileName, string methodName)
         {
-            var validacion = FileValidationHelper.ValidateDeclaracionJuradaAttachment(fileContent, fileName, methodName);
+            var validacion = FileValidator.ValidateDeclaracionJuradaAttachment(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<string>.IsFailed(
@@ -66,7 +66,7 @@ namespace AppLogic.Helpers.ValidationHelpers
                     validacion.HttpCode);
             }
 
-            return FileValidationHelper.SanitizeDeclaracionJuradaAttachmentName(fileName, methodName);
+            return FileValidator.SanitizeDeclaracionJuradaAttachmentName(fileName, methodName);
         }
 
         private static OperationResult<bool> ValidarAntecedentesAcademicosParaConfirmacion(
