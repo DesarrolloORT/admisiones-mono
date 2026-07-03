@@ -3,7 +3,7 @@
 <main class="scholarship-process__main">
   <app-scholarship-onboarding variant="fbr" (continueRequested)="startApplication()" />
 </main>
-} @else if (!show()) {
+} @else if (!success()) {
 <app-process-layout
   closeLabel="Cerrar becas"
   processTitle="Postulación a becas"
@@ -18,15 +18,14 @@
   (logoutRequested)="logout()">
   <main class="scholarship-process__main">
     @switch (process.currentStep()) { @case ('info-postulacion') {
-    <app-scholarship-confirmation-step variant="fbr" (confirmApplication)="showSuccess()" />
-    <!-- <app-scholarship-academic-step variant="fbr" /> -->
+    <app-scholarship-academic-step variant="fbr" />
     } @case ('info-personal') {
     <app-scholarship-personal-step variant="fbr" />
     } @case ('confirmacion') {
-    <!-- Punto de extensión: montar acá el step de confirmación (ver README). -->
+    <app-scholarship-confirmation-step variant="fbr" (confirmApplication)="showSuccess()" />
     } }
   </main>
 </app-process-layout>
 } @else {
-<app-scholarship-success variant="fbc" />
+<app-scholarship-success variant="fbr" />
 }

@@ -39,7 +39,7 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
 })
 export class Fbr {
   protected readonly onboardingCompleted = signal(false);
-  protected readonly show = signal(false);
+  protected readonly success = signal(false);
 
   protected startApplication(): void {
     this.onboardingCompleted.set(true);
@@ -58,6 +58,6 @@ export class Fbr {
   }
 
   protected showSuccess(): void {
-    this.show.set(true);
+    this.success.set(true);
   }
 }
