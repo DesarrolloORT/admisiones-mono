@@ -167,7 +167,7 @@ namespace AppLogic.Services.Personas
             string fileName,
             string methodName)
         {
-            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, methodName);
+            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<ImagenTemporal>.IsFailed(
@@ -201,7 +201,7 @@ namespace AppLogic.Services.Personas
             string fileName,
             string methodName)
         {
-            var validacion = FileValidationHelper.ValidateDocumentFile(fileContent, fileName, methodName);
+            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<bool>.IsFailed(
