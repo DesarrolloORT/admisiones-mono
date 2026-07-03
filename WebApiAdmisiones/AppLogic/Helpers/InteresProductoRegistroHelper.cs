@@ -22,8 +22,6 @@ namespace AppLogic.Helpers
         {
             var intereses = uow.Interes.GetInteresesPersonaProcesosHabilitados(codigoPersona).ToList();
 
-            ResetearInteresesProductos(uow, intereses, fechaActual);
-
             var interes = intereses.FirstOrDefault(i => i.IdProceso == request.IdProcesoSeleccionado);
             var esInteresNuevo = interes == null;
             interes ??= CrearInteres(uow, dbConnectionContext, codigoPersona, request.IdProcesoSeleccionado);
@@ -51,33 +49,6 @@ namespace AppLogic.Helpers
             return OperationResult<DtoTivenosAltaInteresRequest?>.Ok(
                 CrearRequestTivenos(codigoPersona, request, operacionTivenos),
                 methodName);
-        }
-
-        private static void ResetearInteresesProductos(IUnitOfWork uow, IEnumerable<Intere> intereses, DateTime fechaActual)
-        {
-            foreach (var interes in intereses)
-            {
-                foreach (var interesProducto in interes.InteresProductos)
-                {
-                    var interesProductoActual = uow.InteresProductos.GetByKey(interesProducto.IdInteres, interesProducto.IdProducto);
-                    if (interesProductoActual == null)
-                    {
-                        continue;
-                    }
-
-                    if (interesProductoActual.IdGradoInteres == Constantes.kGRADO_INTERES_INSCRIPTO)
-                    {
-                        continue;
-                    }
-
-                    interesProductoActual.IdGradoInteresAnt = interesProductoActual.IdGradoInteres;
-                    interesProductoActual.IdGradoInteres = Constantes.kGRADO_INTERES_DESINTERESADO;
-                    interesProductoActual.UsuarioModifInteresProd = Constantes.kUSERNAME_USUARIO_ADMISIONES;
-                    interesProductoActual.FechaModifInteresProd = fechaActual;
-                    interesProductoActual.IdgradoantModifInteresProd = interesProductoActual.IdGradoInteresAnt;
-                    uow.InteresProductos.Update(interesProductoActual);
-                }
-            }
         }
 
         private static Intere CrearInteres(

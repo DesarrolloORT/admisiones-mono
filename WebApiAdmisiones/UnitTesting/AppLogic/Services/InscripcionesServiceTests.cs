@@ -749,7 +749,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void RegistrarInteresProducto_ConInteresExistente_ReseteaYActualiza()
+        public void RegistrarInteresProducto_ConInteresExistente_MantieneOtrosInteresesYActualizaSeleccionado()
         {
             var personaRepo = new Mock<IPersonaRepository>();
             personaRepo.Setup(r => r.ExistePersona(123)).Returns(true);
@@ -827,12 +827,14 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.Equal(4m, interesProductoProducto10.IdGradoInteres);
-            Assert.Equal(0m, interesProductoProducto10.IdGradoInteresAnt);
-            Assert.Equal(0m, interesProductoProducto11.IdGradoInteres);
-            Assert.Equal(4m, interesProductoProducto11.IdGradoInteresAnt);
+            Assert.Equal(2m, interesProductoProducto10.IdGradoInteresAnt);
+            Assert.Equal(4m, interesProductoProducto11.IdGradoInteres);
+            Assert.Equal(0m, interesProductoProducto11.IdGradoInteresAnt);
             Assert.Equal(5m, interesProductoProducto12.IdGradoInteres);
-            interesProductoRepo.Verify(r => r.Update(It.IsAny<InteresProducto>()), Times.AtLeast(2));
+            interesProductoRepo.Verify(r => r.Update(interesProductoProducto10), Times.Once);
+            interesProductoRepo.Verify(r => r.Update(interesProductoProducto11), Times.Never);
             interesProductoRepo.Verify(r => r.Update(interesProductoProducto12), Times.Never);
+            interesProductoRepo.Verify(r => r.Update(It.IsAny<InteresProducto>()), Times.Once);
             interesProductoOfertaRepo.Verify(r => r.Add(It.IsAny<InteresProductoOferta>()), Times.Never);
             intereRepo.Verify(r => r.Add(It.IsAny<Intere>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaInteresXSeleccionEnSitio(
