@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   OrtAccordionModule,
@@ -41,13 +49,22 @@ export class ScholarshipAcademicStep {
   protected readonly submitted = signal(false);
   protected readonly selectedInscription = signal<string | null>(null);
   protected readonly inscriptionForm = new FormGroup({
-    selectedInscription: new FormControl<string | null>(null, Validators.required),
-    applicationMode: new FormControl<string | null>(null),
-    evaluationDate: new FormControl<string | null>(null),
+    inscription: new FormGroup({
+      selectedInscription: new FormControl<string | null>(null, Validators.required),
+      applicationMode: new FormControl<string | null>(null),
+    }),
+    evaluation: new FormGroup({
+      evaluationDate: new FormControl<string | null>(null),
+    }),
   });
-  protected readonly selectionControl = this.inscriptionForm.controls.selectedInscription;
-  protected readonly applicationModeControl = this.inscriptionForm.controls.applicationMode;
-  protected readonly evaluationDateControl = this.inscriptionForm.controls.evaluationDate;
+
+  protected readonly inscriptionSection = this.inscriptionForm.controls.inscription;
+  protected readonly evaluationSection = this.inscriptionForm.controls.evaluation;
+
+  protected readonly selectionControl = this.inscriptionSection.controls.selectedInscription;
+  protected readonly applicationModeControl = this.inscriptionSection.controls.applicationMode;
+  protected readonly evaluationDateControl = this.evaluationSection.controls.evaluationDate;
+
   protected readonly selectedAcademicStepData = computed(() => {
     const items = this.academicStepData();
     const selectedValue = this.selectedInscription();
@@ -63,6 +80,10 @@ export class ScholarshipAcademicStep {
   });
 
   constructor() {
+    effect(() => {
+      this.syncConditionalValidators();
+    });
+
     this.scholarshipEndpoint.getAcademicStepData().subscribe(data => {
       this.academicStepData.set(data);
 
@@ -76,6 +97,40 @@ export class ScholarshipAcademicStep {
       this.selectedInscription.set(null);
       this.selectionControl.reset(null);
     });
+  }
+
+  protected shouldShowApplicationMode(): boolean {
+    return this.variant() === 'fexaCon' || this.variant() === 'fexaSin';
+  }
+
+  protected shouldShowEvaluationSection(): boolean {
+    return this.variant() === 'fexaCon' || this.variant() === 'fexaSin' || this.variant() === 'fbc';
+  }
+
+  protected isInscriptionSectionComplete(): boolean {
+    return this.inscriptionSection.valid;
+  }
+
+  protected isEvaluationSectionComplete(): boolean {
+    return this.evaluationSection.valid;
+  }
+
+  protected hasInscriptionSectionError(): boolean {
+    return this.submitted() && this.inscriptionSection.invalid;
+  }
+
+  protected hasEvaluationSectionError(): boolean {
+    return this.submitted() && this.evaluationSection.invalid;
+  }
+
+  private syncConditionalValidators(): void {
+    this.setRequired(this.applicationModeControl, this.shouldShowApplicationMode());
+    this.setRequired(this.evaluationDateControl, this.shouldShowEvaluationSection());
+  }
+
+  private setRequired(control: FormControl<string | null>, required: boolean): void {
+    control.setValidators(required ? Validators.required : null);
+    control.updateValueAndValidity({ emitEvent: false });
   }
 
   protected onInscriptionSelectionChange(value: string | null): void {

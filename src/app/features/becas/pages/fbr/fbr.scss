@@ -46,6 +46,10 @@
   letter-spacing: 0;
 }
 
+.scholarship-accordion-item--complete .scholarship-accordion-item__icon {
+  color: var(--ort-sys-base-text-success-color);
+}
+
 .scholarship-accordion__content {
   display: grid;
   gap: var(--ort-sys-spacing-16);

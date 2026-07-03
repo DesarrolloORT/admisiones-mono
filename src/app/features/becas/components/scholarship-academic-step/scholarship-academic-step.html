@@ -11,15 +11,26 @@
   }
   <form novalidate [formGroup]="inscriptionForm" (ngSubmit)="onContinue()">
     <ort-accordion>
-      <ort-accordion-item [expanded]="true">
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="isInscriptionSectionComplete()"
+        [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="contact_page" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              class="scholarship-accordion-item__icon"
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="isInscriptionSectionComplete() ? 'check_circle' : 'contact_page'" />
             Tu inscripción
           </ort-accordion-title>
+          @if (hasInscriptionSectionError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
         <ort-accordion-body>
-          <div class="scholarship-accordion__content">
+          <div class="scholarship-accordion__content" formGroupName="inscription">
             @if (academicStepData().length > 1) {
             <ort-radio-group
               formControlName="selectedInscription"
@@ -67,7 +78,7 @@
                 readonly
                 [value]="selectedAcademicStepData().turno" />
             </ort-form-field>
-            } @if (variant() === 'fexaCon' || variant() === 'fexaSin') {
+            } @if (shouldShowApplicationMode()) {
             <ort-radio-group
               formControlName="applicationMode"
               legend="Modalidad de postulación"
@@ -91,15 +102,25 @@
         </ort-accordion-body>
       </ort-accordion-item>
       @if (variant() === 'fexaCon' || variant() === 'fexaSin' || variant() === 'fbc') {
-      <ort-accordion-item>
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="isEvaluationSectionComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="calendar_month" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              class="scholarship-accordion-item__icon"
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="isEvaluationSectionComplete() ? 'check_circle' : 'calendar_month'" />
             Período de evaluación
           </ort-accordion-title>
+          @if (hasEvaluationSectionError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
         <ort-accordion-body>
-          <div class="scholarship-accordion__content">
+          <div class="scholarship-accordion__content" formGroupName="evaluation">
             <p>
               Seleccioná la fecha en la que querés rendir la prueba. Tenés que completar la
               información requerida antes de la fecha de cierre de postulación indicada.
