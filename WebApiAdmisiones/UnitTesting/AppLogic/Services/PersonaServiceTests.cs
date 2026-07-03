@@ -244,6 +244,33 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirDocumentoPersona_WithPng_CreatesBothAndSavesOnce()
+        {
+            var persona = new Persona { CodigoPersona = 123 };
+            var fecha = DateTime.Today.AddYears(1);
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(persona);
+            _dbConnectionContextMock
+                .SetupSequence(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN_TEMPORAL))
+                .Returns(10)
+                .Returns(11);
+
+            var result = _service.SubirDocumentoPersona(
+                123,
+                fecha,
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.png", Archivo = ValidPng() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.png", Archivo = ValidPng() });
+
+            Assert.True(result.Success);
+            _imagenTemporalRepositoryMock.Verify(
+                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_1.png")),
+                Times.Once);
+            _imagenTemporalRepositoryMock.Verify(
+                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_2.png")),
+                Times.Once);
+            _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
         public void SubirDocumentoPersona_WhenPersonaDoesNotExist_ReturnsNotFound()
         {
             var result = _service.SubirDocumentoPersona(
@@ -785,6 +812,11 @@ namespace UnitTesting.AppLogic.Services
         private static byte[] ValidPdf()
         {
             return new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D };
+        }
+
+        private static byte[] ValidPng()
+        {
+            return new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
         }
     }
 }

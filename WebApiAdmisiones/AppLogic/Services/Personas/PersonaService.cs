@@ -435,7 +435,7 @@ namespace AppLogic.Services.Personas
                     400);
             }
 
-            var validacion = FileValidationHelper.ValidateDocumentFile(
+            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(
                 documento.Archivo,
                 documento.NombreArchivo,
                 nameof(SubirDocumentoPersona));
