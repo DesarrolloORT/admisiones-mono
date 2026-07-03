@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NgControl, Validators } from '@angular/forms';
 import {
+  getBankSvg,
   OrtButton,
   OrtDrawer,
   OrtFormFieldModule,
@@ -48,6 +49,8 @@ let nextResponsiveSelectId = 0;
   styleUrl: './responsive-select.scss',
 })
 export class ResponsiveSelect implements ControlValueAccessor {
+  protected readonly getBankSvg = getBankSvg;
+
   public readonly label = input.required<string>();
   public readonly options = input<readonly ResponsiveSelectOption[]>([]);
   public readonly optionGroups = input<readonly ResponsiveSelectOptionGroup[] | null>(null);
