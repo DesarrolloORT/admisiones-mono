@@ -322,6 +322,15 @@ namespace AppLogic.Services.Personas
                 return validacionDorso;
             }
 
+            var validacionFecha = DocumentoIdentidadPersonaService.ValidarFechaVencimientoDocumento(
+                fecha,
+                nameof(SubirDocumentoPersona),
+                "GEN_SDA_05");
+            if (!validacionFecha.Success)
+            {
+                return validacionFecha;
+            }
+
             using var uow = uowFactory.Create();
 
             var persona = uow.Personas.GetByKey(codigoPersona);

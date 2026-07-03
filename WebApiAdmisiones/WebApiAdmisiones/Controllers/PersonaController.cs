@@ -241,6 +241,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
         public IActionResult SubirDocumentoPersona([FromBody] UploadDocumentoPersonaRequest request)
         {
             var result = personaService.SubirDocumentoPersona(

@@ -19,41 +19,6 @@ namespace AppLogic.Services.Personas
                 || tipo == PersonaConstants.DocumentoPersona.Dorso;
         }
 
-        public static OperationResult<byte[]> ObtenerDocumentoParaConsulta(
-            IUnitOfWork uow,
-            long codigoPersona,
-            int tipo,
-            string methodName)
-        {
-            if (!EsTipoDocumentoValido(tipo))
-            {
-                return OperationResult<byte[]>.IsFailed(
-                    "GEN_DA_01",
-                    methodName,
-                    "Tipo de documento inválido. Los valores admitidos son 1 (frente) y 2 (dorso).",
-                    400);
-            }
-
-            var temporal = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
-            if (temporal is not null)
-            {
-                return ValidarDocumentoTemporalParaConsulta(temporal, methodName);
-            }
-
-            var definitivo = uow.Imagens.GetDocumentoByPersonaAndTipo(codigoPersona, tipo);
-            if (definitivo is null)
-            {
-                return OperationResult<byte[]>.IsFailed(
-                    "GEN_DA_02",
-                    methodName,
-                    "Documento no encontrado.",
-                    404);
-            }
-
-            var persona = uow.Personas.GetByKey(codigoPersona);
-            return ValidarDocumentoDefinitivoParaConsulta(definitivo, persona?.FechaVtoDocumentoPersona, methodName);
-        }
-
         public static OperationResult<DtoDocumentoPersonaConsulta?> ObtenerDocumentoOpcionalParaConsulta(
             IUnitOfWork uow,
             long codigoPersona,
@@ -156,6 +121,23 @@ namespace AppLogic.Services.Personas
             }
 
             return temporales;
+        }
+
+        public static OperationResult<bool> ValidarFechaVencimientoDocumento(
+            DateTime? fechaVencimiento,
+            string methodName,
+            string errorCode)
+        {
+            if (fechaVencimiento.HasValue && fechaVencimiento.Value.Date < DateTime.Today)
+            {
+                return OperationResult<bool>.IsFailed(
+                    errorCode,
+                    methodName,
+                    "El documento de identidad se encuentra vencido.",
+                    409);
+            }
+
+            return OperationResult<bool>.Ok(true, methodName);
         }
 
         public static OperationResult<ImagenTemporal> CrearDocumentoTemporal(
@@ -407,14 +389,17 @@ namespace AppLogic.Services.Personas
             ImagenTemporal documento,
             string methodName)
         {
-            if (documento.FechaVtoDocumentoPersona.HasValue
-                && documento.FechaVtoDocumentoPersona.Value.Date < DateTime.Today)
+            var validacionFecha = ValidarFechaVencimientoDocumento(
+                documento.FechaVtoDocumentoPersona,
+                methodName,
+                "GEN_DA_03");
+            if (!validacionFecha.Success)
             {
                 return OperationResult<byte[]>.IsFailed(
-                    "GEN_DA_03",
+                    validacionFecha.ErrorCode,
                     methodName,
-                    "El documento se encuentra vencido.",
-                    409);
+                    validacionFecha.Message,
+                    validacionFecha.HttpCode);
             }
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
@@ -434,13 +419,17 @@ namespace AppLogic.Services.Personas
             DateTime? fechaVencimiento,
             string methodName)
         {
-            if (fechaVencimiento.HasValue && fechaVencimiento.Value.Date < DateTime.Today)
+            var validacionFecha = ValidarFechaVencimientoDocumento(
+                fechaVencimiento,
+                methodName,
+                "GEN_DA_03");
+            if (!validacionFecha.Success)
             {
                 return OperationResult<byte[]>.IsFailed(
-                    "GEN_DA_03",
+                    validacionFecha.ErrorCode,
                     methodName,
-                    "El documento se encuentra vencido.",
-                    409);
+                    validacionFecha.Message,
+                    validacionFecha.HttpCode);
             }
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
@@ -465,10 +454,10 @@ namespace AppLogic.Services.Personas
                 return DocumentoFaltante(lado, methodName);
             }
 
-            if (documento.FechaVtoDocumentoPersona.HasValue
-                && documento.FechaVtoDocumentoPersona.Value.Date < DateTime.Today)
+            var validacionFecha = DocumentoVencido(documento.FechaVtoDocumentoPersona, methodName);
+            if (!validacionFecha.Success)
             {
-                return DocumentoVencido(methodName);
+                return validacionFecha;
             }
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
@@ -490,9 +479,10 @@ namespace AppLogic.Services.Personas
                 return DocumentoFaltante(lado, methodName);
             }
 
-            if (fechaVencimiento.HasValue && fechaVencimiento.Value.Date < DateTime.Today)
+            var validacionFecha = DocumentoVencido(fechaVencimiento, methodName);
+            if (!validacionFecha.Success)
             {
-                return DocumentoVencido(methodName);
+                return validacionFecha;
             }
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
@@ -512,13 +502,12 @@ namespace AppLogic.Services.Personas
                 404);
         }
 
-        private static OperationResult<bool> DocumentoVencido(string methodName)
+        private static OperationResult<bool> DocumentoVencido(DateTime? fechaVencimiento, string methodName)
         {
-            return OperationResult<bool>.IsFailed(
-                "INS_CPI_10",
+            return ValidarFechaVencimientoDocumento(
+                fechaVencimiento,
                 methodName,
-                "El documento de identidad se encuentra vencido.",
-                409);
+                "INS_CPI_10");
         }
 
         private static OperationResult<bool> DocumentoSinImagen(string lado, string methodName)

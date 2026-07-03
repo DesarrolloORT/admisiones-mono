@@ -271,6 +271,24 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void SubirDocumentoPersona_WhenFechaIsExpired_ReturnsConflict()
+        {
+            var result = _service.SubirDocumentoPersona(
+                123,
+                DateTime.Today.AddDays(-1),
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_SDA_05", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+            _uowFactoryMock.Verify(f => f.Create(), Times.Never);
+            _personaRepositoryMock.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
+            _imagenTemporalRepositoryMock.Verify(r => r.Add(It.IsAny<ImagenTemporal>()), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+        }
+
+        [Fact]
         public void SubirDocumentoPersona_WhenPersonaDoesNotExist_ReturnsNotFound()
         {
             var result = _service.SubirDocumentoPersona(
