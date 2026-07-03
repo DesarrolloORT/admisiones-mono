@@ -1,4 +1,6 @@
+/* stylelint-disable declaration-property-unit-allowed-list -- Header and drawer follow Figma px measurements and ORT token fallbacks. */
 :host {
+  --header-primary: var(--ort-sys-base-surface-primary-background);
   display: block;
 }
 
@@ -23,7 +25,77 @@
   gap: var(--ort-sys-spacing-48);
   justify-content: center;
   box-sizing: border-box;
-  min-height: 100vh;
+  min-height: calc(100dvh - 80px);
   margin: 0;
-  padding: var(--ort-sys-spacing-24);
+  padding-inline: var(--ort-sys-spacing-24);
+}
+
+.success-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--header-primary);
+}
+
+.home-brand {
+  display: flex;
+  gap: var(--ort-sys-spacing-16);
+  justify-content: center;
+  align-items: center;
+  justify-self: center;
+  overflow: hidden;
+  width: 212px;
+  height: 48px;
+}
+
+.home-brand__logo {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  aspect-ratio: 70 / 36;
+  inline-size: clamp(52px, 8vw, 64px);
+  block-size: auto;
+}
+
+.home-brand__divider {
+  width: 1px;
+  height: 28px;
+  border-radius: var(--ort-sys-border-radius-round, 9999px);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.home-brand__name {
+  color: var(--ort-sys-base-text-on-color-header);
+  font-weight: 700;
+  font-size: var(--ort-sys-body-text-size, 16px);
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.success-header__content {
+  display: flex;
+
+  gap: var(--ort-sys-spacing-12);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 80px;
+  margin: 0;
+  padding: var(--ort-sys-spacing-8);
+}
+
+@media (width <=760px) {
+  .success-screen {
+    min-height: calc(100dvh - 111px);
+  }
+
+  .success-header__content {
+    height: 111px;
+    padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) 0;
+  }
+
+  .home-brand {
+    width: fit-content;
+    max-width: 212px;
+  }
 }
