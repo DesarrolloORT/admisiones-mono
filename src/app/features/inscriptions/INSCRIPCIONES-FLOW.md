@@ -1,3 +1,9 @@
+---
+slug: /flujos/inscripciones
+title: Flujo de inscripciones
+description: Pasos, campos condicionales, payloads y casos borde de la inscripción.
+---
+
 # Flow manual de inscripciones
 
 > Tipo: reference
@@ -24,6 +30,22 @@ laboral, identidad y reglamento. Si `tieneDerechoEncuesta === false`, solo
 se muestran identidad y reglamento. Si la encuesta ya viene completa no se
 muestran secciones de encuesta.
 
+```mermaid
+flowchart TD
+  A[Propuesta academica] -->|InteresProducto OK| B{Estado de encuesta}
+  B -->|Pendiente o en progreso| C[Encuesta + identidad + reglamento]
+  B -->|Sin derecho| D[Identidad + reglamento]
+  B -->|Completa| E[Identidad + reglamento]
+  C --> F[Guardar encuesta]
+  D --> G[Guardar identidad modificada]
+  E --> G
+  F --> G
+  G --> H[Confirmar preinscripcion]
+  H -->|Confirmada| I[Seleccion de pago]
+  H -->|Error| J[Mostrar error y permanecer]
+  I --> K[Estado terminal local]
+```
+
 ## Regla general de valores ocultos
 
 Cuando un campo padre cambia, la UI actualiza validadores y puede ocultar
@@ -36,13 +58,47 @@ Excepciones que si limpian valores:
 - Propuesta academica: cambiar `tipoPropuesta` limpia `carrera`, `comienzo` y
   `turno`; cambiar `carrera` limpia `comienzo` y `turno`; cambiar `comienzo`
   limpia `turno`.
-- Bachillerato: cambiar `anioSecundaria` o `tipoBachillerato` limpia
-  `tipoBachillerato` / `orientacion` si el valor anterior ya no existe en las
-  opciones vigentes.
+- Bachillerato: cambiar `anioSecundaria` limpia `orientacion` si el valor anterior
+  ya no existe en las orientaciones vigentes para ese año.
 - Institucion educativa: cambiar `departamento` limpia `institucionEducativa`
   solo si el valor anterior no existe en el nuevo catalogo cargado.
 - Pago: cambiar `metodoPago` a algo distinto de `cuenta-bancaria` limpia
   `banco`.
+
+## Matriz de campos condicionales
+
+| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                        |
+| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------- |
+| `cursaSecundaria = cursando`            | `anioSecundaria`                        | Requerido               | Conserva valor crudo                | `anioBachillerato = null`                   |
+| Año con orientaciones                   | `orientacion`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `orientacionBachilleratoId = null`          |
+| `recursaAnioBachillerato = si`          | `vecesRecursaAnioBachillerato`          | Entero mayor que 0      | Conserva valor crudo                | `vecesRecursaAnioBachillerato = null`       |
+| `lugarSecundaria = 1`                   | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `nombreInstitucion...` |
+| `lugarSecundaria != 1`                  | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `institucionSecundariaId = null`            |
+| `estadoEducacionSuperior = 1`           | `universidadesEducacionSuperior`        | Seleccion requerida     | Conserva valor crudo                | `universidadEducacionSuperiorIds = null`    |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                       |
+| Formacion de madre o padre es `5` o `6` | `tituloOrtMadre` o `tituloOrtPadre`     | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                         |
+| `otrasUniversidades = si`               | `universidadesInformadas`               | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                          |
+| Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
+| `situacionLaboral = trabaja`            | `tipoJornadaLaboral`                    | Requerido               | Conserva valor crudo                | `tipoJornadaId = null`                      |
+| Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
+| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | No existe payload de pago actualmente       |
+
+Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
+verificada al nodo exacto. No se publican enlaces generales ni placeholders.
+
+## Casos borde consolidados
+
+- Ocultar un control no garantiza que su valor crudo se elimine; los mappers son
+  la frontera que envia `null` cuando no aplica.
+- Cambiar la institucion de Uruguay a exterior puede conservar temporalmente el
+  id anterior como texto.
+- Una opcion dependiente se conserva mientras siga existiendo en el catalogo
+  nuevo; si desaparece, se limpia.
+- La encuesta completa oculta sus secciones, pero identidad y reglamento
+  mantienen sus propias reglas.
+- El paso de pago todavia no llama al backend; sus estados terminales son locales.
+- `resultado=en-proceso` fuerza el estado terminal "Inscripcion en proceso" para
+  cualquier metodo.
 
 ## Paso 1: propuesta academica
 
@@ -73,11 +129,16 @@ Al continuar se llama a `POST /Inscripciones/InteresProducto` con:
 
 `cursaSecundaria` controla si se muestra `anioSecundaria`. Si pasa a
 `no-cursando` el año queda crudo en el form pero no se envia; el backend recibe
-`anioBachillerato = null`. Si cursa secundaria y `anioSecundaria != 10` se
-muestra `tipoBachillerato` y, si el tipo elegido tiene orientaciones, tambien
-`orientacion`. Al cambiar a año 10 o dejar vacío se ocultan y se envia
-`orientacionBachilleratoId = null`.
+`anioBachillerato = null`. Si cursa secundaria y el año elegido trae
+orientaciones en `educacion.aniosBachillerato[].orientaciones`, se muestra
+`orientacion` directamente. No hay selector intermedio de tipo nacional o
+internacional. Si el año no trae orientaciones o cambia a uno donde la seleccion
+anterior no existe, se envia `orientacionBachilleratoId = null`.
 
+`recursaAnioBachillerato` es requerido. Si vale `si`, se muestra
+`vecesRecursaAnioBachillerato` y se exige un numero mayor a 0. Si vale `no`, la
+cantidad puede quedar cruda en el form pero el backend recibe
+`vecesRecursaAnioBachillerato = null`.
 `lugarSecundaria` decide el control de institucion educativa. Con valor `1`
 (Uruguay) se muestran `departamento` e `institucionEducativa` como select; el
 backend recibe `ubicacionUltimoAnioSecundariaId = 1`,
@@ -89,20 +150,25 @@ backend recibe `ubicacionUltimoAnioSecundariaId = 1`,
 el control, por lo que puede conservar el id anterior como texto.
 
 `estadoEducacionSuperior = 1` muestra el multiple `universidadesEducacionSuperior`.
-Si cambia a otro valor la seleccion queda cruda pero el backend recibe
-`universidadEducacionSuperiorIds = null`.
-
+Si la seleccion incluye `Otro` (`0`), se muestra el `ortInput`
+`universidadEducacionSuperiorOtro` y el backend recibe
+`universidadEducacionSuperiorOtros = [texto]`. Si cambia a otro valor o no esta
+seleccionado `0`, la seleccion y el texto pueden quedar crudos pero el backend
+recibe `universidadEducacionSuperiorIds = null` o
+`universidadEducacionSuperiorOtros = null`, segun corresponda.
 `formacionMadre` con valor `5` o `6` muestra `tituloOrtMadre` (si/no). Si cambia
 a otro valor el titulo queda crudo pero se envia `null`. Lo mismo aplica a
 `formacionPadre` y `tituloOrtPadre`.
 
 ### Decision academica
 
-`otrasUniversidades = si` muestra el multiple `universidadesInformadas`. Si pasa
-a `no`, la seleccion queda cruda pero el backend recibe
-`universidadConsideradaIds = null`. `certezaDecision` no tiene hijos condicionales;
-`1` es decidido/a y `2` es con dudas, y se envia como `nivelDecisionId`.
-
+`otrasUniversidades = si` muestra el multiple `universidadesInformadas`. Si la
+seleccion incluye `Otro` (`0`), se muestra el `ortInput`
+`universidadInformadaOtro` y el backend recibe `universidadConsideradaOtros =
+[texto]`. Si pasa a `no`, la seleccion queda cruda pero el backend recibe
+`universidadConsideradaIds = null` y `universidadConsideradaOtros = null`.
+`certezaDecision` no tiene hijos condicionales; `1` es decidido/a y `2` es con
+dudas, y se envia como `nivelDecisionId`.
 Los campos directos de esta seccion son `anioDecisionCarrera` (`anioDecisionCarreraId`),
 `apoyoDecision` (`apoyoDecisionId`), `anioDecisionOrt` (`anioDecisionOrtId`) y
 `motivosOrt` (`motivoEleccionOrtIds`), todos con ids de catalogo.
@@ -160,9 +226,10 @@ Todos los campos envian `null` cuando no aplican.
 
 - `carreraId`: `Number(carrera)`.
 - `comienzoId`: `Number(comienzo)`.
-- `orientacionBachilleratoId`: `Number(orientacion)` si cursa secundaria y `anioSecundaria != 10`.
+- `orientacionBachilleratoId`: `Number(orientacion)` si cursa secundaria y el año elegido tiene orientaciones.
 - `anioBachillerato`: `Number(anioSecundaria)` si `cursaSecundaria = cursando`.
-- `vecesRecursaAnioBachillerato` y `recursaAnioBachillerato`: sin campo UI, siempre `null`.
+- `recursaAnioBachillerato`: `si -> true`, `no -> false`.
+- `vecesRecursaAnioBachillerato`: cantidad solo si `recursaAnioBachillerato = si`; si no, `null`.
 - `nivelFormacionPadreTutorId`: `Number(formacionPadre)`.
 - `nivelFormacionMadreTutorId`: `Number(formacionMadre)`.
 - `anioDecisionCarreraId`: `Number(anioDecisionCarrera)`.
@@ -171,7 +238,6 @@ Todos los campos envian `null` cuando no aplican.
 - `informacionOtrasUniversidadesLinea1` y `Linea2`: sin campo UI, siempre `null`.
 - `apoyoDecisionId`: `Number(apoyoDecision)`.
 - `institucionSecundariaId`: `Number(institucionEducativa)` solo si `lugarSecundaria = 1`.
-- `autorizaInformarEncuesta`: sin campo UI, siempre `null`.
 - `nombreInstitucionSecundaria`: texto de `institucionEducativa` si `lugarSecundaria != 1`.
 - `ubicacionUltimoAnioSecundariaId`: `Number(lugarSecundaria)`.
 - `estadoEducacionSuperiorPreviaId`: `Number(estadoEducacionSuperior)`.
@@ -187,8 +253,10 @@ Todos los campos envian `null` cuando no aplican.
 - `padreTutorEgresadoOrt`: `tituloOrtPadre` (`si -> true`, `no -> false`), solo si `formacionPadre` es `5` o `6`.
 - `trabajaActualmente`: `trabaja -> true`; `buscando` o `no-trabaja -> false`.
 - `tipoJornadaId`: `Number(tipoJornadaLaboral)` solo si `situacionLaboral = trabaja`.
-- `universidadConsideradaIds`: `universidadesInformadas.map(Number)` solo si `otrasUniversidades = si`.
-- `universidadEducacionSuperiorIds`: `universidadesEducacionSuperior.map(Number)` solo si `estadoEducacionSuperior = 1`.
+- `universidadConsideradaIds`: `universidadesInformadas.map(Number)` solo si `otrasUniversidades = si`; incluye `0` si selecciona `Otro`.
+- `universidadConsideradaOtros`: `[universidadInformadaOtro.trim()]` solo si `universidadConsideradaIds` incluye `0`; si no, `null`.
+- `universidadEducacionSuperiorIds`: `universidadesEducacionSuperior.map(Number)` solo si `estadoEducacionSuperior = 1`; incluye `0` si selecciona `Otro`.
+- `universidadEducacionSuperiorOtros`: `[universidadEducacionSuperiorOtro.trim()]` solo si `universidadEducacionSuperiorIds` incluye `0`; si no, `null`.
 - `publicidadOrtIds`: `mediosPublicidad.map(Number)` solo si `recuerdaPublicidad = si`.
 - `motivoEleccionOrtIds`: `motivosOrt.map(Number)`, `null` si no hay seleccion.
 

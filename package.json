@@ -42,6 +42,10 @@
     "env:offline": "npm run env:sync -- --offline",
     "env:cache:clear": "node tools/env/sync-azure-environment.mjs --clear-cache",
     "test:env-sync": "node tools/env/sync-azure-environment.mjs --self-test",
+    "docs": "npm --prefix docs-site run",
+    "docs:site": "npm --prefix docs-site run start",
+    "docs:site:build": "npm --prefix docs-site run build",
+    "docs:site:serve": "npm --prefix docs-site run serve",
     "prepare": "husky"
   },
   "private": true,

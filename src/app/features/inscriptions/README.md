@@ -1,3 +1,9 @@
+---
+slug: /arquitectura/flujo-pasos
+title: Anatomía del flujo paso a paso
+description: Responsabilidades de stores, fachadas y componentes en una inscripción.
+---
+
 # Inscripciones — anatomía del flujo paso a paso
 
 Esta feature es la **referencia** del patrón de "proceso paso a paso" del repo.
