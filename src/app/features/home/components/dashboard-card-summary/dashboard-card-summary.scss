@@ -15,7 +15,7 @@
 
 .card-summary__icon {
   flex-shrink: 0;
-  color: var(--ort-sys-base-icon-color-subtle);
+  color: var(--ort-sys-base-icon-color);
 }
 
 .card-summary__text {
@@ -36,7 +36,7 @@
   line-height: var(--ort-sys-body-line-height);
 }
 
-@media (width >= 768px) {
+@media (width >=768px) {
   .card-summary {
     gap: var(--ort-sys-spacing-16);
   }

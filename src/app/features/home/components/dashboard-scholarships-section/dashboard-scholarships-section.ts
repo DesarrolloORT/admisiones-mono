@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
@@ -24,4 +24,5 @@ import { ScholarshipGrantedCard } from '../scholarship-granted-card/scholarship-
 export class DashboardScholarshipsSection {
   readonly becas = input.required<MiBeca[]>();
   readonly singleRow = input.required<boolean>();
+  readonly openDialog = output<void>();
 }
