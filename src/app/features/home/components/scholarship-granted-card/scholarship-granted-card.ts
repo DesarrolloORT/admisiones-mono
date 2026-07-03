@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, output } from '@angular/core';
 import { OrtButtonModule } from '@desarrolloort/components';
 
 @Component({
@@ -8,4 +8,10 @@ import { OrtButtonModule } from '@desarrolloort/components';
   styleUrl: './scholarship-granted-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ScholarshipGrantedCard {}
+export class ScholarshipGrantedCard {
+  readonly openDialog = output<void>();
+
+  onOpenDialogClick() {
+    this.openDialog.emit();
+  }
+}

@@ -12,8 +12,8 @@ import {
 import { RouterLink } from '@angular/router';
 import {
   ExpandableStepperStep,
+  OrtButton,
   OrtButtonBaseDirective,
-  OrtButtonComponent,
   OrtExpandableStepperModule,
   OrtIconModule,
 } from '@desarrolloort/components';
@@ -27,7 +27,7 @@ import {
     OrtIconModule,
     RouterLink,
     OrtButtonBaseDirective,
-    OrtButtonComponent,
+    OrtButton,
   ],
   templateUrl: './process-layout.html',
   styleUrl: './process-layout.scss',

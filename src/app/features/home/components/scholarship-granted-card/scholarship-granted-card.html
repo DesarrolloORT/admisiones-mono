@@ -7,7 +7,12 @@
     para la carrera Licenciatura en Diseño Gráfico.
   </p>
   <div class="dashboard-card__actions">
-    <button class="action-btn" ort-primary-button type="button" [attr.aria-label]="'Aceptar beca'">
+    <button
+      class="action-btn"
+      ort-primary-button
+      type="button"
+      [attr.aria-label]="'Aceptar beca'"
+      (click)="onOpenDialogClick()">
       Aceptar beca
     </button>
     <button

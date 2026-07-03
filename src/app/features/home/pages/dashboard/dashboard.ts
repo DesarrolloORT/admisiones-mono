@@ -7,9 +7,11 @@ import {
   inject,
   input,
   OnDestroy,
+  signal,
   ViewEncapsulation,
 } from '@angular/core';
-import { OrtAlertModule } from '@desarrolloort/components';
+import { OrtAlertModule, OrtButton, OrtDialog, OrtIconModule } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 
@@ -31,6 +33,9 @@ import { MiInscripcion } from '../../models/mi-inscripcion';
     DashboardCareersSection,
     OrtAlertModule,
     DashboardScholarshipsSection,
+    OrtDialog,
+    OrtButton,
+    OrtIconModule,
   ],
 })
 export class Dashboard implements AfterViewInit, OnDestroy {
@@ -89,5 +94,23 @@ export class Dashboard implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.swipers.forEach(swiper => swiper.destroy());
+  }
+
+  private readonly breakpointService = inject(BreakpointService);
+
+  readonly hideStatusIcon = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
+  });
+
+  readonly isDialogOpen = signal(false);
+
+  openDialog() {
+    this.isDialogOpen.set(true);
+  }
+
+  closeDialog() {
+    this.isDialogOpen.set(false);
   }
 }

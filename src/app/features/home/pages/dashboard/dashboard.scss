@@ -93,6 +93,30 @@
   line-height: var(--ort-sys-heading-level5-line-height);
 }
 
+.scholarship-dialog__list {
+  display: grid;
+  gap: var(--ort-sys-spacing-12);
+  margin-top: var(--ort-sys-spacing-12);
+  margin-left: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.scholarship-dialog__list-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.scholarship-dialog__list-marker {
+  flex: 0 0 auto;
+  color: var(--ort-sys-color-primary-500);
+}
+
+.scholarship-dialog__list-item-content span {
+  font-weight: var(--ort-sys-font-weight-semibold);
+}
+
 @media (width <=760px) {
   .dashboard-main {
     gap: var(--ort-sys-spacing-24);
@@ -152,5 +176,10 @@
 
   .section-header {
     margin-bottom: var(--ort-sys-spacing-16);
+  }
+}
+@media (width >= 1200px) {
+  .ort-dialog__dialog {
+    width: 30%;
   }
 }
