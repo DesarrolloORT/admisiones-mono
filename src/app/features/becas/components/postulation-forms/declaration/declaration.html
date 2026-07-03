@@ -1,5 +1,5 @@
 <!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
-<div class="scholarship-accordion__content">
+<div class="scholarship-accordion__content" [formGroup]="declarationForm">
   <section aria-labelledby="family-nucleus-title" class="scholarship-subsection">
     <div class="scholarship-subsection__header">
       <h4 id="family-nucleus-title">Núcleo familiar</h4>
@@ -9,92 +9,119 @@
       </p>
     </div>
 
-    @for (member of members(); track member.id; let index = $index) {
-    <ort-card>
-      <ort-card-header class="member-card__header" [divider]="false">
-        <h5 class="member-card__title" ortCardTitle>Integrante {{ index + 1 }}</h5>
+    <ng-container formArrayName="familyMembers">
+      @for (member of familyMembers.controls; track member.controls.id.value; let index = $index) {
+      <ort-card [formGroupName]="index">
+        <ort-card-header class="member-card__header" [divider]="false">
+          <h5 class="member-card__title" ortCardTitle>Integrante {{ index + 1 }}</h5>
 
-        @if (index === 0) {
-        <p ortCardHeaderIconAction>Postulante</p>
-        } @else {
-        <button
-          aria-label="Eliminar integrante"
-          ort-icon-button
-          ortCardHeaderIconAction
-          type="button"
-          (click)="removeMember(member.id)">
-          <ort-icon name="delete" />
-        </button>
-        }
-      </ort-card-header>
-      <ort-card-content>
-        @if (index !== 0) {
-        <ort-form-field>
-          <ort-label>Parentesco</ort-label>
-          <ort-select required>
-            <ort-option value="padre">Padre</ort-option>
-            <ort-option value="madre">Madre</ort-option>
-            <ort-option value="hermano">Hermano/a</ort-option>
-            <ort-option value="hijo">Hijo/a</ort-option>
-            <ort-option value="conyuge">Cónyuge</ort-option>
-            <ort-option value="otro">Otro</ort-option>
-          </ort-select>
-        </ort-form-field>
-        }
+          @if (index === 0) {
+          <p ortCardHeaderIconAction>Postulante</p>
+          } @else {
+          <button
+            aria-label="Eliminar integrante"
+            ort-icon-button
+            ortCardHeaderIconAction
+            type="button"
+            (click)="removeMember(member.controls.id.value)">
+            <ort-icon name="delete" />
+          </button>
+          }
+        </ort-card-header>
+        <ort-card-content>
+          @if (index !== 0) {
+          <ort-form-field>
+            <ort-label>Parentesco</ort-label>
+            <ort-select formControlName="relationship" required>
+              <ort-option value="padre">Padre</ort-option>
+              <ort-option value="madre">Madre</ort-option>
+              <ort-option value="hermano">Hermano/a</ort-option>
+              <ort-option value="hijo">Hijo/a</ort-option>
+              <ort-option value="conyuge">Cónyuge</ort-option>
+              <ort-option value="otro">Otro</ort-option>
+            </ort-select>
+          </ort-form-field>
+          @if (member.controls.relationship.invalid && (submitted() ||
+          member.controls.relationship.touched)) {
+          <ort-error>Seleccioná el parentesco</ort-error>
+          } }
 
-        <ort-form-field>
-          <ort-label>Nombre</ort-label>
-          <input ortInput required />
-        </ort-form-field>
+          <ort-form-field>
+            <ort-label>Nombre</ort-label>
+            <input formControlName="name" ortInput required />
+          </ort-form-field>
+          @if (member.controls.name.invalid && (submitted() || member.controls.name.touched)) {
+          <ort-error>Ingresá el nombre</ort-error>
+          }
 
-        <ort-form-field>
-          <ort-label>Edad</ort-label>
-          <input ortNumberInput required [decimals]="0" />
-        </ort-form-field>
+          <ort-form-field>
+            <ort-label>Edad</ort-label>
+            <input formControlName="age" ortNumberInput required [decimals]="0" />
+          </ort-form-field>
+          @if (member.controls.age.invalid && (submitted() || member.controls.age.touched)) {
+          <ort-error>Ingresá la edad</ort-error>
+          }
 
-        <ort-radio-group
-          legend="¿Percibe ingresos?"
-          orientation="vertical"
-          [name]="'percibeIngresos-' + member.id"
-          [required]="true"
-          [(ngModel)]="member.percibeIngresos">
-          <ort-radio-button class="inscription-radio-option" value="si">
-            Si, percibe
-          </ort-radio-button>
+          <ort-radio-group
+            formControlName="percibeIngresos"
+            legend="¿Percibe ingresos?"
+            orientation="vertical"
+            [name]="'percibeIngresos-' + member.controls.id.value"
+            [required]="true">
+            <ort-radio-button class="inscription-radio-option" value="si">
+              Si, percibe
+            </ort-radio-button>
 
-          <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
-        </ort-radio-group>
-        @if (member.percibeIngresos === 'si') {
-        <ort-form-field>
-          <ort-label>Ingresos nominales</ort-label>
-          <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
-          <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
-        </ort-form-field>
+            <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
+          </ort-radio-group>
+          @if (member.controls.percibeIngresos.invalid && (submitted() ||
+          member.controls.percibeIngresos.touched)) {
+          <ort-error>Seleccioná una opción</ort-error>
+          } @if (member.controls.percibeIngresos.value === 'si') {
+          <ort-form-field>
+            <ort-label>Ingresos nominales</ort-label>
+            <span ortTextPrefix>$</span>
+            <input class="money-input" formControlName="nominalIncome" ortNumberInput required />
+            <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
+          </ort-form-field>
+          @if (member.controls.nominalIncome.invalid && (submitted() ||
+          member.controls.nominalIncome.touched)) {
+          <ort-error>Ingresá los ingresos nominales</ort-error>
+          }
 
-        <ort-form-field>
-          <ort-label>Ingresos líquidos</ort-label>
-          <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
-          <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
-        </ort-form-field>
+          <ort-form-field>
+            <ort-label>Ingresos líquidos</ort-label>
+            <span ortTextPrefix>$</span>
+            <input class="money-input" formControlName="liquidIncome" ortNumberInput required />
+            <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
+          </ort-form-field>
+          @if (member.controls.liquidIncome.invalid && (submitted() ||
+          member.controls.liquidIncome.touched)) {
+          <ort-error>Ingresá los ingresos líquidos</ort-error>
+          }
 
-        <ort-file-uploader
-          display="inline"
-          label="Adjuntá comprobantes de ingresos"
-          [acceptedTypes]="['.pdf', '.jpg', '.png']" />
+          <ort-file-uploader
+            display="inline"
+            label="Adjuntá comprobantes de ingresos"
+            multiple="true"
+            [acceptedTypes]="['.pdf', '.jpg', '.png']"
+            (filesChanged)="onIncomeProofFilesChanged(member.controls.id.value, $event)" />
+          @if (submitted() && isIncomeProofFileMissing(member)) {
+          <ort-error>Adjuntá al menos un comprobante de ingresos</ort-error>
+          }
 
-        <button ort-button type="button" (click)="openDialog = true">
-          ¿Qué comprobante debo subir?
-        </button>
-        }
-      </ort-card-content>
-    </ort-card>
-    }
-    <button ort-secondary-button type="button" (click)="agregarIntegrante()">
-      <ort-icon name="add" size="sm" />
-      Agregar integrante
-    </button>
+          <button ort-button type="button" (click)="openDialog = true">
+            ¿Qué comprobante debo subir?
+          </button>
+          }
+        </ort-card-content>
+      </ort-card>
+      }
+      <button ort-secondary-button type="button" (click)="addMember()">
+        <ort-icon name="add" size="sm" />
+        Agregar integrante
+      </button>
+    </ng-container>
   </section>
 
   <ort-dialog
@@ -149,6 +176,7 @@
     </div>
 
     <ort-radio-group
+      formControlName="housingType"
       legend="¿En qué tipo de vivienda residís?"
       orientation="vertical"
       [required]="true">
@@ -158,6 +186,9 @@
       </ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="otro">Otro tipo</ort-radio-button>
     </ort-radio-group>
+    @if (housingTypeControl.invalid && (submitted() || housingTypeControl.touched)) {
+    <ort-error>Seleccioná una opción</ort-error>
+    }
   </section>
 
   <hr class="subsection-divider" />
@@ -168,36 +199,44 @@
     </div>
 
     <ort-radio-group
+      formControlName="summerHouse"
       legend="¿Cuentan con casa de verano o descanso?"
       orientation="vertical"
       [required]="true">
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
     </ort-radio-group>
+    @if (summerHouseControl.invalid && (submitted() || summerHouseControl.touched)) {
+    <ort-error>Seleccioná una opción</ort-error>
+    }
 
     <ort-radio-group
+      formControlName="vehicleOwn"
       legend="¿Cuentan con vehículo propio?"
       name="vehiculoPropio"
       orientation="vertical"
-      [ngModel]="vehiculoPropio()"
-      [required]="true"
-      (ngModelChange)="vehiculoPropio.set($event)">
+      [required]="true">
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
     </ort-radio-group>
-
-    @if (vehiculoPropio() === 'si') {
+    @if (vehicleOwnControl.invalid && (submitted() || vehicleOwnControl.touched)) {
+    <ort-error>Seleccioná una opción</ort-error>
+    } @if (vehicleOwnControl.value === 'si') {
     <ort-form-field>
       <ort-label>Marca y modelo</ort-label>
-      <input ortInput required />
+      <input formControlName="vehicleModel" ortInput required />
     </ort-form-field>
+    @if (vehicleModelControl.invalid && (submitted() || vehicleModelControl.touched)) {
+    <ort-error>Ingresá marca y modelo del vehículo</ort-error>
+    }
 
     <ort-form-field>
       <ort-label>Año</ort-label>
-      <input ortNumberInput required [decimals]="0" />
+      <input formControlName="vehicleYear" ortNumberInput required [decimals]="0" />
     </ort-form-field>
-
-    }
+    @if (vehicleYearControl.invalid && (submitted() || vehicleYearControl.touched)) {
+    <ort-error>Identificá el año del vehículo</ort-error>
+    } }
   </section>
 
   <hr class="subsection-divider" />
@@ -214,18 +253,24 @@
     <ort-form-field>
       <ort-label>Aportes o ahorros</ort-label>
       <span ortTextPrefix>$</span>
-      <input class="money-input" ortNumberInput required />
+      <input class="money-input" formControlName="savingsAmount" ortNumberInput required />
     </ort-form-field>
+    @if (savingsAmountControl.invalid && (submitted() || savingsAmountControl.touched)) {
+    <ort-error>Ingresá el monto de los ahorros</ort-error>
+    }
 
     <ort-form-field>
       <ort-label>¿Cómo piensas solventar tus estudios?</ort-label>
-      <textarea #textareaStudies ortInput required></textarea>
+      <textarea #textareaStudies formControlName="studyPlan" ortInput required></textarea>
       <ort-hint align="end">{{textareaStudies.value.length}}/400</ort-hint>
     </ort-form-field>
+    @if (studyPlanControl.invalid && (submitted() || studyPlanControl.touched)) {
+    <ort-error>Ingresá como piensas solventar tus estudios</ort-error>
+    }
 
     <ort-form-field>
       <ort-label>Otras observaciones</ort-label>
-      <textarea #textareaObservations ortInput></textarea>
+      <textarea #textareaObservations formControlName="observations" ortInput></textarea>
       <ort-hint align="end">{{textareaObservations.value.length}}/400</ort-hint>
     </ort-form-field>
   </section>
@@ -247,39 +292,62 @@
         <ort-form-field>
           <ort-label>Vivienda</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
+          <input class="money-input" formControlName="housingExpenses" ortNumberInput required />
           <ort-hint>Cuota u alquiler, impuestos, servicios, etc.</ort-hint>
         </ort-form-field>
+        @if (housingExpensesControl.invalid && (submitted() || housingExpensesControl.touched)) {
+        <ort-error>Ingresá un monto</ort-error>
+        }
 
         <ort-form-field>
           <ort-label>Otros servicios</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
+          <input
+            class="money-input"
+            formControlName="otherServicesExpenses"
+            ortNumberInput
+            required />
           <ort-hint>Suscripciones, telefonía móvil, etc.</ort-hint>
         </ort-form-field>
+        @if (otherServicesExpensesControl.invalid && (submitted() ||
+        otherServicesExpensesControl.touched)) {
+        <ort-error>Ingresá un monto</ort-error>
+        }
 
         <ort-form-field>
           <ort-label>Salud y bienestar</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
+          <input class="money-input" formControlName="healthExpenses" ortNumberInput required />
           <ort-hint>Mutualista, medicamentos, club, etc.</ort-hint>
         </ort-form-field>
+        @if (healthExpensesControl.invalid && (submitted() || healthExpensesControl.touched)) {
+        <ort-error>Ingresá un monto</ort-error>
+        }
 
         <ort-form-field>
           <ort-label>Gastos personales</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
+          <input class="money-input" formControlName="personalExpenses" ortNumberInput required />
           <ort-hint>Alimentación, vestimenta, etc.</ort-hint>
         </ort-form-field>
+        @if (personalExpensesControl.invalid && (submitted() || personalExpensesControl.touched)) {
+        <ort-error>Ingresá un monto</ort-error>
+        }
 
         <ort-form-field>
           <ort-label>Transporte</ort-label>
           <span ortTextPrefix>$</span>
-          <input class="money-input" ortNumberInput required />
+          <input
+            class="money-input"
+            formControlName="transportationExpenses"
+            ortNumberInput
+            required />
           <ort-hint>Boletos, combustible, peajes, etc.</ort-hint>
         </ort-form-field>
-
-        @for (expense of expenses(); track expense.name) {
+        @if (transportationExpensesControl.invalid && (submitted() ||
+        transportationExpensesControl.touched)) {
+        <ort-error>Ingresá un monto</ort-error>
+        } @for (expense of expenses(); track expense.name) {
         <ort-form-field>
           <ort-label>{{ expense.name }}</ort-label>
           <span ortTextPrefix>$</span>
