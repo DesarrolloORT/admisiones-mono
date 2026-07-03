@@ -230,14 +230,14 @@ namespace UnitTesting.AppLogic.Services
                 r => r.Add(It.Is<ImagenTemporal>(i =>
                     i.IdImagenTemporal == 10 &&
                     i.CodigoPersona == 123 &&
-                    i.NombreImagen == "123_1.pdf" &&
+                    i.NombreImagen == "123_1.jpg" &&
                     i.TipoImagen == "1")),
                 Times.Once);
             _imagenTemporalRepositoryMock.Verify(
                 r => r.Add(It.Is<ImagenTemporal>(i =>
                     i.IdImagenTemporal == 11 &&
                     i.CodigoPersona == 123 &&
-                    i.NombreImagen == "123_2.pdf" &&
+                    i.NombreImagen == "123_2.jpg" &&
                     i.TipoImagen == "1")),
                 Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
@@ -262,10 +262,10 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             _imagenTemporalRepositoryMock.Verify(
-                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_1.png")),
+                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_1.jpg")),
                 Times.Once);
             _imagenTemporalRepositoryMock.Verify(
-                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_2.png")),
+                r => r.Add(It.Is<ImagenTemporal>(i => i.NombreImagen == "123_2.jpg")),
                 Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
         }

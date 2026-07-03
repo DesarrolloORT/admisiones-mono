@@ -446,7 +446,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(3000, documentoAgregado!.IdImagenTemporal);
             Assert.Equal(123, documentoAgregado.CodigoPersona);
             Assert.Equal("1", documentoAgregado.TipoImagen);
-            Assert.Equal("123_1.pdf", documentoAgregado.NombreImagen);
+            Assert.Equal("123_1.jpg", documentoAgregado.NombreImagen);
             Assert.Equal(new DateTime(2030, 1, 1), documentoAgregado.FechaVtoDocumentoPersona);
             _uowMock.Verify(u => u.Commit(), Times.Once);
         }

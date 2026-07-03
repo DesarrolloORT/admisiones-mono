@@ -704,7 +704,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(3000, documentoAgregado!.IdImagenTemporal);
             Assert.Equal(codigoPersona, documentoAgregado.CodigoPersona);
             Assert.Equal("1", documentoAgregado.TipoImagen);
-            Assert.Equal("12345_1.pdf", documentoAgregado.NombreImagen);
+            Assert.Equal("12345_1.jpg", documentoAgregado.NombreImagen);
             Assert.Equal(new DateTime(2030, 1, 1), documentoAgregado.FechaVtoDocumentoPersona);
             Assert.NotNull(fotoAgregada);
             Assert.Equal(4000, fotoAgregada!.IdImagen);

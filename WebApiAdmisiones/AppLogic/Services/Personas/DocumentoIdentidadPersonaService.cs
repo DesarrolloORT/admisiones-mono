@@ -185,7 +185,7 @@ namespace AppLogic.Services.Personas
                     NombreImagen = ConstruirNombrePersistido(
                         codigoPersona,
                         tipo,
-                        ResolverExtensionPersistida(fileName, ".pdf")),
+                        ".jpg"),
                     TipoImagen = TipoImagenDocumentoIdentidadPersistido,
                     BlobImagen = fileContent,
                     FechaVtoDocumentoPersona = fecha
@@ -214,7 +214,7 @@ namespace AppLogic.Services.Personas
             existente.NombreImagen = ConstruirNombrePersistido(
                 existente.CodigoPersona ?? 0,
                 tipo,
-                ResolverExtensionPersistida(fileName, ".pdf"));
+                ".jpg");
             existente.TipoImagen = TipoImagenDocumentoIdentidadPersistido;
             existente.BlobImagen = fileContent;
             existente.FechaVtoDocumentoPersona = fecha;
@@ -279,7 +279,7 @@ namespace AppLogic.Services.Personas
                     NombreImagen = ConstruirNombrePersistido(
                         persona.CodigoPersona,
                         PersonaConstants.DocumentoPersona.Frente,
-                        ResolverExtensionPersistida(documento.NombreArchivo, ".pdf")),
+                        ".jpg"),
                     TipoImagen = TipoImagenDocumentoIdentidadPersistido,
                     BlobImagen = documento.Archivo,
                     FechaVtoDocumentoPersona = fechaVencimiento
@@ -290,7 +290,7 @@ namespace AppLogic.Services.Personas
                 documentoExistente.NombreImagen = ConstruirNombrePersistido(
                     persona.CodigoPersona,
                     PersonaConstants.DocumentoPersona.Frente,
-                    ResolverExtensionPersistida(documento.NombreArchivo, ".pdf"));
+                    ".jpg");
                 documentoExistente.TipoImagen = TipoImagenDocumentoIdentidadPersistido;
                 documentoExistente.BlobImagen = documento.Archivo;
                 documentoExistente.FechaVtoDocumentoPersona = fechaVencimiento;
