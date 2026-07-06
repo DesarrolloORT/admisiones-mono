@@ -156,10 +156,11 @@ Ubicación:
 src/environments/environment.ts
 ```
 
-Ignorado por Git:
+Ignorados por Git:
 
 ```gitignore
 src/environments/generated-environment.ts
+src/web.config
 ```
 
 El cache vive bajo `tmp/`, que también está ignorado por Git.

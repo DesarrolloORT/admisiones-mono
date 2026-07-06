@@ -1,5 +1,5 @@
 ---
-slug: /
+slug: /introduccion
 title: Admisiones
 description: Mapa de la documentación técnica y funcional del proyecto Admisiones.
 ---

@@ -1,5 +1,5 @@
 ---
-slug: /flujos/registro
+slug: /flujos/registro-detalle
 title: Registro punta a punta
 description: Botones, decisiones, contratos y persistencia del registro entre frontend y backend.
 ---

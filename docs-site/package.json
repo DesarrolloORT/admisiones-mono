@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "site": "docusaurus start --host 127.0.0.1",
-    "start": "docusaurus start --host 127.0.0.1",
+    "site": "docusaurus start --host 127.0.0.1 --port 4300",
+    "start": "docusaurus start --host 127.0.0.1 --port 4300",
     "build": "docusaurus build",
-    "serve": "docusaurus serve"
+    "serve": "docusaurus serve --host 127.0.0.1 --port 4300"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.1",

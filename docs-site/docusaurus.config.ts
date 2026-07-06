@@ -1,10 +1,11 @@
+import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
-const config = {
-  title: 'DesarrolloORT Frontend Docs',
-  tagline: 'Documentación técnica y funcional de los proyectos frontend',
-  url: process.env.DOCS_SITE_URL ?? 'http://localhost',
-  baseUrl: '/',
+const config: Config = {
+  title: 'Admisiones',
+  tagline: 'Documentacion tecnica y funcional de Admisiones',
+  url: 'https://ort-docs.ort.edu.uy',
+  baseUrl: '/admisiones/',
   trailingSlash: true,
   onBrokenLinks: 'warn',
   favicon: 'img/favicon.svg',
@@ -31,14 +32,13 @@ const config = {
     [
       'classic',
       {
-        blog: false,
         docs: {
           path: '../docs',
-          routeBasePath: 'proyectos/admisiones',
-          include: ['*.md'],
-          sidebarPath: './sidebars.js',
-          editUrl: 'https://github.com/DesarrolloORT/admisiones/edit/main/',
+          routeBasePath: '/',
+          sidebarPath: './sidebars.ts',
+          editUrl: 'https://github.com/DesarrolloORT/admisiones/edit/main/docs/',
         },
+        blog: false,
         sitemap: false,
       },
     ],
@@ -49,13 +49,13 @@ const config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Frontend Docs',
+      title: 'Admisiones',
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'admissionsSidebar',
           position: 'left',
-          label: 'Admisiones',
+          label: 'Documentacion',
         },
       ],
     },
