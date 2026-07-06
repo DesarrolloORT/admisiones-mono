@@ -10,6 +10,7 @@ import { ScholarshipOnboarding } from '../../components/scholarship-onboarding/s
 import { ScholarshipPersonalStep } from '../../components/scholarship-personal-step/scholarship-personal-step';
 import { ScholarshipSuccess } from '../../components/scholarship-success/scholarship-success';
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
+import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
 import { ScholarshipFormsStore } from '../../store/scholarship-forms';
 import { ScholarshipProcessStore } from '../../store/scholarship-process';
 
@@ -24,7 +25,12 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
     ScholarshipConfirmationStep,
     ScholarshipSuccess,
   ],
-  providers: [ScholarshipFormsStore, ScholarshipProcessStore, ScholarshipProcessFacade],
+  providers: [
+    ScholarshipFormsStore,
+    ScholarshipProcessStore,
+    ScholarshipProcessFacade,
+    ScholarshipProposalFacade,
+  ],
   templateUrl: './fbr.html',
   styleUrl: './fbr.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
