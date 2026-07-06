@@ -1,27 +1,11 @@
-# Configuración de ambiente frontend con Azure App Configuration
+# Levantar el frontend con Azure y cambiar de ambiente
 
 Este proyecto obtiene la configuración frontend desde Azure App Configuration.
 Azure es la fuente de verdad; el repo no guarda valores reales de ambiente.
 
-Flujo local por defecto:
-
-```text
-npm start
-  → prestart
-  → npm run env:sync -- --env desa
-  → usa cache local si tiene menos de 60 minutos
-  → si no hay cache fresco, lee Azure App Configuration una vez
-  → cachea todos los labels disponibles para la key
-  → genera src/environments/generated-environment.ts
-  → actualiza src/web.config con la CSP del ambiente
-  → ejecuta ng serve
-```
-
-El archivo `generated-environment.ts` es generado automáticamente y no debe editarse manualmente.
-
 ## Requisitos
 
-- Node.js y npm instalados.
+- Node.js 20 y npm instalados.
 - Azure CLI instalada.
 - Sesión válida con `az login`.
 - Permiso de lectura sobre Azure App Configuration.
@@ -39,6 +23,69 @@ Rol mínimo:
 
 ```text
 App Configuration Data Reader
+```
+
+## Paso a paso para levantar el frontend
+
+1. Instalar las dependencias del proyecto:
+
+   ```powershell
+   npm install
+   ```
+
+   Si GitHub Packages rechaza la instalación, ejecutar `npm login --registry=https://npm.pkg.github.com` con un token que tenga acceso de lectura al paquete y repetir `npm install`.
+
+2. Iniciar sesión en Azure y comprobar la cuenta activa:
+
+   ```powershell
+   az login
+   az account show
+   ```
+
+3. Levantar el frontend en `desa`:
+
+   ```powershell
+   npm start
+   ```
+
+4. Abrir [http://localhost:4200/](http://localhost:4200/).
+
+`npm start` sincroniza el label `desa`, genera `src/environments/generated-environment.ts`, actualiza `src/web.config` con la CSP del ambiente y ejecuta `ng serve`.
+
+El archivo generado no debe editarse manualmente.
+
+## Cambiar de ambiente
+
+Detener el servidor, sincronizar el label requerido y levantar Angular directamente:
+
+```powershell
+npm run env:sync -- --env prod
+npx ng serve
+```
+
+Reemplazar `prod` por el label disponible en Azure. Para ignorar el cache y obtener la versión más reciente:
+
+```powershell
+npm run env:refresh -- --env prod
+npx ng serve
+```
+
+No usar `npm start` después de seleccionar otro ambiente: su `prestart` vuelve a sincronizar `desa`.
+
+Para volver al ambiente de desarrollo, basta con ejecutar `npm start`.
+
+## Flujo interno
+
+```text
+npm start
+  → prestart
+  → npm run env:sync -- --env desa
+  → usa cache local si tiene menos de 60 minutos
+  → si no hay cache fresco, lee Azure App Configuration una vez
+  → cachea todos los labels disponibles para la key
+  → genera src/environments/generated-environment.ts
+  → actualiza src/web.config con la CSP del ambiente
+  → ejecuta ng serve
 ```
 
 ## Guardrails
