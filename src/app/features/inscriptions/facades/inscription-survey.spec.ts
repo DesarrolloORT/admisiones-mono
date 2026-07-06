@@ -140,6 +140,82 @@ describe('InscripcionSurveyFacade', () => {
       idOfertaSeleccionada: 300,
     });
   });
+
+  it('does not upload preloaded identity document when the expiration control is dirty but unchanged', () => {
+    const { survey, forms } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesConsideradasOtros: [],
+      universidadesEducacionSuperior: [],
+      universidadesEducacionSuperiorOtros: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    const frente = preloadFile('frente.png');
+    const dorso = preloadFile('dorso.png');
+    const selfie = preloadFile('selfie.png');
+
+    applyIdentityPreload(survey, {
+      frente,
+      dorso,
+      selfie,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identityForm.controls.vencimientoDocumento.markAsDirty();
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+    forms.academicForm.controls.turno.setValue('300');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).not.toHaveBeenCalled();
+    expect(uploadIdentityPhoto).not.toHaveBeenCalled();
+  });
+
+  it('uploads preloaded identity document when the expiration changes', () => {
+    const { survey, forms } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesConsideradasOtros: [],
+      universidadesEducacionSuperior: [],
+      universidadesEducacionSuperiorOtros: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    const frente = preloadFile('frente.png');
+    const dorso = preloadFile('dorso.png');
+    const selfie = preloadFile('selfie.png');
+
+    applyIdentityPreload(survey, {
+      frente,
+      dorso,
+      selfie,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 1, 4));
+    survey.identityForm.controls.vencimientoDocumento.markAsDirty();
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+    forms.academicForm.controls.turno.setValue('300');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).toHaveBeenCalledWith({
+      fecha: '2031-02-04',
+      frente,
+      dorso,
+    });
+    expect(uploadIdentityPhoto).not.toHaveBeenCalled();
+  });
+
   it('does not save the survey when work becomes complete', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: true,

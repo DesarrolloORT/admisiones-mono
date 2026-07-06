@@ -44,6 +44,21 @@ describe('InscripcionProcessFacade', () => {
     });
   });
 
+  it('uses pending-payment detail before catalogs finish initializing', () => {
+    const { draft, process } = createFacade(createPendingPaymentDetail(), false);
+
+    expect(draft.clear).not.toHaveBeenCalled();
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(process.preEnrollmentResponse()).toEqual({
+      idInscripcion: 1072704,
+      confirmada: false,
+      fechaVencimientoPago: '2027-03-04',
+      seniaInscripcion: 15500,
+      saldoCuenta: 1200,
+      resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+    });
+  });
+
   it('uses confirmed detail instead of any local draft', () => {
     const { draft, payment, process } = createFacade(createConfirmedDetail());
 
@@ -62,7 +77,7 @@ describe('InscripcionProcessFacade', () => {
   });
 });
 
-function createFacade(detail: InscripcionDetail | null) {
+function createFacade(detail: InscripcionDetail | null, initialized = true) {
   const draft = {
     load: vi.fn(),
     save: vi.fn(),
@@ -86,7 +101,7 @@ function createFacade(detail: InscripcionDetail | null) {
       {
         provide: InscripcionProposalFacade,
         useValue: {
-          initialized: signal(true),
+          initialized: signal(initialized),
           catalogError: signal(null),
           continue: vi.fn(),
         },
@@ -94,7 +109,7 @@ function createFacade(detail: InscripcionDetail | null) {
       {
         provide: InscripcionSurveyFacade,
         useValue: {
-          initialized: signal(true),
+          initialized: signal(initialized),
           activeSection: signal('educacion'),
           readerOpen: signal(false),
           scenario: signal('primera-vez'),

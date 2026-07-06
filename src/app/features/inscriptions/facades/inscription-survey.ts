@@ -64,6 +64,7 @@ export class InscripcionSurveyFacade {
   private readonly proposal = inject(InscripcionProposalFacade);
   private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
   private identityPreloadRequested = false;
+  private initialIdentityExpiration = '';
   private uruguayCountryCode: number | null = null;
   private readonly identityFileTouched = new Set<IdentityFileTarget>();
   private readonly baccalaureateYears = signal<readonly BaccalaureateYearGroup[]>([]);
@@ -455,16 +456,13 @@ export class InscripcionSurveyFacade {
   private saveIdentityChanges(): Observable<boolean> {
     const files = this.identityFiles();
     const expiration = serializeDate(this.identityForm.controls.vencimientoDocumento.value);
+    const documentChanged =
+      this.identityFileTouched.has('frente') ||
+      this.identityFileTouched.has('dorso') ||
+      expiration !== this.initialIdentityExpiration;
     const uploads: Observable<boolean>[] = [];
 
-    if (
-      expiration &&
-      files.frente &&
-      files.dorso &&
-      (this.identityFileTouched.has('frente') ||
-        this.identityFileTouched.has('dorso') ||
-        this.identityForm.controls.vencimientoDocumento.dirty)
-    ) {
+    if (expiration && files.frente && files.dorso && documentChanged) {
       uploads.push(
         this.inscriptions.uploadIdentityDocument({
           fecha: expiration,
@@ -682,6 +680,7 @@ export class InscripcionSurveyFacade {
 
   private applyIdentityPreload(preload: InscripcionIdentityPreload): void {
     const expiration = parseDate(preload.fechaVencimiento);
+    this.initialIdentityExpiration = serializeDate(expiration);
     this.setIdentityConfirmationRequired(
       !!preload.frente && !!preload.dorso && !!preload.selfie && !!expiration
     );

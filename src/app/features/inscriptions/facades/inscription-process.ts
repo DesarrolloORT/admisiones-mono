@@ -78,6 +78,7 @@ export class InscripcionProcessFacade {
   });
 
   constructor() {
+    this.applyResumeContext();
     this.restoreDraftWhenReady();
     this.observeDraftChanges();
     this.clearDraftAtTerminalOutcome();
@@ -162,7 +163,6 @@ export class InscripcionProcessFacade {
   private restoreDraft(): void {
     this.draftRestored = true;
     this.clearDrafts();
-    this.applyResumeContext();
     this.draftReady.set(true);
   }
 
