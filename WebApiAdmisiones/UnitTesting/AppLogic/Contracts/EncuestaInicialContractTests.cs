@@ -14,7 +14,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(8, Contract["version"]!.GetValue<int>());
+            Assert.Equal(9, Contract["version"]!.GetValue<int>());
             Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
             Assert.NotNull(Contract["sections"]);
@@ -96,6 +96,37 @@ namespace UnitTesting.AppLogic.Contracts
             Assert.Equal(["Uruguay", "En el exterior"], AllowedOptionLabels("ubicacionUltimoAnioSecundariaId"));
             Assert.Equal(["S\u00ed, en Uruguay", "S\u00ed, en el exterior", "No"], AllowedOptionLabels("estadoEducacionSuperiorPreviaId"));
             Assert.Equal(["Decidido/a", "Con dudas"], AllowedOptionLabels("nivelDecisionId"));
+        }
+
+        [Fact]
+        public void EncuestaInicialContract_AnioBachilleratoDisallowsCuartoForNivelUniversitario()
+        {
+            var rules = Contract["fields"]!["anioBachillerato"]!["disallowedWhen"]!.AsArray();
+            var rule = rules.Single(r => r!["code"]!.GetValue<string>() == "INS_EI_64");
+
+            Assert.Equal("selectedCarrera.nivel == 1", rule!["condition"]!.GetValue<string>());
+            Assert.Equal([4, 10], rule["values"]!.AsArray().Select(v => v!.GetValue<int>()).ToList());
+        }
+
+        [Fact]
+        public void EncuestaInicialContract_ConditionalArraysRequireAtLeastOneItem()
+        {
+            string[] arrays =
+            [
+                "universidadEducacionSuperiorIds",
+                "universidadConsideradaIds",
+                "publicidadOrtIds",
+                "motivoEleccionOrtIds"
+            ];
+
+            foreach (var field in arrays)
+                Assert.Equal(1, Contract["fields"]![field]!["minItems"]!.GetValue<int>());
+        }
+
+        [Fact]
+        public void EncuestaInicialContract_VecesRecursaHasMinimumOne()
+        {
+            Assert.Equal(1, Contract["fields"]!["vecesRecursaAnioBachillerato"]!["min"]!.GetValue<int>());
         }
 
         [Fact]

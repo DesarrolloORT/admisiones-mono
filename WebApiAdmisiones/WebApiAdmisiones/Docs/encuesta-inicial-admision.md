@@ -197,6 +197,13 @@ La regla no debe depender de un valor fijo como anioBachillerato == 6.
 Debe depender de si el catálogo del año seleccionado trae orientaciones.
 ```
 
+#### Nivel de carrera y año de bachillerato
+
+```text
+Si la carrera es de nivel 1 (universitaria):
+    anioBachillerato no puede ser 4to (solo 5to o 6to).
+```
+
 #### Recursa año de bachillerato
 
 ```text
@@ -212,11 +219,11 @@ Si recursaAnioBachillerato = false:
 #### Educación superior previa
 
 ```text
-Si estadoEducacionSuperiorPreviaId = 1 o 2:
+Si estadoEducacionSuperiorPreviaId = 1:
     universidadEducacionSuperiorIds es obligatorio.
     Debe tener al menos un elemento.
 
-Si estadoEducacionSuperiorPreviaId = 3:
+Si estadoEducacionSuperiorPreviaId = 2 o 3:
     universidadEducacionSuperiorIds no aplica.
     El backend debe limpiar los registros hijos asociados.
 ```
@@ -562,10 +569,10 @@ EDUCACION_SUPERIOR_ADMISION
 Regla:
 
 ```text
-Si estadoEducacionSuperiorPreviaId = 3:
+Si estadoEducacionSuperiorPreviaId = 2 o 3:
     eliminar registros hijos asociados.
 
-Si estadoEducacionSuperiorPreviaId = 1 o 2:
+Si estadoEducacionSuperiorPreviaId = 1:
     reemplazar registros existentes por los enviados.
 ```
 
@@ -634,7 +641,7 @@ Si recursaAnioBachillerato = false:
 ```
 
 ```text
-Si estadoEducacionSuperiorPreviaId = 3:
+Si estadoEducacionSuperiorPreviaId = 2 o 3:
     eliminar universidadEducacionSuperiorIds.
 ```
 
@@ -721,7 +728,7 @@ Si recursaAnioBachillerato = false:
 
 TIENE_EDUCACION_SUPERIOR_ENCUESTA_INI completo.
 
-Si tuvo educación superior previa:
+Si estadoEducacionSuperiorPreviaId = 1:
     Debe existir al menos un registro en EDUCACION_SUPERIOR_ADMISION.
 
 INSTRUCCION_PADRE_ENCUESTA_INI completo.

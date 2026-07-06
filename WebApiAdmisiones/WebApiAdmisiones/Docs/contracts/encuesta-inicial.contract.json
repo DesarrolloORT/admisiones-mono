@@ -1,5 +1,5 @@
 ﻿{
-  "version": 8,
+  "version": 9,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "sections": [
@@ -84,6 +84,7 @@
       "catalogEndpoint": "Catalogos/Carreras",
       "valueField": "idProducto",
       "labelField": "nombreProducto",
+      "levelField": "idNivelProducto",
       "requiredForDefinitivo": true
     },
     "procesoId": {
@@ -91,6 +92,7 @@
       "catalogEndpoint": "Catalogos/Comienzos",
       "valueField": "idProceso",
       "labelField": "nombreProceso",
+      "dependsOn": "carreraId",
       "requiredForDefinitivo": true
     },
     "ubicacionUltimoAnioSecundariaId": {
@@ -130,7 +132,15 @@
       "valueField": "value",
       "labelField": "label",
       "requiredWhen": "cursaSecundariaActualmente == true",
-      "clearWhen": "cursaSecundariaActualmente == false"
+      "clearWhen": "cursaSecundariaActualmente == false",
+      "disallowedWhen": [
+        {
+          "code": "INS_EI_64",
+          "condition": "selectedCarrera.nivel == 1",
+          "values": [4, 10],
+          "message": "Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año."
+        }
+      ]
     },
     "cursaSecundariaActualmente": {
       "section": "educacion",
@@ -175,7 +185,8 @@
       "section": "educacion",
       "type": "number",
       "requiredWhen": "recursaAnioBachillerato == true",
-      "clearWhen": "recursaAnioBachillerato == false"
+      "clearWhen": "recursaAnioBachillerato == false",
+      "min": 1
     },
     "estadoEducacionSuperiorPreviaId": {
       "section": "educacion",
@@ -203,7 +214,8 @@
       "itemValueField": "value",
       "itemLabelField": "label",
       "requiredWhen": "estadoEducacionSuperiorPreviaId == 1",
-      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]"
+      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]",
+      "minItems": 1
     },
     "universidadEducacionSuperiorOtros": {
       "section": "educacion",
@@ -313,7 +325,8 @@
       "itemValueField": "value",
       "itemLabelField": "label",
       "requiredWhen": "seInformoEnOtrasUniversidades == true",
-      "clearWhen": "seInformoEnOtrasUniversidades == false"
+      "clearWhen": "seInformoEnOtrasUniversidades == false",
+      "minItems": 1
     },
     "universidadConsideradaOtros": {
       "section": "decisionAcademica",
@@ -443,7 +456,8 @@
       "itemValueField": "value",
       "itemLabelField": "label",
       "requiredWhen": "recuerdaPublicidadOrt == true",
-      "clearWhen": "recuerdaPublicidadOrt == false"
+      "clearWhen": "recuerdaPublicidadOrt == false",
+      "minItems": 1
     },
     "trabajaActualmente": {
       "section": "situacionLaboral",
