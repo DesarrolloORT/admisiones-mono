@@ -8,9 +8,9 @@ import {
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 import { EvaluationPeriod } from '../postulation-forms/evaluation-period/evaluation-period';
 import { Inscription } from '../postulation-forms/inscription/inscription';
-import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
 
 @Component({
   selector: 'app-scholarship-academic-step',

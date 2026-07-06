@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { OrtIconModule } from '@desarrolloort/components';
 
-import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 
 interface ScholarshipRequirement {
   title: string;

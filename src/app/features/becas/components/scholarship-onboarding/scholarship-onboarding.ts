@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
-import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 import { ScholarshipRequirementsCard } from '../scholarship-requirements-card/scholarship-requirements-card';
 
 @Component({

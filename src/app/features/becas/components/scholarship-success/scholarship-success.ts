@@ -8,7 +8,7 @@ import {
 } from '@desarrolloort/components';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
-import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 
 @Component({
   selector: 'app-scholarship-success',

@@ -8,7 +8,7 @@ import {
   OrtSnackbarModule,
 } from '@desarrolloort/components';
 
-import { ScholarshipVariant } from '../scholarship-personal-step/scholarship-personal-step';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions';
 
 @Component({

@@ -11,8 +11,6 @@ import { EducationInfoFcl } from '../postulation-forms/education-info-fcl/educat
 import { PersonalData } from '../postulation-forms/personal-data/personal-data';
 import { WorkHistory } from '../postulation-forms/work-history/work-history';
 
-export type { ScholarshipVariant };
-
 @Component({
   selector: 'app-scholarship-personal-step',
   imports: [
