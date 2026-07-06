@@ -24,6 +24,7 @@ using AppLogic.Services.Autenticacion;
 using AppLogic.Services.Registro;
 using AppLogic.Services.Personas;
 using AppLogic.Services.Inscripciones;
+using AppLogic.Services.Inscripciones.Encuesta;
 using AppLogic.Services.Becas;
 using AppLogic.Services.Catalogos;
 using AppLogic.IServices.Autenticacion;
@@ -114,6 +115,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IRegistroService, RegistroService>();
             services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
+            services.AddScoped<IEncuestaInicialService, EncuestaInicialService>();
             services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();

@@ -4,8 +4,10 @@ using AppLogic.Dtos.Tivenos;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Inscripciones;
+using AppLogic.Services.Inscripciones.Encuesta;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -77,12 +79,68 @@ namespace UnitTesting.AppLogic.Services
             _service = new InscripcionesService(
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
-                _generalServiceMock.Object,
                 _tivenosEnvioServiceMock.Object,
-                apiClient);
+                apiClient,
+                CrearEncuestaInicialServiceReal());
         }
 
+        // Construye la implementación real de EncuestaInicialService con los mismos mocks,
+        // para preservar la cobertura profunda de encuesta que ya ejercitan estos tests
+        // (ahora vía la dependencia inyectada en lugar del antiguo `new` interno).
+        private EncuestaInicialService CrearEncuestaInicialServiceReal() =>
+            new(
+                _uowFactoryMock.Object,
+                _dbConnectionContextMock.Object,
+                _generalServiceMock.Object,
+                _tivenosEnvioServiceMock.Object);
+
         private static readonly DateTime FechaBase = new(2026, 5, 27, 10, 30, 0);
+
+        [Fact]
+        public void ObtenerEncuestaInicial_DelegaEnEncuestaInicialService()
+        {
+            var encuestaMock = new Mock<IEncuestaInicialService>();
+            var esperado = global::Utilities.OperationResult<DtoObtenerEncuestaInicialResponse>.Ok(
+                new DtoObtenerEncuestaInicialResponse { TieneDerechoEncuesta = true },
+                nameof(IEncuestaInicialService.ObtenerEncuestaInicial));
+            encuestaMock.Setup(s => s.ObtenerEncuestaInicial(123)).Returns(esperado);
+            var service = CrearServiceConEncuesta(encuestaMock.Object);
+
+            var result = service.ObtenerEncuestaInicial(123);
+
+            Assert.Same(esperado, result);
+            encuestaMock.Verify(s => s.ObtenerEncuestaInicial(123), Times.Once);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_DelegaEnEncuestaInicialService()
+        {
+            var encuestaMock = new Mock<IEncuestaInicialService>();
+            var request = new DtoGuardarEncuestaInicialRequest();
+            var esperado = global::Utilities.OperationResult<DtoGuardarEncuestaInicialResponse>.Ok(
+                new DtoGuardarEncuestaInicialResponse(),
+                nameof(IEncuestaInicialService.GuardarEncuestaInicial));
+            encuestaMock.Setup(s => s.GuardarEncuestaInicial(123, request)).Returns(esperado);
+            var service = CrearServiceConEncuesta(encuestaMock.Object);
+
+            var result = service.GuardarEncuestaInicial(123, request);
+
+            Assert.Same(esperado, result);
+            encuestaMock.Verify(s => s.GuardarEncuestaInicial(123, request), Times.Once);
+        }
+
+        private InscripcionesService CrearServiceConEncuesta(IEncuestaInicialService encuestaInicialService)
+        {
+            var apiClient = new InscripcionesyPagosApiClient(
+                new HttpClient { BaseAddress = new Uri("https://internal.test/") },
+                NullLogger<InscripcionesyPagosApiClient>.Instance);
+            return new InscripcionesService(
+                _uowFactoryMock.Object,
+                _dbConnectionContextMock.Object,
+                _tivenosEnvioServiceMock.Object,
+                apiClient,
+                encuestaInicialService);
+        }
 
         [Fact]
         public void ObtenerAceptacionReglamentoEstudiantil_WhenNoAcceptance_ReturnsFalseWithoutDate()
@@ -1955,9 +2013,9 @@ namespace UnitTesting.AppLogic.Services
             return new InscripcionesService(
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
-                _generalServiceMock.Object,
                 _tivenosEnvioServiceMock.Object,
-                apiClient);
+                apiClient,
+                CrearEncuestaInicialServiceReal());
         }
 
         private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
