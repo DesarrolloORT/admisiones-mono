@@ -7,7 +7,7 @@
     <ort-radio-button class="inscription-radio-option" value="si">Si, cursé</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
   </ort-radio-group>
-  @if (otherStudiesControl.invalid && (submitted() || otherStudiesControl.touched)) {
+  @if (otherStudiesControl.invalid && (facade.submitted() || otherStudiesControl.touched)) {
   <ort-error>Seleccioná una opción</ort-error>
   }
 </div>

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtError,
   OrtFileUploaderChange,
@@ -8,6 +8,8 @@ import {
   OrtInputModule,
   OrtRadioModule,
 } from '@desarrolloort/components';
+
+import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 
 @Component({
   selector: 'app-education-info-fbr',
@@ -24,18 +26,8 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationInfoFbr {
-  protected readonly submitted = signal(false);
-  protected readonly educationInfoFbrForm = new FormGroup({
-    schoolLocation: new FormControl<string | null>(null, Validators.required),
-    lastYear: new FormControl<string | null>(null, Validators.required),
-    universityLocation: new FormControl<string | null>(null, Validators.required),
-    career: new FormControl<string | null>(null, Validators.required),
-    approvedSubjects: new FormControl<number | null>(null, Validators.required),
-    totalSubjects: new FormControl<number | null>(null, Validators.required),
-    average: new FormControl<number | null>(null, Validators.required),
-    averageRevalidation: new FormControl<number | null>(null, Validators.required),
-    revalidationFormFile: new FormControl<boolean>(false, Validators.requiredTrue),
-  });
+  protected readonly facade = inject(ScholarshipPersonalFacade);
+  protected readonly educationInfoFbrForm = this.facade.educationInfoFbrForm;
   protected readonly schoolLocationControl = this.educationInfoFbrForm.controls.schoolLocation;
   protected readonly lastYearControl = this.educationInfoFbrForm.controls.lastYear;
   protected readonly universityLocationControl =
@@ -50,15 +42,6 @@ export class EducationInfoFbr {
     this.educationInfoFbrForm.controls.revalidationFormFile;
 
   public onRevalidationFormFilesChanged(change: OrtFileUploaderChange): void {
-    const selectedFile = change.value.find(file => file.isValid)?.file ?? null;
-    this.revalidationFormFileControl.setValue(Boolean(selectedFile));
-    this.revalidationFormFileControl.markAsTouched();
-  }
-
-  public validateAndMarkTouched(): boolean {
-    this.submitted.set(true);
-    this.educationInfoFbrForm.markAllAsTouched();
-
-    return this.educationInfoFbrForm.valid;
+    this.facade.setFileFlag(this.revalidationFormFileControl, change);
   }
 }

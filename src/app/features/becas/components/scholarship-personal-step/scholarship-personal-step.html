@@ -7,12 +7,12 @@
     </p>
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
-  @if (showErrorAlert()) {
+  @if (facade.showErrorAlert()) {
   <app-error-alert />
   }
   <form>
     <ort-accordion>
-      @if (variant() !== 'fcl' && variant() !== 'fexaSin') {
+      @if (facade.isSectionVisible('datos-personales')) {
       <ort-accordion-item [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
@@ -26,7 +26,7 @@
       </ort-accordion-item>
       }
 
-      <ort-accordion-item [expanded]="variant() === 'fcl' || variant() === 'fexaSin'">
+      <ort-accordion-item [expanded]="!facade.isSectionVisible('datos-personales')">
         <ort-accordion-header>
           <ort-accordion-title>
             <ort-icon name="auto_stories" ortAccordionTitleLeadingIcon size="md" />
@@ -35,9 +35,9 @@
         </ort-accordion-header>
 
         <ort-accordion-body>
-          @if (variant() === 'fbr') {
+          @if (facade.isSectionVisible('educacion-fbr')) {
           <app-education-info-fbr />
-          } @else if (variant() === 'fcl'){
+          } @else if (facade.isSectionVisible('educacion-fcl')){
           <app-education-info-fcl />
           } @else {
           <app-education-info />
@@ -45,7 +45,7 @@
         </ort-accordion-body>
       </ort-accordion-item>
 
-      @if (variant() === 'fcl') {
+      @if (facade.isSectionVisible('antecedentes-laborales')) {
       <ort-accordion-item>
         <ort-accordion-header>
           <ort-accordion-title>
@@ -57,7 +57,7 @@
           <app-work-history />
         </ort-accordion-body>
       </ort-accordion-item>
-      } @if (variant() !== 'fexaSin'){
+      } @if (facade.isSectionVisible('declaracion')){
       <ort-accordion-item>
         <ort-accordion-header>
           <ort-accordion-title>

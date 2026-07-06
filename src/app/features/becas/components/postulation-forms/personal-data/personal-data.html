@@ -12,7 +12,7 @@
     </ort-radio-button>
   </ort-radio-group>
 
-  @if (attendanceModeControl.invalid && (submitted() || attendanceModeControl.touched)) {
+  @if (attendanceModeControl.invalid && (facade.submitted() || attendanceModeControl.touched)) {
   <ort-error>Seleccioná una opción</ort-error>
   }
 </div>

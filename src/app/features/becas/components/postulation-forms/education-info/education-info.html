@@ -3,7 +3,8 @@
     <ort-label>Promedio de 2° EMS (5to)</ort-label>
     <input formControlName="averageSecondYear" ortNumberInput required />
   </ort-form-field>
-  @if (averageSecondYearControl.invalid && (submitted() || averageSecondYearControl.touched)) {
+  @if (averageSecondYearControl.invalid && (facade.submitted() || averageSecondYearControl.touched))
+  {
   <ort-error>Ingresá tu promedio</ort-error>
   }
 
@@ -11,7 +12,7 @@
     <ort-label>Promedio de 3° EMS (6to)</ort-label>
     <input formControlName="averageThirdYear" ortNumberInput required />
   </ort-form-field>
-  @if (averageThirdYearControl.invalid && (submitted() || averageThirdYearControl.touched)) {
+  @if (averageThirdYearControl.invalid && (facade.submitted() || averageThirdYearControl.touched)) {
   <ort-error>Ingresá tu promedio</ort-error>
   }
 
@@ -20,7 +21,7 @@
     label="Certificado de secundaria (Formula 69) *"
     [acceptedTypes]="['.pdf', '.png', '.jpg']"
     (filesChanged)="onCertificateFilesChanged($event)" />
-  @if (certificateFileControl.invalid && (submitted() || certificateFileControl.touched)) {
+  @if (certificateFileControl.invalid && (facade.submitted() || certificateFileControl.touched)) {
   <ort-error>Adjuntá el certificado de secundaria</ort-error>
   }
 </div>

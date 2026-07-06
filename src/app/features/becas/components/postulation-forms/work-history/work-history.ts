@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { OrtError, OrtRadioModule } from '@desarrolloort/components';
+
+import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 
 @Component({
   selector: 'app-work-history',
@@ -10,16 +12,7 @@ import { OrtError, OrtRadioModule } from '@desarrolloort/components';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkHistory {
-  protected readonly submitted = signal(false);
-  protected readonly workHistoryForm = new FormGroup({
-    workHistory: new FormControl<string | null>(null, Validators.required),
-  });
+  protected readonly facade = inject(ScholarshipPersonalFacade);
+  protected readonly workHistoryForm = this.facade.workHistoryForm;
   protected readonly workHistoryControl = this.workHistoryForm.controls.workHistory;
-
-  public validateAndMarkTouched(): boolean {
-    this.submitted.set(true);
-    this.workHistoryForm.markAllAsTouched();
-
-    return this.workHistoryForm.valid;
-  }
 }

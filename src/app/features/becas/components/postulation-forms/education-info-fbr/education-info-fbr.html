@@ -11,7 +11,7 @@
       En el exterior
     </ort-radio-button>
   </ort-radio-group>
-  @if (schoolLocationControl.invalid && (submitted() || schoolLocationControl.touched)) {
+  @if (schoolLocationControl.invalid && (facade.submitted() || schoolLocationControl.touched)) {
   <ort-error>Seleccioná una opción</ort-error>
   }
 
@@ -27,7 +27,7 @@
       3º EMS (6º año)
     </ort-radio-button>
   </ort-radio-group>
-  @if (lastYearControl.invalid && (submitted() || lastYearControl.touched)) {
+  @if (lastYearControl.invalid && (facade.submitted() || lastYearControl.touched)) {
   <ort-error>Seleccioná una opción</ort-error>
   }
 
@@ -41,7 +41,8 @@
       En el exterior
     </ort-radio-button>
   </ort-radio-group>
-  @if (universityLocationControl.invalid && (submitted() || universityLocationControl.touched)) {
+  @if (universityLocationControl.invalid && (facade.submitted() ||
+  universityLocationControl.touched)) {
   <ort-error>Seleccioná una opción</ort-error>
   }
 
@@ -49,7 +50,7 @@
     <ort-label>Carrera cursada o en curso</ort-label>
     <input formControlName="career" ortInput required />
   </ort-form-field>
-  @if (careerControl.invalid && (submitted() || careerControl.touched)) {
+  @if (careerControl.invalid && (facade.submitted() || careerControl.touched)) {
   <ort-error>Ingresá la carrera cursada o en curso</ort-error>
   }
 
@@ -57,7 +58,7 @@
     <ort-label>Cantidad de materias aprobadas</ort-label>
     <input formControlName="approvedSubjects" ortNumberInput required />
   </ort-form-field>
-  @if (approvedSubjectsControl.invalid && (submitted() || approvedSubjectsControl.touched)) {
+  @if (approvedSubjectsControl.invalid && (facade.submitted() || approvedSubjectsControl.touched)) {
   <ort-error>Ingresá la cantidad de materias aprobadas</ort-error>
   }
 
@@ -65,7 +66,7 @@
     <ort-label>Cantidad de materias</ort-label>
     <input formControlName="totalSubjects" ortNumberInput required />
   </ort-form-field>
-  @if (totalSubjectsControl.invalid && (submitted() || totalSubjectsControl.touched)) {
+  @if (totalSubjectsControl.invalid && (facade.submitted() || totalSubjectsControl.touched)) {
   <ort-error>Ingresá la cantidad de materias</ort-error>
   }
 
@@ -74,7 +75,7 @@
     <input formControlName="average" ortNumberInput required />
     <ort-hint>Considerando materias y exámenes aprobados.</ort-hint>
   </ort-form-field>
-  @if (averageControl.invalid && (submitted() || averageControl.touched)) {
+  @if (averageControl.invalid && (facade.submitted() || averageControl.touched)) {
   <ort-error>Ingresá el promedio de calificaciones</ort-error>
   }
 
@@ -83,7 +84,8 @@
     <input formControlName="averageRevalidation" ortNumberInput required />
     <ort-hint>Considerando materias y exámenes aprobados y reprobados.</ort-hint>
   </ort-form-field>
-  @if (averageRevalidationControl.invalid && (submitted() || averageRevalidationControl.touched)) {
+  @if (averageRevalidationControl.invalid && (facade.submitted() ||
+  averageRevalidationControl.touched)) {
   <ort-error>Ingresá el promedio total de calificaciones</ort-error>
   }
 
@@ -92,8 +94,8 @@
     label="Formulario de reválidas *"
     [acceptedTypes]="['.pdf']"
     (filesChanged)="onRevalidationFormFilesChanged($event)" />
-  @if (revalidationFormFileControl.invalid && (submitted() || revalidationFormFileControl.touched))
-  {
+  @if (revalidationFormFileControl.invalid && (facade.submitted() ||
+  revalidationFormFileControl.touched)) {
   <ort-error>Adjuntá el formulario de reválidas</ort-error>
   }
 </div>

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtError,
   OrtFileUploaderChange,
@@ -7,6 +7,8 @@ import {
   OrtFormFieldModule,
   OrtInputModule,
 } from '@desarrolloort/components';
+
+import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 
 @Component({
   selector: 'app-education-info',
@@ -22,26 +24,13 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationInfo {
-  protected readonly submitted = signal(false);
-  protected readonly educationInfoForm = new FormGroup({
-    averageSecondYear: new FormControl<number | null>(null, Validators.required),
-    averageThirdYear: new FormControl<number | null>(null, Validators.required),
-    certificateFile: new FormControl<boolean>(false, Validators.requiredTrue),
-  });
+  protected readonly facade = inject(ScholarshipPersonalFacade);
+  protected readonly educationInfoForm = this.facade.educationInfoForm;
   protected readonly averageSecondYearControl = this.educationInfoForm.controls.averageSecondYear;
   protected readonly averageThirdYearControl = this.educationInfoForm.controls.averageThirdYear;
   protected readonly certificateFileControl = this.educationInfoForm.controls.certificateFile;
 
   public onCertificateFilesChanged(change: OrtFileUploaderChange): void {
-    const selectedFile = change.value.find(file => file.isValid)?.file ?? null;
-    this.certificateFileControl.setValue(Boolean(selectedFile));
-    this.certificateFileControl.markAsTouched();
-  }
-
-  public validateAndMarkTouched(): boolean {
-    this.submitted.set(true);
-    this.educationInfoForm.markAllAsTouched();
-
-    return this.educationInfoForm.valid;
+    this.facade.setFileFlag(this.certificateFileControl, change);
   }
 }

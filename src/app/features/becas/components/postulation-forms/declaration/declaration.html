@@ -41,7 +41,7 @@
               <ort-option value="otro">Otro</ort-option>
             </ort-select>
           </ort-form-field>
-          @if (member.controls.relationship.invalid && (submitted() ||
+          @if (member.controls.relationship.invalid && (facade.submitted() ||
           member.controls.relationship.touched)) {
           <ort-error>Seleccioná el parentesco</ort-error>
           } }
@@ -50,7 +50,8 @@
             <ort-label>Nombre</ort-label>
             <input formControlName="name" ortInput required />
           </ort-form-field>
-          @if (member.controls.name.invalid && (submitted() || member.controls.name.touched)) {
+          @if (member.controls.name.invalid && (facade.submitted() || member.controls.name.touched))
+          {
           <ort-error>Ingresá el nombre</ort-error>
           }
 
@@ -58,7 +59,7 @@
             <ort-label>Edad</ort-label>
             <input formControlName="age" ortNumberInput required [decimals]="0" />
           </ort-form-field>
-          @if (member.controls.age.invalid && (submitted() || member.controls.age.touched)) {
+          @if (member.controls.age.invalid && (facade.submitted() || member.controls.age.touched)) {
           <ort-error>Ingresá la edad</ort-error>
           }
 
@@ -74,7 +75,7 @@
 
             <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
           </ort-radio-group>
-          @if (member.controls.percibeIngresos.invalid && (submitted() ||
+          @if (member.controls.percibeIngresos.invalid && (facade.submitted() ||
           member.controls.percibeIngresos.touched)) {
           <ort-error>Seleccioná una opción</ort-error>
           } @if (member.controls.percibeIngresos.value === 'si') {
@@ -84,7 +85,7 @@
             <input class="money-input" formControlName="nominalIncome" ortNumberInput required />
             <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
           </ort-form-field>
-          @if (member.controls.nominalIncome.invalid && (submitted() ||
+          @if (member.controls.nominalIncome.invalid && (facade.submitted() ||
           member.controls.nominalIncome.touched)) {
           <ort-error>Ingresá los ingresos nominales</ort-error>
           }
@@ -95,7 +96,7 @@
             <input class="money-input" formControlName="liquidIncome" ortNumberInput required />
             <ort-hint>Monto mensual en pesos uruguayos.</ort-hint>
           </ort-form-field>
-          @if (member.controls.liquidIncome.invalid && (submitted() ||
+          @if (member.controls.liquidIncome.invalid && (facade.submitted() ||
           member.controls.liquidIncome.touched)) {
           <ort-error>Ingresá los ingresos líquidos</ort-error>
           }
@@ -106,7 +107,7 @@
             multiple="true"
             [acceptedTypes]="['.pdf', '.jpg', '.png']"
             (filesChanged)="onIncomeProofFilesChanged(member.controls.id.value, $event)" />
-          @if (submitted() && isIncomeProofFileMissing(member)) {
+          @if (facade.submitted() && isIncomeProofFileMissing(member)) {
           <ort-error>Adjuntá al menos un comprobante de ingresos</ort-error>
           }
 
@@ -186,7 +187,7 @@
       </ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="otro">Otro tipo</ort-radio-button>
     </ort-radio-group>
-    @if (housingTypeControl.invalid && (submitted() || housingTypeControl.touched)) {
+    @if (housingTypeControl.invalid && (facade.submitted() || housingTypeControl.touched)) {
     <ort-error>Seleccioná una opción</ort-error>
     }
   </section>
@@ -206,7 +207,7 @@
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
     </ort-radio-group>
-    @if (summerHouseControl.invalid && (submitted() || summerHouseControl.touched)) {
+    @if (summerHouseControl.invalid && (facade.submitted() || summerHouseControl.touched)) {
     <ort-error>Seleccioná una opción</ort-error>
     }
 
@@ -219,14 +220,14 @@
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
       <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>
     </ort-radio-group>
-    @if (vehicleOwnControl.invalid && (submitted() || vehicleOwnControl.touched)) {
+    @if (vehicleOwnControl.invalid && (facade.submitted() || vehicleOwnControl.touched)) {
     <ort-error>Seleccioná una opción</ort-error>
     } @if (vehicleOwnControl.value === 'si') {
     <ort-form-field>
       <ort-label>Marca y modelo</ort-label>
       <input formControlName="vehicleModel" ortInput required />
     </ort-form-field>
-    @if (vehicleModelControl.invalid && (submitted() || vehicleModelControl.touched)) {
+    @if (vehicleModelControl.invalid && (facade.submitted() || vehicleModelControl.touched)) {
     <ort-error>Ingresá marca y modelo del vehículo</ort-error>
     }
 
@@ -234,7 +235,7 @@
       <ort-label>Año</ort-label>
       <input formControlName="vehicleYear" ortNumberInput required [decimals]="0" />
     </ort-form-field>
-    @if (vehicleYearControl.invalid && (submitted() || vehicleYearControl.touched)) {
+    @if (vehicleYearControl.invalid && (facade.submitted() || vehicleYearControl.touched)) {
     <ort-error>Identificá el año del vehículo</ort-error>
     } }
   </section>
@@ -255,7 +256,7 @@
       <span ortTextPrefix>$</span>
       <input class="money-input" formControlName="savingsAmount" ortNumberInput required />
     </ort-form-field>
-    @if (savingsAmountControl.invalid && (submitted() || savingsAmountControl.touched)) {
+    @if (savingsAmountControl.invalid && (facade.submitted() || savingsAmountControl.touched)) {
     <ort-error>Ingresá el monto de los ahorros</ort-error>
     }
 
@@ -264,7 +265,7 @@
       <textarea #textareaStudies formControlName="studyPlan" ortInput required></textarea>
       <ort-hint align="end">{{textareaStudies.value.length}}/400</ort-hint>
     </ort-form-field>
-    @if (studyPlanControl.invalid && (submitted() || studyPlanControl.touched)) {
+    @if (studyPlanControl.invalid && (facade.submitted() || studyPlanControl.touched)) {
     <ort-error>Ingresá como piensas solventar tus estudios</ort-error>
     }
 
@@ -295,7 +296,8 @@
           <input class="money-input" formControlName="housingExpenses" ortNumberInput required />
           <ort-hint>Cuota u alquiler, impuestos, servicios, etc.</ort-hint>
         </ort-form-field>
-        @if (housingExpensesControl.invalid && (submitted() || housingExpensesControl.touched)) {
+        @if (housingExpensesControl.invalid && (facade.submitted() ||
+        housingExpensesControl.touched)) {
         <ort-error>Ingresá un monto</ort-error>
         }
 
@@ -309,7 +311,7 @@
             required />
           <ort-hint>Suscripciones, telefonía móvil, etc.</ort-hint>
         </ort-form-field>
-        @if (otherServicesExpensesControl.invalid && (submitted() ||
+        @if (otherServicesExpensesControl.invalid && (facade.submitted() ||
         otherServicesExpensesControl.touched)) {
         <ort-error>Ingresá un monto</ort-error>
         }
@@ -320,7 +322,8 @@
           <input class="money-input" formControlName="healthExpenses" ortNumberInput required />
           <ort-hint>Mutualista, medicamentos, club, etc.</ort-hint>
         </ort-form-field>
-        @if (healthExpensesControl.invalid && (submitted() || healthExpensesControl.touched)) {
+        @if (healthExpensesControl.invalid && (facade.submitted() || healthExpensesControl.touched))
+        {
         <ort-error>Ingresá un monto</ort-error>
         }
 
@@ -330,7 +333,8 @@
           <input class="money-input" formControlName="personalExpenses" ortNumberInput required />
           <ort-hint>Alimentación, vestimenta, etc.</ort-hint>
         </ort-form-field>
-        @if (personalExpensesControl.invalid && (submitted() || personalExpensesControl.touched)) {
+        @if (personalExpensesControl.invalid && (facade.submitted() ||
+        personalExpensesControl.touched)) {
         <ort-error>Ingresá un monto</ort-error>
         }
 
@@ -344,7 +348,7 @@
             required />
           <ort-hint>Boletos, combustible, peajes, etc.</ort-hint>
         </ort-form-field>
-        @if (transportationExpensesControl.invalid && (submitted() ||
+        @if (transportationExpensesControl.invalid && (facade.submitted() ||
         transportationExpensesControl.touched)) {
         <ort-error>Ingresá un monto</ort-error>
         } @for (expense of expenses(); track expense.name) {
