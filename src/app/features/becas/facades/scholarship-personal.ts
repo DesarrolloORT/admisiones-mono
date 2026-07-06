@@ -11,6 +11,7 @@ import {
   type ScholarshipPersonalSectionId,
   type ScholarshipVariant,
 } from '../models/scholarship-personal-forms';
+import { createSectionStatus, SectionStatus } from '../models/section-status';
 import { ScholarshipFormsStore } from '../store/scholarship-forms';
 import { ScholarshipProcessFacade } from './scholarship-process';
 
@@ -56,6 +57,20 @@ export class ScholarshipPersonalFacade {
 
   public isSectionVisible(section: ScholarshipPersonalSectionId): boolean {
     return this.visibleSections().includes(section);
+  }
+
+  public sectionStatus(section: ScholarshipPersonalSectionId): SectionStatus {
+    return createSectionStatus(() => this.isSectionValid(section), this.submitted);
+  }
+
+  /** La sección "Información educativa" es una sola en el acordeón, pero cuál de los tres forms aplica depende de `variant`. */
+  public educationSectionId(): ScholarshipPersonalSectionId {
+    return (
+      this.visibleSections().find(
+        section =>
+          section === 'educacion' || section === 'educacion-fbr' || section === 'educacion-fcl'
+      ) ?? 'educacion'
+    );
   }
 
   public addFamilyMember(): void {
@@ -115,22 +130,24 @@ export class ScholarshipPersonalFacade {
   }
 
   private isValid(sections: readonly ScholarshipPersonalSectionId[]): boolean {
-    return sections.every(section => {
-      switch (section) {
-        case 'datos-personales':
-          return this.personalDataForm.valid;
-        case 'educacion':
-          return this.educationInfoForm.valid;
-        case 'educacion-fbr':
-          return this.educationInfoFbrForm.valid;
-        case 'educacion-fcl':
-          return this.educationInfoFclForm.valid;
-        case 'antecedentes-laborales':
-          return this.workHistoryForm.valid;
-        case 'declaracion':
-          return this.isDeclarationValid();
-      }
-    });
+    return sections.every(section => this.isSectionValid(section));
+  }
+
+  private isSectionValid(section: ScholarshipPersonalSectionId): boolean {
+    switch (section) {
+      case 'datos-personales':
+        return this.personalDataForm.valid;
+      case 'educacion':
+        return this.educationInfoForm.valid;
+      case 'educacion-fbr':
+        return this.educationInfoFbrForm.valid;
+      case 'educacion-fcl':
+        return this.educationInfoFclForm.valid;
+      case 'antecedentes-laborales':
+        return this.workHistoryForm.valid;
+      case 'declaracion':
+        return this.isDeclarationValid();
+    }
   }
 
   private isDeclarationValid(): boolean {
