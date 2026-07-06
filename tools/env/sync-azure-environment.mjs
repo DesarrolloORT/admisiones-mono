@@ -292,7 +292,38 @@ function escapeXmlAttribute(value) {
 
 function getCspPolicy(config) {
   const policy = config.CSP_POLICY ?? config.cspPolicy;
-  return typeof policy === 'string' && policy.trim() ? policy.trim() : null;
+
+  if (typeof policy !== 'string' || !policy.trim()) {
+    return null;
+  }
+
+  return config.RECAPTCHA_KEY ? withRecaptchaCsp(policy.trim()) : policy.trim();
+}
+
+function withRecaptchaCsp(policy) {
+  const directives = new Map(
+    policy
+      .split(';')
+      .map(part => part.trim())
+      .filter(Boolean)
+      .map(part => {
+        const [name, ...sources] = part.split(/\s+/);
+        return [name, sources];
+      })
+  );
+
+  addCspSources(directives, 'script-src', ['https://www.google.com', 'https://www.gstatic.com']);
+  addCspSources(directives, 'connect-src', ['https://www.google.com']);
+  addCspSources(directives, 'frame-src', ['https://www.google.com', 'https://recaptcha.google.com']);
+
+  return [...directives]
+    .map(([name, sources]) => [name, ...sources].join(' '))
+    .join('; ');
+}
+
+function addCspSources(directives, name, sources) {
+  const current = directives.get(name) ?? directives.get('default-src') ?? ["'self'"];
+  directives.set(name, [...new Set([...current, ...sources])]);
 }
 
 async function writeWebConfig(outputPath, cspPolicy) {
