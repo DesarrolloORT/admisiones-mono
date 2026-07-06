@@ -6,7 +6,6 @@ using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Services.Personas;
@@ -15,7 +14,6 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
-using AppLogic.Services.Inscripciones.Encuesta;
 
 namespace AppLogic.Services.Inscripciones
 {
@@ -26,22 +24,22 @@ namespace AppLogic.Services.Inscripciones
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
-        private readonly IGeneralService _generalService;
         private readonly ITivenosEnvioService _tivenosEnvioService;
         private readonly InscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
+        private readonly IEncuestaInicialService _encuestaInicialService;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
-            IGeneralService generalService,
             ITivenosEnvioService tivenosEnvioService,
-            InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
+            InscripcionesyPagosApiClient inscripcionesyPagosApiClient,
+            IEncuestaInicialService encuestaInicialService)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
-            _generalService = generalService;
             _tivenosEnvioService = tivenosEnvioService;
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
+            _encuestaInicialService = encuestaInicialService;
         }
 
         public async Task<OperationResult<DtoDetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
@@ -385,24 +383,12 @@ namespace AppLogic.Services.Inscripciones
 
         public OperationResult<DtoObtenerEncuestaInicialResponse> ObtenerEncuestaInicial(long codigoPersona)
         {
-            var encuestaInicialService = new EncuestaInicialService(
-                _uowFactory,
-                _dbConnectionContext,
-                _generalService,
-                _tivenosEnvioService);
-
-            return encuestaInicialService.ObtenerEncuestaInicial(codigoPersona);
+            return _encuestaInicialService.ObtenerEncuestaInicial(codigoPersona);
         }
 
         public OperationResult<DtoGuardarEncuestaInicialResponse> GuardarEncuestaInicial(long codigoPersona, DtoGuardarEncuestaInicialRequest request)
         {
-            var encuestaInicialService = new EncuestaInicialService(
-                _uowFactory,
-                _dbConnectionContext,
-                _generalService,
-                _tivenosEnvioService);
-
-            return encuestaInicialService.GuardarEncuestaInicial(codigoPersona, request);
+            return _encuestaInicialService.GuardarEncuestaInicial(codigoPersona, request);
         }
 
         public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, DtoConfirmarPreInscripcionRequest request)

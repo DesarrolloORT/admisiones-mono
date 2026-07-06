@@ -4,6 +4,7 @@ using AppLogic.Dtos.Tivenos;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
+using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Tivenos;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
@@ -13,11 +14,12 @@ using Utilities;
 
 namespace AppLogic.Services.Inscripciones.Encuesta
 {
-    internal sealed class EncuestaInicialService(
+    public sealed class EncuestaInicialService(
         IUnitOfWorkFactory uowFactory,
         IDbConnectionContext dbConnectionContext,
         IGeneralService generalService,
         ITivenosEnvioService tivenosEnvioService)
+        : IEncuestaInicialService
     {
         private const long CodigoOrientacionQuintoLegacy = 1304;
 
