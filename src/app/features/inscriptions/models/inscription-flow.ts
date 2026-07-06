@@ -16,11 +16,19 @@ export type EstadoSeccionEncuesta = 'pendiente' | 'activa' | 'completa';
 
 export type MetodoPago =
   | 'cuenta-bancaria'
-  | 'tarjeta-credito'
   | 'cuenta-personal'
   | 'banred'
+  | 'geopay'
   | 'abitab'
   | 'paganza';
+
+export type MetodoPagoApi =
+  | 'CUENTA_PERSONAL'
+  | 'ABITAB'
+  | 'PAGANZA'
+  | 'BANRED'
+  | 'GEOPAY'
+  | 'SISTARBANC';
 
 export type ResultadoPago = 'confirmada' | 'reservada' | 'en-proceso';
 
@@ -34,11 +42,12 @@ export interface InscripcionInitialSurvey {
   cursaSecundaria: boolean | null;
   orientacionBachilleratoId: number | null;
   anioBachilleratoId: number | null;
+  recursaAnioBachillerato: boolean | null;
+  vecesRecursaAnioBachillerato: number | null;
   institucionSecundariaId: number | null;
   ubicacionSecundariaId: number | null;
   nombreInstitucionSecundaria: string | null;
   estadoEducacionSuperiorPreviaId: number | null;
-  tieneEducacionSuperior: boolean | null;
   nivelFormacionMadreId: number | null;
   nivelFormacionPadreId: number | null;
   madreEgresadaOrt: boolean | null;
@@ -47,13 +56,7 @@ export interface InscripcionInitialSurvey {
   anioDecisionOrtId: number | null;
   seInformoEnOtrasUniversidades: boolean | null;
   apoyoDecisionId: number | null;
-  apoyoPadres: boolean | null;
-  apoyoOtros: boolean | null;
-  apoyoAmigosFamiliares: boolean | null;
-  apoyoNadie: boolean | null;
-  apoyoAmigoPropuesta: boolean | null;
   nivelDecisionId: number | null;
-  decisionConfirmada: boolean | null;
   tuvoAsesoramientoOrt: boolean | null;
   valoracionAsesoramientoOrt: number | null;
   visitoSitioWebOrt: boolean | null;
@@ -66,7 +69,9 @@ export interface InscripcionInitialSurveyResponse {
   tieneDerechoEncuesta: boolean;
   encuesta: InscripcionInitialSurvey | null;
   universidadesConsideradas: number[];
+  universidadesConsideradasOtros: string[];
   universidadesEducacionSuperior: number[];
+  universidadesEducacionSuperiorOtros: string[];
   opcionesMotivosSeleccionados: number[];
   opcionesPublicidadSeleccionadas: number[];
 }
@@ -104,7 +109,9 @@ export interface InscripcionInitialSurveyPayload {
   trabajaActualmente: boolean | null;
   tipoJornadaId: number | null;
   universidadConsideradaIds: number[] | null;
+  universidadConsideradaOtros: string[] | null;
   universidadEducacionSuperiorIds: number[] | null;
+  universidadEducacionSuperiorOtros: string[] | null;
   publicidadOrtIds: number[] | null;
   motivoEleccionOrtIds: number[] | null;
 }
@@ -140,6 +147,7 @@ export interface InscripcionStudentRegulationAcceptance {
 }
 
 export interface InscripcionPreEnrollmentResponse {
+  idInscripcion?: number | null;
   confirmada: boolean;
   fechaVencimientoPago: string | null;
   seniaInscripcion: number | null;
@@ -149,6 +157,26 @@ export interface InscripcionPreEnrollmentResponse {
     comienzo: string | null;
     turno: string | null;
   } | null;
+}
+
+export interface InscripcionPaymentPayload {
+  idInscripcion: number;
+  metodoPago: MetodoPago;
+  idBancoSistarbanc: string | null;
+}
+
+export interface InscripcionPaymentMessage {
+  clave: string | null;
+  valor: string | null;
+}
+
+export interface InscripcionPaymentResponse {
+  success: boolean;
+  resultado: string | null;
+  urlPago: string | null;
+  mensajes: InscripcionPaymentMessage[];
+  message: string | null;
+  errorCode: string | null;
 }
 
 export interface InscripcionIdentityDocumentFile {
@@ -185,13 +213,15 @@ export interface ValoresEncuesta {
   educacion: {
     cursaSecundaria: string;
     anioSecundaria: string;
-    tipoBachillerato: string;
     orientacion: string;
+    recursaAnioBachillerato: string;
+    vecesRecursaAnioBachillerato: number | null;
     lugarSecundaria: string;
     departamento: string;
     institucionEducativa: string;
     estadoEducacionSuperior: string;
     universidadesEducacionSuperior: string[];
+    universidadEducacionSuperiorOtro: string;
     formacionMadre: string;
     tituloOrtMadre: string;
     formacionPadre: string;
@@ -203,6 +233,7 @@ export interface ValoresEncuesta {
     anioDecisionOrt: string;
     otrasUniversidades: string;
     universidadesInformadas: string[];
+    universidadInformadaOtro: string;
     certezaDecision: string;
     motivosOrt: string[];
   };

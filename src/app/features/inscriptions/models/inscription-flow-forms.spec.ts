@@ -9,7 +9,11 @@ describe('InscripcionForms', () => {
     const forms = createInscripcionForms();
 
     expect(Object.keys(forms.educationForm.controls)).toContain('universidadesEducacionSuperior');
+    expect(Object.keys(forms.educationForm.controls)).toContain('universidadEducacionSuperiorOtro');
+    expect(Object.keys(forms.educationForm.controls)).toContain('recursaAnioBachillerato');
+    expect(Object.keys(forms.educationForm.controls)).toContain('vecesRecursaAnioBachillerato');
     expect(Object.keys(forms.academicDecisionForm.controls)).toContain('universidadesInformadas');
+    expect(Object.keys(forms.academicDecisionForm.controls)).toContain('universidadInformadaOtro');
     expect(Object.keys(forms.ortExperienceForm.controls)).toContain('calificacionSede');
   });
 

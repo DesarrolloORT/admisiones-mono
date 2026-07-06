@@ -50,6 +50,7 @@ export function detailToPreEnrollment(
 
   const resumen = source.resumen;
   return {
+    idInscripcion: detail.pagoPendiente?.idInscripcion ?? null,
     confirmada: detail.confirmada !== null,
     fechaVencimientoPago: detail.pagoPendiente?.fechaVencimientoPago ?? null,
     seniaInscripcion: detail.pagoPendiente?.senia ?? null,

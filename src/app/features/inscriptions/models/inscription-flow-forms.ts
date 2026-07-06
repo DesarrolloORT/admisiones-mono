@@ -36,8 +36,12 @@ export function createInscripcionForms() {
         validators: Validators.required,
       }),
       anioSecundaria: new FormControl('', { nonNullable: true }),
-      tipoBachillerato: new FormControl('', { nonNullable: true }),
       orientacion: new FormControl('', { nonNullable: true }),
+      recursaAnioBachillerato: new FormControl('', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      vecesRecursaAnioBachillerato: new FormControl<number | null>(null),
       lugarSecundaria: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -49,6 +53,7 @@ export function createInscripcionForms() {
         validators: Validators.required,
       }),
       universidadesEducacionSuperior: new FormControl<string[]>([], { nonNullable: true }),
+      universidadEducacionSuperiorOtro: new FormControl('', { nonNullable: true }),
       formacionMadre: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -75,6 +80,7 @@ export function createInscripcionForms() {
         validators: Validators.required,
       }),
       universidadesInformadas: new FormControl<string[]>([], { nonNullable: true }),
+      universidadInformadaOtro: new FormControl('', { nonNullable: true }),
       certezaDecision: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -140,8 +146,9 @@ export function createSectionConfig(
       errorFields: [
         { controlName: 'cursaSecundaria', fieldId: '', label: 'Situación de secundaria' },
         { controlName: 'anioSecundaria', fieldId: '', label: 'Año en curso' },
-        { controlName: 'tipoBachillerato', fieldId: '', label: 'Tipo de bachillerato' },
         { controlName: 'orientacion', fieldId: '', label: 'Orientación' },
+        { controlName: 'recursaAnioBachillerato', fieldId: '', label: 'Recursado de bachillerato' },
+        { controlName: 'vecesRecursaAnioBachillerato', fieldId: '', label: 'Veces de recursado' },
         { controlName: 'lugarSecundaria', fieldId: '', label: 'Lugar de secundaria' },
         { controlName: 'departamento', fieldId: '', label: 'Departamento' },
         { controlName: 'institucionEducativa', fieldId: '', label: 'Institución educativa' },
@@ -154,6 +161,11 @@ export function createSectionConfig(
           controlName: 'universidadesEducacionSuperior',
           fieldId: '',
           label: 'Universidades de educación superior',
+        },
+        {
+          controlName: 'universidadEducacionSuperiorOtro',
+          fieldId: '',
+          label: 'Otra universidad de educación superior',
         },
         { controlName: 'formacionMadre', fieldId: '', label: 'Formación de madre o tutor' },
         { controlName: 'tituloOrtMadre', fieldId: '', label: 'Título en ORT de madre o tutor' },
@@ -174,6 +186,11 @@ export function createSectionConfig(
           controlName: 'universidadesInformadas',
           fieldId: '',
           label: 'Universidades consultadas',
+        },
+        {
+          controlName: 'universidadInformadaOtro',
+          fieldId: '',
+          label: 'Otra universidad consultada',
         },
         { controlName: 'certezaDecision', fieldId: '', label: 'Certeza de la decisión' },
         { controlName: 'motivosOrt', fieldId: '', label: 'Motivos para elegir ORT' },
