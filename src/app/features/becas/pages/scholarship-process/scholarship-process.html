@@ -1,7 +1,7 @@
 @if (!onboardingCompleted()) {
 <app-home-header [showBack]="true" />
 <main class="scholarship-process__main">
-  <app-scholarship-onboarding variant="fbr" (continueRequested)="startApplication()" />
+  <app-scholarship-onboarding [variant]="variant" (continueRequested)="startApplication()" />
 </main>
 } @else if (!success()) {
 <app-process-layout
@@ -18,14 +18,14 @@
   (logoutRequested)="logout()">
   <main class="scholarship-process__main">
     @switch (process.currentStep()) { @case ('info-postulacion') {
-    <app-scholarship-academic-step variant="fbr" />
+    <app-scholarship-academic-step [variant]="variant" />
     } @case ('info-personal') {
-    <app-scholarship-personal-step variant="fbr" />
+    <app-scholarship-personal-step [variant]="variant" />
     } @case ('confirmacion') {
-    <app-scholarship-confirmation-step variant="fbr" (confirmApplication)="showSuccess()" />
+    <app-scholarship-confirmation-step [variant]="variant" (confirmApplication)="showSuccess()" />
     } }
   </main>
 </app-process-layout>
 } @else {
-<app-scholarship-success variant="fbr" />
+<app-scholarship-success [variant]="variant" />
 }

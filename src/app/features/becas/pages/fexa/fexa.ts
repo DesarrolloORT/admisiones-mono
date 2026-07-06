@@ -15,7 +15,7 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
 import { ScholarshipProcessPage } from '../scholarship-process/scholarship-process-page';
 
 @Component({
-  selector: 'app-fbr',
+  selector: 'app-fexa',
   imports: [
     ProcessLayout,
     ScholarshipOnboarding,
@@ -35,6 +35,6 @@ import { ScholarshipProcessPage } from '../scholarship-process/scholarship-proce
   styleUrl: '../scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Fbr extends ScholarshipProcessPage {
-  protected readonly variant: ScholarshipVariant = 'fbr';
+export class Fexa extends ScholarshipProcessPage {
+  protected readonly variant: ScholarshipVariant = 'fexaCon';
 }
