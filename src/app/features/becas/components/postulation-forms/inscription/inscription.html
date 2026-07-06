@@ -1,0 +1,68 @@
+<div class="scholarship-accordion__content" [formGroup]="inscriptionSection">
+  @if (facade.academicStepData().length > 1) {
+  <ort-radio-group
+    formControlName="selectedInscription"
+    legend="Seleccioná una inscripción"
+    orientation="vertical"
+    [required]="true"
+    [value]="facade.selectedInscription()"
+    (valueChange)="facade.onInscriptionSelectionChange($event)">
+    @for (item of facade.academicStepData(); track item.carrera) {
+    <ort-radio-card-button class="inscription-radio-option" [value]="item.carrera">
+      {{ item.carrera }}
+    </ort-radio-card-button>
+    }
+  </ort-radio-group>
+  @if (selectionControl.invalid && (selectionControl.touched || facade.submitted())) {
+  <ort-error>Seleccioná una opción</ort-error>
+  } } @if (facade.academicStepData().length === 1 || facade.selectedInscription()) {
+  <ort-form-field>
+    <ort-label for="scholarship-career">Carrera</ort-label>
+    <input
+      aria-label="Carrera"
+      id="scholarship-career"
+      name="scholarship-career"
+      ortInput
+      readonly
+      [value]="facade.selectedAcademicStepData().carrera" />
+  </ort-form-field>
+  <ort-form-field>
+    <ort-label for="scholarship-start">Comienzo</ort-label>
+    <input
+      aria-label="Comienzo"
+      id="scholarship-start"
+      name="scholarship-start"
+      ortInput
+      readonly
+      [value]="facade.selectedAcademicStepData().comienzo" />
+  </ort-form-field>
+  <ort-form-field>
+    <ort-label for="scholarship-shift">Turno</ort-label>
+    <input
+      aria-label="Turno"
+      id="scholarship-shift"
+      name="scholarship-shift"
+      ortInput
+      readonly
+      [value]="facade.selectedAcademicStepData().turno" />
+  </ort-form-field>
+  } @if (facade.shouldShowApplicationMode()) {
+  <ort-radio-group
+    formControlName="applicationMode"
+    legend="Modalidad de postulación"
+    orientation="vertical"
+    [required]="true">
+    <ort-radio-card-button class="inscription-radio-option" value="con declaracion">
+      Con declaración jurada
+      <span ortRadioSupportingText>Beca de hasta 60% de descuento</span>
+    </ort-radio-card-button>
+
+    <ort-radio-card-button class="inscription-radio-option" value="sin declaracion">
+      Sin declaración jurada
+      <span ortRadioSupportingText>Beca de hasta 35% de descuento</span>
+    </ort-radio-card-button>
+  </ort-radio-group>
+  @if (applicationModeControl.invalid && (applicationModeControl.touched || facade.submitted())) {
+  <ort-error>Seleccioná una modalidad</ort-error>
+  } }
+</div>

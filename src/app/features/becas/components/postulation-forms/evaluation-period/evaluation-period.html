@@ -1,0 +1,25 @@
+<div class="scholarship-accordion__content" [formGroup]="facade.evaluationSection">
+  <p>
+    Seleccioná la fecha en la que querés rendir la prueba. Tenés que completar la información
+    requerida antes de la fecha de cierre de postulación indicada.
+  </p>
+
+  <ort-radio-group
+    formControlName="evaluationDate"
+    legend="Fecha de prueba"
+    orientation="vertical"
+    [required]="true">
+    <ort-radio-card-button class="inscription-radio-option" value="fecha1">
+      Viernes 13/06/2025
+      <span ortRadioSupportingText>Cierre de postulación: 24/05/2026</span>
+    </ort-radio-card-button>
+
+    <ort-radio-card-button class="inscription-radio-option" value="fecha2">
+      Viernes 11/07/2025
+      <span ortRadioSupportingText>Cierre de postulación: 04/07/2025</span>
+    </ort-radio-card-button>
+  </ort-radio-group>
+  @if (evaluationDateControl.invalid && (evaluationDateControl.touched || facade.submitted())) {
+  <ort-error>Seleccioná una fecha de prueba</ort-error>
+  }
+</div>
