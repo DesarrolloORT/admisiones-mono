@@ -21,6 +21,7 @@ public class AuthService : IAuthService
     private const string MensajeGenericoRecupero =
         "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
     private const string SISTEMA = "ADMISIONESWEB";
+    private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
@@ -155,10 +156,11 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(AutenticarUsuarioLDAPAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "LOGIN_LDAP_99",
                 nameof(AutenticarUsuarioLDAPAsync),
-                $"Error al autenticar usuario: {ex.Message}",
+                "Error al autenticar usuario.",
                 500,
                 default!);
         }
@@ -250,10 +252,11 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(RefrescarTokensAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "REFRESH_TOKEN_99",
                 nameof(RefrescarTokensAsync),
-                $"Error al refrescar tokens: {ex.Message}",
+                "Error al refrescar tokens.",
                 500,
                 default!);
         }
@@ -447,10 +450,11 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarPasswordAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "INI_PAS_99",
                 nameof(CompletarPasswordAsync),
-                $"Error al completar password inicial: {ex.Message}",
+                "Error al completar password inicial.",
                 500,
                 default!);
         }
@@ -657,10 +661,11 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(GenerarTokensParaPersonaAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "GEN_TOK_99",
                 nameof(GenerarTokensParaPersonaAsync),
-                $"Error al generar tokens: {ex.Message}",
+                "Error al generar tokens.",
                 500,
                 default!);
         }

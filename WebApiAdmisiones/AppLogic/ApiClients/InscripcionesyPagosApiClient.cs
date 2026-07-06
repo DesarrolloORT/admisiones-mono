@@ -588,11 +588,11 @@ namespace AppLogic.ApiClients
             if (ex is HttpRequestException)
             {
                 _logger.LogError(ex, "Error de red");
-                return OperationResult<T>.IsFailed("API_NETWORK", methodName, $"Error de red: {ex.Message}", 503, default!);
+                return OperationResult<T>.IsFailed("API_NETWORK", methodName, "Error de red al comunicarse con el servicio.", 503, default!);
             }
 
             _logger.LogError(ex, "Error inesperado");
-            return OperationResult<T>.IsFailed("API_UNEXPECTED", methodName, $"Error: {ex.Message}", 500, default!);
+            return OperationResult<T>.IsFailed("API_UNEXPECTED", methodName, "Error inesperado al comunicarse con el servicio.", 500, default!);
         }
 
         private static List<OfertaInscripcionDto> MapearOfertasInscripcion(List<OfertaInscripcionApiResponse>? ofertasApi)

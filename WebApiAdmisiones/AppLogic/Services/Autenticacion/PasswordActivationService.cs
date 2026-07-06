@@ -12,6 +12,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Utilities;
@@ -34,6 +35,9 @@ public class PasswordActivationService : IPasswordActivationService
     private readonly EnvioMail _envioMail;
     private readonly IHashTokenStore _hashTokenStore;
     private readonly IDatabase _redisDb;
+    private readonly ILogger<PasswordActivationService>? _logger;
+
+    private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -46,13 +50,15 @@ public class PasswordActivationService : IPasswordActivationService
         IConfiguration configuration,
         EnvioMail envioMail,
         IHashTokenStore hashTokenStore,
-        IConnectionMultiplexer redis)
+        IConnectionMultiplexer redis,
+        ILogger<PasswordActivationService>? logger = null)
     {
         _uowFactory = uowFactory;
         _configuration = configuration;
         _envioMail = envioMail;
         _hashTokenStore = hashTokenStore;
         _redisDb = redis.GetDatabase();
+        _logger = logger;
     }
 
     private sealed record PasswordMailFlow(
@@ -137,10 +143,11 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(EnviarMailNuevaPersonaAsync));
             return OperationResult<object?>.IsFailed(
                 "ACT_NUP_99",
                 nameof(EnviarMailNuevaPersonaAsync),
-                $"Error al enviar link de activación para nueva persona: {ex.Message}",
+                "Error al enviar link de activación para nueva persona.",
                 500);
         }
     }
@@ -208,10 +215,11 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, originMethod);
             return OperationResult<object?>.IsFailed(
                 flow.CodigoErrorGeneral,
                 originMethod,
-                $"Error al enviar link de {flow.Descripcion}: {ex.Message}",
+                $"Error al enviar link de {flow.Descripcion}.",
                 500);
         }
     }
@@ -283,10 +291,11 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(ActivarLinkPasswordAsync));
             return Task.FromResult(OperationResult<DtoPasswordActivationSession>.IsFailed(
                 "ACT_LINK_99",
                 nameof(ActivarLinkPasswordAsync),
-                $"Error al activar link de contraseña: {ex.Message}",
+                "Error al activar link de contraseña.",
                 500,
                 default!));
         }
@@ -473,10 +482,11 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(ValidarSessionToken));
             return OperationResult<DtoValidatedSession>.IsFailed(
                 "ACT_SES_99",
                 nameof(ValidarSessionToken),
-                $"Error al validar sesión temporal: {ex.Message}",
+                "Error al validar sesión temporal.",
                 500,
                 default!);
         }
