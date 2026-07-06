@@ -7,11 +7,13 @@ namespace WebApiAdmisiones.Security.Captcha
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<RecaptchaService>? _logger;
 
-        public RecaptchaService(HttpClient httpClient, IConfiguration configuration)
+        public RecaptchaService(HttpClient httpClient, IConfiguration configuration, ILogger<RecaptchaService>? logger = null)
         {
             _httpClient = httpClient;
             _configuration = configuration;
+            _logger = logger;
         }
 
         private const string SecretKeyEnvironmentVariable = "RECAPTCHA_SECRET_KEY";
@@ -106,10 +108,11 @@ namespace WebApiAdmisiones.Security.Captcha
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "Error inesperado en {Metodo}", nameof(ValidarConScoreAsync));
                 return OperationResult<double>.IsFailed(
                     "AUTH_CAPTCHA_99",
                     nameof(ValidarConScoreAsync),
-                    $"Error al validar captcha: {ex.Message}",
+                    "Error al validar captcha.",
                     500,
                     0d);
             }

@@ -13,6 +13,7 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
@@ -29,6 +30,9 @@ namespace AppLogic.Services.Registro
         private readonly ILdap _ldap;
         private readonly IPasswordActivationService? _passwordActivationService;
         private readonly IServiceScopeFactory? _serviceScopeFactory;
+        private readonly ILogger<RegistroService>? _logger;
+
+        private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
         public RegistroService(
             ICatalogosService catalogosService,
@@ -36,13 +40,15 @@ namespace AppLogic.Services.Registro
             IDbConnectionContext dbConnectionContext,
             ILdap ldap,
             IPasswordActivationService? passwordActivationService = null,
-            IServiceScopeFactory? serviceScopeFactory = null)
+            IServiceScopeFactory? serviceScopeFactory = null,
+            ILogger<RegistroService>? logger = null)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _ldap = ldap;
             _passwordActivationService = passwordActivationService;
             _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
         public async Task<OperationResult<DtoRegistroEvaluacionResponse>> EvaluarDocumentoAsync(DtoRegistroEvaluarDocumentoRequest request)
@@ -421,10 +427,11 @@ namespace AppLogic.Services.Registro
             catch (Exception ex)
             {
                 uow.Rollback();
+                _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
                 return OperationResult<long>.IsFailed(
                     "REG_PERSONA_99",
                     nameof(CompletarNuevaPersonaAsync),
-                    $"Error al crear la persona: {ex.Message}",
+                    "Error al crear la persona.",
                     500,
                     default);
             }
@@ -512,10 +519,11 @@ namespace AppLogic.Services.Registro
             catch (Exception ex)
             {
                 uow.Rollback();
+                _logger?.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarNuevaPersonaAsync));
                 return OperationResult<object?>.IsFailed(
                     "REG_PERSONA_99",
                     nameof(ConfirmarNuevaPersonaAsync),
-                    $"Error al crear la persona: {ex.Message}",
+                    "Error al crear la persona.",
                     500);
             }
 
@@ -546,10 +554,11 @@ namespace AppLogic.Services.Registro
             catch (Exception ex)
             {
                 uow.Rollback();
+                _logger?.LogError(ex, ErrorInesperadoLog, originMethod);
                 return OperationResult<object?>.IsFailed(
                     "REG_ADMISIONES_99",
                     originMethod,
-                    $"Error al registrar la admisión: {ex.Message}",
+                    "Error al registrar la admisión.",
                     500);
             }
 
@@ -579,10 +588,11 @@ namespace AppLogic.Services.Registro
             catch (Exception ex)
             {
                 uow.Rollback();
+                _logger?.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarSolicitudAltaAsync));
                 return OperationResult<object?>.IsFailed(
                     "REG_SOLICITUD_99",
                     nameof(ConfirmarSolicitudAltaAsync),
-                    $"Error al crear la solicitud de alta: {ex.Message}",
+                    "Error al crear la solicitud de alta.",
                     500);
             }
         }

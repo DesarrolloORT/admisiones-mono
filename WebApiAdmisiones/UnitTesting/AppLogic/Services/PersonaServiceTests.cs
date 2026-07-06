@@ -823,7 +823,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("CAM_PAS_99", result.ErrorCode);
             Assert.Contains("Error al cambiar contraseña", result.Message);
-            Assert.Contains("LDAP service unavailable", result.Message);
+            // El detalle interno de la excepción NO debe filtrarse al cliente.
+            Assert.DoesNotContain("LDAP service unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
         }
 

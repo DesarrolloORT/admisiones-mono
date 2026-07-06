@@ -10,6 +10,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
@@ -18,7 +19,8 @@ namespace AppLogic.Services.Personas
     public class PersonaService(
         IUnitOfWorkFactory uowFactory,
         ILdap ldap,
-        IDbConnectionContext dbConnectionContext)
+        IDbConnectionContext dbConnectionContext,
+        ILogger<PersonaService>? logger = null)
         : IPersonaService
     {
         public OperationResult<DtoDatosPersona> ObtenerDatosPersona(long codigoPersona)
@@ -175,10 +177,11 @@ namespace AppLogic.Services.Personas
             }
             catch (Exception ex)
             {
+                logger?.LogError(ex, "Error inesperado en {Metodo}", nameof(CambiarPasswordAsync));
                 return OperationResult<object>.IsFailed(
                     "CAM_PAS_99",
                     nameof(CambiarPasswordAsync),
-                    $"Error al cambiar contraseña: {ex.Message}",
+                    "Error al cambiar contraseña.",
                     500,
                     default!);
             }

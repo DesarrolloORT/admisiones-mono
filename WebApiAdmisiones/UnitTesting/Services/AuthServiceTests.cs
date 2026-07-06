@@ -327,7 +327,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("LOGIN_LDAP_99", result.ErrorCode);
             Assert.Contains("Error al autenticar usuario", result.Message);
-            Assert.Contains("Database unavailable", result.Message);
+            // El detalle interno de la excepción NO debe filtrarse al cliente.
+            Assert.DoesNotContain("Database unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
         }
 
@@ -499,7 +500,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("REFRESH_TOKEN_99", result.ErrorCode);
             Assert.Contains("Error al refrescar tokens", result.Message);
-            Assert.Contains("Hash service unavailable", result.Message);
+            // El detalle interno de la excepción NO debe filtrarse al cliente.
+            Assert.DoesNotContain("Hash service unavailable", result.Message);
             Assert.Equal(500, result.HttpCode);
         }
 
