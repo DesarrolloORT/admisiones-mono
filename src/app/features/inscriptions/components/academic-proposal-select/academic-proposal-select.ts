@@ -1,7 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit } from '@angular/core';
 import type { FormGroup } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { OrtIconModule, OrtRadioModule, OrtSpinnerModule } from '@desarrolloort/components';
+import {
+  OrtCardModule,
+  OrtIconModule,
+  OrtRadioModule,
+  OrtSpinnerModule,
+} from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import type {
   AcademicProposalForm,
@@ -15,7 +21,14 @@ import {
 
 @Component({
   selector: 'app-academic-proposal-select',
-  imports: [OrtIconModule, OrtRadioModule, OrtSpinnerModule, ReactiveFormsModule, ResponsiveSelect],
+  imports: [
+    OrtCardModule,
+    OrtIconModule,
+    OrtRadioModule,
+    OrtSpinnerModule,
+    ReactiveFormsModule,
+    ResponsiveSelect,
+  ],
   providers: [AcademicProposalSelection],
   templateUrl: './academic-proposal-select.html',
   styleUrl: './academic-proposal-select.scss',
@@ -24,6 +37,13 @@ import {
 export class AcademicProposalSelect implements OnInit {
   public readonly form = input.required<FormGroup<AcademicProposalForm>>();
   public readonly selection = input(inject(AcademicProposalSelection));
+  private readonly breakpointService = inject(BreakpointService);
+
+  protected readonly isMobile = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
+  });
 
   protected readonly careerOptionGroups = computed(() =>
     groupCareerOptions(this.selection().careerOptions())
