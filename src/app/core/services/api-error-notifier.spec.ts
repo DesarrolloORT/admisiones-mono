@@ -26,4 +26,22 @@ describe('AppApiErrorNotifier', () => {
 
     expect(snackbar.error).toHaveBeenCalledWith('Los datos enviados no son válidos.');
   });
+
+  it('should not show a snackbar for missing resources', () => {
+    const snackbar = { error: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [AppApiErrorNotifier, { provide: SnackbarHandler, useValue: snackbar }],
+    });
+
+    TestBed.inject(AppApiErrorNotifier).notify({
+      status: 404,
+      message: 'Documento no encontrado.',
+      action: 'notify',
+      isOperationResult: true,
+      originalError: new Error('not found'),
+    });
+
+    expect(snackbar.error).not.toHaveBeenCalled();
+  });
 });

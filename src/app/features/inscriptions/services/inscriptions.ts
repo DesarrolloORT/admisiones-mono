@@ -10,6 +10,8 @@ import type {
   InscripcionIdentityUploadFile,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
+  InscripcionPaymentPayload,
+  InscripcionPaymentResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
@@ -82,6 +84,10 @@ export class Inscripciones {
     payload: InscripcionConfirmPreEnrollmentPayload
   ): Observable<InscripcionPreEnrollmentResponse> {
     return this.endpoint.confirmPreEnrollment(payload);
+  }
+
+  public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {
+    return this.endpoint.pay(payload);
   }
 
   public registerProductInterest(payload: InscripcionProductInterestPayload): Observable<boolean> {
