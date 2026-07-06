@@ -9,7 +9,7 @@ import { ScholarshipProposalFacade } from '../../../facades/scholarship-proposal
   selector: 'app-evaluation-period',
   imports: [ReactiveFormsModule, OrtRadioModule, OrtError],
   templateUrl: './evaluation-period.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EvaluationPeriod {

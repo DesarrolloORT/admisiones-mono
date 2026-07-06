@@ -45,7 +45,7 @@ type MonthlyExpense = {
     OrtError,
   ],
   templateUrl: './declaration.html',
-  styleUrls: ['../../../pages/fbr/fbr.scss', './declaration.scss'],
+  styleUrls: ['../../../pages/scholarship-process/scholarship-process.scss', './declaration.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Declaration {

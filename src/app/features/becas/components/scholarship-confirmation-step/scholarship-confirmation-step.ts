@@ -23,7 +23,10 @@ import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions
     OrtError,
   ],
   templateUrl: './scholarship-confirmation-step.html',
-  styleUrls: ['./scholarship-confirmation-step.scss', '../../pages/fbr/fbr.scss'],
+  styleUrls: [
+    './scholarship-confirmation-step.scss',
+    '../../pages/scholarship-process/scholarship-process.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipConfirmationStep {

@@ -9,7 +9,7 @@ import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal
   selector: 'app-personal-data',
   imports: [ReactiveFormsModule, OrtFormFieldModule, OrtRadioModule],
   templateUrl: './personal-data.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PersonalData {

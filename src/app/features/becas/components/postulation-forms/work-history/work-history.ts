@@ -9,7 +9,7 @@ import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal
   selector: 'app-work-history',
   imports: [OrtRadioModule, OrtError, ReactiveFormsModule],
   templateUrl: './work-history.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkHistory {

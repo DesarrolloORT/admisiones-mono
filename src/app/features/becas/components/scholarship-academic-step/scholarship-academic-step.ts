@@ -27,7 +27,7 @@ import { Inscription } from '../postulation-forms/inscription/inscription';
   ],
   providers: [ScholarshipProposalFacade],
   templateUrl: './scholarship-academic-step.html',
-  styleUrls: ['../../pages/fbr/fbr.scss'],
+  styleUrls: ['../../pages/scholarship-process/scholarship-process.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipAcademicStep {

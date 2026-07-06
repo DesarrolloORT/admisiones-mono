@@ -9,7 +9,7 @@ import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal
   selector: 'app-education-info-fcl',
   imports: [OrtRadioModule, OrtError, ReactiveFormsModule],
   templateUrl: './education-info-fcl.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationInfoFcl {

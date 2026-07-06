@@ -35,7 +35,7 @@ import { WorkHistory } from '../postulation-forms/work-history/work-history';
   ],
   providers: [ScholarshipPersonalFacade],
   templateUrl: './scholarship-personal-step.html',
-  styleUrls: ['../../pages/fbr/fbr.scss'],
+  styleUrls: ['../../pages/scholarship-process/scholarship-process.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipPersonalStep {

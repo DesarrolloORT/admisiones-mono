@@ -14,7 +14,7 @@ import { ScholarshipProposalFacade } from '../../../facades/scholarship-proposal
   selector: 'app-inscription',
   imports: [ReactiveFormsModule, OrtFormFieldModule, OrtInputModule, OrtRadioModule, OrtError],
   templateUrl: './inscription.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Inscription {

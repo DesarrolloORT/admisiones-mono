@@ -23,7 +23,7 @@ import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal
     ReactiveFormsModule,
   ],
   templateUrl: './education-info-fbr.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../pages/scholarship-process/scholarship-process.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationInfoFbr {
