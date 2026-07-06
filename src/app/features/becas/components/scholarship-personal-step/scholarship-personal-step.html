@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="scholarship-postulation-title" class="scholarship-screen">
   <header class="scholarship-screen__header">
     <h1 id="scholarship-postulation-title">Información personal</h1>
@@ -13,12 +14,22 @@
   <form>
     <ort-accordion>
       @if (facade.isSectionVisible('datos-personales')) {
-      <ort-accordion-item [expanded]="true">
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('datos-personales').isComplete()"
+        [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="person" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="facade.sectionStatus('datos-personales').isComplete() ? 'check_circle' : 'person'" />
             Datos personales
           </ort-accordion-title>
+          @if (facade.sectionStatus('datos-personales').hasError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
         <ort-accordion-body>
           <app-personal-data />
@@ -26,12 +37,22 @@
       </ort-accordion-item>
       }
 
-      <ort-accordion-item [expanded]="!facade.isSectionVisible('datos-personales')">
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus(facade.educationSectionId()).isComplete()"
+        [expanded]="!facade.isSectionVisible('datos-personales')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="auto_stories" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="facade.sectionStatus(facade.educationSectionId()).isComplete() ? 'check_circle' : 'auto_stories'" />
             Información educativa
           </ort-accordion-title>
+          @if (facade.sectionStatus(facade.educationSectionId()).hasError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
 
         <ort-accordion-body>
@@ -46,24 +67,42 @@
       </ort-accordion-item>
 
       @if (facade.isSectionVisible('antecedentes-laborales')) {
-      <ort-accordion-item>
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('antecedentes-laborales').isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="work_outline" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="facade.sectionStatus('antecedentes-laborales').isComplete() ? 'check_circle' : 'work_outline'" />
             Antecedentes laborales
           </ort-accordion-title>
+          @if (facade.sectionStatus('antecedentes-laborales').hasError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
         <ort-accordion-body>
           <app-work-history />
         </ort-accordion-body>
       </ort-accordion-item>
       } @if (facade.isSectionVisible('declaracion')){
-      <ort-accordion-item>
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('declaracion').isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon name="description" ortAccordionTitleLeadingIcon size="md" />
+            <ort-icon
+              ortAccordionTitleLeadingIcon
+              size="md"
+              [name]="facade.sectionStatus('declaracion').isComplete() ? 'check_circle' : 'description'" />
             Declaración jurada
           </ort-accordion-title>
+          @if (facade.sectionStatus('declaracion').hasError()) {
+          <ort-accordion-description>
+            <ort-error>Información pendiente</ort-error>
+          </ort-accordion-description>
+          }
         </ort-accordion-header>
         <ort-accordion-body>
           <app-declaration />
