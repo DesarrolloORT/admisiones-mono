@@ -9,6 +9,7 @@ import {
   postInscripcionesConfirmarPreInscripcionEndpoint,
   postInscripcionesEncuestaInicialEndpoint,
   postInscripcionesInteresProductoEndpoint,
+  postInscripcionesPagarEndpoint,
 } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaDocumentoEndpoint,
@@ -27,9 +28,13 @@ import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
+  InscripcionPaymentPayload,
+  InscripcionPaymentResponse,
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
+  MetodoPago,
+  MetodoPagoApi,
   SeccionEncuestaId,
 } from '../models/inscription-flow';
 
@@ -53,7 +58,7 @@ export class InscripcionesEndpoint {
           pagoPendiente: response.pagoPendiente
             ? {
                 idInscripcion: response.pagoPendiente.idInscripcion ?? null,
-                senia: response.pagoPendiente?.senia ?? null,
+                senia: response.pagoPendiente.senia ?? null,
                 saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
                 fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
                 resumen: this.toSummary(response.pagoPendiente.resumen),
@@ -137,7 +142,9 @@ export class InscripcionesEndpoint {
           tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
           encuesta: survey ? this.toInitialSurvey(survey) : null,
           universidadesConsideradas: survey?.universidadConsideradaIds ?? [],
+          universidadesConsideradasOtros: survey?.universidadConsideradaOtros ?? [],
           universidadesEducacionSuperior: survey?.universidadEducacionSuperiorIds ?? [],
+          universidadesEducacionSuperiorOtros: survey?.universidadEducacionSuperiorOtros ?? [],
           opcionesMotivosSeleccionados: survey?.motivoEleccionOrtIds ?? [],
           opcionesPublicidadSeleccionadas: survey?.publicidadOrtIds ?? [],
         };
@@ -178,7 +185,9 @@ export class InscripcionesEndpoint {
       trabajaActualmente: payload.trabajaActualmente,
       tipoJornadaId: payload.tipoJornadaId,
       universidadConsideradaIds: payload.universidadConsideradaIds,
+      universidadConsideradaOtros: payload.universidadConsideradaOtros,
       universidadEducacionSuperiorIds: payload.universidadEducacionSuperiorIds,
+      universidadEducacionSuperiorOtros: payload.universidadEducacionSuperiorOtros,
       publicidadOrtIds: payload.publicidadOrtIds,
       motivoEleccionOrtIds: payload.motivoEleccionOrtIds,
     };
@@ -217,8 +226,9 @@ export class InscripcionesEndpoint {
       .pipe(
         map(response => ({
           confirmada: response.confirmada === true,
+          idInscripcion: response.idInscripcion ?? null,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
-          seniaInscripcion: response?.senia ?? null,
+          seniaInscripcion: response.senia ?? null,
           saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
           resumen: response.resumen
             ? {
@@ -227,6 +237,34 @@ export class InscripcionesEndpoint {
                 turno: response.resumen.turno ?? null,
               }
             : null,
+        })),
+        tap(() => this.api.clearCache())
+      );
+  }
+
+  public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {
+    return this.api
+      .request(postInscripcionesPagarEndpoint, {
+        body: {
+          idInscripto: payload.idInscripcion,
+          tipoPago: toApiPaymentMethod(payload.metodoPago),
+          idBancoSistarbanc:
+            payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
+        },
+        showLoader: true,
+      })
+      .pipe(
+        map(response => ({
+          success: true,
+          resultado: response.resultado ?? null,
+          urlPago: response.urlPago ?? null,
+          mensajes:
+            response.mensajes?.map(message => ({
+              clave: message.clave ?? null,
+              valor: message.valor ?? null,
+            })) ?? [],
+          message: null,
+          errorCode: null,
         })),
         tap(() => this.api.clearCache())
       );
@@ -256,11 +294,12 @@ export class InscripcionesEndpoint {
       cursaSecundaria: survey.cursaSecundariaActualmente ?? null,
       orientacionBachilleratoId: survey.orientacionBachilleratoId ?? null,
       anioBachilleratoId: survey.anioBachillerato ?? null,
+      recursaAnioBachillerato: survey.recursaAnioBachillerato ?? null,
+      vecesRecursaAnioBachillerato: survey.vecesRecursaAnioBachillerato ?? null,
       institucionSecundariaId: survey.institucionSecundariaId ?? null,
       ubicacionSecundariaId: survey.ubicacionUltimoAnioSecundariaId ?? null,
       nombreInstitucionSecundaria: survey.nombreInstitucionSecundaria ?? null,
       estadoEducacionSuperiorPreviaId: survey.estadoEducacionSuperiorPreviaId ?? null,
-      tieneEducacionSuperior: toHigherEducationFlag(survey.estadoEducacionSuperiorPreviaId),
       nivelFormacionMadreId: survey.nivelFormacionMadreTutorId ?? null,
       nivelFormacionPadreId: survey.nivelFormacionPadreTutorId ?? null,
       madreEgresadaOrt: survey.madreTutorEgresadoOrt ?? null,
@@ -269,13 +308,7 @@ export class InscripcionesEndpoint {
       anioDecisionOrtId: survey.anioDecisionOrtId ?? null,
       seInformoEnOtrasUniversidades: survey.seInformoEnOtrasUniversidades ?? null,
       apoyoDecisionId: survey.apoyoDecisionId ?? null,
-      apoyoPadres: null,
-      apoyoOtros: null,
-      apoyoAmigosFamiliares: null,
-      apoyoNadie: null,
-      apoyoAmigoPropuesta: null,
       nivelDecisionId: survey.nivelDecisionId ?? null,
-      decisionConfirmada: toDecisionConfirmed(survey.nivelDecisionId),
       tuvoAsesoramientoOrt: survey.tuvoAsesoramientoOrt ?? null,
       valoracionAsesoramientoOrt: survey.valoracionAsesoramientoOrtId ?? null,
       visitoSitioWebOrt: survey.visitoSitioWebOrt ?? null,
@@ -313,6 +346,23 @@ export class InscripcionesEndpoint {
   }
 }
 
+function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
+  switch (method) {
+    case 'cuenta-personal':
+      return 'CUENTA_PERSONAL';
+    case 'abitab':
+      return 'ABITAB';
+    case 'paganza':
+      return 'PAGANZA';
+    case 'banred':
+      return 'BANRED';
+    case 'geopay':
+      return 'GEOPAY';
+    case 'cuenta-bancaria':
+      return 'SISTARBANC';
+  }
+}
+
 function toSurveySection(value: string | null | undefined): SeccionEncuestaId | null {
   switch (value) {
     case 'educacion':
@@ -325,15 +375,4 @@ function toSurveySection(value: string | null | undefined): SeccionEncuestaId | 
     default:
       return null;
   }
-}
-
-function toHigherEducationFlag(value: number | null | undefined): boolean | null {
-  if (value === null || value === undefined) return null;
-  return value === 1;
-}
-
-function toDecisionConfirmed(value: number | null | undefined): boolean | null {
-  if (value === 1) return true;
-  if (value === 2) return false;
-  return null;
 }

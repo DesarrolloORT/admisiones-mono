@@ -10,6 +10,7 @@ import {
   postInscripcionesConfirmarPreInscripcionEndpoint,
   postInscripcionesEncuestaInicialEndpoint,
   postInscripcionesInteresProductoEndpoint,
+  postInscripcionesPagarEndpoint,
 } from '../../../shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaDocumentoEndpoint,
@@ -167,10 +168,14 @@ describe('InscripcionesEndpoint', () => {
           procesoId: 200,
           estado: 'completa',
           cursaSecundariaActualmente: true,
+          recursaAnioBachillerato: true,
+          vecesRecursaAnioBachillerato: 2,
           estadoEducacionSuperiorPreviaId: 1,
           nivelDecisionId: 1,
           universidadConsideradaIds: [10],
+          universidadConsideradaOtros: ['Otra consultada'],
           universidadEducacionSuperiorIds: [20],
+          universidadEducacionSuperiorOtros: ['Otra superior'],
           motivoEleccionOrtIds: [5],
           publicidadOrtIds: [7],
         },
@@ -187,12 +192,15 @@ describe('InscripcionesEndpoint', () => {
           comienzoId: 200,
           completa: true,
           cursaSecundaria: true,
+          recursaAnioBachillerato: true,
+          vecesRecursaAnioBachillerato: 2,
           estadoEducacionSuperiorPreviaId: 1,
           nivelDecisionId: 1,
-          decisionConfirmada: true,
         }),
         universidadesConsideradas: [10],
+        universidadesConsideradasOtros: ['Otra consultada'],
         universidadesEducacionSuperior: [20],
+        universidadesEducacionSuperiorOtros: ['Otra superior'],
         opcionesMotivosSeleccionados: [5],
         opcionesPublicidadSeleccionadas: [7],
       })
@@ -255,7 +263,9 @@ describe('InscripcionesEndpoint', () => {
       trabajaActualmente: null,
       tipoJornadaId: null,
       universidadConsideradaIds: null,
+      universidadConsideradaOtros: null,
       universidadEducacionSuperiorIds: null,
+      universidadEducacionSuperiorOtros: null,
       publicidadOrtIds: null,
       motivoEleccionOrtIds: null,
     };
@@ -267,6 +277,8 @@ describe('InscripcionesEndpoint', () => {
         carreraId: 20,
         procesoId: 200,
         cursaSecundariaActualmente: null,
+        universidadConsideradaOtros: null,
+        universidadEducacionSuperiorOtros: null,
       }),
       showLoader: true,
     });
@@ -277,6 +289,7 @@ describe('InscripcionesEndpoint', () => {
     apiMock.request.mockReturnValueOnce(
       of({
         confirmada: true,
+        idInscripcion: 1072704,
         fechaVencimientoPago: '2027-04-15',
         senia: 21000,
         estadoCuenta: { saldoActual: 70000 },
@@ -287,6 +300,7 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.confirmPreEnrollment(payload))).resolves.toEqual({
       confirmada: true,
+      idInscripcion: 1072704,
       fechaVencimientoPago: '2027-04-15',
       seniaInscripcion: 21000,
       saldoCuenta: 70000,
@@ -299,6 +313,87 @@ describe('InscripcionesEndpoint', () => {
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
+  it('maps bank account payment to Sistarbanc payload', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        resultado: 'pendiente',
+        urlPago: 'https://pagos.example/sistarbanc',
+        mensajes: [{ clave: 'factura', valor: 'Creada' }],
+      })
+    );
+
+    await expect(
+      firstValueFrom(
+        endpoint.pay({
+          idInscripcion: 1072704,
+          metodoPago: 'cuenta-bancaria',
+          idBancoSistarbanc: 'brou',
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      resultado: 'pendiente',
+      urlPago: 'https://pagos.example/sistarbanc',
+      mensajes: [{ clave: 'factura', valor: 'Creada' }],
+      message: null,
+      errorCode: null,
+    });
+    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesPagarEndpoint, {
+      body: {
+        idInscripto: 1072704,
+        tipoPago: 'SISTARBANC',
+        idBancoSistarbanc: 'brou',
+      },
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
+  it('maps each payment method without leaking generated contracts', async () => {
+    apiMock.request.mockReturnValue(of({}));
+
+    await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
+    );
+    await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null })
+    );
+    await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'paganza', idBancoSistarbanc: null })
+    );
+    await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'banred', idBancoSistarbanc: null })
+    );
+    await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'geopay', idBancoSistarbanc: null })
+    );
+
+    expect(apiMock.request).toHaveBeenNthCalledWith(
+      1,
+      postInscripcionesPagarEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'CUENTA_PERSONAL' }) })
+    );
+    expect(apiMock.request).toHaveBeenNthCalledWith(
+      2,
+      postInscripcionesPagarEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'ABITAB' }) })
+    );
+    expect(apiMock.request).toHaveBeenNthCalledWith(
+      3,
+      postInscripcionesPagarEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'PAGANZA' }) })
+    );
+    expect(apiMock.request).toHaveBeenNthCalledWith(
+      4,
+      postInscripcionesPagarEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'BANRED' }) })
+    );
+    expect(apiMock.request).toHaveBeenNthCalledWith(
+      5,
+      postInscripcionesPagarEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'GEOPAY' }) })
+    );
+  });
   it('maps product interest payload and boolean response', async () => {
     const payload = { idOferta: 300, idProcesoSeleccionado: 200, idProducto: 20 };
 

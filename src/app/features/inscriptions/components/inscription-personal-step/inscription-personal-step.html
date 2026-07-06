@@ -89,24 +89,54 @@
               <p class="inscription-field-error" id="school-year-error" role="alert">
                 Seleccioná una opción
               </p>
-              } @if (facade.shouldAskBaccalaureateType()) {
-              <app-responsive-select
-                errorText="Seleccioná una opción"
-                formControlName="tipoBachillerato"
-                label="Orientación"
-                [options]="facade.baccalaureateOptions()" />
-              @if (facade.educationForm.controls.tipoBachillerato.touched &&
-              facade.educationForm.controls.tipoBachillerato.hasError('required')) {
-              <p class="inscription-field-error" id="baccalaureate-type-error" role="alert">
-                Seleccioná una opción
-              </p>
-              } @if (facade.orientationOptions().length > 0) {
+              } @if (facade.shouldAskBaccalaureateOrientation()) {
               <app-responsive-select
                 errorText="Seleccioná una opción"
                 formControlName="orientacion"
                 label="Orientación"
                 [options]="facade.orientationOptions()" />
-              } }
+              @if (facade.educationForm.controls.orientacion.touched &&
+              facade.educationForm.controls.orientacion.hasError('required')) {
+              <p class="inscription-field-error" id="baccalaureate-orientation-error" role="alert">
+                Seleccioná una opción
+              </p>
+              } } }
+
+              <ort-radio-group
+                class="inscription-choice-list"
+                formControlName="recursaAnioBachillerato"
+                legend="¿Recursaste algún año de bachillerato?"
+                name="baccalaureate-repeat"
+                [aria-describedby]="
+                  facade.educationForm.controls.recursaAnioBachillerato.touched &&
+                  facade.educationForm.controls.recursaAnioBachillerato.hasError('required')
+                    ? 'baccalaureate-repeat-error'
+                    : null
+                "
+                [orientation]="radioGroupOrientation()"
+                [required]="true">
+                <ort-radio-button value="si">Sí</ort-radio-button>
+                <ort-radio-button value="no">No</ort-radio-button>
+              </ort-radio-group>
+              @if (facade.educationForm.controls.recursaAnioBachillerato.touched &&
+              facade.educationForm.controls.recursaAnioBachillerato.hasError('required')) {
+              <p class="inscription-field-error" id="baccalaureate-repeat-error" role="alert">
+                Seleccioná una opción
+              </p>
+              } @if (facade.shouldAskRecursaCount()) {
+              <ort-form-field>
+                <ort-label>¿Cuántas veces?</ort-label>
+                <input
+                  formControlName="vecesRecursaAnioBachillerato"
+                  ortNumberInput
+                  [allowNegative]="false"
+                  [decimals]="0" />
+                @if (facade.educationForm.controls.vecesRecursaAnioBachillerato.touched &&
+                facade.educationForm.controls.vecesRecursaAnioBachillerato.invalid) {
+                <ort-error>Ingresá una cantidad mayor a 0</ort-error>
+                }
+              </ort-form-field>
+              }
 
               <ort-radio-group
                 class="inscription-choice-list"
@@ -156,7 +186,7 @@
                 <ort-error>Ingresá la institución educativa</ort-error>
                 }
               </ort-form-field>
-              } }
+              }
             </section>
 
             <ort-divider class="inscription-section-divider" decorative />
@@ -196,7 +226,17 @@
                 [multiple]="true"
                 [options]="facade.higherEducationUniversityOptions()"
                 [searchable]="true" />
-              }
+              @if (facade.shouldAskHigherEducationOtherUniversity()) {
+              <ort-form-field>
+                <ort-label>¿Cuál?</ort-label>
+                <input formControlName="universidadEducacionSuperiorOtro" ortInput type="text" />
+                @if (facade.educationForm.controls.universidadEducacionSuperiorOtro.touched &&
+                facade.educationForm.controls.universidadEducacionSuperiorOtro.hasError('required'))
+                {
+                <ort-error>Ingresá la universidad</ort-error>
+                }
+              </ort-form-field>
+              } }
             </section>
 
             <ort-divider decorative />
@@ -392,7 +432,16 @@
               [multiple]="true"
               [options]="facade.universityOptions()"
               [searchable]="true" />
-            }
+            @if (facade.shouldAskInformedOtherUniversity()) {
+            <ort-form-field>
+              <ort-label>¿Cuál?</ort-label>
+              <input formControlName="universidadInformadaOtro" ortInput type="text" />
+              @if (facade.academicDecisionForm.controls.universidadInformadaOtro.touched &&
+              facade.academicDecisionForm.controls.universidadInformadaOtro.hasError('required')) {
+              <ort-error>Ingresá la universidad</ort-error>
+              }
+            </ort-form-field>
+            } }
 
             <ort-radio-group
               class="inscription-choice-list"
@@ -720,7 +769,8 @@
               class="inscription-subsection">
               <h4 id="identity-document-title">Documento de identidad</h4>
               <p id="identity-document-help">
-                Subí una imagen clara del frente y dorso de tu documento de identidad.
+                Subí una imagen clara del frente y dorso de tu cédula de identidad. En caso de ser
+                extranjero, podés utilizar el documento emitido por tu país de origen.
               </p>
               <ort-file-uploader
                 label="Frente del documento *"
