@@ -15,11 +15,18 @@
         [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              class="scholarship-accordion-item__icon"
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.inscriptionStatus.isComplete() ? 'check_circle' : 'contact_page'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [name]="facade.inscriptionStatus.isComplete() ? 'check_circle' : 'contact_page'" />
+              @if (facade.inscriptionStatus.hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Tu inscripción
           </ort-accordion-title>
           @if (facade.inscriptionStatus.hasError()) {
@@ -37,11 +44,18 @@
         [class.scholarship-accordion-item--complete]="facade.evaluationStatus.isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              class="scholarship-accordion-item__icon"
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.evaluationStatus.isComplete() ? 'check_circle' : 'calendar_month'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [name]="facade.evaluationStatus.isComplete() ? 'check_circle' : 'calendar_month'" />
+              @if (facade.evaluationStatus.hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Período de evaluación
           </ort-accordion-title>
           @if (facade.evaluationStatus.hasError()) {

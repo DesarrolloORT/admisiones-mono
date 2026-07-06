@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
 import {
   OrtAccordionModule,
+  OrtBadgeModule,
   OrtButtonModule,
   OrtError,
   OrtIconModule,
@@ -22,6 +23,7 @@ import { Inscription } from '../postulation-forms/inscription/inscription';
     ErrorAlert,
     Inscription,
     EvaluationPeriod,
+    OrtBadgeModule,
   ],
   providers: [ScholarshipProposalFacade],
   templateUrl: './scholarship-academic-step.html',

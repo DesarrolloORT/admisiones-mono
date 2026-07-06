@@ -1,5 +1,11 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
-import { OrtAccordionModule, OrtButton, OrtError, OrtIconModule } from '@desarrolloort/components';
+import {
+  OrtAccordionModule,
+  OrtBadgeModule,
+  OrtButton,
+  OrtError,
+  OrtIconModule,
+} from '@desarrolloort/components';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { ScholarshipPersonalFacade } from '../../facades/scholarship-personal';
@@ -25,6 +31,7 @@ import { WorkHistory } from '../postulation-forms/work-history/work-history';
     EducationInfoFcl,
     WorkHistory,
     ErrorAlert,
+    OrtBadgeModule,
   ],
   providers: [ScholarshipPersonalFacade],
   templateUrl: './scholarship-personal-step.html',

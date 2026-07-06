@@ -19,10 +19,18 @@
         [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.sectionStatus('datos-personales').isComplete() ? 'check_circle' : 'person'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [name]="facade.sectionStatus('datos-personales').isComplete() ? 'check_circle' : 'person'" />
+              @if (facade.sectionStatus('datos-personales').hasError()){
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Datos personales
           </ort-accordion-title>
           @if (facade.sectionStatus('datos-personales').hasError()) {
@@ -42,10 +50,18 @@
         [expanded]="!facade.isSectionVisible('datos-personales')">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.sectionStatus(facade.educationSectionId()).isComplete() ? 'check_circle' : 'auto_stories'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [name]="facade.sectionStatus(facade.educationSectionId()).isComplete() ? 'check_circle' : 'auto_stories'" />
+              @if (facade.sectionStatus(facade.educationSectionId()).hasError()){
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Información educativa
           </ort-accordion-title>
           @if (facade.sectionStatus(facade.educationSectionId()).hasError()) {
@@ -71,10 +87,17 @@
         [class.scholarship-accordion-item--complete]="facade.sectionStatus('antecedentes-laborales').isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.sectionStatus('antecedentes-laborales').isComplete() ? 'check_circle' : 'work_outline'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                size="md"
+                [name]="facade.sectionStatus('antecedentes-laborales').isComplete() ? 'check_circle' : 'work_outline'" />
+              @if (facade.sectionStatus('antecedentes-laborales').hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Antecedentes laborales
           </ort-accordion-title>
           @if (facade.sectionStatus('antecedentes-laborales').hasError()) {
@@ -92,10 +115,17 @@
         [class.scholarship-accordion-item--complete]="facade.sectionStatus('declaracion').isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
-            <ort-icon
-              ortAccordionTitleLeadingIcon
-              size="md"
-              [name]="facade.sectionStatus('declaracion').isComplete() ? 'check_circle' : 'description'" />
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                size="md"
+                [name]="facade.sectionStatus('declaracion').isComplete() ? 'check_circle' : 'description'" />
+              @if (facade.sectionStatus('declaracion').hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
             Declaración jurada
           </ort-accordion-title>
           @if (facade.sectionStatus('declaracion').hasError()) {
