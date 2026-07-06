@@ -3,7 +3,7 @@
   <ort-radio-group
     formControlName="selectedInscription"
     legend="Seleccioná una inscripción"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true"
     [value]="facade.selectedInscription()"
     (valueChange)="facade.onInscriptionSelectionChange($event)">
@@ -50,7 +50,7 @@
   <ort-radio-group
     formControlName="applicationMode"
     legend="Modalidad de postulación"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-card-button class="inscription-radio-option" value="con declaracion">
       Con declaración jurada

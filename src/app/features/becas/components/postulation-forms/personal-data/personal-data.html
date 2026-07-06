@@ -2,7 +2,7 @@
   <ort-radio-group
     formControlName="attendanceMode"
     legend="Si comenzás la carrera, ¿cómo asistirás?"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="montevideo">
       Residiré en Montevideo

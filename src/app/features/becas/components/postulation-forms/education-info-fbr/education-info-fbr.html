@@ -4,7 +4,7 @@
   <ort-radio-group
     formControlName="schoolLocation"
     legend="¿Dónde cursaste el último año de secundaria?"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="uruguay">Uruguay</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="exterior">
@@ -18,7 +18,7 @@
   <ort-radio-group
     formControlName="lastYear"
     legend="Indica el último año cursado"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="2ems">
       2º EMS (5º año)
@@ -34,7 +34,7 @@
   <ort-radio-group
     formControlName="universityLocation"
     legend="¿Dónde cursaste los estudios universitarios a revalidar?"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="uruguay">En Uruguay</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="exterior">

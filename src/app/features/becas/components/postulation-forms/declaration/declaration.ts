@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   OrtButton,
@@ -15,6 +15,7 @@ import {
   OrtRadioModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 import type { FamilyMemberGroup } from '../../../models/scholarship-personal-forms';
@@ -49,6 +50,8 @@ type MonthlyExpense = {
 })
 export class Declaration {
   protected readonly facade = inject(ScholarshipPersonalFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
   protected readonly declarationForm = this.facade.declarationForm;
   protected readonly familyMembers = this.declarationForm.controls
     .familyMembers as FormArray<FamilyMemberGroup>;
@@ -67,6 +70,12 @@ export class Declaration {
   protected readonly transportationExpensesControl =
     this.declarationForm.controls.transportationExpenses;
   protected readonly observationsControl = this.declarationForm.controls.observations;
+
+  protected readonly radioGroupOrientation = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
+  });
 
   openDialog: boolean = false;
 

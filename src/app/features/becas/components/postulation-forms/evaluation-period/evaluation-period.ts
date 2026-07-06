@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OrtError, OrtRadioModule } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { ScholarshipProposalFacade } from '../../../facades/scholarship-proposal';
 
@@ -13,5 +14,13 @@ import { ScholarshipProposalFacade } from '../../../facades/scholarship-proposal
 })
 export class EvaluationPeriod {
   protected readonly facade = inject(ScholarshipProposalFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
   protected readonly evaluationDateControl = this.facade.evaluationDateControl;
+
+  protected readonly radioGroupOrientation = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
+  });
 }

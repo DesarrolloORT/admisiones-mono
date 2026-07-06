@@ -7,7 +7,7 @@
   <ort-radio-group
     formControlName="evaluationDate"
     legend="Fecha de prueba"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-card-button class="inscription-radio-option" value="fecha1">
       Viernes 13/06/2025

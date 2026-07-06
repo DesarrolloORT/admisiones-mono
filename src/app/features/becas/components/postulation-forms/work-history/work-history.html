@@ -2,7 +2,7 @@
   <ort-radio-group
     formControlName="workHistory"
     legend="¿Contás con experiencia laboral?"
-    orientation="vertical"
+    [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="si">Si</ort-radio-button>
     <ort-radio-button class="inscription-radio-option" value="no">No</ort-radio-button>

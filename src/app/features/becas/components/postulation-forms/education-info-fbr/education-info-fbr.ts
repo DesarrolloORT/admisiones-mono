@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtError,
@@ -8,6 +8,7 @@ import {
   OrtInputModule,
   OrtRadioModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 
@@ -27,6 +28,8 @@ import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal
 })
 export class EducationInfoFbr {
   protected readonly facade = inject(ScholarshipPersonalFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
   protected readonly educationInfoFbrForm = this.facade.educationInfoFbrForm;
   protected readonly schoolLocationControl = this.educationInfoFbrForm.controls.schoolLocation;
   protected readonly lastYearControl = this.educationInfoFbrForm.controls.lastYear;
@@ -40,6 +43,12 @@ export class EducationInfoFbr {
     this.educationInfoFbrForm.controls.averageRevalidation;
   protected readonly revalidationFormFileControl =
     this.educationInfoFbrForm.controls.revalidationFormFile;
+
+  protected readonly radioGroupOrientation = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
+  });
 
   public onRevalidationFormFilesChanged(change: OrtFileUploaderChange): void {
     this.facade.setFileFlag(this.revalidationFormFileControl, change);
