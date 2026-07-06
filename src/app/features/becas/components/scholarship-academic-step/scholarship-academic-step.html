@@ -1,4 +1,3 @@
-<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 <section aria-labelledby="scholarship-academic-title" class="scholarship-screen">
   <header class="scholarship-screen__header">
     <h1 id="scholarship-academic-title">Postulación a beca</h1>
@@ -6,13 +5,13 @@
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
-  @if (showErrorAlert()) {
+  @if (facade.showErrorAlert()) {
   <app-error-alert />
   }
-  <form novalidate [formGroup]="inscriptionForm" (ngSubmit)="onContinue()">
+  <form>
     <ort-accordion>
       <ort-accordion-item
-        [class.scholarship-accordion-item--complete]="isInscriptionSectionComplete()"
+        [class.scholarship-accordion-item--complete]="facade.inscriptionStatus.isComplete()"
         [expanded]="true">
         <ort-accordion-header>
           <ort-accordion-title>
@@ -20,136 +19,46 @@
               class="scholarship-accordion-item__icon"
               ortAccordionTitleLeadingIcon
               size="md"
-              [name]="isInscriptionSectionComplete() ? 'check_circle' : 'contact_page'" />
+              [name]="facade.inscriptionStatus.isComplete() ? 'check_circle' : 'contact_page'" />
             Tu inscripción
           </ort-accordion-title>
-          @if (hasInscriptionSectionError()) {
+          @if (facade.inscriptionStatus.hasError()) {
           <ort-accordion-description>
             <ort-error>Información pendiente</ort-error>
           </ort-accordion-description>
           }
         </ort-accordion-header>
         <ort-accordion-body>
-          <div class="scholarship-accordion__content" formGroupName="inscription">
-            @if (academicStepData().length > 1) {
-            <ort-radio-group
-              formControlName="selectedInscription"
-              legend="Seleccioná una inscripción"
-              orientation="vertical"
-              [required]="true"
-              [value]="selectedInscription()"
-              (valueChange)="onInscriptionSelectionChange($event)">
-              @for (item of academicStepData(); track item.carrera) {
-              <ort-radio-card-button class="inscription-radio-option" [value]="item.carrera">
-                {{ item.carrera }}
-              </ort-radio-card-button>
-              }
-            </ort-radio-group>
-            @if (selectionControl.invalid && (selectionControl.touched || submitted())) {
-            <ort-error>Seleccioná una opción</ort-error>
-            } } @if (academicStepData().length === 1 || selectedInscription()) {
-            <ort-form-field>
-              <ort-label for="scholarship-career">Carrera</ort-label>
-              <input
-                aria-label="Carrera"
-                id="scholarship-career"
-                name="scholarship-career"
-                ortInput
-                readonly
-                [value]="selectedAcademicStepData().carrera" />
-            </ort-form-field>
-            <ort-form-field>
-              <ort-label for="scholarship-start">Comienzo</ort-label>
-              <input
-                aria-label="Comienzo"
-                id="scholarship-start"
-                name="scholarship-start"
-                ortInput
-                readonly
-                [value]="selectedAcademicStepData().comienzo" />
-            </ort-form-field>
-            <ort-form-field>
-              <ort-label for="scholarship-shift">Turno</ort-label>
-              <input
-                aria-label="Turno"
-                id="scholarship-shift"
-                name="scholarship-shift"
-                ortInput
-                readonly
-                [value]="selectedAcademicStepData().turno" />
-            </ort-form-field>
-            } @if (shouldShowApplicationMode()) {
-            <ort-radio-group
-              formControlName="applicationMode"
-              legend="Modalidad de postulación"
-              orientation="vertical"
-              [required]="true">
-              <ort-radio-card-button class="inscription-radio-option" value="con declaracion">
-                Con declaración jurada
-                <span ortRadioSupportingText>Beca de hasta 60% de descuento</span>
-              </ort-radio-card-button>
-
-              <ort-radio-card-button class="inscription-radio-option" value="sin declaracion">
-                Sin declaración jurada
-                <span ortRadioSupportingText>Beca de hasta 35% de descuento</span>
-              </ort-radio-card-button>
-            </ort-radio-group>
-            @if (applicationModeControl.invalid && (applicationModeControl.touched || submitted()))
-            {
-            <ort-error>Seleccioná una modalidad</ort-error>
-            } }
-          </div>
+          <app-inscription />
         </ort-accordion-body>
       </ort-accordion-item>
-      @if (variant() === 'fexaCon' || variant() === 'fexaSin' || variant() === 'fbc') {
+      @if (facade.shouldShowEvaluationSection()) {
       <ort-accordion-item
-        [class.scholarship-accordion-item--complete]="isEvaluationSectionComplete()">
+        [class.scholarship-accordion-item--complete]="facade.evaluationStatus.isComplete()">
         <ort-accordion-header>
           <ort-accordion-title>
             <ort-icon
               class="scholarship-accordion-item__icon"
               ortAccordionTitleLeadingIcon
               size="md"
-              [name]="isEvaluationSectionComplete() ? 'check_circle' : 'calendar_month'" />
+              [name]="facade.evaluationStatus.isComplete() ? 'check_circle' : 'calendar_month'" />
             Período de evaluación
           </ort-accordion-title>
-          @if (hasEvaluationSectionError()) {
+          @if (facade.evaluationStatus.hasError()) {
           <ort-accordion-description>
             <ort-error>Información pendiente</ort-error>
           </ort-accordion-description>
           }
         </ort-accordion-header>
         <ort-accordion-body>
-          <div class="scholarship-accordion__content" formGroupName="evaluation">
-            <p>
-              Seleccioná la fecha en la que querés rendir la prueba. Tenés que completar la
-              información requerida antes de la fecha de cierre de postulación indicada.
-            </p>
-
-            <ort-radio-group
-              formControlName="evaluationDate"
-              legend="Fecha de prueba"
-              orientation="vertical"
-              [required]="true">
-              <ort-radio-card-button class="inscription-radio-option" value="fecha1">
-                Viernes 13/06/2025
-                <span ortRadioSupportingText>Cierre de postulación: 24/05/2026</span>
-              </ort-radio-card-button>
-
-              <ort-radio-card-button class="inscription-radio-option" value="fecha2">
-                Viernes 11/07/2025
-                <span ortRadioSupportingText>Cierre de postulación: 04/07/2025</span>
-              </ort-radio-card-button>
-            </ort-radio-group>
-            @if (evaluationDateControl.invalid && (evaluationDateControl.touched || submitted())) {
-            <ort-error>Seleccioná una fecha de prueba</ort-error>
-            }
-          </div>
+          <app-evaluation-period />
         </ort-accordion-body>
       </ort-accordion-item>
       }
     </ort-accordion>
 
-    <button class="scholarship-step-button" ort-primary-button type="submit">Continuar</button>
+    <button class="scholarship-step-button" ort-primary-button type="button" (click)="onContinue()">
+      Continuar
+    </button>
   </form>
 </section>
