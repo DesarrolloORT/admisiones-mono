@@ -257,7 +257,24 @@ export class InscripcionSurveyFacade {
   }
 
   public updateIdentityFile(target: IdentityFileTarget, event: OrtFileUploaderChange): void {
-    const selectedFile = event.value.find(file => file.isValid)?.file ?? null;
+    const selected =
+      event.value.find(file => file.isValid && !file.isPreloaded) ??
+      event.value.find(file => file.isValid) ??
+      null;
+    const selectedFile = selected?.file ?? null;
+    const currentFile = this.identityFiles()[target];
+
+    if (
+      selected?.isPreloaded &&
+      currentFile &&
+      selectedFile &&
+      currentFile.name === selectedFile.name &&
+      currentFile.size === selectedFile.size &&
+      currentFile.type === selectedFile.type
+    ) {
+      return;
+    }
+
     this.identityFileTouched.add(target);
     this.preloadedIdentityFiles.update(files => ({ ...files, [target]: null }));
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));

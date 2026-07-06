@@ -103,6 +103,43 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.activeSection()).toBe('reglamento');
   });
 
+  it('does not upload preloaded identity files when only confirmation changes', () => {
+    const { survey, forms } = createFacade({
+      tieneDerechoEncuesta: false,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesConsideradasOtros: [],
+      universidadesEducacionSuperior: [],
+      universidadesEducacionSuperiorOtros: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+    });
+    const frente = preloadFile('frente.png');
+    const dorso = preloadFile('dorso.png');
+    const selfie = preloadFile('selfie.png');
+
+    applyIdentityPreload(survey, {
+      frente,
+      dorso,
+      selfie,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+    forms.academicForm.controls.turno.setValue('300');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).not.toHaveBeenCalled();
+    expect(uploadIdentityPhoto).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
+  });
   it('does not save the survey when work becomes complete', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: true,
@@ -508,6 +545,13 @@ describe('InscripcionSurveyFacade', () => {
         applyIdentityPreload(preload: InscripcionIdentityPreload): void;
       }
     ).applyIdentityPreload(preload);
+  }
+  function preloadedFileEvent(
+    file: File
+  ): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+    return { value: [{ isValid: true, isPreloaded: true, file }] } as Parameters<
+      InscripcionSurveyFacade['updateIdentityFile']
+    >[1];
   }
   function fileEvent(file: File): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
     return { value: [{ isValid: true, file }] } as Parameters<

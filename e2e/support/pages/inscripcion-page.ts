@@ -136,7 +136,9 @@ export class InscripcionPage {
     await expect(this.page.getByText('foto-persona.jpg', { exact: true })).toBeVisible();
     await expect(this.page.getByRole('textbox', { name: 'Vencimiento' })).toHaveValue('04/02/2030');
 
-    await this.continue();
+    await this.page
+      .getByRole('checkbox', { name: 'Verifico que la identidad es correcta' })
+      .check();
     await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
   }
   public async acceptRegulation(): Promise<void> {

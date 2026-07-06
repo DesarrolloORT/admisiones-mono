@@ -69,7 +69,7 @@ export function formatPaymentDeadline(value: string | null | undefined): string 
 }
 
 export function getReservationInstructions(method: MetodoPago | null): InstruccionReserva {
-  return method === 'paganza' || method === 'banred' || method === 'abitab'
+  return method === 'paganza' || method === 'abitab'
     ? RESERVATION_INSTRUCTIONS[method]
     : RESERVATION_INSTRUCTIONS.abitab;
 }

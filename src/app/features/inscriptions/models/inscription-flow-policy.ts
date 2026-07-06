@@ -9,7 +9,7 @@ import {
 
 const ESCENARIOS: readonly EscenarioInscripcion[] = ['primera-vez', 'parcial', 'encuesta-completa'];
 
-const METODOS_RESERVA: readonly MetodoPago[] = ['abitab', 'paganza', 'banred'];
+const METODOS_RESERVA: readonly MetodoPago[] = ['abitab', 'paganza'];
 
 export function parseEscenario(value: string | null): EscenarioInscripcion {
   return ESCENARIOS.includes(value as EscenarioInscripcion)

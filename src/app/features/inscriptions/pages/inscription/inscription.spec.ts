@@ -97,7 +97,9 @@ describe('Inscripcion', () => {
                 tieneDerechoEncuesta: true,
                 encuesta: null,
                 universidadesConsideradas: [],
+                universidadesConsideradasOtros: [],
                 universidadesEducacionSuperior: [],
+                universidadesEducacionSuperiorOtros: [],
                 opcionesMotivosSeleccionados: [],
                 opcionesPublicidadSeleccionadas: [],
               })

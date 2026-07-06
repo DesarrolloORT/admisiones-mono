@@ -19,9 +19,10 @@ el contrato backend sale de `inscription-flow-mappers.ts`.
 
 El flujo tiene 3 pasos. El **paso 1** (Propuesta academica) avanza con
 `POST /Inscripciones/InteresProducto`. El **paso 2** (Informacion personal)
-llama primero a `POST /Inscripciones/EncuestaInicial` y luego a
+guarda primero los cambios de identidad, luego llama a
+`POST /Inscripciones/EncuestaInicial` y finalmente a
 `POST /Inscripciones/ConfirmarPreInscripcion`. El **paso 3** (Confirmacion /
-pago) es UI local y por ahora no llama a `/Inscripciones/Pagar`.
+pago) llama a `POST /Inscripciones/Pagar`; el detalle vive en [PAYMENTS-FLOW.md](./PAYMENTS-FLOW.md).
 
 Antes de entrar al paso 2 se consulta `GET /Inscripciones/EncuestaInicial`.
 Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
@@ -36,14 +37,17 @@ flowchart TD
   B -->|Pendiente o en progreso| C[Encuesta + identidad + reglamento]
   B -->|Sin derecho| D[Identidad + reglamento]
   B -->|Completa| E[Identidad + reglamento]
-  C --> F[Guardar encuesta]
-  D --> G[Guardar identidad modificada]
-  E --> G
-  F --> G
-  G --> H[Confirmar preinscripcion]
-  H -->|Confirmada| I[Seleccion de pago]
-  H -->|Error| J[Mostrar error y permanecer]
-  I --> K[Estado terminal local]
+  C --> F[Identidad + reglamento]
+  D --> F
+  E --> F
+  F --> G[Subir documento y foto en paralelo]
+  G -->|Ambos OK| H[Guardar encuesta]
+  G -->|Error| M[Reabrir identidad sin check]
+  H -->|OK| I[Confirmar preinscripcion]
+  H -->|Error| K[Mostrar error y permanecer]
+  I -->|Confirmada| J[Seleccion de pago]
+  I -->|Error| K[Mostrar error y permanecer]
+  J --> L[Pago / estado terminal]
 ```
 
 ## Regla general de valores ocultos
@@ -81,7 +85,7 @@ Excepciones que si limpian valores:
 | Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
 | `situacionLaboral = trabaja`            | `tipoJornadaLaboral`                    | Requerido               | Conserva valor crudo                | `tipoJornadaId = null`                      |
 | Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
-| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | No existe payload de pago actualmente       |
+| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `idBancoSistarbanc`           |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -96,7 +100,7 @@ verificada al nodo exacto. No se publican enlaces generales ni placeholders.
   nuevo; si desaparece, se limpia.
 - La encuesta completa oculta sus secciones, pero identidad y reglamento
   mantienen sus propias reglas.
-- El paso de pago todavia no llama al backend; sus estados terminales son locales.
+- El paso de pago llama al backend; los pagos externos terminan en `pago-pendiente-externo` hasta que exista confirmación automática.
 - `resultado=en-proceso` fuerza el estado terminal "Inscripcion en proceso" para
   cualquier metodo.
 
@@ -191,6 +195,9 @@ Con `buscando` o `no-trabaja` no se muestra ningun hijo; el backend recibe
 `trabajaActualmente = false` y `tipoJornadaId = null`. El valor viejo de jornada
 queda crudo en el form pero se ignora.
 
+Completar Situacion laboral solo valida y marca el expansible. No dispara llamadas
+HTTP; la encuesta se guarda junto con el resto del cierre del paso 2.
+
 ### Identidad
 
 Se precargan datos desde `GET /Persona/Documento` y `GET /Persona/Foto`. La
@@ -220,9 +227,10 @@ solo si el usuario lo marca.
 
 ## Payload de encuesta inicial
 
-Se envia con `POST /Inscripciones/EncuestaInicial` al guardar parcial y antes de
-confirmar la preinscripcion, siempre que el usuario tenga derecho a encuesta.
-Todos los campos envian `null` cuando no aplican.
+Se envia con `POST /Inscripciones/EncuestaInicial` al cerrar el paso 2, despues de
+guardar correctamente los cambios de identidad y antes de confirmar la
+preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
+envian `null` cuando no aplican.
 
 - `carreraId`: `Number(carrera)`.
 - `comienzoId`: `Number(comienzo)`.
@@ -268,10 +276,11 @@ vuelve a esa seccion y no llama al backend de confirmacion.
 
 Orden de cierre:
 
-1. `POST /Inscripciones/EncuestaInicial`, si la persona tiene derecho a encuesta.
-2. `POST /Persona/SubirDocumento`, si se toco frente/dorso o cambio el vencimiento.
-3. `POST /Persona/SubirFoto`, si se toco la selfie.
-4. `POST /Inscripciones/ConfirmarPreInscripcion` con:
+1. En paralelo, `POST /Persona/SubirDocumento` si se toco frente/dorso o cambio
+   el vencimiento, y `POST /Persona/SubirFoto` si se toco la selfie.
+2. `POST /Inscripciones/EncuestaInicial`, solo si las cargas de identidad
+   requeridas terminaron correctamente y la persona tiene derecho a encuesta.
+3. `POST /Inscripciones/ConfirmarPreInscripcion` con:
 
 ```json
 {
@@ -281,21 +290,25 @@ Orden de cierre:
 ```
 
 Si el backend responde `confirmada === true`, se avanza al paso de pago. Si no,
-se muestra error y no se avanza.
+se muestra error y no se avanza. Si Documento o Foto falla por HTTP,
+`OperationResult.success === false` o `data === false`, no se guarda la encuesta:
+se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
+el check de completada.
 
 ## Paso 3: pago
 
-Los metodos disponibles son cuenta bancaria (`cuenta-bancaria`), tarjeta de
-credito (`tarjeta-credito`), cuenta personal (`cuenta-personal`), Banred
-(`banred`), Abitab (`abitab`) y Paganza (`paganza`). Solo cuenta bancaria muestra
-un campo extra: `banco`, requerido, con el `idBanco` del catalogo. Cuenta personal
-solo aparece si la seña es mayor a 0 y se deshabilita si el saldo es menor a la
-seña. Los tres primeros metodos terminan en estado "Confirmada"; los tres ultimos
-(Banred, Abitab, Paganza) terminan en "Reserva".
+El detalle operativo del pago vive en [PAYMENTS-FLOW.md](./PAYMENTS-FLOW.md).
+Resumen:
 
-El paso de pago no envia hoy un payload al backend. Solo valida el metodo, abre
-un dialogo de confirmacion y resuelve la pantalla terminal. Con query param
-`resultado=en-proceso`, cualquier metodo termina en "Inscripcion en proceso".
+- El paso llama a `POST /Inscripciones/Pagar` con `idInscripcion`, método de pago
+  y, para cuenta bancaria, `idBancoSistarbanc`.
+- Cuenta bancaria conserva el valor UI `cuenta-bancaria`, pero el adapter envía
+  `SISTARBANC`.
+- `tarjeta-credito` no queda como método activo hasta que exista mapeo backend.
+- Banred, Geopay y Sistarbanc redirigen a pasarela externa; como todavía no hay
+  callback ni consulta de acreditación, el front termina en
+  `pago-pendiente-externo` y no en un loader infinito.
+- Abitab y Paganza quedan como reserva/pago pendiente externo con instrucciones.
 
 ## Catalogos usados
 

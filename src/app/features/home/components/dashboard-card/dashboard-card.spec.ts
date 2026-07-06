@@ -24,7 +24,7 @@ describe('DashboardCard', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
-      '/inscripciones/detalle?idProducto=20&idProceso=200'
+      '/inscripciones?idProducto=20&idProceso=200'
     );
   });
 });
