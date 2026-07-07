@@ -28,12 +28,8 @@ namespace DataAccess.DevartRepositories
                 (from ip in ctx.InteresProductos
                  join i in ctx.Interes on ip.IdInteres equals i.IdInteres
                  join p in ctx.Procesos on i.IdProceso equals p.IdProceso
-                 join f in ctx.VdFrescoProductoAdmisiones
-                     on new { CodigoPersona = (long?)i.CodigoPersona, IdProducto = (long?)ip.IdProducto }
-                        equals new { f.CodigoPersona, f.IdProducto }
                  where i.CodigoPersona == codigoPersona
                      && (ip.IdGradoInteres == 5m || ip.IdGradoInteres == 4m)
-                     && p.MarcadoParawebProceso == "SI"
                      && p.HabilitadoInteresSitio == "SI"
                  select ip.IdProducto).ToList();
 
