@@ -2,8 +2,10 @@
 
 <div class="scholarship-accordion__content" [formGroup]="educationInfoFbrForm">
   <ort-radio-group
+    divider="true"
     formControlName="schoolLocation"
     legend="¿Dónde cursaste el último año de secundaria?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="uruguay">Uruguay</ort-radio-button>
@@ -16,8 +18,10 @@
   }
 
   <ort-radio-group
+    divider="true"
     formControlName="lastYear"
     legend="Indica el último año cursado"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="2ems">
@@ -32,8 +36,10 @@
   }
 
   <ort-radio-group
+    divider="true"
     formControlName="universityLocation"
     legend="¿Dónde cursaste los estudios universitarios a revalidar?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="uruguay">En Uruguay</ort-radio-button>

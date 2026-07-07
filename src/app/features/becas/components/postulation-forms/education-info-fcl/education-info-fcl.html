@@ -1,7 +1,9 @@
 <div class="scholarship-accordion__content" [formGroup]="educationInfoFclForm">
   <ort-radio-group
+    divider="true"
     formControlName="otherStudies"
     legend="¿Cursaste otros estudios?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="si">Si, cursé</ort-radio-button>

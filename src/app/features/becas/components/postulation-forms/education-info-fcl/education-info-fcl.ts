@@ -24,4 +24,10 @@ export class EducationInfoFcl {
 
     return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
   });
+
+  protected readonly radioGroupIndicatorPosition = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'right' : 'left';
+  });
 }

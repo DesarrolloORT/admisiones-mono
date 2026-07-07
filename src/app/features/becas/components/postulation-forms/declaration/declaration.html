@@ -64,8 +64,10 @@
           }
 
           <ort-radio-group
+            divider="true"
             formControlName="percibeIngresos"
             legend="¿Percibe ingresos?"
+            [indicatorPosition]="radioGroupIndicatorPosition()"
             [name]="'percibeIngresos-' + member.controls.id.value"
             [orientation]="radioGroupOrientation()"
             [required]="true">
@@ -177,8 +179,10 @@
     </div>
 
     <ort-radio-group
+      divider="true"
       formControlName="housingType"
       legend="¿En qué tipo de vivienda residís?"
+      [indicatorPosition]="radioGroupIndicatorPosition()"
       [orientation]="radioGroupOrientation()"
       [required]="true">
       <ort-radio-button class="inscription-radio-option" value="propia">Propia</ort-radio-button>
@@ -200,8 +204,10 @@
     </div>
 
     <ort-radio-group
+      divider="true"
       formControlName="summerHouse"
       legend="¿Cuentan con casa de verano o descanso?"
+      [indicatorPosition]="radioGroupIndicatorPosition()"
       [orientation]="radioGroupOrientation()"
       [required]="true">
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>
@@ -212,9 +218,11 @@
     }
 
     <ort-radio-group
+      divider="true"
       formControlName="vehicleOwn"
       legend="¿Cuentan con vehículo propio?"
       name="vehiculoPropio"
+      [indicatorPosition]="radioGroupIndicatorPosition()"
       [orientation]="radioGroupOrientation()"
       [required]="true">
       <ort-radio-button class="inscription-radio-option" value="si">Si, tenemos</ort-radio-button>

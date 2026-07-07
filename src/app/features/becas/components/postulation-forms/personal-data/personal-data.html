@@ -1,7 +1,9 @@
 <div class="scholarship-accordion__content" [formGroup]="personalDataForm">
   <ort-radio-group
+    divider="true"
     formControlName="attendanceMode"
     legend="Si comenzás la carrera, ¿cómo asistirás?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-button class="inscription-radio-option" value="montevideo">
