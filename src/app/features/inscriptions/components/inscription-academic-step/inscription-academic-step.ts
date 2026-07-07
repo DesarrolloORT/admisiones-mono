@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OrtButtonModule, OrtFormFieldModule } from '@desarrolloort/components';
+import { AcademicProposalSelect } from 'src/app/features/catalogs/components/academic-proposal-select/academic-proposal-select';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { InscripcionProposalFacade } from '../../facades/inscription-proposal';
-import { AcademicProposalSelect } from '../academic-proposal-select/academic-proposal-select';
 
 @Component({
   selector: 'app-inscription-academic-step',

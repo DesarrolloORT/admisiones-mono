@@ -63,9 +63,10 @@
             aria-labelledby="payment-method-title"
             class="inscription-radio-list inscription-radio-list--cards"
             formControlName="metodoPago"
-            indicatorPosition="left"
+            indicatorPosition="right"
             legend="Medio de pago"
             name="payment-method"
+            [divider]="divider"
             [orientation]="radioGroupOrientation()"
             [required]="true">
             @for (option of facade.paymentOptions(); track option.value) {
