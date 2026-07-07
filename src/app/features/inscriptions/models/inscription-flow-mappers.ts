@@ -6,7 +6,6 @@ import type {
   InscripcionPaymentPayload,
   MetodoPago,
   MetodoPagoApi,
-  ValoresEncuesta,
 } from './inscription-flow';
 import type { InscripcionForms } from './inscription-flow-forms';
 
@@ -223,15 +222,6 @@ function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
     case 'cuenta-bancaria':
       return 'SISTARBANC';
   }
-}
-
-export function getSurveyValues(forms: InscripcionForms): ValoresEncuesta {
-  return {
-    educacion: forms.educationForm.getRawValue(),
-    decisionAcademica: forms.academicDecisionForm.getRawValue(),
-    experienciaOrt: forms.ortExperienceForm.getRawValue(),
-    situacionLaboral: forms.workForm.getRawValue(),
-  };
 }
 
 export function serializeDate(value: Date | null): string {

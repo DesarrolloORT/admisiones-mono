@@ -88,7 +88,6 @@ export class InscripcionProposalFacade {
             return;
           }
           this.process.flow.next();
-          this.process.markCheckpoint();
         },
         error: () =>
           this.productInterestError.set(

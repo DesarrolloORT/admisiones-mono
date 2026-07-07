@@ -272,19 +272,8 @@ export class InscripcionPaymentFacade {
     return this.paymentOptions().some(option => option.value === selected && !option.disabled);
   }
 
-  public restore(
-    method: MetodoPago | '',
-    response: ReturnType<InscripcionProcessStore['preEnrollmentResponse']>
-  ): void {
-    this.paymentForm.controls.metodoPago.setValue(method, { emitEvent: false });
-    this.syncBankValidator(method);
-    this.process.preEnrollmentResponse.set(response);
-    this.view.set('editing');
-  }
-
   private finishAt(outcome: InscripcionOutcome): void {
     this.outcome.set(outcome);
-    this.process.markCheckpoint();
   }
 }
 

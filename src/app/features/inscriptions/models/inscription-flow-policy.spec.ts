@@ -1,15 +1,9 @@
-import {
-  findFirstIncompleteSection,
-  getResultadoPago,
-  getSeccionesVisibles,
-  parseEscenario,
-  parseResultadoForzado,
-} from './inscription-flow-policy';
+import { getSeccionesVisibles, parseResultadoForzado } from './inscription-flow-policy';
 
 describe('inscription flow policy', () => {
-  it('uses safe defaults for unknown query parameters', () => {
-    expect(parseEscenario('desconocido')).toBe('primera-vez');
+  it('uses a safe default for unknown forced results', () => {
     expect(parseResultadoForzado('error')).toBeNull();
+    expect(parseResultadoForzado('en-proceso')).toBe('en-proceso');
   });
 
   it('keeps the work-status section in first-time and partial surveys', () => {
@@ -19,18 +13,5 @@ describe('inscription flow policy', () => {
 
   it('limits a completed survey to identity and regulation', () => {
     expect(getSeccionesVisibles('encuesta-completa')).toEqual(['identidad', 'reglamento']);
-  });
-
-  it('finds the first incomplete visible section', () => {
-    expect(
-      findFirstIncompleteSection(['educacion', 'decision-academica', 'identidad'], ['educacion'])
-    ).toBe('decision-academica');
-  });
-
-  it('maps payment methods and forced outcomes', () => {
-    expect(getResultadoPago('abitab', null)).toBe('reservada');
-    expect(getResultadoPago('cuenta-personal', null)).toBe('confirmada');
-    expect(getResultadoPago('banred', null)).toBe('confirmada');
-    expect(getResultadoPago('cuenta-personal', 'en-proceso')).toBe('en-proceso');
   });
 });

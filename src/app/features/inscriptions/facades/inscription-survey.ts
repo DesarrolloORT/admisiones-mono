@@ -219,7 +219,6 @@ export class InscripcionSurveyFacade {
     const nextSection = this.findNextInvalidSection(section);
     if (nextSection) {
       this.activeSection.set(nextSection);
-      this.process.markCheckpoint();
       return;
     }
     this.finishSurveyStep();
@@ -353,7 +352,6 @@ export class InscripcionSurveyFacade {
     this.completeSection('reglamento');
     this.activeSection.set('reglamento');
     this.readerOpen.set(false);
-    this.process.markCheckpoint();
   }
 
   public retryInitialSurvey(): void {
@@ -363,21 +361,6 @@ export class InscripcionSurveyFacade {
   public savePartial(): Observable<boolean> {
     if (!this.hasInitialSurveyRight()) return of(true);
     return this.inscriptions.saveInitialSurvey(this.getInitialSurveyPayload());
-  }
-
-  public restoreSectionState(
-    activeSection: SeccionEncuestaId,
-    completedSections: readonly SeccionEncuestaId[]
-  ): void {
-    const visible = this.visibleSections();
-    this.activeSection.set(visible.includes(activeSection) ? activeSection : visible[0]);
-    this.completedSections.set(
-      completedSections.filter(section => section !== 'identidad' && visible.includes(section))
-    );
-  }
-
-  public completedSectionIds(): readonly SeccionEncuestaId[] {
-    return this.completedSections();
   }
 
   private finishSurveyStep(): void {
@@ -418,7 +401,6 @@ export class InscripcionSurveyFacade {
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('completa');
           this.process.flow.next();
-          this.process.markCheckpoint();
         },
         error: error => {
           const identitySaveFailed =
@@ -548,7 +530,6 @@ export class InscripcionSurveyFacade {
       const sections = this.visibleSections();
       const nextSection = sections[sections.indexOf('identidad') + 1];
       if (nextSection) this.activeSection.set(nextSection);
-      this.process.markCheckpoint();
     });
   }
 

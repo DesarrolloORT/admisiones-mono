@@ -1,36 +1,19 @@
-import { computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { merge } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscription-detail';
-import type { BorradorInscripcion, EscenarioInscripcion } from '../models/inscription-flow';
-import { getSurveyValues, serializeDate } from '../models/inscription-flow-mappers';
-import { InscripcionDraft } from '../services/inscription-draft';
-import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyFacade } from './inscription-survey';
 
-const DRAFT_SCENARIOS: readonly EscenarioInscripcion[] = [
-  'primera-vez',
-  'parcial',
-  'encuesta-completa',
-];
-
 export class InscripcionProcessFacade {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly forms = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
-  private readonly draft = inject(InscripcionDraft);
-  private draftTimer: ReturnType<typeof setTimeout> | null = null;
-  private draftRestored = false;
-  private lastCheckpoint = 0;
-  private readonly draftReady = signal(false);
 
   public readonly proposal = inject(InscripcionProposalFacade);
   public readonly survey = inject(InscripcionSurveyFacade);
@@ -79,12 +62,6 @@ export class InscripcionProcessFacade {
 
   constructor() {
     this.applyResumeContext();
-    this.restoreDraftWhenReady();
-    this.observeDraftChanges();
-    this.clearDraftAtTerminalOutcome();
-    this.destroyRef.onDestroy(() => {
-      if (this.draftTimer) clearTimeout(this.draftTimer);
-    });
   }
 
   public continue(): void {
@@ -112,7 +89,6 @@ export class InscripcionProcessFacade {
 
   public requestExit(): void {
     this.surveySaveError.set(null);
-    this.flushDraft();
     this.exitConfirmationOpen.set(true);
   }
 
@@ -123,7 +99,6 @@ export class InscripcionProcessFacade {
 
   public confirmExit(): void {
     if (this.savingSurvey()) return;
-    this.flushDraft();
 
     if (!this.survey.hasInitialSurveyRight()) {
       this.exitConfirmationOpen.set(false);
@@ -153,19 +128,6 @@ export class InscripcionProcessFacade {
       });
   }
 
-  private restoreDraftWhenReady(): void {
-    effect(() => {
-      if (!this.proposal.initialized() || !this.survey.initialized() || this.draftRestored) return;
-      untracked(() => this.restoreDraft());
-    });
-  }
-
-  private restoreDraft(): void {
-    this.draftRestored = true;
-    this.clearDrafts();
-    this.draftReady.set(true);
-  }
-
   // Si la inscripción se retoma desde el panel con un detalle resuelto, reconstruye
   // el contexto y posiciona el flujo en el paso pendiente: "Pago pendiente" precarga
   // seña/vencimiento/resumen y salta al paso de pago; "Confirmada" precarga el
@@ -183,100 +145,5 @@ export class InscripcionProcessFacade {
     } else if (detail.estado === 'Confirmada') {
       this.payment.outcome.set('inscription-confirmada');
     }
-  }
-
-  private observeDraftChanges(): void {
-    merge(
-      this.forms.academicForm.valueChanges,
-      this.forms.educationForm.valueChanges,
-      this.forms.academicDecisionForm.valueChanges,
-      this.forms.ortExperienceForm.valueChanges,
-      this.forms.workForm.valueChanges,
-      this.forms.identityForm.valueChanges,
-      this.forms.regulationForm.valueChanges,
-      this.forms.paymentForm.valueChanges
-    )
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.scheduleDraftSave());
-
-    effect(() => {
-      const ready = this.draftReady();
-      this.currentStep();
-      this.survey.activeSection();
-      this.survey.completedSectionIds();
-      this.process.preEnrollmentResponse();
-      const checkpoint = this.process.checkpoint();
-      if (!ready || this.payment.outcome()) return;
-
-      if (checkpoint > this.lastCheckpoint) {
-        this.lastCheckpoint = checkpoint;
-        untracked(() => this.flushDraft());
-      } else {
-        untracked(() => this.scheduleDraftSave());
-      }
-    });
-  }
-
-  private scheduleDraftSave(): void {
-    if (!this.draftReady() || this.payment.outcome()) return;
-    if (this.draftTimer) clearTimeout(this.draftTimer);
-    this.draftTimer = setTimeout(() => {
-      this.draftTimer = null;
-      this.saveDraft();
-    }, 300);
-  }
-
-  private flushDraft(): void {
-    if (!this.draftReady() || this.payment.outcome()) return;
-    if (this.draftTimer) {
-      clearTimeout(this.draftTimer);
-      this.draftTimer = null;
-    }
-    this.saveDraft();
-  }
-
-  private saveDraft(): void {
-    const scenario = this.survey.scenario();
-    for (const candidate of DRAFT_SCENARIOS) {
-      if (candidate !== scenario) this.draft.clear(candidate);
-    }
-    this.draft.save(this.buildDraft(scenario));
-  }
-
-  private buildDraft(scenario: EscenarioInscripcion): BorradorInscripcion {
-    return {
-      version: 2,
-      escenario: scenario,
-      paso: this.currentStep(),
-      seccionActiva: this.survey.activeSection(),
-      seccionesCompletas: [...this.survey.completedSectionIds()],
-      propuesta: this.forms.academicForm.getRawValue(),
-      encuesta: getSurveyValues(this.forms.forms),
-      identidad: {
-        vencimientoDocumento: serializeDate(
-          this.forms.identityForm.controls.vencimientoDocumento.value
-        ),
-      },
-      reglamento: this.forms.regulationForm.getRawValue(),
-      pago: this.forms.paymentForm.getRawValue(),
-      preinscription: this.process.preEnrollmentResponse(),
-    };
-  }
-
-  private clearDraftAtTerminalOutcome(): void {
-    effect(() => {
-      if (!this.payment.outcome()) return;
-      untracked(() => {
-        if (this.draftTimer) {
-          clearTimeout(this.draftTimer);
-          this.draftTimer = null;
-        }
-        this.clearDrafts();
-      });
-    });
-  }
-
-  private clearDrafts(): void {
-    for (const scenario of DRAFT_SCENARIOS) this.draft.clear(scenario);
   }
 }
