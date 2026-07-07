@@ -23,6 +23,7 @@
               <ort-icon
                 class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.sectionStatus('datos-personales').isComplete()"
                 [name]="facade.sectionStatus('datos-personales').isComplete() ? 'check_circle' : 'person'" />
               @if (facade.sectionStatus('datos-personales').hasError()){
               <ort-badge
@@ -54,6 +55,7 @@
               <ort-icon
                 class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.sectionStatus(facade.educationSectionId()).isComplete()"
                 [name]="facade.sectionStatus(facade.educationSectionId()).isComplete() ? 'check_circle' : 'auto_stories'" />
               @if (facade.sectionStatus(facade.educationSectionId()).hasError()){
               <ort-badge
@@ -89,7 +91,9 @@
           <ort-accordion-title>
             <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
               <ort-icon
+                class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.sectionStatus('antecedentes-laborales').isComplete()"
                 [name]="facade.sectionStatus('antecedentes-laborales').isComplete() ? 'check_circle' : 'work_outline'" />
               @if (facade.sectionStatus('antecedentes-laborales').hasError()) {
               <ort-badge
@@ -117,7 +121,9 @@
           <ort-accordion-title>
             <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
               <ort-icon
+                class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.sectionStatus('declaracion').isComplete()"
                 [name]="facade.sectionStatus('declaracion').isComplete() ? 'check_circle' : 'description'" />
               @if (facade.sectionStatus('declaracion').hasError()) {
               <ort-badge

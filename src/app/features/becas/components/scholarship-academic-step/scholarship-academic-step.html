@@ -19,6 +19,7 @@
               <ort-icon
                 class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.inscriptionStatus.isComplete()"
                 [name]="facade.inscriptionStatus.isComplete() ? 'check_circle' : 'contact_page'" />
               @if (facade.inscriptionStatus.hasError()) {
               <ort-badge
@@ -48,6 +49,7 @@
               <ort-icon
                 class="scholarship-accordion-item__icon"
                 size="md"
+                [filled]="facade.evaluationStatus.isComplete()"
                 [name]="facade.evaluationStatus.isComplete() ? 'check_circle' : 'calendar_month'" />
               @if (facade.evaluationStatus.hasError()) {
               <ort-badge
