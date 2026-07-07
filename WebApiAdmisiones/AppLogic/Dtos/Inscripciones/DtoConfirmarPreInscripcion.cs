@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace AppLogic.Dtos.Inscripciones
 {
@@ -32,6 +33,10 @@ namespace AppLogic.Dtos.Inscripciones
         public string Resultado { get; set; } = string.Empty;
         public string? UrlPago { get; set; }
         public List<DtoMensajePagoCarrito> Mensajes { get; set; } = new();
+
+        /// <summary>Detalle de la inscripción confirmada. Solo se completa cuando el pago se completa (CUENTA_PERSONAL).</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public DtoConfirmadaDetalle? Confirmada { get; set; }
     }
 
     public class DtoMensajePagoCarrito

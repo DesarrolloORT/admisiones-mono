@@ -2419,13 +2419,52 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task Pagar_WithCuentaPersonal_ReturnsPagoConfirmado()
+        public async Task Pagar_WithCuentaPersonal_ReturnsPagoConfirmadoConDetalle()
         {
+            var inscripto = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 99,
+                Oferta = new Oferta
+                {
+                    IdOferta = 99,
+                    IdTurno = 5,
+                    Turno = new Turno { IdTurno = 5, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete
+                        {
+                            Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en DiseÃ±o GrÃ¡fico" }
+                        }
+                    }
+                }
+            };
             var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo
-                .Setup(r => r.GetDetalleByKey(555, 123))
-                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>
+            {
+                new()
+                {
+                    IdInscripto = 555,
+                    CooacadCodigo = 1,
+                    CooacadPrimerNombre = "MarÃ­a",
+                    CooacadPrimerApellido = "RodrÃ­guez",
+                    MailAcad = "maria.rodriguez@ort.edu.uy"
+                }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Arte y estÃ©tica I" }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
 
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
@@ -2436,8 +2475,42 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
             Assert.Single(result.Data.Mensajes);
+            Assert.NotNull(result.Data.Confirmada);
+            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
+            Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
+            Assert.Single(result.Data.Confirmada.MateriasPrimerSemestre);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task Pagar_WithCuentaPersonal_DetalleBestEffortCuandoVistasVacias()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>());
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>());
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+
+            Assert.True(result.Success);
+            Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
+            Assert.NotNull(result.Data.Confirmada);
+            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Null(result.Data.Confirmada.CoordinadorAcademico);
+            Assert.Empty(result.Data.Confirmada.MateriasPrimerSemestre);
         }
 
         [Fact]

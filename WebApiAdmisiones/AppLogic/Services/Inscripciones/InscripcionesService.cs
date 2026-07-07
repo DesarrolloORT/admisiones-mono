@@ -113,9 +113,7 @@ namespace AppLogic.Services.Inscripciones
                             "No se encontró la inscripción confirmada para la persona.",
                             404);
                     }
-                    var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(inscripto.IdInscripto);
-                    var materias = uow.VdInscriptoCreditoAlumnos.GetByInscripto(inscripto.IdInscripto);
-                    response.Confirmada = MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
+                    response.Confirmada = ConstruirDetalleConfirmada(uow, codigoPersona, inscripto);
                     break;
 
                 // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
@@ -135,6 +133,13 @@ namespace AppLogic.Services.Inscripciones
                 EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
+        }
+
+        private static DtoConfirmadaDetalle ConstruirDetalleConfirmada(IUnitOfWork uow, long codigoPersona, Inscripto inscripto)
+        {
+            var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(inscripto.IdInscripto);
+            var materias = uow.VdInscriptoCreditoAlumnos.GetByInscripto(inscripto.IdInscripto);
+            return MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
         }
 
         private static DtoConfirmadaDetalle MapearConfirmada(
@@ -489,9 +494,15 @@ namespace AppLogic.Services.Inscripciones
                 case "CUENTA_PERSONAL":
                 {
                     var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripto = request.IdInscripto });
-                    return result.Success
-                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "PAGO_CONFIRMADO", Mensajes = result.Data ?? new() }, methodName)
-                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                    if (!result.Success)
+                        return OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+
+                    using var uow = _uowFactory.Create();
+                    var inscripto = uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona);
+                    var detalle = inscripto != null ? ConstruirDetalleConfirmada(uow, codigoPersona, inscripto) : null;
+                    return OperationResult<DtoPagarResponse>.Ok(
+                        new DtoPagarResponse { Resultado = "PAGO_CONFIRMADO", Mensajes = result.Data ?? new(), Confirmada = detalle },
+                        methodName);
                 }
 
                 case "ABITAB":
