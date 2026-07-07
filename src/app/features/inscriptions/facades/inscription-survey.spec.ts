@@ -501,9 +501,100 @@ describe('InscripcionSurveyFacade', () => {
     survey.academicDecisionForm.controls.universidadInformadaOtro.setValue('Otra consultada');
     expect(survey.academicDecisionForm.controls.universidadInformadaOtro.valid).toBe(true);
   });
+  it('blocks pre-enrollment when a university career has a disallowed baccalaureate year', () => {
+    const { survey, forms } = createFacade(
+      {
+        tieneDerechoEncuesta: true,
+        encuesta: null,
+        universidadesConsideradas: [],
+        universidadesConsideradasOtros: [],
+        universidadesEducacionSuperior: [],
+        universidadesEducacionSuperiorOtros: [],
+        opcionesMotivosSeleccionados: [],
+        opcionesPublicidadSeleccionadas: [],
+      },
+      {
+        educacion: {
+          ubicacionesUltimoAnioSecundaria: [],
+          estadosEducacionSuperiorPrevia: [],
+          universidades: [],
+          nivelesFormacionTutores: [],
+          aniosBachillerato: [
+            { id: 4, label: '4º año', baccalaureates: [] },
+            { id: 5, label: '5º año', baccalaureates: [] },
+          ],
+        },
+      },
+      [
+        {
+          idProducto: 100,
+          idNivelProducto: 1,
+          nombreProducto: 'Ingeniería',
+          nombreNivelProducto: 'Universitaria',
+        },
+      ]
+    );
+
+    forms.academicForm.controls.carrera.setValue('100');
+    survey.educationForm.controls.cursaSecundaria.setValue('cursando');
+    survey.educationForm.controls.anioSecundaria.setValue('4');
+
+    expect(survey.isUniversityCareer()).toBe(true);
+    expect(
+      survey.educationForm.controls.anioSecundaria.hasError('bachilleratoNoUniversitario')
+    ).toBe(true);
+
+    survey.educationForm.controls.anioSecundaria.setValue('5');
+    expect(
+      survey.educationForm.controls.anioSecundaria.hasError('bachilleratoNoUniversitario')
+    ).toBe(false);
+  });
+
+  it('does not flag disallowed years for non-university careers', () => {
+    const { survey, forms } = createFacade(
+      {
+        tieneDerechoEncuesta: true,
+        encuesta: null,
+        universidadesConsideradas: [],
+        universidadesConsideradasOtros: [],
+        universidadesEducacionSuperior: [],
+        universidadesEducacionSuperiorOtros: [],
+        opcionesMotivosSeleccionados: [],
+        opcionesPublicidadSeleccionadas: [],
+      },
+      {
+        educacion: {
+          ubicacionesUltimoAnioSecundaria: [],
+          estadosEducacionSuperiorPrevia: [],
+          universidades: [],
+          nivelesFormacionTutores: [],
+          aniosBachillerato: [{ id: 4, label: '4º año', baccalaureates: [] }],
+        },
+      },
+      [
+        {
+          idProducto: 200,
+          idNivelProducto: 2,
+          nombreProducto: 'Tecnicatura',
+          nombreNivelProducto: 'Terciaria',
+        },
+      ]
+    );
+
+    forms.academicForm.controls.carrera.setValue('200');
+    survey.educationForm.controls.cursaSecundaria.setValue('cursando');
+    survey.educationForm.controls.anioSecundaria.setValue('4');
+
+    expect(survey.isUniversityCareer()).toBe(false);
+    expect(
+      survey.educationForm.controls.anioSecundaria.hasError('bachilleratoNoUniversitario')
+    ).toBe(false);
+  });
+
   function createFacade(
     initialSurvey: unknown,
-    catalogOverrides: Record<string, unknown> = {}
+    catalogOverrides: Record<string, unknown> = {},
+    careers: unknown[] = []
   ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
@@ -528,7 +619,7 @@ describe('InscripcionSurveyFacade', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () => of([]),
+            getCareers: () => of(careers),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
             getCountryLocations: () => of([]),

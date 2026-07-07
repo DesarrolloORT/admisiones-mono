@@ -32,8 +32,10 @@ import type {
 } from '../models/inscription-flow';
 import {
   buildFormErrors,
+  disallowedBachilleratoForUniversity,
   type IdentityFileTarget,
   type IdentityPreloadedFileMap,
+  NIVEL_UNIVERSITARIO,
 } from '../models/inscription-flow-forms';
 import {
   buildConfirmPreEnrollmentPayload,
@@ -284,6 +286,15 @@ export class InscripcionSurveyFacade {
 
   public isIdentityFileMissing(target: IdentityFileTarget): boolean {
     return this.submittedSections().includes('identidad') && !this.identityFiles()[target];
+  }
+
+  public isUniversityCareer(): boolean {
+    const selectedCareer = this.formsStore.academicForm.controls.carrera.value;
+    if (!selectedCareer) return false;
+    const nivel = this.proposal
+      .careers()
+      .find(career => career.idProducto.toString() === selectedCareer)?.idNivelProducto;
+    return nivel === NIVEL_UNIVERSITARIO;
   }
 
   public isNationalSchoolPlace(): boolean {
@@ -543,6 +554,8 @@ export class InscripcionSurveyFacade {
 
   private configureConditionalValidators(): void {
     merge(
+      this.formsStore.academicForm.controls.carrera.valueChanges,
+      this.educationForm.controls.anioSecundaria.valueChanges,
       this.educationForm.controls.cursaSecundaria.valueChanges,
       this.educationForm.controls.lugarSecundaria.valueChanges,
       this.educationForm.controls.estadoEducacionSuperior.valueChanges,
@@ -570,10 +583,12 @@ export class InscripcionSurveyFacade {
     const work = this.workForm.controls;
     const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
 
-    this.setRequired(
-      education.anioSecundaria,
-      currentlyInSchool && this.schoolYearOptions().length > 0
-    );
+    const anioBachilleratoRequired = currentlyInSchool && this.schoolYearOptions().length > 0;
+    education.anioSecundaria.setValidators([
+      ...(anioBachilleratoRequired ? [Validators.required] : []),
+      disallowedBachilleratoForUniversity(() => this.isUniversityCareer()),
+    ]);
+    education.anioSecundaria.updateValueAndValidity({ emitEvent: false });
     this.setRequired(education.orientacion, this.shouldAskBaccalaureateOrientation());
     this.setRequired(education.vecesRecursaAnioBachillerato, this.shouldAskRecursaCount(), [
       Validators.required,

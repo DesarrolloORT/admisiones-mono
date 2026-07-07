@@ -3,6 +3,9 @@ import type { Career } from '../../catalogs/models/catalog.interface';
 import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
+  InscripcionPaymentPayload,
+  MetodoPago,
+  MetodoPagoApi,
   ValoresEncuesta,
 } from './inscription-flow';
 import type { InscripcionForms } from './inscription-flow-forms';
@@ -195,6 +198,31 @@ export function buildConfirmPreEnrollmentPayload(forms: InscripcionForms) {
     aceptoReglamento: forms.regulationForm.controls.aceptaReglamento.value,
     idOfertaSeleccionada,
   };
+}
+
+export function buildPaymentPayload(payload: InscripcionPaymentPayload) {
+  return {
+    idInscripto: payload.idInscripcion,
+    tipoPago: toApiPaymentMethod(payload.metodoPago),
+    idBancoSistarbanc: payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
+  };
+}
+
+function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
+  switch (method) {
+    case 'cuenta-personal':
+      return 'CUENTA_PERSONAL';
+    case 'abitab':
+      return 'ABITAB';
+    case 'paganza':
+      return 'PAGANZA';
+    case 'banred':
+      return 'BANRED';
+    case 'geopay':
+      return 'GEOPAY';
+    case 'cuenta-bancaria':
+      return 'SISTARBANC';
+  }
 }
 
 export function getSurveyValues(forms: InscripcionForms): ValoresEncuesta {

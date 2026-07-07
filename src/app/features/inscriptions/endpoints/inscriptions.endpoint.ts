@@ -33,10 +33,9 @@ import type {
   InscripcionPreEnrollmentResponse,
   InscripcionProductInterestPayload,
   InscripcionStudentRegulationAcceptance,
-  MetodoPago,
-  MetodoPagoApi,
   SeccionEncuestaId,
 } from '../models/inscription-flow';
+import { buildPaymentPayload } from '../models/inscription-flow-mappers';
 
 @Injectable({
   providedIn: 'root',
@@ -243,14 +242,10 @@ export class InscripcionesEndpoint {
   }
 
   public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {
+    const body = buildPaymentPayload(payload);
     return this.api
       .request(postInscripcionesPagarEndpoint, {
-        body: {
-          idInscripto: payload.idInscripcion,
-          tipoPago: toApiPaymentMethod(payload.metodoPago),
-          idBancoSistarbanc:
-            payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
-        },
+        body,
         showLoader: true,
       })
       .pipe(
@@ -343,23 +338,6 @@ export class InscripcionesEndpoint {
           turno: summary.turno ?? null,
         }
       : null;
-  }
-}
-
-function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
-  switch (method) {
-    case 'cuenta-personal':
-      return 'CUENTA_PERSONAL';
-    case 'abitab':
-      return 'ABITAB';
-    case 'paganza':
-      return 'PAGANZA';
-    case 'banred':
-      return 'BANRED';
-    case 'geopay':
-      return 'GEOPAY';
-    case 'cuenta-bancaria':
-      return 'SISTARBANC';
   }
 }
 

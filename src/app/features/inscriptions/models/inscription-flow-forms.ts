@@ -1,4 +1,4 @@
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtPreloadedFile } from '@desarrolloort/components';
 import {
   buildFormErrorSummary,
@@ -18,6 +18,31 @@ export interface SectionConfig {
 export type IdentityFileTarget = keyof ArchivosIdentidad;
 
 export type IdentityPreloadedFileMap = Record<IdentityFileTarget, OrtPreloadedFile | null>;
+
+/**
+ * Regla del contrato encuesta-inicial (código INS_EI_64): para carreras de nivel 1
+ * (universitarias) el año de bachillerato no puede ser 4º ni 10º.
+ */
+export const NIVEL_UNIVERSITARIO = 1;
+export const ANIOS_BACHILLERATO_NO_UNIVERSITARIOS: readonly number[] = [4, 10];
+export const BACHILLERATO_NO_UNIVERSITARIO = 'bachilleratoNoUniversitario';
+export const BACHILLERATO_NO_UNIVERSITARIO_MESSAGE =
+  'Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año.';
+
+/**
+ * Bloquea años de bachillerato prohibidos cuando la carrera seleccionada es universitaria.
+ * `isUniversity` lo provee el facade (cruza la carrera seleccionada contra el catálogo).
+ */
+export function disallowedBachilleratoForUniversity(
+  isUniversity: () => boolean,
+  disallowedValues: readonly number[] = ANIOS_BACHILLERATO_NO_UNIVERSITARIOS
+): ValidatorFn {
+  return control => {
+    if (control.value === null || control.value === '' || !isUniversity()) return null;
+    const value = Number(control.value);
+    return disallowedValues.includes(value) ? { [BACHILLERATO_NO_UNIVERSITARIO]: true } : null;
+  };
+}
 
 export function createInscripcionForms() {
   return {
@@ -145,7 +170,12 @@ export function createSectionConfig(
       form: forms.educationForm,
       errorFields: [
         { controlName: 'cursaSecundaria', fieldId: '', label: 'Situación de secundaria' },
-        { controlName: 'anioSecundaria', fieldId: '', label: 'Año en curso' },
+        {
+          controlName: 'anioSecundaria',
+          fieldId: '',
+          label: 'Año en curso',
+          messages: { [BACHILLERATO_NO_UNIVERSITARIO]: BACHILLERATO_NO_UNIVERSITARIO_MESSAGE },
+        },
         { controlName: 'orientacion', fieldId: '', label: 'Orientación' },
         { controlName: 'recursaAnioBachillerato', fieldId: '', label: 'Recursado de bachillerato' },
         { controlName: 'vecesRecursaAnioBachillerato', fieldId: '', label: 'Veces de recursado' },
