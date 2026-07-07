@@ -30,21 +30,12 @@
         </ort-card-header>
         <ort-card-content>
           @if (index !== 0) {
-          <ort-form-field>
-            <ort-label>Parentesco</ort-label>
-            <ort-select formControlName="relationship" required>
-              <ort-option value="padre">Padre</ort-option>
-              <ort-option value="madre">Madre</ort-option>
-              <ort-option value="hermano">Hermano/a</ort-option>
-              <ort-option value="hijo">Hijo/a</ort-option>
-              <ort-option value="conyuge">Cónyuge</ort-option>
-              <ort-option value="otro">Otro</ort-option>
-            </ort-select>
-          </ort-form-field>
-          @if (member.controls.relationship.invalid && (facade.submitted() ||
-          member.controls.relationship.touched)) {
-          <ort-error>Seleccioná el parentesco</ort-error>
-          } }
+          <app-responsive-select
+            errorText="Seleccioná el parentesco"
+            formControlName="relationship"
+            label="Parentesco"
+            [options]="relationshipOptions" />
+          }
 
           <ort-form-field>
             <ort-label>Nombre</ort-label>

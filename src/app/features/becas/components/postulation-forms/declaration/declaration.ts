@@ -14,9 +14,12 @@ import {
   OrtIconModule,
   OrtInputModule,
   OrtRadioModule,
-  OrtSelectModule,
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
+import {
+  ResponsiveSelect,
+  ResponsiveSelectOption,
+} from 'src/app/shared/ui/responsive-select/responsive-select';
 
 import { ScholarshipPersonalFacade } from '../../../facades/scholarship-personal';
 import type { FamilyMemberGroup } from '../../../models/scholarship-personal-forms';
@@ -39,12 +42,12 @@ type MonthlyExpense = {
     OrtIconModule,
     OrtDrawer,
     OrtIconButton,
-    OrtSelectModule,
     OrtFileUploaderModule,
     OrtDialogModule,
     ReactiveFormsModule,
     OrtError,
     OrtDivider,
+    ResponsiveSelect,
   ],
   templateUrl: './declaration.html',
   styleUrls: ['../../../pages/scholarship-process/scholarship-process.scss', './declaration.scss'],
@@ -72,6 +75,15 @@ export class Declaration {
   protected readonly transportationExpensesControl =
     this.declarationForm.controls.transportationExpenses;
   protected readonly observationsControl = this.declarationForm.controls.observations;
+
+  protected readonly relationshipOptions: ResponsiveSelectOption[] = [
+    { value: 'padre', label: 'Padre' },
+    { value: 'madre', label: 'Madre' },
+    { value: 'hermano', label: 'Hermano/a' },
+    { value: 'hijo', label: 'Hijo/a' },
+    { value: 'conyuge', label: 'Cónyuge' },
+    { value: 'otro', label: 'Otro' },
+  ];
 
   protected readonly radioGroupOrientation = computed(() => {
     const breakpoint = this.breakpointService.breakpoint();
