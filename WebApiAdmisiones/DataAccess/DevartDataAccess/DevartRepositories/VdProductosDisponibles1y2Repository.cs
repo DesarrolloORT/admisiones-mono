@@ -22,7 +22,7 @@ namespace DataAccess.DevartRepositories
         {
             var ctx = Context;
 
-            // Productos con interés fresco (grado 5) en procesos marcados para web/habilitados,
+            // Productos con interés (grado alto 4 o inscripto 5) en procesos marcados para web/habilitados,
             // que además figuran en VD_FRESCO_PRODUCTO_ADMISIONES para la persona.
             var productosInteresFresco =
                 (from ip in ctx.InteresProductos
@@ -32,7 +32,7 @@ namespace DataAccess.DevartRepositories
                      on new { CodigoPersona = (long?)i.CodigoPersona, IdProducto = (long?)ip.IdProducto }
                         equals new { f.CodigoPersona, f.IdProducto }
                  where i.CodigoPersona == codigoPersona
-                     && ip.IdGradoInteres == 5m
+                     && (ip.IdGradoInteres == 5m || ip.IdGradoInteres == 4m)
                      && p.MarcadoParawebProceso == "SI"
                      && p.HabilitadoInteresSitio == "SI"
                  select ip.IdProducto).ToList();
