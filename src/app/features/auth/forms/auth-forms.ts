@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
-import type { PhoneInputValue } from '@desarrolloort/components';
+import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { ortCedulaValidator, ortPhoneValidator } from '@desarrolloort/components';
 import {
   matchingFieldsValidator,
@@ -34,7 +34,7 @@ export interface PersonalForm {
   sexo: FormControl<string>;
   location: FormControl<LocationValue>;
   direccion: FormControl<string>;
-  telefono1: FormControl<PhoneInputValue | null>;
+  telefono1: FormControl<OrtPhoneInputValue | null>;
   mail: FormControl<string>;
   verificacionMail: FormControl<string>;
 }
@@ -131,7 +131,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
         nonNullable: true,
         validators: [Validators.required, Validators.maxLength(ADDRESS_MAX_LENGTH)],
       }),
-      telefono1: new FormControl<PhoneInputValue | null>(null, {
+      telefono1: new FormControl<OrtPhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
         updateOn: 'blur',
       }),

@@ -11,10 +11,10 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  ExpandableStepperStep,
   OrtButton,
   OrtButtonBaseDirective,
   OrtExpandableStepperModule,
+  OrtExpandableStepperStep,
   OrtIconModule,
 } from '@desarrolloort/components';
 
@@ -47,7 +47,7 @@ export class ProcessLayout {
   public readonly stepperAriaLabel = input('Pasos del proceso');
   public readonly stepperExpanded = input(false);
   public readonly stepperSubtitle = input<string | undefined>(undefined);
-  public readonly steps = input<ExpandableStepperStep[]>([]);
+  public readonly steps = input<OrtExpandableStepperStep[]>([]);
 
   public readonly back = output<void>();
   public readonly closeFlow = output<void>();

@@ -1,4 +1,4 @@
-import type { PhoneInputValue } from '@desarrolloort/components';
+import type { OrtPhoneInputValue } from '@desarrolloort/components';
 
 import { LocationValue } from '../../catalogs/models/location-value';
 import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
@@ -18,7 +18,7 @@ export interface RegisterPersonalFormValue {
   sexo: string;
   location: LocationValue;
   direccion: string;
-  telefono1: PhoneInputValue | null;
+  telefono1: OrtPhoneInputValue | null;
   mail: string;
   verificacionMail: string;
 }
@@ -49,7 +49,7 @@ export function toAuthRegisterPersonalData(
   };
 }
 
-function toBackendPhone(value: PhoneInputValue | null): string {
+function toBackendPhone(value: OrtPhoneInputValue | null): string {
   if (!value) {
     return '';
   }
