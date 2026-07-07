@@ -15,7 +15,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import {
   findCountryByIso2,
   getIso2Codes,
@@ -23,6 +22,7 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtPhoneInputValue,
   ortPhoneValidator,
   OrtSelectModule,
   OrtSkeletonModule,

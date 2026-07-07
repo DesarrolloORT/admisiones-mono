@@ -11,9 +11,8 @@ import { SCHOLARSHIP_STEPS } from '../models/scholarship-process';
  *
  * Se provee a nivel de la página (no en root) para que cada postulación tenga
  * su propio estado. A medida que el flujo crezca, agregá acá las señales de
- * estado compartido entre pasos (p. ej. la respuesta de la API de postulación,
- * un contador de checkpoints para el autoguardado, etc.), igual que
- * `preEnrollmentResponse` / `checkpoint` en inscripciones.
+ * estado compartido entre pasos (p. ej. la respuesta de la API de postulación),
+ * igual que `preEnrollmentResponse` en inscripciones.
  */
 export class ScholarshipProcessStore {
   public readonly flow = createProcessFlow(SCHOLARSHIP_STEPS, 'info-postulacion');

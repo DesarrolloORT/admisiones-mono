@@ -327,7 +327,7 @@ describe('AuthEndpoint', () => {
       };
 
       endpoint.recognizeDocument(payload).subscribe(response => {
-        expect(response.requiereRevision).toBe(false);
+        expect(response.campos?.primerNombre).toBe('Ana');
       });
 
       const req = httpController.expectOne(
@@ -338,7 +338,7 @@ describe('AuthEndpoint', () => {
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(CAPTCHA_ACTION)).toBe('AnalizarAdjunto');
 
-      req.flush({ success: true, httpCode: 200, data: { requiereRevision: false } });
+      req.flush({ success: true, httpCode: 200, data: { campos: { primerNombre: 'Ana' } } });
     });
 
     it('should propagate normalized API failures', () => {

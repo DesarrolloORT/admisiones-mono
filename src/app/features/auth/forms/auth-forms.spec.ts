@@ -2,7 +2,6 @@ import {
   createIdentityForm,
   createLoginForm,
   createPersonalForm,
-  emailsMatch,
   getDocumentNumberValidators,
 } from './auth-forms';
 
@@ -16,7 +15,7 @@ describe('auth forms', () => {
     expect(createPersonalForm().controls.telefono1.updateOn).toBe('blur');
   });
 
-  it('should validate matching emails case-insensitively', () => {
+  it('should accept matching emails case-insensitively', () => {
     const form = createPersonalForm();
 
     form.patchValue({
@@ -24,7 +23,7 @@ describe('auth forms', () => {
       verificacionMail: 'ana@example.com',
     });
 
-    expect(emailsMatch(form)).toBe(true);
+    expect(form.controls.verificacionMail.hasError('emailMismatch')).toBe(false);
   });
 
   it('should attach an email mismatch error to confirmation', () => {

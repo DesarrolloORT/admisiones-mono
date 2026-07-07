@@ -3,8 +3,8 @@ import { Observable } from 'rxjs';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import type {
+  DocumentRecognitionData,
   DocumentRecognitionRequest,
-  DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 
@@ -36,7 +36,7 @@ export class DocumentRecognition {
 
   public recognizeDocument(
     payload: DocumentRecognitionRequest
-  ): Observable<DocumentRecognitionResponse> {
+  ): Observable<DocumentRecognitionData> {
     return this.endpoint.recognizeDocument(payload);
   }
 

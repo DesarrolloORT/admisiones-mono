@@ -14,7 +14,7 @@ describe('DocumentRecognition', () => {
 
   beforeEach(() => {
     endpointMock = {
-      recognizeDocument: vi.fn().mockReturnValue(of({ requiereRevision: false })),
+      recognizeDocument: vi.fn().mockReturnValue(of({ campos: { primerNombre: 'Ana' } })),
     };
 
     TestBed.configureTestingModule({
@@ -39,7 +39,7 @@ describe('DocumentRecognition', () => {
     };
 
     service.recognizeDocument(payload).subscribe(response => {
-      expect(response.requiereRevision).toBe(false);
+      expect(response.campos?.primerNombre).toBe('Ana');
     });
 
     expect(endpointMock.recognizeDocument).toHaveBeenCalledWith(payload);
