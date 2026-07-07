@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
@@ -36,5 +36,12 @@ import { ScholarshipProcessPage } from '../scholarship-process/scholarship-proce
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Fexa extends ScholarshipProcessPage {
-  protected readonly variant: ScholarshipVariant = 'fexaCon';
+  private readonly formsStore = inject(ScholarshipFormsStore);
+
+  protected get variant(): ScholarshipVariant {
+    const applicationMode =
+      this.formsStore.inscriptionForm.controls.inscription.controls.applicationMode.value;
+
+    return applicationMode === 'sin declaracion' ? 'fexaSin' : 'fexaCon';
+  }
 }
