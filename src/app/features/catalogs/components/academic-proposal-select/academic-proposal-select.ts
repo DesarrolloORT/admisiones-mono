@@ -8,16 +8,13 @@ import {
   OrtSpinnerModule,
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
-
-import type {
-  AcademicProposalForm,
-  AcademicProposalOption,
-} from '../../../catalogs/models/academic-proposal';
-import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
 import {
   ResponsiveSelect,
   type ResponsiveSelectOptionGroup,
-} from '../responsive-select/responsive-select';
+} from 'src/app/shared/ui/responsive-select/responsive-select';
+
+import type { AcademicProposalForm, AcademicProposalOption } from '../../models/academic-proposal';
+import { AcademicProposalSelection } from '../../services/academic-proposal-selection';
 
 @Component({
   selector: 'app-academic-proposal-select',

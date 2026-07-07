@@ -4,11 +4,11 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { of } from 'rxjs';
+import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 import { vi } from 'vitest';
 
-import type { AcademicProposalForm } from '../../../catalogs/models/academic-proposal';
-import { Catalogs } from '../../../catalogs/services/catalogs';
-import { ResponsiveSelect } from '../responsive-select/responsive-select';
+import type { AcademicProposalForm } from '../../models/academic-proposal';
+import { Catalogs } from '../../services/catalogs';
 import { AcademicProposalSelect } from './academic-proposal-select';
 
 describe('AcademicProposalSelect', () => {

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
-import type { PhoneInputValue } from '@desarrolloort/components';
+import type { OrtOrtPhoneInputValue } from '@desarrolloort/components';
 import { NEVER, of } from 'rxjs';
 import { AccountService } from 'src/app/features/auth/services/account';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
@@ -22,7 +22,7 @@ interface TestPersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<PhoneInputValue | null>;
+  phone: FormControl<OrtOrtPhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }

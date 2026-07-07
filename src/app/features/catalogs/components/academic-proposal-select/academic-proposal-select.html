@@ -15,6 +15,7 @@
         orientation="vertical"
         [aria-describedby]="proposalTypeErrorId()"
         [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
+        [divider]="true"
         [required]="true">
         @for (option of selection().proposalOptions(); track option.value) {
         <ort-radio-card-button
