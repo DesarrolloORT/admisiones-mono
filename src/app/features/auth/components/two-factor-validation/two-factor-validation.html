@@ -49,11 +49,7 @@
         Debería llegarte el código máximo en un minuto.
         <br />
         ¿No lo recibiste?
-        <button
-          class="resend-link"
-          type="button"
-          [disabled]="!canResend() || isSubmitting()"
-          (click)="onResend()">
+        <button class="resend-link" type="button" [disabled]="isSubmitting()" (click)="onResend()">
           Enviar un nuevo código.
         </button>
       </p>
