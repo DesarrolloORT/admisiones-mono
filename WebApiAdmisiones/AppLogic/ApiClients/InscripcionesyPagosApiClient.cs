@@ -581,8 +581,8 @@ namespace AppLogic.ApiClients
         {
             if (ex is TaskCanceledException taskEx && taskEx.InnerException is TimeoutException)
             {
-                _logger.LogError(ex, "Timeout al comunicarse con API (>30s)");
-                return OperationResult<T>.IsFailed("API_TIMEOUT", methodName, "Timeout (30s)", 504, default!);
+                _logger.LogError(ex, "Timeout al comunicarse con API (>2m)");
+                return OperationResult<T>.IsFailed("API_TIMEOUT", methodName, "Timeout (2m)", 504, default!);
             }
 
             if (ex is HttpRequestException)

@@ -46,7 +46,7 @@ namespace WebApiAdmisiones.Extensions
                         "Falta configuración: ApiClients:InscripcionesYPagos:BaseUrl");
 
                 client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(30); // Timeout claro: 30s máximo
+                client.Timeout = TimeSpan.FromMinutes(2); // Timeout claro: 2 minutos máximo
                 client.DefaultRequestHeaders.Add("User-Agent", "WebApiAdmisiones/1.0");
             })
             .AddHttpMessageHandler<ServiceAuthenticationHandler>(); // Solo inyecta los tokens, SIN reintentos
