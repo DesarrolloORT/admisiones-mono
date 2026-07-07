@@ -89,6 +89,12 @@
               <p class="inscription-field-error" id="school-year-error" role="alert">
                 Seleccioná una opción
               </p>
+              } @if (facade.educationForm.controls.anioSecundaria.touched &&
+              facade.educationForm.controls.anioSecundaria.hasError('bachilleratoNoUniversitario'))
+              {
+              <p class="inscription-field-error" id="school-year-university-error" role="alert">
+                Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año.
+              </p>
               } @if (facade.shouldAskBaccalaureateOrientation()) {
               <app-responsive-select
                 errorText="Seleccioná una opción"
