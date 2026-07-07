@@ -183,16 +183,12 @@ describe('AuthSessionService', () => {
 
   it('should clear session locally after logout', () => {
     service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
-    window.sessionStorage.setItem('inscripcion-borrador:v1:primera-vez', '{"draft":true}');
-    window.sessionStorage.setItem('telemetry-run-id', 'keep');
 
     service.logout();
 
     expect(endpointMock.logout).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem('auth-session')).toBeNull();
-    expect(window.sessionStorage.getItem('inscripcion-borrador:v1:primera-vez')).toBeNull();
-    expect(window.sessionStorage.getItem('telemetry-run-id')).toBe('keep');
     expect(endpointMock.clearCache).toHaveBeenCalled();
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });

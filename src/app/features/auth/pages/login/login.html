@@ -55,9 +55,9 @@
       <ort-form-field [hideRequiredMarker]="!!form.controls.password.value">
         <ort-label>Contraseña</ort-label>
         <input
+          autocomplete="current-password"
           formControlName="password"
           ortInput
-          [attr.autocomplete]="'current-password'"
           [id]="'login-password'"
           [type]="passwordInputType()" />
         <button

@@ -1,9 +1,7 @@
-import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
-import { storageKeys } from 'src/app/core/storage/keys';
 
 import { AuthEndpoint, LoginResult, ResendTwoFactorCodeResult } from '../endpoints/auth.endpoint';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
@@ -32,7 +30,6 @@ interface PendingTwoFactorContext {
 export class AuthSessionService {
   private readonly endpoint = inject(AuthEndpoint);
   private readonly account = inject(AccountService);
-  private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly sessionState = signal<AuthSession | null>(null);
   private pendingTwoFactorContext: PendingTwoFactorContext | null = null;
@@ -113,7 +110,6 @@ export class AuthSessionService {
     this.sessionState.set(null);
     this.pendingTwoFactorContext = null;
     this.endpoint.clearCache();
-    this.clearUserSessionStorage();
   }
 
   public logout(): void {
@@ -158,21 +154,5 @@ export class AuthSessionService {
 
   private storeSession(session: AuthSession): void {
     this.sessionState.set(session);
-  }
-
-  private clearUserSessionStorage(): void {
-    const storage = this.document.defaultView?.sessionStorage;
-
-    if (!storage) {
-      return;
-    }
-
-    for (let index = storage.length - 1; index >= 0; index--) {
-      const key = storage.key(index);
-
-      if (key?.startsWith(`${storageKeys.inscriptionDraft}:`)) {
-        storage.removeItem(key);
-      }
-    }
   }
 }
