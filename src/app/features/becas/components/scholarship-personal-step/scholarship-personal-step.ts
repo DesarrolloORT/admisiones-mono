@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
 import {
   OrtAccordionModule,
@@ -39,6 +40,7 @@ import { WorkHistory } from '../postulation-forms/work-history/work-history';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipPersonalStep {
+  private readonly document = inject(DOCUMENT);
   protected readonly facade = inject(ScholarshipPersonalFacade);
   readonly variant = input.required<ScholarshipVariant>();
 
@@ -48,5 +50,9 @@ export class ScholarshipPersonalStep {
 
   protected onContinue(): void {
     this.facade.continue();
+
+    if (this.facade.showErrorAlert()) {
+      this.document.defaultView?.scrollTo({ behavior: 'smooth', left: 0, top: 0 });
+    }
   }
 }
