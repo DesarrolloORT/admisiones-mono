@@ -15,7 +15,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import type { PhoneInputValue } from '@desarrolloort/components';
+import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import {
   findCountryByIso2,
   getIso2Codes,
@@ -59,7 +59,7 @@ interface PersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<PhoneInputValue | null>;
+  phone: FormControl<OrtPhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }
@@ -101,7 +101,7 @@ export class PersonalData implements OnInit {
       stateCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       cityCode: new FormControl('', { nonNullable: true }),
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      phone: new FormControl<PhoneInputValue | null>(null, {
+      phone: new FormControl<OrtPhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
         asyncValidators: [this.phoneValidator()],
         updateOn: 'blur',
@@ -290,7 +290,7 @@ export class PersonalData implements OnInit {
     return value ? Number(value) : undefined;
   }
 
-  private toPhoneInputValue(value: string): PhoneInputValue | null {
+  private toPhoneInputValue(value: string): OrtPhoneInputValue | null {
     const trimmed = value.trim();
 
     if (!trimmed) {
@@ -311,7 +311,7 @@ export class PersonalData implements OnInit {
     return { iso2: 'UY', number, numberE164: `+598${number}` };
   }
 
-  private toBackendPhone(value: PhoneInputValue | null): string {
+  private toBackendPhone(value: OrtPhoneInputValue | null): string {
     if (!value) {
       return '';
     }
@@ -325,7 +325,7 @@ export class PersonalData implements OnInit {
 
   private phoneValidator(): AsyncValidatorFn {
     return control => {
-      const value = control.value as PhoneInputValue | null;
+      const value = control.value as OrtPhoneInputValue | null;
       if (!value?.number.trim()) {
         return of(null);
       }
@@ -337,7 +337,7 @@ export class PersonalData implements OnInit {
     };
   }
 
-  private toPhoneValidationPayload(value: PhoneInputValue): PhoneValidationPayload {
+  private toPhoneValidationPayload(value: OrtPhoneInputValue): PhoneValidationPayload {
     const iso2 = value.iso2 || null;
     const country = this.findPhoneCountryByIso2(iso2);
 
