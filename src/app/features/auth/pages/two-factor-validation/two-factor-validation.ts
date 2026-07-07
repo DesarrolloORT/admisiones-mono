@@ -22,7 +22,6 @@ export class TwoFactorValidationPage {
   protected readonly email = signal<string>('');
   protected readonly isSubmitting = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly canResend = signal<boolean>(true);
 
   private readonly sessionId = signal<string>('');
   private readonly documentType = signal<string>('');
