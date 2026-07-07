@@ -1,3 +1,9 @@
+---
+slug: /convenciones
+title: Buenas prácticas
+description: Convenciones Angular y límites de los contratos de API.
+---
+
 # Best Practices
 
 > Tipo: standards

@@ -116,17 +116,21 @@ describe('InscripcionPersonalStep', () => {
 
     expect(component.radioGroupOrientation()).toBe('horizontal');
   });
-  it('keeps baccalaureate options bound in the real template', () => {
+  it('keeps generated survey fields bound in the real template', () => {
     const template = readFileSync(
       'src/app/features/inscriptions/components/inscription-personal-step/inscription-personal-step.html',
       'utf8'
     );
 
     expect(template).toContain('<app-responsive-select');
-    expect(template).toContain('[options]="facade.baccalaureateOptions()"');
-    expect(template).not.toContain(
-      '<ort-radio-card-button value="1">Nacional</ort-radio-card-button>'
-    );
+    expect(template).toContain('[options]="facade.orientationOptions()"');
+    expect(template).toContain('formControlName="orientacion"');
+    expect(template).toContain('formControlName="recursaAnioBachillerato"');
+    expect(template).toContain('formControlName="vecesRecursaAnioBachillerato"');
+    expect(template).toContain('ortNumberInput');
+    expect(template).toContain('formControlName="universidadEducacionSuperiorOtro"');
+    expect(template).toContain('formControlName="universidadInformadaOtro"');
+    expect(template).toContain('ortInput');
     expect(template).toContain('formControlName="apoyoDecision"');
     expect(template).toContain('placeholder="Seleccioná..."');
   });

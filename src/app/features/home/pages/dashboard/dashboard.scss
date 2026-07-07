@@ -129,7 +129,7 @@
   }
 }
 
-@media (width >= 768px) {
+@media (width >=768px) {
   .alert-detail--inline {
     display: inline;
   }
@@ -178,7 +178,8 @@
     margin-bottom: var(--ort-sys-spacing-16);
   }
 }
-@media (width >= 1200px) {
+
+@media (width >=1200px) {
   .ort-dialog__dialog {
     width: 30%;
   }

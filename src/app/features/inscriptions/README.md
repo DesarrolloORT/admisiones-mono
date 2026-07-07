@@ -1,3 +1,9 @@
+---
+slug: /arquitectura/flujo-pasos
+title: Anatomía del flujo paso a paso
+description: Responsabilidades de stores, fachadas y componentes en una inscripción.
+---
+
 # Inscripciones — anatomía del flujo paso a paso
 
 Esta feature es la **referencia** del patrón de "proceso paso a paso" del repo.
@@ -73,6 +79,11 @@ tiene su propio estado.
   y, **cuando la sección está OK, llama a `this.process.flow.next()`** (o avanza
   de sub‑sección). Ahí es donde "se pasa de paso".
 
+  `inscripcion-survey.ts` cierra el paso en una única cadena: guarda Documento y
+  Foto en paralelo, guarda EncuestaInicial solo si ambos terminan correctamente y
+  finalmente confirma la preinscripción. Situación laboral no dispara llamadas
+  HTTP por sí sola.
+
 > **Quién decide el avance:** la fachada de sección, no el template. El template
 > solo invoca `process.continue()` / `process.back()`.
 
@@ -111,6 +122,9 @@ para "retomar"). La página/fachada los lee de `route.snapshot.data`.
    y `stepItems`.
 6. La página, al ser reactiva a `process.currentStep()`, renderiza el componente
    del paso nuevo; `ProcessLayout` actualiza el stepper.
+
+Dentro de la encuesta no hay guardados automáticos por completar expansibles. El
+guardado y la confirmación se ejecutan juntos al cerrar el paso.
 
 `back()` es el espejo: retrocede sub‑sección si la hay, si no `flow.previous()`.
 

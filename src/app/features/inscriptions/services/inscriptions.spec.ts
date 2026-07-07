@@ -18,6 +18,7 @@ describe('Inscripciones', () => {
     getStudentRegulationAcceptance: ReturnType<typeof vi.fn>;
     saveInitialSurvey: ReturnType<typeof vi.fn>;
     registerProductInterest: ReturnType<typeof vi.fn>;
+    pay: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -45,7 +46,9 @@ describe('Inscripciones', () => {
           tieneDerechoEncuesta: true,
           encuesta: null,
           universidadesConsideradas: [],
+          universidadesConsideradasOtros: [],
           universidadesEducacionSuperior: [],
+          universidadesEducacionSuperiorOtros: [],
           opcionesMotivosSeleccionados: [],
           opcionesPublicidadSeleccionadas: [],
         })
@@ -55,6 +58,16 @@ describe('Inscripciones', () => {
         .mockReturnValue(of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })),
       saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
       registerProductInterest: vi.fn().mockReturnValue(of(true)),
+      pay: vi.fn().mockReturnValue(
+        of({
+          success: true,
+          resultado: null,
+          urlPago: null,
+          mensajes: [],
+          message: null,
+          errorCode: null,
+        })
+      ),
     };
 
     TestBed.configureTestingModule({
@@ -166,7 +179,9 @@ describe('Inscripciones', () => {
       trabajaActualmente: null,
       tipoJornadaId: null,
       universidadConsideradaIds: null,
+      universidadConsideradaOtros: null,
       universidadEducacionSuperiorIds: null,
+      universidadEducacionSuperiorOtros: null,
       publicidadOrtIds: null,
       motivoEleccionOrtIds: null,
     };
@@ -196,5 +211,17 @@ describe('Inscripciones', () => {
     service.confirmPreEnrollment(payload).subscribe();
 
     expect(endpointMock.confirmPreEnrollment).toHaveBeenCalledWith(payload);
+  });
+
+  it('delegates payment', () => {
+    const payload = {
+      idInscripcion: 1072704,
+      metodoPago: 'cuenta-bancaria' as const,
+      idBancoSistarbanc: 'brou',
+    };
+
+    service.pay(payload).subscribe();
+
+    expect(endpointMock.pay).toHaveBeenCalledWith(payload);
   });
 });

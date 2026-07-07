@@ -44,7 +44,7 @@ export function resolveBankLogo(bank: Pick<Bank, 'label' | 'code'>): string {
 /** Convierte un banco de catálogo en opción de combo con su logo. */
 export function toBankOption(bank: Bank): OpcionInscripcion {
   return {
-    value: bank.id.toString(),
+    value: bank.code ?? bank.id.toString(),
     label: bank.label,
     icon: resolveBankLogo(bank),
   };

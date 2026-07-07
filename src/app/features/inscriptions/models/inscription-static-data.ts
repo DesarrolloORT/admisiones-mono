@@ -22,12 +22,6 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
     hint: 'Pagá desde tu banco por Sistarbanc',
   },
   {
-    value: 'tarjeta-credito',
-    label: 'Tarjeta de crédito',
-    hint: 'Podrás seleccionar tu tarjeta de crédito dentro de Sistarbanc',
-    badges: ['Mastercard', 'Visa'],
-  },
-  {
     value: 'cuenta-personal',
     label: 'Cuenta personal',
     hint: 'Monto disponible no informado',
@@ -35,7 +29,12 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
   {
     value: 'banred',
     label: 'Banred',
-    hint: 'Mediante la aplicación ingresando tu número de estudiante',
+    hint: 'Te redirigiremos a la pasarela para completar el pago',
+  },
+  {
+    value: 'geopay',
+    label: 'Geopay',
+    hint: 'Te redirigiremos a la pasarela para completar el pago',
   },
   {
     value: 'abitab',
@@ -50,7 +49,7 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
 ];
 
 export const RESERVATION_INSTRUCTIONS: Record<
-  Extract<MetodoPago, 'abitab' | 'paganza' | 'banred'>,
+  Extract<MetodoPago, 'abitab' | 'paganza'>,
   InstruccionReserva
 > = {
   abitab: {
@@ -69,13 +68,6 @@ export const RESERVATION_INSTRUCTIONS: Record<
     description:
       'Tenés tiempo hasta el 4 de marzo de 2027 para realizar el pago de la seña desde Paganza.',
     items: ['Buscá Universidad ORT Uruguay', 'Ingresá tu número de estudiante: 397654'],
-    help: 'La acreditación puede demorar hasta 24 horas hábiles.',
-  },
-  banred: {
-    title: '¡Inscripción reservada!',
-    description:
-      'Tenés tiempo hasta el 4 de marzo de 2027 para realizar el pago de la seña desde Banred.',
-    items: ['Ingresá tu número de estudiante: 397654'],
     help: 'La acreditación puede demorar hasta 24 horas hábiles.',
   },
 };

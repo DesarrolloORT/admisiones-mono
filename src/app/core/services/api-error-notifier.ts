@@ -10,6 +10,7 @@ export class AppApiErrorNotifier extends ApiErrorNotifier {
   private readonly snackbar = inject(SnackbarHandler);
 
   public override notify(error: NormalizedApiError): void {
+    if (error.status === 404) return;
     this.snackbar.error(error.message);
   }
 }

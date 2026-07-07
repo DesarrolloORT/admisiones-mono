@@ -1,6 +1,6 @@
 import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, Validators } from '@angular/forms';
+import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import type {
   OrtErrorItem,
@@ -8,7 +8,7 @@ import type {
   OrtPreloadedFile,
 } from '@desarrolloort/components';
 import { forkJoin, merge, Observable, of } from 'rxjs';
-import { finalize, map, switchMap } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -32,8 +32,10 @@ import type {
 } from '../models/inscription-flow';
 import {
   buildFormErrors,
+  disallowedBachilleratoForUniversity,
   type IdentityFileTarget,
   type IdentityPreloadedFileMap,
+  NIVEL_UNIVERSITARIO,
 } from '../models/inscription-flow-forms';
 import {
   buildConfirmPreEnrollmentPayload,
@@ -51,7 +53,6 @@ import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionProposalFacade } from './inscription-proposal';
 
-const FIRST_EMS_SCHOOL_YEAR = '10';
 const URUGUAY_COUNTRY_CODE = 1;
 const IDENTITY_SAVE_ERROR = 'identity-save';
 
@@ -65,6 +66,7 @@ export class InscripcionSurveyFacade {
   private readonly proposal = inject(InscripcionProposalFacade);
   private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
   private identityPreloadRequested = false;
+  private initialIdentityExpiration = '';
   private uruguayCountryCode: number | null = null;
   private readonly identityFileTouched = new Set<IdentityFileTarget>();
   private readonly baccalaureateYears = signal<readonly BaccalaureateYearGroup[]>([]);
@@ -115,7 +117,6 @@ export class InscripcionSurveyFacade {
   public readonly schoolYearOptions = computed<readonly OpcionInscripcion[]>(() =>
     this.baccalaureateYears().map(year => ({ value: year.id.toString(), label: year.label }))
   );
-  public readonly baccalaureateOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly orientationOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly schoolPlaceOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly departmentOptions = signal<readonly OpcionInscripcion[]>([]);
@@ -184,6 +185,7 @@ export class InscripcionSurveyFacade {
     this.configureConditionalValidators();
     this.configureDependentCatalogs();
     this.observeForms();
+    this.observeIdentityConfirmation();
     this.loadStudentRegulationAcceptance();
     this.loadIdentityPreloadOnIdentitySection();
     this.applyResolvedInitialSurveyState();
@@ -191,13 +193,6 @@ export class InscripcionSurveyFacade {
 
   private configureDependentCatalogs(): void {
     this.educationForm.controls.anioSecundaria.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.refreshBaccalaureateOptions();
-        this.refreshOrientationOptions();
-        this.updateConditionalValidators();
-      });
-    this.educationForm.controls.tipoBachillerato.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.refreshOrientationOptions();
@@ -265,7 +260,24 @@ export class InscripcionSurveyFacade {
   }
 
   public updateIdentityFile(target: IdentityFileTarget, event: OrtFileUploaderChange): void {
-    const selectedFile = event.value.find(file => file.isValid)?.file ?? null;
+    const selected =
+      event.value.find(file => file.isValid && !file.isPreloaded) ??
+      event.value.find(file => file.isValid) ??
+      null;
+    const selectedFile = selected?.file ?? null;
+    const currentFile = this.identityFiles()[target];
+
+    if (
+      selected?.isPreloaded &&
+      currentFile &&
+      selectedFile &&
+      currentFile.name === selectedFile.name &&
+      currentFile.size === selectedFile.size &&
+      currentFile.type === selectedFile.type
+    ) {
+      return;
+    }
+
     this.identityFileTouched.add(target);
     this.preloadedIdentityFiles.update(files => ({ ...files, [target]: null }));
     this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
@@ -276,6 +288,15 @@ export class InscripcionSurveyFacade {
     return this.submittedSections().includes('identidad') && !this.identityFiles()[target];
   }
 
+  public isUniversityCareer(): boolean {
+    const selectedCareer = this.formsStore.academicForm.controls.carrera.value;
+    if (!selectedCareer) return false;
+    const nivel = this.proposal
+      .careers()
+      .find(career => career.idProducto.toString() === selectedCareer)?.idNivelProducto;
+    return nivel === NIVEL_UNIVERSITARIO;
+  }
+
   public isNationalSchoolPlace(): boolean {
     return this.educationForm.controls.lugarSecundaria.value === '1';
   }
@@ -284,17 +305,35 @@ export class InscripcionSurveyFacade {
     return this.educationForm.controls.lugarSecundaria.value === '2';
   }
 
-  public shouldAskBaccalaureateType(): boolean {
+  public shouldAskBaccalaureateOrientation(): boolean {
     const selectedYear = this.educationForm.controls.anioSecundaria.value;
     return (
       this.educationForm.controls.cursaSecundaria.value === 'cursando' &&
       !!selectedYear &&
-      selectedYear !== FIRST_EMS_SCHOOL_YEAR
+      this.orientationOptions().length > 0
     );
+  }
+
+  public shouldAskRecursaCount(): boolean {
+    return this.educationForm.controls.recursaAnioBachillerato.value === 'si';
   }
 
   public shouldAskHigherEducationUniversities(): boolean {
     return this.educationForm.controls.estadoEducacionSuperior.value === '1';
+  }
+
+  public shouldAskHigherEducationOtherUniversity(): boolean {
+    return (
+      this.shouldAskHigherEducationUniversities() &&
+      this.educationForm.controls.universidadesEducacionSuperior.value.includes('0')
+    );
+  }
+
+  public shouldAskInformedOtherUniversity(): boolean {
+    return (
+      this.academicDecisionForm.controls.otrasUniversidades.value === 'si' &&
+      this.academicDecisionForm.controls.universidadesInformadas.value.includes('0')
+    );
   }
 
   public shouldAskMotherOrtDegree(): boolean {
@@ -354,14 +393,15 @@ export class InscripcionSurveyFacade {
 
     this.preEnrollmentError.set(null);
     this.finalizingPreEnrollment.set(true);
-    this.savePartial()
+    this.saveIdentityChanges()
       .pipe(
-        switchMap(saved => {
-          if (!saved) throw new Error('No se pudo guardar la encuesta inicial final.');
-          return this.saveIdentityChanges();
-        }),
+        catchError(() => of(false)),
         switchMap(savedIdentity => {
           if (!savedIdentity) throw new Error(IDENTITY_SAVE_ERROR);
+          return this.savePartial();
+        }),
+        switchMap(saved => {
+          if (!saved) throw new Error('No se pudo guardar la encuesta inicial final.');
           return this.inscriptions.confirmPreEnrollment(confirmPayload);
         }),
         finalize(() => this.finalizingPreEnrollment.set(false)),
@@ -380,12 +420,23 @@ export class InscripcionSurveyFacade {
           this.process.flow.next();
           this.process.markCheckpoint();
         },
-        error: error =>
+        error: error => {
+          const identitySaveFailed =
+            error instanceof Error && error.message === IDENTITY_SAVE_ERROR;
+          if (identitySaveFailed) {
+            this.completedSections.update(sections =>
+              sections.filter(section => section !== 'identidad')
+            );
+            this.markSectionSubmitted('identidad');
+            this.activeSection.set('identidad');
+            this.identityForm.markAllAsTouched();
+          }
           this.preEnrollmentError.set(
-            error instanceof Error && error.message === IDENTITY_SAVE_ERROR
+            identitySaveFailed
               ? 'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
               : 'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
-          ),
+          );
+        },
       });
   }
 
@@ -416,16 +467,13 @@ export class InscripcionSurveyFacade {
   private saveIdentityChanges(): Observable<boolean> {
     const files = this.identityFiles();
     const expiration = serializeDate(this.identityForm.controls.vencimientoDocumento.value);
+    const documentChanged =
+      this.identityFileTouched.has('frente') ||
+      this.identityFileTouched.has('dorso') ||
+      expiration !== this.initialIdentityExpiration;
     const uploads: Observable<boolean>[] = [];
 
-    if (
-      expiration &&
-      files.frente &&
-      files.dorso &&
-      (this.identityFileTouched.has('frente') ||
-        this.identityFileTouched.has('dorso') ||
-        this.identityForm.controls.vencimientoDocumento.dirty)
-    ) {
+    if (expiration && files.frente && files.dorso && documentChanged) {
       uploads.push(
         this.inscriptions.uploadIdentityDocument({
           fecha: expiration,
@@ -487,14 +535,36 @@ export class InscripcionSurveyFacade {
       });
   }
 
+  private observeIdentityConfirmation(): void {
+    this.identityForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const confirmed = this.identityForm.controls.identidadCorrecta.value;
+      if (!confirmed || !this.requiresIdentityConfirmation() || !this.isSectionValid('identidad')) {
+        return;
+      }
+
+      this.completeSection('identidad');
+      if (this.activeSection() !== 'identidad') return;
+
+      const sections = this.visibleSections();
+      const nextSection = sections[sections.indexOf('identidad') + 1];
+      if (nextSection) this.activeSection.set(nextSection);
+      this.process.markCheckpoint();
+    });
+  }
+
   private configureConditionalValidators(): void {
     merge(
+      this.formsStore.academicForm.controls.carrera.valueChanges,
+      this.educationForm.controls.anioSecundaria.valueChanges,
       this.educationForm.controls.cursaSecundaria.valueChanges,
       this.educationForm.controls.lugarSecundaria.valueChanges,
       this.educationForm.controls.estadoEducacionSuperior.valueChanges,
+      this.educationForm.controls.universidadesEducacionSuperior.valueChanges,
+      this.educationForm.controls.recursaAnioBachillerato.valueChanges,
       this.educationForm.controls.formacionMadre.valueChanges,
       this.educationForm.controls.formacionPadre.valueChanges,
       this.academicDecisionForm.controls.otrasUniversidades.valueChanges,
+      this.academicDecisionForm.controls.universidadesInformadas.valueChanges,
       this.ortExperienceForm.controls.reunionAsesoramiento.valueChanges,
       this.ortExperienceForm.controls.visitoWeb.valueChanges,
       this.ortExperienceForm.controls.visitoSede.valueChanges,
@@ -513,15 +583,17 @@ export class InscripcionSurveyFacade {
     const work = this.workForm.controls;
     const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
 
-    this.setRequired(
-      education.anioSecundaria,
-      currentlyInSchool && this.schoolYearOptions().length > 0
-    );
-    this.setRequired(education.tipoBachillerato, this.shouldAskBaccalaureateType());
-    this.setRequired(
-      education.orientacion,
-      this.shouldAskBaccalaureateType() && this.orientationOptions().length > 0
-    );
+    const anioBachilleratoRequired = currentlyInSchool && this.schoolYearOptions().length > 0;
+    education.anioSecundaria.setValidators([
+      ...(anioBachilleratoRequired ? [Validators.required] : []),
+      disallowedBachilleratoForUniversity(() => this.isUniversityCareer()),
+    ]);
+    education.anioSecundaria.updateValueAndValidity({ emitEvent: false });
+    this.setRequired(education.orientacion, this.shouldAskBaccalaureateOrientation());
+    this.setRequired(education.vecesRecursaAnioBachillerato, this.shouldAskRecursaCount(), [
+      Validators.required,
+      Validators.min(1),
+    ]);
     this.setRequired(
       education.departamento,
       this.isNationalSchoolPlace() && this.departmentOptions().length > 0
@@ -536,6 +608,10 @@ export class InscripcionSurveyFacade {
       this.shouldAskHigherEducationUniversities() &&
         this.higherEducationUniversityOptions().length > 0
     );
+    this.setRequired(
+      education.universidadEducacionSuperiorOtro,
+      this.shouldAskHigherEducationOtherUniversity()
+    );
     this.setRequired(education.tituloOrtMadre, this.shouldAskMotherOrtDegree());
     this.setRequired(education.tituloOrtPadre, this.shouldAskFatherOrtDegree());
 
@@ -543,6 +619,7 @@ export class InscripcionSurveyFacade {
       decision.universidadesInformadas,
       decision.otrasUniversidades.value === 'si' && this.universityOptions().length > 0
     );
+    this.setRequired(decision.universidadInformadaOtro, this.shouldAskInformedOtherUniversity());
 
     this.setRequired(
       experience.calificacionAsesoramiento,
@@ -561,8 +638,12 @@ export class InscripcionSurveyFacade {
     );
   }
 
-  private setRequired(control: AbstractControl, required: boolean): void {
-    control.setValidators(required ? Validators.required : null);
+  private setRequired(
+    control: AbstractControl,
+    required: boolean,
+    validators: ValidatorFn | ValidatorFn[] = Validators.required
+  ): void {
+    control.setValidators(required ? validators : null);
     control.updateValueAndValidity({ emitEvent: false });
   }
 
@@ -614,6 +695,7 @@ export class InscripcionSurveyFacade {
 
   private applyIdentityPreload(preload: InscripcionIdentityPreload): void {
     const expiration = parseDate(preload.fechaVencimiento);
+    this.initialIdentityExpiration = serializeDate(expiration);
     this.setIdentityConfirmationRequired(
       !!preload.frente && !!preload.dorso && !!preload.selfie && !!expiration
     );
@@ -701,7 +783,9 @@ export class InscripcionSurveyFacade {
         tieneDerechoEncuesta: true,
         encuesta: null,
         universidadesConsideradas: [],
+        universidadesConsideradasOtros: [],
         universidadesEducacionSuperior: [],
+        universidadesEducacionSuperiorOtros: [],
         opcionesMotivosSeleccionados: [],
         opcionesPublicidadSeleccionadas: [],
       }
@@ -758,8 +842,6 @@ export class InscripcionSurveyFacade {
     const proposalType = patchBackendSurveyForms(survey, response, {
       forms: this.formsStore.forms,
       careers: this.proposal.careers(),
-      previousCareerOptions: this.previousCareerOptions(),
-      supportOptions: this.supportOptions(),
     });
     this.proposal.setProposalType(proposalType);
     this.refreshOrientationOptions();
@@ -838,33 +920,15 @@ export class InscripcionSurveyFacade {
         )
       );
     }
-    this.refreshBaccalaureateOptions();
     this.refreshOrientationOptions();
     this.updateConditionalValidators();
-  }
-
-  private refreshBaccalaureateOptions(): void {
-    this.baccalaureateOptions.set(
-      buildBaccalaureateOptions(
-        this.baccalaureateYears(),
-        this.educationForm.controls.anioSecundaria.value
-      )
-    );
-    const control = this.educationForm.controls.tipoBachillerato;
-    if (
-      control.value &&
-      !this.baccalaureateOptions().some(option => option.value === control.value)
-    ) {
-      control.setValue('', { emitEvent: false });
-    }
   }
 
   private refreshOrientationOptions(): void {
     this.orientationOptions.set(
       buildOrientationOptions(
         this.baccalaureateYears(),
-        this.educationForm.controls.anioSecundaria.value,
-        this.educationForm.controls.tipoBachillerato.value
+        this.educationForm.controls.anioSecundaria.value
       )
     );
     if (
@@ -932,29 +996,14 @@ export class InscripcionSurveyFacade {
   }
 }
 
-function buildBaccalaureateOptions(
+function buildOrientationOptions(
   years: readonly BaccalaureateYearGroup[],
   selectedYear: string
 ): readonly OpcionInscripcion[] {
   const year = years.find(option => option.id.toString() === selectedYear);
-  return (year?.baccalaureates ?? []).map(option => ({
-    value: option.id.toString(),
-    label: option.label,
-  }));
-}
-
-function buildOrientationOptions(
-  years: readonly BaccalaureateYearGroup[],
-  selectedYear: string,
-  selectedBaccalaureate: string
-): readonly OpcionInscripcion[] {
-  const year = years.find(option => option.id.toString() === selectedYear);
-  const baccalaureate = year?.baccalaureates.find(
-    option => option.id.toString() === selectedBaccalaureate
+  return (year?.baccalaureates ?? []).flatMap(option =>
+    option.orientation ? [{ value: option.id.toString(), label: option.orientation }] : []
   );
-  return baccalaureate?.orientation
-    ? [{ value: baccalaureate.id.toString(), label: baccalaureate.orientation }]
-    : [];
 }
 
 function isNotFoundError(error: unknown): error is { status: number } {

@@ -28,7 +28,7 @@ describe('inscription-bank-logo', () => {
 
   it('maps a catalog bank into a combo option with its logo', () => {
     expect(toBankOption({ id: 7, label: 'Santander', code: 'santander' })).toEqual({
-      value: '7',
+      value: 'santander',
       label: 'Santander',
       icon: 'assets/banks/santander.svg',
     });

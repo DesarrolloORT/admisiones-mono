@@ -15,10 +15,10 @@ import {
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
+import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 
 import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
 import { InscripcionDialog } from '../inscription-dialog/inscription-dialog';
-import { ResponsiveSelect } from '../responsive-select/responsive-select';
 
 @Component({
   selector: 'app-inscription-confirmation-step',
@@ -40,6 +40,8 @@ export class InscripcionConfirmationStep {
   protected readonly facade = inject(InscripcionPaymentFacade);
   private readonly breakpointService = inject(BreakpointService);
   private readonly paymentSubmit = viewChild<ElementRef<HTMLButtonElement>>('paymentSubmit');
+
+  protected readonly divider = true;
 
   protected readonly radioGroupOrientation = computed(() => {
     const breakpoint = this.breakpointService.breakpoint();

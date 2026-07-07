@@ -11,15 +11,17 @@ describe('DashboardQuickActions', () => {
     });
   });
 
-  it('resumes actionable career states in the common flow with the enrollment context', async () => {
-    const fixture = createComponent('Pago pendiente');
+  it.each(['En proceso', 'Pendiente', 'Pago pendiente', 'Confirmada'])(
+    'resumes %s in the common flow with the enrollment context',
+    async status => {
+      const fixture = createComponent(status);
 
-    await fixture.whenStable();
+      await fixture.whenStable();
 
-    const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
-    expect(link.textContent).toContain('Ver instrucciones de pago');
-    expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
-  });
+      const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
+    }
+  );
 
   it('keeps waiting enrollments informational', async () => {
     const fixture = createComponent('A la espera');

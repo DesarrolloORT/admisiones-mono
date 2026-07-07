@@ -12,7 +12,9 @@ const emptySurveyResponse = {
   tieneDerechoEncuesta: true,
   encuesta: null,
   universidadesConsideradas: [],
+  universidadesConsideradasOtros: [],
   universidadesEducacionSuperior: [],
+  universidadesEducacionSuperiorOtros: [],
   opcionesMotivosSeleccionados: [],
   opcionesPublicidadSeleccionadas: [],
 };
@@ -27,11 +29,12 @@ const emptySurvey: InscripcionInitialSurvey = {
   cursaSecundaria: null,
   orientacionBachilleratoId: null,
   anioBachilleratoId: null,
+  recursaAnioBachillerato: null,
+  vecesRecursaAnioBachillerato: null,
   institucionSecundariaId: null,
   ubicacionSecundariaId: null,
   nombreInstitucionSecundaria: null,
   estadoEducacionSuperiorPreviaId: null,
-  tieneEducacionSuperior: null,
   nivelFormacionMadreId: null,
   nivelFormacionPadreId: null,
   madreEgresadaOrt: null,
@@ -40,13 +43,7 @@ const emptySurvey: InscripcionInitialSurvey = {
   anioDecisionOrtId: null,
   seInformoEnOtrasUniversidades: null,
   apoyoDecisionId: null,
-  apoyoPadres: null,
-  apoyoOtros: null,
-  apoyoAmigosFamiliares: null,
-  apoyoNadie: null,
-  apoyoAmigoPropuesta: null,
   nivelDecisionId: null,
-  decisionConfirmada: null,
   tuvoAsesoramientoOrt: null,
   valoracionAsesoramientoOrt: null,
   visitoSitioWebOrt: null,
@@ -63,12 +60,14 @@ describe('inscription flow mappers', () => {
     forms.educationForm.patchValue({
       cursaSecundaria: 'cursando',
       anioSecundaria: '11',
-      tipoBachillerato: '1',
       orientacion: '12',
+      recursaAnioBachillerato: 'si',
+      vecesRecursaAnioBachillerato: 2,
       lugarSecundaria: '1',
       institucionEducativa: '99',
       estadoEducacionSuperior: '1',
-      universidadesEducacionSuperior: ['10'],
+      universidadesEducacionSuperior: ['10', '0'],
+      universidadEducacionSuperiorOtro: ' Universidad inventada ',
       formacionMadre: '5',
       tituloOrtMadre: 'si',
       formacionPadre: '6',
@@ -79,7 +78,8 @@ describe('inscription flow mappers', () => {
       anioDecisionOrt: '7',
       apoyoDecision: '5',
       otrasUniversidades: 'si',
-      universidadesInformadas: ['11'],
+      universidadesInformadas: ['11', '0'],
+      universidadInformadaOtro: ' Otra consultada ',
       certezaDecision: '1',
       motivosOrt: ['2'],
     });
@@ -130,7 +130,9 @@ describe('inscription flow mappers', () => {
         'tuvoAsesoramientoOrt',
         'ubicacionUltimoAnioSecundariaId',
         'universidadConsideradaIds',
+        'universidadConsideradaOtros',
         'universidadEducacionSuperiorIds',
+        'universidadEducacionSuperiorOtros',
         'valoracionAsesoramientoOrtId',
         'valoracionInstalacionesOrtId',
         'valoracionSitioWebOrtId',
@@ -145,6 +147,8 @@ describe('inscription flow mappers', () => {
       orientacionBachilleratoId: 12,
       anioBachillerato: 11,
       cursaSecundariaActualmente: true,
+      recursaAnioBachillerato: true,
+      vecesRecursaAnioBachillerato: 2,
       institucionSecundariaId: 99,
       nombreInstitucionSecundaria: null,
       nivelFormacionMadreTutorId: 5,
@@ -154,9 +158,11 @@ describe('inscription flow mappers', () => {
       anioDecisionOrtId: 7,
       apoyoDecisionId: 5,
       seInformoEnOtrasUniversidades: true,
-      universidadConsideradaIds: [11],
+      universidadConsideradaIds: [11, 0],
+      universidadConsideradaOtros: ['Otra consultada'],
       estadoEducacionSuperiorPreviaId: 1,
-      universidadEducacionSuperiorIds: [10],
+      universidadEducacionSuperiorIds: [10, 0],
+      universidadEducacionSuperiorOtros: ['Universidad inventada'],
       nivelDecisionId: 1,
       tuvoAsesoramientoOrt: true,
       valoracionAsesoramientoOrtId: 4,
@@ -176,7 +182,6 @@ describe('inscription flow mappers', () => {
     forms.educationForm.patchValue({
       cursaSecundaria: 'no-cursando',
       anioSecundaria: '11',
-      tipoBachillerato: '12',
       orientacion: '12',
     });
 
@@ -184,19 +189,26 @@ describe('inscription flow mappers', () => {
 
     expect(payload.orientacionBachilleratoId).toBeNull();
   });
-  it('does not send orientation for 1 EMS even if stale baccalaureate values exist', () => {
+
+  it('does not send other-university text unless option 0 is selected', () => {
     const forms = createInscripcionForms();
     forms.educationForm.patchValue({
-      cursaSecundaria: 'cursando',
-      anioSecundaria: '10',
-      tipoBachillerato: '2',
-      orientacion: '12',
+      estadoEducacionSuperior: '1',
+      universidadesEducacionSuperior: ['10'],
+      universidadEducacionSuperiorOtro: 'Ignorada',
+    });
+    forms.academicDecisionForm.patchValue({
+      otrasUniversidades: 'si',
+      universidadesInformadas: ['11'],
+      universidadInformadaOtro: 'Ignorada',
     });
 
     const payload = buildInitialSurveyPayload(forms);
 
-    expect(payload.orientacionBachilleratoId).toBeNull();
+    expect(payload.universidadEducacionSuperiorOtros).toBeNull();
+    expect(payload.universidadConsideradaOtros).toBeNull();
   });
+
   it('detects complete university education by contract id', () => {
     expect(hasCompleteUniversityEducation('5')).toBe(true);
     expect(hasCompleteUniversityEducation('6')).toBe(true);
@@ -212,36 +224,43 @@ describe('inscription flow mappers', () => {
         cursaSecundaria: true,
         anioBachilleratoId: 6,
         orientacionBachilleratoId: 2,
+        recursaAnioBachillerato: true,
+        vecesRecursaAnioBachillerato: 2,
         ubicacionSecundariaId: 1,
         institucionSecundariaId: 99,
         seInformoEnOtrasUniversidades: true,
-        decisionConfirmada: false,
+        nivelDecisionId: 2,
         tuvoAsesoramientoOrt: true,
         visitoInstalacionesOrt: true,
         recuerdaPublicidadOrt: true,
       },
       {
         ...emptySurveyResponse,
-        universidadesConsideradas: [10],
-        universidadesEducacionSuperior: [11],
+        universidadesConsideradas: [10, 0],
+        universidadesConsideradasOtros: ['Otra consultada'],
+        universidadesEducacionSuperior: [11, 0],
+        universidadesEducacionSuperiorOtros: ['Otra superior'],
         opcionesMotivosSeleccionados: [8],
         opcionesPublicidadSeleccionadas: [9],
       },
-      { forms, careers: [], previousCareerOptions: [], supportOptions: [] }
+      { forms, careers: [] }
     );
 
     expect(forms.educationForm.getRawValue()).toMatchObject({
       cursaSecundaria: 'cursando',
       anioSecundaria: '6',
-      tipoBachillerato: '2',
       orientacion: '2',
+      recursaAnioBachillerato: 'si',
+      vecesRecursaAnioBachillerato: 2,
       lugarSecundaria: '1',
       institucionEducativa: '99',
-      universidadesEducacionSuperior: ['11'],
+      universidadesEducacionSuperior: ['11', '0'],
+      universidadEducacionSuperiorOtro: 'Otra superior',
     });
     expect(forms.academicDecisionForm.getRawValue()).toMatchObject({
       otrasUniversidades: 'si',
-      universidadesInformadas: ['10'],
+      universidadesInformadas: ['10', '0'],
+      universidadInformadaOtro: 'Otra consultada',
       certezaDecision: '2',
       motivosOrt: ['8'],
     });

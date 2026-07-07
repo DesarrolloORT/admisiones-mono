@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideRouter, RouterLink } from '@angular/router';
 
 import { MiInscripcion } from '../../models/mi-inscripcion';
 import { DashboardCareersSection } from './dashboard-careers-section';
@@ -9,6 +11,7 @@ describe('DashboardCareersSection', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [DashboardCareersSection],
+      providers: [provideRouter([])],
     });
   });
 
@@ -26,6 +29,15 @@ describe('DashboardCareersSection', () => {
 
     expect(fixture.nativeElement.querySelectorAll('app-dashboard-card')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('.swiper')).toBeNull();
+  });
+
+  it('should navigate to inscriptions from the add career button', async () => {
+    fixture = createComponent([createEnrollment(1)]);
+    await fixture.whenStable();
+
+    const button = fixture.debugElement.query(By.css('.section-header__add'));
+
+    expect(button.injector.get(RouterLink).urlTree?.toString()).toBe('/inscripciones');
   });
 
   it('should show a carousel for multiple enrollments', async () => {

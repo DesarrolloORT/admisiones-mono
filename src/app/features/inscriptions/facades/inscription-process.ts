@@ -6,7 +6,7 @@ import { finalize } from 'rxjs/operators';
 
 import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscription-detail';
 import type { BorradorInscripcion, EscenarioInscripcion } from '../models/inscription-flow';
-import { getSurveyValues, parseDate, serializeDate } from '../models/inscription-flow-mappers';
+import { getSurveyValues, serializeDate } from '../models/inscription-flow-mappers';
 import { InscripcionDraft } from '../services/inscription-draft';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -78,6 +78,7 @@ export class InscripcionProcessFacade {
   });
 
   constructor() {
+    this.applyResumeContext();
     this.restoreDraftWhenReady();
     this.observeDraftChanges();
     this.clearDraftAtTerminalOutcome();
@@ -161,28 +162,7 @@ export class InscripcionProcessFacade {
 
   private restoreDraft(): void {
     this.draftRestored = true;
-    const saved = this.draft.load(this.survey.scenario());
-    if (saved) {
-      this.forms.academicForm.patchValue(saved.propuesta, { emitEvent: false });
-      this.proposal.setProposalType(saved.propuesta.tipoPropuesta);
-      this.forms.educationForm.patchValue(saved.encuesta.educacion, { emitEvent: false });
-      this.forms.academicDecisionForm.patchValue(saved.encuesta.decisionAcademica, {
-        emitEvent: false,
-      });
-      this.forms.ortExperienceForm.patchValue(saved.encuesta.experienciaOrt, { emitEvent: false });
-      this.forms.workForm.patchValue(saved.encuesta.situacionLaboral, { emitEvent: false });
-      this.forms.identityForm.controls.vencimientoDocumento.setValue(
-        parseDate(saved.identidad.vencimientoDocumento),
-        { emitEvent: false }
-      );
-      this.forms.regulationForm.patchValue(saved.reglamento, { emitEvent: false });
-      this.survey.restoreSectionState(saved.seccionActiva, saved.seccionesCompletas);
-      this.payment.restore(saved.pago.metodoPago, saved.preinscription);
-      this.process.flow.goTo(
-        saved.paso === 'pago' && !saved.preinscription ? 'encuesta' : saved.paso
-      );
-    }
-    this.applyResumeContext();
+    this.clearDrafts();
     this.draftReady.set(true);
   }
 
@@ -193,13 +173,16 @@ export class InscripcionProcessFacade {
   // configurado por la encuesta.
   private applyResumeContext(): void {
     const detail = this.route.snapshot.data['inscriptionDetail'] as InscripcionDetail | null;
-    if (detail?.estado !== 'Pago pendiente' && detail?.estado !== 'Confirmada') return;
+    if (!detail) return;
 
     const preEnrollment = detailToPreEnrollment(detail);
     if (preEnrollment) this.process.preEnrollmentResponse.set(preEnrollment);
 
-    if (detail.estado === 'Pago pendiente') this.process.flow.goTo('pago');
-    else this.payment.outcome.set('inscription-confirmada');
+    if (detail.estado === 'Pago pendiente' || detail.estado === 'Pendiente') {
+      this.process.flow.goTo('pago');
+    } else if (detail.estado === 'Confirmada') {
+      this.payment.outcome.set('inscription-confirmada');
+    }
   }
 
   private observeDraftChanges(): void {
@@ -288,8 +271,12 @@ export class InscripcionProcessFacade {
           clearTimeout(this.draftTimer);
           this.draftTimer = null;
         }
-        for (const scenario of DRAFT_SCENARIOS) this.draft.clear(scenario);
+        this.clearDrafts();
       });
     });
+  }
+
+  private clearDrafts(): void {
+    for (const scenario of DRAFT_SCENARIOS) this.draft.clear(scenario);
   }
 }

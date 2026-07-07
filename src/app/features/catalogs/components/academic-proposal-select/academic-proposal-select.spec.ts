@@ -1,15 +1,26 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { of } from 'rxjs';
+import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 import { vi } from 'vitest';
 
-import type { AcademicProposalForm } from '../../../catalogs/models/academic-proposal';
-import { Catalogs } from '../../../catalogs/services/catalogs';
-import { ResponsiveSelect } from '../responsive-select/responsive-select';
+import type { AcademicProposalForm } from '../../models/academic-proposal';
+import { Catalogs } from '../../services/catalogs';
 import { AcademicProposalSelect } from './academic-proposal-select';
 
 describe('AcademicProposalSelect', () => {
+  const breakpoint = signal({
+    isXSmall: true,
+    isSmall: false,
+    isMedium: false,
+    isLarge: false,
+    currentBreakpoint: 'xs',
+    screenWidth: 375,
+  });
+
   beforeAll(() => {
     Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
       configurable: true,
@@ -21,9 +32,19 @@ describe('AcademicProposalSelect', () => {
   let form: FormGroup<AcademicProposalForm>;
 
   beforeEach(async () => {
+    breakpoint.set({
+      isXSmall: true,
+      isSmall: false,
+      isMedium: false,
+      isLarge: false,
+      currentBreakpoint: 'xs',
+      screenWidth: 375,
+    });
+
     TestBed.configureTestingModule({
       imports: [AcademicProposalSelect],
       providers: [
+        { provide: BreakpointService, useValue: { breakpoint } },
         {
           provide: Catalogs,
           useValue: {
@@ -61,6 +82,31 @@ describe('AcademicProposalSelect', () => {
 
   it('connects a form to its academic selection state', () => {
     expect(fixture.componentInstance.selection().initialized()).toBe(true);
+  });
+
+  it('adapts the design-system card content to the current breakpoint', () => {
+    const card = fixture.nativeElement.querySelector('ort-card') as HTMLElement;
+
+    expect(card.classList).toContain('academic-proposal-select__card--mobile');
+    expect(fixture.nativeElement.querySelector('.academic-proposal-select__icon')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.academic-proposal-select__hint')).toBeNull();
+
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 900,
+    });
+    fixture.detectChanges();
+
+    expect(card.classList).not.toContain('academic-proposal-select__card--mobile');
+    expect(fixture.nativeElement.querySelector('.academic-proposal-select__icon')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.academic-proposal-select__hint')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.academic-proposal-select').classList).toContain(
+      'academic-proposal-select--desktop'
+    );
   });
 
   it('selects a career from the mobile drawer', () => {

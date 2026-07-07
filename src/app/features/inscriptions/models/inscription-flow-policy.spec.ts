@@ -29,7 +29,8 @@ describe('inscription flow policy', () => {
 
   it('maps payment methods and forced outcomes', () => {
     expect(getResultadoPago('abitab', null)).toBe('reservada');
-    expect(getResultadoPago('tarjeta-credito', null)).toBe('confirmada');
-    expect(getResultadoPago('tarjeta-credito', 'en-proceso')).toBe('en-proceso');
+    expect(getResultadoPago('cuenta-personal', null)).toBe('confirmada');
+    expect(getResultadoPago('banred', null)).toBe('confirmada');
+    expect(getResultadoPago('cuenta-personal', 'en-proceso')).toBe('en-proceso');
   });
 });

@@ -47,6 +47,18 @@
       <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
     </footer>
   </section>
+  } @else if (payment.outcome() === 'pago-pendiente-externo') {
+  <section aria-labelledby="external-payment-title" class="inscription-screen inscription-terminal">
+    <span aria-hidden="true" class="inscription-success-heading__icon">
+      <ort-icon>open_in_new</ort-icon>
+    </span>
+    <h1 id="external-payment-title">Pago pendiente en pasarela externa</h1>
+    <p>Te redirigimos a la pasarela para completar el pago.</p>
+    <p>Cuando el pago se acredite, podrás ver el estado actualizado desde el panel principal.</p>
+    <footer class="inscription-footer">
+      <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
+    </footer>
+  </section>
   } @else if (payment.view() === 'processing') {
   <section aria-labelledby="processing-title" class="inscription-screen inscription-terminal">
     <ort-spinner aria-hidden="true" />

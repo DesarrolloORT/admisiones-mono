@@ -31,8 +31,43 @@ function getArg(name, defaultValue = undefined) {
   return value;
 }
 
+const ARGUMENTS_WITH_VALUES = new Set([
+  'azure-cli-dir',
+  'cache-path',
+  'cache-ttl-minutes',
+  'daily-limit',
+  'daily-usage-path',
+  'endpoint',
+  'env',
+  'key',
+  'label',
+  'label-filter',
+  'max-stale-minutes',
+  'output',
+  'project',
+  'web-config',
+]);
+
 function hasFlag(name) {
   return process.argv.includes(`--${name}`);
+}
+
+function getPositionalArg(args = process.argv.slice(2)) {
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg.startsWith('--')) {
+      if (ARGUMENTS_WITH_VALUES.has(arg.slice(2))) {
+        index += 1;
+      }
+
+      continue;
+    }
+
+    return arg;
+  }
+
+  return undefined;
 }
 
 function getNonNegativeIntegerArg(name, defaultValue) {
@@ -292,7 +327,12 @@ function escapeXmlAttribute(value) {
 
 function getCspPolicy(config) {
   const policy = config.CSP_POLICY ?? config.cspPolicy;
-  return typeof policy === 'string' && policy.trim() ? policy.trim() : null;
+
+  if (typeof policy !== 'string' || !policy.trim()) {
+    return null;
+  }
+
+  return policy.trim();
 }
 
 async function writeWebConfig(outputPath, cspPolicy) {
@@ -525,6 +565,18 @@ function runSelfTest() {
   assert.deepEqual(getCacheLabels(cache), ['desa', 'prod']);
   assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: cache.key }), true);
   assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: 'other' }), false);
+  assert.equal(
+    getPositionalArg(['--project', 'admisiones', '--endpoint', 'https://example', '--offline', 'desa']),
+    'desa'
+  );
+  assert.equal(getPositionalArg(['--project', 'admisiones', '--env', 'desa']), undefined);
+  assert.equal(getCspPolicy({ CSP_POLICY: " object-src 'none'; " }), "object-src 'none';");
+  assert.equal(getCspPolicy({ cspPolicy: "base-uri 'self'" }), "base-uri 'self'");
+  assert.equal(
+    getCspPolicy({ CSP_POLICY: "script-src 'self'", RECAPTCHA_KEY: 'public-site-key' }),
+    "script-src 'self'"
+  );
+  assert.equal(getCspPolicy({ CSP_POLICY: ' ' }), null);
   info('Self-test OK');
 }
 
@@ -543,7 +595,7 @@ async function main() {
   }
 
   const project = getArg('project');
-  const env = getArg('env');
+  const env = getArg('env', getPositionalArg());
   const endpoint = getArg('endpoint', process.env.AZURE_APPCONFIG_ENDPOINT);
 
   validateRequiredArgs({ project, env, endpoint });

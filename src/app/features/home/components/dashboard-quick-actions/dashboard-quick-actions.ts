@@ -57,7 +57,7 @@ export class DashboardQuickActions {
   protected readonly resumesFlow = computed(
     () =>
       this.cardType() === 'careers' &&
-      ['En proceso', 'Pago pendiente', 'Confirmada'].includes(this.status()) &&
+      ['En proceso', 'Pendiente', 'Pago pendiente', 'Confirmada'].includes(this.status()) &&
       Number.isSafeInteger(this.idProducto()) &&
       Number.isSafeInteger(this.idProceso()) &&
       (this.idProducto() ?? 0) > 0 &&

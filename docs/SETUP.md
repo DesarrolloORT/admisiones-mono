@@ -30,7 +30,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
    `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 
-   El archivo `src/environments/generated-environment.ts` esta ignorado por [`.gitignore`](../.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
+   Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](../.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
 3. Actualizar contratos generados si el backend Swagger ya esta disponible:
 

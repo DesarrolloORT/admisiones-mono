@@ -3,20 +3,20 @@ import type { Career } from '../../catalogs/models/catalog.interface';
 import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
-  OpcionInscripcion,
+  InscripcionPaymentPayload,
+  MetodoPago,
+  MetodoPagoApi,
   ValoresEncuesta,
 } from './inscription-flow';
 import type { InscripcionForms } from './inscription-flow-forms';
 
 const SCHOOL_PLACE_NATIONAL = '1';
 const SCHOOL_PLACE_INTERNATIONAL = '2';
-const FIRST_EMS_SCHOOL_YEAR = '10';
+const OTHER_OPTION_VALUE = '0';
 
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
   careers: readonly Career[];
-  previousCareerOptions: readonly OpcionInscripcion[];
-  supportOptions: readonly OpcionInscripcion[];
 }
 
 export function patchBackendSurveyForms(
@@ -54,17 +54,16 @@ export function patchBackendSurveyForms(
             ? 'no-cursando'
             : '',
       anioSecundaria: toFormValue(survey.anioBachilleratoId),
-      tipoBachillerato: toFormValue(survey.orientacionBachilleratoId),
       orientacion: toFormValue(survey.orientacionBachilleratoId),
+      recursaAnioBachillerato: toYesNoValue(survey.recursaAnioBachillerato),
+      vecesRecursaAnioBachillerato: survey.vecesRecursaAnioBachillerato,
       lugarSecundaria: getSchoolPlaceValue(survey),
       institucionEducativa: schoolInstitution.toString(),
-      estadoEducacionSuperior:
-        survey.estadoEducacionSuperiorPreviaId !== null
-          ? toFormValue(survey.estadoEducacionSuperiorPreviaId)
-          : findHigherEducationOption(survey.tieneEducacionSuperior, context.previousCareerOptions),
+      estadoEducacionSuperior: toFormValue(survey.estadoEducacionSuperiorPreviaId),
       universidadesEducacionSuperior: toSelectedOptionValues(
         response.universidadesEducacionSuperior
       ),
+      universidadEducacionSuperiorOtro: toFirstText(response.universidadesEducacionSuperiorOtros),
       formacionMadre: toFormValue(survey.nivelFormacionMadreId),
       tituloOrtMadre: toYesNoValue(survey.madreEgresadaOrt),
       formacionPadre: toFormValue(survey.nivelFormacionPadreId),
@@ -75,21 +74,12 @@ export function patchBackendSurveyForms(
   forms.academicDecisionForm.patchValue(
     {
       anioDecisionCarrera: toFormValue(survey.anioDecisionCarreraId),
-      apoyoDecision:
-        survey.apoyoDecisionId !== null
-          ? toFormValue(survey.apoyoDecisionId)
-          : findSupportOption(survey, context.supportOptions),
+      apoyoDecision: toFormValue(survey.apoyoDecisionId),
       anioDecisionOrt: toFormValue(survey.anioDecisionOrtId),
       otrasUniversidades: toYesNoValue(survey.seInformoEnOtrasUniversidades),
       universidadesInformadas: toSelectedOptionValues(response.universidadesConsideradas),
-      certezaDecision:
-        survey.nivelDecisionId !== null
-          ? toFormValue(survey.nivelDecisionId)
-          : survey.decisionConfirmada === true
-            ? '1'
-            : survey.decisionConfirmada === false
-              ? '2'
-              : '',
+      universidadInformadaOtro: toFirstText(response.universidadesConsideradasOtros),
+      certezaDecision: toFormValue(survey.nivelDecisionId),
       motivosOrt: toSelectedOptionValues(response.opcionesMotivosSeleccionados),
     },
     { emitEvent: false }
@@ -117,6 +107,7 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const experience = forms.ortExperienceForm.controls;
   const work = forms.workForm.controls;
   const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
+  const recursedBaccalaureate = education.recursaAnioBachillerato.value === 'si';
   const nationalSchoolPlace = education.lugarSecundaria.value === SCHOOL_PLACE_NATIONAL;
   const motherHasCompleteUniversity = hasCompleteUniversityEducation(
     education.formacionMadre.value
@@ -132,14 +123,15 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   return {
     carreraId: toNullableNumber(forms.academicForm.controls.carrera.value),
     comienzoId: toNullableNumber(forms.academicForm.controls.comienzo.value),
-    orientacionBachilleratoId:
-      currentlyInSchool && education.anioSecundaria.value !== FIRST_EMS_SCHOOL_YEAR
-        ? toNullableNumber(education.orientacion.value)
-        : null,
+    orientacionBachilleratoId: currentlyInSchool
+      ? toNullableNumber(education.orientacion.value)
+      : null,
     anioBachillerato: currentlyInSchool ? toNullableNumber(education.anioSecundaria.value) : null,
     cursaSecundariaActualmente: currentlyInSchool,
-    vecesRecursaAnioBachillerato: null,
-    recursaAnioBachillerato: null,
+    vecesRecursaAnioBachillerato: recursedBaccalaureate
+      ? education.vecesRecursaAnioBachillerato.value
+      : null,
+    recursaAnioBachillerato: toNullableBoolean(education.recursaAnioBachillerato.value),
     nivelFormacionPadreTutorId: toNullableNumber(education.formacionPadre.value),
     nivelFormacionMadreTutorId: toNullableNumber(education.formacionMadre.value),
     anioDecisionCarreraId: toNullableNumber(decision.anioDecisionCarrera.value),
@@ -180,9 +172,17 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
     universidadConsideradaIds: informedOtherUniversities
       ? toNumberArray(decision.universidadesInformadas.value)
       : null,
+    universidadConsideradaOtros:
+      informedOtherUniversities && hasOtherOption(decision.universidadesInformadas.value)
+        ? toSingleTextArray(decision.universidadInformadaOtro.value)
+        : null,
     universidadEducacionSuperiorIds: hasPreviousHigherEducation
       ? toNumberArray(education.universidadesEducacionSuperior.value)
       : null,
+    universidadEducacionSuperiorOtros:
+      hasPreviousHigherEducation && hasOtherOption(education.universidadesEducacionSuperior.value)
+        ? toSingleTextArray(education.universidadEducacionSuperiorOtro.value)
+        : null,
     publicidadOrtIds: remembersAdvertising
       ? toNumberArray(experience.mediosPublicidad.value)
       : null,
@@ -198,6 +198,31 @@ export function buildConfirmPreEnrollmentPayload(forms: InscripcionForms) {
     aceptoReglamento: forms.regulationForm.controls.aceptaReglamento.value,
     idOfertaSeleccionada,
   };
+}
+
+export function buildPaymentPayload(payload: InscripcionPaymentPayload) {
+  return {
+    idInscripto: payload.idInscripcion,
+    tipoPago: toApiPaymentMethod(payload.metodoPago),
+    idBancoSistarbanc: payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
+  };
+}
+
+function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
+  switch (method) {
+    case 'cuenta-personal':
+      return 'CUENTA_PERSONAL';
+    case 'abitab':
+      return 'ABITAB';
+    case 'paganza':
+      return 'PAGANZA';
+    case 'banred':
+      return 'BANRED';
+    case 'geopay':
+      return 'GEOPAY';
+    case 'cuenta-bancaria':
+      return 'SISTARBANC';
+  }
 }
 
 export function getSurveyValues(forms: InscripcionForms): ValoresEncuesta {
@@ -258,39 +283,6 @@ function getSchoolPlaceValue(survey: InscripcionInitialSurvey): string {
   return '';
 }
 
-function findHigherEducationOption(
-  value: boolean | null,
-  options: readonly OpcionInscripcion[]
-): string {
-  if (value === null) return '';
-  const option = options.find(item => {
-    const isNegative = item.label.trim().toLowerCase().startsWith('no ');
-    return value ? !isNegative : isNegative;
-  });
-  return option?.value ?? '';
-}
-
-function findSupportOption(
-  survey: InscripcionInitialSurvey,
-  options: readonly OpcionInscripcion[]
-): string {
-  const selected = [
-    { value: survey.apoyoPadres, aliases: ['padre', 'madre', 'famil'] },
-    { value: survey.apoyoAmigosFamiliares, aliases: ['amigo', 'famil'] },
-    { value: survey.apoyoAmigoPropuesta, aliases: ['amigo'] },
-    { value: survey.apoyoNadie, aliases: ['nadie'] },
-    { value: survey.apoyoOtros, aliases: ['otro'] },
-  ].find(item => item.value === true);
-  if (!selected) return '';
-
-  return (
-    options.find(option => {
-      const label = option.label.toLowerCase();
-      return selected.aliases.some(alias => label.includes(alias));
-    })?.value ?? ''
-  );
-}
-
 export function hasCompleteUniversityEducation(value: string): boolean {
   return value === '5' || value === '6';
 }
@@ -306,6 +298,19 @@ function toNumberArray(values: readonly string[]): number[] | null {
     return parsed === null ? [] : [parsed];
   });
   return numbers.length > 0 ? numbers : null;
+}
+
+function toFirstText(values: readonly string[]): string {
+  return values[0] ?? '';
+}
+
+function toSingleTextArray(value: string): string[] | null {
+  const trimmed = value.trim();
+  return trimmed ? [trimmed] : null;
+}
+
+function hasOtherOption(values: readonly string[]): boolean {
+  return values.includes(OTHER_OPTION_VALUE);
 }
 
 function toSelectedOptionValues(ids: readonly number[]): string[] {

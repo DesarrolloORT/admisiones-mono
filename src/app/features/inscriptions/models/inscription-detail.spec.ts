@@ -16,6 +16,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
+      idInscripcion: 1072704,
       confirmada: false,
       fechaVencimientoPago: '2026-06-26T16:29:20',
       seniaInscripcion: 3339,
@@ -38,6 +39,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
+      idInscripcion: null,
       confirmada: true,
       fechaVencimientoPago: null,
       seniaInscripcion: null,

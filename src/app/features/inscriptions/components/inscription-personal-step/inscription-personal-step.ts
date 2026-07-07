@@ -16,9 +16,9 @@ import {
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
+import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 
 import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
-import { ResponsiveSelect } from '../responsive-select/responsive-select';
 
 @Component({
   selector: 'app-inscription-personal-step',
@@ -46,6 +46,8 @@ import { ResponsiveSelect } from '../responsive-select/responsive-select';
 export class InscripcionPersonalStep {
   protected readonly facade = inject(InscripcionSurveyFacade);
   private readonly breakpointService = inject(BreakpointService);
+
+  protected readonly divider = true;
 
   protected readonly radioGroupOrientation = computed(() => {
     const breakpoint = this.breakpointService.breakpoint();

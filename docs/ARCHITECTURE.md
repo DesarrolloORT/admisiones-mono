@@ -1,3 +1,9 @@
+---
+slug: /arquitectura
+title: Arquitectura
+description: Capas, responsabilidades y flujo de datos del frontend de Admisiones.
+---
+
 # Architecture
 
 > Tipo: explanation

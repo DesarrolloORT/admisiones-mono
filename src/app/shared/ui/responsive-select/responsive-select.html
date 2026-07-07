@@ -25,7 +25,7 @@
       <ort-option [textValue]="option.label" [value]="option.value">
         @if (option.icon) {
         <span class="responsive-select__option-with-icon">
-          <img alt="" [src]="option.icon" />
+          <ort-icon aria-hidden="true" type="svg" [svgContent]="getBankSvg(option.label)" />
           <span>{{ option.label }}</span>
         </span>
         } @else { {{ option.label }} }
@@ -36,7 +36,7 @@
     <ort-option [textValue]="option.label" [value]="option.value">
       @if (option.icon) {
       <span class="responsive-select__option-with-icon">
-        <img alt="" [src]="option.icon" />
+        <ort-icon aria-hidden="true" type="svg" [svgContent]="getBankSvg(option.label)" />
         <span>{{ option.label }}</span>
       </span>
       } @else { {{ option.label }} }
@@ -117,7 +117,11 @@
         (click)="toggleOption(option.value)"
         (keydown)="onDrawerOptionKeydown($event)">
         @if (option.icon) {
-        <img alt="" class="responsive-select__drawer-icon" [src]="option.icon" />
+        <ort-icon
+          aria-hidden="true"
+          class="responsive-select__drawer-icon"
+          type="svg"
+          [svgContent]="getBankSvg(option.label)" />
         }
         <span>{{ option.label }}</span>
         <span aria-hidden="true" class="responsive-select__drawer-radio"></span>
