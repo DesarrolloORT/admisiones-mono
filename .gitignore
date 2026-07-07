@@ -57,4 +57,5 @@ Thumbs.db
 
 # Azure-generated frontend environment
 src/environments/generated-environment.ts
+src/web.config
 

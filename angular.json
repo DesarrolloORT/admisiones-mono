@@ -55,9 +55,6 @@
               "subresourceIntegrity": true,
               "outputHashing": "all",
               "progress": true,
-              "security": {
-                "autoCsp": true
-              },
               "extractLicenses": true,
               "budgets": [
                 {
