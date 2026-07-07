@@ -78,27 +78,11 @@ namespace AppLogic.Services.Inscripciones
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
-                    var inscriptoPago = idInscripto.HasValue
-                        ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
-                        : null;
-                    if (inscriptoPago == null)
+                    var errorPagoPendiente = await ArmarPagoPendiente(uow, response, codigoPersona, idInscripto);
+                    if (errorPagoPendiente != null)
                     {
-                        return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
-                            "INS_DET_02",
-                            nameof(ObtenerDetalleInscripcion),
-                            "No se encontró la inscripción para la persona.",
-                            404);
+                        return errorPagoPendiente;
                     }
-                    var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
-                    if (!carritos.Success)
-                    {
-                        return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
-                            carritos.ErrorCode,
-                            nameof(ObtenerDetalleInscripcion),
-                            carritos.Message,
-                            carritos.HttpCode);
-                    }
-                    response.PagoPendiente = MapearPagoPendiente(inscriptoPago, carritos.Data);
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.Confirmada:
@@ -120,6 +104,55 @@ namespace AppLogic.Services.Inscripciones
             }
 
             return OperationResult<DtoDetalleInscripcionResponse>.Ok(response, nameof(ObtenerDetalleInscripcion));
+        }
+
+        /// <summary>
+        /// Arma el detalle de una inscripción en estado "Pago pendiente". Si ya eligió método de pago
+        /// (existe seña mínima) devuelve el bloque compacto <see cref="DtoSeniaMinima"/>; si no, el payload
+        /// completo. Devuelve un resultado de error para cortar, o null si completó el response correctamente.
+        /// </summary>
+        private async Task<OperationResult<DtoDetalleInscripcionResponse>?> ArmarPagoPendiente(
+            IUnitOfWork uow, DtoDetalleInscripcionResponse response, long codigoPersona, long? idInscripto)
+        {
+            var inscriptoPago = idInscripto.HasValue
+                ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
+                : null;
+            if (inscriptoPago == null)
+            {
+                return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
+                    "INS_DET_02",
+                    nameof(ObtenerDetalleInscripcion),
+                    "No se encontró la inscripción para la persona.",
+                    404);
+            }
+
+            var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
+            if (!carritos.Success)
+            {
+                return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
+                    carritos.ErrorCode,
+                    nameof(ObtenerDetalleInscripcion),
+                    carritos.Message,
+                    carritos.HttpCode);
+            }
+
+            var seniaMinima = uow.InscriptoSeniaMinima.GetByKey(inscriptoPago.IdInscripto);
+            if (seniaMinima != null)
+            {
+                var persona = uow.Personas.GetByKey(codigoPersona);
+                response.SeniaMinima = new DtoSeniaMinima
+                {
+                    MetodoPago = seniaMinima.MetodoPagoSeniaMinima,
+                    Cedula = persona?.Documento?.Trim(),
+                    CodigoPersona = codigoPersona,
+                    Senia = ConfirmarPreInscripcionHelper.SumarSenias(carritos.Data?.Carritos)
+                };
+            }
+            else
+            {
+                response.PagoPendiente = MapearPagoPendiente(inscriptoPago, carritos.Data);
+            }
+            return null;
         }
 
         private static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
