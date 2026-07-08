@@ -56,10 +56,10 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    tecnicos en `src/app/shared/api/generated/endpoints/`. Esos archivos son
    locales, estan ignorados por Git y no deben editarse manualmente.
 
-   Para descubrir los endpoints reales disponibles en tu ambiente local:
+   Para actualizar los endpoints reales disponibles en tu ambiente local:
 
    ```bash
-   node scripts/codegen/list-endpoints.js
+   npm run update-api
    ```
 
 4. Ajustar la base del repositorio nuevo:

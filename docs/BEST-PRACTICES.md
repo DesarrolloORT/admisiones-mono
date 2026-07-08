@@ -232,10 +232,10 @@ Esto ejecuta:
 - `npm run update-endpoints`: regenera constantes en
   `src/app/shared/api/generated/endpoints/`.
 
-Para descubrir endpoints reales en el ambiente local:
+Para actualizar endpoints reales en el ambiente local:
 
 ```bash
-node scripts/codegen/list-endpoints.js
+npm run update-api
 ```
 
 Para detectar drift en CI o antes de un PR:

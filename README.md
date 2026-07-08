@@ -16,6 +16,7 @@ Migracion de `admisiones_legacy` hacia una aplicacion Angular moderna, con nueva
 - [Admisiones](#admisiones)
   - [Indice](#indice)
   - [Objetivo del proyecto](#objetivo-del-proyecto)
+  - [Documentacion ORT Docs Hub](#documentacion-ort-docs-hub)
   - [Requisitos](#requisitos)
   - [Inicio rapido](#inicio-rapido)
   - [Configuracion de desarrollo local](#configuracion-de-desarrollo-local)
@@ -44,6 +45,12 @@ El alcance incluye:
 - Redisenio completo de interfaz y experiencia de usuario.
 - Estandarizacion de arquitectura, testing y CI/CD sobre esta nueva base.
 
+## Documentacion ORT Docs Hub
+
+- Metadata para el Hub: [.docs/project.json](.docs/project.json)
+- Sitio documental publicado: URL prevista https://ort-docs.ort.edu.uy/admisiones/
+- Fuente documental: [docs/](docs/)
+
 ## Requisitos
 
 | Herramienta | Version minima | Notas                                |
@@ -57,7 +64,7 @@ El alcance incluye:
 
 1. Clonar el repositorio.
 2. Instalar dependencias con `npm install`.
-3. Crear ambientes a partir de los templates en `src/environments/`.
+3. Ejecutar `az login`; `npm run start` genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration.
 4. Ejecutar `npm run start`.
 
 Si necesitas el flujo completo con autenticacion de packages y detalle de ambientes, seguir la seccion de configuracion de desarrollo local.
@@ -87,7 +94,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Ejecutar `az login` (una sola vez) y luego usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration con cache local.
+   Ejecutar `az login` (una sola vez) y luego usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La CSP se toma de `CSP_POLICY`/`cspPolicy` del ambiente.
 
 ## Ejecutar la aplicacion en un servidor local
 
@@ -146,8 +153,7 @@ backend, ejecutar `npm run update-api` para regenerar modelos en
 ignorados por Git.
 
 `ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
-defecto los `GET` sin parámetros. Los services consumen adapters de feature; si
-necesitas ver los endpoints reales locales, ejecuta `node scripts/codegen/list-endpoints.js`.
+defecto los `GET` sin parámetros. Los services consumen adapters de feature; los endpoints generados se actualizan con `npm run update-api`.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 

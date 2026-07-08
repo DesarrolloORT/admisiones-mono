@@ -97,8 +97,7 @@ Reglas:
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
 - usar `npm run check-api-contracts` para validar que los adapters no filtren
   `generated`, `unknown`, `any` ni casts `as unknown as`.
-- usar `node scripts/codegen/list-endpoints.js` para listar endpoints reales
-  locales y el adapter que los consume.
+- usar `npm run update-api` para regenerar endpoints y validar adapters.
 
 `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
 `queryParams`. Esto cubre catálogos y datos de referencia sin agregar
