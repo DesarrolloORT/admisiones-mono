@@ -6,6 +6,7 @@ import { parseArgs as nodeParseArgs } from 'node:util';
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
   toProjectPath,
@@ -132,14 +133,15 @@ async function main() {
     process.exit(0);
   }
 
-  if (existsSync(outputAbs)) {
-    rmSync(outputAbs, { recursive: true, force: true });
-  }
-  mkdirSync(outputAbs, { recursive: true });
+  const tempOutputAbs = resolve(ROOT, `${flags.output}.tmp-${process.pid}`);
+  rmSync(tempOutputAbs, { recursive: true, force: true });
+  mkdirSync(tempOutputAbs, { recursive: true });
 
   for (const file of generation.files) {
-    writeFileSync(resolve(outputAbs, file.name), await formatTypeScript(file.content), 'utf-8');
+    writeFileSync(resolve(tempOutputAbs, file.name), await formatTypeScript(file.content), 'utf-8');
   }
+
+  replaceGeneratedDirectory(tempOutputAbs, outputAbs);
 
   if (generation.warnings.length > 0) {
     console.warn('\nWarnings:');

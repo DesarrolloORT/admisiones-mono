@@ -36,6 +36,7 @@ import type { InscripcionInitialSurveyResolved } from '../resolvers/inscription-
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
 import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
@@ -61,6 +62,7 @@ export class InscripcionSurveyFacade {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
+  private readonly payment = inject(InscripcionPaymentFacade);
   private readonly proposal = inject(InscripcionProposalFacade);
 
   public readonly options = inject(InscripcionSurveyOptionsFacade);
@@ -326,14 +328,12 @@ export class InscripcionSurveyFacade {
       )
       .subscribe({
         next: response => {
-          if (response.confirmada === false) {
-            this.preEnrollmentError.set(
-              'No se pudo confirmar la preinscripción. Intentá nuevamente.'
-            );
-            return;
-          }
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('completa');
+          if (response.enEspera === true) {
+            this.payment.outcome.set('inscription-en-proceso');
+            return;
+          }
           this.process.flow.next();
         },
         error: error => {

@@ -289,9 +289,10 @@ describe('InscripcionesEndpoint', () => {
     apiMock.request.mockReturnValueOnce(
       of({
         confirmada: true,
-        idInscripcion: 1072704,
-        fechaVencimientoPago: '2027-04-15',
-        senia: 21000,
+        enEspera: true,
+        idInscripcion: null,
+        fechaVencimientoPago: null,
+        senia: 0,
         estadoCuenta: { saldoActual: 70000 },
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
@@ -300,9 +301,10 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.confirmPreEnrollment(payload))).resolves.toEqual({
       confirmada: true,
-      idInscripcion: 1072704,
-      fechaVencimientoPago: '2027-04-15',
-      seniaInscripcion: 21000,
+      enEspera: true,
+      idInscripcion: null,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 0,
       saldoCuenta: 70000,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
     });

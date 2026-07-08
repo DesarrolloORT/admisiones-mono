@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
@@ -9,6 +10,7 @@ import type { InscripcionInitialSurvey } from '../models/inscription-flow';
 import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyFacade } from './inscription-survey';
 import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
@@ -21,12 +23,15 @@ describe('InscripcionSurveyFacade', () => {
   const uploadIdentityPhoto = vi.fn();
   const getIdentityPreload = vi.fn();
   const getStudentRegulationAcceptance = vi.fn();
+  const payment = { outcome: signal(null) };
 
   beforeEach(() => {
+    payment.outcome.set(null);
     saveInitialSurvey.mockReset().mockReturnValue(of(true));
     confirmPreEnrollment.mockReset().mockReturnValue(
       of({
         confirmada: true,
+        enEspera: false,
         fechaVencimientoPago: null,
         seniaInscripcion: null,
         saldoCuenta: null,
@@ -356,10 +361,11 @@ describe('InscripcionSurveyFacade', () => {
     );
   });
 
-  it('does not navigate when pre-enrollment is not confirmed', () => {
+  it('uses only enEspera to decide between payment and manual review screens', () => {
     confirmPreEnrollment.mockReturnValue(
       of({
         confirmada: false,
+        enEspera: false,
         fechaVencimientoPago: null,
         seniaInscripcion: null,
         saldoCuenta: null,
@@ -371,10 +377,29 @@ describe('InscripcionSurveyFacade', () => {
     survey.continue();
 
     expect(confirmPreEnrollment).toHaveBeenCalledOnce();
-    expect(process.flow.currentStep()).toBe('encuesta');
-    expect(survey.preEnrollmentError()).toBe(
-      'No se pudo confirmar la preinscripción. Intentá nuevamente.'
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBeNull();
+    expect(survey.preEnrollmentError()).toBeNull();
+  });
+
+  it('shows the in-process outcome when pre-enrollment is waiting for manual review', () => {
+    confirmPreEnrollment.mockReturnValue(
+      of({
+        confirmada: true,
+        enEspera: true,
+        idInscripcion: null,
+        fechaVencimientoPago: null,
+        seniaInscripcion: 0,
+        saldoCuenta: null,
+        resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Noche' },
+      })
     );
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBe('inscription-en-proceso');
   });
 
   it('uses school year orientations directly from the selected year catalog', () => {
@@ -650,6 +675,7 @@ describe('InscripcionSurveyFacade', () => {
               }),
           },
         },
+        { provide: InscripcionPaymentFacade, useValue: payment },
         {
           provide: Inscripciones,
           useValue: {

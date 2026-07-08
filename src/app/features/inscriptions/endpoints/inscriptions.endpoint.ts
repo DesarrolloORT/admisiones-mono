@@ -225,6 +225,7 @@ export class InscripcionesEndpoint {
       .pipe(
         map(response => ({
           confirmada: response.confirmada === true,
+          enEspera: 'enEspera' in response && response.enEspera === true,
           idInscripcion: response.idInscripcion ?? null,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
           seniaInscripcion: response.senia ?? null,

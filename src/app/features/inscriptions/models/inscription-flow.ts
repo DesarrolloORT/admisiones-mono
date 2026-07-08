@@ -147,6 +147,7 @@ export interface InscripcionStudentRegulationAcceptance {
 export interface InscripcionPreEnrollmentResponse {
   idInscripcion?: number | null;
   confirmada: boolean;
+  enEspera?: boolean;
   fechaVencimientoPago: string | null;
   seniaInscripcion: number | null;
   saldoCuenta: number | null;
