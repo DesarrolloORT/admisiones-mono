@@ -377,37 +377,13 @@
     top: 0;
     z-index: 2;
     display: block;
-    min-height: 111px;
+    min-height: 64px;
     background: var(--ort-sys-base-surface-primary-background);
     color: var(--ort-sys-base-text-on-color-header);
   }
 
   .auth-mobile-header--step {
-    min-height: 183px;
-  }
-
-  .auth-statusbar {
-    display: flex;
-    justify-content: space-between;
-    height: 47px;
-    padding: var(--ort-sys-spacing-14) var(--ort-sys-spacing-16) 0;
-    font-weight: var(--ort-sys-font-weight-semibold);
-    font-size: var(--ort-sys-font-size-16);
-    line-height: var(--ort-sys-line-height-20);
-  }
-
-  .auth-statusbar__icons {
-    display: flex;
-    gap: var(--ort-sys-spacing-4);
-    align-items: center;
-
-    span {
-      display: block;
-      width: 18px;
-      height: 10px;
-      border: 1px solid var(--ort-sys-base-text-on-color-header);
-      border-radius: 2px;
-    }
+    min-height: 136px;
   }
 
   .auth-mobile-header__logo {
