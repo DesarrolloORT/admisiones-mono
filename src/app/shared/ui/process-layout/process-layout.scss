@@ -85,9 +85,9 @@
   display: block;
   flex: 0 0 auto;
   object-fit: contain;
-  aspect-ratio: 70 / 36;
-  inline-size: clamp(52px, 8vw, 64px);
-  block-size: auto;
+  width: 56px;
+  height: auto;
+  aspect-ratio: 67 / 30;
 }
 
 .process-layout__brand-divider {
