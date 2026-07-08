@@ -116,22 +116,26 @@ describe('InscripcionPersonalStep', () => {
 
     expect(component.radioGroupOrientation()).toBe('horizontal');
   });
-  it('keeps generated survey fields bound in the real template', () => {
-    const template = readFileSync(
-      'src/app/features/inscriptions/components/inscription-personal-step/inscription-personal-step.html',
+  it('keeps generated survey fields bound in the section templates', () => {
+    const education = readFileSync(
+      'src/app/features/inscriptions/components/inscription-education-section/inscription-education-section.html',
+      'utf8'
+    );
+    const decision = readFileSync(
+      'src/app/features/inscriptions/components/inscription-academic-decision-section/inscription-academic-decision-section.html',
       'utf8'
     );
 
-    expect(template).toContain('<app-responsive-select');
-    expect(template).toContain('[options]="facade.options.orientationOptions()"');
-    expect(template).toContain('formControlName="orientacion"');
-    expect(template).toContain('formControlName="recursaAnioBachillerato"');
-    expect(template).toContain('formControlName="vecesRecursaAnioBachillerato"');
-    expect(template).toContain('ortNumberInput');
-    expect(template).toContain('formControlName="universidadEducacionSuperiorOtro"');
-    expect(template).toContain('formControlName="universidadInformadaOtro"');
-    expect(template).toContain('ortInput');
-    expect(template).toContain('formControlName="apoyoDecision"');
-    expect(template).toContain('placeholder="Seleccioná..."');
+    expect(education).toContain('<app-responsive-select');
+    expect(education).toContain('[options]="facade.options.orientationOptions()"');
+    expect(education).toContain('formControlName="orientacion"');
+    expect(education).toContain('formControlName="recursaAnioBachillerato"');
+    expect(education).toContain('formControlName="vecesRecursaAnioBachillerato"');
+    expect(education).toContain('ortNumberInput');
+    expect(education).toContain('formControlName="universidadEducacionSuperiorOtro"');
+    expect(education).toContain('ortInput');
+    expect(decision).toContain('formControlName="universidadInformadaOtro"');
+    expect(decision).toContain('formControlName="apoyoDecision"');
+    expect(decision).toContain('placeholder="Seleccioná..."');
   });
 });

@@ -1,9 +1,11 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
   inject,
+  Injector,
   viewChild,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -39,6 +41,7 @@ import { InscripcionDialog } from '../inscription-dialog/inscription-dialog';
 export class InscripcionConfirmationStep {
   protected readonly facade = inject(InscripcionPaymentFacade);
   private readonly breakpointService = inject(BreakpointService);
+  private readonly injector = inject(Injector);
   private readonly paymentSubmit = viewChild<ElementRef<HTMLButtonElement>>('paymentSubmit');
 
   protected readonly divider = true;
@@ -58,9 +61,7 @@ export class InscripcionConfirmationStep {
     const focusSubmit = () => this.paymentSubmit()?.nativeElement.focus({ preventScroll: true });
 
     focusSubmit();
-    setTimeout(focusSubmit, 0);
-    setTimeout(focusSubmit, 50);
-    setTimeout(focusSubmit, 150);
+    afterNextRender(focusSubmit, { injector: this.injector });
   }
 
   protected onFormEnter(event: Event): void {
