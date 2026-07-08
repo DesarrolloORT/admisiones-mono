@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
+import { getApiErrorMessage } from '../../models/api-error-message';
 import { AuthSessionService } from '../../services/auth-session';
 
 @Component({
@@ -55,9 +55,10 @@ export class TwoFactorValidationPage {
           void this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
-          const message = isNormalizedApiError(error)
-            ? error.message
-            : 'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.';
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.'
+          );
           this.isSubmitting.set(false);
           this.snackbar.error(message);
         },
@@ -86,9 +87,10 @@ export class TwoFactorValidationPage {
         this.isSubmitting.set(false);
       },
       error: error => {
-        const message = isNormalizedApiError(error)
-          ? error.message
-          : 'No pudimos reenviar el código. Intentá nuevamente.';
+        const message = getApiErrorMessage(
+          error,
+          'No pudimos reenviar el código. Intentá nuevamente.'
+        );
         this.isSubmitting.set(false);
         this.snackbar.error(message);
       },
