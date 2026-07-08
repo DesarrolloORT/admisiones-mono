@@ -11,6 +11,8 @@ import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyFacade } from './inscription-survey';
+import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
+import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
 describe('InscripcionSurveyFacade', () => {
   const saveInitialSurvey = vi.fn();
@@ -94,7 +96,7 @@ describe('InscripcionSurveyFacade', () => {
       fechaVencimiento: '2030-02-04',
     });
 
-    expect(survey.requiresIdentityConfirmation()).toBe(true);
+    expect(survey.identity.requiresIdentityConfirmation()).toBe(true);
     expect(survey.identityForm.controls.identidadCorrecta.hasError('required')).toBe(true);
 
     survey.identityForm.controls.identidadCorrecta.setValue(true);
@@ -124,9 +126,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
     forms.academicForm.controls.turno.setValue('300');
@@ -162,9 +164,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
@@ -197,9 +199,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 1, 4));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
@@ -274,9 +276,9 @@ describe('InscripcionSurveyFacade', () => {
 
     survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
-    survey.updateIdentityFile('frente', fileEvent(frente));
-    survey.updateIdentityFile('dorso', fileEvent(dorso));
-    survey.updateIdentityFile('selfie', fileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
     forms.academicForm.controls.turno.setValue('300');
 
@@ -332,7 +334,7 @@ describe('InscripcionSurveyFacade', () => {
     expect(confirmPreEnrollment).not.toHaveBeenCalled();
     expect(survey.activeSection()).toBe('identidad');
     expect(survey.getSectionState('identidad')).toBe('activa');
-    expect(survey.identityFiles()).toEqual({ frente, dorso, selfie });
+    expect(survey.identity.identityFiles()).toEqual({ frente, dorso, selfie });
     expect(survey.preEnrollmentError()).toBe(
       'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
     );
@@ -410,7 +412,7 @@ describe('InscripcionSurveyFacade', () => {
       }
     );
 
-    expect(survey.schoolYearOptions()).toEqual([
+    expect(survey.options.schoolYearOptions()).toEqual([
       { value: '10', label: '1 EMS' },
       { value: '11', label: '2 EMS' },
       { value: '12', label: '3 EMS' },
@@ -419,17 +421,17 @@ describe('InscripcionSurveyFacade', () => {
     survey.educationForm.patchValue({ cursaSecundaria: 'cursando', anioSecundaria: '10' });
 
     expect(survey.shouldAskBaccalaureateOrientation()).toBe(false);
-    expect(survey.orientationOptions()).toEqual([]);
+    expect(survey.options.orientationOptions()).toEqual([]);
 
     survey.educationForm.controls.anioSecundaria.setValue('11');
 
     expect(survey.shouldAskBaccalaureateOrientation()).toBe(true);
-    expect(survey.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
+    expect(survey.options.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
 
     survey.educationForm.controls.orientacion.setValue('20');
     survey.educationForm.controls.anioSecundaria.setValue('12');
 
-    expect(survey.orientationOptions()).toEqual([{ value: '30', label: 'Economia' }]);
+    expect(survey.options.orientationOptions()).toEqual([{ value: '30', label: 'Economia' }]);
     expect(survey.educationForm.controls.orientacion.value).toBe('');
   });
 
@@ -606,6 +608,8 @@ describe('InscripcionSurveyFacade', () => {
         InscripcionFormsStore,
         InscripcionProcessStore,
         InscripcionProposalFacade,
+        InscripcionSurveyOptionsFacade,
+        InscripcionSurveyIdentityFacade,
         InscripcionSurveyFacade,
         {
           provide: ActivatedRoute,
@@ -685,9 +689,9 @@ describe('InscripcionSurveyFacade', () => {
 
     result.survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     result.survey.identityForm.controls.vencimientoDocumento.markAsDirty();
-    result.survey.updateIdentityFile('frente', fileEvent(frente));
-    result.survey.updateIdentityFile('dorso', fileEvent(dorso));
-    result.survey.updateIdentityFile('selfie', fileEvent(selfie));
+    result.survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    result.survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    result.survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     result.survey.regulationForm.controls.aceptaReglamento.setValue(true);
     result.forms.academicForm.controls.turno.setValue('300');
 
@@ -708,21 +712,23 @@ describe('InscripcionSurveyFacade', () => {
     preload: InscripcionIdentityPreload
   ): void {
     (
-      survey as unknown as {
+      survey.identity as unknown as {
         applyIdentityPreload(preload: InscripcionIdentityPreload): void;
       }
     ).applyIdentityPreload(preload);
   }
   function preloadedFileEvent(
     file: File
-  ): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+  ): Parameters<InscripcionSurveyIdentityFacade['updateIdentityFile']>[1] {
     return { value: [{ isValid: true, isPreloaded: true, file }] } as Parameters<
-      InscripcionSurveyFacade['updateIdentityFile']
+      InscripcionSurveyIdentityFacade['updateIdentityFile']
     >[1];
   }
-  function fileEvent(file: File): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+  function fileEvent(
+    file: File
+  ): Parameters<InscripcionSurveyIdentityFacade['updateIdentityFile']>[1] {
     return { value: [{ isValid: true, file }] } as Parameters<
-      InscripcionSurveyFacade['updateIdentityFile']
+      InscripcionSurveyIdentityFacade['updateIdentityFile']
     >[1];
   }
 

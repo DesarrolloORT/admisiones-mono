@@ -16,6 +16,8 @@ import { InscripcionPaymentFacade } from '../../facades/inscription-payment';
 import { InscripcionProcessFacade } from '../../facades/inscription-process';
 import { InscripcionProposalFacade } from '../../facades/inscription-proposal';
 import { InscripcionSurveyFacade } from '../../facades/inscription-survey';
+import { InscripcionSurveyIdentityFacade } from '../../facades/inscription-survey-identity';
+import { InscripcionSurveyOptionsFacade } from '../../facades/inscription-survey-options';
 import { InscripcionFormsStore } from '../../store/inscription-forms';
 import { InscripcionProcessStore } from '../../store/inscription-process';
 
@@ -40,6 +42,8 @@ import { InscripcionProcessStore } from '../../store/inscription-process';
     InscripcionFormsStore,
     InscripcionProcessStore,
     InscripcionProposalFacade,
+    InscripcionSurveyOptionsFacade,
+    InscripcionSurveyIdentityFacade,
     InscripcionSurveyFacade,
     InscripcionPaymentFacade,
     InscripcionProcessFacade,

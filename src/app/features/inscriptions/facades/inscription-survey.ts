@@ -1,40 +1,27 @@
-import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import type {
-  OrtErrorItem,
-  OrtFileUploaderChange,
-  OrtPreloadedFile,
-} from '@desarrolloort/components';
-import { forkJoin, merge, Observable, of } from 'rxjs';
-import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import type { OrtErrorItem } from '@desarrolloort/components';
+import { merge, Observable, of } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
 } from 'src/app/shared/ui/error-alert/error-alert';
 
 import type {
-  BaccalaureateYearGroup,
-  InitialSurveyCatalogs,
-  LocationCountry,
-} from '../../catalogs/models/catalog.interface';
-import { Catalogs } from '../../catalogs/services/catalogs';
-import type {
-  ArchivosIdentidad,
   EstadoEncuestaInicial,
   EstadoSeccionEncuesta,
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
   InscripcionStudentRegulationAcceptance,
-  OpcionInscripcion,
   SeccionEncuestaId,
 } from '../models/inscription-flow';
 import {
   buildFormErrors,
   disallowedBachilleratoForUniversity,
   type IdentityFileTarget,
-  type IdentityPreloadedFileMap,
   NIVEL_UNIVERSITARIO,
 } from '../models/inscription-flow-forms';
 import {
@@ -43,33 +30,43 @@ import {
   hasCompleteUniversityEducation,
   parseDate,
   patchBackendSurveyForms,
-  serializeDate,
 } from '../models/inscription-flow-mappers';
-import { toCatalogOptions } from '../models/inscription-flow-options';
 import { getSeccionesVisibles } from '../models/inscription-flow-policy';
 import type { InscripcionInitialSurveyResolved } from '../resolvers/inscription-initial-survey.resolver';
-import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
+import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionProposalFacade } from './inscription-proposal';
+import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
+import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
-const URUGUAY_COUNTRY_CODE = 1;
 const IDENTITY_SAVE_ERROR = 'identity-save';
 
+interface SectionProgress {
+  completed: boolean;
+  submitted: boolean;
+}
+
+const EMPTY_PROGRESS: SectionProgress = { completed: false, submitted: false };
+
+/**
+ * Orquestador del paso 2 (encuesta inicial + identidad + reglamento): estado de
+ * secciones, validadores condicionales y cierre del paso. Los catálogos viven en
+ * `InscripcionSurveyOptionsFacade` (`options`) y la verificación de identidad en
+ * `InscripcionSurveyIdentityFacade` (`identity`).
+ */
 export class InscripcionSurveyFacade {
-  private readonly catalogs = inject(Catalogs);
   private readonly inscriptions = inject(Inscripciones);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
   private readonly proposal = inject(InscripcionProposalFacade);
+
+  public readonly options = inject(InscripcionSurveyOptionsFacade);
+  public readonly identity = inject(InscripcionSurveyIdentityFacade);
+
   private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
-  private identityPreloadRequested = false;
-  private initialIdentityExpiration = '';
-  private uruguayCountryCode: number | null = null;
-  private readonly identityFileTouched = new Set<IdentityFileTarget>();
-  private readonly baccalaureateYears = signal<readonly BaccalaureateYearGroup[]>([]);
 
   public readonly educationForm = this.formsStore.educationForm;
   public readonly academicDecisionForm = this.formsStore.academicDecisionForm;
@@ -79,69 +76,26 @@ export class InscripcionSurveyFacade {
   public readonly regulationForm = this.formsStore.regulationForm;
   private readonly sectionConfig = this.formsStore.sectionConfig;
 
-  public readonly acceptedImageTypes = ['image/jpeg', 'image/png'];
-  public readonly ratingLabels = signal<Record<number, string>>({
-    1: '1 estrella: Malo',
-    2: '2 estrellas: Regular',
-    3: '3 estrellas: Bueno',
-    4: '4 estrellas: Muy bueno',
-    5: '5 estrellas: Excelente',
-  });
-
-  private readonly completedSections = signal<readonly SeccionEncuestaId[]>([]);
-  private readonly submittedSections = signal<readonly SeccionEncuestaId[]>([]);
+  // Estado por sección en un único registro; `getSectionState` es el contrato
+  // que consume el template.
+  private readonly sectionProgress = signal<
+    Readonly<Partial<Record<SeccionEncuestaId, SectionProgress>>>
+  >({});
   public readonly activeSection = signal<SeccionEncuestaId>('educacion');
   public readonly readerOpen = signal(false);
   public readonly surveyState = signal<EstadoEncuestaInicial>('no-iniciada');
   public readonly hasInitialSurveyRight = signal(true);
-  public readonly identityFiles = signal<ArchivosIdentidad>({
-    frente: null,
-    dorso: null,
-    selfie: null,
-  });
-  private readonly preloadedIdentityFiles = signal<IdentityPreloadedFileMap>({
-    frente: null,
-    dorso: null,
-    selfie: null,
-  });
-  public readonly requiresIdentityConfirmation = signal(false);
   public readonly hasAcceptedStudentRegulation = signal(false);
   public readonly submittedAcceptanceDate = signal<Date | null>(null);
 
-  public readonly previousCareerOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly educationLevelOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly supportOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly decisionYearOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly decisionLevelOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly motivesOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly schoolYearOptions = computed<readonly OpcionInscripcion[]>(() =>
-    this.baccalaureateYears().map(year => ({ value: year.id.toString(), label: year.label }))
-  );
-  public readonly orientationOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly schoolPlaceOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly departmentOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly institutionOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly universityOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly higherEducationUniversityOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly advertisingOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly workScheduleOptions = signal<readonly OpcionInscripcion[]>([]);
-
-  public readonly catalogError = signal<string | null>(null);
+  public readonly catalogError = this.options.catalogError;
+  public readonly loadingInitialSurveyCatalogs = this.options.loadingInitialSurveyCatalogs;
+  public readonly initialized = this.options.initialized;
   public readonly surveyLoadError = signal<string | null>(null);
   public readonly preEnrollmentError = signal<string | null>(null);
-  public readonly loadingInitialSurveyCatalogs = signal(false);
   public readonly loadingSurveyState = signal(false);
   public readonly finalizingPreEnrollment = signal(false);
-  public readonly initialized = signal(false);
 
-  public readonly initialIdentityFiles = computed(() => {
-    const files = this.preloadedIdentityFiles();
-    return {
-      frente: files.frente ? [files.frente] : [],
-      dorso: files.dorso ? [files.dorso] : [],
-      selfie: files.selfie ? [files.selfie] : [],
-    };
-  });
   public readonly scenario = computed(() =>
     !this.hasInitialSurveyRight() || this.surveyState() === 'completa'
       ? 'encuesta-completa'
@@ -160,14 +114,14 @@ export class InscripcionSurveyFacade {
   );
   public readonly activeSectionErrors = computed<OrtErrorItem[]>(() => {
     const section = this.activeSection();
-    if (!this.submittedSections().includes(section)) return [];
+    if (!this.progressOf(section).submitted) return [];
     const formErrors = buildFormErrors(
       this.sectionConfig[section].form,
       this.sectionConfig[section].errorFields
     );
     if (section !== 'identidad') return formErrors;
 
-    const files = this.identityFiles();
+    const files = this.identity.identityFiles();
     return [
       ...formErrors,
       ...(!files.frente ? [{ message: 'Frente del documento es obligatorio.' }] : []),
@@ -180,42 +134,35 @@ export class InscripcionSurveyFacade {
   );
 
   constructor() {
-    this.loadInitialSurveyCatalogs();
-    this.loadDepartmentOptions();
+    this.options.initialize({
+      onOptionsChanged: () => this.updateConditionalValidators(),
+      onInitialCatalogsApplied: () => this.reapplyBackendSurvey(),
+    });
+    this.identity.initialize({
+      isIdentitySectionActive: computed(
+        () => this.process.flow.currentStep() === 'encuesta' && this.activeSection() === 'identidad'
+      ),
+      surveyLoadError: this.surveyLoadError,
+      onIdentityChanged: () => this.syncSectionCompletion('identidad'),
+    });
     this.configureConditionalValidators();
-    this.configureDependentCatalogs();
     this.observeForms();
     this.observeIdentityConfirmation();
     this.loadStudentRegulationAcceptance();
-    this.loadIdentityPreloadOnIdentitySection();
     this.applyResolvedInitialSurveyState();
-  }
-
-  private configureDependentCatalogs(): void {
-    this.educationForm.controls.anioSecundaria.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.refreshOrientationOptions();
-        this.updateConditionalValidators();
-      });
-    this.educationForm.controls.departamento.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadInstitutionsForSelectedDepartment());
   }
 
   public continue(): void {
     if (this.finalizingPreEnrollment()) return;
 
     const section = this.activeSection();
-    this.submittedSections.update(sections =>
-      sections.includes(section) ? sections : [...sections, section]
-    );
+    this.patchProgress(section, { submitted: true });
     if (!this.isSectionValid(section)) {
       this.sectionConfig[section].form.markAllAsTouched();
       return;
     }
 
-    this.completeSection(section);
+    this.patchProgress(section, { completed: true });
     const nextSection = this.findNextInvalidSection(section);
     if (nextSection) {
       this.activeSection.set(nextSection);
@@ -245,7 +192,7 @@ export class InscripcionSurveyFacade {
 
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
     if (
-      this.completedSections().includes(section) ||
+      this.progressOf(section).completed ||
       (section !== 'identidad' && this.isSectionValid(section))
     ) {
       return 'completa';
@@ -255,36 +202,11 @@ export class InscripcionSurveyFacade {
   }
 
   public isSectionPending(section: SeccionEncuestaId): boolean {
-    return this.submittedSections().includes(section) && !this.isSectionValid(section);
-  }
-
-  public updateIdentityFile(target: IdentityFileTarget, event: OrtFileUploaderChange): void {
-    const selected =
-      event.value.find(file => file.isValid && !file.isPreloaded) ??
-      event.value.find(file => file.isValid) ??
-      null;
-    const selectedFile = selected?.file ?? null;
-    const currentFile = this.identityFiles()[target];
-
-    if (
-      selected?.isPreloaded &&
-      currentFile &&
-      selectedFile &&
-      currentFile.name === selectedFile.name &&
-      currentFile.size === selectedFile.size &&
-      currentFile.type === selectedFile.type
-    ) {
-      return;
-    }
-
-    this.identityFileTouched.add(target);
-    this.preloadedIdentityFiles.update(files => ({ ...files, [target]: null }));
-    this.identityFiles.update(files => ({ ...files, [target]: selectedFile }));
-    this.syncSectionCompletion('identidad');
+    return this.progressOf(section).submitted && !this.isSectionValid(section);
   }
 
   public isIdentityFileMissing(target: IdentityFileTarget): boolean {
-    return this.submittedSections().includes('identidad') && !this.identityFiles()[target];
+    return this.progressOf('identidad').submitted && !this.identity.identityFiles()[target];
   }
 
   public isUniversityCareer(): boolean {
@@ -309,7 +231,7 @@ export class InscripcionSurveyFacade {
     return (
       this.educationForm.controls.cursaSecundaria.value === 'cursando' &&
       !!selectedYear &&
-      this.orientationOptions().length > 0
+      this.options.orientationOptions().length > 0
     );
   }
 
@@ -349,7 +271,7 @@ export class InscripcionSurveyFacade {
 
   public acceptRegulation(): void {
     this.regulationForm.controls.aceptaReglamento.setValue(true);
-    this.completeSection('reglamento');
+    this.patchProgress('reglamento', { completed: true });
     this.activeSection.set('reglamento');
     this.readerOpen.set(false);
   }
@@ -360,7 +282,18 @@ export class InscripcionSurveyFacade {
 
   public savePartial(): Observable<boolean> {
     if (!this.hasInitialSurveyRight()) return of(true);
-    return this.inscriptions.saveInitialSurvey(this.getInitialSurveyPayload());
+    return this.inscriptions.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
+  }
+
+  private progressOf(section: SeccionEncuestaId): SectionProgress {
+    return this.sectionProgress()[section] ?? EMPTY_PROGRESS;
+  }
+
+  private patchProgress(section: SeccionEncuestaId, patch: Partial<SectionProgress>): void {
+    this.sectionProgress.update(progress => ({
+      ...progress,
+      [section]: { ...(progress[section] ?? EMPTY_PROGRESS), ...patch },
+    }));
   }
 
   private finishSurveyStep(): void {
@@ -376,7 +309,8 @@ export class InscripcionSurveyFacade {
 
     this.preEnrollmentError.set(null);
     this.finalizingPreEnrollment.set(true);
-    this.saveIdentityChanges()
+    this.identity
+      .saveIdentityChanges()
       .pipe(
         catchError(() => of(false)),
         switchMap(savedIdentity => {
@@ -406,10 +340,7 @@ export class InscripcionSurveyFacade {
           const identitySaveFailed =
             error instanceof Error && error.message === IDENTITY_SAVE_ERROR;
           if (identitySaveFailed) {
-            this.completedSections.update(sections =>
-              sections.filter(section => section !== 'identidad')
-            );
-            this.markSectionSubmitted('identidad');
+            this.patchProgress('identidad', { completed: false, submitted: true });
             this.activeSection.set('identidad');
             this.identityForm.markAllAsTouched();
           }
@@ -431,7 +362,7 @@ export class InscripcionSurveyFacade {
     const invalidSection = this.visibleSections().find(section => !this.isSectionValid(section));
     if (!invalidSection) return true;
 
-    this.markSectionSubmitted(invalidSection);
+    this.patchProgress(invalidSection, { submitted: true });
     this.activeSection.set(invalidSection);
     this.sectionConfig[invalidSection].form.markAllAsTouched();
     this.preEnrollmentError.set(
@@ -440,65 +371,19 @@ export class InscripcionSurveyFacade {
     return false;
   }
 
-  private markSectionSubmitted(section: SeccionEncuestaId): void {
-    this.submittedSections.update(sections =>
-      sections.includes(section) ? sections : [...sections, section]
-    );
-  }
-
-  private saveIdentityChanges(): Observable<boolean> {
-    const files = this.identityFiles();
-    const expiration = serializeDate(this.identityForm.controls.vencimientoDocumento.value);
-    const documentChanged =
-      this.identityFileTouched.has('frente') ||
-      this.identityFileTouched.has('dorso') ||
-      expiration !== this.initialIdentityExpiration;
-    const uploads: Observable<boolean>[] = [];
-
-    if (expiration && files.frente && files.dorso && documentChanged) {
-      uploads.push(
-        this.inscriptions.uploadIdentityDocument({
-          fecha: expiration,
-          frente: files.frente,
-          dorso: files.dorso,
-        })
-      );
-    }
-
-    if (files.selfie && this.identityFileTouched.has('selfie')) {
-      uploads.push(this.inscriptions.uploadIdentityPhoto(files.selfie));
-    }
-
-    return uploads.length === 0
-      ? of(true)
-      : forkJoin(uploads).pipe(map(results => results.every(Boolean)));
-  }
-
-  private completeSection(section: SeccionEncuestaId): void {
-    this.completedSections.update(sections =>
-      sections.includes(section) ? sections : [...sections, section]
-    );
-  }
-
   private syncSectionCompletion(section: SeccionEncuestaId): void {
     if (section !== 'identidad' && this.isSectionValid(section)) {
-      this.completeSection(section);
+      this.patchProgress(section, { completed: true });
       return;
     }
     if (!this.isSectionValid(section)) {
-      this.completedSections.update(sections => sections.filter(item => item !== section));
+      this.patchProgress(section, { completed: false });
     }
   }
 
   private isSectionValid(section: SeccionEncuestaId): boolean {
     if (section !== 'identidad') return this.sectionConfig[section].form.valid;
-    const files = this.identityFiles();
-    return (
-      this.identityForm.valid &&
-      files.frente !== null &&
-      files.dorso !== null &&
-      files.selfie !== null
-    );
+    return this.identity.isComplete();
   }
 
   private observeForms(): void {
@@ -520,11 +405,15 @@ export class InscripcionSurveyFacade {
   private observeIdentityConfirmation(): void {
     this.identityForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       const confirmed = this.identityForm.controls.identidadCorrecta.value;
-      if (!confirmed || !this.requiresIdentityConfirmation() || !this.isSectionValid('identidad')) {
+      if (
+        !confirmed ||
+        !this.identity.requiresIdentityConfirmation() ||
+        !this.isSectionValid('identidad')
+      ) {
         return;
       }
 
-      this.completeSection('identidad');
+      this.patchProgress('identidad', { completed: true });
       if (this.activeSection() !== 'identidad') return;
 
       const sections = this.visibleSections();
@@ -564,7 +453,8 @@ export class InscripcionSurveyFacade {
     const work = this.workForm.controls;
     const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
 
-    const anioBachilleratoRequired = currentlyInSchool && this.schoolYearOptions().length > 0;
+    const anioBachilleratoRequired =
+      currentlyInSchool && this.options.schoolYearOptions().length > 0;
     education.anioSecundaria.setValidators([
       ...(anioBachilleratoRequired ? [Validators.required] : []),
       disallowedBachilleratoForUniversity(() => this.isUniversityCareer()),
@@ -577,17 +467,17 @@ export class InscripcionSurveyFacade {
     ]);
     this.setRequired(
       education.departamento,
-      this.isNationalSchoolPlace() && this.departmentOptions().length > 0
+      this.isNationalSchoolPlace() && this.options.departmentOptions().length > 0
     );
     this.setRequired(
       education.institucionEducativa,
-      (this.isNationalSchoolPlace() && this.institutionOptions().length > 0) ||
+      (this.isNationalSchoolPlace() && this.options.institutionOptions().length > 0) ||
         this.isForeignSchoolPlace()
     );
     this.setRequired(
       education.universidadesEducacionSuperior,
       this.shouldAskHigherEducationUniversities() &&
-        this.higherEducationUniversityOptions().length > 0
+        this.options.higherEducationUniversityOptions().length > 0
     );
     this.setRequired(
       education.universidadEducacionSuperiorOtro,
@@ -598,7 +488,7 @@ export class InscripcionSurveyFacade {
 
     this.setRequired(
       decision.universidadesInformadas,
-      decision.otrasUniversidades.value === 'si' && this.universityOptions().length > 0
+      decision.otrasUniversidades.value === 'si' && this.options.universityOptions().length > 0
     );
     this.setRequired(decision.universidadInformadaOtro, this.shouldAskInformedOtherUniversity());
 
@@ -610,12 +500,12 @@ export class InscripcionSurveyFacade {
     this.setRequired(experience.calificacionSede, experience.visitoSede.value === 'si');
     this.setRequired(
       experience.mediosPublicidad,
-      experience.recuerdaPublicidad.value === 'si' && this.advertisingOptions().length > 0
+      experience.recuerdaPublicidad.value === 'si' && this.options.advertisingOptions().length > 0
     );
 
     this.setRequired(
       work.tipoJornadaLaboral,
-      work.situacionLaboral.value === 'trabaja' && this.workScheduleOptions().length > 0
+      work.situacionLaboral.value === 'trabaja' && this.options.workScheduleOptions().length > 0
     );
   }
 
@@ -639,86 +529,10 @@ export class InscripcionSurveyFacade {
           if (!accepted) return;
           this.submittedAcceptanceDate.set(parseDate(acceptance.fechaAceptacion));
           this.regulationForm.controls.aceptaReglamento.setValue(true);
-          this.completeSection('reglamento');
+          this.patchProgress('reglamento', { completed: true });
         },
         error: () => this.hasAcceptedStudentRegulation.set(false),
       });
-  }
-
-  private loadIdentityPreloadOnIdentitySection(): void {
-    effect(() => {
-      if (
-        this.identityPreloadRequested ||
-        this.surveyLoadError() ||
-        this.process.flow.currentStep() !== 'encuesta' ||
-        this.activeSection() !== 'identidad'
-      ) {
-        return;
-      }
-      this.identityPreloadRequested = true;
-      this.inscriptions
-        .getIdentityPreload()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: preload => this.applyIdentityPreload(preload),
-          error: () => undefined,
-        });
-    });
-  }
-
-  private setIdentityConfirmationRequired(required: boolean): void {
-    this.requiresIdentityConfirmation.set(required);
-    const control = this.identityForm.controls.identidadCorrecta;
-    control.setValidators(required ? Validators.requiredTrue : null);
-    if (!required) control.setValue(false, { emitEvent: false });
-    control.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private applyIdentityPreload(preload: InscripcionIdentityPreload): void {
-    const expiration = parseDate(preload.fechaVencimiento);
-    this.initialIdentityExpiration = serializeDate(expiration);
-    this.setIdentityConfirmationRequired(
-      !!preload.frente && !!preload.dorso && !!preload.selfie && !!expiration
-    );
-
-    this.applyPreloadedIdentityFile('frente', preload.frente);
-    this.applyPreloadedIdentityFile('dorso', preload.dorso);
-    this.applyPreloadedIdentityFile('selfie', preload.selfie);
-
-    const expirationControl = this.identityForm.controls.vencimientoDocumento;
-    if (expiration && !expirationControl.value && !expirationControl.dirty) {
-      expirationControl.setValue(expiration);
-    }
-    this.syncSectionCompletion('identidad');
-  }
-
-  private applyPreloadedIdentityFile(target: IdentityFileTarget, file: File | null): void {
-    if (!file || this.identityFileTouched.has(target) || this.identityFiles()[target]) return;
-    this.identityFiles.update(files => ({ ...files, [target]: file }));
-    void file
-      .arrayBuffer()
-      .then(src => {
-        if (this.identityFileTouched.has(target) || this.identityFiles()[target] !== file) return;
-        this.preloadedIdentityFiles.update(files => ({
-          ...files,
-          [target]: this.toIdentityPreloadedFile(target, file, src),
-        }));
-      })
-      .catch(() => undefined);
-  }
-
-  private toIdentityPreloadedFile(
-    target: IdentityFileTarget,
-    file: File,
-    src: ArrayBuffer
-  ): OrtPreloadedFile {
-    return {
-      id: `identity-preload-${target}`,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      src,
-    };
   }
 
   private loadInitialSurveyState(): void {
@@ -776,7 +590,7 @@ export class InscripcionSurveyFacade {
   private initializeEmptySurvey(): void {
     this.hasInitialSurveyRight.set(true);
     this.surveyState.set('no-iniciada');
-    this.completedSections.set([]);
+    this.sectionProgress.set({});
     this.activeSection.set('educacion');
     this.process.flow.reset();
   }
@@ -784,7 +598,7 @@ export class InscripcionSurveyFacade {
   private initializeIdentityOnlySurvey(): void {
     this.hasInitialSurveyRight.set(false);
     this.surveyState.set('completa');
-    this.completedSections.set([]);
+    this.sectionProgress.set({});
     this.activeSection.set('identidad');
     this.process.flow.reset();
   }
@@ -810,10 +624,20 @@ export class InscripcionSurveyFacade {
     const activeSection = isComplete ? 'identidad' : (survey.seccionActiva ?? 'educacion');
     const visibleSections = getSeccionesVisibles(isComplete ? 'encuesta-completa' : 'primera-vez');
     const activeIndex = visibleSections.indexOf(activeSection);
-    this.completedSections.set(activeIndex > 0 ? visibleSections.slice(0, activeIndex) : []);
+    const completedSections = activeIndex > 0 ? visibleSections.slice(0, activeIndex) : [];
+    this.sectionProgress.set(
+      Object.fromEntries(
+        completedSections.map(section => [section, { completed: true, submitted: false }])
+      )
+    );
     this.activeSection.set(activeSection);
     this.process.flow.goTo('encuesta');
     this.proposal.loadAcademicOptionsForSurvey(survey);
+  }
+
+  private reapplyBackendSurvey(): void {
+    const response = this.initialSurveyResponse;
+    if (response?.encuesta) this.applyBackendSurvey(response.encuesta, response);
   }
 
   private applyBackendSurvey(
@@ -825,166 +649,9 @@ export class InscripcionSurveyFacade {
       careers: this.proposal.careers(),
     });
     this.proposal.setProposalType(proposalType);
-    this.refreshOrientationOptions();
+    this.options.refreshOrientationOptions();
     this.updateConditionalValidators();
   }
-
-  private getInitialSurveyPayload() {
-    return buildInitialSurveyPayload(this.formsStore.forms);
-  }
-
-  private loadInitialSurveyCatalogs(): void {
-    this.loadingInitialSurveyCatalogs.set(true);
-    this.catalogs
-      .getInitialSurveyCatalogs()
-      .pipe(
-        finalize(() => {
-          this.loadingInitialSurveyCatalogs.set(false);
-          this.initialized.set(true);
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: catalogs => {
-          this.applyInitialSurveyCatalogs(catalogs);
-          const response = this.initialSurveyResponse;
-          if (response?.encuesta) this.applyBackendSurvey(response.encuesta, response);
-        },
-        error: () => {
-          this.catalogError.set('No se pudieron cargar los catálogos de encuesta inicial.');
-          this.applyInitialSurveyCatalogs({
-            educacion: {
-              ubicacionesUltimoAnioSecundaria: [],
-              aniosBachillerato: [],
-              estadosEducacionSuperiorPrevia: [],
-              universidades: [],
-              nivelesFormacionTutores: [],
-            },
-            decisionAcademica: {
-              aniosEducacionMediaSuperior: [],
-              apoyosDecision: [],
-              nivelesDecision: [],
-              universidades: [],
-              motivosEleccionOrt: [],
-            },
-            experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-            situacionLaboral: { tiposJornada: [] },
-          });
-        },
-      });
-  }
-
-  private applyInitialSurveyCatalogs(catalogs: InitialSurveyCatalogs): void {
-    const education = catalogs.educacion;
-    const decision = catalogs.decisionAcademica;
-    const experience = catalogs.experienciaOrt;
-
-    this.previousCareerOptions.set(toCatalogOptions(education.estadosEducacionSuperiorPrevia));
-    this.educationLevelOptions.set(toCatalogOptions(education.nivelesFormacionTutores));
-    this.schoolPlaceOptions.set(toCatalogOptions(education.ubicacionesUltimoAnioSecundaria));
-    this.supportOptions.set(toCatalogOptions(decision.apoyosDecision));
-    this.decisionYearOptions.set(toCatalogOptions(decision.aniosEducacionMediaSuperior));
-    this.decisionLevelOptions.set(toCatalogOptions(decision.nivelesDecision));
-    this.motivesOptions.set(toCatalogOptions(decision.motivosEleccionOrt));
-    this.universityOptions.set(toCatalogOptions(decision.universidades));
-    this.higherEducationUniversityOptions.set(toCatalogOptions(education.universidades));
-    this.advertisingOptions.set(toCatalogOptions(experience.publicidadesOrt));
-    this.workScheduleOptions.set(toCatalogOptions(catalogs.situacionLaboral.tiposJornada));
-    this.baccalaureateYears.set(education.aniosBachillerato);
-    if (experience.valoraciones.length > 0) {
-      this.ratingLabels.set(
-        Object.fromEntries(
-          experience.valoraciones.map(({ id, label }) => [
-            Number(id),
-            `${id} ${Number(id) === 1 ? 'estrella' : 'estrellas'}: ${label}`,
-          ])
-        )
-      );
-    }
-    this.refreshOrientationOptions();
-    this.updateConditionalValidators();
-  }
-
-  private refreshOrientationOptions(): void {
-    this.orientationOptions.set(
-      buildOrientationOptions(
-        this.baccalaureateYears(),
-        this.educationForm.controls.anioSecundaria.value
-      )
-    );
-    if (
-      this.educationForm.controls.orientacion.value &&
-      !this.orientationOptions().some(
-        option => option.value === this.educationForm.controls.orientacion.value
-      )
-    ) {
-      this.educationForm.controls.orientacion.setValue('', { emitEvent: false });
-    }
-  }
-
-  private loadDepartmentOptions(): void {
-    this.catalogs
-      .getCountryLocations()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: countries => this.applyDepartmentOptions(countries),
-        error: () => undefined,
-      });
-  }
-
-  private applyDepartmentOptions(countries: readonly LocationCountry[]): void {
-    const uruguay = countries.find(country => country.codigoPais === URUGUAY_COUNTRY_CODE) ?? null;
-    this.uruguayCountryCode = uruguay?.codigoPais ?? null;
-    this.departmentOptions.set(
-      (uruguay?.estado ?? []).map(state => ({
-        value: state.codigoEstado.toString(),
-        label: state.nombre,
-      }))
-    );
-    this.updateConditionalValidators();
-  }
-
-  private loadInstitutionsForSelectedDepartment(): void {
-    const departmentValue = this.educationForm.controls.departamento.value;
-    const codigoEstado = departmentValue ? Number(departmentValue) : null;
-    if (this.uruguayCountryCode === null || codigoEstado === null) {
-      this.institutionOptions.set([]);
-      this.updateConditionalValidators();
-      return;
-    }
-    this.catalogs
-      .getInstituciones(this.uruguayCountryCode, codigoEstado)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: institutions => {
-          this.institutionOptions.set(
-            institutions.map(institution => ({
-              value: institution.id.toString(),
-              label: institution.label,
-            }))
-          );
-          const selected = this.educationForm.controls.institucionEducativa.value;
-          if (selected && !this.institutionOptions().some(option => option.value === selected)) {
-            this.educationForm.controls.institucionEducativa.setValue('', { emitEvent: false });
-          }
-          this.updateConditionalValidators();
-        },
-        error: () => {
-          this.institutionOptions.set([]);
-          this.updateConditionalValidators();
-        },
-      });
-  }
-}
-
-function buildOrientationOptions(
-  years: readonly BaccalaureateYearGroup[],
-  selectedYear: string
-): readonly OpcionInscripcion[] {
-  const year = years.find(option => option.id.toString() === selectedYear);
-  return (year?.baccalaureates ?? []).flatMap(option =>
-    option.orientation ? [{ value: option.id.toString(), label: option.orientation }] : []
-  );
 }
 
 function isNotFoundError(error: unknown): error is { status: number } {

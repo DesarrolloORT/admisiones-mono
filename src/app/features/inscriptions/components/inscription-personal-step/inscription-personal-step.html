@@ -81,7 +81,7 @@
                 [divider]="divider"
                 [orientation]="radioGroupOrientation()"
                 [required]="true">
-                @for (option of facade.schoolYearOptions(); track option.value) {
+                @for (option of facade.options.schoolYearOptions(); track option.value) {
                 <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
                 }
               </ort-radio-group>
@@ -101,7 +101,7 @@
                 errorText="Seleccioná una opción"
                 formControlName="orientacion"
                 label="Orientación"
-                [options]="facade.orientationOptions()" />
+                [options]="facade.options.orientationOptions()" />
               @if (facade.educationForm.controls.orientacion.touched &&
               facade.educationForm.controls.orientacion.hasError('required')) {
               <p class="inscription-field-error" id="baccalaureate-orientation-error" role="alert">
@@ -175,16 +175,16 @@
                 errorText="Seleccioná una opción"
                 formControlName="departamento"
                 label="Departamento"
-                [disabled]="facade.departmentOptions().length === 0"
-                [options]="facade.departmentOptions()"
+                [disabled]="facade.options.departmentOptions().length === 0"
+                [options]="facade.options.departmentOptions()"
                 [searchable]="true" />
 
               <app-responsive-select
                 errorText="Seleccioná una opción"
                 formControlName="institucionEducativa"
                 label="Institución educativa"
-                [disabled]="facade.institutionOptions().length === 0"
-                [options]="facade.institutionOptions()"
+                [disabled]="facade.options.institutionOptions().length === 0"
+                [options]="facade.options.institutionOptions()"
                 [searchable]="true" />
               } @else if (facade.isForeignSchoolPlace()) {
               <ort-form-field
@@ -218,7 +218,7 @@
                 [divider]="divider"
                 [orientation]="radioGroupOrientation()"
                 [required]="true">
-                @for (option of facade.previousCareerOptions(); track option.value) {
+                @for (option of facade.options.previousCareerOptions(); track option.value) {
                 <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
                 }
               </ort-radio-group>
@@ -233,9 +233,9 @@
                 formControlName="universidadesEducacionSuperior"
                 label="¿En qué universidades cursaste?"
                 placeholder="Seleccioná una o más..."
-                [disabled]="facade.higherEducationUniversityOptions().length === 0"
+                [disabled]="facade.options.higherEducationUniversityOptions().length === 0"
                 [multiple]="true"
-                [options]="facade.higherEducationUniversityOptions()"
+                [options]="facade.options.higherEducationUniversityOptions()"
                 [searchable]="true" />
               @if (facade.shouldAskHigherEducationOtherUniversity()) {
               <ort-form-field>
@@ -266,8 +266,8 @@
                     errorText="Seleccioná una opción"
                     formControlName="formacionMadre"
                     label="Nivel máximo alcanzado"
-                    [disabled]="facade.loadingInitialSurveyCatalogs()"
-                    [options]="facade.educationLevelOptions()" />
+                    [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+                    [options]="facade.options.educationLevelOptions()" />
                   @if (facade.shouldAskMotherOrtDegree()) {
                   <ort-radio-group
                     class="inscription-choice-list"
@@ -301,8 +301,8 @@
                     errorText="Seleccioná una opción"
                     formControlName="formacionPadre"
                     label="Nivel máximo alcanzado"
-                    [disabled]="facade.loadingInitialSurveyCatalogs()"
-                    [options]="facade.educationLevelOptions()" />
+                    [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+                    [options]="facade.options.educationLevelOptions()" />
                   @if (facade.shouldAskFatherOrtDegree()) {
                   <ort-radio-group
                     class="inscription-choice-list"
@@ -374,7 +374,7 @@
               [divider]="divider"
               [orientation]="radioGroupOrientation()"
               [required]="true">
-              @for (option of facade.decisionYearOptions(); track option.value) {
+              @for (option of facade.options.decisionYearOptions(); track option.value) {
               <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
               }
             </ort-radio-group>
@@ -391,8 +391,8 @@
               formControlName="apoyoDecision"
               label="¿Quiénes te apoyaron en la decisión?"
               placeholder="Seleccioná..."
-              [disabled]="facade.loadingInitialSurveyCatalogs()"
-              [options]="facade.supportOptions()" />
+              [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+              [options]="facade.options.supportOptions()" />
 
             <ort-radio-group
               class="inscription-choice-list"
@@ -409,7 +409,7 @@
               [divider]="divider"
               [orientation]="radioGroupOrientation()"
               [required]="true">
-              @for (option of facade.decisionYearOptions(); track option.value) {
+              @for (option of facade.options.decisionYearOptions(); track option.value) {
               <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
               }
             </ort-radio-group>
@@ -449,9 +449,9 @@
               formControlName="universidadesInformadas"
               label="¿En qué universidades te informaste?"
               placeholder="Seleccioná una o más..."
-              [disabled]="facade.universityOptions().length === 0"
+              [disabled]="facade.options.universityOptions().length === 0"
               [multiple]="true"
-              [options]="facade.universityOptions()"
+              [options]="facade.options.universityOptions()"
               [searchable]="true" />
             @if (facade.shouldAskInformedOtherUniversity()) {
             <ort-form-field>
@@ -495,9 +495,9 @@
               formControlName="motivosOrt"
               label="Motivos para elegir ORT"
               placeholder="Seleccioná una o más..."
-              [disabled]="facade.loadingInitialSurveyCatalogs()"
+              [disabled]="facade.options.loadingInitialSurveyCatalogs()"
               [multiple]="true"
-              [options]="facade.motivesOptions()"
+              [options]="facade.options.motivesOptions()"
               [searchable]="true" />
           </div>
         </ort-accordion-body>
@@ -571,7 +571,7 @@
               "
                 [required]="true"
                 [showValueText]="true"
-                [valueLabels]="facade.ratingLabels()" />
+                [valueLabels]="facade.options.ratingLabels()" />
               }
             </section>
 
@@ -616,7 +616,7 @@
               "
                 [required]="true"
                 [showValueText]="true"
-                [valueLabels]="facade.ratingLabels()" />
+                [valueLabels]="facade.options.ratingLabels()" />
               }
             </section>
 
@@ -660,7 +660,7 @@
               "
               [required]="true"
               [showValueText]="true"
-              [valueLabels]="facade.ratingLabels()" />
+              [valueLabels]="facade.options.ratingLabels()" />
             }
 
             <ort-radio-group
@@ -692,9 +692,9 @@
               formControlName="mediosPublicidad"
               label="¿Dónde viste esa publicidad?"
               placeholder="Seleccioná una o más..."
-              [disabled]="facade.advertisingOptions().length === 0"
+              [disabled]="facade.options.advertisingOptions().length === 0"
               [multiple]="true"
-              [options]="facade.advertisingOptions()"
+              [options]="facade.options.advertisingOptions()"
               [searchable]="true" />
             }
           </div>
@@ -759,11 +759,11 @@
                   ? 'work-schedule-error'
                   : null
               "
-              [disabled]="facade.workScheduleOptions().length === 0"
+              [disabled]="facade.options.workScheduleOptions().length === 0"
               [divider]="divider"
               [orientation]="radioGroupOrientation()"
               [required]="true">
-              @for (option of facade.workScheduleOptions(); track option.value) {
+              @for (option of facade.options.workScheduleOptions(); track option.value) {
               <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
               }
             </ort-radio-group>
@@ -809,9 +809,9 @@
               </p>
               <ort-file-uploader
                 label="Frente del documento *"
-                [acceptedTypes]="facade.acceptedImageTypes"
-                [initialFiles]="facade.initialIdentityFiles().frente"
-                (filesChanged)="facade.updateIdentityFile('frente', $event)" />
+                [acceptedTypes]="facade.identity.acceptedImageTypes"
+                [initialFiles]="facade.identity.initialIdentityFiles().frente"
+                (filesChanged)="facade.identity.updateIdentityFile('frente', $event)" />
               @if (facade.isIdentityFileMissing('frente')) {
               <p class="inscription-field-error" role="alert">
                 Adjuntá la imagen del frente del documento
@@ -819,9 +819,9 @@
               }
               <ort-file-uploader
                 label="Dorso del documento *"
-                [acceptedTypes]="facade.acceptedImageTypes"
-                [initialFiles]="facade.initialIdentityFiles().dorso"
-                (filesChanged)="facade.updateIdentityFile('dorso', $event)" />
+                [acceptedTypes]="facade.identity.acceptedImageTypes"
+                [initialFiles]="facade.identity.initialIdentityFiles().dorso"
+                (filesChanged)="facade.identity.updateIdentityFile('dorso', $event)" />
               @if (facade.isIdentityFileMissing('dorso')) {
               <p class="inscription-field-error" role="alert">
                 Adjuntá la imagen del dorso del documento
@@ -848,8 +848,8 @@
               aria-labelledby="identity-selfie-title"
               class="inscription-subsection">
               <h4 id="identity-selfie-title">Adjuntá una foto tuya</h4>
-              @if(facade.initialIdentityFiles().selfie &&
-              facade.initialIdentityFiles().selfie.length > 0) {
+              @if(facade.identity.initialIdentityFiles().selfie &&
+              facade.identity.initialIdentityFiles().selfie.length > 0) {
               <p id="identity-selfie-help">
                 Ya subiste una foto de tu rostro. Si querés cambiarla, podés subir otra.
               </p>
@@ -860,13 +860,13 @@
               }
               <ort-file-uploader
                 label="Foto del rostro *"
-                [acceptedTypes]="facade.acceptedImageTypes"
-                [initialFiles]="facade.initialIdentityFiles().selfie"
+                [acceptedTypes]="facade.identity.acceptedImageTypes"
+                [initialFiles]="facade.identity.initialIdentityFiles().selfie"
                 [maxFiles]="1"
-                (filesChanged)="facade.updateIdentityFile('selfie', $event)" />
+                (filesChanged)="facade.identity.updateIdentityFile('selfie', $event)" />
               @if (facade.isIdentityFileMissing('selfie')) {
               <p class="inscription-field-error" role="alert">Adjuntá tu imagen de perfil</p>
-              } @if (facade.requiresIdentityConfirmation()) {
+              } @if (facade.identity.requiresIdentityConfirmation()) {
               <ort-checkbox
                 class="inscription-identity-confirmation"
                 formControlName="identidadCorrecta">

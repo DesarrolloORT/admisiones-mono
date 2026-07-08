@@ -123,7 +123,7 @@ describe('InscripcionPersonalStep', () => {
     );
 
     expect(template).toContain('<app-responsive-select');
-    expect(template).toContain('[options]="facade.orientationOptions()"');
+    expect(template).toContain('[options]="facade.options.orientationOptions()"');
     expect(template).toContain('formControlName="orientacion"');
     expect(template).toContain('formControlName="recursaAnioBachillerato"');
     expect(template).toContain('formControlName="vecesRecursaAnioBachillerato"');
