@@ -15,15 +15,15 @@
           formControlName="password"
           ortInput
           [id]="'login-password'"
-          [type]="passwordInputType()" />
+          [type]="passwordVisibility.inputType()" />
         <button
           class="password-visibility-toggle"
           ortSuffix
           type="button"
-          [attr.aria-label]="passwordToggleLabel()"
-          [attr.aria-pressed]="showPassword()"
-          (click)="togglePasswordVisibility()">
-          <ort-icon aria-hidden="true" [name]="passwordIcon()" />
+          [attr.aria-label]="passwordVisibility.toggleLabel()"
+          [attr.aria-pressed]="passwordVisibility.visible()"
+          (click)="passwordVisibility.toggle()">
+          <ort-icon aria-hidden="true" [name]="passwordVisibility.icon()" />
         </button>
         @if ( form.controls.password.touched && form.controls.password.hasError('required') ) {
         <ort-error>Este campo es obligatorio</ort-error>

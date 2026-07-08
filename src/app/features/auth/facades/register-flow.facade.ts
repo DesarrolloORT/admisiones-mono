@@ -1,7 +1,6 @@
 import { computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
@@ -12,6 +11,7 @@ import {
   syncDocumentNumberValidators,
 } from '../forms/auth-forms';
 import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
+import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
   CEDULA_DOCUMENT_TYPE,
@@ -134,7 +134,7 @@ export class RegisterFlowFacade {
 
       this.step.set('personal');
     } catch (error) {
-      this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+      this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
     } finally {
       this.isSubmitting.set(false);
     }
@@ -198,7 +198,7 @@ export class RegisterFlowFacade {
           this.navigateToEmailConfirmation();
         },
         error: error => {
-          this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+          this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
         },
       });
   }
@@ -240,7 +240,7 @@ export class RegisterFlowFacade {
           }
         },
         error: error => {
-          const message = this.getApiErrorMessage(error, 'No se pudo completar el registro.');
+          const message = getApiErrorMessage(error, 'No se pudo completar el registro.');
           this.snackbar.error(message);
         },
       });
@@ -304,10 +304,6 @@ export class RegisterFlowFacade {
     this.registrationFlowId.set(null);
   }
 
-  private getApiErrorMessage(error: unknown, fallback: string): string {
-    return isNormalizedApiError(error) ? error.message : fallback;
-  }
-
   private showError(message: string): void {
     this.snackbar.error(message);
   }
@@ -336,7 +332,7 @@ export class RegisterFlowFacade {
       return;
     }
 
-    this.showError(this.getApiErrorMessage(error, 'No se pudo precargar el documento.'));
+    this.showError(getApiErrorMessage(error, 'No se pudo precargar el documento.'));
   }
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {

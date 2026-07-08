@@ -16,6 +16,7 @@ import {
   buildOrtPasswordRequirements,
   ORT_PASSWORD_VALIDATORS,
 } from '../../../../shared/forms/password-validation';
+import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { AccountService } from '../../../auth/services/account';
 
 interface ChangePasswordForm {
@@ -77,39 +78,10 @@ export class ChangePassword {
   private readonly errorState = signal<string | null>(null);
   protected readonly error = this.errorState.asReadonly();
 
-  protected readonly currentPasswordVisible = signal(false);
-  protected readonly passwordVisible = signal(false);
-  protected readonly confirmPasswordVisible = signal(false);
-
-  protected readonly currentPasswordInputType = computed(() =>
-    this.currentPasswordVisible() ? 'text' : 'password'
-  );
-  protected readonly currentPasswordIcon = computed(() =>
-    this.currentPasswordVisible() ? 'visibility' : 'visibility_off'
-  );
-  protected readonly passwordInputType = computed(() =>
-    this.passwordVisible() ? 'text' : 'password'
-  );
-  protected readonly passwordIcon = computed(() =>
-    this.passwordVisible() ? 'visibility' : 'visibility_off'
-  );
-  protected readonly confirmPasswordInputType = computed(() =>
-    this.confirmPasswordVisible() ? 'text' : 'password'
-  );
-  protected readonly confirmPasswordIcon = computed(() =>
-    this.confirmPasswordVisible() ? 'visibility' : 'visibility_off'
-  );
-
-  protected readonly currentPasswordToggleLabel = computed(() =>
-    this.currentPasswordVisible() ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'
-  );
-  protected readonly passwordToggleLabel = computed(() =>
-    this.passwordVisible() ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'
-  );
-  protected readonly confirmPasswordToggleLabel = computed(() =>
-    this.confirmPasswordVisible()
-      ? 'Ocultar confirmación de contraseña'
-      : 'Mostrar confirmación de contraseña'
+  protected readonly currentPasswordVisibility = createPasswordVisibility('contraseña actual');
+  protected readonly passwordVisibility = createPasswordVisibility('nueva contraseña');
+  protected readonly confirmPasswordVisibility = createPasswordVisibility(
+    'confirmación de contraseña'
   );
 
   protected readonly errorSummary = computed<OrtErrorItem[]>(() => {
@@ -142,18 +114,6 @@ export class ChangePassword {
     this.password();
     return buildOrtPasswordRequirements(this.form.controls.password);
   });
-
-  protected toggleCurrentPasswordVisibility(): void {
-    this.currentPasswordVisible.update(v => !v);
-  }
-
-  protected togglePasswordVisibility(): void {
-    this.passwordVisible.update(v => !v);
-  }
-
-  protected toggleConfirmPasswordVisibility(): void {
-    this.confirmPasswordVisible.update(v => !v);
-  }
 
   protected submit(): void {
     this.form.markAllAsTouched();

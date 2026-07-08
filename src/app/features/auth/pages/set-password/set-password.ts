@@ -22,6 +22,7 @@ import {
   ORT_PASSWORD_ERROR_MESSAGES,
   ORT_PASSWORD_VALIDATORS,
 } from '../../../../shared/forms/password-validation';
+import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { AuthSessionService } from '../../services/auth-session';
@@ -110,29 +111,11 @@ export class SetPassword {
   private readonly tokenErrorState = signal<string | null>(null);
   protected readonly tokenError = this.tokenErrorState.asReadonly();
 
-  protected readonly passwordVisible = signal(false);
-  protected readonly confirmPasswordVisible = signal(false);
+  protected readonly passwordVisibility = createPasswordVisibility();
+  protected readonly confirmPasswordVisibility = createPasswordVisibility(
+    'confirmación de contraseña'
+  );
 
-  protected readonly passwordInputType = computed(() =>
-    this.passwordVisible() ? 'text' : 'password'
-  );
-  protected readonly passwordIcon = computed(() =>
-    this.passwordVisible() ? 'visibility_off' : 'visibility'
-  );
-  protected readonly passwordToggleLabel = computed(() =>
-    this.passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'
-  );
-  protected readonly confirmPasswordInputType = computed(() =>
-    this.confirmPasswordVisible() ? 'text' : 'password'
-  );
-  protected readonly confirmPasswordIcon = computed(() =>
-    this.confirmPasswordVisible() ? 'visibility_off' : 'visibility'
-  );
-  protected readonly confirmPasswordToggleLabel = computed(() =>
-    this.confirmPasswordVisible()
-      ? 'Ocultar confirmación de contraseña'
-      : 'Mostrar confirmación de contraseña'
-  );
   private readonly password = toSignal(this.form.controls.password.valueChanges, {
     initialValue: this.form.controls.password.value,
   });
@@ -153,14 +136,6 @@ export class SetPassword {
 
   constructor() {
     this.activateToken();
-  }
-
-  protected togglePasswordVisibility(): void {
-    this.passwordVisible.update(v => !v);
-  }
-
-  protected toggleConfirmPasswordVisibility(): void {
-    this.confirmPasswordVisible.update(v => !v);
   }
 
   protected submit(): void {
