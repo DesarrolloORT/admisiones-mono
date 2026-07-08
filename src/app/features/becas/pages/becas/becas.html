@@ -3,10 +3,15 @@
   <section aria-labelledby="scholarships-title" class="scholarships-screen">
     <div class="scholarships-screen__header">
       <h1 class="scholarships-title" id="scholarships-title">Postulación a becas</h1>
+      @if (inscripto()) {
       <p class="scholarships-description">Conocé las becas disponibles y sus requisitos.</p>
+      }@else {
+      <p class="scholarships-description">
+        Conocé las becas disponibles y sus requisitos. Para postularte a una beca, necesitás haber
+        completado el proceso de inscripción.
+      </p>
+      }
     </div>
-
-    @if (inscripto()) {
     <ul class="scholarship-list">
       @for (beca of becas(); track $index) {
       <li>
@@ -14,27 +19,5 @@
       </li>
       }
     </ul>
-    } @else{
-    <app-scholarship-card [beca]="becas()[0]" [inscripto]="inscripto()" [single]="true" />
-    <div class="with-inscription__container">
-      <div class="inscription-separation__container">
-        <div class="inscription-separation">
-          <span>Con inscripción previa</span>
-        </div>
-        <p class="inscription-separation__text">
-          La postulación a estas becas requiere que hayas completado el proceso de inscripción y
-          abonado la seña.
-        </p>
-      </div>
-      <ul class="scholarship-list scholarship-list__grid">
-        @for (beca of becas().slice(1); track $index) {
-        <li>
-          <app-scholarship-card [beca]="beca" [inscripto]="inscripto()" [style.opacity]="0.75" />
-        </li>
-        }
-      </ul>
-    </div>
-
-    }
   </section>
 </main>

@@ -51,40 +51,6 @@
   line-height: var(--ort-sys-spacing-24);
 }
 
-.inscription-separation {
-  display: flex;
-  gap: var(--ort-sys-spacing-8);
-  align-items: center;
-  color: var(--ort-sys-color-primary-500);
-  font-weight: var(--ort-sys-font-weight-semibold);
-  font-size: var(--ort-sys-font-size-14);
-  text-align: center;
-}
-
-.inscription-separation__container {
-  display: grid;
-  gap: var(--ort-sys-spacing-8);
-  margin-bottom: var(--ort-sys-spacing-24);
-}
-
-.inscription-separation::before,
-.inscription-separation::after {
-  content: '';
-  flex: 1;
-  // stylelint-disable-next-line declaration-property-unit-allowed-list -- Hairline divider uses 1px by design.
-  height: 1px;
-  background-color: var(--ort-sys-color-primary-500);
-}
-
-.inscription-separation span {
-  white-space: nowrap;
-}
-
-.inscription-separation__text {
-  color: var(--ort-sys-base-text-color-body);
-  font-weight: var(--ort-sys-font-weight-semibold);
-}
-
 @media (width >= 1024px) {
   .scholarship-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,38 +61,10 @@
     gap: var(--ort-sys-spacing-48);
     margin-top: var(--ort-sys-spacing-64);
   }
-
-  .inscription-separation {
-    justify-content: flex-start;
-    margin-top: var(--ort-sys-spacing-24);
-    font-size: var(--ort-sys-font-size-20);
-  }
-
-  .inscription-separation::before {
-    display: none;
-  }
-
-  .inscription-separation::after {
-    flex: 1;
-  }
-
-  .inscription-separation__container {
-    margin-bottom: 0;
-  }
-
-  .scholarship-list__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--ort-sys-spacing-16);
-  }
-
-  .with-inscription__container {
-    display: grid;
-    gap: var(--ort-sys-spacing-32);
-  }
 }
 
 @media (width >= 1920px) {
   .becas-main {
-    width: 55%;
+    width: 50%;
   }
 }

@@ -18,21 +18,21 @@ const SCHOLARSHIPS = [
     description:
       'Dirigida a estudiantes que comienzan una carrera y cuentan con un destacado desempeño académico en secundaria.',
     test: true,
-    route: '',
+    route: '/becas/fexa',
   },
   {
     title: 'Becas Concursables',
     description:
       'Dirigidas a estudiantes que comienzan una carrera y han aprobado bachillerato o tienen exámenes de 6.º año pendientes.',
     test: true,
-    route: '',
+    route: '/becas/fbc',
   },
   {
     title: 'Carreras Cortas / Capacitación Laboral',
     description:
       'Dirigida a estudiantes que desean cursar una carrera corta y cuentan con al menos 4.º año de secundaria aprobado.',
     test: false,
-    route: '',
+    route: '/becas/fcl',
   },
 ];
 
@@ -49,7 +49,7 @@ export class Becas {
 
   protected readonly becas = signal(SCHOLARSHIPS);
 
-  protected inscripto = signal(false);
+  protected inscripto = signal(true);
 
   private readonly breakpointService = inject(BreakpointService);
 
