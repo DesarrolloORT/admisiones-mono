@@ -6,7 +6,6 @@ import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
-import { Catalogs } from '../../catalogs/services/catalogs';
 import {
   createIdentityForm,
   createPersonalForm,
@@ -18,7 +17,6 @@ import {
   CEDULA_DOCUMENT_TYPE,
   cleanDocumentNumber,
   getDocumentNumberLabel,
-  isCedulaDocumentType,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import {
@@ -32,13 +30,11 @@ import { DocumentPrefillResult, DocumentPrefillService } from '../services/docum
 import { RegistrationService } from '../services/registration';
 
 export class RegisterFlowFacade {
-  private readonly catalogs = inject(Catalogs);
   private readonly documentPrefill = inject(DocumentPrefillService);
   private readonly registration = inject(RegistrationService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
-  public readonly documentTypes$ = this.catalogs.getDocumentTypes();
   public readonly identityForm = createIdentityForm();
   public readonly personalForm = createPersonalForm();
   public readonly step = signal<RegisterStep>('identity');
@@ -53,8 +49,6 @@ export class RegisterFlowFacade {
     this.identityForm.controls.documentType.valueChanges,
     { initialValue: this.identityForm.controls.documentType.value }
   );
-
-  public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
 
   public readonly documentNumberLabel = computed(() =>
     getDocumentNumberLabel(this._documentTypeValue())

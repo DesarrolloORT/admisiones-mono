@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { afterEach, vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
@@ -21,10 +21,20 @@ const PAYMENT_OK: InscripcionPaymentResponse = {
   errorCode: null,
 };
 
+const CONFIRMED_DETAIL = {
+  numeroEstudiante: 412001,
+  resumen: null,
+  coordinadorAcademico: { nombre: 'Laura Pérez', email: 'laura.perez@ort.edu.uy' },
+  materiasPrimerSemestre: [
+    { idMateria: 1, nombre: 'Programación I' },
+    { idMateria: 2, nombre: null },
+  ],
+};
+
 describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
   let process: InscripcionProcessStore;
-  let inscriptions: { pay: ReturnType<typeof vi.fn> };
+  let inscriptions: { pay: ReturnType<typeof vi.fn>; getDetail: ReturnType<typeof vi.fn> };
 
   afterEach(() => {
     vi.useRealTimers();
@@ -32,7 +42,17 @@ describe('InscripcionPaymentFacade', () => {
   });
 
   beforeEach(() => {
-    inscriptions = { pay: vi.fn().mockReturnValue(of(PAYMENT_OK)) };
+    inscriptions = {
+      pay: vi.fn().mockReturnValue(of(PAYMENT_OK)),
+      getDetail: vi.fn().mockReturnValue(
+        of({
+          estado: 'Confirmada',
+          detalle: null,
+          pagoPendiente: null,
+          confirmada: CONFIRMED_DETAIL,
+        })
+      ),
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -199,5 +219,84 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.bankOptions()).toEqual([
       { value: 'brou', label: 'BROU', icon: 'assets/banks/brou.svg' },
     ]);
+  });
+
+  it('loads the confirmed detail after a confirmed payment', () => {
+    const forms = TestBed.inject(InscripcionFormsStore);
+    forms.academicForm.controls.carrera.setValue('20');
+    forms.academicForm.controls.comienzo.setValue('200');
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200);
+    expect(facade.studentNumber()).toBe(412001);
+    expect(facade.coordinators()).toEqual([
+      {
+        role: 'Coordinador(a) Académico:',
+        name: 'Laura Pérez',
+        email: 'laura.perez@ort.edu.uy',
+      },
+    ]);
+    expect(facade.visibleSubjects()).toEqual(['Programación I']);
+  });
+
+  it('keeps the success screen without detail sections when getDetail fails', () => {
+    const forms = TestBed.inject(InscripcionFormsStore);
+    forms.academicForm.controls.carrera.setValue('20');
+    forms.academicForm.controls.comienzo.setValue('200');
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
+    inscriptions.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('inscription-confirmada');
+    expect(facade.studentNumber()).toBeNull();
+    expect(facade.coordinators()).toEqual([]);
+    expect(facade.visibleSubjects()).toEqual([]);
+  });
+
+  it('skips the detail request when no catalog ids are available', () => {
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('inscription-confirmada');
+    expect(inscriptions.getDetail).not.toHaveBeenCalled();
+  });
+
+  it('builds reservation instructions with the real deadline and amount', () => {
+    process.preEnrollmentResponse.set({
+      idInscripcion: 1072704,
+      confirmada: false,
+      fechaVencimientoPago: '2027-03-04',
+      seniaInscripcion: 15500,
+      saldoCuenta: null,
+      resumen: null,
+    });
+    facade.selectedPaymentMethod.set('abitab');
+
+    const instructions = facade.reservationInstructions();
+
+    expect(instructions.description).toContain('04/03/2027');
+    expect(instructions.items).toContain('Monto a pagar: $ 15.500');
+    expect(instructions.items.join(' ')).not.toContain('397654');
+  });
+
+  it('falls back to generic reservation instructions without method or data', () => {
+    process.preEnrollmentResponse.set(null);
+    facade.selectedPaymentMethod.set(null);
+
+    const instructions = facade.reservationInstructions();
+
+    expect(instructions.title).toBe('¡Inscripción reservada!');
+    expect(instructions.description).toContain('Realizá el pago de la seña');
+    expect(instructions.items).toEqual([]);
   });
 });

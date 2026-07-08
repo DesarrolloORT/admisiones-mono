@@ -65,6 +65,7 @@ describe('InscripcionProcessFacade', () => {
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
     });
     expect(payment.outcome()).toBe('inscription-confirmada');
+    expect(payment.confirmedDetail()).toEqual(createConfirmedDetail().confirmada);
   });
 });
 
@@ -72,6 +73,7 @@ function createFacade(detail: InscripcionDetail | null, initialized = true) {
   const payment = {
     outcome: signal(null),
     view: signal('editing'),
+    confirmedDetail: signal(null),
     requestConfirmation: vi.fn(),
   };
 

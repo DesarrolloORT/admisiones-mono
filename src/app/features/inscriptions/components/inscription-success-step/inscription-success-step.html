@@ -12,33 +12,25 @@
     </p>
   </header>
 
+  @if (facade.studentNumber(); as studentNumber) {
   <p class="inscription-alert inscription-alert--info">
     <ort-icon aria-hidden="true">info</ort-icon>
     <span>
-      <strong>Tu número de estudiante es {{ facade.studentNumber }}</strong>
+      <strong>Tu número de estudiante es {{ studentNumber }}</strong>
       Lo utilizarás a lo largo de tu carrera.
     </span>
   </p>
-
+  } @if (facade.coordinators().length > 0) {
   <ort-card aria-labelledby="coordinators-title" role="region">
     <ort-card-content>
       <h3 id="coordinators-title">Coordinadores académicos</h3>
       <p>Tus contactos principales durante el desarrollo de tus estudios en ORT serán:</p>
       <div class="inscription-contact-list">
-        @for (coordinator of facade.coordinators; track coordinator.email) {
+        @for (coordinator of facade.coordinators(); track coordinator.email) {
         <article class="inscription-contact">
-          @if (coordinator.imageUrl) {
-          <img
-            class="inscription-contact__avatar"
-            height="40"
-            width="40"
-            [alt]="coordinator.name"
-            [src]="coordinator.imageUrl" />
-          } @else {
           <span aria-hidden="true" class="inscription-contact__avatar">
             <ort-icon>person</ort-icon>
           </span>
-          }
           <div>
             <h3>{{ coordinator.role }}</h3>
             <p>{{ coordinator.name }}</p>
@@ -49,6 +41,7 @@
       </div>
     </ort-card-content>
   </ort-card>
+  }
 
   <ort-card aria-label="Inscripción" role="region">
     <ort-card-content>
@@ -65,6 +58,7 @@
         }
       </dl>
 
+      @if (facade.visibleSubjects().length > 0) {
       <h4 id="career-subject-list-title">
         Listado de materias a cursar ({{ facade.visibleSubjects().length }})
       </h4>
@@ -79,6 +73,7 @@
         </li>
         }
       </ul>
+      @if (facade.canToggleSubjects()) {
       <button
         aria-controls="career-subject-list"
         ort-tonal-button
@@ -87,6 +82,7 @@
         (click)="facade.toggleSubjects()">
         {{ facade.subjectsToggleLabel() }}
       </button>
+      } }
     </ort-card-content>
   </ort-card>
 

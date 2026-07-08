@@ -210,7 +210,6 @@ export interface ContactoCoordinador {
   role: string;
   name: string;
   email: string;
-  imageUrl?: string;
 }
 
 export interface InstruccionReserva {

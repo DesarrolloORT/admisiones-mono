@@ -143,6 +143,7 @@ export class InscripcionProcessFacade {
     if (detail.estado === 'Pago pendiente' || detail.estado === 'Pendiente') {
       this.process.flow.goTo('pago');
     } else if (detail.estado === 'Confirmada') {
+      this.payment.confirmedDetail.set(detail.confirmada);
       this.payment.outcome.set('inscription-confirmada');
     }
   }

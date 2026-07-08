@@ -1,4 +1,4 @@
-import { AsyncPipe, DOCUMENT } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -18,10 +18,7 @@ import {
   OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
-  OrtInputModule,
-  OrtSelectModule,
 } from '@desarrolloort/components';
-import { Observable } from 'rxjs';
 import {
   buildFormErrorSummary,
   focusFieldById,
@@ -30,19 +27,17 @@ import {
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
 } from 'src/app/shared/forms/form-error-summary';
 
-import { DocumentType } from '../../../catalogs/models/catalog.interface';
 import { IdentityForm } from '../../forms/auth-forms';
+import { DocumentFields } from '../document-fields/document-fields';
 
 @Component({
   selector: 'app-register-identity-step',
   imports: [
-    AsyncPipe,
+    DocumentFields,
     OrtButtonModule,
     OrtFileUploaderModule,
     OrtFormFieldModule,
     OrtIconModule,
-    OrtInputModule,
-    OrtSelectModule,
     ReactiveFormsModule,
     RouterLink,
   ],
@@ -54,8 +49,6 @@ export class RegisterIdentityStep {
   private readonly errorSummaryAnchor = viewChild<ElementRef<HTMLElement>>('errorSummaryAnchor');
 
   public readonly form = input.required<FormGroup<IdentityForm>>();
-  public readonly documentTypes = input.required<Observable<DocumentType[]>>();
-  public readonly isCedulaInput = input(false);
   public readonly documentNumberLabel = input('Nro. de documento');
   public readonly acceptedDocumentTypes = input<string[]>([
     'application/pdf',

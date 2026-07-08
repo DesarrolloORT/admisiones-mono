@@ -7,7 +7,9 @@ import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert'
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscription-bank-logo';
+import type { InscripcionConfirmedDetail } from '../models/inscription-detail';
 import type {
+  ContactoCoordinador,
   InscripcionPaymentResponse,
   MetodoPago,
   OpcionInscripcion,
@@ -15,19 +17,17 @@ import type {
 } from '../models/inscription-flow';
 import { parseResultadoForzado } from '../models/inscription-flow-policy';
 import {
+  buildReservationInstructions,
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
-  getReservationInstructions,
 } from '../models/inscription-flow-view';
 import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscription-process';
 import {
-  COORDINATORS,
   PAYMENT_OPTIONS,
   type PaymentOption,
   SANTANDER_ACCOUNT_URL,
   STUDENT_SERVICE_LINKS,
-  SUBJECTS,
 } from '../models/inscription-static-data';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
@@ -47,10 +47,31 @@ export class InscripcionPaymentFacade {
   public readonly paymentOptions = computed<readonly PaymentOption[]>(() =>
     PAYMENT_OPTIONS.flatMap(option => this.resolvePaymentOption(option))
   );
-  public readonly coordinators = COORDINATORS;
   public readonly santanderAccountUrl = SANTANDER_ACCOUNT_URL;
-  public readonly studentNumber = '397654';
   public readonly studentServices = STUDENT_SERVICE_LINKS;
+
+  // Detalle de la inscripción confirmada (número de estudiante, coordinación y
+  // materias). Lo setea applyResumeContext al retomar desde el panel, o se carga
+  // vía getDetail al confirmarse el pago. Si la carga falla queda null y la
+  // pantalla de éxito oculta esas secciones.
+  public readonly confirmedDetail = signal<InscripcionConfirmedDetail | null>(null);
+  public readonly studentNumber = computed(() => this.confirmedDetail()?.numeroEstudiante ?? null);
+  public readonly coordinators = computed<readonly ContactoCoordinador[]>(() => {
+    const coordinator = this.confirmedDetail()?.coordinadorAcademico;
+    if (!coordinator?.nombre || !coordinator.email) return [];
+    return [
+      {
+        role: 'Coordinador(a) Académico:',
+        name: coordinator.nombre,
+        email: coordinator.email,
+      },
+    ];
+  });
+  private readonly subjects = computed<readonly string[]>(() =>
+    (this.confirmedDetail()?.materiasPrimerSemestre ?? [])
+      .map(materia => materia.nombre?.trim())
+      .filter((nombre): nombre is string => !!nombre)
+  );
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
@@ -107,13 +128,14 @@ export class InscripcionPaymentFacade {
     formatInscriptionAmount(this.process.preEnrollmentResponse()?.seniaInscripcion)
   );
   public readonly visibleSubjects = computed(() =>
-    this.showAllSubjects() ? SUBJECTS : SUBJECTS.slice(0, 4)
+    this.showAllSubjects() ? this.subjects() : this.subjects().slice(0, 4)
   );
+  public readonly canToggleSubjects = computed(() => this.subjects().length > 4);
   public readonly subjectsToggleLabel = computed(() =>
     this.showAllSubjects() ? 'Ver menos materias' : 'Ver todas las materias'
   );
   public readonly reservationInstructions = computed(() =>
-    getReservationInstructions(this.selectedPaymentMethod())
+    buildReservationInstructions(this.selectedPaymentMethod(), this.process.preEnrollmentResponse())
   );
 
   constructor() {
@@ -274,7 +296,46 @@ export class InscripcionPaymentFacade {
 
   private finishAt(outcome: InscripcionOutcome): void {
     this.outcome.set(outcome);
+    if (outcome === 'inscription-confirmada' && !this.confirmedDetail()) {
+      this.loadConfirmedDetail();
+    }
   }
+
+  private loadConfirmedDetail(): void {
+    const idProducto = this.resolveCatalogId(
+      this.proposal.academicForm.controls.carrera.value,
+      'idProducto'
+    );
+    const idProceso = this.resolveCatalogId(
+      this.proposal.academicForm.controls.comienzo.value,
+      'idProceso'
+    );
+    if (idProducto === null || idProceso === null) return;
+
+    this.inscriptions
+      .getDetail(idProducto, idProceso)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: detail => this.confirmedDetail.set(detail.confirmada),
+        error: () => undefined,
+      });
+  }
+
+  // En el flujo completo los ids salen de la propuesta académica; al retomar el
+  // pago desde el panel esa sección está vacía y los ids vienen por query params
+  // (los mismos que usa inscriptionDetailResolver).
+  private resolveCatalogId(formValue: string, queryParam: string): number | null {
+    return (
+      toPositiveInteger(formValue) ??
+      toPositiveInteger(this.route.snapshot.queryParamMap.get(queryParam))
+    );
+  }
+}
+
+function toPositiveInteger(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function isPositiveAmount(value: number | null | undefined): value is number {

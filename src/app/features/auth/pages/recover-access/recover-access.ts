@@ -1,21 +1,8 @@
 import { DOCUMENT } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {
-  OrtButtonModule,
-  OrtFormFieldModule,
-  OrtInputModule,
-  OrtSelectModule,
-} from '@desarrolloort/components';
+import { OrtButtonModule, OrtFormFieldModule, OrtInputModule } from '@desarrolloort/components';
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
@@ -26,17 +13,18 @@ import {
 } from '../../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/auth-form/auth-form';
-import { createRecoverAccessForm, syncDocumentNumberValidators } from '../../forms/auth-forms';
-import { formatDocumentForBackend, isCedulaDocumentType } from '../../models/document-number';
+import { DocumentFields } from '../../components/document-fields/document-fields';
+import { createRecoverAccessForm } from '../../forms/auth-forms';
+import { formatDocumentForBackend } from '../../models/document-number';
 import { PasswordActivationService } from '../../services/password-activation';
 
 @Component({
   selector: 'app-recover-access',
   imports: [
     AuthForm,
+    DocumentFields,
     OrtFormFieldModule,
     OrtInputModule,
-    OrtSelectModule,
     OrtButtonModule,
     ReactiveFormsModule,
     RouterLink,
@@ -65,7 +53,7 @@ export class RecoverAccess {
       fieldId: 'recover-document-number',
       label: 'Nro. de documento',
       messages: {
-        pattern: 'Ingresá solo caracteres alfanuméricos.',
+        pattern: 'Ingresá solo caracteres alfanuméricos o guiones.',
       },
     },
     {
@@ -75,21 +63,8 @@ export class RecoverAccess {
     },
   ];
 
-  private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
-    initialValue: this.form.controls.documentType.value,
-  });
-
-  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
-
-  constructor() {
-    effect(() => {
-      syncDocumentNumberValidators(this.form.controls.documentNumber, this.documentTypeValue());
-    });
-  }
-
   protected submit(): void {
     this.submitted.set(true);
-    syncDocumentNumberValidators(this.form.controls.documentNumber, this.documentTypeValue());
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();

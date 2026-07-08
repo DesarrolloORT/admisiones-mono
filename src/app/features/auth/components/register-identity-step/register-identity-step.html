@@ -22,53 +22,10 @@
 
     <div class="auth-divider">O ingresá tus datos manualmente</div>
 
-    <ort-form-field [hideRequiredMarker]="!!form().controls.documentType.value">
-      <ort-label>Tipo de documento</ort-label>
-      <ort-select
-        aria-label="Tipo de documento"
-        formControlName="documentType"
-        [id]="'register-document-type'">
-        <ort-option value="CI">Cédula</ort-option>
-        <ort-option value="PS">Pasaporte</ort-option>
-        <ort-option value="DE">Documento extranjero</ort-option>
-      </ort-select>
-      @if ( form().controls.documentType.touched &&
-      form().controls.documentType.hasError('required') ) {
-      <ort-error>Este campo es obligatorio</ort-error>
-      }
-    </ort-form-field>
-
-    <!-- TODO(a11y-ort-component): OrtInput no conserva siempre el nombre accesible del OrtFormField al alternar entre cédula y documento no-CI; se explicita aria-label hasta que la librería lo resuelva. -->
-    <ort-form-field [hideRequiredMarker]="!!form().controls.documentNumber.value">
-      <ort-label>{{ documentNumberLabel() }}</ort-label>
-      @if (isCedulaInput()) {
-      <input
-        formControlName="documentNumber"
-        ortCedulaInput
-        type="text"
-        [aria-label]="documentNumberLabel()"
-        [id]="'register-document-number'" />
-      } @else {
-      <input
-        formControlName="documentNumber"
-        inputmode="numeric"
-        ortInput
-        type="text"
-        [aria-label]="documentNumberLabel()"
-        [id]="'register-document-number'" />
-      } @if (!isCedulaInput()) {
-      <ort-hint>Sin puntos ni espacios.</ort-hint>
-      } @if ( form().controls.documentNumber.touched &&
-      form().controls.documentNumber.hasError('required') ) {
-      <ort-error>Este campo es obligatorio</ort-error>
-      } @if ( isCedulaInput() && form().controls.documentNumber.touched &&
-      form().controls.documentNumber.hasError('cedula') ) {
-      <ort-error>Ingresá un número de cédula válido</ort-error>
-      } @if ( !isCedulaInput() && form().controls.documentNumber.touched &&
-      form().controls.documentNumber.hasError('pattern') ) {
-      <ort-error>Ingresá solo caracteres alfanuméricos o guiones</ort-error>
-      }
-    </ort-form-field>
+    <app-document-fields
+      idPrefix="register"
+      [form]="form()"
+      [numberLabel]="documentNumberLabel()" />
   </section>
 
   <div #errorSummaryAnchor tabindex="-1">

@@ -10,9 +10,7 @@
   @if (facade.step() === 'identity') {
   <app-register-identity-step
     [documentNumberLabel]="facade.documentNumberLabel()"
-    [documentTypes]="facade.documentTypes$"
     [form]="facade.identityForm"
-    [isCedulaInput]="facade.isCedulaInput()"
     [isRecognizingDocument]="facade.isRecognizingDocument()"
     [isSubmitting]="facade.isSubmitting()"
     [showLoginAction]="facade.registrationFlow() === 'user-exists' || facade.registrationFlow() === 'application-exists'"
