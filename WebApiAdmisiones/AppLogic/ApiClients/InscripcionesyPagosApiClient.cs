@@ -42,6 +42,7 @@ namespace AppLogic.ApiClients
         public bool Success { get; set; }
         public string? Message { get; set; }
         public long? IdInscripcion { get; set; }
+        public bool InscripcionPendiente { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
         public List<CarritoSeniaApiDto> Carritos { get; set; } = new();
         public ResumenInscripcionApiDto? Resumen { get; set; }

@@ -54,6 +54,10 @@ namespace AppLogic.Dtos.Inscripciones
     public class DtoConfirmarPreInscripcionResponse
     {
         public bool Confirmada { get; set; }
+
+        /// <summary>True cuando la preinscripción quedó pero la inscripción fue a bandeja ("A la espera"). El front muestra "Inscripción en proceso".</summary>
+        public bool EnEspera { get; set; }
+
         public long? IdInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
         public decimal Senia { get; set; }

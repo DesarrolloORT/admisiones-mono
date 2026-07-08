@@ -284,6 +284,7 @@ namespace AppLogic.Helpers
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = source.Confirmada || source.Success,
+                EnEspera = source.InscripcionPendiente,
                 IdInscripcion = source.IdInscripcion,
                 FechaVencimientoPago = source.FechaVencimientoPago,
                 Senia = SumarSenias(source.Carritos),
