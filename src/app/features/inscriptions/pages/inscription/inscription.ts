@@ -1,5 +1,12 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  Injector,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule, OrtSpinnerModule } from '@desarrolloort/components';
 
@@ -54,6 +61,7 @@ import { InscripcionProcessStore } from '../../store/inscription-process';
 })
 export class Inscripcion {
   private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
   protected readonly process = inject(InscripcionProcessFacade);
   protected readonly survey = inject(InscripcionSurveyFacade);
   protected readonly payment = inject(InscripcionPaymentFacade);
@@ -66,7 +74,7 @@ export class Inscripcion {
       this.payment.outcome();
       if (this.payment.view() === 'confirming') return;
 
-      setTimeout(() => this.focusCurrentScreen());
+      afterNextRender(() => this.focusCurrentScreen(), { injector: this.injector });
     });
   }
 
@@ -74,6 +82,5 @@ export class Inscripcion {
     const main = this.document.getElementById('main-content');
     main?.focus();
     this.document.defaultView?.scrollTo({ behavior: 'instant', left: 0, top: 0 });
-    this.document.defaultView?.setTimeout(() => main?.focus(), 50);
   }
 }
