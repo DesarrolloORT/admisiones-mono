@@ -31,6 +31,7 @@ jobs:
         with:
           env-filename: prod
           CSP_POLICY: ${{ vars.CSP_POLICY }}
+          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
           CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
         env:
           RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
