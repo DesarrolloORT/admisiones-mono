@@ -53,9 +53,8 @@ flowchart TD
 ## Regla general de valores ocultos
 
 Cuando un campo padre cambia, la UI actualiza validadores y puede ocultar
-campos hijos. En varios casos el valor crudo del hijo queda en el form o en
-el borrador, pero el payload lo ignora y envia `null` cuando el padre indica
-que no aplica.
+campos hijos. En varios casos el valor crudo del hijo queda en el form, pero
+el payload lo ignora y envia `null` cuando el padre indica que no aplica.
 
 Excepciones que si limpian valores:
 

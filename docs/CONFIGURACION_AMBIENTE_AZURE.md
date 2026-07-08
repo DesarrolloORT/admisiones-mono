@@ -165,23 +165,37 @@ src/web.config
 
 El cache vive bajo `tmp/`, que también está ignorado por Git.
 
-## CSP
+## CSP y `web.config`
 
 La CSP del ambiente debe estar en Azure dentro del JSON, como `CSP_POLICY` o `cspPolicy`.
-El script falla si no existe, porque `web.config` se genera desde ese valor.
+El script falla si no existe, porque `src/web.config` se genera desde ese valor y Angular lo copia al root del build por la entrada `assets` de `angular.json`.
 
-Ejemplo mínimo:
+El `web.config` generado agrega estos headers:
+
+```text
+Cache-Control: no-cache
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Content-Security-Policy: <CSP_POLICY del ambiente>
+Referrer-Policy: no-referrer
+Permissions-Policy: camera=(), geolocation=(), microphone=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+```
+
+Tambien mantiene los MIME types de `.json` y `.webmanifest`, y la regla de rewrite que manda rutas Angular no fisicas a `/index.html`.
+
+Ejemplo minimo:
 
 ```json
 {
   "production": false,
   "API_URL": "https://apiadmisionesdesa.ort.edu.uy",
   "RECAPTCHA_KEY": "site-key-publica",
-  "CSP_POLICY": "object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
+  "CSP_POLICY": "default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; connect-src 'self' https://apiadmisionesdesa.ort.edu.uy https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
 }
 ```
 
-`RECAPTCHA_KEY` es la site key pública usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend.
+`RECAPTCHA_KEY` es la site key publica usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend. Si `RECAPTCHA_KEY` tiene valor, `CSP_POLICY` debe permitir los origenes de Google indicados en el ejemplo; si el ambiente no usa captcha, no hace falta permitirlos.
 
 ## Problemas comunes
 

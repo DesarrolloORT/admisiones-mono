@@ -159,7 +159,7 @@ Usa las mismas variables de despliegue que `cd.yml`.
 - [`.github/workflows/labeler.yml`](../.github/workflows/labeler.yml): etiqueta PRs automaticamente.
 - [`.github/workflows/pr-state-labeler.yml`](../.github/workflows/pr-state-labeler.yml): gestiona etiquetas de estado de PR.
 - [`.github/workflows/notification.yml`](../.github/workflows/notification.yml): centraliza notificaciones.
-- [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml): genera `src/environments/environment.ts` y copia el archivo segun `env-filename`.
+- [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml): genera `src/environments/generated-environment.ts` y `src/web.config`; `CSP_POLICY` es obligatorio y se escribe como header `Content-Security-Policy`.
 
 ## Referencias relacionadas
 

@@ -58,8 +58,7 @@ inscripciones ni de validación: solo "en qué paso estoy y cómo me muevo".
 
 - **`inscripcion-process.ts`** (`InscripcionProcessStore`) envuelve
   `createProcessFlow(INSCRIPCION_STEPS, 'propuesta')` y le suma estado propio del
-  flujo: `preEnrollmentResponse` y `checkpoint` (un contador que dispara el
-  autoguardado del borrador). Es la **fuente de verdad del paso actual**.
+  flujo: `preEnrollmentResponse`. Es la **fuente de verdad del paso actual**.
 - **`inscripcion-forms.ts`** (`InscripcionFormsStore`) crea y guarda todos los
   `FormGroup` y el `sectionConfig`. Las fachadas leen los forms desde acá.
 
@@ -72,8 +71,8 @@ tiene su propio estado.
   página conoce. Expone al template lo que el stepper necesita (`currentStep`,
   `stepItems`, `stepLabel`, `canGoBack`) y centraliza `continue()` / `back()`.
   `continue()` hace un `switch (currentStep())` y **delega** en la fachada de la
-  sección activa; también maneja el borrador (autoguardado en `sessionStorage`,
-  restauración, retomar desde el panel).
+  sección activa; también reconstruye el contexto al retomar desde el panel
+  (`applyResumeContext`).
 - **`inscripcion-proposal.ts` / `inscripcion-survey.ts` / `inscripcion-payment.ts`**
   son las fachadas de cada paso. Cada una valida su sección, llama a los services
   y, **cuando la sección está OK, llama a `this.process.flow.next()`** (o avanza
@@ -93,7 +92,7 @@ tiene su propio estado.
   (`shared/api/generated/**`). **Solo acá** se permiten esos imports. Mapean
   request/response a tipos propios de la feature.
 - **`services/`** orquestan endpoints y exponen Observables con tipos de la
-  feature. `inscripcion-draft.ts` persiste el borrador en `sessionStorage`.
+  feature.
 
 ### 6. `resolvers/` — precarga antes de entrar
 
@@ -143,7 +142,7 @@ guardado y la confirmación se ejecutan juntos al cerrar el paso.
 | Tocar el contrato con la API                      | **solo** en `endpoints/` (única capa que ve `generated/**`)                                                                     |
 | Cambiar el chrome (header, stepper, botón cerrar) | `shared/ui/process-layout`                                                                                                      |
 | Tocar el motor de pasos genérico                  | `shared/process-flow/process-flow.ts` (afecta a todas las features)                                                             |
-| Persistir/retomar avances                         | `services/inscripcion-draft.ts` + `ProcessFacade` (draft)                                                                       |
+| Retomar una inscripción desde el panel            | `resolvers/` + `ProcessFacade.applyResumeContext`                                                                               |
 
 ---
 

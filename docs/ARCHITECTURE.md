@@ -134,7 +134,7 @@ ubicacion preferida es co-localizada.
 
 ### Ambientes locales y generados
 
-Los archivos de `src/environments/` no se versionan. En local se crean a partir de los templates y en CI se generan mediante [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml).
+`src/environments/environment.ts` queda versionado como wrapper estable. Los archivos generados `src/environments/generated-environment.ts` y `src/web.config` no se versionan: en local los crea `npm run env:sync` desde Azure App Configuration y en CI los crea [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml).
 
 ## Puntos de extension esperados
 
