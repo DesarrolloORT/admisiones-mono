@@ -20,8 +20,8 @@
         <div class="process-layout__brand">
           <img
             class="process-layout__logo"
-            height="36"
-            width="53"
+            height="25"
+            width="56"
             [alt]="logoAlt()"
             [ngSrc]="logoSrc()" />
           <span aria-hidden="true" class="process-layout__brand-divider"></span>
@@ -50,7 +50,7 @@
         profileMenuOpen() ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'
       "
               (click)="toggleProfileMenu()">
-              <ort-icon aria-hidden="true">person</ort-icon>
+              <ort-icon aria-hidden="true" filled>person</ort-icon>
             </button>
 
             @if (profileMenuOpen()) {
