@@ -23,7 +23,7 @@ import {
   provideOrtApiErrorHandling,
   UiUtils,
 } from '@desarrolloort/ngx-utils';
-import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
+import { RECAPTCHA_LOADER_OPTIONS, RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
 import { environment } from 'src/environments/environment';
 
 import { routes } from './app.routes';
@@ -60,6 +60,12 @@ export const appConfig: ApplicationConfig = {
     ),
     importProvidersFrom(RecaptchaV3Module),
     { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.RECAPTCHA_KEY },
+    {
+      provide: RECAPTCHA_LOADER_OPTIONS,
+      useValue: {
+        onBeforeLoad: (url: URL) => ({ url, nonce: environment.RECAPTCHA_NONCE }),
+      },
+    },
     ...provideOrtApiErrorHandling({
       notifier: { provide: ApiErrorNotifier, useClass: AppApiErrorNotifier },
     }),
