@@ -87,9 +87,12 @@ Secretos:
 Variables:
 
 - `CSP_POLICY`
+- `RECAPTCHA_NONCE`
 - `CACHING_ENABLED`
 
 `CSP_POLICY` debe permitir reCAPTCHA v3 cuando el login o endpoints publicos protegidos usen captcha. Como minimo debe incluir `https://www.google.com` y `https://www.gstatic.com` en `script-src`, `https://www.google.com` en `connect-src`, y `https://www.google.com` / `https://recaptcha.google.com` en `frame-src`.
+
+`script-src` no debe usar `unsafe-inline` ni hashes fijos para permitir los scripts inline que inyecta `api.js` de Google. En su lugar, `script-src` debe incluir `'nonce-<RECAPTCHA_NONCE>' 'strict-dynamic'`, y `RECAPTCHA_NONCE` debe ser exactamente el mismo valor en ambas variables. Google propaga ese nonce a los scripts inline que agrega, y `strict-dynamic` habilita cualquier script cargado por uno con nonce valido sin depender de hashes que se rompen cuando Google cambia el contenido del script sin aviso.
 
 Notas:
 

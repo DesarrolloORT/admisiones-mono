@@ -341,6 +341,13 @@ async function writeWebConfig(outputPath, cspPolicy) {
   <system.webServer>
     <httpProtocol>
       <customHeaders>
+        <remove name="Cache-Control" />
+        <remove name="X-Content-Type-Options" />
+        <remove name="X-Frame-Options" />
+        <remove name="Content-Security-Policy" />
+        <remove name="Referrer-Policy" />
+        <remove name="Permissions-Policy" />
+        <remove name="Strict-Transport-Security" />
         <add name="Cache-Control" value="no-cache" />
         <add name="X-Content-Type-Options" value="nosniff" />
         <add name="X-Frame-Options" value="SAMEORIGIN" />
@@ -566,7 +573,14 @@ function runSelfTest() {
   assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: cache.key }), true);
   assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: 'other' }), false);
   assert.equal(
-    getPositionalArg(['--project', 'admisiones', '--endpoint', 'https://example', '--offline', 'desa']),
+    getPositionalArg([
+      '--project',
+      'admisiones',
+      '--endpoint',
+      'https://example',
+      '--offline',
+      'desa',
+    ]),
     'desa'
   );
   assert.equal(getPositionalArg(['--project', 'admisiones', '--env', 'desa']), undefined);
@@ -651,3 +665,4 @@ async function main() {
 main().catch(error => {
   fail('Error inesperado ejecutando env-sync.', error);
 });
+
