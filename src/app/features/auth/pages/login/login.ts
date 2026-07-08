@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -41,6 +42,7 @@ import { AuthSessionService } from '../../services/auth-session';
 })
 export class Login {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
@@ -89,6 +91,7 @@ export class Login {
         documentNumber: cleanedDocumentNumber,
         password,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: outcome => {
           if (outcome.kind === 'twoFactorRequired') {

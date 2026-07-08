@@ -4,7 +4,7 @@
     <input formControlName="primerNombre" ortInput type="text" [id]="'first-name'" />
     @if (form().controls.primerNombre.touched && form().controls.primerNombre.hasError('required'))
     {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -18,7 +18,7 @@
     <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
     @if (form().controls.primerApellido.touched &&
     form().controls.primerApellido.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -39,7 +39,7 @@
     <ort-datepicker-toggle ortSuffix [selectedDate]="initDate" />
     @if (form().controls.fechaNacimiento.touched &&
     form().controls.fechaNacimiento.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -51,7 +51,7 @@
       <ort-option value="M">Masculino</ort-option>
     </ort-select>
     @if (form().controls.sexo.touched && form().controls.sexo.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
@@ -68,7 +68,7 @@
     <ort-label>Dirección</ort-label>
     <input formControlName="direccion" ortInput type="text" [id]="'address'" />
     @if (form().controls.direccion.touched && form().controls.direccion.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 </section>

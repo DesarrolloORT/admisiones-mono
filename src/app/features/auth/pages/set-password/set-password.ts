@@ -1,6 +1,13 @@
 import { DOCUMENT, Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -10,6 +17,7 @@ import {
   OrtInputModule,
 } from '@desarrolloort/components';
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
+import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
   focusFieldById,
@@ -50,6 +58,7 @@ interface SetPasswordForm {
 })
 export class SetPassword {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly location = inject(Location);
   private readonly passwordActivation = inject(PasswordActivationService);
   private readonly authSession = inject(AuthSessionService);
@@ -149,37 +158,45 @@ export class SetPassword {
 
     this.isSubmittingState.set(true);
 
-    this.passwordActivation.completePassword(this.form.controls.password.value).subscribe({
-      next: () => {
-        const message = this.isRecovery
-          ? 'Contraseña actualizada correctamente.'
-          : 'Cuenta activada correctamente.';
-        this.snackbar.success(message);
+    this.passwordActivation
+      .completePassword(this.form.controls.password.value)
+      .pipe(
+        switchMap(() => {
+          this.snackbar.success(
+            this.isRecovery
+              ? 'Contraseña actualizada correctamente.'
+              : 'Cuenta activada correctamente.'
+          );
+          return this.isRecovery ? of('/iniciar-sesion') : this.hydrateSessionAndGoHome();
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: url => this.navigateAfterSubmit(url),
+        error: () => {
+          this.isSubmittingState.set(false);
+          this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
+        },
+      });
+  }
 
-        if (this.isRecovery) {
-          void this.router
-            .navigateByUrl('/iniciar-sesion')
-            .finally(() => this.isSubmittingState.set(false));
-          return;
-        }
+  /** Emite la URL destino, o `null` si la sesión no pudo hidratarse (queda en la página). */
+  private hydrateSessionAndGoHome() {
+    return this.authSession.hydrateAuthenticatedSession().pipe(
+      map(() => '/inicio'),
+      catchError(() => {
+        this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
+        return of(null);
+      })
+    );
+  }
 
-        this.authSession.hydrateAuthenticatedSession().subscribe({
-          next: () => {
-            void this.router
-              .navigateByUrl('/inicio')
-              .finally(() => this.isSubmittingState.set(false));
-          },
-          error: () => {
-            this.isSubmittingState.set(false);
-            this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
-          },
-        });
-      },
-      error: () => {
-        this.isSubmittingState.set(false);
-        this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
-      },
-    });
+  private navigateAfterSubmit(url: string | null): void {
+    if (!url) {
+      this.isSubmittingState.set(false);
+      return;
+    }
+    void this.router.navigateByUrl(url).finally(() => this.isSubmittingState.set(false));
   }
 
   private activateToken(): void {
@@ -194,9 +211,12 @@ export class SetPassword {
       this.isRecovery ? 'flow=recovery' : ''
     );
 
-    this.passwordActivation.activateLink(token).subscribe({
-      error: () =>
-        this.tokenErrorState.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
-    });
+    this.passwordActivation
+      .activateLink(token)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () =>
+          this.tokenErrorState.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
+      });
   }
 }

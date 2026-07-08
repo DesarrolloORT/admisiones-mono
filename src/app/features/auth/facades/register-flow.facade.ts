@@ -1,5 +1,5 @@
-import { computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -30,6 +30,7 @@ import { DocumentPrefillResult, DocumentPrefillService } from '../services/docum
 import { RegistrationService } from '../services/registration';
 
 export class RegisterFlowFacade {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly documentPrefill = inject(DocumentPrefillService);
   private readonly registration = inject(RegistrationService);
   private readonly router = inject(Router);
@@ -192,7 +193,10 @@ export class RegisterFlowFacade {
         identity: this.getCleanIdentityValues(),
         personal: toAuthRegisterPersonalData(this.personalForm.getRawValue()),
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .pipe(
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: () => {
           this.navigateToEmailConfirmation();
@@ -230,7 +234,10 @@ export class RegisterFlowFacade {
         primerApellido: primerApellido.value,
         mail: mail.value,
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .pipe(
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: result => {
           if (result.success) {

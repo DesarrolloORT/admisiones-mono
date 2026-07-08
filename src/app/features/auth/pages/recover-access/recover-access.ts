@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtFormFieldModule, OrtInputModule } from '@desarrolloort/components';
@@ -35,6 +36,7 @@ import { PasswordActivationService } from '../../services/password-activation';
 })
 export class RecoverAccess {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly passwordService = inject(PasswordActivationService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
@@ -83,7 +85,10 @@ export class RecoverAccess {
         documento: formatDocumentForBackend(documentType, documentNumber),
         primerApellido: primerApellido.trim(),
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .pipe(
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: () => this.completeRequest(),
         error: error => {

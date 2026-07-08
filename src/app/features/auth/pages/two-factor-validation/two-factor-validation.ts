@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
@@ -16,6 +17,7 @@ import { AuthSessionService } from '../../services/auth-session';
 })
 export class TwoFactorValidationPage {
   private readonly authSession = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -49,6 +51,7 @@ export class TwoFactorValidationPage {
         documentType: this.documentType(),
         documentNumber: this.documentNumber(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.snackbar.success('Código validado correctamente.');
@@ -75,26 +78,29 @@ export class TwoFactorValidationPage {
     this.error.set(null);
     this.isSubmitting.set(true);
 
-    this.authSession.resendTwoFactorCode(sessionId).subscribe({
-      next: result => {
-        this.sessionId.set(result.sessionId);
+    this.authSession
+      .resendTwoFactorCode(sessionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.sessionId.set(result.sessionId);
 
-        if (result.maskedEmail) {
-          this.email.set(result.maskedEmail);
-        }
+          if (result.maskedEmail) {
+            this.email.set(result.maskedEmail);
+          }
 
-        this.snackbar.success('Código reenviado.');
-        this.isSubmitting.set(false);
-      },
-      error: error => {
-        const message = getApiErrorMessage(
-          error,
-          'No pudimos reenviar el código. Intentá nuevamente.'
-        );
-        this.isSubmitting.set(false);
-        this.snackbar.error(message);
-      },
-    });
+          this.snackbar.success('Código reenviado.');
+          this.isSubmitting.set(false);
+        },
+        error: error => {
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos reenviar el código. Intentá nuevamente.'
+          );
+          this.isSubmitting.set(false);
+          this.snackbar.error(message);
+        },
+      });
   }
 
   private restoreStateFromNavigation(): void {

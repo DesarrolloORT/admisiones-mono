@@ -22,7 +22,7 @@
     <ort-label>E-mail</ort-label>
     <input autocomplete="email" formControlName="mail" ortInput type="email" [id]="'email'" />
     @if (form().controls.mail.touched && form().controls.mail.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     } @if (form().controls.mail.touched && form().controls.mail.hasError('email')) {
     <ort-error>Ingresá un e-mail válido</ort-error>
     }
@@ -38,7 +38,7 @@
       [id]="'confirm-email'" />
     @if (form().controls.verificacionMail.touched &&
     form().controls.verificacionMail.hasError('required')) {
-    <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+    <ort-error>Este campo es obligatorio</ort-error>
     } @if (form().controls.verificacionMail.touched &&
     form().controls.verificacionMail.hasError('email')) {
     <ort-error>Ingresá un e-mail válido</ort-error>
