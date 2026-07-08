@@ -46,6 +46,7 @@ jobs:
         with:
           env-filename: dev
           CSP_POLICY: ${{ vars.CSP_POLICY }}
+          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
           CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
         env:
           RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
@@ -106,6 +107,7 @@ jobs:
         with:
           env-filename: dev
           CSP_POLICY: ${{ vars.CSP_POLICY }}
+          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
           CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
         env:
           RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
@@ -147,6 +149,7 @@ jobs:
             "project": "admisiones",
             "apiUrl": "${{secrets.API_URL}}",
             "cspPolicy": "${{vars.CSP_POLICY}}",
+            "recaptchaNonce": "${{vars.RECAPTCHA_NONCE}}",
             "appVersion": "$appVersion",
             "cachingEnabled": "${{ vars.CACHING_ENABLED || 'true' }}",
             "recaptchaSiteKey": "${{secrets.RECAPTCHA_KEY}}",
