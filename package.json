@@ -22,6 +22,8 @@
     "test:coverage": "ng test --no-watch --coverage",
     "test:sonar": "ng test --no-watch --coverage --coverage-reporters lcov",
     "test:a11y": "playwright test --config playwright.config.ts --grep @a11y",
+    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:e2e:telemetry": "playwright test --config playwright.config.ts --grep @telemetry",
     "test:e2e:smoke": "playwright test --config playwright.config.ts --grep @smoke",
     "test:e2e:regression": "playwright test --config playwright.config.ts --grep @regression",
     "test:e2e:ui": "playwright test --config playwright.config.ts --ui",
