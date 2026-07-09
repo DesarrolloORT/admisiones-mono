@@ -1,15 +1,22 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 import { AppConfigurationClient } from '@azure/app-configuration';
-import { AzureCliCredential } from '@azure/identity';
+import {
+  deserializeAuthenticationRecord,
+  DeviceCodeCredential,
+  EnvironmentCredential,
+  InteractiveBrowserCredential,
+  serializeAuthenticationRecord,
+  useIdentityPlugin,
+} from '@azure/identity';
 
 const DEFAULT_CACHE_PATH = path.normalize('tmp/env/azure-environment-cache.json');
 const DEFAULT_DAILY_USAGE_PATH = path.normalize('tmp/env/azure-environment-usage.json');
+const DEFAULT_AUTH_RECORD_PATH = path.normalize('tmp/env/azure-auth-record.json');
+const APP_CONFIG_SCOPE = 'https://azconfig.io/.default';
 const DEFAULT_CACHE_TTL_MINUTES = 60;
 const DEFAULT_DAILY_LIMIT = 50;
 const DEFAULT_MAX_STALE_MINUTES = 24 * 60;
@@ -32,7 +39,7 @@ function getArg(name, defaultValue = undefined) {
 }
 
 const ARGUMENTS_WITH_VALUES = new Set([
-  'azure-cli-dir',
+  'auth-record-path',
   'cache-path',
   'cache-ttl-minutes',
   'daily-limit',
@@ -45,6 +52,7 @@ const ARGUMENTS_WITH_VALUES = new Set([
   'max-stale-minutes',
   'output',
   'project',
+  'tenant-id',
   'web-config',
 ]);
 
@@ -174,11 +182,13 @@ async function writeJsonFile(filePath, value) {
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
-async function clearCache(cachePath, dailyUsagePath) {
+async function clearCache(cachePath, dailyUsagePath, authRecordPath) {
   await fs.rm(cachePath, { force: true });
   await fs.rm(dailyUsagePath, { force: true });
+  await fs.rm(authRecordPath, { force: true });
   info(`Cache eliminado: ${cachePath}`);
   info(`Contador eliminado: ${dailyUsagePath}`);
+  info(`Sesión eliminada: ${authRecordPath}`);
 }
 
 async function readDailyUsage(dailyUsagePath) {
@@ -217,92 +227,72 @@ async function assertAndRecordAzureRead(dailyUsagePath, dailyLimit) {
   });
 }
 
-function getUniqueExistingAzureCliDirsOnWindows(customAzureCliDir) {
-  const candidateDirs = [
-    customAzureCliDir,
-    'C:\\Program Files\\Microsoft SDKs\\Azure\\CLI2\\wbin',
-    'C:\\Program Files (x86)\\Microsoft SDKs\\Azure\\CLI2\\wbin',
-    process.env.ProgramFiles
-      ? path.join(process.env.ProgramFiles, 'Microsoft SDKs', 'Azure', 'CLI2', 'wbin')
-      : undefined,
-    process.env['ProgramFiles(x86)']
-      ? path.join(process.env['ProgramFiles(x86)'], 'Microsoft SDKs', 'Azure', 'CLI2', 'wbin')
-      : undefined,
-  ].filter(Boolean);
+async function enableTokenCachePersistence() {
+  try {
+    const { cachePersistencePlugin } = await import('@azure/identity-cache-persistence');
 
-  const unique = [];
+    useIdentityPlugin(cachePersistencePlugin);
 
-  for (const dir of candidateDirs) {
-    const normalized = path.normalize(dir);
-    const alreadyIncluded = unique.some(item => item.toLowerCase() === normalized.toLowerCase());
+    return true;
+  } catch (error) {
+    warn(
+      `No se pudo habilitar la persistencia del token cache (${error?.message ?? 'error desconocido'}). El login por navegador se pedirá más seguido.`
+    );
 
-    if (!alreadyIncluded && existsSync(path.join(normalized, 'az.cmd'))) {
-      unique.push(normalized);
-    }
-  }
-
-  return unique;
-}
-
-function ensureAzureCliInPathOnWindows(customAzureCliDir) {
-  if (process.platform !== 'win32') {
-    return;
-  }
-
-  const currentPath = process.env.PATH ?? '';
-  const pathEntries = currentPath
-    .split(path.delimiter)
-    .filter(Boolean)
-    .map(entry => path.normalize(entry).toLowerCase());
-
-  const existingAzureCliDirs = getUniqueExistingAzureCliDirsOnWindows(customAzureCliDir);
-
-  for (const dir of existingAzureCliDirs) {
-    const normalizedDir = path.normalize(dir);
-
-    if (!pathEntries.includes(normalizedDir.toLowerCase())) {
-      process.env.PATH = `${normalizedDir}${path.delimiter}${currentPath}`;
-      info(`Azure CLI detectado y agregado al PATH del proceso: ${normalizedDir}`);
-      return;
-    }
+    return false;
   }
 }
 
-function assertAzureCliAvailable() {
-  const result = spawnSync('az', ['account', 'show', '--output', 'json'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+async function resolveCredential({ authRecordPath, tenantId, useDeviceCode }) {
+  if (process.env.AZURE_CLIENT_ID && process.env.AZURE_TENANT_ID) {
+    info('Credenciales de service principal detectadas en variables de entorno (CI).');
 
-  if (result.status === 0) {
-    return;
+    return new EnvironmentCredential();
   }
 
-  const stderr = result.stderr?.trim();
-  const stdout = result.stdout?.trim();
-  const details = [stderr, stdout].filter(Boolean).join('\n');
+  const persistenceEnabled = await enableTokenCachePersistence();
+  const savedRecord = await readJsonFile(authRecordPath);
+  const credentialOptions = {
+    tenantId,
+    ...(persistenceEnabled && {
+      tokenCachePersistenceOptions: { enabled: true, name: 'ort-env-sync' },
+    }),
+    ...(savedRecord && {
+      authenticationRecord: deserializeAuthenticationRecord(JSON.stringify(savedRecord)),
+    }),
+  };
+  const credential = useDeviceCode
+    ? new DeviceCodeCredential(credentialOptions)
+    : new InteractiveBrowserCredential(credentialOptions);
 
-  fail(
-    [
-      'No se pudo ejecutar "az account show" desde este proceso Node.',
-      '',
-      'Esto suele pasar por una de estas causas:',
-      '1. Azure CLI no está instalado.',
-      '2. Azure CLI está instalado pero no está en el PATH de esta terminal.',
-      '3. No se ejecutó "az login" con el usuario de Windows actual.',
-      '4. VS Code/PowerShell/CMD quedaron abiertos antes de instalar Azure CLI y no tomaron el PATH nuevo.',
-      '',
-      'Acciones recomendadas:',
-      '1. Cerrar y abrir nuevamente la terminal o VS Code.',
-      '2. Ejecutar: az login',
-      '3. Ejecutar: az account show',
-      '4. Volver a ejecutar: npm start',
-      '',
-      'Ruta estándar esperada en Windows:',
-      'C:\\Program Files\\Microsoft SDKs\\Azure\\CLI2\\wbin\\az.cmd',
-    ].join('\n'),
-    details ? new Error(details) : undefined
-  );
+  if (!savedRecord) {
+    info(
+      useDeviceCode
+        ? 'Primera vez: seguí las instrucciones en consola para iniciar sesión con tu cuenta ORT...'
+        : 'Primera vez: se abrirá el navegador para iniciar sesión con tu cuenta ORT...'
+    );
+
+    try {
+      const record = await credential.authenticate(APP_CONFIG_SCOPE);
+
+      await writeJsonFile(authRecordPath, JSON.parse(serializeAuthenticationRecord(record)));
+      info(`Sesión guardada en ${authRecordPath}. Los próximos usos serán silenciosos.`);
+    } catch (error) {
+      fail(
+        [
+          'No se pudo completar el login por navegador con Entra ID.',
+          '',
+          'Revisar:',
+          '1. Que hayas completado el login en el navegador que se abrió.',
+          '2. Que tu cuenta ORT tenga acceso al tenant correcto (podés forzarlo con --tenant-id o AZURE_TENANT_ID).',
+          '3. Que el tenant permita el flujo interactivo (si ves un error AADSTS, reportalo a operaciones).',
+        ].join('\n'),
+        error
+      );
+    }
+  }
+
+  return credential;
 }
 
 async function writeGeneratedEnvironment(outputPath, config, metadata) {
@@ -469,6 +459,7 @@ function cacheMatches(cache, { endpoint, key }) {
 }
 
 async function resolveEnvironmentSetting({
+  authRecordPath,
   cachePath,
   dailyLimit,
   dailyUsagePath,
@@ -478,8 +469,10 @@ async function resolveEnvironmentSetting({
   labelFilter,
   refresh,
   offline,
+  tenantId,
   ttlMinutes,
   maxStaleMinutes,
+  useDeviceCode,
 }) {
   const cache = await readJsonFile(cachePath);
   const matchingCache = cacheMatches(cache, { endpoint, key }) ? cache : null;
@@ -508,11 +501,9 @@ async function resolveEnvironmentSetting({
     }
   }
 
-  ensureAzureCliInPathOnWindows(getArg('azure-cli-dir', undefined));
-  assertAzureCliAvailable();
   await assertAndRecordAzureRead(dailyUsagePath, dailyLimit);
 
-  const credential = new AzureCliCredential();
+  const credential = await resolveCredential({ authRecordPath, tenantId, useDeviceCode });
   const client = new AppConfigurationClient(endpoint, credential);
   let settings;
 
@@ -525,13 +516,9 @@ async function resolveEnvironmentSetting({
         '',
         'Revisar:',
         `1. Que exista la key "${key}" con labelFilter "${labelFilter}".`,
-        '2. Que el usuario autenticado con "az login" tenga permiso de lectura.',
+        '2. Que tu cuenta tenga el rol "App Configuration Data Reader" sobre el recurso.',
         '3. Que el endpoint sea correcto.',
-        '4. Que "az account show" funcione en esta misma terminal.',
-        '',
-        'Comandos útiles:',
-        'az account show',
-        'az login',
+        `4. Si el problema es de sesión, ejecutar "npm run env:cache:clear" (borra ${authRecordPath}) y reintentar para volver a iniciar sesión.`,
       ].join('\n'),
       error
     );
@@ -602,9 +589,10 @@ async function main() {
 
   const cachePath = getArg('cache-path', DEFAULT_CACHE_PATH);
   const dailyUsagePath = getArg('daily-usage-path', DEFAULT_DAILY_USAGE_PATH);
+  const authRecordPath = getArg('auth-record-path', DEFAULT_AUTH_RECORD_PATH);
 
   if (hasFlag('clear-cache')) {
-    await clearCache(cachePath, dailyUsagePath);
+    await clearCache(cachePath, dailyUsagePath, authRecordPath);
     return;
   }
 
@@ -617,6 +605,8 @@ async function main() {
   const key = getArg('key', `frontend:${project}:environment`);
   const label = getArg('label', env);
   const labelFilter = getArg('label-filter', '*');
+  const tenantId = getArg('tenant-id', process.env.AZURE_TENANT_ID ?? 'organizations');
+  const useDeviceCode = hasFlag('device-code');
   const refresh = hasFlag('refresh');
   const offline = hasFlag('offline');
   const ttlMinutes = getNonNegativeIntegerArg('cache-ttl-minutes', DEFAULT_CACHE_TTL_MINUTES);
@@ -635,6 +625,7 @@ async function main() {
   info(`Web config: ${webConfigPath}`);
 
   const { setting, source, fetchedAt } = await resolveEnvironmentSetting({
+    authRecordPath,
     cachePath,
     dailyLimit,
     dailyUsagePath,
@@ -644,8 +635,10 @@ async function main() {
     labelFilter,
     refresh,
     offline,
+    tenantId,
     ttlMinutes,
     maxStaleMinutes,
+    useDeviceCode,
   });
   const config = setting.config;
 
@@ -665,4 +658,3 @@ async function main() {
 main().catch(error => {
   fail('Error inesperado ejecutando env-sync.', error);
 });
-
