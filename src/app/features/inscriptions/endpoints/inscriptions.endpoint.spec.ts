@@ -1,5 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, type Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { ApiHttpClient } from '../../../shared/api/core/api-http-client';
@@ -57,6 +58,7 @@ describe('InscripcionesEndpoint', () => {
       estado: 'Confirmada',
       detalle: null,
       pagoPendiente: null,
+      seniaMinima: null,
       confirmada: {
         numeroEstudiante: 397654,
         resumen: {
@@ -69,6 +71,7 @@ describe('InscripcionesEndpoint', () => {
           turno: null,
         },
         coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
+        coordinadorCursos: null,
         materiasPrimerSemestre: [
           { idMateria: 1, nombre: 'Programación' },
           { idMateria: null, nombre: null },
@@ -80,6 +83,55 @@ describe('InscripcionesEndpoint', () => {
       cache: false,
       showLoader: true,
     });
+  });
+
+  it('maps the course coordinator alongside the academic coordinator', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'Confirmada',
+        confirmada: {
+          numeroEstudiante: 397654,
+          coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
+          coordinadorCursos: { nombre: 'Beto Cursos', email: 'beto@example.com' },
+        },
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual(
+      expect.objectContaining({
+        confirmada: expect.objectContaining({
+          coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
+          coordinadorCursos: { nombre: 'Beto Cursos', email: 'beto@example.com' },
+        }),
+      })
+    );
+  });
+
+  it('maps the seniaMinima block when the payment method was already chosen', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'Pago pendiente',
+        seniaMinima: {
+          metodoPago: 'ABITAB',
+          cedula: '12345678',
+          codigoPersona: 555,
+          senia: 3339,
+        },
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.getDetail(719, 1398))).resolves.toEqual(
+      expect.objectContaining({
+        estado: 'Pago pendiente',
+        pagoPendiente: null,
+        seniaMinima: {
+          metodoPago: 'ABITAB',
+          cedula: '12345678',
+          codigoPersona: 555,
+          senia: 3339,
+        },
+      })
+    );
   });
 
   it('maps pending payment account balance from inscription detail', async () => {
@@ -406,4 +458,141 @@ describe('InscripcionesEndpoint', () => {
       showLoader: true,
     });
   });
+
+  it('propagates HTTP errors without catching them silently', async () => {
+    const failure = new HttpErrorResponse({ status: 500 });
+    const operations: readonly (() => Observable<unknown>)[] = [
+      () => endpoint.getDetail(20, 200),
+      () => endpoint.saveInitialSurvey(createSurveyPayload()),
+      () => endpoint.confirmPreEnrollment({ aceptoReglamento: true, idOfertaSeleccionada: 300 }),
+      () => endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null }),
+    ];
+
+    for (const operation of operations) {
+      apiMock.request.mockReturnValueOnce(throwError(() => failure));
+      await expect(firstValueFrom(operation())).rejects.toBe(failure);
+    }
+    expect(apiMock.clearCache).not.toHaveBeenCalled();
+  });
+
+  it('maps the complete survey body renaming comienzoId to procesoId', async () => {
+    await expect(firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))).resolves.toBe(
+      true
+    );
+
+    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesEncuestaInicialEndpoint, {
+      body: {
+        carreraId: 20,
+        procesoId: 200,
+        orientacionBachilleratoId: 3,
+        anioBachillerato: 2025,
+        cursaSecundariaActualmente: false,
+        vecesRecursaAnioBachillerato: 1,
+        recursaAnioBachillerato: true,
+        nivelFormacionPadreTutorId: 4,
+        nivelFormacionMadreTutorId: 5,
+        anioDecisionCarreraId: 6,
+        anioDecisionOrtId: 7,
+        seInformoEnOtrasUniversidades: true,
+        informacionOtrasUniversidadesLinea1: 'UCU',
+        informacionOtrasUniversidadesLinea2: 'UM',
+        apoyoDecisionId: 8,
+        institucionSecundariaId: 9,
+        nombreInstitucionSecundaria: 'Liceo 1',
+        ubicacionUltimoAnioSecundariaId: 10,
+        estadoEducacionSuperiorPreviaId: 11,
+        nivelDecisionId: 12,
+        tuvoAsesoramientoOrt: true,
+        valoracionAsesoramientoOrtId: 13,
+        visitoSitioWebOrt: true,
+        valoracionSitioWebOrtId: 14,
+        visitoInstalacionesOrt: false,
+        valoracionInstalacionesOrtId: 15,
+        recuerdaPublicidadOrt: true,
+        madreTutorEgresadoOrt: false,
+        padreTutorEgresadoOrt: true,
+        trabajaActualmente: true,
+        tipoJornadaId: 16,
+        universidadConsideradaIds: [10, 11],
+        universidadConsideradaOtros: ['Otra consultada'],
+        universidadEducacionSuperiorIds: [20],
+        universidadEducacionSuperiorOtros: ['Otra superior'],
+        publicidadOrtIds: [7],
+        motivoEleccionOrtIds: [5],
+      },
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
+  it('normalizes a detail response without estado to nulls', async () => {
+    apiMock.request.mockReturnValueOnce(of({}));
+
+    await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual({
+      estado: null,
+      detalle: null,
+      pagoPendiente: null,
+      seniaMinima: null,
+      confirmada: null,
+    });
+  });
+
+  it('drops an unknown survey estado to a null active section', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({ tieneDerechoEncuesta: true, encuesta: { estado: 'en-revision' } })
+    );
+    const unknown = await firstValueFrom(endpoint.getInitialSurvey());
+
+    expect(unknown.encuesta?.seccionActiva).toBeNull();
+    expect(unknown.encuesta?.completa).toBe(false);
+
+    apiMock.request.mockReturnValueOnce(
+      of({ tieneDerechoEncuesta: true, encuesta: { estado: 'identidad' } })
+    );
+    const known = await firstValueFrom(endpoint.getInitialSurvey());
+
+    expect(known.encuesta?.seccionActiva).toBe('identidad');
+  });
 });
+
+function createSurveyPayload(): InscripcionInitialSurveyPayload {
+  return {
+    carreraId: 20,
+    comienzoId: 200,
+    orientacionBachilleratoId: 3,
+    anioBachillerato: 2025,
+    cursaSecundariaActualmente: false,
+    vecesRecursaAnioBachillerato: 1,
+    recursaAnioBachillerato: true,
+    nivelFormacionPadreTutorId: 4,
+    nivelFormacionMadreTutorId: 5,
+    anioDecisionCarreraId: 6,
+    anioDecisionOrtId: 7,
+    seInformoEnOtrasUniversidades: true,
+    informacionOtrasUniversidadesLinea1: 'UCU',
+    informacionOtrasUniversidadesLinea2: 'UM',
+    apoyoDecisionId: 8,
+    institucionSecundariaId: 9,
+    nombreInstitucionSecundaria: 'Liceo 1',
+    ubicacionUltimoAnioSecundariaId: 10,
+    estadoEducacionSuperiorPreviaId: 11,
+    nivelDecisionId: 12,
+    tuvoAsesoramientoOrt: true,
+    valoracionAsesoramientoOrtId: 13,
+    visitoSitioWebOrt: true,
+    valoracionSitioWebOrtId: 14,
+    visitoInstalacionesOrt: false,
+    valoracionInstalacionesOrtId: 15,
+    recuerdaPublicidadOrt: true,
+    madreTutorEgresadoOrt: false,
+    padreTutorEgresadoOrt: true,
+    trabajaActualmente: true,
+    tipoJornadaId: 16,
+    universidadConsideradaIds: [10, 11],
+    universidadConsideradaOtros: ['Otra consultada'],
+    universidadEducacionSuperiorIds: [20],
+    universidadEducacionSuperiorOtros: ['Otra superior'],
+    publicidadOrtIds: [7],
+    motivoEleccionOrtIds: [5],
+  };
+}
