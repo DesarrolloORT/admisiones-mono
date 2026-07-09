@@ -195,11 +195,9 @@ namespace DataAccess.DevartRepositories
 
         protected virtual void CloseContext()
         {
-            if (context != null)
-            {
-                context.Dispose();
-                context = null;
-            }
+            // El DbContext es inyectado por DI (scoped) y lo dispone el contenedor al finalizar el request;
+            // el UnitOfWork nunca es dueno del contexto, asi que no debe disponerlo aca.
+            context = null;
         }
 
         #region IDisposable Methods
