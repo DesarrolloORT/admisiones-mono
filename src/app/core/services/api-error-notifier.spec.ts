@@ -27,7 +27,7 @@ describe('AppApiErrorNotifier', () => {
     expect(snackbar.error).toHaveBeenCalledWith('Los datos enviados no son válidos.');
   });
 
-  it('should not show a snackbar for missing resources', () => {
+  it('should not show ignored errors', () => {
     const snackbar = { error: vi.fn() };
 
     TestBed.configureTestingModule({
@@ -35,6 +35,33 @@ describe('AppApiErrorNotifier', () => {
     });
 
     TestBed.inject(AppApiErrorNotifier).notify({
+      status: 404,
+      message: 'Documento no encontrado.',
+      action: 'ignore',
+      isOperationResult: true,
+      originalError: new Error('not found'),
+    });
+
+    expect(snackbar.error).not.toHaveBeenCalled();
+  });
+
+  it('should not show auth or missing-resource errors globally', () => {
+    const snackbar = { error: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [AppApiErrorNotifier, { provide: SnackbarHandler, useValue: snackbar }],
+    });
+
+    const notifier = TestBed.inject(AppApiErrorNotifier);
+
+    notifier.notify({
+      status: 401,
+      message: 'Su sesión ha expirado.',
+      action: 'notify',
+      isOperationResult: false,
+      originalError: new Error('unauthorized'),
+    });
+    notifier.notify({
       status: 404,
       message: 'Documento no encontrado.',
       action: 'notify',

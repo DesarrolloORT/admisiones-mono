@@ -4,6 +4,10 @@
   heroIcon="school"
   heroTitle="Tu red profesional comienza hoy."
   title="Comenzá tu camino en ORT">
+  @if (formError(); as error) {
+  <app-error-alert title="No pudimos continuar" [message]="error" />
+  }
+
   <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <section class="auth-form-section">
       <app-document-fields autocomplete="username" idPrefix="login" [form]="form" />

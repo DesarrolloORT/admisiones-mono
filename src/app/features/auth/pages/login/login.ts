@@ -16,7 +16,7 @@ import {
   getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
-import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
+import { ErrorAlert } from '../../../../shared/ui/error-alert/error-alert';
 import { AuthForm } from '../../components/auth-form/auth-form';
 import { DocumentFields } from '../../components/document-fields/document-fields';
 import { createLoginForm } from '../../forms/auth-forms';
@@ -35,6 +35,7 @@ import { AuthSessionService } from '../../services/auth-session';
     OrtIconModule,
     ReactiveFormsModule,
     RouterLink,
+    ErrorAlert,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -45,11 +46,11 @@ export class Login {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
-  private readonly snackbar = inject(SnackbarHandler);
   protected readonly form = createLoginForm();
   protected readonly isSubmitting = signal(false);
   protected readonly passwordVisibility = createPasswordVisibility();
   protected readonly submitted = signal(false);
+  protected readonly formError = signal<string | null>(null);
   private readonly errorFields: FormErrorField[] = [
     {
       controlName: 'documentType',
@@ -72,10 +73,11 @@ export class Login {
   ];
   protected submit(): void {
     this.submitted.set(true);
+    this.formError.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.snackbar.error('Revisá los campos marcados.');
+      this.formError.set('Revisá los campos marcados.');
       focusFieldById(this.document, getFirstInvalidFieldId(this.form, this.errorFields));
       return;
     }
@@ -108,7 +110,7 @@ export class Login {
         error: error => {
           const message = getApiErrorMessage(error, 'No se pudo iniciar sesión.');
           this.isSubmitting.set(false);
-          this.snackbar.error(message);
+          this.formError.set(message);
         },
       });
   }

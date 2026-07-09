@@ -3,7 +3,6 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthSessionService } from '../../services/auth-session';
 import { Login } from './login';
 
@@ -14,7 +13,6 @@ describe('Login', () => {
     login: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
-  let snackbarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     authMock = {
@@ -29,15 +27,9 @@ describe('Login', () => {
         })
       ),
     };
-    snackbarMock = { error: vi.fn() };
-
     TestBed.configureTestingModule({
       imports: [Login],
-      providers: [
-        provideRouter([]),
-        { provide: AuthSessionService, useValue: authMock },
-        { provide: SnackbarHandler, useValue: snackbarMock },
-      ],
+      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
     });
 
     navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
@@ -91,7 +83,7 @@ describe('Login', () => {
     expect(authMock.login).not.toHaveBeenCalled();
   });
 
-  it('should show auth errors in snackbar', () => {
+  it('should show auth errors inline', () => {
     authMock.login.mockReturnValue(
       throwError(() => ({
         status: 401,
@@ -109,7 +101,9 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(snackbarMock.error).toHaveBeenCalledWith('Credenciales inválidas.');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Credenciales inválidas.');
   });
 
   it('should navigate to email confirmation without putting identity in router state', () => {
