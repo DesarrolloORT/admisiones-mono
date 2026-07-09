@@ -2355,10 +2355,35 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Equal("https://pagos.test/factura", result.Data);
+            Assert.Equal("https://pagos.test/factura", result.Data!.Url);
+            Assert.Null(result.Data.ParametrosEncriptados);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
             Assert.Equal(string.Empty, request.Body);
+        }
+
+        [Fact]
+        public async Task ObtenerUrlFactura_WithParametrosEncriptados_SeparatesUrlFromParam()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura?parametrosEncriptados=abc123\""));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            {
+                IdInscripto = 555,
+                TipoPago = "BANRED"
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("https://pagos.test/factura", result.Data!.Url);
+            Assert.Equal("abc123", result.Data.ParametrosEncriptados);
         }
 
         [Fact]
@@ -2552,6 +2577,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("URL_GENERADA", result.Data!.Resultado);
             Assert.Equal("https://pagos.test/factura", result.Data.UrlPago);
+            Assert.Null(result.Data.ParametrosEncriptados);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("UrlCrearFactura?tipoPago=BANRED&idInscripcion=555&banco=", request.RequestUri);
         }

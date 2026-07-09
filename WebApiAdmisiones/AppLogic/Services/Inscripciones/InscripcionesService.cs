@@ -558,7 +558,12 @@ namespace AppLogic.Services.Inscripciones
                         IdBancoSistarbanc = request.IdBancoSistarbanc
                     });
                     return result.Success
-                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "URL_GENERADA", UrlPago = result.Data }, methodName)
+                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse
+                        {
+                            Resultado = "URL_GENERADA",
+                            UrlPago = result.Data!.Url,
+                            ParametrosEncriptados = result.Data.ParametrosEncriptados
+                        }, methodName)
                         : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
                 }
 
@@ -567,39 +572,60 @@ namespace AppLogic.Services.Inscripciones
             }
         }
 
-        public async Task<OperationResult<string>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
+        public async Task<OperationResult<DtoObtenerUrlFacturaResponse>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
         {
             const string methodName = nameof(ObtenerUrlFactura);
 
             var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_UF_00", "INS_UF_01", methodName);
             if (!validacion.Success)
-                return OperationResult<string>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
             var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
             var tipoPagoNormalizado = tipoPago ?? string.Empty;
             if (!TiposPagoFactura.Contains(tipoPagoNormalizado))
             {
-                return OperationResult<string>.IsFailed("INS_UF_02", methodName, "TipoPago invalido.", 400);
+                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed("INS_UF_02", methodName, "TipoPago invalido.", 400);
             }
 
             var idBancoSistarbanc = request.IdBancoSistarbanc?.Trim();
             if (tipoPagoNormalizado == "SISTARBANC" && string.IsNullOrWhiteSpace(idBancoSistarbanc))
             {
-                return OperationResult<string>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
+                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
             }
 
             using (var uow = _uowFactory.Create())
             {
                 var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripto, codigoPersona, "INS_UF_04", methodName);
                 if (!pertenencia.Success)
-                    return OperationResult<string>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+                    return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
             }
 
             var banco = tipoPagoNormalizado == "SISTARBANC" ? idBancoSistarbanc! : string.Empty;
             var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripto, tipoPagoNormalizado, banco);
-            return urlResult.Success
-                ? OperationResult<string>.Ok(urlResult.Data, methodName)
-                : OperationResult<string>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
+            if (!urlResult.Success)
+            {
+                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
+            }
+
+            var (url, parametrosEncriptados) = SepararUrlYParametrosEncriptados(urlResult.Data);
+            return OperationResult<DtoObtenerUrlFacturaResponse>.Ok(
+                new DtoObtenerUrlFacturaResponse { Url = url, ParametrosEncriptados = parametrosEncriptados },
+                methodName);
+        }
+
+        private const string MarcadorParametrosEncriptados = "parametrosEncriptados=";
+
+        private static (string Url, string? ParametrosEncriptados) SepararUrlYParametrosEncriptados(string urlCompleta)
+        {
+            var idx = urlCompleta.IndexOf(MarcadorParametrosEncriptados, StringComparison.Ordinal);
+            if (idx <= 0)
+            {
+                return (urlCompleta, null);
+            }
+
+            var url = urlCompleta[..(idx - 1)];
+            var parametrosEncriptados = Uri.UnescapeDataString(urlCompleta[(idx + MarcadorParametrosEncriptados.Length)..]);
+            return (url, parametrosEncriptados);
         }
 
         public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request)

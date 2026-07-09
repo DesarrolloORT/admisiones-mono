@@ -16,6 +16,12 @@ namespace AppLogic.Dtos.Inscripciones
         public string? IdBancoSistarbanc { get; set; }
     }
 
+    public class DtoObtenerUrlFacturaResponse
+    {
+        public string Url { get; set; } = string.Empty;
+        public string? ParametrosEncriptados { get; set; }
+    }
+
     public class DtoPagarCuentaPersonalRequest
     {
         public long IdInscripto { get; set; }
@@ -32,6 +38,7 @@ namespace AppLogic.Dtos.Inscripciones
     {
         public string Resultado { get; set; } = string.Empty;
         public string? UrlPago { get; set; }
+        public string? ParametrosEncriptados { get; set; }
         public List<DtoMensajePagoCarrito> Mensajes { get; set; } = new();
 
         /// <summary>Detalle de la inscripción confirmada. Solo se completa cuando el pago se completa (CUENTA_PERSONAL).</summary>
