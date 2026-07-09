@@ -434,13 +434,6 @@ namespace WebApiAdmisiones.Controllers
                 return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
             }
 
-            if (!result.Success)
-            {
-                // Limpiar cookies si falló la renovación.
-                CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
-                return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
-            }
-
             // 3. Establecer cookies con los nuevos tokens (HTTP concern)
             if (result.Data != null)
             {

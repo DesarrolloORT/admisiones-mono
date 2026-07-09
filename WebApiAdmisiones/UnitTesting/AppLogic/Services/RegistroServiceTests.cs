@@ -13,14 +13,12 @@ using Utilities;
 using Xunit;
 using AppLogic.Services.Registro;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {
     public class RegistroServiceTests
     {
-        private readonly Mock<ICatalogosService> _catalogosServiceMock;
         private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
@@ -30,7 +28,6 @@ namespace UnitTesting.AppLogic.Services
 
         public RegistroServiceTests()
         {
-            _catalogosServiceMock = new Mock<ICatalogosService>();
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
@@ -38,7 +35,6 @@ namespace UnitTesting.AppLogic.Services
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _service = new RegistroService(
-                _catalogosServiceMock.Object,
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
                 _ldapMock.Object,
@@ -268,19 +264,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("REG_DOC_03", result.ErrorCode);
             _uowMock.Verify(u => u.Personas, Times.Never);
-        }
-
-        [Fact]
-        public async Task ConfirmarNuevaPersona_InvalidDocument_ReturnsFailure()
-        {
-            var result = await _service.ConfirmarNuevaPersonaAsync(new DtoRegistroPersonaRequest
-            {
-                TipoDocumento = "CI",
-                Documento = "1234567-1"
-            });
-
-            Assert.False(result.Success);
-            Assert.Equal("REG_DOC_02", result.ErrorCode);
         }
 
         [Fact]

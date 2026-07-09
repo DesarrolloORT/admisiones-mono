@@ -3,7 +3,6 @@ using AppLogic.Dtos.Becas;
 using AppLogic.Dtos.Personas;
 using AppLogic.DevartDTOs;
 using AppLogic.IServices.Personas;
-using AppLogic.Services.Inscripciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;

@@ -7,9 +7,6 @@ namespace AppLogic.IServices.Catalogos
 {
     public interface ICatalogosService
     {
-        // Versión síncrona (legacy, mantener para compatibilidad)
-        OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades();
-        // Versión asíncrona (preferida, soporta cache distribuido)
         Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync();
         OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
         OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona);

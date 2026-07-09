@@ -124,7 +124,7 @@ namespace UnitTesting.Controllers
                 .Setup(s => s.ObtenerPaisesEstadosCiudadesAsync())
                 .ReturnsAsync(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(
                     expectedData,
-                    nameof(ICatalogosService.ObtenerPaisesEstadosCiudades)));
+                    nameof(ICatalogosService.ObtenerPaisesEstadosCiudadesAsync)));
 
             // Act
             var response = await controller.ObtenerPaisesEstadosCiudades();

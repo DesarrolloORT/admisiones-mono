@@ -4,7 +4,6 @@ using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.Services.Personas;
 using AppLogic.Utilities;
@@ -35,7 +34,6 @@ namespace AppLogic.Services.Registro
         private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
         public RegistroService(
-            ICatalogosService catalogosService,
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ILdap ldap,
@@ -202,53 +200,6 @@ namespace AppLogic.Services.Registro
                 uow,
                 persona,
                 nameof(VerificarIdentidadAsync));
-        }
-
-        public async Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
-        {
-            if (request == null)
-            {
-                return OperationResult<object?>.IsFailed(
-                    requestErrorCode,
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    requestErrorMessage,
-                    400);
-            }
-
-            var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
-            if (!documentoValidation.IsValid)
-            {
-                return OperationResult<object?>.IsFailed(
-                    ObtenerCodigoValidacionDocumento(documentoValidation.Error),
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    documentoValidation.Message,
-                    400);
-            }
-
-            var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
-            if (tipoDocumento != "CI")
-            {
-                return OperationResult<object?>.IsFailed(
-                    documentTypeErrorCode,
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    "ConfirmarNuevaPersona solo aplica para cédula de identidad.",
-                    400);
-            }
-
-            var uow = _uowFactory.Create();
-
-            var documento = DocumentUtils.Normalizar(request.Documento);
-            var persona = uow.Personas.GetByDocumento(documento);
-            if (persona != null)
-            {
-                return OperationResult<object?>.IsFailed(
-                    "REG_PERSONA_02",
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    "La persona ya existe.",
-                    409);
-            }
-
-            return await CrearPersonaUsuarioAsync(uow, request);
         }
 
         public async Task<OperationResult<object?>> ValidarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
@@ -473,61 +424,6 @@ namespace AppLogic.Services.Registro
             using var uow = _uowFactory.Create();
 
             return await CrearSolicitudAltaAsync(uow, request);
-        }
-
-        private async Task<OperationResult<object?>> CrearPersonaUsuarioAsync(
-            IUnitOfWork uow,
-            DtoRegistroPersonaRequest request)
-        {
-            var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
-            if (ciudad == null)
-            {
-                return OperationResult<object?>.IsFailed(
-                    "REG_CIUDAD_01",
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    "No existe la ciudad indicada.",
-                    400);
-            }
-
-            Persona persona;
-
-            try
-            {
-                uow.BeginTransaction();
-                persona = RegistroEntityFactoryHelper.CrearPersona(
-                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA),
-                    request,
-                    ciudad,
-                    DateTime.Now);
-                uow.Personas.Add(persona);
-                uow.Save();
-
-                var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
-                if (!crearUsuario.Success)
-                {
-                    uow.Rollback();
-                    return OperationResult<object?>.IsFailed(
-                        crearUsuario.ErrorCode,
-                        nameof(ConfirmarNuevaPersonaAsync),
-                        crearUsuario.Message,
-                        crearUsuario.HttpCode);
-                }
-
-                RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
-                uow.Commit();
-            }
-            catch (Exception ex)
-            {
-                uow.Rollback();
-                _logger?.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarNuevaPersonaAsync));
-                return OperationResult<object?>.IsFailed(
-                    "REG_PERSONA_99",
-                    nameof(ConfirmarNuevaPersonaAsync),
-                    "Error al crear la persona.",
-                    500);
-            }
-
-            return await EnviarMailLinkPasswordAsync(persona, nameof(ConfirmarNuevaPersonaAsync));
         }
 
         private async Task<OperationResult<object?>> CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
