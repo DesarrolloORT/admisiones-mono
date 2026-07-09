@@ -10,8 +10,13 @@ import { OrtButtonModule } from '@desarrolloort/components';
 })
 export class ScholarshipGrantedCard {
   readonly openDialog = output<void>();
+  readonly consultar = output<void>();
 
   onOpenDialogClick() {
     this.openDialog.emit();
+  }
+
+  onConsultarClick() {
+    this.consultar.emit();
   }
 }

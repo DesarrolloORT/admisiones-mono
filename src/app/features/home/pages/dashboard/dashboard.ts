@@ -19,6 +19,7 @@ import { AuthSessionService } from '../../../auth/services/auth-session';
 import { DashboardActionCard } from '../../components/dashboard-action-card/dashboard-action-card';
 import { DashboardCareersSection } from '../../components/dashboard-careers-section/dashboard-careers-section';
 import { DashboardScholarshipsSection } from '../../components/dashboard-scholarships-section/dashboard-scholarships-section';
+import { ReviewScholarshipResult } from '../../components/review-scholarship-result/review-scholarship-result';
 import { MiBeca } from '../../models/mi-beca';
 import { MiInscripcion } from '../../models/mi-inscripcion';
 
@@ -36,6 +37,7 @@ import { MiInscripcion } from '../../models/mi-inscripcion';
     OrtDialog,
     OrtButton,
     OrtIconModule,
+    ReviewScholarshipResult,
   ],
 })
 export class Dashboard implements AfterViewInit, OnDestroy {
@@ -112,5 +114,15 @@ export class Dashboard implements AfterViewInit, OnDestroy {
 
   closeDialog() {
     this.isDialogOpen.set(false);
+  }
+
+  readonly showScholarshipResult = signal(false);
+
+  showScholarshipReview() {
+    this.showScholarshipResult.set(true);
+  }
+
+  closeReview() {
+    this.showScholarshipResult.set(false);
   }
 }

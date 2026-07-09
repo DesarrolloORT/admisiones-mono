@@ -25,4 +25,5 @@ export class DashboardScholarshipsSection {
   readonly becas = input.required<MiBeca[]>();
   readonly singleRow = input.required<boolean>();
   readonly openDialog = output<void>();
+  readonly consultar = output<void>();
 }

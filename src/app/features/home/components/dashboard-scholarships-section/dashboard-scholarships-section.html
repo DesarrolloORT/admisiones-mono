@@ -27,7 +27,9 @@
       </div>
       }
       <div class="swiper-slide">
-        <app-scholarship-granted-card (openDialog)="openDialog.emit()" />
+        <app-scholarship-granted-card
+          (consultar)="consultar.emit()"
+          (openDialog)="openDialog.emit()" />
       </div>
     </div>
     <div class="swiper-pagination"></div>
