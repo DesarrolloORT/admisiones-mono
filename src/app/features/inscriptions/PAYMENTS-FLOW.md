@@ -75,3 +75,24 @@ Por eso el estado default al volver o no poder confirmar es
 
 Cuando backend defina callback, polling o endpoint de consulta, ese mecanismo debe
 actualizar este estado a `inscription-confirmada` o mostrar error final.
+
+### Contrato con las páginas Pagos\*Gestion.aspx
+
+Las tres pasarelas intermedias (`PagosBanRedGestion.aspx`,
+`PagosGeoPayGestion.aspx`, `PagosSistarbancGestion.aspx`, en LogicaORT) leen el
+POST así: `Request.Form["data"].Split('=')[1].Split('"')[0]` — extraen lo que
+está entre el primer `=` y la primera `"`. Por eso el front envía
+`data = {"params":"parametrosEncriptados=<blob>"}` (mismo formato que Gestion_V2
+en producción). El backend de admisiones ya le quitó el prefijo
+`parametrosEncriptados=` a la URL original (`SepararUrlYParametrosEncriptados`
+en `InscripcionesService.cs`), así que el front lo reconstruye.
+
+### Salteo del intermediario ASPX (propuesta a backend)
+
+El ASPX desencripta el blob, crea la transacción contra BanRed y recién ahí
+redirige a la pasarela. El front no puede replicar ese paso: la clave de
+desencriptación es server-side.
+
+Propuesta: que `POST /Inscripciones/Pagar` devuelva directamente la URL final de
+la pasarela (BanRed) ya resuelta. Con eso admisiones muestra todo el detalle del
+pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.

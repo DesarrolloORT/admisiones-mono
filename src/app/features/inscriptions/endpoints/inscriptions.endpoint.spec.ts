@@ -372,6 +372,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         resultado: 'pendiente',
         urlPago: 'https://pagos.example/sistarbanc',
+        parametrosEncriptados: 'token-encriptado',
         mensajes: [{ clave: 'factura', valor: 'Creada' }],
       })
     );
@@ -388,6 +389,7 @@ describe('InscripcionesEndpoint', () => {
       success: true,
       resultado: 'pendiente',
       urlPago: 'https://pagos.example/sistarbanc',
+      parametrosEncriptados: 'token-encriptado',
       mensajes: [{ clave: 'factura', valor: 'Creada' }],
       message: null,
       errorCode: null,

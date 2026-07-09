@@ -68,7 +68,122 @@ describe('InscripcionSurveyIdentityFacade', () => {
     expect(uploadIdentityDocument).not.toHaveBeenCalled();
   });
 
-  function createFacade(): InscripcionSurveyIdentityFacade {
+  it('resolves to false when one of the uploads fails', async () => {
+    const identity = createFacade();
+    uploadIdentityDocument.mockReturnValue(of(false));
+    identity.updateIdentityFile('frente', fileEvent([{ isValid: true, file: file('f.png') }]));
+    identity.updateIdentityFile('dorso', fileEvent([{ isValid: true, file: file('d.png') }]));
+    identity.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+
+    await expect(firstValueFrom(identity.saveIdentityChanges())).resolves.toBe(false);
+  });
+
+  it('uploads the document when only the expiration date changes', async () => {
+    const identity = createFacade();
+    identity.updateIdentityFile('frente', fileEvent([{ isValid: true, file: file('f.png') }]));
+    identity.updateIdentityFile('dorso', fileEvent([{ isValid: true, file: file('d.png') }]));
+    await firstValueFrom(identity.saveIdentityChanges());
+    uploadIdentityDocument.mockClear();
+
+    identity.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 3, 15));
+
+    await expect(firstValueFrom(identity.saveIdentityChanges())).resolves.toBe(true);
+    expect(uploadIdentityDocument).toHaveBeenCalledWith({
+      fecha: '2031-04-15',
+      frente: identity.identityFiles().frente,
+      dorso: identity.identityFiles().dorso,
+    });
+  });
+
+  it('requires identity confirmation only when all three files and expiration preload', () => {
+    const bytes = new Uint8Array([1, 2, 3]).buffer;
+    const preloadedFile = (name: string): File =>
+      ({
+        name,
+        size: 3,
+        type: 'image/png',
+        arrayBuffer: () => Promise.resolve(bytes),
+      }) as File;
+    const getIdentityPreload = vi.fn().mockReturnValue(
+      of({
+        frente: preloadedFile('frente.png'),
+        dorso: preloadedFile('dorso.png'),
+        selfie: null,
+        fechaVencimiento: '2030-02-04',
+      })
+    );
+    const identity = createFacade(getIdentityPreload, true);
+    TestBed.tick();
+
+    expect(identity.requiresIdentityConfirmation()).toBe(false);
+    expect(identity.identityFiles().frente?.name).toBe('frente.png');
+    expect(identity.identityFiles().selfie).toBeNull();
+  });
+
+  it('requires identity confirmation when the three files and expiration are preloaded', () => {
+    const bytes = new Uint8Array([1, 2, 3]).buffer;
+    const preloadedFile = (name: string): File =>
+      ({
+        name,
+        size: 3,
+        type: 'image/png',
+        arrayBuffer: () => Promise.resolve(bytes),
+      }) as File;
+    const getIdentityPreload = vi.fn().mockReturnValue(
+      of({
+        frente: preloadedFile('frente.png'),
+        dorso: preloadedFile('dorso.png'),
+        selfie: preloadedFile('selfie.png'),
+        fechaVencimiento: '2030-02-04',
+      })
+    );
+    const identity = createFacade(getIdentityPreload, true);
+    TestBed.tick();
+
+    expect(identity.requiresIdentityConfirmation()).toBe(true);
+    expect(identity.identityForm.controls.vencimientoDocumento.value).toEqual(new Date(2030, 1, 4));
+  });
+
+  it('maps preloaded files into the uploader preload list with array buffer contents', async () => {
+    const bytes = new Uint8Array([9, 9, 9]).buffer;
+    const preloadedFile = {
+      name: 'frente.png',
+      size: 3,
+      type: 'image/png',
+      arrayBuffer: () => Promise.resolve(bytes),
+    } as File;
+    const getIdentityPreload = vi.fn().mockReturnValue(
+      of({
+        frente: preloadedFile,
+        dorso: null,
+        selfie: null,
+        fechaVencimiento: null,
+      })
+    );
+    const identity = createFacade(getIdentityPreload, true);
+    TestBed.tick();
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(identity.initialIdentityFiles().frente).toEqual([
+      {
+        id: 'identity-preload-frente',
+        name: 'frente.png',
+        size: 3,
+        type: 'image/png',
+        src: bytes,
+      },
+    ]);
+    expect(identity.initialIdentityFiles().dorso).toEqual([]);
+  });
+
+  function createFacade(
+    getIdentityPreload: ReturnType<typeof vi.fn> = vi
+      .fn()
+      .mockReturnValue(of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })),
+    isIdentitySectionActive = false
+  ): InscripcionSurveyIdentityFacade {
     TestBed.configureTestingModule({
       providers: [
         InscripcionFormsStore,
@@ -76,11 +191,7 @@ describe('InscripcionSurveyIdentityFacade', () => {
         {
           provide: Inscripciones,
           useValue: {
-            getIdentityPreload: vi
-              .fn()
-              .mockReturnValue(
-                of({ frente: null, dorso: null, selfie: null, fechaVencimiento: null })
-              ),
+            getIdentityPreload,
             uploadIdentityDocument,
             uploadIdentityPhoto,
           },
@@ -89,7 +200,7 @@ describe('InscripcionSurveyIdentityFacade', () => {
     });
     const identity = TestBed.inject(InscripcionSurveyIdentityFacade);
     identity.initialize({
-      isIdentitySectionActive: signal(false),
+      isIdentitySectionActive: signal(isIdentitySectionActive),
       surveyLoadError: signal(null),
       onIdentityChanged,
     });

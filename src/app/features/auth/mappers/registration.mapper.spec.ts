@@ -95,4 +95,76 @@ describe('registration mapper', () => {
       }).telefono1
     ).toBe('+541123456789');
   });
+
+  it('should convert dd/mm/yyyy display dates to ISO format', () => {
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        fechaNacimiento: '31/12/2000',
+      }).fechaNacimiento
+    ).toBe('2000-12-31');
+  });
+
+  it('should map empty or null birth dates to an empty string', () => {
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        fechaNacimiento: '',
+      }).fechaNacimiento
+    ).toBe('');
+
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        fechaNacimiento: null,
+      }).fechaNacimiento
+    ).toBe('');
+  });
+
+  it('should keep an unrecognized date format trimmed as-is', () => {
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        fechaNacimiento: '  2000/01/01  ',
+      }).fechaNacimiento
+    ).toBe('2000/01/01');
+  });
+
+  it('should map a null telefono1 to an empty string', () => {
+    expect(
+      toAuthRegisterPersonalData({
+        ...personal,
+        telefono1: null,
+      }).telefono1
+    ).toBe('');
+  });
+
+  it('should trim whitespace-only names to empty strings', () => {
+    const result = toAuthRegisterPersonalData({
+      ...personal,
+      primerNombre: '   ',
+      segundoNombre: '   ',
+      primerApellido: '   ',
+      segundoApellido: '   ',
+    });
+
+    expect(result.primerNombre).toBe('');
+    expect(result.segundoNombre).toBe('');
+    expect(result.primerApellido).toBe('');
+    expect(result.segundoApellido).toBe('');
+  });
+
+  it('should map empty segundoNombre/segundoApellido to null in the register payload', () => {
+    const payload = toRegisterPayload({
+      identity,
+      personal: toAuthRegisterPersonalData({
+        ...personal,
+        segundoNombre: '',
+        segundoApellido: '',
+      }),
+    });
+
+    expect(payload.segundoNombre).toBeNull();
+    expect(payload.segundoApellido).toBeNull();
+  });
 });

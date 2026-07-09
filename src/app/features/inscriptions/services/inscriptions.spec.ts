@@ -63,6 +63,7 @@ describe('Inscripciones', () => {
           success: true,
           resultado: null,
           urlPago: null,
+          parametrosEncriptados: null,
           mensajes: [],
           message: null,
           errorCode: null,

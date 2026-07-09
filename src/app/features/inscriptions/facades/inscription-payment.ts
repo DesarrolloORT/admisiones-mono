@@ -32,6 +32,7 @@ import {
   SANTANDER_ACCOUNT_URL,
   STUDENT_SERVICE_LINKS,
 } from '../models/inscription-static-data';
+import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -42,6 +43,7 @@ export class InscripcionPaymentFacade {
   private readonly destroyRef = inject(DestroyRef);
   private readonly catalogs = inject(Catalogs);
   private readonly inscriptions = inject(Inscripciones);
+  private readonly externalPaymentSubmitter = inject(ExternalPaymentSubmitter);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
   private readonly proposal = inject(InscripcionProposalFacade);
@@ -248,7 +250,7 @@ export class InscripcionPaymentFacade {
       return;
     }
     if (isExternalPaymentMethod(method)) {
-      if (response.urlPago && !this.redirectToExternalPayment(response.urlPago)) return;
+      if (!this.submitExternalPayment(response)) return;
       this.finishAt('pago-pendiente-externo');
       return;
     }
@@ -260,14 +262,23 @@ export class InscripcionPaymentFacade {
     this.finishAt('inscription-confirmada');
   }
 
-  private redirectToExternalPayment(value: string): boolean {
-    const url = toHttpUrl(value);
-    if (!url) {
+  private submitExternalPayment(response: InscripcionPaymentResponse): boolean {
+    if (!hasText(response.urlPago) || !hasText(response.parametrosEncriptados)) {
+      this.paymentApiError.set(
+        'La pasarela no devolvió los datos necesarios para iniciar el pago.'
+      );
+      return false;
+    }
+    if (
+      !this.externalPaymentSubmitter.submit({
+        urlPago: response.urlPago,
+        parametrosEncriptados: response.parametrosEncriptados,
+      })
+    ) {
       this.paymentApiError.set('La pasarela devolvió una URL inválida.');
       return false;
     }
 
-    globalThis.location.assign(url);
     return true;
   }
 
@@ -354,6 +365,10 @@ function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 
+function hasText(value: string | null): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 function isExternalPaymentMethod(method: MetodoPago): boolean {
   return method === 'cuenta-bancaria' || method === 'banred' || method === 'geopay';
 }
@@ -372,13 +387,4 @@ function getPaymentErrorMessage(response: InscripcionPaymentResponse): string {
     response.mensajes.find(message => message.valor?.trim())?.valor ??
     'Intentá nuevamente en unos minutos.'
   );
-}
-
-function toHttpUrl(value: string): string | null {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }

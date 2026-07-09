@@ -7,6 +7,7 @@ import { AcademicProposalSelection } from '../../catalogs/services/academic-prop
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS } from '../models/inscription-bank-logo';
 import type { InscripcionPaymentResponse, MetodoPago } from '../models/inscription-flow';
+import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -17,6 +18,7 @@ const PAYMENT_OK: InscripcionPaymentResponse = {
   success: true,
   resultado: null,
   urlPago: null,
+  parametrosEncriptados: null,
   mensajes: [],
   message: null,
   errorCode: null,
@@ -37,6 +39,7 @@ describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
   let process: InscripcionProcessStore;
   let inscriptions: { pay: ReturnType<typeof vi.fn>; getDetail: ReturnType<typeof vi.fn> };
+  let externalPaymentSubmitter: { submit: ReturnType<typeof vi.fn> };
 
   afterEach(() => {
     vi.useRealTimers();
@@ -55,6 +58,7 @@ describe('InscripcionPaymentFacade', () => {
         })
       ),
     };
+    externalPaymentSubmitter = { submit: vi.fn().mockReturnValue(true) };
     configureFacade();
   });
 
@@ -86,6 +90,7 @@ describe('InscripcionPaymentFacade', () => {
           },
         },
         { provide: Inscripciones, useValue: inscriptions },
+        { provide: ExternalPaymentSubmitter, useValue: externalPaymentSubmitter },
       ],
     });
     facade = TestBed.inject(InscripcionPaymentFacade);
@@ -171,20 +176,21 @@ describe('InscripcionPaymentFacade', () => {
     });
   });
 
-  it('redirects external payment methods and leaves an explicit pending state', () => {
-    const assign = vi.fn();
-    vi.stubGlobal('location', { assign });
-
+  it('submits external payment methods and leaves an explicit pending state', () => {
     const externalMethods: readonly MetodoPago[] = ['banred', 'geopay', 'cuenta-bancaria'];
     for (const method of externalMethods) {
       inscriptions.pay.mockClear();
-      assign.mockClear();
+      externalPaymentSubmitter.submit.mockClear();
       facade.outcome.set(null);
       facade.view.set('editing');
       facade.paymentForm.controls.metodoPago.setValue(method);
       facade.paymentForm.controls.banco.setValue(method === 'cuenta-bancaria' ? 'brou' : '');
       inscriptions.pay.mockReturnValueOnce(
-        of({ ...PAYMENT_OK, urlPago: `https://pagos.example/${method}` })
+        of({
+          ...PAYMENT_OK,
+          urlPago: `https://pagos.example/${method}`,
+          parametrosEncriptados: `token-${method}`,
+        })
       );
 
       facade.requestConfirmation();
@@ -195,7 +201,10 @@ describe('InscripcionPaymentFacade', () => {
         metodoPago: method,
         idBancoSistarbanc: method === 'cuenta-bancaria' ? 'brou' : null,
       });
-      expect(assign).toHaveBeenCalledWith(`https://pagos.example/${method}`);
+      expect(externalPaymentSubmitter.submit).toHaveBeenCalledWith({
+        urlPago: `https://pagos.example/${method}`,
+        parametrosEncriptados: `token-${method}`,
+      });
       expect(facade.outcome()).toBe('pago-pendiente-externo');
     }
   });
@@ -331,39 +340,62 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.outcome()).toBe('reserva');
   });
 
-  it('rejects an invalid gateway URL without redirecting or finishing the flow', () => {
-    const assign = vi.fn();
-    vi.stubGlobal('location', { assign });
+  it('rejects external payment when the gateway returns no URL', () => {
+    inscriptions.pay.mockReturnValueOnce(
+      of({ ...PAYMENT_OK, urlPago: null, parametrosEncriptados: 'token-encriptado' })
+    );
+    facade.paymentForm.controls.metodoPago.setValue('banred');
 
-    for (const urlPago of ['javascript:alert(1)', 'ftp://pagos.example/banred', 'no-es-una-url']) {
-      facade.outcome.set(null);
-      facade.view.set('editing');
-      inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, urlPago }));
-      facade.paymentForm.controls.metodoPago.setValue('banred');
+    facade.requestConfirmation();
+    facade.confirm();
 
-      facade.requestConfirmation();
-      facade.confirm();
-
-      expect(assign).not.toHaveBeenCalled();
-      expect(facade.outcome()).toBeNull();
-      expect(facade.view()).toBe('editing');
-      expect(facade.paymentErrorAlert()).toEqual({
-        title: 'No pudimos procesar el pago',
-        message: 'La pasarela devolvió una URL inválida.',
-      });
-    }
+    expect(externalPaymentSubmitter.submit).not.toHaveBeenCalled();
+    expect(facade.outcome()).toBeNull();
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'La pasarela no devolvió los datos necesarios para iniciar el pago.',
+    });
   });
 
-  it('leaves the explicit pending state when the gateway returns no URL', () => {
-    const assign = vi.fn();
-    vi.stubGlobal('location', { assign });
+  it('rejects external payment when the gateway returns no encrypted params', () => {
+    inscriptions.pay.mockReturnValueOnce(
+      of({ ...PAYMENT_OK, urlPago: 'https://pagos.example/geopay', parametrosEncriptados: null })
+    );
     facade.paymentForm.controls.metodoPago.setValue('geopay');
 
     facade.requestConfirmation();
     facade.confirm();
 
-    expect(assign).not.toHaveBeenCalled();
-    expect(facade.outcome()).toBe('pago-pendiente-externo');
+    expect(externalPaymentSubmitter.submit).not.toHaveBeenCalled();
+    expect(facade.outcome()).toBeNull();
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'La pasarela no devolvió los datos necesarios para iniciar el pago.',
+    });
+  });
+
+  it('rejects external payment when the submitter rejects the gateway URL', () => {
+    externalPaymentSubmitter.submit.mockReturnValueOnce(false);
+    inscriptions.pay.mockReturnValueOnce(
+      of({
+        ...PAYMENT_OK,
+        urlPago: 'https://pagos.example/banred',
+        parametrosEncriptados: 'token-encriptado',
+      })
+    );
+    facade.paymentForm.controls.metodoPago.setValue('banred');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBeNull();
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'La pasarela devolvió una URL inválida.',
+    });
   });
 
   it('forces the in-process outcome from the resultado query param', () => {
