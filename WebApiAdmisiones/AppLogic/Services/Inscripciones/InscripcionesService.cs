@@ -74,7 +74,7 @@ namespace AppLogic.Services.Inscripciones
             {
                 case InscripcionesConstants.EstadoInscripcion.EnProceso:
                     var oferta = uow.InteresProductoOfertas.GetOfertaSeleccionada(codigoPersona, idProducto, idProceso);
-                    response.Detalle = MapearOfertaResumen(oferta);
+                    response.Detalle = MapearOfertaResumen(oferta, idProceso);
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
@@ -288,7 +288,7 @@ namespace AppLogic.Services.Inscripciones
             };
         }
 
-        private static DtoResumenInscripcion? MapearOfertaResumen(Oferta? oferta)
+        private static DtoResumenInscripcion? MapearOfertaResumen(Oferta? oferta, long idProceso)
         {
             if (oferta == null)
             {
@@ -302,7 +302,7 @@ namespace AppLogic.Services.Inscripciones
                 IdOferta = oferta.IdOferta,
                 IdProducto = producto?.IdProducto ?? 0,
                 Carrera = producto?.NombreWebProducto ?? producto?.NombreExtensoProducto ?? producto?.NombreProducto,
-                IdComienzo = comienzo?.IdComienzo ?? 0,
+                IdComienzo = idProceso,
                 Comienzo = comienzo?.NombreComienzo,
                 IdTurno = oferta.IdTurno,
                 Turno = oferta.Turno?.NombreTurno
