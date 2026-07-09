@@ -7,7 +7,10 @@ import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert'
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscription-bank-logo';
-import type { InscripcionConfirmedDetail } from '../models/inscription-detail';
+import type {
+  InscripcionConfirmedDetail,
+  InscripcionCoordinador,
+} from '../models/inscription-detail';
 import type {
   ContactoCoordinador,
   InscripcionPaymentResponse,
@@ -57,15 +60,11 @@ export class InscripcionPaymentFacade {
   public readonly confirmedDetail = signal<InscripcionConfirmedDetail | null>(null);
   public readonly studentNumber = computed(() => this.confirmedDetail()?.numeroEstudiante ?? null);
   public readonly coordinators = computed<readonly ContactoCoordinador[]>(() => {
-    const coordinator = this.confirmedDetail()?.coordinadorAcademico;
-    if (!coordinator?.nombre || !coordinator.email) return [];
+    const detail = this.confirmedDetail();
     return [
-      {
-        role: 'Coordinador(a) Académico:',
-        name: coordinator.nombre,
-        email: coordinator.email,
-      },
-    ];
+      toCoordinatorContact('Coordinador(a) Académico:', detail?.coordinadorAcademico),
+      toCoordinatorContact('Coordinador(a) de Cursos:', detail?.coordinadorCursos),
+    ].filter((contact): contact is ContactoCoordinador => contact !== null);
   });
   private readonly subjects = computed<readonly string[]>(() =>
     (this.confirmedDetail()?.materiasPrimerSemestre ?? [])
@@ -191,6 +190,7 @@ export class InscripcionPaymentFacade {
   }
 
   public confirm(): void {
+    if (this.view() === 'processing') return;
     const method = this.paymentForm.controls.metodoPago.value;
     const idInscripcion = this.process.preEnrollmentResponse()?.idInscripcion;
     if (!method) return;
@@ -336,6 +336,14 @@ function toPositiveInteger(value: string | null): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function toCoordinatorContact(
+  role: string,
+  coordinator: InscripcionCoordinador | null | undefined
+): ContactoCoordinador | null {
+  if (!coordinator?.nombre || !coordinator.email) return null;
+  return { role, name: coordinator.nombre, email: coordinator.email };
 }
 
 function isPositiveAmount(value: number | null | undefined): value is number {

@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { type Observable, of, Subject, throwError } from 'rxjs';
 import { afterEach, vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import { FALLBACK_BANK_OPTIONS } from '../models/inscription-bank-logo';
 import type { InscripcionPaymentResponse, MetodoPago } from '../models/inscription-flow';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
@@ -25,6 +26,7 @@ const CONFIRMED_DETAIL = {
   numeroEstudiante: 412001,
   resumen: null,
   coordinadorAcademico: { nombre: 'Laura Pérez', email: 'laura.perez@ort.edu.uy' },
+  coordinadorCursos: { nombre: 'Diego Cursos', email: 'diego.cursos@ort.edu.uy' },
   materiasPrimerSemestre: [
     { idMateria: 1, nombre: 'Programación I' },
     { idMateria: 2, nombre: null },
@@ -53,7 +55,16 @@ describe('InscripcionPaymentFacade', () => {
         })
       ),
     };
+    configureFacade();
+  });
 
+  function configureFacade(
+    options: {
+      queryParams?: Record<string, string>;
+      bancos?: Observable<readonly { id: number; label: string; code: string }[]>;
+    } = {}
+  ): void {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
@@ -63,7 +74,7 @@ describe('InscripcionPaymentFacade', () => {
         InscripcionPaymentFacade,
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { queryParamMap: convertToParamMap({}) } },
+          useValue: { snapshot: { queryParamMap: convertToParamMap(options.queryParams ?? {}) } },
         },
         {
           provide: Catalogs,
@@ -71,7 +82,7 @@ describe('InscripcionPaymentFacade', () => {
             getCareers: () => of([]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
-            getBancos: () => of([{ id: 1, label: 'BROU', code: 'brou' }]),
+            getBancos: () => options.bancos ?? of([{ id: 1, label: 'BROU', code: 'brou' }]),
           },
         },
         { provide: Inscripciones, useValue: inscriptions },
@@ -87,7 +98,7 @@ describe('InscripcionPaymentFacade', () => {
       saldoCuenta: 70000,
       resumen: null,
     });
-  });
+  }
 
   it('calls the payment service and shows reservation for Abitab', () => {
     facade.paymentForm.controls.metodoPago.setValue('abitab');
@@ -239,6 +250,11 @@ describe('InscripcionPaymentFacade', () => {
         name: 'Laura Pérez',
         email: 'laura.perez@ort.edu.uy',
       },
+      {
+        role: 'Coordinador(a) de Cursos:',
+        name: 'Diego Cursos',
+        email: 'diego.cursos@ort.edu.uy',
+      },
     ]);
     expect(facade.visibleSubjects()).toEqual(['Programación I']);
   });
@@ -298,5 +314,141 @@ describe('InscripcionPaymentFacade', () => {
     expect(instructions.title).toBe('¡Inscripción reservada!');
     expect(instructions.description).toContain('Realizá el pago de la seña');
     expect(instructions.items).toEqual([]);
+  });
+
+  it('ignores a second confirm while a payment is already processing', () => {
+    const payment = new Subject<typeof PAYMENT_OK>();
+    inscriptions.pay.mockReturnValueOnce(payment.asObservable());
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+    facade.confirm();
+
+    expect(inscriptions.pay).toHaveBeenCalledTimes(1);
+    payment.next(PAYMENT_OK);
+    payment.complete();
+    expect(facade.outcome()).toBe('reserva');
+  });
+
+  it('rejects an invalid gateway URL without redirecting or finishing the flow', () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { assign });
+
+    for (const urlPago of ['javascript:alert(1)', 'ftp://pagos.example/banred', 'no-es-una-url']) {
+      facade.outcome.set(null);
+      facade.view.set('editing');
+      inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, urlPago }));
+      facade.paymentForm.controls.metodoPago.setValue('banred');
+
+      facade.requestConfirmation();
+      facade.confirm();
+
+      expect(assign).not.toHaveBeenCalled();
+      expect(facade.outcome()).toBeNull();
+      expect(facade.view()).toBe('editing');
+      expect(facade.paymentErrorAlert()).toEqual({
+        title: 'No pudimos procesar el pago',
+        message: 'La pasarela devolvió una URL inválida.',
+      });
+    }
+  });
+
+  it('leaves the explicit pending state when the gateway returns no URL', () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { assign });
+    facade.paymentForm.controls.metodoPago.setValue('geopay');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(assign).not.toHaveBeenCalled();
+    expect(facade.outcome()).toBe('pago-pendiente-externo');
+  });
+
+  it('forces the in-process outcome from the resultado query param', () => {
+    configureFacade({ queryParams: { resultado: 'en-proceso' } });
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('inscription-en-proceso');
+  });
+
+  it('recovers to editing with a visible error when the payment request fails', () => {
+    inscriptions.pay.mockReturnValueOnce(throwError(() => new Error('network down')));
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.view()).toBe('editing');
+    expect(facade.outcome()).toBeNull();
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'Intentá nuevamente en unos minutos.',
+    });
+  });
+
+  it('falls back to the static bank options when the catalog fails', () => {
+    configureFacade({ bancos: throwError(() => new Error('catalog down')) });
+
+    expect(facade.bankOptions()).toEqual(FALLBACK_BANK_OPTIONS);
+    expect(facade.loadingBanks()).toBe(false);
+  });
+
+  it('closes the confirmation dialog without paying', () => {
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+    facade.requestConfirmation();
+    expect(facade.view()).toBe('confirming');
+
+    facade.cancelConfirmation();
+
+    expect(facade.view()).toBe('editing');
+    expect(inscriptions.pay).not.toHaveBeenCalled();
+  });
+
+  it('reserves on a reservada result for methods without their own branch', () => {
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'reservada' }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('reserva');
+  });
+
+  it('confirms the inscription when the backend result is unknown', () => {
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'algo-desconocido' }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('inscription-confirmada');
+  });
+
+  it('rejects the payment when the pending inscription id is missing', () => {
+    process.preEnrollmentResponse.set({
+      idInscripcion: null,
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 15500,
+      saldoCuenta: 70000,
+      resumen: null,
+    });
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(inscriptions.pay).not.toHaveBeenCalled();
+    expect(facade.view()).toBe('editing');
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'No pudimos identificar la inscripción pendiente.',
+    });
   });
 });
