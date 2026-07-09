@@ -2153,6 +2153,9 @@ namespace UnitTesting.AppLogic.Services
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
             var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
                 """
