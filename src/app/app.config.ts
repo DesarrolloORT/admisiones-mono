@@ -63,7 +63,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: RECAPTCHA_LOADER_OPTIONS,
       useValue: {
-        onBeforeLoad: (url: URL) => ({ url, nonce: environment.RECAPTCHA_NONCE }),
+        onBeforeLoad: (url: URL) => {
+          const nonce = getOptionalEnvironmentString('RECAPTCHA_NONCE');
+
+          return nonce ? { url, nonce } : { url };
+        },
       },
     },
     ...provideOrtApiErrorHandling({
@@ -74,3 +78,9 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(FDPComponentsModule),
   ],
 };
+
+function getOptionalEnvironmentString(key: string): string | undefined {
+  const value = (environment as Record<string, unknown>)[key];
+
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
