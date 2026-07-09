@@ -618,15 +618,203 @@ describe('InscripcionSurveyFacade', () => {
     ).toBe(false);
   });
 
+  it('sets the pre-enrollment error and stops the spinner when confirmation fails', () => {
+    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(confirmPreEnrollment).toHaveBeenCalledOnce();
+    expect(survey.preEnrollmentError()).toBe(
+      'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+    );
+    expect(survey.finalizingPreEnrollment()).toBe(false);
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBeNull();
+  });
+
+  it('reports an error instead of confirming when no shift is selected', () => {
+    const { survey, forms } = prepareFinalizableSurvey();
+    forms.academicForm.controls.turno.setValue('');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).not.toHaveBeenCalled();
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).not.toHaveBeenCalled();
+    expect(survey.preEnrollmentError()).toBe(
+      'No se pudo confirmar la preinscripción con la oferta seleccionada.'
+    );
+    expect(survey.finalizingPreEnrollment()).toBe(false);
+  });
+
+  it('prefills the regulation section when the student already accepted it', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '10/05/2026' })
+    );
+    const { survey } = createFacade(createSurveyResponse());
+
+    expect(survey.hasAcceptedStudentRegulation()).toBe(true);
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(true);
+    expect(survey.submittedAcceptanceDate()).toEqual(new Date(2026, 4, 10));
+    expect(survey.getSectionState('reglamento')).toBe('completa');
+  });
+
+  it('keeps the regulation unaccepted when the acceptance lookup fails', () => {
+    getStudentRegulationAcceptance.mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey } = createFacade(createSurveyResponse());
+
+    expect(survey.hasAcceptedStudentRegulation()).toBe(false);
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(false);
+    expect(survey.submittedAcceptanceDate()).toBeNull();
+    expect(survey.activeSection()).toBe('educacion');
+  });
+
+  it('marks the regulation as accepted from the reader', () => {
+    const { survey } = createFacade(createSurveyResponse());
+    survey.openRegulationReader();
+    expect(survey.readerOpen()).toBe(true);
+
+    survey.acceptRegulation();
+
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(true);
+    expect(survey.readerOpen()).toBe(false);
+    expect(survey.activeSection()).toBe('reglamento');
+    expect(survey.getSectionState('reglamento')).toBe('completa');
+  });
+
+  it('closes the reader on back and leaves the step only from the first section', () => {
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('decision-academica');
+    survey.openRegulationReader();
+
+    survey.back();
+
+    expect(survey.readerOpen()).toBe(false);
+    expect(survey.activeSection()).toBe('decision-academica');
+    expect(process.flow.currentStep()).toBe('encuesta');
+
+    survey.back();
+
+    expect(survey.activeSection()).toBe('educacion');
+    expect(process.flow.currentStep()).toBe('encuesta');
+
+    survey.back();
+
+    expect(process.flow.currentStep()).toBe('propuesta');
+  });
+
+  it('loads the initial survey state when the resolver did not run', () => {
+    const response = createSurveyResponse({
+      encuesta: createInitialSurvey({ seccionActiva: 'experiencia-ort' }),
+    });
+    const getInitialSurvey = vi.fn().mockReturnValue(of(response));
+    const { survey, process } = createFacade(response, {}, [], {
+      resolvedData: undefined,
+      getInitialSurvey,
+    });
+
+    expect(getInitialSurvey).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(survey.activeSection()).toBe('experiencia-ort');
+    expect(survey.surveyLoadError()).toBeNull();
+  });
+
+  it('starts an empty survey when the initial survey is not found', () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 404 })));
+    const { survey } = createFacade(null, {}, [], {
+      resolvedData: undefined,
+      getInitialSurvey,
+    });
+
+    expect(survey.surveyLoadError()).toBeNull();
+    expect(survey.hasInitialSurveyRight()).toBe(true);
+    expect(survey.scenario()).toBe('primera-vez');
+    expect(survey.activeSection()).toBe('educacion');
+    expect(survey.loadingSurveyState()).toBe(false);
+  });
+
+  it('sets the survey load error on unexpected failures and recovers on retry', () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey } = createFacade(null, {}, [], {
+      resolvedData: undefined,
+      getInitialSurvey,
+    });
+
+    expect(survey.surveyLoadError()).toBe(
+      'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+    );
+    expect(survey.loadingSurveyState()).toBe(false);
+
+    getInitialSurvey.mockReturnValue(of(createSurveyResponse()));
+    survey.retryInitialSurvey();
+
+    expect(getInitialSurvey).toHaveBeenCalledTimes(2);
+    expect(survey.surveyLoadError()).toBeNull();
+  });
+
+  it('does not trigger a second fetch while the survey state is loading', () => {
+    const pending = new Subject<unknown>();
+    const getInitialSurvey = vi.fn().mockReturnValue(pending);
+    const { survey } = createFacade(null, {}, [], {
+      resolvedData: undefined,
+      getInitialSurvey,
+    });
+
+    expect(survey.loadingSurveyState()).toBe(true);
+
+    survey.retryInitialSurvey();
+
+    expect(getInitialSurvey).toHaveBeenCalledOnce();
+
+    pending.next(createSurveyResponse());
+    pending.complete();
+
+    expect(survey.loadingSurveyState()).toBe(false);
+    expect(survey.surveyLoadError()).toBeNull();
+  });
+
+  it('shows the survey load error when the resolver reports a failure', () => {
+    const getInitialSurvey = vi.fn();
+    const { survey } = createFacade(null, {}, [], {
+      resolvedData: { initialSurvey: null, loadFailed: true },
+      getInitialSurvey,
+    });
+
+    expect(survey.surveyLoadError()).toBe(
+      'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+    );
+    expect(getInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  function createSurveyResponse(overrides: Record<string, unknown> = {}) {
+    return {
+      tieneDerechoEncuesta: true,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesConsideradasOtros: [],
+      universidadesEducacionSuperior: [],
+      universidadesEducacionSuperiorOtros: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+      ...overrides,
+    };
+  }
+
   function createFacade(
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
-    careers: unknown[] = []
+    careers: unknown[] = [],
+    options: { resolvedData?: unknown; getInitialSurvey?: () => unknown } = {}
   ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
     forms: InscripcionFormsStore;
   } {
+    const resolvedData =
+      'resolvedData' in options ? options.resolvedData : { initialSurvey, loadFailed: false };
+    const getInitialSurvey = options.getInitialSurvey ?? (() => of(initialSurvey));
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
@@ -640,7 +828,7 @@ describe('InscripcionSurveyFacade', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              data: { initialSurvey: { initialSurvey, loadFailed: false } },
+              data: { initialSurvey: resolvedData },
               queryParamMap: convertToParamMap({}),
             },
           },
@@ -681,7 +869,7 @@ describe('InscripcionSurveyFacade', () => {
           useValue: {
             getStudentRegulationAcceptance,
             getIdentityPreload,
-            getInitialSurvey: () => of(initialSurvey),
+            getInitialSurvey,
             saveInitialSurvey,
             uploadIdentityDocument,
             uploadIdentityPhoto,

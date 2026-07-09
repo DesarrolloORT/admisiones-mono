@@ -42,6 +42,24 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toBeNull();
   });
 
+  it('resolves to null when a parameter is not numeric', async () => {
+    await expect(resolve({ idProducto: 'abc', idProceso: '200' })).resolves.toBeNull();
+    await expect(resolve({ idProducto: '20', idProceso: 'abc' })).resolves.toBeNull();
+    expect(getDetail).not.toHaveBeenCalled();
+  });
+
+  it('resolves to null when only one parameter is present', async () => {
+    await expect(resolve({ idProducto: '20' })).resolves.toBeNull();
+    await expect(resolve({ idProceso: '200' })).resolves.toBeNull();
+    expect(getDetail).not.toHaveBeenCalled();
+  });
+
+  it('rejects negative and unsafe integer values without calling the service', async () => {
+    await expect(resolve({ idProducto: '-5', idProceso: '200' })).resolves.toBeNull();
+    await expect(resolve({ idProducto: '9007199254740993', idProceso: '200' })).resolves.toBeNull();
+    expect(getDetail).not.toHaveBeenCalled();
+  });
+
   function resolve(queryParams: Record<string, string>): Promise<InscripcionDetail | null> {
     const route = new ActivatedRouteSnapshot();
     Object.defineProperty(route, 'queryParamMap', { value: convertToParamMap(queryParams) });
@@ -52,6 +70,6 @@ describe('inscriptionDetailResolver', () => {
   }
 
   function createDetail(estado: string): InscripcionDetail {
-    return { estado, detalle: null, pagoPendiente: null, confirmada: null };
+    return { estado, detalle: null, pagoPendiente: null, seniaMinima: null, confirmada: null };
   }
 });
