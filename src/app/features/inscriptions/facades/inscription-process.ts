@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscription-detail';
+import { fromApiPaymentMethod } from '../models/inscription-flow-mappers';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
@@ -129,10 +130,13 @@ export class InscripcionProcessFacade {
   }
 
   // Si la inscripción se retoma desde el panel con un detalle resuelto, reconstruye
-  // el contexto y posiciona el flujo en el paso pendiente: "Pago pendiente" precarga
-  // seña/vencimiento/resumen y salta al paso de pago; "Confirmada" precarga el
-  // resumen y muestra el success step terminal. El resto sigue el flujo normal ya
-  // configurado por la encuesta.
+  // el contexto y posiciona el flujo en el paso/pantalla correcto según el estado:
+  // - "Pago pendiente": si ya eligió método (seniaMinima) muestra las referencias de
+  //   pago; si no, salta al paso de pago para elegirlo.
+  // - "Confirmada": precarga el detalle y muestra el success step terminal.
+  // - "A la espera" (y cualquier estado no listado): muestra "Inscripción en proceso".
+  // - "En proceso": sin acción; el bloque `detalle` es la oferta ya elegida y el flujo
+  //   se posiciona solo con la encuesta inicial.
   private applyResumeContext(): void {
     const detail = this.route.snapshot.data['inscriptionDetail'] as InscripcionDetail | null;
     if (!detail) return;
@@ -141,10 +145,17 @@ export class InscripcionProcessFacade {
     if (preEnrollment) this.process.preEnrollmentResponse.set(preEnrollment);
 
     if (detail.estado === 'Pago pendiente' || detail.estado === 'Pendiente') {
-      this.process.flow.goTo('pago');
+      if (detail.seniaMinima) {
+        this.payment.selectedPaymentMethod.set(fromApiPaymentMethod(detail.seniaMinima.metodoPago));
+        this.payment.outcome.set('reserva');
+      } else {
+        this.process.flow.goTo('pago');
+      }
     } else if (detail.estado === 'Confirmada') {
       this.payment.confirmedDetail.set(detail.confirmada);
       this.payment.outcome.set('inscription-confirmada');
+    } else if (detail.estado !== 'En proceso') {
+      this.payment.outcome.set('inscription-en-proceso');
     }
   }
 }
