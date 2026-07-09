@@ -19,7 +19,11 @@ import {
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
 
-import type { InscripcionDetail, InscripcionSummary } from '../models/inscription-detail';
+import type {
+  InscripcionCoordinador,
+  InscripcionDetail,
+  InscripcionSummary,
+} from '../models/inscription-detail';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocument,
@@ -63,16 +67,20 @@ export class InscripcionesEndpoint {
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
             : null,
+          seniaMinima: response.seniaMinima
+            ? {
+                metodoPago: response.seniaMinima.metodoPago ?? null,
+                cedula: response.seniaMinima.cedula ?? null,
+                codigoPersona: response.seniaMinima.codigoPersona ?? null,
+                senia: response.seniaMinima.senia ?? null,
+              }
+            : null,
           confirmada: response.confirmada
             ? {
                 numeroEstudiante: response.confirmada.numeroEstudiante ?? null,
                 resumen: this.toSummary(response.confirmada.resumen),
-                coordinadorAcademico: response.confirmada.coordinadorAcademico
-                  ? {
-                      nombre: response.confirmada.coordinadorAcademico.nombre ?? null,
-                      email: response.confirmada.coordinadorAcademico.email ?? null,
-                    }
-                  : null,
+                coordinadorAcademico: this.toCoordinador(response.confirmada.coordinadorAcademico),
+                coordinadorCursos: this.toCoordinador(response.confirmada.coordinadorCursos),
                 materiasPrimerSemestre:
                   response.confirmada.materiasPrimerSemestre?.map(materia => ({
                     idMateria: materia.idMateria ?? null,
@@ -338,6 +346,14 @@ export class InscripcionesEndpoint {
           idTurno: summary.idTurno ?? null,
           turno: summary.turno ?? null,
         }
+      : null;
+  }
+
+  private toCoordinador(
+    coordinador: { nombre?: string | null; email?: string | null } | null | undefined
+  ): InscripcionCoordinador | null {
+    return coordinador
+      ? { nombre: coordinador.nombre ?? null, email: coordinador.email ?? null }
       : null;
   }
 }
