@@ -38,25 +38,4 @@ namespace AppLogic.Dtos.Personas
         public string? TelefonoSimple { get; set; }
     }
 
-    [ExcludeFromCodeCoverage]
-    public class DtoEmpresaEncuestaRequest
-    {
-        public long CodigoEmpresa { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-
-    [ExcludeFromCodeCoverage]
-    public class DtoPublicidadEncuestaRequest
-    {
-        public long IdPublicidad { get; set; }
-        public string NombrePublicidad { get; set; } = string.Empty;
-    }
-
-    [ExcludeFromCodeCoverage]
-    public class DtoMotivoEncuestaRequest
-    {
-        public long IdMotivo { get; set; }
-        public string NombreMotivo { get; set; } = string.Empty;
-    }
-
 }

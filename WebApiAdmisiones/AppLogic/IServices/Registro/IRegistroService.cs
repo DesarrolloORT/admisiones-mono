@@ -8,7 +8,6 @@ namespace AppLogic.IServices
     {
         Task<OperationResult<DtoRegistroEvaluacionResponse>> EvaluarDocumentoAsync(DtoRegistroEvaluarDocumentoRequest request);
         Task<OperationResult<object?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request);
-        Task<OperationResult<object?>> ConfirmarNuevaPersonaAsync(DtoRegistroPersonaRequest request);
         Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(DtoRegistroPersonaRequest request);
 
         /// <summary>

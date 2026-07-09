@@ -190,22 +190,6 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(result);
         }
 
-        /// <summary>
-        /// Obtiene los fondos de beca disponibles según el nivel de un producto.
-        /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <returns>Lista de tipos de descuento (fondos de beca).</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
-        //[HttpGet("FondosDeBecaPorProducto")]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 200)]
-        //[ProducesResponseType(typeof(OperationResult<IEnumerable<DtoTipoDescuentoDevart>>), 400)]
-        //public IActionResult ObtenerFondosDeBecaPorProducto([FromQuery] long idProducto)
-        //{
-        //    var result = catalogosService.ObtenerFondosDeBecaPorProducto(idProducto);
-        //    return ValidateResponse(result);
-        //}
-
         #endregion
     }
 }

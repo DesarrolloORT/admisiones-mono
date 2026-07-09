@@ -25,7 +25,7 @@ namespace AppLogic.Services.Catalogos
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
         }
 
-        public OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades()
+        private OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>> ObtenerPaisesEstadosCiudades()
         {
             using var uow = _uowFactory.Create();
 

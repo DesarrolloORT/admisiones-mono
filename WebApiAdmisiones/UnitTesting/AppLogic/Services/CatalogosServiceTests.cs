@@ -51,7 +51,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerPaisesEstadosCiudades_ReturnsSlimPaisesEstadosCiudades()
+        public async Task ObtenerPaisesEstadosCiudades_ReturnsSlimPaisesEstadosCiudades()
         {
             var paisRepo = new Mock<IPaisRepository>();
             paisRepo.Setup(r => r.GetPaisesConEstadosYCiudades()).Returns(new List<Pais>
@@ -83,10 +83,10 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 
-            var result = _service.ObtenerPaisesEstadosCiudades();
+            var result = await _service.ObtenerPaisesEstadosCiudadesAsync();
 
             Assert.True(result.Success);
-            Assert.Equal(nameof(CatalogosService.ObtenerPaisesEstadosCiudades), result.Method);
+            Assert.Equal("ObtenerPaisesEstadosCiudades", result.Method);
             var pais = Assert.Single(result.Data!);
             Assert.Equal(1, pais.CodigoPais);
             Assert.Equal("Uruguay", pais.Nombre);

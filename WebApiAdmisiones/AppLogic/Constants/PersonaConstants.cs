@@ -3,17 +3,11 @@ namespace AppLogic.Constants
     public static class PersonaConstants
     {
         public const string PersonaNoEncontradaMessage = "Persona no encontrada.";
-        public const string TipoPersonaSgi = "SGI";
         public const int TipoImagenFoto = 3;
 
         public static class Parametros
         {
-            public static readonly DateTime FechaMinimaNacimiento =
-                new(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
-
             public const long UruguayCodigoPais = 1;
-            public const long ExteriorInstitucionOrt = 2898;
-            public const long TituloGenericoSextoExterior = 5;
         }
 
         public static class DocumentoPersona

@@ -160,18 +160,6 @@ namespace AppLogic.ApiClients
         public DateTime? FechaVencimiento { get; set; }
     }
 
-    /// <summary>
-    /// Response de creación de factura.
-    /// Corresponde a: POST /Carritos/UltCrearFactura
-    /// </summary>
-    public class CrearFacturaResponse
-    {
-        public bool Success { get; set; }
-        public string? Message { get; set; }
-        public long? IdFactura { get; set; }
-        public string? NumeroFactura { get; set; }
-    }
-
     #endregion
 
     /// <summary>
@@ -277,61 +265,6 @@ namespace AppLogic.ApiClients
             catch (Exception ex)
             {
                 return HandleException<SeniaMinimaApiResponse>(ex, nameof(ObtenerSeniaMinimaAsync));
-            }
-        }
-
-        /// <summary>
-        /// Obtiene las ofertas disponibles para inscripción en admisiones (sin proceso).
-        /// Corresponde a: GET /OfertasParaInscripcionAdmisiones
-        /// </summary>
-        /// <param name="idProducto">ID del producto</param>
-        /// <param name="idComienzo">ID del comienzo</param>
-        /// <param name="idTurno">ID del turno</param>
-        /// <returns>Lista de ofertas disponibles</returns>
-        public async Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerOfertasParaInscripcionAdmisionesAsync(
-            long idProducto,
-            long idComienzo,
-            long idTurno)
-        {
-            try
-            {
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation(
-                    "Obteniendo ofertas para inscripción - Producto: {IdProducto}, Comienzo: {IdComienzo}, Turno: {IdTurno}",
-                    idProducto,
-                    idComienzo,
-                    idTurno
-                    );
-                }
-                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisiones?idProducto={idProducto}&idComienzo={idComienzo}";
-                var response = await _httpClient.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var ofertasApi = await response.Content.ReadFromJsonAsync<List<OfertaInscripcionApiResponse>>();
-                    var result = MapearOfertasInscripcion(ofertasApi);
-                    return OperationResult<List<OfertaInscripcionDto>>.Ok(
-                        result!,
-                        nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
-                    );
-                }
-
-                var errorContent = await response.Content.ReadAsStringAsync();
-                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
-                    "OFERTAS_INSCRIPCION_01",
-                    nameof(ObtenerOfertasParaInscripcionAdmisionesAsync),
-                    $"Error al obtener ofertas: {response.StatusCode} - {errorContent}",
-                    (int)response.StatusCode,
-                    default!
-                );
-            }
-            catch (Exception ex)
-            {
-                return HandleException<List<OfertaInscripcionDto>>(
-                    ex,
-                    nameof(ObtenerOfertasParaInscripcionAdmisionesAsync)
-                );
             }
         }
 

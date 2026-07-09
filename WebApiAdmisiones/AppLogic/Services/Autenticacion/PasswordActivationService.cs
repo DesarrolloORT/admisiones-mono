@@ -589,8 +589,6 @@ public class PasswordActivationService : IPasswordActivationService
         return secret;
     }
 
-    internal static string ObtenerSecretKeyPublic() => ObtenerSecretKey();
-
     private TimeSpan ObtenerHorasExpiracion()
     {
         var hours = _configuration.GetValue<double?>("PasswordActivation:ExpireHours") ?? 24;

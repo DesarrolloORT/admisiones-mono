@@ -8,36 +8,6 @@ namespace UnitTesting.AppLogic.ApiClients
     public class InscripcionesyPagosApiClientTests
     {
         [Fact]
-        public async Task ObtenerOfertasParaInscripcionAdmisionesAsync_WithSuccess_MapsResponseAndBuildsUrl()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
-                [
-                  {
-                    "idOferta": 10,
-                    "idTurno": 30,
-                    "nombreTurno": "Nocturno",
-                    "horarioReferencia": "Martes 19:00"
-                  }
-                ]
-                """));
-            var client = CrearClient(handler);
-
-            var result = await client.ObtenerOfertasParaInscripcionAdmisionesAsync(20, 40, 30);
-
-            Assert.True(result.Success);
-            var oferta = Assert.Single(result.Data!);
-            Assert.Equal(10, oferta.IdOferta);
-            Assert.Equal(30, oferta.Turno.IdTurno);
-            Assert.Equal("Nocturno", oferta.Turno.NombreTurno);
-            Assert.Equal("Martes 19:00", oferta.HorarioReferencia);
-            var request = Assert.Single(handler.Requests);
-            Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Contains("OfertasParaInscripcionAdmisiones?idProducto=20&idComienzo=40", request.RequestUri);
-            Assert.DoesNotContain("idTurno", request.RequestUri);
-        }
-
-        [Fact]
         public async Task ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync_WithSuccess_MapsOfertaAdmisionesResponse()
         {
             var handler = new StubHttpMessageHandler(_ =>
