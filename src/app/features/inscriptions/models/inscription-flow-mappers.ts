@@ -224,6 +224,28 @@ function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
   }
 }
 
+// Inverso de toApiPaymentMethod: el bloque seniaMinima trae el método ya elegido
+// como string de API (p.ej. ABITAB/PAGANZA). Lo mapeamos al MetodoPago interno para
+// reutilizar la pantalla de referencias de pago. Un valor desconocido devuelve null.
+export function fromApiPaymentMethod(value: string | null): MetodoPago | null {
+  switch (value) {
+    case 'CUENTA_PERSONAL':
+      return 'cuenta-personal';
+    case 'ABITAB':
+      return 'abitab';
+    case 'PAGANZA':
+      return 'paganza';
+    case 'BANRED':
+      return 'banred';
+    case 'GEOPAY':
+      return 'geopay';
+    case 'SISTARBANC':
+      return 'cuenta-bancaria';
+    default:
+      return null;
+  }
+}
+
 export function serializeDate(value: Date | null): string {
   if (!value) return '';
 
