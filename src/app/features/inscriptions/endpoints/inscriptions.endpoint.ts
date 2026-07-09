@@ -262,6 +262,7 @@ export class InscripcionesEndpoint {
           success: true,
           resultado: response.resultado ?? null,
           urlPago: response.urlPago ?? null,
+          parametrosEncriptados: response.parametrosEncriptados ?? null,
           mensajes:
             response.mensajes?.map(message => ({
               clave: message.clave ?? null,

@@ -173,6 +173,7 @@ export interface InscripcionPaymentResponse {
   success: boolean;
   resultado: string | null;
   urlPago: string | null;
+  parametrosEncriptados: string | null;
   mensajes: InscripcionPaymentMessage[];
   message: string | null;
   errorCode: string | null;
