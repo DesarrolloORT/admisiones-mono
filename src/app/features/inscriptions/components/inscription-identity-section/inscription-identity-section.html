@@ -62,12 +62,22 @@
     @if (facade.isIdentityFileMissing('selfie')) {
     <p class="inscription-field-error" role="alert">Adjuntá tu imagen de perfil</p>
     } @if (facade.identity.requiresIdentityConfirmation()) {
-    <ort-checkbox class="inscription-identity-confirmation" formControlName="identidadCorrecta">
+    <ort-checkbox
+      class="inscription-identity-confirmation"
+      formControlName="identidadCorrecta"
+      [aria-describedby]="
+        facade.identityForm.controls.identidadCorrecta.touched &&
+        facade.identityForm.controls.identidadCorrecta.hasError('required')
+          ? 'identity-confirmation-error'
+          : null
+      ">
       Verifico que la identidad es correcta
     </ort-checkbox>
     @if (facade.identityForm.controls.identidadCorrecta.touched &&
     facade.identityForm.controls.identidadCorrecta.hasError('required')) {
-    <p class="inscription-field-error" role="alert">Confirmá que la identidad es correcta</p>
+    <p class="inscription-field-error" id="identity-confirmation-error" role="alert">
+      Confirmá que la identidad es correcta
+    </p>
     } }
   </section>
 </div>
