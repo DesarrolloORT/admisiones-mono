@@ -21,12 +21,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Configurar Azure CLI (una sola vez por maquina):
-
-   ```bash
-   az login
-   az account show
-   ```
+2. Iniciar sesion con la cuenta ORT (una sola vez por maquina): la primera vez que se ejecute el sync de environment se abre el navegador para autenticarse con Entra ID. La sesion queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`); no se necesita Azure CLI. Para forzar un nuevo login: `npm run env:cache:clear`. En entornos donde no se pueda abrir el navegador, usar `npm run env:sync -- --env desa --device-code`.
 
    `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 

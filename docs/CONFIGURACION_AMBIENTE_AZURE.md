@@ -6,9 +6,7 @@ Azure es la fuente de verdad; el repo no guarda valores reales de ambiente.
 ## Requisitos
 
 - Node.js 20 y npm instalados.
-- Azure CLI instalada.
-- Sesión válida con `az login`.
-- Permiso de lectura sobre Azure App Configuration.
+- Cuenta ORT con permiso de lectura sobre Azure App Configuration
 
 Recurso usado por este proyecto:
 
@@ -35,12 +33,7 @@ App Configuration Data Reader
 
    Si GitHub Packages rechaza la instalación, ejecutar `npm login --registry=https://npm.pkg.github.com` con un token que tenga acceso de lectura al paquete y repetir `npm install`.
 
-2. Iniciar sesión en Azure y comprobar la cuenta activa:
-
-   ```powershell
-   az login
-   az account show
-   ```
+2. Iniciar sesión con la cuenta ORT: la primera vez que corra el sync se abre el navegador para autenticarse con Entra ID. La sesión queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`), por lo que los siguientes usos son silenciosos. Para cerrar la sesión local: `npm run env:cache:clear`. Si no se puede abrir el navegador, agregar `--device-code` al comando de sync.
 
 3. Levantar el frontend en `desa`:
 
@@ -202,26 +195,24 @@ Ejemplo minimo:
 
 ## Problemas comunes
 
-### `az` no se reconoce
+### No se abre el navegador para el login
 
-Validar:
-
-```powershell
-az --version
-```
-
-Si falla, cerrar y abrir PowerShell, CMD, VS Code o Windows Terminal. En Windows la ruta esperada suele ser:
-
-```text
-C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd
-```
-
-### No hay sesión válida
+Ejecutar el sync con device code y seguir las instrucciones en consola:
 
 ```powershell
-az login
-az account show
+npm run env:sync -- --env desa --device-code
 ```
+
+### No hay sesión válida o el login falla
+
+Borrar la sesión local y reintentar (vuelve a pedir login por navegador):
+
+```powershell
+npm run env:cache:clear
+npm run env:sync -- --env desa --refresh
+```
+
+Si aparece un error `AADSTS...` de Entra ID, reportarlo a operaciones: puede ser una política del tenant bloqueando el flujo interactivo.
 
 ### `403 Forbidden`
 
