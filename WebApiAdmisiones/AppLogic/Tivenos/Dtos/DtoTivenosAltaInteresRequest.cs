@@ -1,6 +1,4 @@
-using AppLogic.IServices.Tivenos;
-
-namespace AppLogic.Dtos.Tivenos
+namespace AppLogic.Tivenos.Dtos
 {
     public sealed class DtoTivenosAltaInteresRequest
     {

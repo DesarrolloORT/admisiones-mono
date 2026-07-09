@@ -29,8 +29,8 @@ using AppLogic.IServices.Becas;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.IServices.Personas;
-using AppLogic.IServices.Tivenos;
-using AppLogic.Services.Tivenos;
+using AppLogic.Tivenos.Interfaces;
+using AppLogic.Tivenos.Services;
 
 namespace UnitTesting.Extensions
 {
