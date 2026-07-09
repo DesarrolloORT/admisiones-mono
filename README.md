@@ -64,7 +64,7 @@ El alcance incluye:
 
 1. Clonar el repositorio.
 2. Instalar dependencias con `npm install`.
-3. Ejecutar `az login`; `npm run start` genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration.
+3. `npm run start` genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration; la primera vez abre el navegador para iniciar sesion con la cuenta ORT (la sesion queda persistida, no se necesita Azure CLI).
 4. Ejecutar `npm run start`.
 
 Si necesitas el flujo completo con autenticacion de packages y detalle de ambientes, seguir la seccion de configuracion de desarrollo local.
@@ -94,7 +94,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Ejecutar `az login` (una sola vez) y luego usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La CSP se toma de `CSP_POLICY`/`cspPolicy` del ambiente.
+   Usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY`/`cspPolicy` del ambiente.
 
 ## Ejecutar la aplicacion en un servidor local
 
