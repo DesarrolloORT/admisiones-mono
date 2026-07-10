@@ -58,3 +58,17 @@
   width: 100%;
   margin-block: var(--ort-sys-spacing-24);
 }
+
+@media (width >=760px) {
+  .scholarship-onboarding__screen {
+    max-width: 60%;
+    margin-inline: auto;
+    padding-top: var(--ort-sys-spacing-32);
+  }
+
+  .scholarship-onboarding__cta {
+    display: block;
+    width: fit-content;
+    margin-inline-start: auto;
+  }
+}

@@ -1,21 +1,23 @@
-<header class="scholarship-onboarding__header">
-  <div>
-    <span class="scholarship-onboarding__title-span">Postulación a beca</span>
-    <h2 class="scholarship-onboarding__title" id="scholarship-onboarding-title">{{ title() }}</h2>
-  </div>
-  <div class="scholarship-onboarding__time">
-    <ort-icon aria-hidden="true" class="scholarship-onboarding__time-icon" size="md">
-      timer
-    </ort-icon>
-    <p class="scholarship-onboarding__time-text">
-      <span class="scholarship-onboarding__time-label">Tiempo estimado</span>
-      <span class="scholarship-onboarding__time-value">15 minutos</span>
-    </p>
-  </div>
-</header>
+<section class="scholarship-onboarding__screen">
+  <header class="scholarship-onboarding__header">
+    <div>
+      <span class="scholarship-onboarding__title-span">Postulación a beca</span>
+      <h2 class="scholarship-onboarding__title" id="scholarship-onboarding-title">{{ title() }}</h2>
+    </div>
+    <div class="scholarship-onboarding__time">
+      <ort-icon aria-hidden="true" class="scholarship-onboarding__time-icon" size="md">
+        timer
+      </ort-icon>
+      <p class="scholarship-onboarding__time-text">
+        <span class="scholarship-onboarding__time-label">Tiempo estimado</span>
+        <span class="scholarship-onboarding__time-value">15 minutos</span>
+      </p>
+    </div>
+  </header>
 
-<app-scholarship-requirements-card [variant]="variant()" />
+  <app-scholarship-requirements-card [variant]="variant()" />
 
-<button class="scholarship-onboarding__cta" ort-primary-button type="button" (click)="continue()">
-  Comenzar postulación
-</button>
+  <button class="scholarship-onboarding__cta" ort-primary-button type="button" (click)="continue()">
+    Comenzar postulación
+  </button>
+</section>
