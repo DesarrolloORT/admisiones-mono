@@ -3,7 +3,7 @@ using AppLogic.Catalogos.Mappers;
 using AppLogic.Catalogos.Responses;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers;
+using AppLogic.Inscripciones.Encuesta.Rules;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;

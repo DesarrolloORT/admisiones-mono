@@ -1,7 +1,7 @@
-using AppLogic.Dtos.EncuestaInicial;
+using AppLogic.Inscripciones.Encuesta.Requests;
 using AppLogic.Catalogos.Interfaces;
-using AppLogic.IServices.Inscripciones;
-using AppLogic.Services.Inscripciones.Encuesta;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Inscripciones.Encuesta.Services;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;

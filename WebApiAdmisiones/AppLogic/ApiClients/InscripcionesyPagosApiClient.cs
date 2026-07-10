@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using AppLogic.Dtos.Inscripciones;
+using AppLogic.Inscripciones.Responses;
 using Microsoft.Extensions.Logging;
 using Utilities;
 
