@@ -1,9 +1,10 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Responses;
+using AppLogic.Registro.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -11,7 +12,8 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
-using AppLogic.Services.Registro;
+using AppLogic.Registro.Services;
+using AppLogic.Registro.Interfaces;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Inscripciones;
 

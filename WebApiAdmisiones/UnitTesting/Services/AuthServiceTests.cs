@@ -1,5 +1,5 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
@@ -9,7 +9,7 @@ using Moq;
 using Utilities;
 using AppLogic.Services.Autenticacion;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {

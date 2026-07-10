@@ -1,8 +1,8 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;

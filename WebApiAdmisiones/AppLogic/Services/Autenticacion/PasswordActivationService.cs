@@ -1,5 +1,5 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Dtos.Registro;
+namespace AppLogic.Registro.Dtos;
 
 [ExcludeFromCodeCoverage]
 public sealed class DtoRegistroDocumentoImagenesTemporales

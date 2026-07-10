@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Dtos.Registro;
+namespace AppLogic.Registro.Dtos;
 
 /// <summary>
 /// Datos de una nueva persona pendiente de creación en t_persona,

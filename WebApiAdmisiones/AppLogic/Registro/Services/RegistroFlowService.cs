@@ -1,6 +1,7 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Dtos;
+using AppLogic.Registro.Interfaces;
 using System.Text.Json;
-using AppLogic.IServices;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -8,9 +9,8 @@ using StackExchange.Redis;
 using Utilities;
 using AppLogic.Services.Autenticacion;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
 
-namespace AppLogic.Services.Registro;
+namespace AppLogic.Registro.Services;
 
 /// <summary>
 /// Orquesta el flujo de registro: FlowId session, nueva persona (Redis-deferred), persona existente.

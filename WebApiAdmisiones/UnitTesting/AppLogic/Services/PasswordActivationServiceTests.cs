@@ -1,4 +1,4 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;

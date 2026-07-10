@@ -1,5 +1,5 @@
 using AppLogic.Personas.Responses;
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using AppLogic.Personas.Constants;
 using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;

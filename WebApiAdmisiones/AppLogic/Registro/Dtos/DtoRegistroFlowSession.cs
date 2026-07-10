@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Dtos.Registro;
+namespace AppLogic.Registro.Dtos;
 
 /// <summary>
 /// Sesión de registro almacenada en Redis durante el flujo de onboarding.

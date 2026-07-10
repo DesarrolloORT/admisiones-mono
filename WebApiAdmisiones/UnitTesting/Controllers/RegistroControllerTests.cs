@@ -1,10 +1,11 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Responses;
+using AppLogic.Registro.Dtos;
 using System;
 using System.Collections.Generic;
 using AzureService.DTOs;
 using AzureService.Interfaces;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,7 @@ using WebApiAdmisiones.Models;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 
 namespace UnitTesting.Controllers
 {

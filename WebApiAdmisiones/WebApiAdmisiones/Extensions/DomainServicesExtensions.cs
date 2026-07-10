@@ -21,7 +21,7 @@ using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Observability;
 using AppLogic.Services.Autenticacion;
-using AppLogic.Services.Registro;
+using AppLogic.Registro.Services;
 using AppLogic.Personas.Services;
 using AppLogic.Services.Inscripciones;
 using AppLogic.Services.Inscripciones.Encuesta;
@@ -32,7 +32,7 @@ using AppLogic.IServices.Becas;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.Personas.Interfaces;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 using AppLogic.Tivenos.Interfaces;
 using AppLogic.Tivenos.Services;
 

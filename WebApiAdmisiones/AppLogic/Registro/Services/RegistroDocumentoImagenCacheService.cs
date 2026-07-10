@@ -1,11 +1,11 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 using System.Text.Json;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 
-namespace AppLogic.Services.Registro;
+namespace AppLogic.Registro.Services;
 
 public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImagenCacheService
 {

@@ -1,7 +1,8 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Dtos;
 using Utilities;
 
-namespace AppLogic.IServices.Registro;
+namespace AppLogic.Registro.Interfaces;
 
 public interface IRegistroFlowService
 {

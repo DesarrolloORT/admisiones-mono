@@ -1,6 +1,6 @@
 using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
