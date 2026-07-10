@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Common.Security;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AppLogic.Autenticacion.Services
@@ -40,7 +41,7 @@ namespace AppLogic.Autenticacion.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var secretKey = ObtenerVariableEntornoRequerida("SECRET_KEY_API_INSCR_PAGOS");
+            var secretKey = JwtConfigurationHelper.GetRequiredEnvironmentVariable("SECRET_KEY_API_INSCR_PAGOS");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -55,15 +56,5 @@ namespace AppLogic.Autenticacion.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private static string ObtenerVariableEntornoRequerida(string variableName)
-        {
-            var value = Environment.GetEnvironmentVariable(variableName);
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new InvalidOperationException($"La variable de entorno {variableName} no está configurada.");
-            }
-
-            return value;
-        }
     }
 }
