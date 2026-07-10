@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Dtos.Personas
+namespace AppLogic.Personas.Responses
 {
     public class DtoDocumentoPersonaResponse
     {

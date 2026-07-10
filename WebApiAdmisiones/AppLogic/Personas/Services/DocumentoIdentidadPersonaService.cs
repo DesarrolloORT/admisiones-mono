@@ -1,13 +1,13 @@
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Responses;
 using AppLogic.Dtos.Registro;
-using AppLogic.Constants;
+using AppLogic.Personas.Constants;
 using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
 
-namespace AppLogic.Services.Personas
+namespace AppLogic.Personas.Services
 {
     public static class DocumentoIdentidadPersonaService
     {

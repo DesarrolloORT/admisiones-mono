@@ -1,9 +1,9 @@
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Requests;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Helpers
+namespace AppLogic.Personas.Helpers
 {
     public static class PersonaIdentityHelper
     {

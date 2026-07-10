@@ -1,6 +1,7 @@
 using AppLogic.Dtos.Autenticacion;
 using AppLogic.Dtos.Becas;
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Utilities;
 using WebApiAdmisiones.Controllers;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
-using AppLogic.IServices.Personas;
+using AppLogic.Personas.Interfaces;
 using WebApiAdmisiones.Models;
 
 namespace UnitTesting.Controllers

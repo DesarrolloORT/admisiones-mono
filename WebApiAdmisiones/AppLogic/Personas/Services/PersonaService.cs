@@ -1,10 +1,12 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Personas;
-using AppLogic.Constants;
+using AppLogic.Personas.Constants;
+using AppLogic.Personas.Helpers;
+using AppLogic.Personas.Interfaces;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
+using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.IServices.Personas;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -14,7 +16,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
-namespace AppLogic.Services.Personas
+namespace AppLogic.Personas.Services
 {
     public class PersonaService(
         IUnitOfWorkFactory uowFactory,

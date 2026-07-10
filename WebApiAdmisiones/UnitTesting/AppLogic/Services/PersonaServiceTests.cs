@@ -1,5 +1,6 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -7,7 +8,7 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
-using AppLogic.Services.Personas;
+using AppLogic.Personas.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

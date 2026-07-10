@@ -1,4 +1,4 @@
-namespace AppLogic.Constants
+namespace AppLogic.Personas.Constants
 {
     public static class PersonaConstants
     {
