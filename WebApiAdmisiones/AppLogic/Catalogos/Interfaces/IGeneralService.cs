@@ -1,7 +1,7 @@
 using Utilities;
 using BusinessLogic.IDevartRepositories;
 
-namespace AppLogic.IServices.Catalogos
+namespace AppLogic.Catalogos.Interfaces
 {
     public interface IGeneralService
     {

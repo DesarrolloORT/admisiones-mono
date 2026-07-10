@@ -1,8 +1,8 @@
-using AppLogic.IServices.Catalogos;
+using AppLogic.Catalogos.Interfaces;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Services.Catalogos
+namespace AppLogic.Catalogos.Services
 {
     public class GeneralService : IGeneralService
     {

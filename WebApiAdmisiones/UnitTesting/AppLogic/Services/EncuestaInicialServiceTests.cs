@@ -1,5 +1,5 @@
 using AppLogic.Dtos.EncuestaInicial;
-using AppLogic.IServices.Catalogos;
+using AppLogic.Catalogos.Interfaces;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.Services.Inscripciones.Encuesta;
 using AppLogic.Tivenos.Dtos;

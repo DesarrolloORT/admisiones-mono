@@ -1,9 +1,9 @@
-using AppLogic.Dtos.Catalogos;
+using AppLogic.Catalogos.Responses;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using Utilities;
 
-namespace AppLogic.IServices.Catalogos
+namespace AppLogic.Catalogos.Interfaces
 {
     public interface ICatalogosService
     {

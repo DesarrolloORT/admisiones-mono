@@ -2,7 +2,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;
 using Xunit;
-using AppLogic.Services.Catalogos;
+using AppLogic.Catalogos.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

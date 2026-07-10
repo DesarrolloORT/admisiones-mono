@@ -1,13 +1,14 @@
-using AppLogic.Dtos.Catalogos;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Catalogos.Mappers;
+using AppLogic.Catalogos.Responses;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
-using AppLogic.IServices.Catalogos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Services.Catalogos
+namespace AppLogic.Catalogos.Services
 {
     public class CatalogosService : ICatalogosService
     {
