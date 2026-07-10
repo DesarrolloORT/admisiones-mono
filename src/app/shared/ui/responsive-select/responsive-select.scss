@@ -82,6 +82,10 @@
   display: grid;
   overflow: auto;
   max-height: min(50dvh, 24rem);
+
+  p {
+    font-weight: var(--ort-sys-font-weight-semibold);
+  }
 }
 
 .responsive-select__drawer-option {
