@@ -1,11 +1,13 @@
-﻿using AppLogic.Dtos.EncuestaInicial;
-using AppLogic.Dtos.Inscripciones;
+﻿using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Inscripciones.Encuesta.Responses;
+using AppLogic.Inscripciones.Requests;
+using AppLogic.Inscripciones.Responses;
 using AppLogic.ApiClients;
 using AppLogic.DevartDTOs;
 using AppLogic.Catalogos.Interfaces;
-using AppLogic.IServices.Inscripciones;
-using AppLogic.Services.Inscripciones;
-using AppLogic.Services.Inscripciones.Encuesta;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Inscripciones.Services;
+using AppLogic.Inscripciones.Encuesta.Services;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;
@@ -2084,7 +2086,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertaSeleccionada()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
             var oferta = new Oferta
             {
                 IdOferta = 99,
@@ -2118,7 +2120,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenALaEspera_ReturnsEstadoSinDetalle()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.ALaEspera);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.ALaEspera);
 
             var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
@@ -2130,7 +2132,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenPagoPendiente_ReturnsDetallePago()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {
@@ -2186,7 +2188,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenConfirmada_ReturnsDatosYMaterias()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {
@@ -2267,7 +2269,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenConfirmadaAndCoordinadoresIguales_MuestraSoloAcademico()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {

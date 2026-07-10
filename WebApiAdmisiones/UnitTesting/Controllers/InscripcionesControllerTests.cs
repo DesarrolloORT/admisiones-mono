@@ -1,6 +1,7 @@
-using AppLogic.Dtos.Inscripciones;
+using AppLogic.Inscripciones.Requests;
+using AppLogic.Inscripciones.Responses;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Inscripciones;
+using AppLogic.Inscripciones.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;

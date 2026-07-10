@@ -6,7 +6,6 @@ using AppLogic.Registro.Interfaces;
 using AppLogic.Registro.Validators;
 using AppLogic.DevartDTOs;
 using AppLogic.Autenticacion.Interfaces;
-using AppLogic.IServices.Inscripciones;
 using AppLogic.Personas.Services;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;

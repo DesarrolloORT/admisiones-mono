@@ -15,7 +15,6 @@ using Xunit;
 using AppLogic.Registro.Services;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Autenticacion.Interfaces;
-using AppLogic.IServices.Inscripciones;
 
 namespace UnitTesting.AppLogic.Services
 {

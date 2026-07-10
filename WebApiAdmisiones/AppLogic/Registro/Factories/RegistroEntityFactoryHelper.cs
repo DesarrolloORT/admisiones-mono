@@ -1,6 +1,6 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
-using AppLogic.Constants;
+using AppLogic.Inscripciones.Constants;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
