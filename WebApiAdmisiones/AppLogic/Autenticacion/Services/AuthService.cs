@@ -1,5 +1,6 @@
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Security;
@@ -25,6 +26,15 @@ public class AuthService : IAuthService
         "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
     private const string SISTEMA = "ADMISIONESWEB";
     private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
+    private const string NuevaPersonaSessionPurpose = "nueva-persona-session";
+
+    // Se preserva el literal "CompletarPassword" (nombre del método del controller antes de esta
+    // extracción) para no cambiar el campo Method del OperationResult devuelto al front.
+    private const string CompletarPasswordOriginMethod = "CompletarPassword";
+
+    // Se preserva el literal "CompletarPasswordAsync" (nombre original del método antes de este
+    // rename) para no cambiar el campo Method del OperationResult devuelto al front.
+    private const string CompletarPasswordPersonaExistenteOriginMethod = "CompletarPasswordAsync";
 
     private readonly ILdap _ldap;
     private readonly BusinessLogic.IDevartRepositories.IUnitOfWorkFactory _admisionesUowFactory;
@@ -32,6 +42,7 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IPasswordActivationService _passwordActivationService;
     private readonly IHashTokenStore _hashTokenStore;
+    private readonly IRegistroFlowService _registroFlowService;
     private readonly IServiceScopeFactory? _serviceScopeFactory;
     private readonly IDbConnectionContext? _dbConnectionContext;
     private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
@@ -51,6 +62,7 @@ public class AuthService : IAuthService
         IRefreshTokenService refreshTokenService,
         IPasswordActivationService passwordActivationService,
         IHashTokenStore hashTokenStore,
+        IRegistroFlowService registroFlowService,
         IServiceScopeFactory? serviceScopeFactory = null,
         IDbConnectionContext? dbConnectionContext = null,
         IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null,
@@ -62,6 +74,7 @@ public class AuthService : IAuthService
         _refreshTokenService = refreshTokenService;
         _passwordActivationService = passwordActivationService;
         _hashTokenStore = hashTokenStore;
+        _registroFlowService = registroFlowService;
         _serviceScopeFactory = serviceScopeFactory;
         _dbConnectionContext = dbConnectionContext;
         _documentoImagenCacheService = documentoImagenCacheService;
@@ -308,7 +321,7 @@ public class AuthService : IAuthService
     /// <param name="codigoPersona">Codigo de persona resuelto desde la sesion temporal.</param>
     /// <param name="request">Nueva password a establecer.</param>
     /// <returns>Respuesta de autenticacion normal con tokens para cookies.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordAsync(
+    private async Task<OperationResult<DtoAuthenticationResponse>> CompletarPasswordPersonaExistenteAsync(
         long codigoPersona,
         DtoCompletarPasswordInicialRequest request)
     {
@@ -318,7 +331,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_01",
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     "La solicitud es obligatoria.",
                     400,
                     default!);
@@ -329,7 +342,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_02",
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     validacionPassword,
                     400,
                     default!);
@@ -342,7 +355,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_03",
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     "Usuario no encontrado en la base de datos.",
                     404,
                     default!);
@@ -353,7 +366,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     "INI_PAS_04",
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     "El link de activación ya fue utilizado o no está vigente.",
                     401,
                     default!);
@@ -362,12 +375,12 @@ public class AuthService : IAuthService
             var imagenes = await ObtenerImagenesTemporalesAsync(persona);
             var imagenesValidation = DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
                 imagenes,
-                nameof(CompletarPasswordAsync));
+                CompletarPasswordPersonaExistenteOriginMethod);
             if (!imagenesValidation.Success)
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     imagenesValidation.ErrorCode,
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     imagenesValidation.Message,
                     imagenesValidation.HttpCode,
                     default!);
@@ -381,7 +394,7 @@ public class AuthService : IAuthService
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
                     cambioPassword.ErrorCode,
-                    nameof(CompletarPasswordAsync),
+                    CompletarPasswordPersonaExistenteOriginMethod,
                     cambioPassword.Message,
                     cambioPassword.HttpCode,
                     default!);
@@ -415,18 +428,157 @@ public class AuthService : IAuthService
 
             return OperationResult<DtoAuthenticationResponse>.Ok(
                 authResponse,
-                nameof(CompletarPasswordAsync));
+                CompletarPasswordPersonaExistenteOriginMethod);
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarPasswordAsync));
+            _logger?.LogError(ex, ErrorInesperadoLog, CompletarPasswordPersonaExistenteOriginMethod);
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "INI_PAS_99",
-                nameof(CompletarPasswordAsync),
+                CompletarPasswordPersonaExistenteOriginMethod,
                 "Error al completar password inicial.",
                 500,
                 default!);
         }
+    }
+
+    /// <summary>
+    /// Orquesta CompletarPassword: valida la sesión temporal y despacha al flujo de persona nueva
+    /// (Redis) o persona existente. Movido desde AuthController.CompletarPassword sin cambiar
+    /// validaciones, códigos de error ni el campo Method de las respuestas.
+    /// </summary>
+    public async Task<DtoCompletarPasswordFlowResult> CompletarPasswordFlowAsync(
+        string? sessionToken,
+        DtoCompletarPasswordInicialRequest request)
+    {
+        var sessionResult = _passwordActivationService.ValidarSessionToken(sessionToken ?? string.Empty);
+
+        if (!sessionResult.Success)
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = true,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    sessionResult.ErrorCode,
+                    CompletarPasswordOriginMethod,
+                    sessionResult.Message,
+                    sessionResult.HttpCode,
+                    default!)
+            };
+        }
+
+        var session = sessionResult.Data;
+        if (session == null)
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = true,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_06",
+                    CompletarPasswordOriginMethod,
+                    "Sesion temporal invalida.",
+                    401,
+                    default!)
+            };
+        }
+
+        if (string.Equals(session.Purpose, NuevaPersonaSessionPurpose, StringComparison.Ordinal))
+        {
+            return await CompletarNuevaPersonaFlowAsync(session, request);
+        }
+
+        return await CompletarPersonaExistenteFlowAsync(session, request);
+    }
+
+    private async Task<DtoCompletarPasswordFlowResult> CompletarNuevaPersonaFlowAsync(
+        DtoValidatedSession session,
+        DtoCompletarPasswordInicialRequest request)
+    {
+        var flowId = session.FlowId;
+        if (string.IsNullOrWhiteSpace(flowId))
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = true,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_NUP_01",
+                    CompletarPasswordOriginMethod,
+                    "Sesion temporal sin FlowId valido.",
+                    401,
+                    default!)
+            };
+        }
+
+        var pending = await _registroFlowService.GetPendingPersonaAsync(flowId);
+        if (pending == null)
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = true,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "NUP_COMP_01",
+                    CompletarPasswordOriginMethod,
+                    "El registro pendiente expiró o ya fue completado. Por favor, iniciá el proceso de registro nuevamente.",
+                    401,
+                    default!)
+            };
+        }
+
+        var crearResult = await _registroFlowService.CompletarNuevaPersona(pending, request.PasswordNueva);
+        if (!crearResult.Success)
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = false,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    crearResult.ErrorCode,
+                    CompletarPasswordOriginMethod,
+                    crearResult.Message,
+                    crearResult.HttpCode,
+                    default!)
+            };
+        }
+
+        var tokenResult = await GenerarTokensParaPersonaAsync(crearResult.Data);
+        var completo = tokenResult.Success && tokenResult.Data != null;
+        if (completo)
+        {
+            await _registroFlowService.DeletePendingPersonaAsync(flowId);
+            await _registroFlowService.EliminarFlowSessionAsync(flowId);
+        }
+
+        return new DtoCompletarPasswordFlowResult
+        {
+            ClearActivationCookie = completo,
+            Result = tokenResult
+        };
+    }
+
+    private async Task<DtoCompletarPasswordFlowResult> CompletarPersonaExistenteFlowAsync(
+        DtoValidatedSession session,
+        DtoCompletarPasswordInicialRequest request)
+    {
+        if (!session.CodigoPersona.HasValue)
+        {
+            return new DtoCompletarPasswordFlowResult
+            {
+                ClearActivationCookie = true,
+                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "ACT_SES_03",
+                    CompletarPasswordOriginMethod,
+                    "Sesion temporal sin persona valida.",
+                    401,
+                    default!)
+            };
+        }
+
+        var result = await CompletarPasswordPersonaExistenteAsync(session.CodigoPersona.Value, request);
+
+        return new DtoCompletarPasswordFlowResult
+        {
+            ClearActivationCookie = result.Success && result.Data != null,
+            Result = result
+        };
     }
 
     private async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(Persona persona)
