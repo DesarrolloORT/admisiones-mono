@@ -1,8 +1,8 @@
-using AppLogic.Dtos.Tivenos;
+using AppLogic.Tivenos.Dtos;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.IServices.Tivenos
+namespace AppLogic.Tivenos.Interfaces
 {
     public interface ITivenosEnvioService
     {

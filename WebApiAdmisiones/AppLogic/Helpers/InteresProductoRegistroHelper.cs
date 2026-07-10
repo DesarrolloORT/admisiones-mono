@@ -1,7 +1,6 @@
 using AppLogic.Dtos.Inscripciones;
-using AppLogic.Dtos.Tivenos;
 using AppLogic.Constants;
-using AppLogic.IServices.Tivenos;
+using AppLogic.Tivenos.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

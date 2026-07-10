@@ -1,4 +1,4 @@
-namespace AppLogic.Dtos.Tivenos
+namespace AppLogic.Tivenos.Dtos
 {
     public sealed class DtoTivenosBachilleratoRequest
     {

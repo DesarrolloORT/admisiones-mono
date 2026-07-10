@@ -1,11 +1,11 @@
 using AppLogic.Constants;
 using AppLogic.Dtos.EncuestaInicial;
-using AppLogic.Dtos.Tivenos;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Catalogos;
 using AppLogic.IServices.Inscripciones;
-using AppLogic.IServices.Tivenos;
+using AppLogic.Tivenos.Dtos;
+using AppLogic.Tivenos.Interfaces;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

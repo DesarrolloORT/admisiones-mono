@@ -1,4 +1,4 @@
-namespace AppLogic.IServices.Tivenos
+namespace AppLogic.Tivenos.Dtos
 {
     public sealed class TivenosAltaInteresOperacion
     {
