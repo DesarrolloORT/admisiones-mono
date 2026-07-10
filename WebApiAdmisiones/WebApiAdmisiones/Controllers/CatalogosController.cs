@@ -1,4 +1,5 @@
-using AppLogic.Dtos.Catalogos;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Catalogos.Responses;
 using AppLogic.DevartDTOs;
 using AppLogic.ApiClients;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Utilities;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Cache;
-using AppLogic.IServices.Catalogos;
 
 namespace WebApiAdmisiones.Controllers
 {

@@ -1,4 +1,4 @@
-using AppLogic.Dtos.Catalogos;
+using AppLogic.Catalogos.Responses;
 
 namespace AppLogic.Helpers
 {

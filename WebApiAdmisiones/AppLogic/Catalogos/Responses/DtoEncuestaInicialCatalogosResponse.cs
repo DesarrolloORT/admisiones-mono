@@ -1,4 +1,4 @@
-namespace AppLogic.Dtos.Catalogos
+namespace AppLogic.Catalogos.Responses
 {
     public sealed class DtoComboOption
     {

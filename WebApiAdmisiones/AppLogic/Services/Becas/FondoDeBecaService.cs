@@ -1,5 +1,4 @@
 using AppLogic.Dtos.Becas;
-using AppLogic.Dtos.Catalogos;
 using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers.ValidationHelpers;

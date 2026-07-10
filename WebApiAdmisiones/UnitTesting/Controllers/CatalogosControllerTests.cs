@@ -1,4 +1,5 @@
-﻿using AppLogic.Dtos.Catalogos;
+﻿using AppLogic.Catalogos.Interfaces;
+using AppLogic.Catalogos.Responses;
 using AppLogic.DevartDTOs;
 using AppLogic.ApiClients;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,6 @@ using WebApiAdmisiones.Controllers;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Cache;
-using AppLogic.IServices.Catalogos;
 
 namespace UnitTesting.Controllers
 {

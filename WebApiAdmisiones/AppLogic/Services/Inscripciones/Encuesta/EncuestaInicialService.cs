@@ -2,7 +2,7 @@ using AppLogic.Constants;
 using AppLogic.Dtos.EncuestaInicial;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.IServices.Catalogos;
+using AppLogic.Catalogos.Interfaces;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
