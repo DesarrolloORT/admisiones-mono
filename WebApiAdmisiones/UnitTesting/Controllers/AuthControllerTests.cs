@@ -320,7 +320,8 @@ namespace UnitTesting.Controllers
 
             var response = await _controller.Login(request);
 
-            var acceptedResult = Assert.IsType<AcceptedResult>(response);
+            var acceptedResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(202, acceptedResult.StatusCode);
             var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(acceptedResult.Value);
             Assert.True(operationResult.Success);
             Assert.Equal(202, operationResult.HttpCode);
@@ -424,7 +425,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(response);
+            var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
 
@@ -437,7 +438,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response);
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
             var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(unauthorizedResult.Value);
             Assert.False(operationResult.Success);
@@ -454,7 +455,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response);
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
             var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(unauthorizedResult.Value);
             Assert.False(operationResult.Success);
@@ -482,7 +483,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response);
+            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
         }
 
@@ -507,7 +508,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(response);
+            var notFoundResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(404, notFoundResult.StatusCode);
         }
 
@@ -530,7 +531,7 @@ namespace UnitTesting.Controllers
             var response = await _controller.RefreshToken();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(response);
+            var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
         }
 

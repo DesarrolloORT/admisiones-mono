@@ -108,7 +108,7 @@ namespace WebApiAdmisiones.Controllers
                 AgregarHeadersRateLimit(flowResult.RateLimitHeaders);
 
             if (flowResult.RequiresTwoFactor)
-                return Accepted(flowResult.TwoFactorResult!);
+                return ValidateResponse(flowResult.TwoFactorResult!);
 
             if (flowResult.SetCookies && flowResult.AuthResult?.Data != null)
                 SetAuthenticationCookies(flowResult.AuthResult.Data);
@@ -384,7 +384,6 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("Logout")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
-        [ProducesResponseType(typeof(OperationResult<string>), 200)]
         public IActionResult Logout()
         {
             // Eliminar las cookies de autenticación.
@@ -422,7 +421,7 @@ namespace WebApiAdmisiones.Controllers
                     message: "Refresh token no encontrado en las cookies.",
                     httpCode: 401);
                 CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
-                return Unauthorized(errorResult);
+                return ValidateResponse(errorResult);
             }
 
 
@@ -433,7 +432,7 @@ namespace WebApiAdmisiones.Controllers
             {
                 // Limpiar cookies si falló la renovación
                 CookieAuthenticationHelper.ClearAuthenticationCookies(HttpContext);
-                return result.HttpCode == 404 ? NotFound(result) : Unauthorized(result);
+                return ValidateResponse(result);
             }
 
             // 3. Establecer cookies con los nuevos tokens (HTTP concern)
@@ -442,7 +441,7 @@ namespace WebApiAdmisiones.Controllers
                 SetAuthenticationCookies(result.Data);
             }
 
-            return Ok(result);
+            return ValidateResponse(result);
         }
 
         /// <summary>
