@@ -13,10 +13,7 @@
         (filesChanged)="onDocumentFilesChanged($event)" />
 
       @if (isRecognizingDocument()) {
-      <p class="auth-selected-file" role="status">
-        <ort-icon aria-hidden="true">hourglass_top</ort-icon>
-        Procesando documento... Los campos se completarán automáticamente.
-      </p>
+      <ort-progress-bar aria-label="Procesando documento" variant="indeterminate" />
       }
     </section>
 

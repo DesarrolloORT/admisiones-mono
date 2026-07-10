@@ -18,6 +18,7 @@ import {
   OrtFileUploaderModule,
   OrtFormFieldModule,
   OrtIconModule,
+  OrtProgressBar,
 } from '@desarrolloort/components';
 import {
   buildFormErrorSummary,
@@ -40,6 +41,7 @@ import { DocumentFields } from '../document-fields/document-fields';
     OrtIconModule,
     ReactiveFormsModule,
     RouterLink,
+    OrtProgressBar,
   ],
   templateUrl: './register-identity-step.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
