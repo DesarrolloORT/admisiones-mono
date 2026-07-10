@@ -7,7 +7,7 @@ using StackExchange.Redis;
 using Utilities;
 using Xunit;
 using AppLogic.Registro.Services;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Registro.Interfaces;
 
 namespace UnitTesting.AppLogic.Services

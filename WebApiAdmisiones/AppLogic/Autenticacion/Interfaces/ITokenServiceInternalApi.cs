@@ -1,6 +1,6 @@
 using System;
 
-namespace AppLogic.IServices.Autenticacion
+namespace AppLogic.Autenticacion.Interfaces
 {
     /// <summary>
     /// Servicio para generar tokens de autenticación para comunicación con APIs internas.

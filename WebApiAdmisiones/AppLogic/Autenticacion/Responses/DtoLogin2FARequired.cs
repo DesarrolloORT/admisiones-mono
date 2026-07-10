@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Dtos.Autenticacion
+namespace AppLogic.Autenticacion.Responses
 {
     /// <summary>
     /// Respuesta cuando el login requiere verificación de dos factores.

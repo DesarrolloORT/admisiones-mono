@@ -1,7 +1,8 @@
-using AppLogic.Dtos.Autenticacion;
-using AppLogic.Helpers;
+using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Autenticacion.Helpers;
 using AppLogic.IServices;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Utilities;
 using MailORT;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Utilities;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 /// <summary>
 /// Implementación del servicio de autenticación de dos factores.

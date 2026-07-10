@@ -1,7 +1,7 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Responses;
 using Utilities;
 
-namespace AppLogic.IServices.Autenticacion;
+namespace AppLogic.Autenticacion.Interfaces;
 
 /// <summary>
 /// Servicio de autenticación de dos factores (2FA) por email.

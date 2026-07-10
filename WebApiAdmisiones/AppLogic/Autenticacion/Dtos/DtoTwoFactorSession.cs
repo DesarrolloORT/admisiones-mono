@@ -1,4 +1,4 @@
-namespace AppLogic.Dtos.Autenticacion;
+namespace AppLogic.Autenticacion.Dtos;
 
 /// <summary>
 /// Modelo de sesión 2FA almacenada en Redis durante el flujo de verificación.

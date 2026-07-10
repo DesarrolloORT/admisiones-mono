@@ -20,14 +20,14 @@ using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Observability;
-using AppLogic.Services.Autenticacion;
+using AppLogic.Autenticacion.Services;
 using AppLogic.Registro.Services;
 using AppLogic.Personas.Services;
 using AppLogic.Services.Inscripciones;
 using AppLogic.Services.Inscripciones.Encuesta;
 using AppLogic.Services.Becas;
 using AppLogic.Catalogos.Services;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using AppLogic.IServices.Becas;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.IServices.Inscripciones;
@@ -136,13 +136,13 @@ namespace WebApiAdmisiones.Extensions
 
             // Abstracciones de infraestructura para los servicios de AppLogic.
             services.AddScoped<IEmailSender, AppLogic.Services.Email.EnvioMailEmailSender>();
-            services.AddScoped<AppLogic.IServices.Autenticacion.ITwoFactorSessionStore, AppLogic.Services.Autenticacion.RedisTwoFactorSessionStore>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ITwoFactorSessionStore, AppLogic.Autenticacion.Services.RedisTwoFactorSessionStore>();
 
             // Servicio de autenticación de dos factores (2FA) por email.
-            services.AddScoped<AppLogic.IServices.Autenticacion.IDosFactoresAuthService, AppLogic.Services.Autenticacion.DosFactoresAuthService>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.IDosFactoresAuthService, AppLogic.Autenticacion.Services.DosFactoresAuthService>();
 
             // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
-            services.AddScoped<AppLogic.IServices.Autenticacion.ILoginFlowService, AppLogic.Services.Autenticacion.LoginFlowService>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ILoginFlowService, AppLogic.Autenticacion.Services.LoginFlowService>();
 
             return services;
         }

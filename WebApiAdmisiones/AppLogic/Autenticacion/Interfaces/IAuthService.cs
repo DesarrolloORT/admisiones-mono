@@ -1,7 +1,8 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Responses;
 using Utilities;
 
-namespace AppLogic.IServices.Autenticacion;
+namespace AppLogic.Autenticacion.Interfaces;
 
 public interface IAuthService
 {

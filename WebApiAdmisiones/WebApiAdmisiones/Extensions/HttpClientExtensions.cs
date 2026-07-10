@@ -4,8 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using WebApiAdmisiones.HttpHandlers;
-using AppLogic.Services.Autenticacion;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Autenticacion.Interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {

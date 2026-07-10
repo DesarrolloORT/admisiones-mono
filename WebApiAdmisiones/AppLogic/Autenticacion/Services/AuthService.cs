@@ -1,7 +1,8 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Registro.Dtos;
 using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.IServices.Autenticacion;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Utilities;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 public class AuthService : IAuthService
 {

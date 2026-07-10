@@ -1,6 +1,6 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Dtos;
 
-namespace AppLogic.IServices.Autenticacion;
+namespace AppLogic.Autenticacion.Interfaces;
 
 public interface ITwoFactorSessionStore
 {

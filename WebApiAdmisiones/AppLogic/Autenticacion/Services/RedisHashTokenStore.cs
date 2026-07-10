@@ -1,7 +1,7 @@
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using StackExchange.Redis;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 /// <summary>
 /// Almacena hashes de tokens de activación en Redis.

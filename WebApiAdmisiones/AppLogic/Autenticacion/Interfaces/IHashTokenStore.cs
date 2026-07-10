@@ -1,4 +1,4 @@
-namespace AppLogic.IServices.Autenticacion;
+namespace AppLogic.Autenticacion.Interfaces;
 
 /// <summary>
 /// Almacenamiento de hashes de tokens de activacion.

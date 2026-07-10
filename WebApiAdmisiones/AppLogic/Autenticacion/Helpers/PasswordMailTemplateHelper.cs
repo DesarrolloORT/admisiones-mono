@@ -3,7 +3,7 @@ using System.Text.Encodings.Web;
 using BusinessLogic.Entities;
 using MailORT;
 
-namespace AppLogic.Helpers;
+namespace AppLogic.Autenticacion.Helpers;
 
 public static class PasswordMailTemplateHelper
 {
