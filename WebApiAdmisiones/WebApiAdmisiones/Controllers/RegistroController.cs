@@ -186,50 +186,30 @@ namespace WebApiAdmisiones.Controllers
             string nombreDocumento,
             string? tipoMime)
         {
-            var tipoDocumento = reconocimiento.Campos.TipoDocumento;
-            var numeroDocumento = reconocimiento.Campos.NumeroDocumento;
-            if (string.IsNullOrWhiteSpace(tipoDocumento) || string.IsNullOrWhiteSpace(numeroDocumento))
+            var documentoFrente = new DtoRegistroDocumentoArchivoTemporal
             {
-                return;
-            }
+                Archivo = documentoOriginal,
+                NombreArchivo = nombreDocumento,
+                ContentType = string.IsNullOrWhiteSpace(tipoMime)
+                    ? "application/octet-stream"
+                    : tipoMime
+            };
 
-            try
-            {
-                await documentoImagenCacheService.GuardarAsync(
-                    tipoDocumento,
-                    numeroDocumento,
-                    new DtoRegistroDocumentoImagenesTemporales
-                    {
-                        TipoDocumento = tipoDocumento,
-                        Documento = numeroDocumento,
-                        FechaVencimiento = reconocimiento.Campos.FechaVencimiento,
-                        DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
-                        {
-                            Archivo = documentoOriginal,
-                            NombreArchivo = nombreDocumento,
-                            ContentType = string.IsNullOrWhiteSpace(tipoMime)
-                                ? "application/octet-stream"
-                                : tipoMime
-                        },
-                        CaraPersona = reconocimiento.CaraPersona is null
-                            ? null
-                            : new DtoRegistroDocumentoArchivoTemporal
-                            {
-                                Archivo = reconocimiento.CaraPersona.Archivo,
-                                NombreArchivo = reconocimiento.CaraPersona.NombreArchivo,
-                                ContentType = reconocimiento.CaraPersona.ContentType
-                            },
-                        CreatedAt = DateTime.UtcNow
-                    });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "No se pudieron guardar en Redis las imagenes reconocidas para {TipoDocumento}:{Documento}.",
-                    tipoDocumento,
-                    numeroDocumento);
-            }
+            var caraPersona = reconocimiento.CaraPersona is null
+                ? null
+                : new DtoRegistroDocumentoArchivoTemporal
+                {
+                    Archivo = reconocimiento.CaraPersona.Archivo,
+                    NombreArchivo = reconocimiento.CaraPersona.NombreArchivo,
+                    ContentType = reconocimiento.CaraPersona.ContentType
+                };
+
+            await documentoImagenCacheService.GuardarImagenesTemporalesSiCorrespondeAsync(
+                reconocimiento.Campos.TipoDocumento,
+                reconocimiento.Campos.NumeroDocumento,
+                reconocimiento.Campos.FechaVencimiento,
+                documentoFrente,
+                caraPersona);
         }
 
         /// <summary>
