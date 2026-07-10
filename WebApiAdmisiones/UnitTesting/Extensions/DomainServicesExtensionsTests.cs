@@ -326,7 +326,13 @@ namespace UnitTesting.Extensions
 
             _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
 
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
+            // ICatalogosService ahora resuelve a CatalogosCacheDecorator (agrega cache Redis a
+            // ObtenerPaisesEstadosCiudadesAsync); CatalogosService sigue registrado por separado
+            // como clase concreta para que el decorator pueda envolverlo.
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationFactory != null));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(CatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITivenosEnvioService) && sd.ImplementationType == typeof(TivenosEnvioService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));

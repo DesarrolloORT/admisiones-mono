@@ -19,6 +19,7 @@ using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.Observability;
 using AppLogic.Autenticacion.Services;
 using AppLogic.Registro.Services;
@@ -111,7 +112,11 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de aplicación.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralService, GeneralService>();
-            services.AddScoped<ICatalogosService, CatalogosService>();
+            services.AddScoped<CatalogosService>();
+            services.AddScoped<ICatalogosService>(sp => new CatalogosCacheDecorator(
+                sp.GetRequiredService<CatalogosService>(),
+                sp.GetRequiredService<IRedisCacheService>(),
+                sp.GetRequiredService<IConfiguration>()));
             services.AddScoped<IRegistroService, RegistroService>();
             services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
