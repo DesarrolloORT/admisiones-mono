@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Becas;
+using AppLogic.Becas.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

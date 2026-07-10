@@ -1,5 +1,5 @@
 using AppLogic.Autenticacion.Requests;
-using AppLogic.Dtos.Becas;
+using AppLogic.Becas.Responses;
 using AppLogic.Personas.Requests;
 using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;

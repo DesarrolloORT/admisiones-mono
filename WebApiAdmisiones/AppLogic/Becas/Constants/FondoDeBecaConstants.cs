@@ -1,4 +1,4 @@
-namespace AppLogic.Constants
+namespace AppLogic.Becas.Constants
 {
     public static class FondoDeBecaConstants
     {
