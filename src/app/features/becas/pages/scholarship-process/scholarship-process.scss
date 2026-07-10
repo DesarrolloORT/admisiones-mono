@@ -79,6 +79,29 @@
   margin-top: var(--ort-sys-spacing-24);
 }
 
+.scholarship-step-button--back {
+  display: none;
+}
+
+@media (width >=760px) {
+  .scholarship-step__footer {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--ort-sys-spacing-32);
+  }
+
+  .scholarship-step-button {
+    width: fit-content;
+    margin-top: 0;
+  }
+
+  .scholarship-step-button--back {
+    display: inline-flex;
+  }
+}
+
 .scholarship-accordion-item__icon-wrapper {
   position: relative;
 }

@@ -147,5 +147,16 @@
       }
     </ort-accordion>
   </form>
-  <button ort-primary-button type="button" (click)="onContinue()">Continuar</button>
+  <div class="scholarship-step__footer">
+    <button class="scholarship-step-button" ort-primary-button type="button" (click)="onContinue()">
+      Continuar
+    </button>
+    <button
+      class="scholarship-step-button scholarship-step-button--back"
+      ort-secondary-button
+      type="button"
+      (click)="facade.back()">
+      Volver al paso anterior
+    </button>
+  </div>
 </section>

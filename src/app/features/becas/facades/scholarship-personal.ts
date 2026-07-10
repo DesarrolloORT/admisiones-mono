@@ -129,6 +129,10 @@ export class ScholarshipPersonalFacade {
     this.processFacade.continue();
   }
 
+  public back(): void {
+    this.processFacade.back();
+  }
+
   private isValid(sections: readonly ScholarshipPersonalSectionId[]): boolean {
     return sections.every(section => this.isSectionValid(section));
   }
