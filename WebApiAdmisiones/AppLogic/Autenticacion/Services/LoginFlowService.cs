@@ -1,7 +1,7 @@
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Autenticacion.Responses;
-using AppLogic.IServices;
+using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

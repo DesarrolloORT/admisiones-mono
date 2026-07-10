@@ -1,4 +1,3 @@
-using AppLogic.Constants;
 using AppLogic.Personas.Constants;
 using AppLogic.Inscripciones.Encuesta.Requests;
 using AppLogic.Inscripciones.Encuesta.Responses;
@@ -8,6 +7,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using System.Security.Cryptography;
 using System.Text;
+using AppLogic.Common.Constants;
 
 namespace AppLogic.Inscripciones.Encuesta.Mappers
 {

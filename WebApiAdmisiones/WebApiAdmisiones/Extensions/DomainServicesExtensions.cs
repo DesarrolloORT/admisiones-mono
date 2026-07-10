@@ -1,4 +1,4 @@
-using AppLogic.IServices;
+using AppLogic.Common.Email;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
@@ -135,7 +135,7 @@ namespace WebApiAdmisiones.Extensions
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
             // Abstracciones de infraestructura para los servicios de AppLogic.
-            services.AddScoped<IEmailSender, AppLogic.Services.Email.EnvioMailEmailSender>();
+            services.AddScoped<IEmailSender, AppLogic.Common.Email.EnvioMailEmailSender>();
             services.AddScoped<AppLogic.Autenticacion.Interfaces.ITwoFactorSessionStore, AppLogic.Autenticacion.Services.RedisTwoFactorSessionStore>();
 
             // Servicio de autenticación de dos factores (2FA) por email.

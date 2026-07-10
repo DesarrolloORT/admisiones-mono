@@ -1,5 +1,5 @@
 using AppLogic.Inscripciones.Requests;
-using AppLogic.Constants;
+using AppLogic.Common.Constants;
 using AppLogic.Tivenos.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

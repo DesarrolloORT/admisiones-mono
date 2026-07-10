@@ -1,12 +1,12 @@
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
 using AppLogic.ApiClients;
-using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
+using AppLogic.Common.Constants;
 
 namespace AppLogic.Inscripciones.Rules
 {

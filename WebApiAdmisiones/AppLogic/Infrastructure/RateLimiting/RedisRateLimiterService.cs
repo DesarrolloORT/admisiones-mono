@@ -1,9 +1,8 @@
-using AppLogic.IServices;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace AppLogic.Services.RateLimiting
+namespace AppLogic.Infrastructure.RateLimiting
 {
     /// <summary>
     /// Rate limiter distribuido usando Redis.
