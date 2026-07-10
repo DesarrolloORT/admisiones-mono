@@ -1,5 +1,6 @@
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Security;
 using AppLogic.Registro.Dtos;
@@ -135,24 +136,11 @@ public class AuthService : IAuthService
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
             // Crear respuesta de autenticación
-            var authResponse = new DtoAuthenticationResponse
-            {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = persona.CodigoPersona,
-                    PrimerNombre = persona.PrimerNombre,
-                    SegundoNombre = persona.SegundoNombre,
-                    PrimerApellido = persona.PrimerApellido,
-                    SegundoApellido = persona.SegundoApellido,
-                    TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento,
-                    Email = persona.Email
-                },
-                // Estas propiedades son internas y se usan en el controlador para establecer las cookies
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                RefreshTokenHash = refreshTokenHash
-            };
+            var authResponse = AuthenticationResponseBuilder.Build(
+                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+                accessToken,
+                refreshToken,
+                refreshTokenHash);
 
             return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(AutenticarUsuarioLDAPAsync));
         }
@@ -232,23 +220,12 @@ public class AuthService : IAuthService
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
             // 6. Crear respuesta con los nuevos tokens
-            var authResponse = new DtoAuthenticationResponse
-            {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = persona.CodigoPersona,
-                    PrimerNombre = persona.PrimerNombre,
-                    SegundoNombre = persona.SegundoNombre,
-                    PrimerApellido = persona.PrimerApellido,
-                    SegundoApellido = persona.SegundoApellido,
-                    TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento
-                },
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
-                RefreshTokenHash = newRefreshTokenHash,
-                Message = "Tokens renovados correctamente."
-            };
+            var authResponse = AuthenticationResponseBuilder.Build(
+                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+                newAccessToken,
+                newRefreshToken,
+                newRefreshTokenHash,
+                "Tokens renovados correctamente.");
 
             return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(RefrescarTokensAsync));
         }
@@ -429,24 +406,12 @@ public class AuthService : IAuthService
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
-            var authResponse = new DtoAuthenticationResponse
-            {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = persona.CodigoPersona,
-                    PrimerNombre = persona.PrimerNombre,
-                    SegundoNombre = persona.SegundoNombre,
-                    PrimerApellido = persona.PrimerApellido,
-                    SegundoApellido = persona.SegundoApellido,
-                    TipoPersona = persona.TipoPersona,
-                    Documento = persona.Documento,
-                    Email = persona.Email
-                },
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                RefreshTokenHash = refreshTokenHash,
-                Message = "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras."
-            };
+            var authResponse = AuthenticationResponseBuilder.Build(
+                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+                accessToken,
+                refreshToken,
+                refreshTokenHash,
+                "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
 
             return OperationResult<DtoAuthenticationResponse>.Ok(
                 authResponse,
@@ -596,25 +561,15 @@ public class AuthService : IAuthService
                 refreshTokenHash,
                 DateTime.UtcNow.AddDays(refreshExpireDays));
 
+            var authResponse = AuthenticationResponseBuilder.Build(
+                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+                accessToken,
+                refreshToken,
+                refreshTokenHash,
+                "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
+
             return OperationResult<DtoAuthenticationResponse>.Ok(
-                new DtoAuthenticationResponse
-                {
-                    Persona = new DtoPersonaAuth
-                    {
-                        CodigoPersona = persona.CodigoPersona,
-                        PrimerNombre = persona.PrimerNombre,
-                        SegundoNombre = persona.SegundoNombre,
-                        PrimerApellido = persona.PrimerApellido,
-                        SegundoApellido = persona.SegundoApellido,
-                        TipoPersona = persona.TipoPersona,
-                        Documento = persona.Documento,
-                        Email = persona.Email
-                    },
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    RefreshTokenHash = refreshTokenHash,
-                    Message = "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras."
-                },
+                authResponse,
                 nameof(GenerarTokensParaPersonaAsync));
         }
         catch (Exception ex)
