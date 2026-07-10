@@ -1,4 +1,4 @@
-namespace AppLogic.Constants
+namespace AppLogic.Common.Constants
 {
     public static class CommonConstants
     {

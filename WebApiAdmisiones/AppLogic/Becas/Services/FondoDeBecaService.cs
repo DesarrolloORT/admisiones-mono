@@ -1,5 +1,4 @@
 using AppLogic.Becas.Dtos;
-using AppLogic.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Becas.Validators;
 using AppLogic.Becas.Interfaces;
@@ -7,6 +6,7 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using System.Text.Json;
 using Utilities;
+using AppLogic.Common.Constants;
 
 namespace AppLogic.Becas.Services
 {

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.IServices;
+namespace AppLogic.Infrastructure.RateLimiting;
 
 public interface IRateLimiterService
 {

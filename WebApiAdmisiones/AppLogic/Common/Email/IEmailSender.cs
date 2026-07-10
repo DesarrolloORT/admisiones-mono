@@ -1,4 +1,4 @@
-namespace AppLogic.IServices;
+namespace AppLogic.Common.Email;
 
 public interface IEmailSender
 {

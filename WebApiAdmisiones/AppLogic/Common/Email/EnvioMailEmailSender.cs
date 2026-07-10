@@ -1,8 +1,7 @@
-using AppLogic.IServices;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 
-namespace AppLogic.Services.Email;
+namespace AppLogic.Common.Email;
 
 /// <summary>
 /// Implementación de IEmailSender que delega en EnvioMail (SOAP Office365).

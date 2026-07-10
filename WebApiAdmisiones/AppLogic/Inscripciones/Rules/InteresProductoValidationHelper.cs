@@ -1,4 +1,4 @@
-using AppLogic.Constants;
+using AppLogic.Common.Constants;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
