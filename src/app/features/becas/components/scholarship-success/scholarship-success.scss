@@ -15,6 +15,9 @@
 }
 
 .success-screen__content {
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
   padding-inline: var(--ort-sys-spacing-8);
   text-align: center;
 }
@@ -24,10 +27,17 @@
   flex-direction: column;
   gap: var(--ort-sys-spacing-48);
   justify-content: center;
+  align-items: center;
   box-sizing: border-box;
   min-height: calc(100dvh - 80px);
   margin: 0;
   padding-inline: var(--ort-sys-spacing-24);
+}
+
+.success-screen > ort-card,
+.success-screen > button {
+  width: 100%;
+  max-width: 30rem;
 }
 
 .success-header {
@@ -52,8 +62,9 @@
   display: block;
   flex: 0 0 auto;
   object-fit: contain;
-  aspect-ratio: 70 / 36;
-  inline-size: clamp(52px, 8vw, 64px);
+  width: 56px;
+  height: auto;
+  aspect-ratio: 67 / 30;
   block-size: auto;
 }
 
