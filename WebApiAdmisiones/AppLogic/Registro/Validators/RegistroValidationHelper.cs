@@ -1,10 +1,10 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
 using System;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Helpers.ValidationHelpers
+namespace AppLogic.Registro.Validators
 {
     public static class RegistroValidationHelper
     {

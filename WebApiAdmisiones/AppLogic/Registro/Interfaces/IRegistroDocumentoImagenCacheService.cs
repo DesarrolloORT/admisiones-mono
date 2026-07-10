@@ -1,6 +1,6 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Dtos;
 
-namespace AppLogic.IServices.Registro;
+namespace AppLogic.Registro.Interfaces;
 
 public interface IRegistroDocumentoImagenCacheService
 {

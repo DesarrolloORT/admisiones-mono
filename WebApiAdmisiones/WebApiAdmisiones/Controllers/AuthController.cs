@@ -1,6 +1,6 @@
 using AppLogic.Dtos.Autenticacion;
 using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

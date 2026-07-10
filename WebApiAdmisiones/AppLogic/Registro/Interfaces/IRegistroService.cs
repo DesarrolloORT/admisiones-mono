@@ -1,8 +1,9 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Responses;
+using AppLogic.Registro.Dtos;
 using Utilities;
-using AppLogic.Services.Registro;
 
-namespace AppLogic.IServices
+namespace AppLogic.Registro.Interfaces
 {
     public interface IRegistroService
     {

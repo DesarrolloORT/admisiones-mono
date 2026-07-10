@@ -1,4 +1,5 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Dtos;
 using AppLogic.Constants;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
@@ -7,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Utilities;
 
-namespace AppLogic.Helpers
+namespace AppLogic.Registro.Factories
 {
     [ExcludeFromCodeCoverage]
     public static class RegistroEntityFactoryHelper

@@ -1,8 +1,10 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Responses;
+using AppLogic.Registro.Dtos;
+using AppLogic.Registro.Factories;
+using AppLogic.Registro.Interfaces;
+using AppLogic.Registro.Validators;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers;
-using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.IServices;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Inscripciones;
 using AppLogic.Personas.Services;
@@ -16,7 +18,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Utilities;
 
-namespace AppLogic.Services.Registro
+namespace AppLogic.Registro.Services
 {
     public class RegistroService : IRegistroService
     {
