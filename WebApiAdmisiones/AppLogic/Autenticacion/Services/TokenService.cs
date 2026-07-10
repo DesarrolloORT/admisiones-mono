@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using BusinessLogic.Entities;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Common.Security;
 
 
 namespace AppLogic.Autenticacion.Services
@@ -45,8 +46,7 @@ namespace AppLogic.Autenticacion.Services
 
         public string HashToken(string token)
         {
-            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-            return Convert.ToBase64String(bytes);
+            return TokenHashHelper.HashSha256Base64(token);
         }
 
         private static double ObtenerMinutosExpiracionJwt()
