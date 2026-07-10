@@ -1,7 +1,7 @@
 using AppLogic.DevartDTOs;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Dtos.Becas
+namespace AppLogic.Becas.Dtos
 {
     [ExcludeFromCodeCoverage]
     public class DtoDeclaracionJuradaAdmisiones

@@ -8,7 +8,7 @@ using AppLogic.DevartDTOs;
 using Utilities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
-using AppLogic.Services.Becas;
+using AppLogic.Becas.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

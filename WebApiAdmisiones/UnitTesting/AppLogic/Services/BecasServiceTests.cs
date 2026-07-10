@@ -4,7 +4,7 @@ using ConnectionContext;
 using Moq;
 using System.Linq;
 using Xunit;
-using AppLogic.Services.Becas;
+using AppLogic.Becas.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

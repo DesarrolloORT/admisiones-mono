@@ -1,7 +1,7 @@
 using AppLogic.DevartDTOs;
 using Utilities;
 
-namespace AppLogic.IServices.Becas
+namespace AppLogic.Becas.Interfaces
 {
     public interface IBecasService
     {

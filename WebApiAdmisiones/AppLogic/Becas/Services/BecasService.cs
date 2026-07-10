@@ -1,11 +1,10 @@
-using AppLogic.Constants;
+using AppLogic.Becas.Interfaces;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Becas;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Services.Becas
+namespace AppLogic.Becas.Services
 {
     public class BecasService : IBecasService
     {
