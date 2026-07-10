@@ -383,7 +383,9 @@ public class AuthService : IAuthService
             }
 
             var imagenes = await ObtenerImagenesTemporalesAsync(persona);
-            var imagenesValidation = ValidarImagenesDocumentoReconocido(imagenes);
+            var imagenesValidation = DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
+                imagenes,
+                nameof(CompletarPasswordAsync));
             if (!imagenesValidation.Success)
             {
                 return OperationResult<DtoAuthenticationResponse>.IsFailed(
@@ -464,64 +466,27 @@ public class AuthService : IAuthService
 
     private async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(Persona persona)
     {
-        if (_documentoImagenCacheService is null ||
-            string.IsNullOrWhiteSpace(persona.TipoDocumento) ||
-            string.IsNullOrWhiteSpace(persona.Documento))
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _documentoImagenCacheService.ObtenerAsync(
-                persona.TipoDocumento,
-                persona.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                persona.TipoDocumento,
-                persona.Documento);
-            return null;
-        }
+        return await DocumentoIdentidadPersonaService.ObtenerImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            persona.TipoDocumento,
+            persona.Documento,
+            _logger);
     }
 
     private async Task EliminarImagenesTemporalesAsync(
         Persona persona,
         DtoRegistroDocumentoImagenesTemporales? imagenes)
     {
-        if (_documentoImagenCacheService is null ||
-            imagenes is null ||
-            string.IsNullOrWhiteSpace(persona.TipoDocumento) ||
-            string.IsNullOrWhiteSpace(persona.Documento))
+        if (imagenes is null)
         {
             return;
         }
 
-        try
-        {
-            await _documentoImagenCacheService.EliminarAsync(
-                persona.TipoDocumento,
-                persona.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                persona.TipoDocumento,
-                persona.Documento);
-        }
-    }
-
-    private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
-        DtoRegistroDocumentoImagenesTemporales? imagenes)
-    {
-        return DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
-            imagenes,
-            nameof(CompletarPasswordAsync));
+        await DocumentoIdentidadPersonaService.EliminarImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            persona.TipoDocumento,
+            persona.Documento,
+            _logger);
     }
 
     private static bool CoincidePersonaRecupero(
@@ -565,15 +530,17 @@ public class AuthService : IAuthService
 
     private static string ObtenerCodigoValidacionDocumentoLogin(DocumentUtils.DocumentValidationError error)
     {
-        return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
-            ? "LOGIN_LDAP_02"
-            : "LOGIN_LDAP_03";
+        return DocumentoIdentidadPersonaService.ResolverCodigoValidacionDocumento(
+            error,
+            "LOGIN_LDAP_02",
+            "LOGIN_LDAP_03");
     }
     private static string ObtenerCodigoValidacionDocumentoRecuperarPassword(DocumentUtils.DocumentValidationError error)
     {
-        return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
-            ? "REC_PAS_02"
-            : "REC_PAS_03";
+        return DocumentoIdentidadPersonaService.ResolverCodigoValidacionDocumento(
+            error,
+            "REC_PAS_02",
+            "REC_PAS_03");
     }
 
     private static double ObtenerDiasExpiracionRefreshToken()

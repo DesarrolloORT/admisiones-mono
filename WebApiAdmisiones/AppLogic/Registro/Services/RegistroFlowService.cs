@@ -1,6 +1,7 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
+using AppLogic.Personas.Services;
 using System.Text.Json;
 using AppLogic.Common.Security;
 using AppLogic.Common.Serialization;
@@ -322,45 +323,20 @@ public class RegistroFlowService : IRegistroFlowService
     private async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(
         DtoRegistroPendingPersona data)
     {
-        if (_documentoImagenCacheService is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _documentoImagenCacheService.ObtenerAsync(data.TipoDocumento, data.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                data.TipoDocumento,
-                data.Documento);
-            return null;
-        }
+        return await DocumentoIdentidadPersonaService.ObtenerImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            data.TipoDocumento,
+            data.Documento,
+            _logger);
     }
 
     private async Task EliminarImagenesTemporalesAsync(DtoRegistroPendingPersona data)
     {
-        if (_documentoImagenCacheService is null)
-        {
-            return;
-        }
-
-        try
-        {
-            await _documentoImagenCacheService.EliminarAsync(data.TipoDocumento, data.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                data.TipoDocumento,
-                data.Documento);
-        }
+        await DocumentoIdentidadPersonaService.EliminarImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            data.TipoDocumento,
+            data.Documento,
+            _logger);
     }
 
     private async Task<string> ResolverFlowIdPendingDocumentoAsync(

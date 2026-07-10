@@ -1,10 +1,13 @@
 using AppLogic.Personas.Responses;
 using AppLogic.Registro.Dtos;
+using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Constants;
 using AppLogic.Helpers.ValidationHelpers;
+using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using Microsoft.Extensions.Logging;
 using Utilities;
 
 namespace AppLogic.Personas.Services
@@ -323,6 +326,71 @@ namespace AppLogic.Personas.Services
         public static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
         {
             return $"{codigoPersona}_{tipoImagen}{extension}";
+        }
+
+        public static string ResolverCodigoValidacionDocumento(
+            DocumentUtils.DocumentValidationError error,
+            string codigoTipoInvalido,
+            string codigoOtro)
+        {
+            return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
+                ? codigoTipoInvalido
+                : codigoOtro;
+        }
+
+        public static async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesSeguroAsync(
+            IRegistroDocumentoImagenCacheService? cacheService,
+            string? tipoDocumento,
+            string? documento,
+            ILogger? logger)
+        {
+            if (cacheService is null ||
+                string.IsNullOrWhiteSpace(tipoDocumento) ||
+                string.IsNullOrWhiteSpace(documento))
+            {
+                return null;
+            }
+
+            try
+            {
+                return await cacheService.ObtenerAsync(tipoDocumento, documento);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(
+                    ex,
+                    "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                    tipoDocumento,
+                    documento);
+                return null;
+            }
+        }
+
+        public static async Task EliminarImagenesTemporalesSeguroAsync(
+            IRegistroDocumentoImagenCacheService? cacheService,
+            string? tipoDocumento,
+            string? documento,
+            ILogger? logger)
+        {
+            if (cacheService is null ||
+                string.IsNullOrWhiteSpace(tipoDocumento) ||
+                string.IsNullOrWhiteSpace(documento))
+            {
+                return;
+            }
+
+            try
+            {
+                await cacheService.EliminarAsync(tipoDocumento, documento);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(
+                    ex,
+                    "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
+                    tipoDocumento,
+                    documento);
+            }
         }
 
         private static OperationResult<bool> ValidarParTemporalParaConfirmacion(
