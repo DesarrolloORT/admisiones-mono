@@ -1,8 +1,9 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.IServices.Autenticacion;
+namespace AppLogic.Autenticacion.Interfaces;
 
 public interface IPasswordActivationService
 {

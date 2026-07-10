@@ -1,6 +1,6 @@
 using BusinessLogic.Entities;
 
-namespace AppLogic.IServices.Autenticacion
+namespace AppLogic.Autenticacion.Interfaces
 {
     public interface ITokenService
     {

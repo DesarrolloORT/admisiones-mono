@@ -1,11 +1,13 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Responses;
 using AppLogic.IServices;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Utilities;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 public class LoginFlowService : ILoginFlowService
 {

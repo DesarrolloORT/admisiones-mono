@@ -1,4 +1,4 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Requests;
 using AppLogic.Personas.Constants;
 using AppLogic.Personas.Helpers;
 using AppLogic.Personas.Interfaces;

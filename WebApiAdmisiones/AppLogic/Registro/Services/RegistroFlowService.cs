@@ -7,8 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Utilities;
-using AppLogic.Services.Autenticacion;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Autenticacion.Interfaces;
 
 namespace AppLogic.Registro.Services;
 

@@ -1,4 +1,4 @@
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Diagnostics.CodeAnalysis;

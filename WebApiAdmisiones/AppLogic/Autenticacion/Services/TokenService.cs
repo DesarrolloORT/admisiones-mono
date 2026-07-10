@@ -6,10 +6,10 @@ using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using BusinessLogic.Entities;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 
 
-namespace AppLogic.Services.Autenticacion
+namespace AppLogic.Autenticacion.Services
 {
     public class TokenService : ITokenService
     {

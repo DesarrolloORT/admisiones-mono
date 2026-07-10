@@ -2,10 +2,10 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AppLogic.Services.Autenticacion
+namespace AppLogic.Autenticacion.Services
 {
     /// <summary>
     /// Implementación del servicio para generar tokens de autenticación con APIs internas.

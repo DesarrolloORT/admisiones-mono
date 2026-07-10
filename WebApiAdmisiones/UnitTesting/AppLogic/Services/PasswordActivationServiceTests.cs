@@ -1,3 +1,4 @@
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -12,8 +13,8 @@ using Moq;
 using StackExchange.Redis;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
-using AppLogic.Services.Autenticacion;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Autenticacion.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {

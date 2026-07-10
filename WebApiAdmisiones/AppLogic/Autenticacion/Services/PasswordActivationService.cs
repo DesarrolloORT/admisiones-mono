@@ -1,4 +1,5 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Registro.Dtos;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,8 +7,8 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using AppLogic.Helpers;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Helpers;
+using AppLogic.Autenticacion.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;
@@ -17,7 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Utilities;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 public class PasswordActivationService : IPasswordActivationService
 {

@@ -1,10 +1,10 @@
-using AppLogic.Dtos.Autenticacion;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Autenticacion.Interfaces;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace AppLogic.Services.Autenticacion;
+namespace AppLogic.Autenticacion.Services;
 
 /// <summary>
 /// Almacena sesiones 2FA en Redis. Maneja la serialización JSON y el TTL de las claves.

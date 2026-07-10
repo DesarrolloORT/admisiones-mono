@@ -1,4 +1,4 @@
-namespace AppLogic.Helpers
+namespace AppLogic.Autenticacion.Helpers
 {
     public static class EmailMaskingHelper
     {

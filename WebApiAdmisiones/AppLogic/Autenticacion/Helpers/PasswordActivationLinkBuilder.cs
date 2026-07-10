@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace AppLogic.Helpers;
+namespace AppLogic.Autenticacion.Helpers;
 
 public static class PasswordActivationLinkBuilder
 {
