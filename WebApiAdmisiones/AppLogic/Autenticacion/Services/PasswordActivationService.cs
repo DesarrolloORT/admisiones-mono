@@ -4,11 +4,11 @@ using AppLogic.Registro.Dtos;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Common.Security;
+using AppLogic.Common.Serialization;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using MailORT;
@@ -39,12 +39,6 @@ public class PasswordActivationService : IPasswordActivationService
     private readonly ILogger<PasswordActivationService>? _logger;
 
     private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-    };
 
     public PasswordActivationService(
         IUnitOfWorkFactory uowFactory,
@@ -360,15 +354,9 @@ public class PasswordActivationService : IPasswordActivationService
                 default!);
         }
 
-        DtoRegistroPendingPersona? pending;
-        try
-        {
-            pending = JsonSerializer.Deserialize<DtoRegistroPendingPersona>(pendingJson.ToString(), JsonOptions);
-        }
-        catch
-        {
-            pending = null;
-        }
+        var pending = JsonSerializationHelper.TryDeserialize<DtoRegistroPendingPersona>(
+            pendingJson.ToString(),
+            JsonSerializationDefaults.Redis);
 
         if (pending == null)
         {
@@ -603,7 +591,6 @@ public class PasswordActivationService : IPasswordActivationService
 
     internal static string HashToken(string token)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(bytes);
+        return TokenHashHelper.HashSha256Base64(token);
     }
 }

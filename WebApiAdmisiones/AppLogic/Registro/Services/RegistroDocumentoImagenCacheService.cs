@@ -1,6 +1,7 @@
 using AppLogic.Registro.Dtos;
 using System.Text.Json;
 using AppLogic.Registro.Interfaces;
+using AppLogic.Common.Serialization;
 using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
@@ -16,11 +17,7 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
     private readonly IConfiguration _configuration;
     private readonly IDatabase _redisDb;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
 
     public RegistroDocumentoImagenCacheService(
         IConfiguration configuration,
@@ -55,16 +52,9 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
             return null;
         }
 
-        try
-        {
-            return JsonSerializer.Deserialize<DtoRegistroDocumentoImagenesTemporales>(
-                json.ToString(),
-                JsonOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return JsonSerializationHelper.TryDeserialize<DtoRegistroDocumentoImagenesTemporales>(
+            json.ToString(),
+            JsonOptions);
     }
 
     public Task EliminarAsync(string tipoDocumento, string documento)
