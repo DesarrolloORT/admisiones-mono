@@ -1,4 +1,4 @@
-using AppLogic.Constants;
+using AppLogic.Personas.Constants;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 

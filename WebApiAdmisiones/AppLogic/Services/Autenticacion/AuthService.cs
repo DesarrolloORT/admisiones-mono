@@ -3,7 +3,7 @@ using AppLogic.Dtos.Registro;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Registro;
-using AppLogic.Services.Personas;
+using AppLogic.Personas.Services;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IServices;

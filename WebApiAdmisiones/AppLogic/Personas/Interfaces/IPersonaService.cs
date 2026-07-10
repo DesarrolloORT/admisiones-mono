@@ -1,9 +1,10 @@
 using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;
 using Utilities;
 
-namespace AppLogic.IServices.Personas
+namespace AppLogic.Personas.Interfaces
 {
     public interface IPersonaService
     {

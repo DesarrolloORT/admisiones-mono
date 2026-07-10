@@ -2,11 +2,12 @@
 using AppLogic.Dtos.Inscripciones;
 using AppLogic.ApiClients;
 using AppLogic.Constants;
+using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Helpers;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.IServices.Inscripciones;
-using AppLogic.Services.Personas;
+using AppLogic.Personas.Services;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using AppLogic.Utilities;

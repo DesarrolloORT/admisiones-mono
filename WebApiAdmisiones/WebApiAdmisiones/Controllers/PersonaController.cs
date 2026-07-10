@@ -1,8 +1,9 @@
 using AppLogic.Dtos.Autenticacion;
 using AppLogic.Dtos.Becas;
-using AppLogic.Dtos.Personas;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Personas;
+using AppLogic.Personas.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;

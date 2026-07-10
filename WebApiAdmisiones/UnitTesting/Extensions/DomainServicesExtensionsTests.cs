@@ -20,7 +20,7 @@ using WebApiAdmisiones.Extensions;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Observability;
 using AppLogic.Services.Autenticacion;
-using AppLogic.Services.Personas;
+using AppLogic.Personas.Services;
 using AppLogic.Services.Inscripciones;
 using AppLogic.Services.Becas;
 using AppLogic.Catalogos.Services;
@@ -28,7 +28,7 @@ using AppLogic.IServices.Autenticacion;
 using AppLogic.IServices.Becas;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.IServices.Inscripciones;
-using AppLogic.IServices.Personas;
+using AppLogic.Personas.Interfaces;
 using AppLogic.Tivenos.Interfaces;
 using AppLogic.Tivenos.Services;
 
