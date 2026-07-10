@@ -1,6 +1,7 @@
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Autenticacion.Responses;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Common.Security;
 using AppLogic.Registro.Dtos;
 using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.Registro.Interfaces;
@@ -577,18 +578,7 @@ public class AuthService : IAuthService
 
     private static double ObtenerDiasExpiracionRefreshToken()
     {
-        var rawValue = Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES");
-        if (string.IsNullOrWhiteSpace(rawValue))
-        {
-            throw new InvalidOperationException("La variable de entorno JWT_REFRESH_EXPIRE_ADMISIONES no está configurada.");
-        }
-
-        if (!double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var days))
-        {
-            throw new InvalidOperationException("La variable de entorno JWT_REFRESH_EXPIRE_ADMISIONES tiene un valor inválido.");
-        }
-
-        return days;
+        return JwtConfigurationHelper.GetRequiredDouble("JWT_REFRESH_EXPIRE_ADMISIONES");
     }
 
     public async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
