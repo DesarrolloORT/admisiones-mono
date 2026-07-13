@@ -3,6 +3,7 @@ using AppLogic.Autenticacion.Requests;
 using AppLogic.Autenticacion.Responses;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Utilities;
@@ -75,9 +76,7 @@ public class LoginFlowService : ILoginFlowService
         var failWindowMinutes = _configuration.GetValue<int?>("Authentication:Login:FailedAttemptWindowMinutes") ?? 15;
         var failWindow = TimeSpan.FromMinutes(failWindowMinutes);
 
-        var normalizedDoc = request.Documento!
-            .Replace(".", "").Replace("-", "").Replace(" ", "")
-            .Trim().ToLowerInvariant();
+        var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(request.Documento);
         var failUserKey = $"login-fail-cred-user:{normalizedDoc}";
         var failIpKey = $"login-fail-cred-ip:{ipAddress}";
 

@@ -4,6 +4,7 @@ using AppLogic.Autenticacion.Responses;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Autenticacion.Services;
+using AppLogic.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -58,9 +59,65 @@ namespace UnitTesting.Security
                 Times.Once);
         }
 
+        [Theory]
+        [InlineData("1.234.567-8")]
+        [InlineData("1234567-8")]
+        [InlineData("12345678")]
+        [InlineData(" 1.234.567-8 ")]
+        public async Task EjecutarAsync_BuildsFailedAttemptKey_UsingDocumentUtilsNormalization(string documento)
+        {
+            var sut = CreateService(out _, out _, out var rateLimiterMock);
+            var request = new DtoAuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = documento,
+                Password = "Password1!"
+            };
+
+            await sut.EjecutarAsync(request, "127.0.0.1", 0.9);
+
+            var expectedKey = $"login-fail-cred-user:{DocumentUtils.NormalizarDocumentoParaClave(documento)}";
+            rateLimiterMock.Verify(
+                s => s.GetRemainingAsync(expectedKey, It.IsAny<int>(), It.IsAny<TimeSpan>()),
+                Times.Once);
+            rateLimiterMock.Verify(
+                s => s.ClearAsync(expectedKey),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_NormalizesDocumentSameWayAsDosFactoresAuthService()
+        {
+            const string documentoConSeparadores = "1.234.567-8";
+            var sut = CreateService(out _, out _, out var rateLimiterMock);
+            var request = new DtoAuthRequest
+            {
+                TipoDocumento = "CI",
+                Documento = documentoConSeparadores,
+                Password = "Password1!"
+            };
+
+            await sut.EjecutarAsync(request, "127.0.0.1", 0.9);
+
+            // DosFactoresAuthService construye sus keys como $"2fa-init:{DocumentUtils.NormalizarDocumentoParaClave(doc)}".
+            // LoginFlowService debe producir el mismo segmento normalizado para el mismo documento.
+            var normalizadoEsperado = DocumentUtils.NormalizarDocumentoParaClave(documentoConSeparadores);
+            rateLimiterMock.Verify(
+                s => s.GetRemainingAsync($"login-fail-cred-user:{normalizadoEsperado}", It.IsAny<int>(), It.IsAny<TimeSpan>()),
+                Times.Once);
+        }
+
         private static LoginFlowService CreateService(
             out Mock<IAuthService> authServiceMock,
             out Mock<IDosFactoresAuthService> dosFactoresMock)
+        {
+            return CreateService(out authServiceMock, out dosFactoresMock, out _);
+        }
+
+        private static LoginFlowService CreateService(
+            out Mock<IAuthService> authServiceMock,
+            out Mock<IDosFactoresAuthService> dosFactoresMock,
+            out Mock<IRateLimiterService> rateLimiterMock)
         {
             Environment.SetEnvironmentVariable("RECAPTCHA_SCORE", "0.5");
 
@@ -84,7 +141,7 @@ namespace UnitTesting.Security
                     },
                     nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
 
-            var rateLimiterMock = new Mock<IRateLimiterService>();
+            rateLimiterMock = new Mock<IRateLimiterService>();
             rateLimiterMock
                 .Setup(s => s.ValidateAsync(
                     It.IsAny<string>(),
