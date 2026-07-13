@@ -1,11 +1,15 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import type { InscripcionDetail } from '../models/inscription-detail';
+import {
+  deriveInitialInscripcionState,
+  type InscripcionInitialSurveyResolved,
+} from '../models/inscription-entry';
 import type { InscripcionInitialSurvey } from '../models/inscription-flow';
 import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
@@ -345,6 +349,51 @@ describe('InscripcionSurveyFacade', () => {
     );
   });
 
+  it('marks identity complete reactively once files and expiry are set, without pressing Continuar', () => {
+    const { survey } = createFacade(createSurveyResponse({ tieneDerechoEncuesta: false }));
+    const frente = new File(['front'], 'frente.png', { type: 'image/png' });
+    const dorso = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
+
+    survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+    survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
+
+    expect(survey.getSectionState('identidad')).toBe('completa');
+    // El check aparece sin avanzar de sección (eso sigue siendo tarea de Continuar).
+    expect(survey.activeSection()).toBe('identidad');
+  });
+
+  it.each([
+    {
+      name: 'changing an identity file',
+      mutate: (survey: InscripcionSurveyFacade) =>
+        survey.identity.updateIdentityFile(
+          'selfie',
+          fileEvent(new File(['new'], 'selfie-2.png', { type: 'image/png' }))
+        ),
+    },
+    {
+      name: 'changing the document expiry',
+      mutate: (survey: InscripcionSurveyFacade) =>
+        survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 0, 1)),
+    },
+  ])(
+    'restores reactive identity completion after an upload failure when $name',
+    ({ mutate }: { name: string; mutate: (survey: InscripcionSurveyFacade) => void }) => {
+      uploadIdentityPhoto.mockReturnValue(of(false));
+      const { survey } = prepareFinalizableSurvey();
+
+      survey.continue();
+      expect(survey.getSectionState('identidad')).toBe('activa');
+
+      mutate(survey);
+
+      expect(survey.getSectionState('identidad')).toBe('completa');
+    }
+  );
+
   it.each([
     { failure: 'data false', result: of(false) },
     { failure: 'HTTP 400', result: throwError(() => ({ status: 400 })) },
@@ -406,7 +455,7 @@ describe('InscripcionSurveyFacade', () => {
     const { survey } = createFacade(
       {
         tieneDerechoEncuesta: true,
-        encuesta: null,
+        encuesta: createInitialSurvey({ seccionActiva: 'educacion' }),
         universidadesConsideradas: [],
         universidadesConsideradasOtros: [],
         universidadesEducacionSuperior: [],
@@ -436,6 +485,7 @@ describe('InscripcionSurveyFacade', () => {
         },
       }
     );
+    TestBed.tick();
 
     expect(survey.options.schoolYearOptions()).toEqual([
       { value: '10', label: '1 EMS' },
@@ -648,11 +698,46 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.finalizingPreEnrollment()).toBe(false);
   });
 
+  it('defers the regulation acceptance lookup until the regulation section is reached', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '10/05/2026' })
+    );
+    const { survey, process } = createFacade(createSurveyResponse());
+
+    expect(getStudentRegulationAcceptance).not.toHaveBeenCalled();
+
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(getStudentRegulationAcceptance).toHaveBeenCalledOnce();
+  });
+
+  it('does not repeat the regulation lookup when navigating back and forth', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })
+    );
+    const { survey, process } = createFacade(createSurveyResponse());
+
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+    survey.activeSection.set('educacion');
+    TestBed.tick();
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(getStudentRegulationAcceptance).toHaveBeenCalledOnce();
+  });
+
   it('prefills the regulation section when the student already accepted it', () => {
     getStudentRegulationAcceptance.mockReturnValue(
       of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '10/05/2026' })
     );
-    const { survey } = createFacade(createSurveyResponse());
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
 
     expect(survey.hasAcceptedStudentRegulation()).toBe(true);
     expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(true);
@@ -662,12 +747,14 @@ describe('InscripcionSurveyFacade', () => {
 
   it('keeps the regulation unaccepted when the acceptance lookup fails', () => {
     getStudentRegulationAcceptance.mockReturnValue(throwError(() => ({ status: 500 })));
-    const { survey } = createFacade(createSurveyResponse());
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
 
     expect(survey.hasAcceptedStudentRegulation()).toBe(false);
     expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(false);
     expect(survey.submittedAcceptanceDate()).toBeNull();
-    expect(survey.activeSection()).toBe('educacion');
   });
 
   it('marks the regulation as accepted from the reader', () => {
@@ -705,28 +792,8 @@ describe('InscripcionSurveyFacade', () => {
     expect(process.flow.currentStep()).toBe('propuesta');
   });
 
-  it('loads the initial survey state when the resolver did not run', () => {
-    const response = createSurveyResponse({
-      encuesta: createInitialSurvey({ seccionActiva: 'experiencia-ort' }),
-    });
-    const getInitialSurvey = vi.fn().mockReturnValue(of(response));
-    const { survey, process } = createFacade(response, {}, [], {
-      resolvedData: undefined,
-      getInitialSurvey,
-    });
-
-    expect(getInitialSurvey).toHaveBeenCalledOnce();
-    expect(process.flow.currentStep()).toBe('encuesta');
-    expect(survey.activeSection()).toBe('experiencia-ort');
-    expect(survey.surveyLoadError()).toBeNull();
-  });
-
-  it('starts an empty survey when the initial survey is not found', () => {
-    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 404 })));
-    const { survey } = createFacade(null, {}, [], {
-      resolvedData: undefined,
-      getInitialSurvey,
-    });
+  it('starts an empty survey when the backend has no survey yet', () => {
+    const { survey } = createFacade(null);
 
     expect(survey.surveyLoadError()).toBeNull();
     expect(survey.hasInitialSurveyRight()).toBe(true);
@@ -735,57 +802,34 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.loadingSurveyState()).toBe(false);
   });
 
-  it('sets the survey load error on unexpected failures and recovers on retry', () => {
-    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 500 })));
-    const { survey } = createFacade(null, {}, [], {
-      resolvedData: undefined,
-      getInitialSurvey,
-    });
-
-    expect(survey.surveyLoadError()).toBe(
-      'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
-    );
-    expect(survey.loadingSurveyState()).toBe(false);
-
-    getInitialSurvey.mockReturnValue(of(createSurveyResponse()));
-    survey.retryInitialSurvey();
-
-    expect(getInitialSurvey).toHaveBeenCalledTimes(2);
-    expect(survey.surveyLoadError()).toBeNull();
-  });
-
-  it('does not trigger a second fetch while the survey state is loading', () => {
-    const pending = new Subject<unknown>();
-    const getInitialSurvey = vi.fn().mockReturnValue(pending);
-    const { survey } = createFacade(null, {}, [], {
-      resolvedData: undefined,
-      getInitialSurvey,
-    });
-
-    expect(survey.loadingSurveyState()).toBe(true);
-
-    survey.retryInitialSurvey();
-
-    expect(getInitialSurvey).toHaveBeenCalledOnce();
-
-    pending.next(createSurveyResponse());
-    pending.complete();
-
-    expect(survey.loadingSurveyState()).toBe(false);
-    expect(survey.surveyLoadError()).toBeNull();
-  });
-
   it('shows the survey load error when the resolver reports a failure', () => {
-    const getInitialSurvey = vi.fn();
-    const { survey } = createFacade(null, {}, [], {
-      resolvedData: { initialSurvey: null, loadFailed: true },
-      getInitialSurvey,
-    });
+    const { survey } = createFacade(null, {}, [], { loadFailed: true });
 
     expect(survey.surveyLoadError()).toBe(
       'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
     );
-    expect(getInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  it('fetchResolvedInitialSurvey maps errors to loadFailed and toggles the loading flag', async () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey } = createFacade(null, {}, [], { skipApply: true, getInitialSurvey });
+
+    await expect(firstValueFrom(survey.fetchResolvedInitialSurvey())).resolves.toEqual({
+      initialSurvey: null,
+      loadFailed: true,
+    });
+    expect(survey.loadingSurveyState()).toBe(false);
+  });
+
+  it('fetchResolvedInitialSurvey maps a 404 to an empty survey with right', async () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 404 })));
+    const { survey } = createFacade(null, {}, [], { skipApply: true, getInitialSurvey });
+
+    await expect(firstValueFrom(survey.fetchResolvedInitialSurvey())).resolves.toEqual({
+      initialSurvey: expect.objectContaining({ tieneDerechoEncuesta: true, encuesta: null }),
+      loadFailed: false,
+    });
+    expect(survey.loadingSurveyState()).toBe(false);
   });
 
   function createSurveyResponse(overrides: Record<string, unknown> = {}) {
@@ -802,18 +846,28 @@ describe('InscripcionSurveyFacade', () => {
     };
   }
 
+  // Detalle mínimo "En proceso" sin bloque `detalle`: retomar-con-detalle mantiene
+  // el comportamiento histórico (encuesta prellena el paso 1 editable y posiciona en
+  // el paso 2). El posicionamiento del flujo y la selección de slice los deriva la
+  // función pura (testeada en inscription-entry.spec); acá solo se aplican.
+  const RESUME_DETAIL: InscripcionDetail = {
+    estado: 'En proceso',
+    detalle: null,
+    pagoPendiente: null,
+    seniaMinima: null,
+    confirmada: null,
+  };
+
   function createFacade(
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
     careers: unknown[] = [],
-    options: { resolvedData?: unknown; getInitialSurvey?: () => unknown } = {}
+    options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
   ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
     forms: InscripcionFormsStore;
   } {
-    const resolvedData =
-      'resolvedData' in options ? options.resolvedData : { initialSurvey, loadFailed: false };
     const getInitialSurvey = options.getInitialSurvey ?? (() => of(initialSurvey));
     TestBed.configureTestingModule({
       providers: [
@@ -824,15 +878,6 @@ describe('InscripcionSurveyFacade', () => {
         InscripcionSurveyOptionsFacade,
         InscripcionSurveyIdentityFacade,
         InscripcionSurveyFacade,
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              data: { initialSurvey: resolvedData },
-              queryParamMap: convertToParamMap({}),
-            },
-          },
-        },
         {
           provide: Catalogs,
           useValue: {
@@ -879,11 +924,26 @@ describe('InscripcionSurveyFacade', () => {
         },
       ],
     });
-    return {
-      survey: TestBed.inject(InscripcionSurveyFacade),
-      process: TestBed.inject(InscripcionProcessStore),
-      forms: TestBed.inject(InscripcionFormsStore),
-    };
+    const survey = TestBed.inject(InscripcionSurveyFacade);
+    const process = TestBed.inject(InscripcionProcessStore);
+    const forms = TestBed.inject(InscripcionFormsStore);
+
+    // Réplica de lo que hace InscripcionProcessFacade.applyInitialState para el slice
+    // de encuesta: deriva y aplica, posicionando el paso al final.
+    if (!options.skipApply) {
+      const resolved: InscripcionInitialSurveyResolved = {
+        initialSurvey: (initialSurvey ?? null) as InscripcionInitialSurveyResolved['initialSurvey'],
+        loadFailed: options.loadFailed ?? false,
+      };
+      const state = deriveInitialInscripcionState({
+        entry: { intent: 'retomar', detail: RESUME_DETAIL },
+        survey: resolved,
+      });
+      survey.applyInitialState(state.survey);
+      process.flow.goTo(state.step);
+    }
+
+    return { survey, process, forms };
   }
 
   function prepareFinalizableSurvey() {

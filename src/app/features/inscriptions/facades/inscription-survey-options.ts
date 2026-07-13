@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, type Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
 
@@ -15,6 +15,8 @@ import { InscripcionFormsStore } from '../store/inscription-forms';
 const URUGUAY_COUNTRY_CODE = 1;
 
 export interface SurveyOptionsCallbacks {
+  /** El paso de encuesta está activo: recién ahí se cargan sus catálogos. */
+  isSurveyStepActive: Signal<boolean>;
   /** Cambió algún catálogo de opciones: revalidar los campos condicionales. */
   onOptionsChanged(): void;
   /** Llegaron los catálogos de la encuesta inicial: re-aplicar la encuesta del backend. */
@@ -33,9 +35,12 @@ export class InscripcionSurveyOptionsFacade {
 
   private uruguayCountryCode: number | null = null;
   private callbacks: SurveyOptionsCallbacks = {
+    isSurveyStepActive: signal(false),
     onOptionsChanged: () => undefined,
     onInitialCatalogsApplied: () => undefined,
   };
+  private readonly context = signal<SurveyOptionsCallbacks | null>(null);
+  private catalogsRequested = false;
   private readonly baccalaureateYears = signal<readonly BaccalaureateYearGroup[]>([]);
 
   public readonly ratingLabels = signal<Record<number, string>>({
@@ -68,11 +73,20 @@ export class InscripcionSurveyOptionsFacade {
   public readonly loadingInitialSurveyCatalogs = signal(false);
   public readonly initialized = signal(false);
 
+  constructor() {
+    effect(() => {
+      const context = this.context();
+      if (!context || this.catalogsRequested || !context.isSurveyStepActive()) return;
+      this.catalogsRequested = true;
+      this.loadInitialSurveyCatalogs();
+      this.loadDepartmentOptions();
+    });
+  }
+
   public initialize(callbacks: SurveyOptionsCallbacks): void {
     this.callbacks = callbacks;
-    this.loadInitialSurveyCatalogs();
-    this.loadDepartmentOptions();
     this.observeDependentControls();
+    this.context.set(callbacks);
   }
 
   public refreshOrientationOptions(): void {
