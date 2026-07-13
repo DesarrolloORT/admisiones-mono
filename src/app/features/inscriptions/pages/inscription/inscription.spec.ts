@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
@@ -20,6 +20,30 @@ describe('Inscripcion', () => {
       imports: [Inscripcion],
       providers: [
         provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              data: {
+                entry: { intent: 'nueva' },
+                initialSurvey: {
+                  initialSurvey: {
+                    tieneDerechoEncuesta: true,
+                    encuesta: null,
+                    universidadesConsideradas: [],
+                    universidadesConsideradasOtros: [],
+                    universidadesEducacionSuperior: [],
+                    universidadesEducacionSuperiorOtros: [],
+                    opcionesMotivosSeleccionados: [],
+                    opcionesPublicidadSeleccionadas: [],
+                  },
+                  loadFailed: false,
+                },
+              },
+              queryParamMap: convertToParamMap({}),
+            },
+          },
+        },
         {
           provide: Catalogs,
           useValue: {

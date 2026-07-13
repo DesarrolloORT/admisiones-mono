@@ -26,7 +26,7 @@
     <h1 id="survey-error-title">No pudimos cargar tu inscripción</h1>
     <p role="alert">{{ survey.surveyLoadError() }}</p>
     <footer class="inscription-footer">
-      <button ort-primary-button type="button" (click)="survey.retryInitialSurvey()">
+      <button ort-primary-button type="button" (click)="process.retryInitialSurvey()">
         Intentar nuevamente
       </button>
     </footer>
