@@ -316,6 +316,43 @@ namespace UnitTesting.AppLogic.Services
                 "hashed_refresh_token",
                 It.Is<DateTime>(d => d > DateTime.UtcNow.AddDays(6) && d < DateTime.UtcNow.AddDays(8))),
                 Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateAccessToken(persona), Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateRefreshToken(), Times.Once);
+            _tokenServiceMock.Verify(x => x.HashToken("refresh_token_456"), Times.Once);
+        }
+
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            const long codigoPersona = 12345;
+            var persona = new Persona { CodigoPersona = codigoPersona, Documento = "1234567-2" };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, "validpass"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior)));
+            _tokenServiceMock.Setup(x => x.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(x => x.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(x => x.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .ThrowsAsync(new InvalidOperationException("Persistence unavailable"));
+
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
+
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_99", result.ErrorCode);
+            Assert.Equal(500, result.HttpCode);
+            Assert.DoesNotContain("Persistence unavailable", result.Message);
+            _tokenServiceMock.Verify(x => x.GenerateAccessToken(persona), Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateRefreshToken(), Times.Once);
+            _tokenServiceMock.Verify(x => x.HashToken("refresh-token"), Times.Once);
+            _refreshTokenServiceMock.Verify(
+                x => x.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
+                Times.Once);
         }
 
         [Fact]
