@@ -203,35 +203,35 @@ namespace AppLogic.Registro.Services
                 nameof(VerificarIdentidadAsync));
         }
 
-        public async Task<OperationResult<object?>> ValidarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
+        public Task<OperationResult<object?>> ValidarNuevaPersonaAsync(DtoRegistroPersonaRequest request)
         {
             if (request == null)
             {
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     requestErrorCode,
                     nameof(ValidarNuevaPersonaAsync),
                     requestErrorMessage,
-                    400);
+                    400));
             }
 
             var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
             if (!documentoValidation.IsValid)
             {
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(ValidarNuevaPersonaAsync),
                     documentoValidation.Message,
-                    400);
+                    400));
             }
 
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             if (tipoDocumento != "CI")
             {
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     documentTypeErrorCode,
                     nameof(ValidarNuevaPersonaAsync),
                     "ConfirmarNuevaPersona solo aplica para cédula de identidad.",
-                    400);
+                    400));
             }
 
             using var uow = _uowFactory.Create();
@@ -240,27 +240,27 @@ namespace AppLogic.Registro.Services
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona != null)
             {
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     "REG_PERSONA_02",
                     nameof(ValidarNuevaPersonaAsync),
                     "La persona ya existe.",
-                    409);
+                    409));
             }
 
             var ciudad = uow.Ciudads.GetByKey(request.CodigoPais, request.CodigoEstado, request.CodigoCiudad);
             if (ciudad == null)
             {
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     "REG_CIUDAD_01",
                     nameof(ValidarNuevaPersonaAsync),
                     "No existe la ciudad indicada.",
-                    400);
+                    400));
             }
 
-            return OperationResult<object?>.IsSuccess(
+            return Task.FromResult(OperationResult<object?>.IsSuccess(
                 null,
                 nameof(ValidarNuevaPersonaAsync),
-                "Validación correcta.");
+                "Validación correcta."));
         }
 
         public async Task<OperationResult<long>> CompletarNuevaPersonaAsync(
@@ -464,7 +464,7 @@ namespace AppLogic.Registro.Services
             return await EnviarMailLinkPasswordAsync(persona, originMethod);
         }
 
-        private async Task<OperationResult<object?>> CrearSolicitudAltaAsync(
+        private Task<OperationResult<object?>> CrearSolicitudAltaAsync(
             IUnitOfWork uow,
             DtoRegistroPersonaRequest request)
         {
@@ -479,20 +479,20 @@ namespace AppLogic.Registro.Services
                 RegistrarAdmisionPorSolicitudAlta(uow, solicitud.IdSolicitudAlta);
                 uow.Commit();
 
-                return OperationResult<object?>.IsSuccess(
+                return Task.FromResult(OperationResult<object?>.IsSuccess(
                     null,
                     nameof(ConfirmarSolicitudAltaAsync),
-                    "La solicitud de alta quedó registrada.");
+                    "La solicitud de alta quedó registrada."));
             }
             catch (Exception ex)
             {
                 uow.Rollback();
                 _logger?.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarSolicitudAltaAsync));
-                return OperationResult<object?>.IsFailed(
+                return Task.FromResult(OperationResult<object?>.IsFailed(
                     "REG_SOLICITUD_99",
                     nameof(ConfirmarSolicitudAltaAsync),
                     "Error al crear la solicitud de alta.",
-                    500);
+                    500));
             }
         }
 

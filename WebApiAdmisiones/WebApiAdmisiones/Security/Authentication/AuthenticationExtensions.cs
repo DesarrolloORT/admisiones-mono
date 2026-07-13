@@ -106,9 +106,6 @@ namespace WebApiAdmisiones.Security.Authentication
             var jwtToken = handler.ReadJwtToken(token);
             var issuer = jwtToken?.Issuer;
 
-            // 🔍 DEBUG: podés poner un breakpoint acá
-            Console.WriteLine($"Token recibido - issuer: {issuer}");
-
             var keysByIssuer = new Dictionary<string, string?>
             {
                 { IssuerAdmisiones, Environment.GetEnvironmentVariable("JWT_SECRET_KEY") }
@@ -136,7 +133,6 @@ namespace WebApiAdmisiones.Security.Authentication
             if (!string.IsNullOrEmpty(tokenFromCookie))
             {
                 context.Token = tokenFromCookie;
-                Console.WriteLine("Token extraído desde cookie HttpOnly (seguro)");
                 return Task.CompletedTask;
             }
 
@@ -145,11 +141,6 @@ namespace WebApiAdmisiones.Security.Authentication
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
                 context.Token = authHeader.Substring("Bearer ".Length).Trim();
-                Console.WriteLine("Token extraído desde Authorization header (fallback)");
-            }
-            else
-            {
-                Console.WriteLine("No se encontró token en cookie ni en Authorization header");
             }
 
             return Task.CompletedTask;
@@ -157,13 +148,11 @@ namespace WebApiAdmisiones.Security.Authentication
 
         private static Task HandleOnTokenValidated(TokenValidatedContext context)
         {
-            Console.WriteLine("Token validado correctamente.");
             return Task.CompletedTask;
         }
 
         private static Task HandleOnAuthenticationFailed(AuthenticationFailedContext context)
         {
-            Console.WriteLine($"Error de autenticación: {context.Exception.Message}");
             return Task.CompletedTask;
         }
     }

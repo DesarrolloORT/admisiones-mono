@@ -369,7 +369,7 @@ namespace WebApiAdmisiones.Controllers
         /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia tipo de documento, documento y primer apellido.
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
-        [HttpPost("RecuperarContraseña")]
+        [HttpPost("RecuperarPassword")]
         [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]

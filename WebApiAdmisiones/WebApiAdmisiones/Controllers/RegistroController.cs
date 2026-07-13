@@ -34,6 +34,27 @@ namespace WebApiAdmisiones.Controllers
             HttpContext.Request.Headers[FlowIdHeaderName].FirstOrDefault();
 
         /// <summary>
+        /// Lee el flowId del header y valida que la sesión de registro esté en el step "evaluado".
+        /// </summary>
+        private async Task<(string? FlowId, IActionResult? Error)> ValidarFlowEvaluadoAsync()
+        {
+            var flowId = ObtenerFlowId();
+            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
+            return (flowId, flowValidation != null ? ValidateResponse(flowValidation) : null);
+        }
+
+        /// <summary>
+        /// Valida que el documento recibido coincida con el de la sesión de registro.
+        /// </summary>
+        private async Task<IActionResult?> ValidarDocumentoDeFlowAsync(
+            string flowId, string? tipoDocumento, string? documento, string originMethod)
+        {
+            var documentoValidation = await registroFlowService.ValidarDocumentoFlowAsync(
+                flowId, tipoDocumento, documento, originMethod);
+            return documentoValidation != null ? ValidateResponse(documentoValidation) : null;
+        }
+
+        /// <summary>
         /// Evalua si el documento ingresado puede iniciar el registro.
         /// </summary>
         /// <remarks>
@@ -86,9 +107,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> VerificarIdentidad([FromBody] DtoRegistroVerificarIdentidadRequest request)
         {
-            var flowId = ObtenerFlowId();
-            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
-            if (flowValidation != null) return ValidateResponse(flowValidation);
+            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            if (flowError != null) return flowError;
 
             if (request == null)
             {
@@ -99,12 +119,9 @@ namespace WebApiAdmisiones.Controllers
                     400));
             }
 
-            var documentoValidation = await registroFlowService.ValidarDocumentoFlowAsync(
-                flowId!,
-                request.TipoDocumento,
-                request.Documento,
-                nameof(VerificarIdentidad));
-            if (documentoValidation != null) return ValidateResponse(documentoValidation);
+            var documentoError = await ValidarDocumentoDeFlowAsync(
+                flowId!, request.TipoDocumento, request.Documento, nameof(VerificarIdentidad));
+            if (documentoError != null) return documentoError;
 
             var result = await registroService.VerificarIdentidadAsync(request);
 
@@ -230,9 +247,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> ConfirmarNuevaPersona([FromBody] DtoRegistroPersonaRequest request)
         {
-            var flowId = ObtenerFlowId();
-            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
-            if (flowValidation != null) return ValidateResponse(flowValidation);
+            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            if (flowError != null) return flowError;
 
             var result = await registroFlowService.ConfirmarNuevaPersonaAsync(request, flowId!);
             return ValidateResponse(result);
@@ -256,9 +272,8 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         public async Task<IActionResult> ConfirmarSolicitudAlta([FromBody] DtoRegistroPersonaRequest request)
         {
-            var flowId = ObtenerFlowId();
-            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
-            if (flowValidation != null) return ValidateResponse(flowValidation);
+            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            if (flowError != null) return flowError;
 
             if (request == null)
             {
@@ -269,12 +284,9 @@ namespace WebApiAdmisiones.Controllers
                     400));
             }
 
-            var documentoValidation = await registroFlowService.ValidarDocumentoFlowAsync(
-                flowId!,
-                request.TipoDocumento,
-                request.Documento,
-                nameof(ConfirmarSolicitudAlta));
-            if (documentoValidation != null) return ValidateResponse(documentoValidation);
+            var documentoError = await ValidarDocumentoDeFlowAsync(
+                flowId!, request.TipoDocumento, request.Documento, nameof(ConfirmarSolicitudAlta));
+            if (documentoError != null) return documentoError;
 
             var result = await registroService.ConfirmarSolicitudAltaAsync(request);
 

@@ -101,13 +101,13 @@ namespace AppLogic.Personas.Services
             Persona persona,
             string methodName)
         {
-            var temporales = ValidarParTemporalParaConfirmacion(uow, persona.CodigoPersona, methodName);
+            var (temporales, _) = ValidarParTemporalParaConfirmacion(uow, persona.CodigoPersona, methodName);
             if (temporales.Success)
             {
                 return temporales;
             }
 
-            var definitivos = ValidarParDefinitivoParaConfirmacion(uow, persona, methodName);
+            var (definitivos, definitivoEsDorso) = ValidarParDefinitivoParaConfirmacion(uow, persona, methodName);
             if (definitivos.Success)
             {
                 return definitivos;
@@ -118,7 +118,7 @@ namespace AppLogic.Personas.Services
                 return temporales;
             }
 
-            if (definitivos.ErrorCode != "INS_CPI_09" || EsErrorDorso(definitivos))
+            if (definitivos.ErrorCode != "INS_CPI_09" || definitivoEsDorso)
             {
                 return definitivos;
             }
@@ -393,7 +393,7 @@ namespace AppLogic.Personas.Services
             }
         }
 
-        private static OperationResult<bool> ValidarParTemporalParaConfirmacion(
+        private static (OperationResult<bool> Resultado, bool EsDorso) ValidarParTemporalParaConfirmacion(
             IUnitOfWork uow,
             long codigoPersona,
             string methodName)
@@ -404,7 +404,7 @@ namespace AppLogic.Personas.Services
             var validacionFrente = ValidarDocumentoTemporalParaConfirmacion(frente, "frente", methodName);
             if (!validacionFrente.Success)
             {
-                return validacionFrente;
+                return (validacionFrente, false);
             }
 
             var dorso = uow.ImagenTemporals.GetDocumentoByPersonaAndTipo(
@@ -413,13 +413,13 @@ namespace AppLogic.Personas.Services
             var validacionDorso = ValidarDocumentoTemporalParaConfirmacion(dorso, "dorso", methodName);
             if (!validacionDorso.Success)
             {
-                return validacionDorso;
+                return (validacionDorso, true);
             }
 
-            return OperationResult<bool>.Ok(true, methodName);
+            return (OperationResult<bool>.Ok(true, methodName), false);
         }
 
-        private static OperationResult<bool> ValidarParDefinitivoParaConfirmacion(
+        private static (OperationResult<bool> Resultado, bool EsDorso) ValidarParDefinitivoParaConfirmacion(
             IUnitOfWork uow,
             Persona persona,
             string methodName)
@@ -434,7 +434,7 @@ namespace AppLogic.Personas.Services
                 methodName);
             if (!validacionFrente.Success)
             {
-                return validacionFrente;
+                return (validacionFrente, false);
             }
 
             var dorso = uow.Imagens.GetDocumentoByPersonaAndTipo(
@@ -447,10 +447,10 @@ namespace AppLogic.Personas.Services
                 methodName);
             if (!validacionDorso.Success)
             {
-                return validacionDorso;
+                return (validacionDorso, true);
             }
 
-            return OperationResult<bool>.Ok(true, methodName);
+            return (OperationResult<bool>.Ok(true, methodName), false);
         }
 
         private static OperationResult<byte[]> ValidarDocumentoTemporalParaConsulta(
@@ -585,11 +585,6 @@ namespace AppLogic.Personas.Services
                 methodName,
                 $"El documento de identidad ({lado}) no contiene imagen.",
                 404);
-        }
-
-        private static bool EsErrorDorso(OperationResult<bool> result)
-        {
-            return result.Message?.Contains("(dorso)", StringComparison.OrdinalIgnoreCase) == true;
         }
 
         private static string ResolverNombreArchivo(string? fileName, string defaultFileName)

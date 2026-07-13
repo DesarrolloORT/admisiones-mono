@@ -142,7 +142,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="400">Error de validación o de negocio.</response>
         /// <response code="401">Usuario no autenticado.</response>
         /// <response code="500">Error interno no controlado.</response>
-        [HttpPost("CambiarContraseña")]
+        [HttpPost("CambiarPassword")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
         [ProducesResponseType(typeof(OperationResult<object>), 401)]
@@ -222,8 +222,18 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult SubirFotoPersona([FromBody] SubirFotoPersonaRequest request)
+        public IActionResult SubirFotoPersona([FromBody] SubirFotoPersonaRequest? request)
         {
+            if (request?.ArchivoAdjunto is null)
+            {
+                return ValidateResponse(OperationResult<bool>.IsFailed(
+                    "SUB_FOT_01",
+                    nameof(SubirFotoPersona),
+                    "No se recibió el archivo adjunto.",
+                    400,
+                    default!));
+            }
+
             var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
             var fileName = string.IsNullOrWhiteSpace(request.ArchivoAdjunto.NombreArchivo)
                 ? "image.jpg"
@@ -246,8 +256,18 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult SubirDocumentoPersona([FromBody] UploadDocumentoPersonaRequest request)
+        public IActionResult SubirDocumentoPersona([FromBody] UploadDocumentoPersonaRequest? request)
         {
+            if (request?.Frente is null || request.Dorso is null)
+            {
+                return ValidateResponse(OperationResult<bool>.IsFailed(
+                    "SUB_DOC_01",
+                    nameof(SubirDocumentoPersona),
+                    "No se recibió el frente o el dorso del documento.",
+                    400,
+                    default!));
+            }
+
             var result = personaService.SubirDocumentoPersona(
                 _currentUser.GetUserId(),
                 request.Fecha,
