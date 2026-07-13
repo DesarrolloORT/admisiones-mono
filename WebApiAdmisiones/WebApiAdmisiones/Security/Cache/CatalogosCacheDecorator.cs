@@ -1,4 +1,4 @@
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Responses;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.Catalogos.Responses;
 using AppLogic.DevartDTOs;

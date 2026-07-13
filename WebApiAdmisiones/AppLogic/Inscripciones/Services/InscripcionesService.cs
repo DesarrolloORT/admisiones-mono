@@ -2,7 +2,8 @@
 using AppLogic.Inscripciones.Encuesta.Responses;
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Interfaces;
+using AppLogic.ApiClients.Responses;
 using AppLogic.Inscripciones.Constants;
 using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;
@@ -28,14 +29,14 @@ namespace AppLogic.Inscripciones.Services
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ITivenosEnvioService _tivenosEnvioService;
-        private readonly InscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
+        private readonly IInscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
         private readonly IEncuestaInicialService _encuestaInicialService;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ITivenosEnvioService tivenosEnvioService,
-            InscripcionesyPagosApiClient inscripcionesyPagosApiClient,
+            IInscripcionesyPagosApiClient inscripcionesyPagosApiClient,
             IEncuestaInicialService encuestaInicialService)
         {
             _uowFactory = uowFactory;

@@ -1,7 +1,7 @@
 ﻿using AppLogic.Catalogos.Responses;
 using System.Net;
 using System.Text;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

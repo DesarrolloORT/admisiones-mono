@@ -1,7 +1,9 @@
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.Catalogos.Mappers;
 using AppLogic.Catalogos.Responses;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Dtos;
+using AppLogic.ApiClients.Interfaces;
+using AppLogic.ApiClients.Responses;
 using AppLogic.DevartDTOs;
 using AppLogic.Inscripciones.Encuesta.Rules;
 using BusinessLogic.Entities;
@@ -13,14 +15,14 @@ namespace AppLogic.Catalogos.Services
     public class CatalogosService : ICatalogosService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
-        private readonly InscripcionesyPagosApiClient? _inscripcionesyPagosApiClient;
+        private readonly IInscripcionesyPagosApiClient? _inscripcionesyPagosApiClient;
 
         public CatalogosService(IUnitOfWorkFactory uowFactory)
         {
             _uowFactory = uowFactory;
         }
 
-        public CatalogosService(IUnitOfWorkFactory uowFactory, InscripcionesyPagosApiClient inscripcionesyPagosApiClient)
+        public CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPagosApiClient inscripcionesyPagosApiClient)
         {
             _uowFactory = uowFactory;
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;

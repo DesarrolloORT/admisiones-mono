@@ -2,7 +2,8 @@
 using AppLogic.Inscripciones.Encuesta.Responses;
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Responses;
+using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.Inscripciones.Interfaces;
