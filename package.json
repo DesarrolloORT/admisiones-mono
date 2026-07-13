@@ -60,7 +60,7 @@
     "@desarrolloort/components": "^2.3.0",
     "@desarrolloort/design-system": "^1.3.0",
     "@desarrolloort/fdp-components": "^2.1.0",
-    "@desarrolloort/ngx-utils": "^2.2.0",
+    "@desarrolloort/ngx-utils": "^2.2.1",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "moment": "^2.30.1",
     "ng-recaptcha-2": "^21.0.1",
