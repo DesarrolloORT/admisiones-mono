@@ -16,6 +16,11 @@ const OTHER_OPTION_VALUE = '0';
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
   careers: readonly Career[];
+  /**
+   * Si es `false`, NO se patchea la selección académica desde una encuesta previa.
+   * Se usa en `nueva`, donde el Paso 1 debe quedar virgen.
+   */
+  includeAcademicSelection?: boolean;
 }
 
 export function patchBackendSurveyForms(
@@ -36,14 +41,16 @@ export function patchBackendSurveyForms(
   const schoolInstitution =
     survey.institucionSecundariaId ?? survey.nombreInstitucionSecundaria ?? '';
 
-  forms.academicForm.patchValue(
-    {
-      tipoPropuesta: proposalType,
-      carrera: productId,
-      comienzo: processId,
-    },
-    { emitEvent: false }
-  );
+  if (context.includeAcademicSelection !== false) {
+    forms.academicForm.patchValue(
+      {
+        tipoPropuesta: proposalType,
+        carrera: productId,
+        comienzo: processId,
+      },
+      { emitEvent: false }
+    );
+  }
   forms.educationForm.patchValue(
     {
       cursaSecundaria:
