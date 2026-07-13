@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -39,6 +40,8 @@ import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipConfirmationStep {
+  private readonly document = inject(DOCUMENT);
+
   showTermsAndConditions = signal(false);
   termsAccepted = signal(false);
   readonly termsError = signal(false);
@@ -54,6 +57,7 @@ export class ScholarshipConfirmationStep {
   }
   openTermsAndConditions(): void {
     this.showTermsAndConditions.set(true);
+    this.document.defaultView?.scrollTo({ behavior: 'instant', left: 0, top: 0 });
   }
 
   acceptTermsAndConditions(): void {

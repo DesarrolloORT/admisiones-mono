@@ -12,7 +12,6 @@ export class TermsAndConditions {
   readonly accepted = output<void>();
 
   protected onAcceptConditions(): void {
-    console.log('Aceptó condiciones');
     this.accepted.emit();
   }
 }
