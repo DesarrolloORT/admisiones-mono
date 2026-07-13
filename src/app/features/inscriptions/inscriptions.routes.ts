@@ -10,7 +10,7 @@ export const routes: Routes = [
     component: Inscripcion,
     resolve: {
       initialSurvey: inscriptionInitialSurveyResolver,
-      inscriptionDetail: inscriptionDetailResolver,
+      entry: inscriptionDetailResolver,
     },
   },
 ];
