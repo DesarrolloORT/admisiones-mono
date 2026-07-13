@@ -2,12 +2,10 @@ using AppLogic.Common.Email;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
-using DataAccess.GenericAccess.Services;
 using DataAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
@@ -99,7 +97,6 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Repositorios y UoW.
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModBandejaDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();

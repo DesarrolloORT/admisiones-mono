@@ -7,7 +7,7 @@ using AppLogic.Registro.Validators;
 using AppLogic.DevartDTOs;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Personas.Services;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

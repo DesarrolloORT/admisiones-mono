@@ -1,8 +1,6 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Responses;
 using AppLogic.Registro.Dtos;
-using System.Collections.Generic;
-using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

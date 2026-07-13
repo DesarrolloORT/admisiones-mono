@@ -5,10 +5,9 @@ using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Security;
 using AppLogic.Registro.Dtos;
-using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IServices;
 using ConnectionContext;
@@ -135,25 +134,10 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // Generar tokens de autenticación
-            var accessToken = _tokenService.GenerateAccessToken(persona);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var refreshTokenHash = _tokenService.HashToken(refreshToken);
-            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
-
-            // Guardar el refresh token en la base de datos (revoca automáticamente los anteriores)
-            await _refreshTokenService.SaveRefreshTokenAsync(
+            var authResponse = await GenerarYPersistirTokensAsync(
+                persona,
                 persona.CodigoPersona,
-                SISTEMA,
-                refreshTokenHash,
-                DateTime.UtcNow.AddDays(refreshExpireDays));
-
-            // Crear respuesta de autenticación
-            var authResponse = AuthenticationResponseBuilder.Build(
-                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
-                accessToken,
-                refreshToken,
-                refreshTokenHash);
+                _refreshTokenService);
 
             return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(AutenticarUsuarioLDAPAsync));
         }
@@ -219,25 +203,10 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // 4. Generar nuevos tokens
-            var newAccessToken = _tokenService.GenerateAccessToken(persona);
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
-            var newRefreshTokenHash = _tokenService.HashToken(newRefreshToken);
-            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
-
-            // 5. Guardar nuevo refresh token en la base de datos
-            await _refreshTokenService.SaveRefreshTokenAsync(
+            var authResponse = await GenerarYPersistirTokensAsync(
+                persona,
                 codigoPersona.Value,
-                SISTEMA,
-                newRefreshTokenHash,
-                DateTime.UtcNow.AddDays(refreshExpireDays));
-
-            // 6. Crear respuesta con los nuevos tokens
-            var authResponse = AuthenticationResponseBuilder.Build(
-                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
-                newAccessToken,
-                newRefreshToken,
-                newRefreshTokenHash,
+                _refreshTokenService,
                 "Tokens renovados correctamente.");
 
             return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(RefrescarTokensAsync));
@@ -408,22 +377,10 @@ public class AuthService : IAuthService
             uow.Save();
             await EliminarImagenesTemporalesAsync(persona, imagenes);
 
-            var accessToken = _tokenService.GenerateAccessToken(persona);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var refreshTokenHash = _tokenService.HashToken(refreshToken);
-            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
-
-            await _refreshTokenService.SaveRefreshTokenAsync(
+            var authResponse = await GenerarYPersistirTokensAsync(
+                persona,
                 codigoPersona,
-                SISTEMA,
-                refreshTokenHash,
-                DateTime.UtcNow.AddDays(refreshExpireDays));
-
-            var authResponse = AuthenticationResponseBuilder.Build(
-                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
-                accessToken,
-                refreshToken,
-                refreshTokenHash,
+                _refreshTokenService,
                 "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
 
             return OperationResult<DtoAuthenticationResponse>.Ok(
@@ -665,7 +622,32 @@ public class AuthService : IAuthService
         return JwtConfigurationHelper.GetRequiredDouble("JWT_REFRESH_EXPIRE_ADMISIONES");
     }
 
-    public async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
+    private async Task<DtoAuthenticationResponse> GenerarYPersistirTokensAsync(
+        Persona persona,
+        long codigoPersona,
+        IRefreshTokenService refreshTokenService,
+        string? message = null)
+    {
+        var accessToken = _tokenService.GenerateAccessToken(persona);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenHash = _tokenService.HashToken(refreshToken);
+        var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
+
+        await refreshTokenService.SaveRefreshTokenAsync(
+            codigoPersona,
+            SISTEMA,
+            refreshTokenHash,
+            DateTime.UtcNow.AddDays(refreshExpireDays));
+
+        return AuthenticationResponseBuilder.Build(
+            AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+            accessToken,
+            refreshToken,
+            refreshTokenHash,
+            message);
+    }
+
+    private async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
     {
         if (_serviceScopeFactory == null)
         {
@@ -702,22 +684,10 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            var accessToken = _tokenService.GenerateAccessToken(persona);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var refreshTokenHash = _tokenService.HashToken(refreshToken);
-            var refreshExpireDays = ObtenerDiasExpiracionRefreshToken();
-
-            await refreshTokenService.SaveRefreshTokenAsync(
+            var authResponse = await GenerarYPersistirTokensAsync(
+                persona,
                 codigoPersona,
-                SISTEMA,
-                refreshTokenHash,
-                DateTime.UtcNow.AddDays(refreshExpireDays));
-
-            var authResponse = AuthenticationResponseBuilder.Build(
-                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
-                accessToken,
-                refreshToken,
-                refreshTokenHash,
+                refreshTokenService,
                 "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
 
             return OperationResult<DtoAuthenticationResponse>.Ok(

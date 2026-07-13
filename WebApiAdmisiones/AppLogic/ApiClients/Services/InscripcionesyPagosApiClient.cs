@@ -176,14 +176,14 @@ namespace AppLogic.ApiClients.Services
                 {
                     if (_logger.IsEnabled(LogLevel.Information))
                     {
-                        _logger.LogInformation("Consultando carritos de la inscripciÃ³n: {IdInscripcion}", idInscripcion);
+                        _logger.LogInformation("Consultando carritos de la inscripción: {IdInscripcion}", idInscripcion);
                     }
 
                     return _httpClient.GetAsync($"ORTSecure/Pagos/Carritos?idInscripcion={idInscripcion}");
                 },
                 "CARRITOS_INSCRIPCION_GET_01",
                 nameof(ObtenerCarritosPorInscripcionAsync),
-                "Error al obtener carritos de la inscripciÃ³n");
+                "Error al obtener carritos de la inscripción");
         }
 
         /// <summary>Procesa el pago de los carritos de seña de una inscripción contra la API legacy.</summary>

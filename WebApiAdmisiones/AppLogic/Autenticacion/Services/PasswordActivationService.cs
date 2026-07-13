@@ -7,11 +7,11 @@ using System.Security.Claims;
 using System.Text;
 using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Common.Email;
 using AppLogic.Common.Security;
 using AppLogic.Common.Serialization;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
-using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -29,11 +29,9 @@ public class PasswordActivationService : IPasswordActivationService
     private const string NuevaPersonaSessionPurpose = "nueva-persona-session";
     private const string Issuer = "WebApiAdmisiones";
     private const string Audience = "AdmisionesPassword";
-    private const string SistemaMail = "ADMISIONES";
-
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly IConfiguration _configuration;
-    private readonly EnvioMail _envioMail;
+    private readonly IEmailSender _emailSender;
     private readonly IHashTokenStore _hashTokenStore;
     private readonly IDatabase _redisDb;
     private readonly ILogger<PasswordActivationService>? _logger;
@@ -43,14 +41,14 @@ public class PasswordActivationService : IPasswordActivationService
     public PasswordActivationService(
         IUnitOfWorkFactory uowFactory,
         IConfiguration configuration,
-        EnvioMail envioMail,
+        IEmailSender emailSender,
         IHashTokenStore hashTokenStore,
         IConnectionMultiplexer redis,
         ILogger<PasswordActivationService>? logger = null)
     {
         _uowFactory = uowFactory;
         _configuration = configuration;
-        _envioMail = envioMail;
+        _emailSender = emailSender;
         _hashTokenStore = hashTokenStore;
         _redisDb = redis.GetDatabase();
         _logger = logger;
@@ -122,14 +120,11 @@ public class PasswordActivationService : IPasswordActivationService
 
             // Reutilizar plantilla de activación pero sin persona (solo necesitamos el link)
             var body = PasswordMailTemplateHelper.ConstruirMailActivacionSinPersona(link);
-            var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
 
-            await _envioMail.EnviarMail(
-                from,
-                new List<string> { email.Trim() },
+            await _emailSender.SendAsync(
+                email.Trim(),
                 "Crea tu contraseña de Admisiones",
-                body,
-                sistema: SistemaMail);
+                body);
 
             return OperationResult<object?>.IsSuccess(
                 null,
@@ -194,14 +189,11 @@ public class PasswordActivationService : IPasswordActivationService
 
             var link = PasswordActivationLinkBuilder.ConstruirLink(_configuration, token, flow.QueryFlow);
             var body = flow.ConstruirBody(persona, link);
-            var from = _configuration["Mail:From"] ?? "admisiones@ort.edu.uy";
 
-            await _envioMail.EnviarMail(
-                from,
-                new List<string> { persona.Email.Trim() },
+            await _emailSender.SendAsync(
+                persona.Email.Trim(),
                 flow.Subject,
-                body,
-                sistema: SistemaMail);
+                body);
 
             return OperationResult<object?>.IsSuccess(
                 null,

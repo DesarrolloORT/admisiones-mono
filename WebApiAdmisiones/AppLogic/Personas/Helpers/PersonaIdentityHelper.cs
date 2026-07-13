@@ -1,5 +1,5 @@
 using AppLogic.Personas.Requests;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using Utilities;
 

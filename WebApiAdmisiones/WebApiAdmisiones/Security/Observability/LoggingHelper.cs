@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
-using WebApiAdmisiones.Observability;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Middleware;
 
