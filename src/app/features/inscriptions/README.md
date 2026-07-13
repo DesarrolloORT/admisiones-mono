@@ -71,8 +71,11 @@ tiene su propio estado.
   página conoce. Expone al template lo que el stepper necesita (`currentStep`,
   `stepItems`, `stepLabel`, `canGoBack`) y centraliza `continue()` / `back()`.
   `continue()` hace un `switch (currentStep())` y **delega** en la fachada de la
-  sección activa; también reconstruye el contexto al retomar desde el panel
-  (`applyResumeContext`).
+  sección activa. Es además el **único inicializador**: en su constructor lee la
+  intención + encuesta resueltas, llama a `deriveInitialInscripcionState` y aplica
+  el resultado con `applyInitialState` (un solo lugar, orden determinístico, el
+  paso del flujo se posiciona al final). Las fachadas de sección **no** se
+  posicionan solas ni leen la ruta.
 - **`inscripcion-proposal.ts` / `inscripcion-survey.ts` / `inscripcion-payment.ts`**
   son las fachadas de cada paso. Cada una valida su sección, llama a los services
   y, **cuando la sección está OK, llama a `this.process.flow.next()`** (o avanza
@@ -94,12 +97,31 @@ tiene su propio estado.
 - **`services/`** orquestan endpoints y exponen Observables con tipos de la
   feature.
 
-### 6. `resolvers/` — precarga antes de entrar
+### 6. `resolvers/` — precarga e **intención de entrada**
 
-Resuelven datos antes de activar la ruta (estado de encuesta inicial, detalle
-para "retomar"). La página/fachada los lee de `route.snapshot.data`.
+Resuelven datos antes de activar la ruta. `inscription-initial-survey.resolver`
+trae el estado de encuesta inicial (por persona). `inscription-detail.resolver`
+decide la **intención de entrada** (`resolveEntryIntent`) a partir de la URL —no
+del backend— y devuelve `InscripcionEntryResolved`:
 
-### 7. `pages/` + `components/` — UI
+- `nueva`: sin query params. Paso 1 **siempre** virgen y editable.
+- `retomar`: con `idProducto`+`idProceso` (desde el panel); carga el detalle.
+- `reactivar`: agrega `modo=reactivar` (futuro botón de una inscripción cancelada;
+  reglas TBD, hoy deriva igual que `nueva`).
+
+Si el detalle falla, la intención degrada a comportamiento `nueva` (`detail:null`).
+
+### 7. `models/inscription-entry.ts` — derivación pura del estado inicial
+
+`deriveInitialInscripcionState(context)` es una **función pura sin efectos** que,
+dado `(intención, detalle, encuesta)`, devuelve el estado inicial completo: paso,
+slice de encuesta, slice de pago y si reanuda `En proceso`. Es la **única fuente de
+verdad** de "en qué estado arranca la inscripción". Su contrato de negocio es la
+tabla ejecutable `inscription-entry.spec.ts` (intención × estado × encuesta). El
+backend manda sobre los datos; la intención manda sobre presentación/navegación
+(por eso `nueva` nunca precarga el paso 1 aunque exista una encuesta previa).
+
+### 8. `pages/` + `components/` — UI
 
 - **`pages/inscripcion`** es el contenedor: declara los `providers` (stores y
   fachadas), monta `app-process-layout` y, con un `@switch (process.currentStep())`,
@@ -131,18 +153,19 @@ guardado y la confirmación se ejecutan juntos al cerrar el paso.
 
 ## "¿Dónde hago X?"
 
-| Quiero…                                           | Voy a…                                                                                                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Agregar / quitar / reordenar un paso              | `models/inscripcion-process.ts` → `INSCRIPCION_STEPS` (y el `@switch` de la página + el `switch` de `ProcessFacade.continue()`) |
-| Cambiar el título/overline de un paso             | `INSCRIPCION_STEPS`                                                                                                             |
-| Cambiar cuándo se puede avanzar/volver            | la fachada de la sección (validación) y `canGoBack` en `ProcessFacade`                                                          |
-| Cambiar la lógica de avance de un paso            | la fachada de ese paso (`proposal` / `survey` / `payment`)                                                                      |
-| Agregar un campo a un formulario                  | `models/inscripcion-flow-forms.ts` (form) + el componente del paso                                                              |
-| Llamar a un endpoint nuevo                        | `endpoints/` (adapter) → `services/` → la fachada                                                                               |
-| Tocar el contrato con la API                      | **solo** en `endpoints/` (única capa que ve `generated/**`)                                                                     |
-| Cambiar el chrome (header, stepper, botón cerrar) | `shared/ui/process-layout`                                                                                                      |
-| Tocar el motor de pasos genérico                  | `shared/process-flow/process-flow.ts` (afecta a todas las features)                                                             |
-| Retomar una inscripción desde el panel            | `resolvers/` + `ProcessFacade.applyResumeContext`                                                                               |
+| Quiero…                                             | Voy a…                                                                                                                                              |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agregar / quitar / reordenar un paso                | `models/inscripcion-process.ts` → `INSCRIPCION_STEPS` (y el `@switch` de la página + el `switch` de `ProcessFacade.continue()`)                     |
+| Cambiar el título/overline de un paso               | `INSCRIPCION_STEPS`                                                                                                                                 |
+| Cambiar cuándo se puede avanzar/volver              | la fachada de la sección (validación) y `canGoBack` en `ProcessFacade`                                                                              |
+| Cambiar la lógica de avance de un paso              | la fachada de ese paso (`proposal` / `survey` / `payment`)                                                                                          |
+| Agregar un campo a un formulario                    | `models/inscripcion-flow-forms.ts` (form) + el componente del paso                                                                                  |
+| Llamar a un endpoint nuevo                          | `endpoints/` (adapter) → `services/` → la fachada                                                                                                   |
+| Tocar el contrato con la API                        | **solo** en `endpoints/` (única capa que ve `generated/**`)                                                                                         |
+| Cambiar el chrome (header, stepper, botón cerrar)   | `shared/ui/process-layout`                                                                                                                          |
+| Tocar el motor de pasos genérico                    | `shared/process-flow/process-flow.ts` (afecta a todas las features)                                                                                 |
+| Cambiar qué muestra cada intención/estado al entrar | `models/inscription-entry.ts` (`deriveInitialInscripcionState`) + su tabla `inscription-entry.spec.ts`; la aplica `ProcessFacade.applyInitialState` |
+| Retomar/reactivar una inscripción desde el panel    | `resolvers/inscription-detail.resolver` (`resolveEntryIntent`) + la derivación de `inscription-entry.ts`                                            |
 
 ---
 
@@ -154,3 +177,9 @@ guardado y la confirmación se ejecutan juntos al cerrar el paso.
 - Las fechas son `string | null` en los contratos; la conversión a `Date` es
   explícita en fachadas/UI.
 - Stores y fachadas se proveen **en la página**, no en root.
+- Los constructores de las fachadas de sección **no posicionan el flujo ni leen la
+  ruta**: el estado inicial lo deriva `deriveInitialInscripcionState` (pura) y lo
+  aplica solo `ProcessFacade.applyInitialState`.
+- La **intención de entrada** (`nueva`/`retomar`/`reactivar`) sale de la URL, nunca
+  se infiere del estado del backend. El backend manda sobre los datos; la intención,
+  sobre presentación y navegación.
