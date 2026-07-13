@@ -10,11 +10,13 @@
   <ort-card aria-labelledby="reservation-instructions-title" role="region">
     <ort-card-content>
       <h2 id="reservation-instructions-title">Instrucciones de pago</h2>
+      <p>{{ facade.reservationInstructions().intro }}</p>
       <ul class="inscription-subject-list">
-        @for (item of facade.reservationInstructions().items; track item) {
+        @for (item of facade.reservationInstructions().items; track item.label) {
         <li>
           <ort-icon aria-hidden="true">chevron_right</ort-icon>
-          {{ item }}
+          <strong>{{ item.label }}:</strong>
+          {{ item.value }}
         </li>
         }
       </ul>

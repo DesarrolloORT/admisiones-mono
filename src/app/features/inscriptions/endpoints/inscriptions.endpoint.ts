@@ -17,9 +17,11 @@ import {
   postPersonaSubirDocumentoEndpoint,
   postPersonaSubirFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+import type { DtoConfirmadaDetalle } from 'src/app/shared/api/generated/models/dtoConfirmadaDetalle';
 import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
 
 import type {
+  InscripcionConfirmedDetail,
   InscripcionCoordinador,
   InscripcionDetail,
   InscripcionSummary,
@@ -75,19 +77,7 @@ export class InscripcionesEndpoint {
                 senia: response.seniaMinima.senia ?? null,
               }
             : null,
-          confirmada: response.confirmada
-            ? {
-                numeroEstudiante: response.confirmada.numeroEstudiante ?? null,
-                resumen: this.toSummary(response.confirmada.resumen),
-                coordinadorAcademico: this.toCoordinador(response.confirmada.coordinadorAcademico),
-                coordinadorCursos: this.toCoordinador(response.confirmada.coordinadorCursos),
-                materiasPrimerSemestre:
-                  response.confirmada.materiasPrimerSemestre?.map(materia => ({
-                    idMateria: materia.idMateria ?? null,
-                    nombre: materia.nombre ?? null,
-                  })) ?? [],
-              }
-            : null,
+          confirmada: this.toConfirmedDetail(response.confirmada),
         }))
       );
   }
@@ -268,6 +258,7 @@ export class InscripcionesEndpoint {
               clave: message.clave ?? null,
               valor: message.valor ?? null,
             })) ?? [],
+          confirmada: this.toConfirmedDetail(response.confirmada),
           message: null,
           errorCode: null,
         })),
@@ -355,6 +346,24 @@ export class InscripcionesEndpoint {
   ): InscripcionCoordinador | null {
     return coordinador
       ? { nombre: coordinador.nombre ?? null, email: coordinador.email ?? null }
+      : null;
+  }
+
+  private toConfirmedDetail(
+    confirmada: DtoConfirmadaDetalle | null | undefined
+  ): InscripcionConfirmedDetail | null {
+    return confirmada
+      ? {
+          numeroEstudiante: confirmada.numeroEstudiante ?? null,
+          resumen: this.toSummary(confirmada.resumen),
+          coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
+          coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),
+          materiasPrimerSemestre:
+            confirmada.materiasPrimerSemestre?.map(materia => ({
+              idMateria: materia.idMateria ?? null,
+              nombre: materia.nombre ?? null,
+            })) ?? [],
+        }
       : null;
   }
 }

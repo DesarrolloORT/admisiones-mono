@@ -391,6 +391,7 @@ describe('InscripcionesEndpoint', () => {
       urlPago: 'https://pagos.example/sistarbanc',
       parametrosEncriptados: 'token-encriptado',
       mensajes: [{ clave: 'factura', valor: 'Creada' }],
+      confirmada: null,
       message: null,
       errorCode: null,
     });
@@ -403,6 +404,44 @@ describe('InscripcionesEndpoint', () => {
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
+  it('maps the confirmada block when the backend confirms the payment inline', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        resultado: 'confirmada',
+        urlPago: null,
+        parametrosEncriptados: null,
+        mensajes: [],
+        confirmada: {
+          numeroEstudiante: 34692671,
+          resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
+          coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
+          coordinadorCursos: null,
+          materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+        },
+      })
+    );
+
+    const response = await firstValueFrom(
+      endpoint.pay({ idInscripcion: 1, metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
+    );
+
+    expect(response.confirmada).toEqual({
+      numeroEstudiante: 34692671,
+      resumen: {
+        idOferta: null,
+        idProducto: null,
+        carrera: 'Sistemas',
+        idComienzo: null,
+        comienzo: 'Marzo',
+        idTurno: null,
+        turno: 'Matutino',
+      },
+      coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
+      coordinadorCursos: null,
+      materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+    });
   });
 
   it('maps each payment method without leaking generated contracts', async () => {
