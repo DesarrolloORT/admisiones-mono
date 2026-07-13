@@ -1,7 +1,6 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import type { OrtErrorItem } from '@desarrolloort/components';
 import { merge, Observable, of } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
@@ -10,6 +9,7 @@ import {
   type ErrorAlertState,
 } from 'src/app/shared/ui/error-alert/error-alert';
 
+import type { InscripcionSurveyInit } from '../models/inscription-entry';
 import type {
   EstadoEncuestaInicial,
   EstadoSeccionEncuesta,
@@ -32,7 +32,10 @@ import {
   patchBackendSurveyForms,
 } from '../models/inscription-flow-mappers';
 import { getSeccionesVisibles } from '../models/inscription-flow-policy';
-import type { InscripcionInitialSurveyResolved } from '../resolvers/inscription-initial-survey.resolver';
+import {
+  type InscripcionInitialSurveyResolved,
+  resolveInitialSurvey,
+} from '../resolvers/inscription-initial-survey.resolver';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -58,7 +61,6 @@ const EMPTY_PROGRESS: SectionProgress = { completed: false, submitted: false };
  */
 export class InscripcionSurveyFacade {
   private readonly inscriptions = inject(Inscripciones);
-  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
@@ -68,7 +70,10 @@ export class InscripcionSurveyFacade {
   public readonly options = inject(InscripcionSurveyOptionsFacade);
   public readonly identity = inject(InscripcionSurveyIdentityFacade);
 
-  private initialSurveyResponse: InscripcionInitialSurveyResponse | null = null;
+  // Slice de encuesta prellenada ya aplicado:
+  // se conserva para re-aplicarlo cuando llegan los catálogos, respetando su flag
+  // `includeAcademicSelection` original.
+  private appliedSurveyState: Extract<InscripcionSurveyInit, { kind: 'prefilled' }> | null = null;
 
   public readonly educationForm = this.formsStore.educationForm;
   public readonly academicDecisionForm = this.formsStore.academicDecisionForm;
@@ -83,6 +88,10 @@ export class InscripcionSurveyFacade {
   private readonly sectionProgress = signal<
     Readonly<Partial<Record<SeccionEncuestaId, SectionProgress>>>
   >({});
+  // Suprime la completitud reactiva de identidad tras un fallo de subida: el form
+  // sigue válido y los archivos presentes, pero el paso debe reabrirse SIN check
+  // hasta que el usuario modifique datos de identidad o arranque un nuevo intento.
+  private readonly identityUploadFailed = signal(false);
   public readonly activeSection = signal<SeccionEncuestaId>('educacion');
   public readonly readerOpen = signal(false);
   public readonly surveyState = signal<EstadoEncuestaInicial>('no-iniciada');
@@ -135,8 +144,11 @@ export class InscripcionSurveyFacade {
     this.activeSectionErrors().length > 0 ? DEFAULT_ERROR_ALERT : null
   );
 
+  private regulationAcceptanceRequested = false;
+
   constructor() {
     this.options.initialize({
+      isSurveyStepActive: computed(() => this.process.flow.currentStep() === 'encuesta'),
       onOptionsChanged: () => this.updateConditionalValidators(),
       onInitialCatalogsApplied: () => this.reapplyBackendSurvey(),
     });
@@ -145,13 +157,76 @@ export class InscripcionSurveyFacade {
         () => this.process.flow.currentStep() === 'encuesta' && this.activeSection() === 'identidad'
       ),
       surveyLoadError: this.surveyLoadError,
-      onIdentityChanged: () => this.syncSectionCompletion('identidad'),
+      onIdentityChanged: () => {
+        this.identityUploadFailed.set(false);
+        this.syncSectionCompletion('identidad');
+      },
     });
     this.configureConditionalValidators();
+    this.observeIdentityRecovery();
     this.observeForms();
     this.observeIdentityConfirmation();
-    this.loadStudentRegulationAcceptance();
-    this.applyResolvedInitialSurveyState();
+    this.deferStudentRegulationAcceptance();
+    // El posicionamiento del flujo y la aplicación del estado inicial los hace
+    // `InscripcionProcessFacade` (único inicializador) vía `applyInitialState`.
+  }
+
+  /**
+   * Aplica el slice de encuesta derivado por `deriveInitialInscripcionState`. NO
+   * toca `process.flow`: el paso lo posiciona `ProcessFacade` una sola vez.
+   */
+  public applyInitialState(state: InscripcionSurveyInit): void {
+    this.identityUploadFailed.set(false);
+    switch (state.kind) {
+      case 'load-failed':
+        this.appliedSurveyState = null;
+        this.surveyLoadError.set(
+          'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+        );
+        return;
+      case 'identity-only':
+        this.appliedSurveyState = null;
+        this.hasInitialSurveyRight.set(false);
+        this.surveyState.set('completa');
+        this.sectionProgress.set({});
+        this.activeSection.set('identidad');
+        return;
+      case 'fresh':
+        this.appliedSurveyState = null;
+        this.hasInitialSurveyRight.set(true);
+        this.surveyState.set('no-iniciada');
+        this.sectionProgress.set({});
+        this.activeSection.set('educacion');
+        return;
+      case 'prefilled': {
+        const encuesta = state.response.encuesta;
+        if (!encuesta) return;
+        this.appliedSurveyState = state;
+        this.hasInitialSurveyRight.set(true);
+        this.surveyState.set(state.surveyState);
+        this.applyBackendSurvey(encuesta, state.response, state.includeAcademicSelection);
+        this.sectionProgress.set(
+          Object.fromEntries(
+            state.completedSections.map(section => [section, { completed: true, submitted: false }])
+          )
+        );
+        this.activeSection.set(state.activeSection);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Re-consulta el estado de encuesta (para el retry manual). Gestiona los flags de
+   * carga/error; el mapeo del 404 lo comparte con el resolver. `ProcessFacade`
+   * re-deriva y re-aplica el estado con el resultado.
+   */
+  public fetchResolvedInitialSurvey(): Observable<InscripcionInitialSurveyResolved> {
+    this.surveyLoadError.set(null);
+    this.loadingSurveyState.set(true);
+    return resolveInitialSurvey(this.inscriptions.getInitialSurvey()).pipe(
+      finalize(() => this.loadingSurveyState.set(false))
+    );
   }
 
   public continue(): void {
@@ -193,14 +268,19 @@ export class InscripcionSurveyFacade {
   }
 
   public getSectionState(section: SeccionEncuestaId): EstadoSeccionEncuesta {
-    if (
-      this.progressOf(section).completed ||
-      (section !== 'identidad' && this.isSectionValid(section))
-    ) {
+    if (this.progressOf(section).completed || this.canSectionAutoComplete(section)) {
       return 'completa';
     }
     if (this.activeSection() === section) return 'activa';
     return 'pendiente';
+  }
+
+  // Una sección válida se marca completa sola (sin apretar Continuar). Identidad es
+  // la excepción tras un fallo de subida: sigue válida pero no debe auto-completarse.
+  private canSectionAutoComplete(section: SeccionEncuestaId): boolean {
+    return (
+      (section !== 'identidad' || !this.identityUploadFailed()) && this.isSectionValid(section)
+    );
   }
 
   public isSectionPending(section: SeccionEncuestaId): boolean {
@@ -278,10 +358,6 @@ export class InscripcionSurveyFacade {
     this.readerOpen.set(false);
   }
 
-  public retryInitialSurvey(): void {
-    this.loadInitialSurveyState();
-  }
-
   public savePartial(): Observable<boolean> {
     if (!this.hasInitialSurveyRight()) return of(true);
     return this.inscriptions.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
@@ -310,6 +386,8 @@ export class InscripcionSurveyFacade {
     }
 
     this.preEnrollmentError.set(null);
+    // Un intento nuevo supersede el fallo anterior: "Continuar" sin modificar reintenta.
+    this.identityUploadFailed.set(false);
     this.finalizingPreEnrollment.set(true);
     this.identity
       .saveIdentityChanges()
@@ -340,6 +418,7 @@ export class InscripcionSurveyFacade {
           const identitySaveFailed =
             error instanceof Error && error.message === IDENTITY_SAVE_ERROR;
           if (identitySaveFailed) {
+            this.identityUploadFailed.set(true);
             this.patchProgress('identidad', { completed: false, submitted: true });
             this.activeSection.set('identidad');
             this.identityForm.markAllAsTouched();
@@ -372,7 +451,7 @@ export class InscripcionSurveyFacade {
   }
 
   private syncSectionCompletion(section: SeccionEncuestaId): void {
-    if (section !== 'identidad' && this.isSectionValid(section)) {
+    if (this.canSectionAutoComplete(section)) {
       this.patchProgress(section, { completed: true });
       return;
     }
@@ -400,6 +479,15 @@ export class InscripcionSurveyFacade {
         this.preEnrollmentError.set(null);
         for (const section of this.visibleSections()) this.syncSectionCompletion(section);
       });
+  }
+
+  // Debe suscribirse ANTES que `observeForms`: los subscribers de un mismo
+  // `valueChanges` corren en orden de suscripción, así la re-sincronización de
+  // completitud ve el flag ya limpio en el mismo tick que el cambio de identidad.
+  private observeIdentityRecovery(): void {
+    this.identityForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.identityUploadFailed.set(false));
   }
 
   private observeIdentityConfirmation(): void {
@@ -518,6 +606,20 @@ export class InscripcionSurveyFacade {
     control.updateValueAndValidity({ emitEvent: false });
   }
 
+  // Carga diferida del reglamento estudiantil (último subpaso del paso 2): se pide
+  // recién al acercarse la sección de identidad/reglamento y una sola vez (el flag
+  // evita repetir la consulta ante navegación atrás/adelante o re-render).
+  private deferStudentRegulationAcceptance(): void {
+    effect(() => {
+      const nearRegulation =
+        this.process.flow.currentStep() === 'encuesta' &&
+        (this.activeSection() === 'identidad' || this.activeSection() === 'reglamento');
+      if (this.regulationAcceptanceRequested || !nearRegulation) return;
+      this.regulationAcceptanceRequested = true;
+      this.loadStudentRegulationAcceptance();
+    });
+  }
+
   private loadStudentRegulationAcceptance(): void {
     this.inscriptions
       .getStudentRegulationAcceptance()
@@ -535,125 +637,30 @@ export class InscripcionSurveyFacade {
       });
   }
 
-  private loadInitialSurveyState(): void {
-    if (this.loadingSurveyState()) return;
-    this.surveyLoadError.set(null);
-    this.loadingSurveyState.set(true);
-    this.inscriptions
-      .getInitialSurvey()
-      .pipe(
-        finalize(() => this.loadingSurveyState.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: response => this.applyInitialSurvey(response),
-        error: error => {
-          if (isNotFoundError(error)) {
-            this.initializeEmptySurvey();
-            return;
-          }
-          this.surveyLoadError.set(
-            'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
-          );
-        },
-      });
-  }
-
-  private applyResolvedInitialSurveyState(): void {
-    const resolved = this.route.snapshot.data['initialSurvey'] as
-      | InscripcionInitialSurveyResolved
-      | undefined;
-    if (!resolved) {
-      this.loadInitialSurveyState();
-      return;
-    }
-    if (resolved.loadFailed) {
-      this.surveyLoadError.set(
-        'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
-      );
-      return;
-    }
-    this.applyInitialSurvey(
-      resolved.initialSurvey ?? {
-        tieneDerechoEncuesta: true,
-        encuesta: null,
-        universidadesConsideradas: [],
-        universidadesConsideradasOtros: [],
-        universidadesEducacionSuperior: [],
-        universidadesEducacionSuperiorOtros: [],
-        opcionesMotivosSeleccionados: [],
-        opcionesPublicidadSeleccionadas: [],
-      }
-    );
-  }
-
-  private initializeEmptySurvey(): void {
-    this.hasInitialSurveyRight.set(true);
-    this.surveyState.set('no-iniciada');
-    this.sectionProgress.set({});
-    this.activeSection.set('educacion');
-    this.process.flow.reset();
-  }
-
-  private initializeIdentityOnlySurvey(): void {
-    this.hasInitialSurveyRight.set(false);
-    this.surveyState.set('completa');
-    this.sectionProgress.set({});
-    this.activeSection.set('identidad');
-    this.process.flow.reset();
-  }
-
-  private applyInitialSurvey(response: InscripcionInitialSurveyResponse): void {
-    this.initialSurveyResponse = response;
-    if (response.tieneDerechoEncuesta === false) {
-      this.initializeIdentityOnlySurvey();
-      return;
-    }
-
-    this.hasInitialSurveyRight.set(true);
-    const survey = response.encuesta;
-    if (!survey) {
-      this.initializeEmptySurvey();
-      return;
-    }
-
-    const isComplete = survey.completa;
-    this.surveyState.set(isComplete ? 'completa' : 'en-progreso');
-    this.applyBackendSurvey(survey, response);
-
-    const activeSection = isComplete ? 'identidad' : (survey.seccionActiva ?? 'educacion');
-    const visibleSections = getSeccionesVisibles(isComplete ? 'encuesta-completa' : 'primera-vez');
-    const activeIndex = visibleSections.indexOf(activeSection);
-    const completedSections = activeIndex > 0 ? visibleSections.slice(0, activeIndex) : [];
-    this.sectionProgress.set(
-      Object.fromEntries(
-        completedSections.map(section => [section, { completed: true, submitted: false }])
-      )
-    );
-    this.activeSection.set(activeSection);
-    this.process.flow.goTo('encuesta');
-    this.proposal.loadAcademicOptionsForSurvey(survey);
-  }
-
   private reapplyBackendSurvey(): void {
-    const response = this.initialSurveyResponse;
-    if (response?.encuesta) this.applyBackendSurvey(response.encuesta, response);
+    const state = this.appliedSurveyState;
+    const encuesta = state?.response.encuesta;
+    if (state && encuesta) {
+      this.applyBackendSurvey(encuesta, state.response, state.includeAcademicSelection);
+    }
   }
 
   private applyBackendSurvey(
     survey: InscripcionInitialSurvey,
-    response: InscripcionInitialSurveyResponse
+    response: InscripcionInitialSurveyResponse,
+    includeAcademicSelection: boolean
   ): void {
     const proposalType = patchBackendSurveyForms(survey, response, {
       forms: this.formsStore.forms,
       careers: this.proposal.careers(),
+      includeAcademicSelection,
     });
-    this.proposal.setProposalType(proposalType);
+    // En una inscripción nueva la encuesta previa no debe pisar el Paso 1.
+    if (includeAcademicSelection) {
+      this.proposal.setProposalType(proposalType);
+      this.proposal.loadAcademicOptionsForSurvey(survey);
+    }
     this.options.refreshOrientationOptions();
     this.updateConditionalValidators();
   }
-}
-
-function isNotFoundError(error: unknown): error is { status: number } {
-  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
 }

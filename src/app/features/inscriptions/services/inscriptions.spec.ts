@@ -65,6 +65,7 @@ describe('Inscripciones', () => {
           urlPago: null,
           parametrosEncriptados: null,
           mensajes: [],
+          confirmada: null,
           message: null,
           errorCode: null,
         })
