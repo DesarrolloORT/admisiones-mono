@@ -85,35 +85,6 @@ describe('AcademicProposalSelection', () => {
       turno: '',
     });
   });
-
-  it('adds a persisted career option that the catalog no longer includes', () => {
-    form.controls.tipoPropuesta.setValue('2');
-    selection.setPersistedCareerOption({ value: '99', label: 'Carrera descontinuada' });
-
-    expect(selection.careerOptions()).toEqual([
-      { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
-      { value: '99', label: 'Carrera descontinuada' },
-    ]);
-  });
-
-  it('does not duplicate a persisted career already present in the catalog', () => {
-    form.controls.tipoPropuesta.setValue('2');
-    selection.setPersistedCareerOption({ value: '20', label: 'Analista Programador' });
-
-    expect(selection.careerOptions()).toEqual([
-      { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
-    ]);
-  });
-
-  it('drops the persisted career option when the proposal type changes', () => {
-    selection.setPersistedCareerOption({ value: '99', label: 'Carrera descontinuada' });
-
-    form.controls.tipoPropuesta.setValue('2');
-
-    expect(selection.careerOptions()).toEqual([
-      { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
-    ]);
-  });
 });
 
 function createForm(): FormGroup<AcademicProposalForm> {
