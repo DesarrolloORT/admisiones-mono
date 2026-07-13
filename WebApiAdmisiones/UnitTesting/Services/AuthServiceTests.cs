@@ -909,7 +909,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(flow.Result.Success);
             Assert.Equal("access-token", flow.Result.Data!.AccessToken);
             Assert.Equal("refresh-token", flow.Result.Data.RefreshToken);
-            Assert.Equal(nameof(AuthService.GenerarTokensParaPersonaAsync), flow.Result.Method);
+            Assert.Equal("GenerarTokensParaPersonaAsync", flow.Result.Method);
             _registroFlowServiceMock.Verify(s => s.DeletePendingPersonaAsync("flow-1"), Times.Once);
             _registroFlowServiceMock.Verify(s => s.EliminarFlowSessionAsync("flow-1"), Times.Once);
         }

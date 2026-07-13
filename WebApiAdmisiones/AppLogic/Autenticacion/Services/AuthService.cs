@@ -664,7 +664,7 @@ public class AuthService : IAuthService
         return JwtConfigurationHelper.GetRequiredDouble("JWT_REFRESH_EXPIRE_ADMISIONES");
     }
 
-    public async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
+    private async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
     {
         if (_serviceScopeFactory == null)
         {

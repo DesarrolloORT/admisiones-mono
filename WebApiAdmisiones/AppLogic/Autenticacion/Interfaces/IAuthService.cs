@@ -10,8 +10,6 @@ public interface IAuthService
     Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass);
     Task<OperationResult<DtoAuthenticationResponse>> RefrescarTokensAsync(string? refreshToken);
     Task<OperationResult<object>> RecuperarPassword(DtoRecuperarPasswordRequest request);
-    Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona);
-
     /// <summary>
     /// Orquesta CompletarPassword completo: valida la sesión temporal y despacha al flujo de
     /// persona nueva (Redis) o persona existente. Devuelve además si el controller debe limpiar
