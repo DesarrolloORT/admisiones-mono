@@ -275,8 +275,9 @@ public class AuthService : IAuthService
                     ? envioMail.Message
                     : MensajeGenericoRecupero);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger?.LogError(ex, ErrorInesperadoLog, nameof(RecuperarPassword));
             return OperationResult<object>.IsSuccess(
                null,
                nameof(RecuperarPassword),

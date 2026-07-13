@@ -12,6 +12,7 @@ namespace WebApiAdmisiones.Security.Authentication
     public static class AuthenticationExtensions
     {
         private const string IssuerAdmisiones = "https://admisiones.ort.edu.uy";
+        private const int MinimumKeyLengthBytes = 32; // HS256 requiere >= 256 bits
 
         /// <summary>
         /// Agrega y configura la autenticación JWT Bearer al contenedor de servicios.
@@ -60,7 +61,15 @@ namespace WebApiAdmisiones.Security.Authentication
                         /// <summary>
                         /// Permite resolver la clave de firma según el emisor del token.
                         /// </summary>
-                        IssuerSigningKeyResolver = ResolveIssuerSigningKey
+                        IssuerSigningKeyResolver = ResolveIssuerSigningKey,
+                        /// <summary>
+                        /// Restringe los algoritmos aceptados para evitar confusión de algoritmos.
+                        /// </summary>
+                        ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                        /// <summary>
+                        /// Tolerancia de reloj entre servidores (el default de la librería es 5 minutos).
+                        /// </summary>
+                        ClockSkew = TimeSpan.FromSeconds(30)
                     };
 
                     /// <summary>
@@ -107,13 +116,13 @@ namespace WebApiAdmisiones.Security.Authentication
 
             if (issuer != null && keysByIssuer.TryGetValue(issuer, out var secret))
             {
-                var keyBytes = Array.Empty<byte>();
-                if (secret != null)
+                if (string.IsNullOrWhiteSpace(secret) || Encoding.UTF8.GetByteCount(secret) < MinimumKeyLengthBytes)
                 {
-                    keyBytes = Encoding.UTF8.GetBytes(secret);
+                    throw new InvalidOperationException(
+                        $"JWT_SECRET_KEY debe estar configurada con al menos {MinimumKeyLengthBytes} bytes para HS256.");
                 }
 
-                return new[] { new SymmetricSecurityKey(keyBytes) };
+                return new[] { new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)) };
             }
 
             throw new SecurityTokenInvalidIssuerException("Issuer no autorizado.");

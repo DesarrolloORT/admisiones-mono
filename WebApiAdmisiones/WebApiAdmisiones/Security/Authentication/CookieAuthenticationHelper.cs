@@ -34,6 +34,19 @@ namespace WebApiAdmisiones.Security.Authentication
         }
 
         /// <summary>
+        /// Strict en ambientes productivos (Production/Preproduction, ver EnvironmentExtensions.IsProductionLike);
+        /// None en el resto, donde front y API suelen correr en orígenes distintos (localhost:4200, etc.).
+        /// </summary>
+        private static SameSiteMode ResolveSameSite()
+        {
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var isProductionLike = string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentName, "Preproduction", StringComparison.OrdinalIgnoreCase);
+
+            return isProductionLike ? SameSiteMode.Strict : SameSiteMode.None;
+        }
+
+        /// <summary>
         /// Establece el access token como una cookie HttpOnly segura.
         /// </summary>
         /// <param name="context">Contexto HTTP.</param>
@@ -45,7 +58,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
+                SameSite = ResolveSameSite(),
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 Domain = CookieDomain(),
@@ -67,7 +80,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,   // false en HTTP local, true en producción HTTPS
-                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
+                SameSite = ResolveSameSite(),
                 Expires = DateTimeOffset.UtcNow.AddDays(expiresInDays),
                 Path = "/",
                 Domain = CookieDomain(),
@@ -106,7 +119,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
+                SameSite = ResolveSameSite(),
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
                 Path = "/",
                 Domain = CookieDomain(),
@@ -133,7 +146,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
+                SameSite = ResolveSameSite(),
                 Path = "/",
                 Domain = CookieDomain()
             };
@@ -151,7 +164,7 @@ namespace WebApiAdmisiones.Security.Authentication
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None, // Ambiente desarrollo local sin HTTPS, en producción usar Strict
+                SameSite = ResolveSameSite(),
                 Path = "/",
                 Domain = CookieDomain()
             };
