@@ -75,6 +75,21 @@ describe('InscripcionProposalFacade', () => {
     expect(process.flow.currentStep()).toBe('propuesta');
     expect(facade.academicErrors()[0]?.message).toContain('No se pudo registrar');
   });
+
+  it('keeps the resumed proposal disabled and skips product interest registration', () => {
+    setValidProposal(facade);
+    facade.disableForResume();
+
+    expect(facade.academicForm.disabled).toBe(true);
+    expect(facade.academicForm.controls.carrera.value).toBe('20');
+    expect(facade.academicForm.controls.comienzo.value).toBe('200');
+    expect(facade.academicForm.controls.turno.value).toBe('300');
+
+    facade.continue();
+
+    expect(registerProductInterest).not.toHaveBeenCalled();
+    expect(process.flow.currentStep()).toBe('encuesta');
+  });
 });
 
 function setValidProposal(facade: InscripcionProposalFacade): void {
