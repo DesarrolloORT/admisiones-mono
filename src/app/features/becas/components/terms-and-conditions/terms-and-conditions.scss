@@ -29,3 +29,14 @@
 .terms-and-conditions button {
   margin-block: var(--ort-sys-spacing-16);
 }
+
+@media (width >= 760px) {
+  .terms-and-conditions button {
+    justify-self: end;
+    width: fit-content;
+  }
+
+  .terms-and-conditions {
+    gap: var(--ort-sys-spacing-20);
+  }
+}
