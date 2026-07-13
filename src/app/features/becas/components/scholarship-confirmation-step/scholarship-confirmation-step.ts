@@ -18,6 +18,7 @@ import {
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 
+import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
 import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions';
 
@@ -41,6 +42,7 @@ import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions
 })
 export class ScholarshipConfirmationStep {
   private readonly document = inject(DOCUMENT);
+  private readonly process = inject(ScholarshipProcessFacade);
 
   showTermsAndConditions = signal(false);
   termsAccepted = signal(false);
@@ -75,6 +77,10 @@ export class ScholarshipConfirmationStep {
     }
     this.termsError.set(false);
     this.confirmApplication.emit();
+  }
+
+  protected onBack(): void {
+    this.process.back();
   }
 
   readonly variant = input.required<ScholarshipVariant>();
