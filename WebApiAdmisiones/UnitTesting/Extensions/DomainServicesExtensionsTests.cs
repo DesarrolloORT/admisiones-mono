@@ -1,5 +1,6 @@
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
+using AppLogic.Common.Email;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
@@ -430,6 +431,21 @@ namespace UnitTesting.Extensions
             // Assert
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
                 sd.ServiceType == typeof(EnvioMail) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        [Fact]
+        public void AddDomainServices_RegistersIEmailSender_AsScoped()
+        {
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(IEmailSender) &&
+                sd.ImplementationType == typeof(EnvioMailEmailSender) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
         }
