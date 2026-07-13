@@ -3,8 +3,9 @@ name: SonarQube - Main Branches
 on:
   push:
     branches:
-      - v*.*.*/main
       - main
+      - v*.*.*/main
+      - latest/main
 
 concurrency:
   group: 'sonar-main-${{ github.ref }}'
@@ -42,6 +43,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Setup environment variables
+        uses: ./.github/actions/setup-env
+        with:
+          env-filename: dev
+          CSP_POLICY: ${{ vars.CSP_POLICY }}
+          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
+          CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
+        env:
+          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
+          API_URL: ${{ secrets.API_URL }}
+
       - name: Generate coverage
         run: npm run test:sonar
 
@@ -74,5 +86,6 @@ jobs:
             -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
             -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
             -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
+            -D "sonar.branch.name=${{ github.ref_name }}" ^
             -D "sonar.qualitygate.wait=true" ^
             -D "sonar.qualitygate.timeout=300"
