@@ -24,8 +24,8 @@ namespace UnitTesting.AppLogic.Services
                 Documento = "1234567-8",
                 DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                 {
-                    Archivo = documentoBytes ?? PdfBytes,
-                    NombreArchivo = "documento.pdf"
+                    Archivo = documentoBytes ?? JpegBytes,
+                    NombreArchivo = "documento.jpg"
                 },
                 CaraPersona = caraBytes is null
                     ? null
@@ -48,15 +48,15 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ValidarImagenesDocumentoReconocido_WithKnownDocumentContentType_ReturnsOk()
+        public void ValidarImagenesDocumentoReconocido_WithPdfDocument_Fails()
         {
             var imagenes = CrearImagenes(documentoBytes: PdfBytes);
 
             var result = DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
                 imagenes,
-                nameof(ValidarImagenesDocumentoReconocido_WithKnownDocumentContentType_ReturnsOk));
+                nameof(ValidarImagenesDocumentoReconocido_WithPdfDocument_Fails));
 
-            Assert.True(result.Success);
+            Assert.False(result.Success);
         }
 
         [Fact]

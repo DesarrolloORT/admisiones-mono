@@ -2,7 +2,6 @@ using AppLogic.Personas.Responses;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Constants;
-using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -152,7 +151,7 @@ namespace AppLogic.Personas.Services
             string fileName,
             string methodName)
         {
-            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(fileContent, fileName, methodName);
+            var validacion = FileValidator.ValidateImageFile(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<ImagenTemporal>.IsFailed(
@@ -186,7 +185,7 @@ namespace AppLogic.Personas.Services
             string fileName,
             string methodName)
         {
-            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(fileContent, fileName, methodName);
+            var validacion = FileValidator.ValidateImageFile(fileContent, fileName, methodName);
             if (!validacion.Success)
             {
                 return OperationResult<bool>.IsFailed(
@@ -217,9 +216,9 @@ namespace AppLogic.Personas.Services
             }
 
             var documento = imagenes.DocumentoFrente;
-            var documentValidation = FileValidationHelper.ValidateIdentityDocumentFile(
+            var documentValidation = FileValidator.ValidateImageFile(
                 documento.Archivo,
-                ResolverNombreArchivo(documento.NombreArchivo, "documento.pdf"),
+                ResolverNombreArchivo(documento.NombreArchivo, "documento.jpg"),
                 methodName);
             if (!documentValidation.Success)
             {

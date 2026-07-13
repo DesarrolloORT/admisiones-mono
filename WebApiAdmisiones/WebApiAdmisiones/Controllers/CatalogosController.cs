@@ -25,17 +25,6 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <remarks>
         /// Endpoint publico para poblar combos de ubicacion. Devuelve una respuesta liviana con codigos y nombres, manteniendo Uruguay primero, luego paises por nombre, y estados/ciudades ordenados alfabeticamente.
-        /// 
-        /// 🚀 Performance:
-        /// - Cache distribuido con Redis (TTL: 24 horas, configurable)
-        /// - Primera llamada (cold): ~200-500ms (consulta DB + cache)
-        /// - Llamadas subsiguientes (hot): ~5-20ms (desde Redis)
-        /// 
-        /// 💾 Cache Key: catalogos:paises-estados-ciudades
-        /// 
-        /// ♻️ Invalidación:
-        /// - Automática cada 24 horas
-        /// - Manual: POST /Catalogos/InvalidateCache?key=catalogos:paises-estados-ciudades
         /// </remarks>
         /// <returns>Paises con sus estados y ciudades disponibles.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>

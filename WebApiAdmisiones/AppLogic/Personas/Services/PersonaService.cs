@@ -6,7 +6,6 @@ using AppLogic.Personas.Requests;
 using AppLogic.Personas.Responses;
 using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.Utilities;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -449,7 +448,7 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(
+            var validacion = FileValidator.ValidateImageFile(
                 documento.Archivo,
                 documento.NombreArchivo,
                 nameof(SubirDocumentoPersona));

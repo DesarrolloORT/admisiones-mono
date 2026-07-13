@@ -1,6 +1,5 @@
 using AppLogic.Inscripciones.Encuesta.Responses;
 using AppLogic.Inscripciones.Encuesta.Rules;
-using AppLogic.Helpers.ValidationHelpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 

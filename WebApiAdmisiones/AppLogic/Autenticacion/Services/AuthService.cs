@@ -5,7 +5,6 @@ using AppLogic.Autenticacion.Helpers;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Security;
 using AppLogic.Registro.Dtos;
-using AppLogic.Helpers.ValidationHelpers;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Utilities;

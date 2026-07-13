@@ -25,7 +25,7 @@ namespace WebApiAdmisiones.Extensions
                 });
 
                 // Los uploads viajan como base64 en JSON y crecen aproximadamente 4/3.
-                // Este limite permite los documentos de 10 MB validados por FileValidationHelper.
+                // Este limite permite los documentos de 10 MB validados por FileValidator.
                 options.Limits.MaxRequestBodySize = MaxJsonUploadRequestBodySize;
             });
         }

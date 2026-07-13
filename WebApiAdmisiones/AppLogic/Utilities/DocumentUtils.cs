@@ -1,9 +1,6 @@
-﻿using AppLogic.Helpers;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using Utilities;
 
 namespace AppLogic.Utilities
@@ -69,12 +66,6 @@ namespace AppLogic.Utilities
         public static bool EsSi(string? value)
         {
             return string.Equals(NormalizarSiNo(value), "SI", StringComparison.Ordinal);
-        }
-
-        public static bool EsSiNoONulo(string? value)
-        {
-            var normalized = NormalizarSiNo(value);
-            return normalized is null or "SI" or "NO";
         }
 
         public static string NormalizarDocumentoParaClave(string? value)
