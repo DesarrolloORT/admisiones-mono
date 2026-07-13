@@ -4,6 +4,7 @@ import { Validators } from '@angular/forms';
 import type { OrtFileUploaderChange, OrtPreloadedFile } from '@desarrolloort/components';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ACCEPTED_IMAGE_MIME_TYPES } from 'src/app/shared/files/image-upload';
 
 import type { ArchivosIdentidad } from '../models/inscription-flow';
 import type {
@@ -32,7 +33,7 @@ export class InscripcionSurveyIdentityFacade {
   private readonly destroyRef = inject(DestroyRef);
 
   public readonly identityForm = inject(InscripcionFormsStore).identityForm;
-  public readonly acceptedImageTypes = ['image/jpeg', 'image/png'];
+  public readonly acceptedImageTypes = [...ACCEPTED_IMAGE_MIME_TYPES];
 
   private readonly context = signal<SurveyIdentityContext | null>(null);
   private identityPreloadRequested = false;

@@ -1,3 +1,4 @@
+import { signal, type WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -16,8 +17,10 @@ describe('InscripcionSurveyOptionsFacade', () => {
   const getInstituciones = vi.fn();
   const onOptionsChanged = vi.fn();
   const onInitialCatalogsApplied = vi.fn();
+  let isSurveyStepActive: WritableSignal<boolean>;
 
   beforeEach(() => {
+    isSurveyStepActive = signal(true);
     getInitialSurveyCatalogs.mockReset().mockReturnValue(of(emptyCatalogs()));
     getCountryLocations.mockReset().mockReturnValue(of([]));
     getInstituciones.mockReset().mockReturnValue(of([]));
@@ -90,6 +93,37 @@ describe('InscripcionSurveyOptionsFacade', () => {
     expect(educationForm.controls.institucionEducativa.value).toBe('');
   });
 
+  it('does not query the survey catalogs until the survey step is active', () => {
+    isSurveyStepActive.set(false);
+
+    const options = createFacade();
+
+    expect(getInitialSurveyCatalogs).not.toHaveBeenCalled();
+    expect(getCountryLocations).not.toHaveBeenCalled();
+
+    isSurveyStepActive.set(true);
+    TestBed.tick();
+
+    expect(getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+    expect(getCountryLocations).toHaveBeenCalledOnce();
+    expect(options.initialized()).toBe(true);
+  });
+
+  it('queries the survey catalogs only once across repeated step activations', () => {
+    const options = createFacade();
+
+    expect(getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+
+    isSurveyStepActive.set(false);
+    TestBed.tick();
+    isSurveyStepActive.set(true);
+    TestBed.tick();
+
+    expect(getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+    expect(getCountryLocations).toHaveBeenCalledOnce();
+    expect(options).toBeTruthy();
+  });
+
   function createFacade(): InscripcionSurveyOptionsFacade {
     TestBed.configureTestingModule({
       providers: [
@@ -102,7 +136,8 @@ describe('InscripcionSurveyOptionsFacade', () => {
       ],
     });
     const options = TestBed.inject(InscripcionSurveyOptionsFacade);
-    options.initialize({ onOptionsChanged, onInitialCatalogsApplied });
+    options.initialize({ isSurveyStepActive, onOptionsChanged, onInitialCatalogsApplied });
+    TestBed.tick();
     return options;
   }
 
