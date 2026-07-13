@@ -1,4 +1,4 @@
-using AppLogic.Helpers;
+using AppLogic.Autenticacion.Helpers;
 
 namespace UnitTesting.AppLogic.Helpers
 {

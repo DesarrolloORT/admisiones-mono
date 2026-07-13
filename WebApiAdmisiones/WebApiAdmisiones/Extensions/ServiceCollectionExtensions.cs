@@ -1,4 +1,4 @@
-using AppLogic.Dtos.Autenticacion;
+using AppLogic.Autenticacion.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -6,7 +6,7 @@ using AzureService.DTOs;
 using Prometheus;
 using Utilities;
 using StackExchange.Redis;
-using AppLogic.Services.RateLimiting;
+using AppLogic.Infrastructure.RateLimiting;
 using WebApiAdmisiones.Security.RateLimiting;
 using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.RequestValidation;
@@ -130,7 +130,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Registrar servicio de rate limiting
-            services.AddSingleton<AppLogic.IServices.IRateLimiterService, RedisRateLimiterService>();
+            services.AddSingleton<AppLogic.Infrastructure.RateLimiting.IRateLimiterService, RedisRateLimiterService>();
 
             // Registrar servicio de cache distribuido
             services.AddSingleton<IRedisCacheService, RedisCacheService>();
@@ -294,7 +294,7 @@ namespace WebApiAdmisiones.Extensions
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     // Usar Redis Rate Limiter en lugar de in-memory
-                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.IServices.IRateLimiterService>();
+                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
 
                     return RateLimitPartition.Get(
                         partitionKey,
@@ -310,7 +310,7 @@ namespace WebApiAdmisiones.Extensions
                     LoginRateLimitRejections.Inc();
 
                     // Obtener información adicional desde Redis
-                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.IServices.IRateLimiterService>();
+                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
                     var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                     var partitionKey = $"login-ip:{ipAddress}";
 

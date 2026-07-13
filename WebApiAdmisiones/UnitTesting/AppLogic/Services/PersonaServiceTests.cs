@@ -1,5 +1,6 @@
-using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Personas;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -7,7 +8,7 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
-using AppLogic.Services.Personas;
+using AppLogic.Personas.Services;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -221,8 +222,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 fecha,
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.png", Archivo = ValidPng() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.png", Archivo = ValidPng() });
 
             Assert.True(result.Success);
             Assert.Equal(fecha, persona.FechaVtoDocumentoPersona);
@@ -276,8 +277,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 DateTime.Today.AddDays(-1),
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.png", Archivo = ValidPng() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.png", Archivo = ValidPng() });
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_05", result.ErrorCode);
@@ -294,8 +295,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 DateTime.Today.AddYears(1),
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = ValidPdf() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.png", Archivo = ValidPng() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.png", Archivo = ValidPng() });
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_02", result.ErrorCode);
@@ -309,8 +310,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.SubirDocumentoPersona(
                 123,
                 DateTime.Today.AddYears(1),
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.pdf", Archivo = ValidPdf() },
-                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.pdf", Archivo = Array.Empty<byte>() });
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "frente.png", Archivo = ValidPng() },
+                new DtoDocumentoPersonaArchivo { NombreArchivo = "dorso.png", Archivo = Array.Empty<byte>() });
 
             Assert.False(result.Success);
             Assert.Equal("GEN_SDA_03", result.ErrorCode);

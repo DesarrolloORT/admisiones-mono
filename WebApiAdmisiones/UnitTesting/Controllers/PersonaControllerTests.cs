@@ -1,6 +1,7 @@
-using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Becas;
-using AppLogic.Dtos.Personas;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Becas.Responses;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Utilities;
 using WebApiAdmisiones.Controllers;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
-using AppLogic.IServices.Personas;
+using AppLogic.Personas.Interfaces;
 using WebApiAdmisiones.Models;
 
 namespace UnitTesting.Controllers
@@ -158,6 +159,62 @@ namespace UnitTesting.Controllers
             _personaServiceMock.Verify(
                 s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
                 Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceSucceeds_ReturnsFileContentResult()
+        {
+            var bytes = new byte[] { 1, 2, 3 };
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.Ok(bytes, nameof(IPersonaService.ObtenerFotoPersona)));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var fileResult = Assert.IsType<FileContentResult>(response);
+            Assert.Equal("image/jpeg", fileResult.ContentType);
+            Assert.Equal(bytes, fileResult.FileContents);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceFails_ReturnsOperationResultBody()
+        {
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.IsFailed(
+                    "GEN_FA_01",
+                    nameof(IPersonaService.ObtenerFotoPersona),
+                    "Foto no encontrada.",
+                    404));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var notFoundResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(404, notFoundResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<byte[]>>(notFoundResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("GEN_FA_01", operationResult.ErrorCode);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceSucceedsWithNullData_ReturnsOperationResultBody()
+        {
+            // ⚠️ CONTRATO: antes este caso devolvía 404 sin body (NotFoundResult); ahora cumple
+            // el ProducesResponseType(typeof(OperationResult<byte[]>), 404) declarado en el endpoint.
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.Ok(null, nameof(IPersonaService.ObtenerFotoPersona)));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var notFoundResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(404, notFoundResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<byte[]>>(notFoundResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("GEN_FA_03", operationResult.ErrorCode);
         }
 
         [Fact]

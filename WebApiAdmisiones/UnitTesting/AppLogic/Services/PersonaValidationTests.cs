@@ -1,5 +1,5 @@
 using System;
-using AppLogic.Helpers.ValidationHelpers;
+using AppLogic.Personas.Validators;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;

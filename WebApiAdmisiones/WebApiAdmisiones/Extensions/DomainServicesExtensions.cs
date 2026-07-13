@@ -1,13 +1,11 @@
-using AppLogic.IServices;
+using AppLogic.Common.Email;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
-using DataAccess.GenericAccess.Services;
 using DataAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
@@ -19,22 +17,23 @@ using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.Observability;
-using AppLogic.Services.Autenticacion;
-using AppLogic.Services.Registro;
-using AppLogic.Services.Personas;
-using AppLogic.Services.Inscripciones;
-using AppLogic.Services.Inscripciones.Encuesta;
-using AppLogic.Services.Becas;
-using AppLogic.Services.Catalogos;
-using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Becas;
-using AppLogic.IServices.Catalogos;
-using AppLogic.IServices.Inscripciones;
-using AppLogic.IServices.Personas;
-using AppLogic.IServices.Registro;
-using AppLogic.IServices.Tivenos;
-using AppLogic.Services.Tivenos;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Registro.Services;
+using AppLogic.Personas.Services;
+using AppLogic.Inscripciones.Services;
+using AppLogic.Inscripciones.Encuesta.Services;
+using AppLogic.Becas.Services;
+using AppLogic.Catalogos.Services;
+using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Becas.Interfaces;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Personas.Interfaces;
+using AppLogic.Registro.Interfaces;
+using AppLogic.Tivenos.Interfaces;
+using AppLogic.Tivenos.Services;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -98,7 +97,6 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Repositorios y UoW.
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModBandejaDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
@@ -111,7 +109,11 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de aplicación.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralService, GeneralService>();
-            services.AddScoped<ICatalogosService, CatalogosService>();
+            services.AddScoped<CatalogosService>();
+            services.AddScoped<ICatalogosService>(sp => new CatalogosCacheDecorator(
+                sp.GetRequiredService<CatalogosService>(),
+                sp.GetRequiredService<IRedisCacheService>(),
+                sp.GetRequiredService<IConfiguration>()));
             services.AddScoped<IRegistroService, RegistroService>();
             services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
@@ -135,14 +137,14 @@ namespace WebApiAdmisiones.Extensions
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
             // Abstracciones de infraestructura para los servicios de AppLogic.
-            services.AddScoped<IEmailSender, AppLogic.Services.Email.EnvioMailEmailSender>();
-            services.AddScoped<AppLogic.IServices.Autenticacion.ITwoFactorSessionStore, AppLogic.Services.Autenticacion.RedisTwoFactorSessionStore>();
+            services.AddScoped<IEmailSender, AppLogic.Common.Email.EnvioMailEmailSender>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ITwoFactorSessionStore, AppLogic.Autenticacion.Services.RedisTwoFactorSessionStore>();
 
             // Servicio de autenticación de dos factores (2FA) por email.
-            services.AddScoped<AppLogic.IServices.Autenticacion.IDosFactoresAuthService, AppLogic.Services.Autenticacion.DosFactoresAuthService>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.IDosFactoresAuthService, AppLogic.Autenticacion.Services.DosFactoresAuthService>();
 
             // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
-            services.AddScoped<AppLogic.IServices.Autenticacion.ILoginFlowService, AppLogic.Services.Autenticacion.LoginFlowService>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ILoginFlowService, AppLogic.Autenticacion.Services.LoginFlowService>();
 
             return services;
         }

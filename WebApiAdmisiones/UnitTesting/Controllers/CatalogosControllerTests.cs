@@ -1,17 +1,16 @@
-﻿using AppLogic.Dtos.Catalogos;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Catalogos.Responses;
 using AppLogic.DevartDTOs;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Dtos;
+using AppLogic.ApiClients.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using Xunit;
 using WebApiAdmisiones.Security.Authentication;
-using WebApiAdmisiones.Security.Cache;
-using AppLogic.IServices.Catalogos;
 
 namespace UnitTesting.Controllers
 {
@@ -20,21 +19,12 @@ namespace UnitTesting.Controllers
         private readonly Mock<ICatalogosService> _serviceMock;
         private readonly Mock<ICurrentUserService> _currentUserMock;
         private readonly Mock<ILogger<CatalogosController>> _loggerMock;
-        private readonly Mock<IRedisCacheService> _cacheMock;
-        private readonly IConfiguration _configuration;
 
         public CatalogosControllerTests()
         {
             _serviceMock = new Mock<ICatalogosService>();
             _currentUserMock = new Mock<ICurrentUserService>();
             _loggerMock = new Mock<ILogger<CatalogosController>>();
-            _cacheMock = new Mock<IRedisCacheService>();
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Cache:CatalogosTTLHours"] = "24"
-                })
-                .Build();
         }
 
         private CatalogosController CreateController()
@@ -42,9 +32,7 @@ namespace UnitTesting.Controllers
             return new CatalogosController(
                 _serviceMock.Object,
                 _loggerMock.Object,
-                _currentUserMock.Object,
-                _cacheMock.Object,
-                _configuration);
+                _currentUserMock.Object);
         }
 
         /*
@@ -71,72 +59,26 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task ObtenerPaisesEstadosCiudades_WithCache_ReturnsOk()
+        public async Task ObtenerPaisesEstadosCiudades_DelegatesToServiceAndReturnsOk()
         {
-            // Arrange
+            // La lógica de cache vive ahora en CatalogosCacheDecorator (ver
+            // CatalogosCacheDecoratorTests); el controller solo delega en ICatalogosService.
             var controller = CreateController();
             var expectedData = new List<DtoPaisEstadoCiudadResponse>
             {
                 new DtoPaisEstadoCiudadResponse { CodigoPais = 1, Nombre = "Uruguay" }
             };
-
-            // Mock cache devuelve datos (cache HIT)
-            _cacheMock
-                .Setup(c => c.GetOrSetAsync(
-                    "catalogos:paises-estados-ciudades",
-                    It.IsAny<Func<Task<IEnumerable<DtoPaisEstadoCiudadResponse>?>>>(),
-                    It.IsAny<TimeSpan>()))
-                .ReturnsAsync(expectedData);
-
-            // Act
-            var response = await controller.ObtenerPaisesEstadosCiudades();
-
-            // Assert
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-
-            // Verificar que NO se llamÃ³ al servicio (porque cache devolviÃ³ datos)
-            _serviceMock.Verify(
-                s => s.ObtenerPaisesEstadosCiudadesAsync(),
-                Times.Never);
-        }
-
-        [Fact]
-        public async Task ObtenerPaisesEstadosCiudades_CacheMiss_CallsService()
-        {
-            // Arrange
-            var controller = CreateController();
-            var expectedData = new List<DtoPaisEstadoCiudadResponse>
-            {
-                new DtoPaisEstadoCiudadResponse { CodigoPais = 1, Nombre = "Uruguay" }
-            };
-
-            // Mock cache devuelve null (cache MISS, luego ejecuta factory internamente)
-            _cacheMock
-                .Setup(c => c.GetOrSetAsync(
-                    "catalogos:paises-estados-ciudades",
-                    It.IsAny<Func<Task<IEnumerable<DtoPaisEstadoCiudadResponse>?>>>(),
-                    It.IsAny<TimeSpan>()))
-                .ReturnsAsync((IEnumerable<DtoPaisEstadoCiudadResponse>?)null);
-
-            // Mock servicio para el fallback
             _serviceMock
                 .Setup(s => s.ObtenerPaisesEstadosCiudadesAsync())
                 .ReturnsAsync(OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(
                     expectedData,
                     nameof(ICatalogosService.ObtenerPaisesEstadosCiudadesAsync)));
 
-            // Act
             var response = await controller.ObtenerPaisesEstadosCiudades();
 
-            // Assert
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-
-            // Verificar que SÃ se llamÃ³ al servicio (fallback porque cache devolviÃ³ null)
-            _serviceMock.Verify(
-                s => s.ObtenerPaisesEstadosCiudadesAsync(),
-                Times.Once);
+            _serviceMock.Verify(s => s.ObtenerPaisesEstadosCiudadesAsync(), Times.Once);
         }
 
         [Fact]
@@ -145,7 +87,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<ICatalogosService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<CatalogosController>>();
-            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object, Mock.Of<IRedisCacheService>(), Mock.Of<IConfiguration>());
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
             serviceMock.Setup(s => s.ObtenerEncuestaInicial())
                 .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
                     new DtoEncuestaInicialCatalogosResponse
@@ -154,7 +96,7 @@ namespace UnitTesting.Controllers
                         {
                             AniosEducacionMediaSuperior =
                             [
-                                new DtoComboOption { Value = 2, Label = "1\u00b0 EMS (4\u00b0 a\u00f1o)" }
+                                new DtoComboOption { Value = 2, Label = "1° EMS (4° año)" }
                             ]
                         }
                     },
@@ -188,7 +130,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<ICatalogosService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<CatalogosController>>();
-            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object, Mock.Of<IRedisCacheService>(), Mock.Of<IConfiguration>());
+            var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.ObtenerTurnos(10, 20))
                 .ReturnsAsync(OperationResult<List<OfertaInscripcionDto>>.Ok(

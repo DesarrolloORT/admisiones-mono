@@ -1,5 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
-using AppLogic.Services.Autenticacion;
+using AppLogic.Autenticacion.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

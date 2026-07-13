@@ -1,14 +1,14 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Dtos;
 using System.Text.Json;
-using AppLogic.IServices;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using StackExchange.Redis;
 using Utilities;
 using Xunit;
-using AppLogic.Services.Registro;
-using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Registro;
+using AppLogic.Registro.Services;
+using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Registro.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {

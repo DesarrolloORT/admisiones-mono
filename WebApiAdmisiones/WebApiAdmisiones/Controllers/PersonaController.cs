@@ -1,8 +1,9 @@
-using AppLogic.Dtos.Autenticacion;
-using AppLogic.Dtos.Becas;
-using AppLogic.Dtos.Personas;
+using AppLogic.Autenticacion.Requests;
+using AppLogic.Becas.Responses;
+using AppLogic.Personas.Requests;
+using AppLogic.Personas.Responses;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Personas;
+using AppLogic.Personas.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
@@ -182,7 +183,11 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Data is null)
             {
-                return NotFound();
+                return ValidateResponse(OperationResult<byte[]>.IsFailed(
+                    "GEN_FA_03",
+                    nameof(ObtenerFotoPersona),
+                    "Foto no encontrada.",
+                    404));
             }
 
             return File(result.Data, "image/jpeg");

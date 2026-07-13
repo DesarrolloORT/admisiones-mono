@@ -1,4 +1,4 @@
-using AppLogic.Helpers.ValidationHelpers;
+using AppLogic.Inscripciones.Rules;
 using BusinessLogic.IDevartRepositories;
 using Moq;
 using Xunit;

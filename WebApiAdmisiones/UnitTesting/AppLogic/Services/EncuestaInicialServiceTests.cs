@@ -1,9 +1,9 @@
-using AppLogic.Dtos.EncuestaInicial;
-using AppLogic.Dtos.Tivenos;
-using AppLogic.IServices.Catalogos;
-using AppLogic.IServices.Inscripciones;
-using AppLogic.IServices.Tivenos;
-using AppLogic.Services.Inscripciones.Encuesta;
+using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Inscripciones.Encuesta.Services;
+using AppLogic.Tivenos.Dtos;
+using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

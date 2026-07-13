@@ -1,7 +1,8 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Common.Email;
+using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
-using MailORT;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,8 +13,8 @@ using Moq;
 using StackExchange.Redis;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
-using AppLogic.Services.Autenticacion;
-using AppLogic.IServices.Autenticacion;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Autenticacion.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -31,7 +32,7 @@ namespace UnitTesting.AppLogic.Services
 
         private PasswordActivationService CrearServicio(
             IUnitOfWorkFactory? uowFactory = null,
-            TestableEnvioMail? mail = null,
+            IEmailSender? emailSender = null,
             Mock<IHashTokenStore>? hashStoreMock = null,
             Mock<IDatabase>? redisDbMock = null)
         {
@@ -42,7 +43,7 @@ namespace UnitTesting.AppLogic.Services
             return new PasswordActivationService(
                 uowFactory ?? Mock.Of<IUnitOfWorkFactory>(),
                 CrearConfiguracion(),
-                mail ?? new TestableEnvioMail(),
+                emailSender ?? new TestEmailSender(),
                 hashStoreMock?.Object ?? Mock.Of<IHashTokenStore>(),
                 redisMock.Object);
         }
@@ -55,7 +56,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -68,6 +69,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             hashStoreMock.Verify(h => h.StoreAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()), Times.Once);
+            Assert.Equal(1, mail.SendCount);
+            Assert.Equal("ana@example.com", mail.To);
+            Assert.Equal("Crea tu contraseña de Admisiones", mail.Subject);
             Assert.Contains("https://admisiones.test/crear-password?token=", mail.Body);
         }
 
@@ -98,6 +102,42 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task EnviarMailNuevaPersonaAsync_SendsExpectedMailOnce()
+        {
+            var emailSender = new TestEmailSender();
+            var service = CrearServicio(emailSender: emailSender);
+
+            var result = await service.EnviarMailNuevaPersonaAsync("flow-1", " nueva@example.com ", "token-1");
+
+            Assert.True(result.Success);
+            Assert.Equal(1, emailSender.SendCount);
+            Assert.Equal("nueva@example.com", emailSender.To);
+            Assert.Equal("Crea tu contraseña de Admisiones", emailSender.Subject);
+            Assert.Contains("flow=registration", emailSender.Body);
+            Assert.Contains("token-1", emailSender.Body);
+        }
+
+        [Fact]
+        public async Task EnviarMailNuevaPersonaAsync_WhenEmailSenderFails_PreservesErrorBehavior()
+        {
+            var emailSenderMock = new Mock<IEmailSender>();
+            emailSenderMock
+                .Setup(s => s.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Mail unavailable"));
+            var service = CrearServicio(emailSender: emailSenderMock.Object);
+
+            var result = await service.EnviarMailNuevaPersonaAsync("flow-1", "nueva@example.com", "token-1");
+
+            Assert.False(result.Success);
+            Assert.Equal("ACT_NUP_99", result.ErrorCode);
+            Assert.Equal("Error al enviar link de activación para nueva persona.", result.Message);
+            Assert.Equal(500, result.HttpCode);
+            emailSenderMock.Verify(
+                s => s.SendAsync("nueva@example.com", "Crea tu contraseña de Admisiones", It.IsAny<string>()),
+                Times.Once);
+        }
+
+        [Fact]
         public async Task EnviarMailRecuperacionPasswordAsync_StoresHashInRedisAndSendsRecoveryMail()
         {
             var persona = CrearPersona();
@@ -105,7 +145,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -121,7 +161,9 @@ namespace UnitTesting.AppLogic.Services
             hashStoreMock.Verify(h => h.StoreAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()), Times.Once);
             Assert.Contains("flow=recovery", mail.Body);
-            Assert.Contains("Recuper", mail.Subject);
+            Assert.Equal(1, mail.SendCount);
+            Assert.Equal("ana@example.com", mail.To);
+            Assert.Equal("Recuperá tu contraseña de Admisiones", mail.Subject);
             Assert.Equal("password-recovery", jwt.Claims.First(c => c.Type == "purpose").Value);
         }
 
@@ -133,7 +175,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -166,7 +208,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -234,7 +276,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -278,7 +320,7 @@ namespace UnitTesting.AppLogic.Services
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
-            var mail = new TestableEnvioMail();
+            var mail = new TestEmailSender();
 
             personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
@@ -382,25 +424,19 @@ namespace UnitTesting.AppLogic.Services
             return Convert.ToBase64String(bytes);
         }
 
-        private class TestableEnvioMail : EnvioMail
+        private sealed class TestEmailSender : IEmailSender
         {
             public string Body { get; private set; } = string.Empty;
             public string Subject { get; private set; } = string.Empty;
+            public string To { get; private set; } = string.Empty;
+            public int SendCount { get; private set; }
 
-            public TestableEnvioMail() : base("http://localhost/wsdl")
+            public Task SendAsync(string to, string subject, string body)
             {
-            }
-
-            public override Task EnviarMail(
-                string from,
-                List<string> colTOs,
-                string subject,
-                string body,
-                List<string>? colReplyTo = null,
-                string sistema = "")
-            {
+                To = to;
                 Subject = subject;
                 Body = body;
+                SendCount++;
                 return Task.CompletedTask;
             }
         }

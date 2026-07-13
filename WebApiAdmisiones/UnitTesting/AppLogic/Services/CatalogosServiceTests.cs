@@ -1,7 +1,7 @@
-﻿using AppLogic.Dtos.Catalogos;
+﻿using AppLogic.Catalogos.Responses;
 using System.Net;
 using System.Text;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Collections.Generic;
 using Xunit;
-using AppLogic.Services.Catalogos;
+using AppLogic.Catalogos.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

@@ -1,5 +1,5 @@
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Becas;
+using AppLogic.Becas.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -41,24 +41,5 @@ namespace UnitTesting.Controllers
             serviceMock.Verify(s => s.ObtenerMisInscripcionesConfirmadas(123), Times.Once);
         }
 
-        /*
-        [Fact]
-        public void ObtenerAceptacionReglamentoEstudiantil_ReturnsOk()
-        {
-            var serviceMock = new Mock<IBecasService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<BecasController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new BecasController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.ObtenerAceptacionReglamentoEstudiantil(1))
-                .Returns(OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(new DtoAceptacionReglamentoEstDevart(), nameof(IBecasService.ObtenerAceptacionReglamentoEstudiantil)));
-
-            var response = controller.ObtenerAceptacionReglamentoEstudiantil();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-        */
     }
 }

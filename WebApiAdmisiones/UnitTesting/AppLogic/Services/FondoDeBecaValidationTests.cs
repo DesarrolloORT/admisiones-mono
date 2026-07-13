@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using AppLogic.Constants;
+using AppLogic.Becas.Constants;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers.ValidationHelpers;
+using AppLogic.Becas.Validators;
 using BusinessLogic.Entities;
 using Utilities;
 using Xunit;

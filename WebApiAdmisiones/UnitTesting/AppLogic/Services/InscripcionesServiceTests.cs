@@ -1,13 +1,16 @@
-﻿using AppLogic.Dtos.EncuestaInicial;
-using AppLogic.Dtos.Inscripciones;
-using AppLogic.Dtos.Tivenos;
-using AppLogic.ApiClients;
+﻿using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Inscripciones.Encuesta.Responses;
+using AppLogic.Inscripciones.Requests;
+using AppLogic.Inscripciones.Responses;
+using AppLogic.ApiClients.Responses;
+using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices.Catalogos;
-using AppLogic.IServices.Inscripciones;
-using AppLogic.IServices.Tivenos;
-using AppLogic.Services.Inscripciones;
-using AppLogic.Services.Inscripciones.Encuesta;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Inscripciones.Services;
+using AppLogic.Inscripciones.Encuesta.Services;
+using AppLogic.Tivenos.Dtos;
+using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -2084,7 +2087,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertaSeleccionada()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
             var oferta = new Oferta
             {
                 IdOferta = 99,
@@ -2118,7 +2121,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenALaEspera_ReturnsEstadoSinDetalle()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.ALaEspera);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.ALaEspera);
 
             var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
 
@@ -2130,7 +2133,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenPagoPendiente_ReturnsDetallePago()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {
@@ -2186,7 +2189,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenConfirmada_ReturnsDatosYMaterias()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {
@@ -2267,7 +2270,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenConfirmadaAndCoordinadoresIguales_MuestraSoloAcademico()
         {
-            SetupFresco(global::AppLogic.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
+            SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada, idInscripto: 555m);
 
             var inscripto = new Inscripto
             {
@@ -2335,7 +2338,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerUrlFactura_WithValidData_PostsAllCarritosAndReturnsUrl()
+        public async Task Pagar_WithSistarbanc_PostsAllCarritosAndReturnsUrl()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2347,7 +2350,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            var result = await service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
                 TipoPago = "SISTARBANC",
@@ -2355,7 +2358,7 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Equal("https://pagos.test/factura", result.Data!.Url);
+            Assert.Equal("https://pagos.test/factura", result.Data!.UrlPago);
             Assert.Null(result.Data.ParametrosEncriptados);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
@@ -2363,7 +2366,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerUrlFactura_WithParametrosEncriptados_SeparatesUrlFromParam()
+        public async Task Pagar_WithParametrosEncriptados_SeparatesUrlFromParam()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2375,21 +2378,21 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura?parametrosEncriptados=abc123\""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            var result = await service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
                 TipoPago = "BANRED"
             });
 
             Assert.True(result.Success);
-            Assert.Equal("https://pagos.test/factura", result.Data!.Url);
+            Assert.Equal("https://pagos.test/factura", result.Data!.UrlPago);
             Assert.Equal("abc123", result.Data.ParametrosEncriptados);
         }
 
         [Fact]
-        public async Task ObtenerUrlFactura_WhenSistarbancWithoutBank_ReturnsBadRequest()
+        public async Task Pagar_WhenSistarbancWithoutBank_ReturnsBadRequest()
         {
-            var result = await _service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
                 TipoPago = "SISTARBANC"
@@ -2401,7 +2404,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerUrlFactura_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
+        public async Task Pagar_WithUrl_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2409,7 +2412,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
                 TipoPago = "BANRED"
@@ -2421,7 +2424,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerUrlFactura_WhenNoCarritos_ReturnsNotFound()
+        public async Task Pagar_WithUrl_WhenApiRejects_ReturnsFailure()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2432,7 +2435,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.ObtenerUrlFactura(123, new DtoObtenerUrlFacturaRequest
+            var result = await service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
                 TipoPago = "BANRED"
@@ -2594,12 +2597,13 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task PagarCuentaPersonal_WithValidData_PostsAllCarritosAndReturnsMessages()
+        public async Task Pagar_WithCuentaPersonal_PostsAllCarritosAndReturnsMessages()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
-                .Setup(r => r.GetDetalleByKey(555, 123))
-                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+                .SetupSequence(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 })
+                .Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
             var handler = new StubHttpMessageHandler(_ =>
@@ -2612,18 +2616,18 @@ namespace UnitTesting.AppLogic.Services
                 """));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
-            Assert.Equal(2, result.Data!.Count);
-            Assert.Equal("123|10|1|7|555", result.Data[0].Clave);
+            Assert.Equal(2, result.Data!.Mensajes.Count);
+            Assert.Equal("123|10|1|7|555", result.Data.Mensajes[0].Clave);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
             Assert.Equal(string.Empty, request.Body);
         }
 
         [Fact]
-        public async Task PagarCuentaPersonal_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
+        public async Task Pagar_WithCuentaPersonal_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2631,7 +2635,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("INS_PC_02", result.ErrorCode);
@@ -2639,7 +2643,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task PagarCuentaPersonal_WhenNoCarritos_ReturnsNotFound()
+        public async Task Pagar_WithCuentaPersonal_WhenNoCarritos_ReturnsNotFound()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2650,7 +2654,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -2658,7 +2662,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task PagarCuentaPersonal_WhenLegacyRejects_ReturnsFailure()
+        public async Task Pagar_WithCuentaPersonal_WhenLegacyRejects_ReturnsFailure()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo
@@ -2670,7 +2674,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.PagarCuentaPersonal(123, new DtoPagarCuentaPersonalRequest { IdInscripto = 555 });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -2679,7 +2683,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarMetodoPago_WithValidData_AddsAndSaves()
+        public async Task Pagar_WithAbitab_AddsAndSaves()
         {
             InscriptoSeniaMinimum? agregado = null;
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -2691,14 +2695,14 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
-                MetodoPago = "ABITAB"
+                TipoPago = "ABITAB"
             });
 
             Assert.True(result.Success);
-            Assert.True(result.Data);
+            Assert.Equal("METODO_GUARDADO", result.Data!.Resultado);
             Assert.NotNull(agregado);
             Assert.Equal(555, agregado!.IdInscripto);
             Assert.Equal("ABITAB", agregado.MetodoPagoSeniaMinima);
@@ -2706,7 +2710,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarMetodoPago_NormalizesMetodoPago()
+        public async Task Pagar_WithPaganza_NormalizesMetodoPago()
         {
             InscriptoSeniaMinimum? agregado = null;
             var inscriptoRepo = new Mock<IInscriptoRepository>();
@@ -2718,10 +2722,10 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
-                MetodoPago = " paganza "
+                TipoPago = " paganza "
             });
 
             Assert.True(result.Success);
@@ -2729,31 +2733,31 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarMetodoPago_WhenMetodoPagoInvalid_ReturnsBadRequest()
+        public async Task Pagar_WhenMetodoPagoInvalid_ReturnsBadRequest()
         {
-            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
-                MetodoPago = "TARJETA"
+                TipoPago = "TARJETA"
             });
 
             Assert.False(result.Success);
-            Assert.Equal("INS_MP_02", result.ErrorCode);
+            Assert.Equal("INS_PAG_01", result.ErrorCode);
             Assert.Equal(400, result.HttpCode);
             _uowFactoryMock.Verify(f => f.Create(), Times.Never);
         }
 
         [Fact]
-        public void GuardarMetodoPago_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
+        public async Task Pagar_WithAbitab_WhenInscriptoDoesNotBelongToPersona_ReturnsNotFound()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
-                MetodoPago = "ABITAB"
+                TipoPago = "ABITAB"
             });
 
             Assert.False(result.Success);
@@ -2763,7 +2767,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarMetodoPago_WhenAlreadyExists_ReturnsConflict()
+        public async Task Pagar_WithPaganza_WhenAlreadyExists_ReturnsConflict()
         {
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
@@ -2772,10 +2776,10 @@ namespace UnitTesting.AppLogic.Services
             seniaRepo.Setup(r => r.GetByKey(555)).Returns(new InscriptoSeniaMinimum { IdInscripto = 555, MetodoPagoSeniaMinima = "ABITAB" });
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = _service.GuardarMetodoPago(123, new DtoGuardarMetodoPagoRequest
+            var result = await _service.Pagar(123, new DtoPagarRequest
             {
                 IdInscripto = 555,
-                MetodoPago = "PAGANZA"
+                TipoPago = "PAGANZA"
             });
 
             Assert.False(result.Success);

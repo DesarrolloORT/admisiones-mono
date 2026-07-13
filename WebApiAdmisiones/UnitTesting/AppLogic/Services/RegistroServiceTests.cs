@@ -1,9 +1,10 @@
-using AppLogic.Dtos.Registro;
+using AppLogic.Registro.Requests;
+using AppLogic.Registro.Responses;
+using AppLogic.Registro.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using AppLogic.DevartDTOs;
-using AppLogic.IServices;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -11,9 +12,9 @@ using LdapService.Interfaces;
 using Moq;
 using Utilities;
 using Xunit;
-using AppLogic.Services.Registro;
-using AppLogic.IServices.Autenticacion;
-using AppLogic.IServices.Inscripciones;
+using AppLogic.Registro.Services;
+using AppLogic.Registro.Interfaces;
+using AppLogic.Autenticacion.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -407,9 +408,9 @@ namespace UnitTesting.AppLogic.Services
                     FechaVencimiento = new DateTime(2030, 1, 1),
                     DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
-                        Archivo = [0x25, 0x50, 0x44, 0x46, 1],
-                        NombreArchivo = "documento.pdf",
-                        ContentType = "application/pdf"
+                        Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                        NombreArchivo = "documento.jpg",
+                        ContentType = "image/jpeg"
                     },
                     CaraPersona = new DtoRegistroDocumentoArchivoTemporal
                     {
@@ -493,8 +494,8 @@ namespace UnitTesting.AppLogic.Services
                     DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [1, 2, 3],
-                        NombreArchivo = "documento.pdf",
-                        ContentType = "application/pdf"
+                        NombreArchivo = "documento.jpg",
+                        ContentType = "image/jpeg"
                     }
                 });
 
