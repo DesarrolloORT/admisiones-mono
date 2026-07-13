@@ -1,4 +1,7 @@
-import type { InscripcionPreEnrollmentResponse } from './inscription-flow';
+import type {
+  InscripcionPreEnrollmentResponse,
+  InscripcionReservationData,
+} from './inscription-flow';
 import {
   buildReservationInstructions,
   buildSummaryItems,
@@ -12,6 +15,11 @@ const PRE_ENROLLMENT: InscripcionPreEnrollmentResponse = {
   seniaInscripcion: 15500,
   saldoCuenta: null,
   resumen: null,
+};
+
+const RESERVATION: InscripcionReservationData = {
+  cedula: '1.234.567-8',
+  codigoPersona: 34692671,
 };
 
 describe('inscription flow view', () => {
@@ -45,20 +53,34 @@ describe('inscription flow view', () => {
     expect(formatInscriptionAmount(-1)).toBe('No informado');
   });
 
-  it('builds reservation instructions from the pre-enrollment data', () => {
-    const abitab = buildReservationInstructions('abitab', PRE_ENROLLMENT);
+  it('builds abitab reservation instructions with the real backend data', () => {
+    const abitab = buildReservationInstructions('abitab', PRE_ENROLLMENT, RESERVATION);
     expect(abitab.description).toContain('04/03/2027');
+    expect(abitab.intro).toContain('local habilitado');
     expect(abitab.items).toEqual([
-      'Cédula de identidad: documento registrado',
-      'Monto a pagar: $ 15.500',
+      { label: 'Cédula de identidad', value: '1.234.567-8' },
+      { label: 'Número de estudiante', value: '34692671' },
+      { label: 'Monto a pagar', value: '$ 15.500' },
     ]);
+  });
 
-    const paganza = buildReservationInstructions('paganza', PRE_ENROLLMENT);
-    expect(paganza.items[0]).toContain('Universidad ORT Uruguay');
+  it('builds paganza reservation instructions with student number and amount', () => {
+    const paganza = buildReservationInstructions('paganza', PRE_ENROLLMENT, RESERVATION);
+    expect(paganza.intro).toContain('Paganza');
+    expect(paganza.items).toEqual([
+      { label: 'Número de estudiante', value: '34692671' },
+      { label: 'Monto a pagar', value: '$ 15.500' },
+    ]);
+  });
+
+  it('omits reservation items when the backend data is unknown', () => {
+    const instructions = buildReservationInstructions('abitab', PRE_ENROLLMENT, null);
+
+    expect(instructions.items).toEqual([{ label: 'Monto a pagar', value: '$ 15.500' }]);
   });
 
   it('omits unknown reservation data instead of inventing it', () => {
-    const instructions = buildReservationInstructions(null, null);
+    const instructions = buildReservationInstructions(null, null, null);
 
     expect(instructions.title).toBe('¡Inscripción reservada!');
     expect(instructions.description).toContain('Realizá el pago de la seña');
