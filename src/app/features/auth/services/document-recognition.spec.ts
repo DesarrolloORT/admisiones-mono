@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
+import {
+  IMAGE_COMPRESSION_THRESHOLD_BYTES,
+  MAX_IMAGE_SIZE_BYTES,
+} from 'src/app/shared/files/image-upload';
 import { vi } from 'vitest';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
@@ -31,9 +35,9 @@ describe('DocumentRecognition', () => {
 
   it('should delegate document recognition payload to the endpoint', () => {
     const payload = {
-      tipoMime: 'application/pdf',
+      tipoMime: 'image/jpeg',
       archivoAdjunto: {
-        nombreArchivo: 'documento.pdf',
+        nombreArchivo: 'documento.jpg',
         archivo: 'base64-content',
       },
     };
@@ -51,9 +55,9 @@ describe('DocumentRecognition', () => {
 
     service
       .recognizeDocument({
-        tipoMime: 'application/pdf',
+        tipoMime: 'image/jpeg',
         archivoAdjunto: {
-          nombreArchivo: 'documento.pdf',
+          nombreArchivo: 'documento.jpg',
           archivo: 'base64-content',
         },
       })
@@ -64,15 +68,15 @@ describe('DocumentRecognition', () => {
       });
   });
 
-  it('should create a base64 request from a valid file', async () => {
+  it('should create a base64 request from a valid image file', async () => {
     const payload = await service.createRequestFromFile(
-      new File(['content'], 'documento.pdf', { type: 'application/pdf' })
+      new File(['content'], 'documento.jpg', { type: 'image/jpeg' })
     );
 
     expect(payload).toEqual({
-      tipoMime: 'application/pdf',
+      tipoMime: 'image/jpeg',
       archivoAdjunto: {
-        nombreArchivo: 'documento.pdf',
+        nombreArchivo: 'documento.jpg',
         archivo: 'Y29udGVudA==',
       },
     });
@@ -86,7 +90,7 @@ describe('DocumentRecognition', () => {
       height: 0,
       getContext: vi.fn(() => ({ drawImage })),
       toBlob: vi.fn((callback: BlobCallback, type?: string, quality?: number) => {
-        expect(type).toBe('image/jpeg');
+        expect(type).toBe('image/png');
         expect(quality).toBe(0.82);
         callback(new Blob(['compressed'], { type }));
       }),
@@ -106,7 +110,7 @@ describe('DocumentRecognition', () => {
 
     const file = fileWithSize(
       new File(['original'], 'cedula.png', { type: 'image/png' }),
-      DocumentRecognition.IMAGE_COMPRESSION_THRESHOLD_BYTES + 1
+      IMAGE_COMPRESSION_THRESHOLD_BYTES + 1
     );
 
     const payload = await service.createRequestFromFile(file);
@@ -117,9 +121,9 @@ describe('DocumentRecognition', () => {
     expect(drawImage).toHaveBeenCalledWith(bitmap, 0, 0, 2000, 1000);
     expect(close).toHaveBeenCalledOnce();
     expect(payload).toEqual({
-      tipoMime: 'image/jpeg',
+      tipoMime: 'image/png',
       archivoAdjunto: {
-        nombreArchivo: 'cedula.jpg',
+        nombreArchivo: 'cedula.png',
         archivo: 'Y29tcHJlc3NlZA==',
       },
     });
@@ -127,13 +131,21 @@ describe('DocumentRecognition', () => {
 
   it('should reject files bigger than the final max size', async () => {
     const file = fileWithSize(
-      new File(['content'], 'documento.pdf', { type: 'application/pdf' }),
-      DocumentRecognition.MAX_FILE_SIZE_BYTES + 1
+      new File(['content'], 'cedula.jpg', { type: 'image/jpeg' }),
+      MAX_IMAGE_SIZE_BYTES + 1
     );
 
     await expect(service.createRequestFromFile(file)).rejects.toEqual(
       new DocumentRecognitionFileError('maxFileSize')
     );
+  });
+
+  it('should reject PDF files', async () => {
+    await expect(
+      service.createRequestFromFile(
+        new File(['content'], 'documento.pdf', { type: 'application/pdf' })
+      )
+    ).rejects.toEqual(new DocumentRecognitionFileError('invalidMimeType'));
   });
 
   it('should reject files without a valid MIME type', async () => {
