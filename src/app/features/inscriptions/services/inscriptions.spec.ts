@@ -101,7 +101,7 @@ describe('Inscripciones', () => {
       expect.objectContaining({ name: 'dorso.jpg', size: 5, type: 'image/jpeg' })
     );
     expect(preload.selfie).toEqual(
-      expect.objectContaining({ name: 'foto-persona.jpg', size: 5, type: 'image/png' })
+      expect.objectContaining({ name: 'foto-persona.png', size: 5, type: 'image/png' })
     );
     expect(preload.fechaVencimiento).toBe('2030-02-04');
   });

@@ -39,9 +39,9 @@ export class Inscripciones {
       photo: this.endpoint.getIdentityPhoto().pipe(catchError(() => of(null))),
     }).pipe(
       map(({ document, photo }) => ({
-        frente: toIdentityFile(document?.frente, 'frente-documento.jpg'),
-        dorso: toIdentityFile(document?.dorso, 'dorso-documento.jpg'),
-        selfie: toBlobFile(photo, 'foto-persona.jpg'),
+        frente: toIdentityFile(document?.frente, 'frente-documento'),
+        dorso: toIdentityFile(document?.dorso, 'dorso-documento'),
+        selfie: toBlobFile(photo, 'foto-persona'),
         fechaVencimiento: document?.fechaVencimiento ?? null,
       }))
     );
