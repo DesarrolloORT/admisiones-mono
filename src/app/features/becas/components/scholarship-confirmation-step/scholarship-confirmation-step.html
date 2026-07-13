@@ -7,143 +7,175 @@
     <p>Revisá que los datos sean correctos antes de enviar tu solicitud</p>
   </header>
 
-  <ort-card aria-label="Inscripción" role="region">
-    <ort-card-content>
-      <h3 class="card-title" ortCardTitle>Licenciatura en Diseño Gráfico</h3>
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="calendar_today" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Comienzo</span>
-          <span class="card-item__value">Marzo 2026</span>
-        </p>
-      </div>
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="schedule" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Turno</span>
-          <span class="card-item__value">Matutino 08:00 - 14:00</span>
-        </p>
-      </div>
-    </ort-card-content>
-  </ort-card>
+  <div
+    class="scholarship-postulation-layout"
+    [class.scholarship-postulation-layout--sidebar]="isSidebarLayout()"
+    [class.scholarship-postulation-layout--stacked]="isStackedLayout()">
+    <aside aria-label="Resumen de tu postulación" class="scholarship-postulation-sidebar">
+      <ort-card aria-label="Inscripción" role="region" [variant]="cardVariant()">
+        <ort-card-content>
+          <h3 class="card-title" ortCardTitle>Licenciatura en Diseño Gráfico</h3>
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="calendar_today" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Comienzo</span>
+              <span class="card-item__value">Marzo 2026</span>
+            </p>
+          </div>
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="schedule" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Turno</span>
+              <span class="card-item__value">Matutino 08:00 - 14:00</span>
+            </p>
+          </div>
+        </ort-card-content>
+      </ort-card>
 
-  <ort-card aria-label="Detalle de tu postulación" role="region">
-    <ort-card-content>
-      <h3 class="card-title" ortCardTitle>Detalle de tu postulación</h3>
-      @if (variant() === 'fexaCon' || variant() === 'fexaSin' || variant() === 'fbc') {
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Beca aplicada</span>
-          @switch (variant()) { @case('fexaCon'){
-          <span class="card-item__value">Fondo de Excelencia Académica</span>
-          <span class="card-item__label">Hasta 60%</span>
-          } @case('fexaSin'){
-          <span class="card-item__value">Fondo de Excelencia Académica</span>
-          <span class="card-item__label">Hasta 35%</span>
-          } @case('fbc'){
-          <span class="card-item__value">Fondo de becas concursables</span>
-          } }
-        </p>
-      </div>
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="today" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Fecha de prueba</span>
-          <span class="card-item__value">Viernes 13/06/2025</span>
-        </p>
-      </div>
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="event" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Fecha de resultados</span>
-          <span class="card-item__value">Lunes 24/07/2025</span>
-        </p>
-      </div>
-      } @else {
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Beca aplicada</span>
-          @if (variant() === 'fbr') {
-          <span class="card-item__value">Fondo de becas de reválidas</span>
-          }@else if (variant() === 'fcl') {
-          <span class="card-item__value">Fondo de beca de capacitación laboral</span>
+      <ort-card aria-label="Detalle de tu postulación" role="region" [variant]="cardVariant()">
+        <ort-card-content>
+          <h3 class="card-title" ortCardTitle>Detalle de tu postulación</h3>
+          @if (isSidebarLayout()) {
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Beca aplicada</span>
+              @switch (variant()) { @case('fexaCon'){
+              <span class="card-item__value">Fondo de Excelencia Académica</span>
+              <span class="card-item__label">Hasta 60%</span>
+              } @case('fexaSin'){
+              <span class="card-item__value">Fondo de Excelencia Académica</span>
+              <span class="card-item__label">Hasta 35%</span>
+              } @case('fbc'){
+              <span class="card-item__value">Fondo de becas concursables</span>
+              } }
+            </p>
+          </div>
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="today" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Fecha de prueba</span>
+              <span class="card-item__value">Viernes 13/06/2025</span>
+            </p>
+          </div>
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="event" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Fecha de resultados</span>
+              <span class="card-item__value">Lunes 24/07/2025</span>
+            </p>
+          </div>
+          } @else {
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="workspace_premium" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Beca aplicada</span>
+              @if (variant() === 'fbr') {
+              <span class="card-item__value">Fondo de becas de reválidas</span>
+              }@else if (variant() === 'fcl') {
+              <span class="card-item__value">Fondo de beca de capacitación laboral</span>
+              }
+            </p>
+          </div>
+          <div class="card-item">
+            <ort-icon aria-hidden="true" name="event" size="md" />
+            <p class="card-item__text">
+              <span class="card-item__label">Fecha de resolución</span>
+              <span class="card-item__value">Lunes 24/07/2025</span>
+            </p>
+          </div>
           }
+        </ort-card-content>
+      </ort-card>
+    </aside>
+    @if (variant() !== 'fbr' && variant() !== 'fcl') {
+    <section aria-labelledby="exam-section__title" class="exam-section">
+      <div class="exam-section__text">
+        <h3 class="exam-section__title" id="exam-section__title">Prueba de aptitud académica</h3>
+        <p>
+          La prueba de aptitud académica (PAA) evalúa habilidades de razonamiento verbal y
+          matemático.
+        </p>
+        <p>
+          Deberás presentarte el
+          <strong>13 de junio</strong>
+          en las instalaciones de ORT para rendirla. Es un requisito obligatorio para la asignación
+          de la beca.
         </p>
       </div>
-      <div class="card-item">
-        <ort-icon aria-hidden="true" name="event" size="md" />
-        <p class="card-item__text">
-          <span class="card-item__label">Fecha de resolución</span>
-          <span class="card-item__value">Lunes 24/07/2025</span>
-        </p>
-      </div>
-      }
-    </ort-card-content>
-  </ort-card>
-
-  <section aria-labelledby="exam-section__title" class="exam-section">
-    <div class="exam-section__text">
-      <h3 class="exam-section__title" id="exam-section__title">Prueba de aptitud académica</h3>
-      <p>
-        La prueba de aptitud académica (PAA) evalúa habilidades de razonamiento verbal y matemático.
-      </p>
-      <p>
-        Deberás presentarte el
-        <strong>13 de junio</strong>
-        en las instalaciones de ORT para rendirla. Es un requisito obligatorio para la asignación de
-        la beca.
-      </p>
-    </div>
-    <button aria-label="Descargar material de estudio (ZIP/PDF)" ort-secondary-button type="button">
-      <ort-icon name="file_download" size="sm" />
-      Descargar material de estudio
-    </button>
+      <button
+        aria-label="Descargar material de estudio (ZIP/PDF)"
+        class="exam-section__button"
+        ort-secondary-button
+        type="button">
+        <ort-icon name="file_download" size="sm" />
+        Descargar material de estudio
+      </button>
+    </section>
+    }
     <ort-snackbar
+      class="scholarship-postulation-banner"
       message="Entrevista pendiente"
       role="status"
       supportingText="Como parte del proceso de evaluación, deberás realizar una entrevista con un asesor académico de la carrera."
       variant="information"
       [autoDismiss]="false"
       [closeable]="false" />
-  </section>
-  <section
-    aria-labelledby="terms-and-conditions-section__title"
-    class="terms-and-conditions-section">
-    <h3 class="terms-and-conditions-section__title" id="terms-and-conditions-section__title">
-      Términos y condiciones
-    </h3>
-    <p class="terms-and-conditions-section__text">
-      Te recomendamos leer los términos y condiciones de mantenimiento de becas. En ellos se
-      detallan los requisitos, responsabilidades y condiciones que debés cumplir para mantener
-      activa tu beca durante tu trayectoria universitaria.
-    </p>
-    <button ort-tonal-button type="button" (click)="openTermsAndConditions()">
-      Leer términos y condiciones
-    </button>
-    <ort-checkbox
-      required
-      [checked]="termsAccepted()"
-      (checkedChange)="onTermsAcceptedChange($event)">
+
+    <section
+      aria-labelledby="terms-and-conditions-section__title"
+      class="terms-and-conditions-section">
+      <h3 class="terms-and-conditions-section__title" id="terms-and-conditions-section__title">
+        Términos y condiciones
+      </h3>
       <p class="terms-and-conditions-section__text">
-        He leído y acepto los
-        <button
-          class="terms-and-conditions-section__link"
-          type="button"
-          (click)="openTermsAndConditions()">
-          términos y condiciones
-        </button>
-        de la postulación.
+        Te recomendamos leer los términos y condiciones de mantenimiento de becas. En ellos se
+        detallan los requisitos, responsabilidades y condiciones que debés cumplir para mantener
+        activa tu beca durante tu trayectoria universitaria.
       </p>
-    </ort-checkbox>
-    @if (termsError()) {
-    <ort-error>Debes leer y aceptar los términos y condiciones</ort-error>
-    }
-  </section>
-  <button ort-primary-button type="button" (click)="onConfirmApplication()">
-    Confirmar postulación
-  </button>
+      <button
+        class="terms-and-conditions__button"
+        ort-tonal-button
+        type="button"
+        (click)="openTermsAndConditions()">
+        Leer términos y condiciones
+      </button>
+      <ort-checkbox
+        required
+        [checked]="termsAccepted()"
+        (checkedChange)="onTermsAcceptedChange($event)">
+        <p class="terms-and-conditions-section__text">
+          He leído y acepto los
+          <button
+            class="terms-and-conditions-section__link"
+            type="button"
+            (click)="openTermsAndConditions()">
+            términos y condiciones
+          </button>
+          de la postulación.
+        </p>
+      </ort-checkbox>
+      @if (termsError()) {
+      <ort-error>Debes leer y aceptar los términos y condiciones</ort-error>
+      }
+    </section>
+
+    <div class="scholarship-step__footer">
+      <button
+        class="scholarship-step-button"
+        ort-primary-button
+        type="button"
+        (click)="onConfirmApplication()">
+        Confirmar postulación
+      </button>
+      <button
+        class="scholarship-step-button scholarship-step-button--back"
+        ort-secondary-button
+        type="button">
+        Volver al paso anterior
+      </button>
+    </div>
+  </div>
 </section>
 } @else {
 <app-terms-and-conditions (accepted)="acceptTermsAndConditions()" />

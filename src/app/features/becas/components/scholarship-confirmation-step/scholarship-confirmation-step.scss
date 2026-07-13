@@ -63,3 +63,127 @@
   color: var(--ort-sys-color-primary-500);
   text-decoration: underline;
 }
+
+.scholarship-postulation-layout {
+  display: grid;
+  gap: var(--ort-sys-spacing-24);
+}
+
+.scholarship-postulation-sidebar {
+  display: grid;
+  gap: var(--ort-sys-spacing-24);
+  order: 1;
+}
+
+.scholarship-postulation-layout .exam-section {
+  order: 2;
+}
+
+.scholarship-postulation-banner {
+  order: 3;
+}
+
+.scholarship-postulation-layout .terms-and-conditions-section {
+  order: 4;
+}
+
+.scholarship-postulation-layout > .scholarship-step__footer {
+  order: 5;
+}
+
+@media (width >= 760px) {
+  .terms-and-conditions__button {
+    display: none;
+  }
+
+  .scholarship-postulation-banner ::ng-deep .ort-snackbar {
+    width: 100%;
+  }
+
+  .scholarship-postulation-layout--sidebar {
+    grid-template-areas:
+      'banner banner'
+      'exam sidebar'
+      'terms sidebar'
+      'footer footer';
+    grid-template-columns: minmax(1fr, 1fr) minmax(17.5rem, 22.5rem);
+  }
+
+  .scholarship-postulation-layout--sidebar .scholarship-postulation-banner {
+    grid-area: banner;
+    order: initial;
+  }
+
+  .scholarship-postulation-layout--sidebar .exam-section {
+    grid-area: exam;
+    order: initial;
+    padding: var(--ort-sys-card-content-padding-block) var(--ort-sys-card-content-padding-inline);
+    border-radius: var(--ort-sys-card-border-radius) var(--ort-sys-card-border-radius) 0 0;
+    background: var(--ort-sys-card-background);
+    box-shadow: var(--ort-sys-elevation-md-x) var(--ort-sys-elevation-md-y)
+      var(--ort-sys-elevation-md-blur) var(--ort-sys-elevation-md-spread)
+      var(--ort-sys-elevation-md-color);
+    clip-path: inset(-1000px -1000px 0 -1000px);
+  }
+
+  .scholarship-postulation-layout--sidebar .terms-and-conditions-section {
+    grid-area: terms;
+    order: initial;
+    margin-top: calc(-1 * var(--ort-sys-spacing-24));
+    padding: var(--ort-sys-card-content-padding-block) var(--ort-sys-card-content-padding-inline);
+    border-top: var(--ort-sys-border-width-1) solid var(--ort-sys-card-border-color);
+    border-radius: 0 0 var(--ort-sys-card-border-radius) var(--ort-sys-card-border-radius);
+    background: var(--ort-sys-card-background);
+    box-shadow: var(--ort-sys-elevation-md-x) var(--ort-sys-elevation-md-y)
+      var(--ort-sys-elevation-md-blur) var(--ort-sys-elevation-md-spread)
+      var(--ort-sys-elevation-md-color);
+    clip-path: inset(0 -1000px -1000px -1000px);
+  }
+
+  .scholarship-postulation-layout--sidebar .scholarship-postulation-sidebar {
+    grid-area: sidebar;
+    align-content: start;
+    order: initial;
+  }
+
+  .scholarship-postulation-layout--sidebar > .scholarship-step__footer {
+    grid-area: footer;
+    order: initial;
+  }
+
+  .exam-section {
+    gap: var(--ort-sys-spacing-16);
+  }
+
+  .exam-section__button {
+    place-self: start start;
+  }
+
+  .scholarship-postulation-layout--stacked {
+    gap: var(--ort-sys-spacing-32);
+  }
+
+  .scholarship-postulation-layout--stacked .scholarship-postulation-banner {
+    order: 1;
+  }
+
+  .scholarship-postulation-layout--stacked .scholarship-postulation-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ort-sys-spacing-32);
+    order: 2;
+  }
+
+  .scholarship-postulation-layout--stacked .terms-and-conditions-section {
+    order: 3;
+    padding: var(--ort-sys-card-content-padding-block) var(--ort-sys-card-content-padding-inline);
+    border-radius: var(--ort-sys-card-border-radius);
+    background: var(--ort-sys-card-background);
+    box-shadow: var(--ort-sys-elevation-md-x) var(--ort-sys-elevation-md-y)
+      var(--ort-sys-elevation-md-blur) var(--ort-sys-elevation-md-spread)
+      var(--ort-sys-elevation-md-color);
+  }
+
+  .scholarship-postulation-layout--stacked > .scholarship-step__footer {
+    order: 4;
+  }
+}

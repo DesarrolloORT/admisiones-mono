@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   OrtButtonModule,
   OrtCardModule,
@@ -7,6 +15,7 @@ import {
   OrtIconModule,
   OrtSnackbarModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 import { TermsAndConditions } from '../terms-and-conditions/terms-and-conditions';
@@ -65,4 +74,16 @@ export class ScholarshipConfirmationStep {
   }
 
   readonly variant = input.required<ScholarshipVariant>();
+
+  readonly isSidebarLayout = computed(() => ['fexaCon', 'fexaSin', 'fbc'].includes(this.variant()));
+
+  readonly isStackedLayout = computed(() => ['fbr', 'fcl'].includes(this.variant()));
+
+  private readonly breakpointService = inject(BreakpointService);
+
+  readonly cardVariant = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'outlined' : 'elevated';
+  });
 }
