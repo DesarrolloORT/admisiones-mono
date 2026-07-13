@@ -4,39 +4,50 @@ describe('inscription-files', () => {
   it('parses a backend data-url into a browser File', () => {
     const archivo = `data:image/png;base64,${globalThis.btoa('png-bytes')}`;
 
-    const file = toIdentityFile({ nombreArchivo: 'frente.png', archivo }, 'fallback.jpg');
+    const file = toIdentityFile({ nombreArchivo: 'frente.png', archivo }, 'frente-documento');
 
     expect(file?.name).toBe('frente.png');
     expect(file?.type).toBe('image/png');
     expect(file?.size).toBe('png-bytes'.length);
   });
 
+  it('derives the name from the real type when the backend sends no file name', () => {
+    const archivo = `data:image/png;base64,${globalThis.btoa('png-bytes')}`;
+
+    const file = toIdentityFile({ nombreArchivo: null, archivo }, 'frente-documento');
+
+    expect(file?.name).toBe('frente-documento.png');
+    expect(file?.type).toBe('image/png');
+  });
+
   it('infers the mime type from the file name for raw base64 and falls back on empty content', () => {
     const file = toIdentityFile(
       { nombreArchivo: 'dorso.jpg', archivo: globalThis.btoa('jpg-bytes') },
-      'fallback.jpg'
+      'dorso-documento'
     );
 
     expect(file?.type).toBe('image/jpeg');
-    expect(toIdentityFile({ nombreArchivo: 'x.jpg', archivo: '   ' }, 'fallback.jpg')).toBeNull();
-    expect(toIdentityFile(null, 'fallback.jpg')).toBeNull();
+    expect(
+      toIdentityFile({ nombreArchivo: 'x.jpg', archivo: '   ' }, 'dorso-documento')
+    ).toBeNull();
+    expect(toIdentityFile(null, 'dorso-documento')).toBeNull();
   });
 
   it('returns null for invalid base64 content', () => {
     expect(
-      toIdentityFile({ nombreArchivo: 'x.jpg', archivo: '@@no-base64@@' }, 'f.jpg')
+      toIdentityFile({ nombreArchivo: 'x.jpg', archivo: '@@no-base64@@' }, 'documento')
     ).toBeNull();
   });
 
-  it('wraps a non-empty blob as File and rejects empty blobs', () => {
+  it('names a nameless blob from its real type', () => {
     const blob = new Blob(['photo'], { type: 'image/png' });
 
-    const file = toBlobFile(blob, 'foto-persona.jpg');
+    const file = toBlobFile(blob, 'foto-persona');
 
-    expect(file?.name).toBe('foto-persona.jpg');
+    expect(file?.name).toBe('foto-persona.png');
     expect(file?.type).toBe('image/png');
-    expect(toBlobFile(new Blob([]), 'foto.jpg')).toBeNull();
-    expect(toBlobFile(null, 'foto.jpg')).toBeNull();
+    expect(toBlobFile(new Blob([]), 'foto-persona')).toBeNull();
+    expect(toBlobFile(null, 'foto-persona')).toBeNull();
   });
 
   it('encodes an image File as base64 upload payload', async () => {
@@ -46,6 +57,14 @@ describe('inscription-files', () => {
 
     expect(upload.nombreArchivo).toBe('frente.jpg');
     expect(globalThis.atob(upload.archivo)).toBe('upload-bytes');
+  });
+
+  it('aligns the upload name extension with the real type', async () => {
+    const file = new File(['upload-bytes'], 'documento.jpg', { type: 'image/png' });
+
+    const upload = await toIdentityUploadFile(file);
+
+    expect(upload.nombreArchivo).toBe('documento.png');
   });
 
   it('rejects files that are not jpeg or png', async () => {
