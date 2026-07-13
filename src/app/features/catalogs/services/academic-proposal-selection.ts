@@ -22,6 +22,7 @@ export class AcademicProposalSelection {
   private readonly destroyRef = inject(DestroyRef);
   private readonly careersState = signal<readonly Career[]>([]);
   private readonly proposalTypeValue = signal('');
+  private readonly persistedCareerOption = signal<AcademicProposalOption | null>(null);
   private form: FormGroup<AcademicProposalForm> | null = null;
   private formSubscriptions = new Subscription();
 
@@ -36,9 +37,16 @@ export class AcademicProposalSelection {
   public readonly proposalOptions = computed(() =>
     getAvailableAcademicProposalTypes(this.careersState())
   );
-  public readonly careerOptions = computed(() =>
-    getAcademicCareerOptions(this.careersState(), this.proposalTypeValue())
-  );
+  public readonly careerOptions = computed(() => {
+    const options = getAcademicCareerOptions(this.careersState(), this.proposalTypeValue());
+    // Al retomar, la carrera persistida puede no estar en el catálogo vigente (oferta
+    // cerrada o nivel sin mapear a un tipo); la agregamos para que el select bloqueado
+    // muestre su nombre, evitando duplicar si el catálogo ya la trae.
+    const persisted = this.persistedCareerOption();
+    return !persisted || options.some(option => option.value === persisted.value)
+      ? options
+      : [...options, persisted];
+  });
   public readonly careersLoadingMessage = computed(() =>
     this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
   );
@@ -82,6 +90,11 @@ export class AcademicProposalSelection {
 
   public setProposalType(value: string): void {
     this.proposalTypeValue.set(value);
+  }
+
+  /** Carrera ya persistida (Retomar): se muestra aunque el catálogo vigente no la incluya. */
+  public setPersistedCareerOption(option: AcademicProposalOption | null): void {
+    this.persistedCareerOption.set(option);
   }
 
   public canSelectCareer(): boolean {
@@ -177,6 +190,7 @@ export class AcademicProposalSelection {
     this.formSubscriptions.add(
       form.controls.tipoPropuesta.valueChanges.subscribe(value => {
         this.proposalTypeValue.set(value);
+        this.persistedCareerOption.set(null);
         form.controls.carrera.setValue('');
         this.startOptions.set([]);
         this.shiftOptions.set([]);
