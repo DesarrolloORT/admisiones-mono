@@ -1,3 +1,5 @@
+import type { InscripcionConfirmedDetail } from './inscription-detail';
+
 export type EscenarioInscripcion = 'primera-vez' | 'parcial' | 'encuesta-completa';
 
 export type EstadoEncuestaInicial = 'no-iniciada' | 'en-progreso' | 'completa';
@@ -175,8 +177,16 @@ export interface InscripcionPaymentResponse {
   urlPago: string | null;
   parametrosEncriptados: string | null;
   mensajes: InscripcionPaymentMessage[];
+  confirmada: InscripcionConfirmedDetail | null;
   message: string | null;
   errorCode: string | null;
+}
+
+// Datos que el backend informa para pagar una reserva (Abitab/Paganza). Llegan
+// en el bloque seniaMinima del Detalle; la pantalla de reserva los muestra.
+export interface InscripcionReservationData {
+  cedula: string | null;
+  codigoPersona: number | null;
 }
 
 export interface InscripcionIdentityDocumentFile {
@@ -214,10 +224,16 @@ export interface ContactoCoordinador {
   email: string;
 }
 
+export interface ItemInstruccionReserva {
+  label: string;
+  value: string;
+}
+
 export interface InstruccionReserva {
   title: string;
   description: string;
-  items: readonly string[];
+  intro: string;
+  items: readonly ItemInstruccionReserva[];
   help: string;
 }
 

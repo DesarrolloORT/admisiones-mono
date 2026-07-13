@@ -379,6 +379,28 @@ describe('inscription flow mappers', () => {
     expect(patchedSchoolPlace({})).toBe('');
   });
 
+  it('leaves the academic selection untouched when includeAcademicSelection is false', () => {
+    const forms = createInscripcionForms();
+
+    patchBackendSurveyForms(
+      {
+        ...emptySurvey,
+        carreraId: 20,
+        comienzoId: 200,
+        cursaSecundaria: true,
+        anioBachilleratoId: 6,
+      },
+      emptySurveyResponse,
+      { forms, careers: [], includeAcademicSelection: false }
+    );
+
+    // El paso 1 queda virgen; el resto de la encuesta sí se patchea.
+    expect(forms.academicForm.controls.carrera.value).toBe('');
+    expect(forms.academicForm.controls.comienzo.value).toBe('');
+    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('');
+    expect(forms.educationForm.controls.anioSecundaria.value).toBe('6');
+  });
+
   it('keeps the current proposal type when the survey level cannot be resolved', () => {
     const forms = createInscripcionForms();
     forms.academicForm.controls.tipoPropuesta.setValue('3');
