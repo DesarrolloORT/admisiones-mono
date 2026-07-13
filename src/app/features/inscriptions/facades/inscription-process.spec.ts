@@ -5,41 +5,55 @@ import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import type { InscripcionDetail } from '../models/inscription-detail';
+import {
+  EMPTY_INITIAL_SURVEY_RESPONSE,
+  type InscripcionEntryResolved,
+  type InscripcionInitialSurveyResolved,
+} from '../models/inscription-entry';
+import type { InscripcionInitialSurvey } from '../models/inscription-flow';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProcessFacade } from './inscription-process';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyFacade } from './inscription-survey';
 
+const NUEVA: InscripcionEntryResolved = { intent: 'nueva' };
+const FRESH: InscripcionInitialSurveyResolved = {
+  initialSurvey: { ...EMPTY_INITIAL_SURVEY_RESPONSE, encuesta: null },
+  loadFailed: false,
+};
+
 describe('InscripcionProcessFacade', () => {
-  it('starts clean without a resolved detail', () => {
-    const { process, payment } = createFacade(null);
+  it('starts clean on a new inscription', () => {
+    const { process, payment, proposal, survey } = createFacade(NUEVA, FRESH);
 
     TestBed.tick();
 
     expect(process.flow.currentStep()).toBe('propuesta');
     expect(process.preEnrollmentResponse()).toBeNull();
     expect(payment.outcome()).toBeNull();
+    expect(proposal.disableForResume).not.toHaveBeenCalled();
+    expect(survey.applyInitialState).toHaveBeenCalledWith({ kind: 'fresh' });
   });
 
-  it('resumes at the payment step with a pending-payment detail', () => {
-    const { process } = createFacade(createPendingPaymentDetail());
+  it('keeps step 1 for a new inscription even with an in-progress survey (bug regression)', () => {
+    const { process, proposal, survey } = createFacade(NUEVA, inProgressSurvey('experiencia-ort'));
 
     TestBed.tick();
 
-    expect(process.flow.currentStep()).toBe('pago');
-    expect(process.preEnrollmentResponse()).toEqual({
-      idInscripcion: 1072704,
-      confirmada: false,
-      fechaVencimientoPago: '2027-03-04',
-      seniaInscripcion: 15500,
-      saldoCuenta: 1200,
-      resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
-    });
+    // Empezar de cero SIEMPRE muestra el paso 1: la encuesta previa (por persona) no
+    // reposiciona el flujo ni precarga la propuesta.
+    expect(process.flow.currentStep()).toBe('propuesta');
+    expect(proposal.disableForResume).not.toHaveBeenCalled();
+    expect(survey.applyInitialState).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'prefilled', includeAcademicSelection: false })
+    );
   });
 
-  it('resumes at the payment step before catalogs finish initializing', () => {
-    const { process } = createFacade(createPendingPaymentDetail(), false);
+  it('resumes at the payment step with a pending-payment detail', () => {
+    const { process } = createFacade(retomar(createPendingPaymentDetail()), FRESH);
+
+    TestBed.tick();
 
     expect(process.flow.currentStep()).toBe('pago');
     expect(process.preEnrollmentResponse()).toEqual({
@@ -53,7 +67,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('shows the terminal success outcome with a confirmed detail', () => {
-    const { payment, process } = createFacade(createConfirmedDetail());
+    const { payment, process } = createFacade(retomar(createConfirmedDetail()), FRESH);
 
     TestBed.tick();
 
@@ -70,24 +84,28 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('shows the payment references when the deposit method was already chosen', () => {
-    const { payment, process } = createFacade(createSeniaMinimaDetail());
+    const { payment, process } = createFacade(retomar(createSeniaMinimaDetail()), FRESH);
 
     TestBed.tick();
 
     expect(process.flow.currentStep()).not.toBe('pago');
     expect(payment.outcome()).toBe('reserva');
     expect(payment.selectedPaymentMethod()).toBe('abitab');
+    expect(payment.reservationData()).toEqual({ cedula: '12345678', codigoPersona: 555 });
     expect(process.preEnrollmentResponse()?.seniaInscripcion).toBe(3339);
   });
 
   it('shows the in-process outcome when the enrollment is awaiting review', () => {
-    const { payment } = createFacade({
-      estado: 'A la espera',
-      detalle: null,
-      pagoPendiente: null,
-      seniaMinima: null,
-      confirmada: null,
-    });
+    const { payment } = createFacade(
+      retomar({
+        estado: 'A la espera',
+        detalle: null,
+        pagoPendiente: null,
+        seniaMinima: null,
+        confirmada: null,
+      }),
+      FRESH
+    );
 
     TestBed.tick();
 
@@ -95,10 +113,10 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('resumes a Pendiente detail like a pending payment', () => {
-    const { payment, process } = createFacade({
-      ...createPendingPaymentDetail(),
-      estado: 'Pendiente',
-    });
+    const { payment, process } = createFacade(
+      retomar({ ...createPendingPaymentDetail(), estado: 'Pendiente' }),
+      FRESH
+    );
 
     TestBed.tick();
 
@@ -107,8 +125,92 @@ describe('InscripcionProcessFacade', () => {
     expect(process.preEnrollmentResponse()?.idInscripcion).toBe(1072704);
   });
 
+  it('disables the survey proposal and lands on step 2 when resuming in progress', () => {
+    const detalle = {
+      idOferta: 300,
+      idProducto: 20,
+      carrera: 'Sistemas',
+      idComienzo: 200,
+      comienzo: 'Marzo 2027',
+      idTurno: 10,
+      turno: 'Noche',
+    };
+    const { process, proposal, survey } = createFacade(
+      retomar({
+        estado: 'En proceso',
+        detalle,
+        pagoPendiente: null,
+        seniaMinima: null,
+        confirmada: null,
+      }),
+      inProgressSurvey('educacion')
+    );
+
+    TestBed.tick();
+
+    expect(survey.applyInitialState).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'prefilled', includeAcademicSelection: true })
+    );
+    expect(proposal.disableForResume).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).toBe('encuesta');
+  });
+
+  it('does not disable the proposal outside an in-progress resume', () => {
+    const { proposal } = createFacade(retomar(createPendingPaymentDetail()), FRESH);
+
+    TestBed.tick();
+
+    expect(proposal.disableForResume).not.toHaveBeenCalled();
+  });
+
+  it('positions the flow step last, after applying proposal and survey slices', () => {
+    const detalle = {
+      idOferta: 300,
+      idProducto: 20,
+      carrera: 'Sistemas',
+      idComienzo: 200,
+      comienzo: 'Marzo 2027',
+      idTurno: 10,
+      turno: 'Noche',
+    };
+    const { process, proposal, survey } = createFacade(
+      retomar({
+        estado: 'En proceso',
+        detalle,
+        pagoPendiente: null,
+        seniaMinima: null,
+        confirmada: null,
+      }),
+      inProgressSurvey('educacion'),
+      true,
+      { spyGoTo: true }
+    );
+
+    TestBed.tick();
+
+    const goToOrder = (process.flow.goTo as unknown as ReturnType<typeof vi.fn>).mock
+      .invocationCallOrder[0];
+    const proposalOrder = proposal.disableForResume.mock.invocationCallOrder[0];
+    const surveyOrder = survey.applyInitialState.mock.invocationCallOrder[0];
+    expect(goToOrder).toBeGreaterThan(proposalOrder);
+    expect(goToOrder).toBeGreaterThan(surveyOrder);
+  });
+
+  it('re-derives and re-applies the state on a manual survey retry', () => {
+    const { facade, survey } = createFacade(NUEVA, { initialSurvey: null, loadFailed: true });
+
+    TestBed.tick();
+    expect(survey.applyInitialState).toHaveBeenLastCalledWith({ kind: 'load-failed' });
+
+    survey.fetchResolvedInitialSurvey.mockReturnValue(of(FRESH));
+    facade.retryInitialSurvey();
+
+    expect(survey.fetchResolvedInitialSurvey).toHaveBeenCalledOnce();
+    expect(survey.applyInitialState).toHaveBeenLastCalledWith({ kind: 'fresh' });
+  });
+
   it('merges the proposal and survey catalog errors', () => {
-    const { facade, proposal, survey } = createFacade(null);
+    const { facade, proposal, survey } = createFacade(NUEVA, FRESH);
 
     expect(facade.catalogError()).toBeNull();
 
@@ -120,7 +222,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('opens and closes the exit confirmation dialog', () => {
-    const { facade } = createFacade(null);
+    const { facade } = createFacade(NUEVA, FRESH);
 
     facade.requestExit();
     expect(facade.exitConfirmationOpen()).toBe(true);
@@ -131,7 +233,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('exits without saving when the user has no initial survey right', () => {
-    const { facade, survey, router } = createFacade(null);
+    const { facade, survey, router } = createFacade(NUEVA, FRESH);
     survey.hasInitialSurveyRight.set(false);
 
     facade.requestExit();
@@ -143,7 +245,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('saves the partial survey and navigates home on exit', () => {
-    const { facade, survey, router } = createFacade(null);
+    const { facade, survey, router } = createFacade(NUEVA, FRESH);
 
     facade.requestExit();
     facade.confirmExit();
@@ -155,7 +257,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('shows an error and stays when the partial save reports failure', () => {
-    const { facade, survey, router } = createFacade(null);
+    const { facade, survey, router } = createFacade(NUEVA, FRESH);
     survey.savePartial.mockReturnValue(of(false));
 
     facade.requestExit();
@@ -167,7 +269,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('shows an error and stays when the partial save fails', () => {
-    const { facade, survey, router } = createFacade(null);
+    const { facade, survey, router } = createFacade(NUEVA, FRESH);
     survey.savePartial.mockReturnValue(throwError(() => new Error('offline')));
 
     facade.requestExit();
@@ -179,7 +281,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('ignores a second exit confirmation while the survey is saving', () => {
-    const { facade, survey, router } = createFacade(null);
+    const { facade, survey, router } = createFacade(NUEVA, FRESH);
     const saving = new Subject<boolean>();
     survey.savePartial.mockReturnValue(saving.asObservable());
 
@@ -195,7 +297,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('dispatches continue to the facade owning the current step', () => {
-    const { facade, process, proposal, survey, payment } = createFacade(null);
+    const { facade, process, proposal, survey, payment } = createFacade(NUEVA, FRESH);
 
     facade.continue();
     expect(proposal.continue).toHaveBeenCalledOnce();
@@ -210,7 +312,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('routes back through the survey or the flow depending on the step', () => {
-    const { facade, process, survey } = createFacade(null);
+    const { facade, process, survey } = createFacade(NUEVA, FRESH);
 
     facade.back();
     expect(survey.back).not.toHaveBeenCalled();
@@ -228,7 +330,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('blocks back while the payment is processing', () => {
-    const { facade, process, payment } = createFacade(null);
+    const { facade, process, payment } = createFacade(NUEVA, FRESH);
     process.flow.goTo('pago');
     payment.view.set('processing');
 
@@ -239,7 +341,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('describes the current step and back label per state', () => {
-    const { facade, process, survey } = createFacade(null);
+    const { facade, process, survey } = createFacade(NUEVA, FRESH);
 
     expect(facade.stepLabel()).toBe('Paso 1 de 3 - Propuesta académica');
     expect(facade.backLabel()).toBe('Volver al paso anterior');
@@ -260,7 +362,7 @@ describe('InscripcionProcessFacade', () => {
   });
 
   it('hides the stepper on terminal outcomes and while processing', () => {
-    const { facade, payment } = createFacade(null);
+    const { facade, payment } = createFacade(NUEVA, FRESH);
 
     expect(facade.showStepper()).toBe(true);
 
@@ -275,11 +377,33 @@ describe('InscripcionProcessFacade', () => {
   });
 });
 
-function createFacade(detail: InscripcionDetail | null, initialized = true) {
+function retomar(detail: InscripcionDetail): InscripcionEntryResolved {
+  return { intent: 'retomar', detail };
+}
+
+function inProgressSurvey(
+  seccionActiva: InscripcionInitialSurvey['seccionActiva']
+): InscripcionInitialSurveyResolved {
+  return {
+    initialSurvey: {
+      ...EMPTY_INITIAL_SURVEY_RESPONSE,
+      encuesta: createInitialSurvey({ seccionActiva }),
+    },
+    loadFailed: false,
+  };
+}
+
+function createFacade(
+  entry: InscripcionEntryResolved,
+  surveyResolved: InscripcionInitialSurveyResolved,
+  initialized = true,
+  options: { spyGoTo?: boolean } = {}
+) {
   const payment = {
     outcome: signal<string | null>(null),
     view: signal('editing'),
     confirmedDetail: signal(null),
+    reservationData: signal<{ cedula: string | null; codigoPersona: number | null } | null>(null),
     selectedPaymentMethod: signal(null),
     requestConfirmation: vi.fn(),
   };
@@ -287,6 +411,7 @@ function createFacade(detail: InscripcionDetail | null, initialized = true) {
     initialized: signal(initialized),
     catalogError: signal<string | null>(null),
     continue: vi.fn(),
+    disableForResume: vi.fn(),
   };
   const survey = {
     initialized: signal(initialized),
@@ -301,6 +426,8 @@ function createFacade(detail: InscripcionDetail | null, initialized = true) {
     back: vi.fn(),
     continue: vi.fn(),
     savePartial: vi.fn().mockReturnValue(of(true)),
+    applyInitialState: vi.fn(),
+    fetchResolvedInitialSurvey: vi.fn(),
   };
   const router = { navigateByUrl: vi.fn() };
 
@@ -308,7 +435,10 @@ function createFacade(detail: InscripcionDetail | null, initialized = true) {
     providers: [
       InscripcionProcessFacade,
       InscripcionProcessStore,
-      { provide: ActivatedRoute, useValue: { snapshot: { data: { inscriptionDetail: detail } } } },
+      {
+        provide: ActivatedRoute,
+        useValue: { snapshot: { data: { entry, initialSurvey: surveyResolved } } },
+      },
       { provide: Router, useValue: router },
       { provide: InscripcionProposalFacade, useValue: proposal },
       { provide: InscripcionSurveyFacade, useValue: survey },
@@ -316,10 +446,50 @@ function createFacade(detail: InscripcionDetail | null, initialized = true) {
     ],
   });
 
-  const facade = TestBed.inject(InscripcionProcessFacade);
   const process = TestBed.inject(InscripcionProcessStore);
+  if (options.spyGoTo) vi.spyOn(process.flow, 'goTo');
+  const facade = TestBed.inject(InscripcionProcessFacade);
 
   return { facade, payment, process, proposal, survey, router };
+}
+
+function createInitialSurvey(
+  values: Partial<InscripcionInitialSurvey> = {}
+): InscripcionInitialSurvey {
+  return {
+    carreraId: null,
+    comienzoId: null,
+    turnoId: null,
+    nivelProductoId: null,
+    completa: false,
+    seccionActiva: null,
+    cursaSecundaria: null,
+    orientacionBachilleratoId: null,
+    anioBachilleratoId: null,
+    recursaAnioBachillerato: null,
+    vecesRecursaAnioBachillerato: null,
+    institucionSecundariaId: null,
+    ubicacionSecundariaId: null,
+    nombreInstitucionSecundaria: null,
+    estadoEducacionSuperiorPreviaId: null,
+    nivelFormacionMadreId: null,
+    nivelFormacionPadreId: null,
+    madreEgresadaOrt: null,
+    padreEgresadoOrt: null,
+    anioDecisionCarreraId: null,
+    anioDecisionOrtId: null,
+    seInformoEnOtrasUniversidades: null,
+    apoyoDecisionId: null,
+    nivelDecisionId: null,
+    tuvoAsesoramientoOrt: null,
+    valoracionAsesoramientoOrt: null,
+    visitoSitioWebOrt: null,
+    valoracionSitioWebOrt: null,
+    visitoInstalacionesOrt: null,
+    valoracionInstalacionesOrt: null,
+    recuerdaPublicidadOrt: null,
+    ...values,
+  };
 }
 
 function createPendingPaymentDetail(): InscripcionDetail {

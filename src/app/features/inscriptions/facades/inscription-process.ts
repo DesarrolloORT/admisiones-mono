@@ -3,8 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
-import { detailToPreEnrollment, type InscripcionDetail } from '../models/inscription-detail';
-import { fromApiPaymentMethod } from '../models/inscription-flow-mappers';
+import {
+  deriveInitialInscripcionState,
+  type InscripcionEntryContext,
+  type InscripcionEntryResolved,
+  type InscripcionInitialState,
+  type InscripcionInitialSurveyResolved,
+  type InscripcionPaymentInit,
+} from '../models/inscription-entry';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
@@ -61,8 +67,14 @@ export class InscripcionProcessFacade {
     );
   });
 
+  private entryContext: InscripcionEntryContext;
+
   constructor() {
-    this.applyResumeContext();
+    this.entryContext = {
+      entry: this.route.snapshot.data['entry'] as InscripcionEntryResolved,
+      survey: this.route.snapshot.data['initialSurvey'] as InscripcionInitialSurveyResolved,
+    };
+    this.applyInitialState(deriveInitialInscripcionState(this.entryContext));
   }
 
   public continue(): void {
@@ -129,33 +141,48 @@ export class InscripcionProcessFacade {
       });
   }
 
-  // Si la inscripción se retoma desde el panel con un detalle resuelto, reconstruye
-  // el contexto y posiciona el flujo en el paso/pantalla correcto según el estado:
-  // - "Pago pendiente": si ya eligió método (seniaMinima) muestra las referencias de
-  //   pago; si no, salta al paso de pago para elegirlo.
-  // - "Confirmada": precarga el detalle y muestra el success step terminal.
-  // - "A la espera" (y cualquier estado no listado): muestra "Inscripción en proceso".
-  // - "En proceso": sin acción; el bloque `detalle` es la oferta ya elegida y el flujo
-  //   se posiciona solo con la encuesta inicial.
-  private applyResumeContext(): void {
-    const detail = this.route.snapshot.data['inscriptionDetail'] as InscripcionDetail | null;
-    if (!detail) return;
+  // Reintento manual (botón de la pantalla de error de encuesta): re-consulta el
+  // estado de encuesta, re-deriva TODO el estado inicial con la nueva respuesta y lo
+  // re-aplica. El backend vuelve a ganar sobre cualquier estado local.
+  public retryInitialSurvey(): void {
+    if (this.survey.loadingSurveyState()) return;
+    this.survey
+      .fetchResolvedInitialSurvey()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(survey => {
+        this.entryContext = { ...this.entryContext, survey };
+        this.applyInitialState(deriveInitialInscripcionState(this.entryContext));
+      });
+  }
 
-    const preEnrollment = detailToPreEnrollment(detail);
-    if (preEnrollment) this.process.preEnrollmentResponse.set(preEnrollment);
+  // Único punto de aplicación del estado inicial. Todo lo derivado (backend = fuente
+  // de verdad) se aplica en orden determinístico; el paso del flujo se posiciona una
+  // sola vez, al final, para que nada lo pise. Las facades hijas NO tocan el flujo.
+  private applyInitialState(state: InscripcionInitialState): void {
+    this.process.preEnrollmentResponse.set(state.preEnrollment);
+    this.survey.applyInitialState(state.survey);
+    if (state.resumeInProgress) this.proposal.disableForResume();
+    this.applyPaymentInit(state.payment);
+    this.process.flow.goTo(state.step);
+  }
 
-    if (detail.estado === 'Pago pendiente' || detail.estado === 'Pendiente') {
-      if (detail.seniaMinima) {
-        this.payment.selectedPaymentMethod.set(fromApiPaymentMethod(detail.seniaMinima.metodoPago));
+  private applyPaymentInit(payment: InscripcionPaymentInit): void {
+    switch (payment.kind) {
+      case 'none':
+      case 'awaiting-method':
+        return;
+      case 'reserva':
+        this.payment.selectedPaymentMethod.set(payment.method);
+        this.payment.reservationData.set(payment.reservation);
         this.payment.outcome.set('reserva');
-      } else {
-        this.process.flow.goTo('pago');
-      }
-    } else if (detail.estado === 'Confirmada') {
-      this.payment.confirmedDetail.set(detail.confirmada);
-      this.payment.outcome.set('inscription-confirmada');
-    } else if (detail.estado !== 'En proceso') {
-      this.payment.outcome.set('inscription-en-proceso');
+        return;
+      case 'confirmada':
+        this.payment.confirmedDetail.set(payment.detail);
+        this.payment.outcome.set('inscription-confirmada');
+        return;
+      case 'en-proceso':
+        this.payment.outcome.set('inscription-en-proceso');
+        return;
     }
   }
 }
