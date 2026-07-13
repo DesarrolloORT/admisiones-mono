@@ -76,7 +76,7 @@ builder.Services.AddCorsPolicy();
 // --------------------------------------------------------------------------
 // 7. Redis para Rate Limiting Distribuido
 // --------------------------------------------------------------------------
-builder.Services.AddRedisRateLimiting(builder.Configuration);
+builder.Services.AddRedisRateLimiting();
 
 // --------------------------------------------------------------------------
 // 8. Rate Limiting (políticas específicas por endpoint)

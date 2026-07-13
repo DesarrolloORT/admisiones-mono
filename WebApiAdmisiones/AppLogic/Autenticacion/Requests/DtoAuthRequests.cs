@@ -26,6 +26,7 @@ namespace AppLogic.Autenticacion.Requests
         /// Contraseña del usuario.
         /// </summary>
         [Required(ErrorMessage = "La contraseña es requerida.")]
+        [Redact]
         public required string Password { get; set; }
     }
 

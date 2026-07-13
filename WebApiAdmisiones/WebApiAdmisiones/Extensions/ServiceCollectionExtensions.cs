@@ -63,20 +63,17 @@ namespace WebApiAdmisiones.Extensions
         /// Configura la conexión a Redis para rate limiting distribuido.
         /// </summary>
         /// <param name="services">Colección de servicios.</param>
-        /// <param name="configuration">Configuración de la aplicación.</param>
         /// <returns>La colección de servicios para encadenamiento.</returns>
-        public static IServiceCollection AddRedisRateLimiting(
-            this IServiceCollection services,
-            IConfiguration configuration)
+        public static IServiceCollection AddRedisRateLimiting(this IServiceCollection services)
         {
             // Configurar conexión a Redis
-            var redisConnection = configuration.GetConnectionString("Redis");
+            var redisConnection = Environment.GetEnvironmentVariable("RedisConnectionStringAdmisiones");
 
             if (string.IsNullOrWhiteSpace(redisConnection))
             {
                 throw new InvalidOperationException(
                     "Redis connection string is required for rate limiting. " +
-                    "Add 'ConnectionStrings:Redis' to appsettings.json");
+                    "Set the RedisConnectionStringAdmisiones environment variable.");
             }
 
             // Registrar IConnectionMultiplexer como singleton
