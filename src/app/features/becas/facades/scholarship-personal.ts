@@ -38,7 +38,6 @@ export class ScholarshipPersonalFacade {
 
   public readonly variant = signal<ScholarshipVariant | null>(null);
   public readonly submitted = signal(false);
-  public readonly showErrorAlert = signal(false);
 
   public readonly visibleSections = computed<readonly ScholarshipPersonalSectionId[]>(() => {
     const variant = this.variant();
@@ -122,15 +121,17 @@ export class ScholarshipPersonalFacade {
       this.familyMembers.controls.forEach(member => member.markAllAsTouched());
     }
 
-    const isValid = this.isValid(sections);
-    this.showErrorAlert.set(!isValid);
-    if (!isValid) return;
+    if (!this.isValid(sections)) return;
 
     this.processFacade.continue();
   }
 
   public back(): void {
     this.processFacade.back();
+  }
+
+  public showErrorAlert(): boolean {
+    return this.submitted() && !this.isValid(this.visibleSections());
   }
 
   private isValid(sections: readonly ScholarshipPersonalSectionId[]): boolean {

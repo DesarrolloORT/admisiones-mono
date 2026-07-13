@@ -30,7 +30,6 @@ export class ScholarshipProposalFacade {
 
   public readonly variant = signal<ScholarshipVariant | null>(null);
   public readonly submitted = signal(false);
-  public readonly showErrorAlert = signal(false);
   public readonly academicStepData = signal<ScholarshipAcademicStepData[]>([]);
   public readonly selectedInscription = signal<string | null>(null);
 
@@ -100,11 +99,13 @@ export class ScholarshipProposalFacade {
     this.submitted.set(true);
     this.inscriptionForm.markAllAsTouched();
 
-    const isValid = this.inscriptionForm.valid;
-    this.showErrorAlert.set(!isValid);
-    if (!isValid) return;
+    if (!this.inscriptionForm.valid) return;
 
     this.process.continue();
+  }
+
+  public showErrorAlert(): boolean {
+    return this.submitted() && !this.inscriptionForm.valid;
   }
 
   private emptyAcademicStepData(): ScholarshipAcademicStepData {
