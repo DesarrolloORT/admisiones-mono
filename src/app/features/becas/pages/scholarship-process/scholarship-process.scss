@@ -55,6 +55,10 @@
   gap: var(--ort-sys-spacing-16);
 }
 
+.scholarship-accordion__content ort-error {
+  margin-top: calc(var(--ort-sys-spacing-4) - var(--ort-sys-spacing-16));
+}
+
 .scholarship-subsection {
   display: grid;
   gap: var(--ort-sys-spacing-16);
