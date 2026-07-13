@@ -20,6 +20,7 @@ const PAYMENT_OK: InscripcionPaymentResponse = {
   urlPago: null,
   parametrosEncriptados: null,
   mensajes: [],
+  confirmada: null,
   message: null,
   errorCode: null,
 };
@@ -268,6 +269,75 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.visibleSubjects()).toEqual(['Programación I']);
   });
 
+  it('uses the confirmed detail from the pay response without re-fetching', () => {
+    const forms = TestBed.inject(InscripcionFormsStore);
+    forms.academicForm.controls.carrera.setValue('20');
+    forms.academicForm.controls.comienzo.setValue('200');
+    inscriptions.pay.mockReturnValueOnce(
+      of({ ...PAYMENT_OK, resultado: 'confirmada', confirmada: CONFIRMED_DETAIL })
+    );
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('inscription-confirmada');
+    expect(inscriptions.getDetail).not.toHaveBeenCalled();
+    expect(facade.studentNumber()).toBe(412001);
+  });
+
+  it('loads the reservation data after an Abitab reserva from the fresh flow', () => {
+    const forms = TestBed.inject(InscripcionFormsStore);
+    forms.academicForm.controls.carrera.setValue('20');
+    forms.academicForm.controls.comienzo.setValue('200');
+    inscriptions.getDetail.mockReturnValueOnce(
+      of({
+        estado: 'Pago pendiente',
+        detalle: null,
+        pagoPendiente: null,
+        seniaMinima: {
+          metodoPago: 'ABITAB',
+          cedula: '12345678',
+          codigoPersona: 34692671,
+          senia: 15500,
+        },
+        confirmada: null,
+      })
+    );
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('reserva');
+    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200);
+    expect(facade.reservationInstructions().items).toContainEqual({
+      label: 'Cédula de identidad',
+      value: '1.234.567-8',
+    });
+    expect(facade.reservationInstructions().items).toContainEqual({
+      label: 'Número de estudiante',
+      value: '34692671',
+    });
+  });
+
+  it('degrades to the amount-only reservation when getDetail fails on a reserva', () => {
+    const forms = TestBed.inject(InscripcionFormsStore);
+    forms.academicForm.controls.carrera.setValue('20');
+    forms.academicForm.controls.comienzo.setValue('200');
+    inscriptions.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(facade.outcome()).toBe('reserva');
+    expect(facade.reservationData()).toBeNull();
+    expect(facade.reservationInstructions().items).toEqual([
+      { label: 'Monto a pagar', value: '$ 15.500' },
+    ]);
+  });
+
   it('keeps the success screen without detail sections when getDetail fails', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
     forms.academicForm.controls.carrera.setValue('20');
@@ -310,8 +380,8 @@ describe('InscripcionPaymentFacade', () => {
     const instructions = facade.reservationInstructions();
 
     expect(instructions.description).toContain('04/03/2027');
-    expect(instructions.items).toContain('Monto a pagar: $ 15.500');
-    expect(instructions.items.join(' ')).not.toContain('397654');
+    expect(instructions.items).toContainEqual({ label: 'Monto a pagar', value: '$ 15.500' });
+    expect(JSON.stringify(instructions.items)).not.toContain('397654');
   });
 
   it('falls back to generic reservation instructions without method or data', () => {

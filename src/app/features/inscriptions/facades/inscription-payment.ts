@@ -10,10 +10,12 @@ import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscription-bank
 import type {
   InscripcionConfirmedDetail,
   InscripcionCoordinador,
+  InscripcionDetail,
 } from '../models/inscription-detail';
 import type {
   ContactoCoordinador,
   InscripcionPaymentResponse,
+  InscripcionReservationData,
   MetodoPago,
   OpcionInscripcion,
   ResultadoPago,
@@ -60,6 +62,11 @@ export class InscripcionPaymentFacade {
   // vía getDetail al confirmarse el pago. Si la carga falla queda null y la
   // pantalla de éxito oculta esas secciones.
   public readonly confirmedDetail = signal<InscripcionConfirmedDetail | null>(null);
+  // Datos para pagar la reserva (Abitab/Paganza): cédula y número de estudiante.
+  // Lo setea applyPaymentInit al retomar, o se carga vía getDetail al quedar en
+  // reserva desde el flujo fresco. Si falla queda null y la pantalla muestra solo
+  // el monto.
+  public readonly reservationData = signal<InscripcionReservationData | null>(null);
   public readonly studentNumber = computed(() => this.confirmedDetail()?.numeroEstudiante ?? null);
   public readonly coordinators = computed<readonly ContactoCoordinador[]>(() => {
     const detail = this.confirmedDetail();
@@ -136,7 +143,11 @@ export class InscripcionPaymentFacade {
     this.showAllSubjects() ? 'Ver menos materias' : 'Ver todas las materias'
   );
   public readonly reservationInstructions = computed(() =>
-    buildReservationInstructions(this.selectedPaymentMethod(), this.process.preEnrollmentResponse())
+    buildReservationInstructions(
+      this.selectedPaymentMethod(),
+      this.process.preEnrollmentResponse(),
+      this.reservationData()
+    )
   );
 
   constructor() {
@@ -236,6 +247,11 @@ export class InscripcionPaymentFacade {
       return;
     }
 
+    // Si el backend confirmó el pago en línea ya trae el detalle (número de
+    // estudiante, coordinación y materias): lo usamos directo y evitamos el
+    // getDetail posterior.
+    if (response.confirmada) this.confirmedDetail.set(response.confirmada);
+
     const result = this.forcedResult ?? normalizePaymentResult(response.resultado);
     if (result === 'confirmada') {
       this.finishAt('inscription-confirmada');
@@ -308,11 +324,24 @@ export class InscripcionPaymentFacade {
   private finishAt(outcome: InscripcionOutcome): void {
     this.outcome.set(outcome);
     if (outcome === 'inscription-confirmada' && !this.confirmedDetail()) {
-      this.loadConfirmedDetail();
+      this.loadDetail(detail => this.confirmedDetail.set(detail.confirmada));
+    }
+    if (outcome === 'reserva' && !this.reservationData()) {
+      this.loadDetail(detail => this.applyReservationDetail(detail));
     }
   }
 
-  private loadConfirmedDetail(): void {
+  private applyReservationDetail(detail: InscripcionDetail): void {
+    const senia = detail.seniaMinima;
+    if (!senia) return;
+    this.reservationData.set({ cedula: senia.cedula, codigoPersona: senia.codigoPersona });
+  }
+
+  // Carga el Detalle y aplica lo que necesite cada pantalla terminal. Los ids
+  // salen de la propuesta académica en el flujo completo, o de los query params
+  // al retomar el pago desde el panel. Si no hay ids o falla, no rompe: la
+  // pantalla degrada a lo que ya tenga.
+  private loadDetail(apply: (detail: InscripcionDetail) => void): void {
     const idProducto = this.resolveCatalogId(
       this.proposal.academicForm.controls.carrera.value,
       'idProducto'
@@ -327,7 +356,7 @@ export class InscripcionPaymentFacade {
       .getDetail(idProducto, idProceso)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: detail => this.confirmedDetail.set(detail.confirmada),
+        next: detail => apply(detail),
         error: () => undefined,
       });
   }
