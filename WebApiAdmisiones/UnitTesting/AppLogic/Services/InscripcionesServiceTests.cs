@@ -2068,19 +2068,16 @@ namespace UnitTesting.AppLogic.Services
         {
             var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
             fresco1y2Repo
-                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>()))
+                .Setup(r => r.GetInscripcionFrescoHabilitada(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
                 .Returns(estado == null
-                    ? new List<VdInscripcionesFresco1y2>()
-                    : new List<VdInscripcionesFresco1y2>
-                    {
-                        new() { IdProducto = idProducto, IdProceso = idProceso, IdInscripto = idInscripto, EstadoInscripcion = estado }
-                    });
+                    ? null
+                    : new VdInscripcionesFresco1y2 { IdProducto = idProducto, IdProceso = idProceso, IdInscripto = idInscripto, EstadoInscripcion = estado });
             _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
 
             var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
             fresco3y4Repo
-                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>()))
-                .Returns(new List<VdInscripcionesFresco3y4>());
+                .Setup(r => r.GetInscripcionFrescoHabilitada(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns((VdInscripcionesFresco3y4?)null);
             _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(fresco3y4Repo.Object);
         }
 

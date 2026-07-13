@@ -75,16 +75,15 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerTiposEgreso_ReturnsActivosOrderedByOrden()
         {
-            // Arrange
+            // Arrange: la BD ya devuelve solo activos y ordenados por Orden (filtro/orden en SQL).
             var tiposEgreso = new List<TipoEgresoDj>
             {
-                new TipoEgresoDj { IdTipoEgresoDj = 1, NombreTipoEgresoDj = "Servicios", Activo = "SI", Orden = 2 },
                 new TipoEgresoDj { IdTipoEgresoDj = 2, NombreTipoEgresoDj = "Alquiler", Activo = "SI", Orden = 1 },
-                new TipoEgresoDj { IdTipoEgresoDj = 3, NombreTipoEgresoDj = "Inactivo", Activo = "NO", Orden = 3 }
+                new TipoEgresoDj { IdTipoEgresoDj = 1, NombreTipoEgresoDj = "Servicios", Activo = "SI", Orden = 2 }
             };
 
             var tipoEgresoRepo = new Mock<BusinessLogic.IDevartRepositories.ITipoEgresoDjRepository>();
-            tipoEgresoRepo.Setup(r => r.GetAll()).Returns(tiposEgreso);
+            tipoEgresoRepo.Setup(r => r.GetActivosOrdenados()).Returns(tiposEgreso);
             _uowMock.Setup(u => u.TipoEgresoDjs).Returns(tipoEgresoRepo.Object);
 
             // Act
@@ -94,7 +93,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.NotNull(result.Data);
             var list = result.Data.ToList();
-            Assert.Equal(2, list.Count); // Solo activos
+            Assert.Equal(2, list.Count);
             Assert.Equal("Alquiler", list[0].NombreTipoEgresoDj); // Orden 1 primero
             Assert.Equal("Servicios", list[1].NombreTipoEgresoDj); // Orden 2 segundo
         }
@@ -102,14 +101,9 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void ObtenerTiposEgreso_NoActivos_ReturnsEmpty()
         {
-            // Arrange
-            var tiposEgreso = new List<TipoEgresoDj>
-            {
-                new TipoEgresoDj { IdTipoEgresoDj = 1, NombreTipoEgresoDj = "Inactivo", Activo = "NO", Orden = 1 }
-            };
-
+            // Arrange: sin activos, la BD ya devuelve la lista vacía.
             var tipoEgresoRepo = new Mock<BusinessLogic.IDevartRepositories.ITipoEgresoDjRepository>();
-            tipoEgresoRepo.Setup(r => r.GetAll()).Returns(tiposEgreso);
+            tipoEgresoRepo.Setup(r => r.GetActivosOrdenados()).Returns(new List<TipoEgresoDj>());
             _uowMock.Setup(u => u.TipoEgresoDjs).Returns(tipoEgresoRepo.Object);
 
             // Act

@@ -12,5 +12,7 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IVdInscripcionesFresco3y4Repository
     {
         ICollection<VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona);
+
+        VdInscripcionesFresco3y4? GetInscripcionFrescoHabilitada(long codigoPersona, long idProducto, long idProceso);
     }
 }

@@ -26,5 +26,21 @@ namespace DataAccess.DevartRepositories
                     && x.FechaReferencia >= fechaLimite)
                 .ToList();
         }
+
+        public virtual BusinessLogic.Entities.VdInscripcionesFresco1y2? GetInscripcionFrescoHabilitada(long codigoPersona, long idProducto, long idProceso)
+        {
+            var diasExtra = (double)(Context.ParametrosAdmisiones
+                .Select(p => p.DiasExtraPermiteInscr1y2 ?? 0)
+                .FirstOrDefault());
+
+            var fechaLimite = DateTime.Today.AddDays(-diasExtra);
+
+            return objectSet
+                .Where(x => x.CodigoPersona == (decimal)codigoPersona
+                    && x.FechaReferencia >= fechaLimite
+                    && x.IdProducto == (decimal)idProducto
+                    && x.IdProceso == (decimal)idProceso)
+                .FirstOrDefault();
+        }
     }
 }

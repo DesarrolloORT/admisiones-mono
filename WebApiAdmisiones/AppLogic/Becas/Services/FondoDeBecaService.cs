@@ -6,7 +6,6 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using System.Text.Json;
 using Utilities;
-using AppLogic.Common.Constants;
 
 namespace AppLogic.Becas.Services
 {
@@ -35,10 +34,7 @@ namespace AppLogic.Becas.Services
         public OperationResult<IEnumerable<DtoTipoEgresoDjDevart>> ObtenerTiposEgreso()
         {
             using var uow = _uowFactory.Create();
-            var entidades = uow.TipoEgresoDjs.GetAll()
-                .Where(e => e.Activo == CommonConstants.Booleanos.Si)
-                .OrderBy(e => e.Orden)
-                .ToList();
+            var entidades = uow.TipoEgresoDjs.GetActivosOrdenados().ToList();
             return OperationResult<IEnumerable<DtoTipoEgresoDjDevart>>.Ok(
                 entidades.ToDtos(),
                 nameof(ObtenerTiposEgreso));

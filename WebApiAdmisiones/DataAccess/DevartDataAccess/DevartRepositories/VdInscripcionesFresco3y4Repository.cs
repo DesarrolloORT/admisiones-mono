@@ -36,5 +36,31 @@ namespace DataAccess.DevartRepositories
                         || (x.IdNivelProducto != 3 && x.IdNivelProducto != 4 && x.FechaReferencia >= fechaLimiteDefault)))
                 .ToList();
         }
+
+        public virtual BusinessLogic.Entities.VdInscripcionesFresco3y4? GetInscripcionFrescoHabilitada(long codigoPersona, long idProducto, long idProceso)
+        {
+            var parametros = Context.ParametrosAdmisiones
+                .Select(p => new
+                {
+                    DiasExtraPermiteInscr3 = p.DiasExtraPermiteInscr3 ?? 0,
+                    DiasExtraPermiteInscr4 = p.DiasExtraPermiteInscr4 ?? 0
+                })
+                .FirstOrDefault();
+
+            var diasExtra3 = (double)(parametros?.DiasExtraPermiteInscr3 ?? 0);
+            var diasExtra4 = (double)(parametros?.DiasExtraPermiteInscr4 ?? 0);
+            var fechaLimiteNivel3 = DateTime.Today.AddDays(-diasExtra3);
+            var fechaLimiteNivel4 = DateTime.Today.AddDays(-diasExtra4);
+            var fechaLimiteDefault = DateTime.Today;
+
+            return objectSet
+                .Where(x => x.CodigoPersona == (decimal)codigoPersona
+                    && x.IdProducto == (decimal)idProducto
+                    && x.IdProceso == (decimal)idProceso
+                    && ((x.IdNivelProducto == 3 && x.FechaReferencia >= fechaLimiteNivel3)
+                        || (x.IdNivelProducto == 4 && x.FechaReferencia >= fechaLimiteNivel4)
+                        || (x.IdNivelProducto != 3 && x.IdNivelProducto != 4 && x.FechaReferencia >= fechaLimiteDefault)))
+                .FirstOrDefault();
+        }
     }
 }

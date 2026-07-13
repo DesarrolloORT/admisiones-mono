@@ -387,8 +387,15 @@ namespace WebApiAdmisiones.Controllers
                 return;
             }
 
-            var accessMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES") ?? "15");
-            var refreshDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES") ?? "7");
+            if (!int.TryParse(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES_ADMISIONES"), out var accessMinutes))
+            {
+                accessMinutes = 15;
+            }
+
+            if (!int.TryParse(Environment.GetEnvironmentVariable("JWT_REFRESH_EXPIRE_ADMISIONES"), out var refreshDays))
+            {
+                refreshDays = 7;
+            }
 
             CookieAuthenticationHelper.SetAccessTokenCookie(HttpContext, data.AccessToken, accessMinutes);
             CookieAuthenticationHelper.SetRefreshTokenCookie(HttpContext, data.RefreshToken, refreshDays);

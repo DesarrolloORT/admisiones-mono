@@ -50,15 +50,13 @@ namespace AppLogic.Inscripciones.Services
         {
             using var uow = _uowFactory.Create();
 
-            var fresco1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona)
-                .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso);
+            var fresco1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
             var estado = fresco1y2?.EstadoInscripcion;
             var idInscripto = (long?)fresco1y2?.IdInscripto;
 
             if (estado == null)
             {
-                var fresco3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(codigoPersona)
-                    .FirstOrDefault(x => x.IdProducto == idProducto && x.IdProceso == idProceso);
+                var fresco3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
                 estado = fresco3y4?.EstadoInscripcion;
                 idInscripto = (long?)fresco3y4?.IdInscripto;
             }
