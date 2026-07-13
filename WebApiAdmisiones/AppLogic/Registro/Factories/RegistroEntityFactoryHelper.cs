@@ -1,7 +1,7 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using AppLogic.Inscripciones.Constants;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using LdapService.DTOs;
 using System.Diagnostics.CodeAnalysis;

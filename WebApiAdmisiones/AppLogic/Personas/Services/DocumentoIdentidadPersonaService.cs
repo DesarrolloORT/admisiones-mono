@@ -1,8 +1,9 @@
 using AppLogic.Personas.Responses;
+using AppLogic.Personas.Dtos;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Constants;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

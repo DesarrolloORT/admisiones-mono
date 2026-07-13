@@ -7,7 +7,7 @@ using AppLogic.Common.Security;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IServices;
 using ConnectionContext;

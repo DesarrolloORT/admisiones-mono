@@ -2,7 +2,7 @@ using AppLogic.Registro.Dtos;
 using System.Text.Json;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Common.Serialization;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

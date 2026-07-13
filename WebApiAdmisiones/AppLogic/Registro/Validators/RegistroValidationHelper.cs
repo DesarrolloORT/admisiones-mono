@@ -1,6 +1,6 @@
 using AppLogic.Registro.Requests;
 using System;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using Utilities;
 

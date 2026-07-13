@@ -4,7 +4,7 @@ using AppLogic.Autenticacion.Helpers;
 using AppLogic.Common.Email;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

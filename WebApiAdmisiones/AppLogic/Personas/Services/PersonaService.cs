@@ -6,7 +6,7 @@ using AppLogic.Personas.Requests;
 using AppLogic.Personas.Responses;
 using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

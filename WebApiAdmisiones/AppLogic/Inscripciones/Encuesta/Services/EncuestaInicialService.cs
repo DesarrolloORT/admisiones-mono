@@ -8,7 +8,7 @@ using AppLogic.Catalogos.Interfaces;
 using AppLogic.Inscripciones.Interfaces;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

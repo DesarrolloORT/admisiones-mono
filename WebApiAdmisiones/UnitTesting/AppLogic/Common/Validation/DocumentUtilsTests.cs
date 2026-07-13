@@ -1,6 +1,6 @@
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 
-namespace UnitTesting.AppLogic.Utilities
+namespace UnitTesting.AppLogic.Common.Validation
 {
     public class DocumentUtilsTests
     {

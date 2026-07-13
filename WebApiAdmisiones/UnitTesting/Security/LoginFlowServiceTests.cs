@@ -4,7 +4,7 @@ using AppLogic.Autenticacion.Responses;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Autenticacion.Services;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;

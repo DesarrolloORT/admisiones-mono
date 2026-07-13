@@ -1,5 +1,5 @@
 using AppLogic.Personas.Constants;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 
 namespace AppLogic.Inscripciones.Encuesta.Rules

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Utilities;
 
-namespace AppLogic.Utilities
+namespace AppLogic.Common.Validation
 {
     public static class DocumentUtils
     {

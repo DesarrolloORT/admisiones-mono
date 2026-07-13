@@ -19,9 +19,4 @@ namespace AppLogic.Personas.Responses
         public byte[]? Archivo { get; set; }
     }
 
-    public class DtoDocumentoPersonaConsulta
-    {
-        public DtoDocumentoPersonaArchivo? Archivo { get; set; }
-        public DateTime? FechaVencimiento { get; set; }
-    }
 }

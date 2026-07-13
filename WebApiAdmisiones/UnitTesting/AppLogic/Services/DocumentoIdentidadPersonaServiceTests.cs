@@ -1,7 +1,7 @@
 using AppLogic.Personas.Services;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
