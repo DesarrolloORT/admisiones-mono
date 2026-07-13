@@ -1,6 +1,6 @@
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 
-namespace UnitTesting.AppLogic.Utilities
+namespace UnitTesting.AppLogic.Common.Validation
 {
     public class DocumentUtilsTests
     {
@@ -66,10 +66,26 @@ namespace UnitTesting.AppLogic.Utilities
 
         [Theory]
         [InlineData("1.234.567-8", "12345678")]
+        [InlineData("1234567-8", "12345678")]
+        [InlineData("12345678", "12345678")]
+        [InlineData(" 1.234.567-8 ", "12345678")]
+        [InlineData("  1 2 3  ", "123")]
+        [InlineData("AbC-123", "abc123")]
         [InlineData(null, "unknown")]
+        [InlineData("", "unknown")]
+        [InlineData("   ", "unknown")]
         public void NormalizarDocumentoParaClave_RemovesSeparators(string? documento, string expected)
         {
             Assert.Equal(expected, DocumentUtils.NormalizarDocumentoParaClave(documento));
+        }
+
+        [Fact]
+        public void NormalizarDocumentoParaClave_IsIdempotent()
+        {
+            var once = DocumentUtils.NormalizarDocumentoParaClave("1.234.567-8");
+            var twice = DocumentUtils.NormalizarDocumentoParaClave(once);
+
+            Assert.Equal(once, twice);
         }
 
         [Fact]

@@ -6,8 +6,7 @@ using AppLogic.Personas.Requests;
 using AppLogic.Personas.Responses;
 using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
-using AppLogic.Helpers.ValidationHelpers;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -449,7 +448,7 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var validacion = FileValidationHelper.ValidateIdentityDocumentFile(
+            var validacion = FileValidator.ValidateImageFile(
                 documento.Archivo,
                 documento.NombreArchivo,
                 nameof(SubirDocumentoPersona));
@@ -518,14 +517,14 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var extension = ResolverExtensionPersistida(fileName, ".jpg");
+            var extension = DocumentoIdentidadPersonaService.ResolverExtensionPersistida(fileName, ".jpg");
 
             return OperationResult<Imagen>.Ok(
                 new Imagen
                 {
                     IdImagen = idImagen,
                     CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = ConstruirNombrePersistido(persona.CodigoPersona, 3, extension),
+                    NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(persona.CodigoPersona, 3, extension),
                     TipoImagen = "3",
                     BlobImagen = fileContent
                 },
@@ -551,23 +550,12 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var extension = ResolverExtensionPersistida(fileName, ".jpg");
+            var extension = DocumentoIdentidadPersonaService.ResolverExtensionPersistida(fileName, ".jpg");
 
-            existing.NombreImagen = ConstruirNombrePersistido(existing.CodigoPersona ?? 0, 3, extension);
+            existing.NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(existing.CodigoPersona ?? 0, 3, extension);
             existing.TipoImagen = "3";
             existing.BlobImagen = fileContent;
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoPersona));
-        }
-
-        private static string ResolverExtensionPersistida(string fileName, string defaultExtension)
-        {
-            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-            return string.IsNullOrWhiteSpace(extension) ? defaultExtension : extension;
-        }
-
-        private static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
-        {
-            return $"{codigoPersona}_{tipoImagen}{extension}";
         }
 
         private static DtoDatosPersona MapearDatosPersona(Persona persona, bool identidadRestringida)

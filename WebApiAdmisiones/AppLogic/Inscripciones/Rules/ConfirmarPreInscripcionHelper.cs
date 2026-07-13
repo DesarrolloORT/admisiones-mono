@@ -1,6 +1,8 @@
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Dtos;
+using AppLogic.ApiClients.Requests;
+using AppLogic.ApiClients.Responses;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

@@ -1,14 +1,17 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
+using AppLogic.Personas.Services;
 using System.Text.Json;
-using AppLogic.Utilities;
+using AppLogic.Common.Security;
+using AppLogic.Common.Serialization;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Utilities;
-using AppLogic.Autenticacion.Services;
 using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Autenticacion.Services;
 
 namespace AppLogic.Registro.Services;
 
@@ -29,11 +32,7 @@ public class RegistroFlowService : IRegistroFlowService
     private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
     private readonly ILogger<RegistroFlowService>? _logger;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
 
     public RegistroFlowService(
         IRegistroService registroService,
@@ -94,15 +93,7 @@ public class RegistroFlowService : IRegistroFlowService
                 400);
         }
 
-        DtoRegistroFlowSession? session;
-        try
-        {
-            session = JsonSerializer.Deserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
-        }
-        catch
-        {
-            session = null;
-        }
+        var session = JsonSerializationHelper.TryDeserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
 
         if (session == null)
         {
@@ -131,14 +122,7 @@ public class RegistroFlowService : IRegistroFlowService
         var json = await _redisDb.StringGetAsync($"{FlowSessionKeyPrefix}{flowId}");
         if (!json.HasValue) return null;
 
-        try
-        {
-            return JsonSerializer.Deserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return JsonSerializationHelper.TryDeserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
     }
 
     private async Task<OperationResult<RegistroFlowResult>?> ValidarDocumentoFlowResultAsync(
@@ -194,16 +178,7 @@ public class RegistroFlowService : IRegistroFlowService
         var json = await _redisDb.StringGetAsync(key);
         if (!json.HasValue) return;
 
-        DtoRegistroFlowSession? session;
-        try
-        {
-            session = JsonSerializer.Deserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
-        }
-        catch
-        {
-            return;
-        }
-
+        var session = JsonSerializationHelper.TryDeserialize<DtoRegistroFlowSession>(json.ToString(), JsonOptions);
         if (session == null) return;
 
         session.Step = nuevoStep;
@@ -250,7 +225,7 @@ public class RegistroFlowService : IRegistroFlowService
             request.Documento,
             flowId);
         var token = PasswordActivationService.GenerarTokenFlowIdPublic(flowIdPending, NuevaPersonaPurpose, ttl);
-        var tokenHash = PasswordActivationService.HashToken(token);
+        var tokenHash = TokenHashHelper.HashSha256Base64(token);
 
         // 3. Guardar persona pendiente en Redis
         var pending = new DtoRegistroPendingPersona
@@ -313,14 +288,7 @@ public class RegistroFlowService : IRegistroFlowService
         var json = await _redisDb.StringGetAsync($"{PendingPersonaKeyPrefix}{flowId}");
         if (!json.HasValue) return null;
 
-        try
-        {
-            return JsonSerializer.Deserialize<DtoRegistroPendingPersona>(json.ToString(), JsonOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return JsonSerializationHelper.TryDeserialize<DtoRegistroPendingPersona>(json.ToString(), JsonOptions);
     }
 
     public async Task DeletePendingPersonaAsync(string flowId)
@@ -355,45 +323,20 @@ public class RegistroFlowService : IRegistroFlowService
     private async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerImagenesTemporalesAsync(
         DtoRegistroPendingPersona data)
     {
-        if (_documentoImagenCacheService is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _documentoImagenCacheService.ObtenerAsync(data.TipoDocumento, data.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron obtener imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                data.TipoDocumento,
-                data.Documento);
-            return null;
-        }
+        return await DocumentoIdentidadPersonaService.ObtenerImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            data.TipoDocumento,
+            data.Documento,
+            _logger);
     }
 
     private async Task EliminarImagenesTemporalesAsync(DtoRegistroPendingPersona data)
     {
-        if (_documentoImagenCacheService is null)
-        {
-            return;
-        }
-
-        try
-        {
-            await _documentoImagenCacheService.EliminarAsync(data.TipoDocumento, data.Documento);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(
-                ex,
-                "No se pudieron eliminar imagenes temporales de documento para {TipoDocumento}:{Documento}.",
-                data.TipoDocumento,
-                data.Documento);
-        }
+        await DocumentoIdentidadPersonaService.EliminarImagenesTemporalesSeguroAsync(
+            _documentoImagenCacheService,
+            data.TipoDocumento,
+            data.Documento,
+            _logger);
     }
 
     private async Task<string> ResolverFlowIdPendingDocumentoAsync(

@@ -408,9 +408,9 @@ namespace UnitTesting.AppLogic.Services
                     FechaVencimiento = new DateTime(2030, 1, 1),
                     DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
-                        Archivo = [0x25, 0x50, 0x44, 0x46, 1],
-                        NombreArchivo = "documento.pdf",
-                        ContentType = "application/pdf"
+                        Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                        NombreArchivo = "documento.jpg",
+                        ContentType = "image/jpeg"
                     },
                     CaraPersona = new DtoRegistroDocumentoArchivoTemporal
                     {
@@ -494,8 +494,8 @@ namespace UnitTesting.AppLogic.Services
                     DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                     {
                         Archivo = [1, 2, 3],
-                        NombreArchivo = "documento.pdf",
-                        ContentType = "application/pdf"
+                        NombreArchivo = "documento.jpg",
+                        ContentType = "image/jpeg"
                     }
                 });
 

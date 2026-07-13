@@ -1,8 +1,10 @@
 using AppLogic.Registro.Dtos;
 using System.Text.Json;
 using AppLogic.Registro.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Serialization;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace AppLogic.Registro.Services;
@@ -15,19 +17,18 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
 
     private readonly IConfiguration _configuration;
     private readonly IDatabase _redisDb;
+    private readonly ILogger<RegistroDocumentoImagenCacheService>? _logger;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
 
     public RegistroDocumentoImagenCacheService(
         IConfiguration configuration,
-        IConnectionMultiplexer redis)
+        IConnectionMultiplexer redis,
+        ILogger<RegistroDocumentoImagenCacheService>? logger = null)
     {
         _configuration = configuration;
         _redisDb = redis.GetDatabase();
+        _logger = logger;
     }
 
     public async Task GuardarAsync(
@@ -47,6 +48,43 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
         await _redisDb.StringSetAsync(key, json, ttl);
     }
 
+    public async Task GuardarImagenesTemporalesSiCorrespondeAsync(
+        string? tipoDocumento,
+        string? numeroDocumento,
+        DateTime? fechaVencimiento,
+        DtoRegistroDocumentoArchivoTemporal documentoFrente,
+        DtoRegistroDocumentoArchivoTemporal? caraPersona)
+    {
+        if (string.IsNullOrWhiteSpace(tipoDocumento) || string.IsNullOrWhiteSpace(numeroDocumento))
+        {
+            return;
+        }
+
+        try
+        {
+            await GuardarAsync(
+                tipoDocumento,
+                numeroDocumento,
+                new DtoRegistroDocumentoImagenesTemporales
+                {
+                    TipoDocumento = tipoDocumento,
+                    Documento = numeroDocumento,
+                    FechaVencimiento = fechaVencimiento,
+                    DocumentoFrente = documentoFrente,
+                    CaraPersona = caraPersona,
+                    CreatedAt = DateTime.UtcNow
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "No se pudieron guardar en Redis las imagenes reconocidas para {TipoDocumento}:{Documento}.",
+                tipoDocumento,
+                numeroDocumento);
+        }
+    }
+
     public async Task<DtoRegistroDocumentoImagenesTemporales?> ObtenerAsync(string tipoDocumento, string documento)
     {
         var json = await _redisDb.StringGetAsync(CrearKey(tipoDocumento, documento));
@@ -55,16 +93,9 @@ public sealed class RegistroDocumentoImagenCacheService : IRegistroDocumentoImag
             return null;
         }
 
-        try
-        {
-            return JsonSerializer.Deserialize<DtoRegistroDocumentoImagenesTemporales>(
-                json.ToString(),
-                JsonOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return JsonSerializationHelper.TryDeserialize<DtoRegistroDocumentoImagenesTemporales>(
+            json.ToString(),
+            JsonOptions);
     }
 
     public Task EliminarAsync(string tipoDocumento, string documento)

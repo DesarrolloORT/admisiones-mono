@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace WebApiAdmisiones.Observability;
+namespace WebApiAdmisiones.Security.Observability;
 
 public static class ClientTelemetryHeaders
 {

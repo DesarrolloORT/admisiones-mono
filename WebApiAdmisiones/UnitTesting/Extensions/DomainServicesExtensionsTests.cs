@@ -1,10 +1,9 @@
 using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
+using AppLogic.Common.Email;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
-using DataAccess.GenericAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
 using MailORT;
@@ -191,24 +190,6 @@ namespace UnitTesting.Extensions
         #region Repository Registration Tests
 
         [Fact]
-        public void AddDomainServices_RegistersIGenericRepository()
-        {
-            // Arrange
-            SetupEnvironmentMock("Development");
-            var configuration = BuildConfiguration();
-
-            // Act
-            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
-
-            // Assert
-            var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(IGenericRepository) &&
-                sd.ImplementationType == typeof(GenericRepository) &&
-                sd.Lifetime == ServiceLifetime.Scoped);
-            Assert.NotNull(descriptor);
-        }
-
-        [Fact]
         public void AddDomainServices_RegistersIUnitOfWorkFactory()
         {
             // Arrange
@@ -326,7 +307,13 @@ namespace UnitTesting.Extensions
 
             _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
 
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
+            // ICatalogosService ahora resuelve a CatalogosCacheDecorator (agrega cache Redis a
+            // ObtenerPaisesEstadosCiudadesAsync); CatalogosService sigue registrado por separado
+            // como clase concreta para que el decorator pueda envolverlo.
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationFactory != null));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(CatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITivenosEnvioService) && sd.ImplementationType == typeof(TivenosEnvioService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));
@@ -449,6 +436,21 @@ namespace UnitTesting.Extensions
         }
 
         [Fact]
+        public void AddDomainServices_RegistersIEmailSender_AsScoped()
+        {
+            SetupEnvironmentMock("Development");
+            var configuration = BuildConfiguration();
+
+            _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
+
+            var descriptor = _serviceCollection.FirstOrDefault(sd =>
+                sd.ServiceType == typeof(IEmailSender) &&
+                sd.ImplementationType == typeof(EnvioMailEmailSender) &&
+                sd.Lifetime == ServiceLifetime.Scoped);
+            Assert.NotNull(descriptor);
+        }
+
+        [Fact]
         public void AddDomainServices_EnvioMail_UsesConfigurationUrlWhenProvided()
         {
             // Arrange
@@ -560,7 +562,6 @@ namespace UnitTesting.Extensions
             _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
 
             // Assert
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IGenericRepository)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IUnitOfWorkFactory)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ModGenericBaseBusinessLogic.IDevartRepositories.IUnitOfWorkFactory)));
@@ -601,8 +602,6 @@ namespace UnitTesting.Extensions
             // Assert - Verify critical services are registered
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(IDbConnectionContext)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IGenericRepository)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(IUnitOfWorkFactory)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 

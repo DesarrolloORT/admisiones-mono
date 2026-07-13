@@ -183,7 +183,11 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Data is null)
             {
-                return NotFound();
+                return ValidateResponse(OperationResult<byte[]>.IsFailed(
+                    "GEN_FA_03",
+                    nameof(ObtenerFotoPersona),
+                    "Foto no encontrada.",
+                    404));
             }
 
             return File(result.Data, "image/jpeg");

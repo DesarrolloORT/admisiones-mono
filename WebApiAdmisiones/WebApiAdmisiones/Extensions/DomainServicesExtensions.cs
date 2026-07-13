@@ -2,12 +2,10 @@ using AppLogic.Common.Email;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
-using DataAccess.GenericAccess.Services;
 using DataAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
@@ -19,6 +17,7 @@ using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.Observability;
 using AppLogic.Autenticacion.Services;
 using AppLogic.Registro.Services;
@@ -98,7 +97,6 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Repositorios y UoW.
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModBandejaDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
@@ -111,7 +109,11 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de aplicación.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralService, GeneralService>();
-            services.AddScoped<ICatalogosService, CatalogosService>();
+            services.AddScoped<CatalogosService>();
+            services.AddScoped<ICatalogosService>(sp => new CatalogosCacheDecorator(
+                sp.GetRequiredService<CatalogosService>(),
+                sp.GetRequiredService<IRedisCacheService>(),
+                sp.GetRequiredService<IConfiguration>()));
             services.AddScoped<IRegistroService, RegistroService>();
             services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();

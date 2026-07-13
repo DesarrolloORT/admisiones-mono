@@ -1,10 +1,9 @@
-using AppLogic.Helpers.ValidationHelpers;
 using Utilities;
 using Xunit;
 
 namespace UnitTesting.AppLogic.Helpers
 {
-    public class FileValidationHelperTests
+    public class FileValidatorTests
     {
         [Fact]
         public void ValidateImageFile_ValidJpeg_ReturnsSuccess()

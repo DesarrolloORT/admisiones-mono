@@ -7,7 +7,7 @@ using AppLogic.Registro.Validators;
 using AppLogic.DevartDTOs;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Personas.Services;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -322,7 +322,9 @@ namespace AppLogic.Registro.Services
                     default);
             }
 
-            var imagenesValidation = ValidarImagenesDocumentoReconocido(imagenes);
+            var imagenesValidation = DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
+                imagenes,
+                nameof(CompletarNuevaPersonaAsync));
             if (!imagenesValidation.Success)
             {
                 return OperationResult<long>.IsFailed(
@@ -502,14 +504,6 @@ namespace AppLogic.Registro.Services
                 null));
         }
 
-        private static OperationResult<bool> ValidarImagenesDocumentoReconocido(
-            DtoRegistroDocumentoImagenesTemporales? imagenes)
-        {
-            return DocumentoIdentidadPersonaService.ValidarImagenesDocumentoReconocido(
-                imagenes,
-                nameof(CompletarNuevaPersonaAsync));
-        }
-
         private void GuardarImagenesDocumentoReconocido(
             IUnitOfWork uow,
             Persona persona,
@@ -587,9 +581,10 @@ namespace AppLogic.Registro.Services
 
         private static string ObtenerCodigoValidacionDocumento(DocumentUtils.DocumentValidationError error)
         {
-            return error == DocumentUtils.DocumentValidationError.InvalidDocumentType
-                ? "REG_DOC_01"
-                : "REG_DOC_02";
+            return DocumentoIdentidadPersonaService.ResolverCodigoValidacionDocumento(
+                error,
+                "REG_DOC_01",
+                "REG_DOC_02");
         }
 
         private async Task<OperationResult<bool>> CrearUsuarioLdapAsync(LdapService.DTOs.ParamCrearUsuarioLdap request)

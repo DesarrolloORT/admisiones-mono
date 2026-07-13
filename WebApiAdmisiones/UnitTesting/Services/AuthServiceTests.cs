@@ -1,4 +1,5 @@
 using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -22,6 +23,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<IHashTokenStore> _hashTokenStoreMock;
+        private readonly Mock<IRegistroFlowService> _registroFlowServiceMock;
         private readonly AuthService _service;
 
         public AuthServiceTests()
@@ -32,6 +34,7 @@ namespace UnitTesting.AppLogic.Services
             _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _hashTokenStoreMock = new Mock<IHashTokenStore>();
+            _registroFlowServiceMock = new Mock<IRegistroFlowService>();
 
             _service = new AuthService(
                 _ldapMock.Object,
@@ -39,7 +42,8 @@ namespace UnitTesting.AppLogic.Services
                 _tokenServiceMock.Object,
                 _refreshTokenServiceMock.Object,
                 _passwordActivationServiceMock.Object,
-                _hashTokenStoreMock.Object);
+                _hashTokenStoreMock.Object,
+                _registroFlowServiceMock.Object);
         }
 
         [Fact]
@@ -52,7 +56,8 @@ namespace UnitTesting.AppLogic.Services
                 _tokenServiceMock.Object,
                 _refreshTokenServiceMock.Object,
                 _passwordActivationServiceMock.Object,
-                _hashTokenStoreMock.Object);
+                _hashTokenStoreMock.Object,
+                _registroFlowServiceMock.Object);
 
             // Assert
             Assert.NotNull(service);
@@ -311,6 +316,43 @@ namespace UnitTesting.AppLogic.Services
                 "hashed_refresh_token",
                 It.Is<DateTime>(d => d > DateTime.UtcNow.AddDays(6) && d < DateTime.UtcNow.AddDays(8))),
                 Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateAccessToken(persona), Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateRefreshToken(), Times.Once);
+            _tokenServiceMock.Verify(x => x.HashToken("refresh_token_456"), Times.Once);
+        }
+
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            const long codigoPersona = 12345;
+            var persona = new Persona { CodigoPersona = codigoPersona, Documento = "1234567-2" };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, "validpass"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior)));
+            _tokenServiceMock.Setup(x => x.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(x => x.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(x => x.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .ThrowsAsync(new InvalidOperationException("Persistence unavailable"));
+
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
+
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_99", result.ErrorCode);
+            Assert.Equal(500, result.HttpCode);
+            Assert.DoesNotContain("Persistence unavailable", result.Message);
+            _tokenServiceMock.Verify(x => x.GenerateAccessToken(persona), Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateRefreshToken(), Times.Once);
+            _tokenServiceMock.Verify(x => x.HashToken("refresh-token"), Times.Once);
+            _refreshTokenServiceMock.Verify(
+                x => x.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()),
+                Times.Once);
         }
 
         [Fact]
@@ -506,7 +548,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordAsync_LdapFailure_PreservesHashToken()
+        public async Task CompletarPasswordFlowAsync_PersonaExistente_LdapFailure_PreservesHashToken()
         {
             var codigoPersona = 12345L;
             var persona = new Persona
@@ -535,8 +577,13 @@ namespace UnitTesting.AppLogic.Services
                     "El servicio LDAP no pudo forzar el cambio de password.",
                     400,
                     false));
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
 
-            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
+            var result = (await _service.CompletarPasswordFlowAsync("token", request)).Result;
 
             Assert.False(result.Success);
             Assert.Equal("hash", persona.HashTokenPassword);
@@ -544,7 +591,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordAsync_WhenPersonaDoesNotExist_ReturnsNotFound()
+        public async Task CompletarPasswordFlowAsync_PersonaExistente_WhenPersonaDoesNotExist_ReturnsNotFound()
         {
             var codigoPersona = 12345L;
             var uowMock = new Mock<IUnitOfWork>();
@@ -552,10 +599,15 @@ namespace UnitTesting.AppLogic.Services
             personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns((Persona)null!);
             uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
             _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
 
-            var result = await _service.CompletarPasswordAsync(
-                codigoPersona,
-                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+            var result = (await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" })).Result;
 
             Assert.False(result.Success);
             Assert.Equal("INI_PAS_03", result.ErrorCode);
@@ -566,7 +618,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordAsync_LdapSuccess_ClearsHashAndReturnsTokens()
+        public async Task CompletarPasswordFlowAsync_PersonaExistente_LdapSuccess_ClearsHashAndReturnsTokens()
         {
             using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
             var codigoPersona = 12345L;
@@ -599,8 +651,13 @@ namespace UnitTesting.AppLogic.Services
             _refreshTokenServiceMock
                 .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
                 .Returns(Task.CompletedTask);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
 
-            var result = await _service.CompletarPasswordAsync(codigoPersona, request);
+            var result = (await _service.CompletarPasswordFlowAsync("token", request)).Result;
 
             Assert.True(result.Success);
             Assert.Equal("access-token", result.Data!.AccessToken);
@@ -613,7 +670,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task CompletarPasswordAsync_WithTemporaryImages_PersistsAndDeletesCache()
+        public async Task CompletarPasswordFlowAsync_PersonaExistente_WithTemporaryImages_PersistsAndDeletesCache()
         {
             using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
             var codigoPersona = 12345L;
@@ -636,9 +693,9 @@ namespace UnitTesting.AppLogic.Services
                 FechaVencimiento = new DateTime(2030, 1, 1),
                 DocumentoFrente = new DtoRegistroDocumentoArchivoTemporal
                 {
-                    Archivo = [0x25, 0x50, 0x44, 0x46, 1],
-                    NombreArchivo = "documento.pdf",
-                    ContentType = "application/pdf"
+                    Archivo = [0xFF, 0xD8, 0xFF, 0xE0, 1],
+                    NombreArchivo = "documento.jpg",
+                    ContentType = "image/jpeg"
                 },
                 CaraPersona = new DtoRegistroDocumentoArchivoTemporal
                 {
@@ -689,6 +746,11 @@ namespace UnitTesting.AppLogic.Services
             _refreshTokenServiceMock
                 .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
                 .Returns(Task.CompletedTask);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
             var service = new AuthService(
                 _ldapMock.Object,
                 _uowFactoryMock.Object,
@@ -696,10 +758,11 @@ namespace UnitTesting.AppLogic.Services
                 _refreshTokenServiceMock.Object,
                 _passwordActivationServiceMock.Object,
                 _hashTokenStoreMock.Object,
+                _registroFlowServiceMock.Object,
                 dbConnectionContext: dbConnectionContextMock.Object,
                 documentoImagenCacheService: cacheMock.Object);
 
-            var result = await service.CompletarPasswordAsync(codigoPersona, request);
+            var result = (await service.CompletarPasswordFlowAsync("token", request)).Result;
 
             Assert.True(result.Success);
             Assert.NotNull(documentoAgregado);
@@ -716,6 +779,303 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(new DateTime(2030, 1, 1), persona.FechaVtoDocumentoPersona);
             cacheMock.Verify(c => c.EliminarAsync("CI", "1234567-2"), Times.Once);
             uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_WhenSessionValidationFails_ReturnsFailureAndClearsCookie()
+        {
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("bad-token"))
+                .Returns(OperationResult<DtoValidatedSession>.IsFailed(
+                    "ACT_SES_01",
+                    nameof(IPasswordActivationService.ValidarSessionToken),
+                    "Sesión temporal no encontrada.",
+                    401,
+                    default!));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "bad-token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("ACT_SES_01", flow.Result.ErrorCode);
+            Assert.Equal(401, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+            _registroFlowServiceMock.Verify(
+                s => s.GetPendingPersonaAsync(It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_WhenSessionDataIsNull_ReturnsFailureAndClearsCookie()
+        {
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(null, nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("ACT_SES_06", flow.Result.ErrorCode);
+            Assert.Equal(401, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_NuevaPersonaConFlowIdVacio_ReturnsFailureAndClearsCookie()
+        {
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "nueva-persona-session", FlowId = "  " },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("ACT_SES_NUP_01", flow.Result.ErrorCode);
+            Assert.Equal(401, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_NuevaPersonaSinPendiente_ReturnsFailureAndClearsCookie()
+        {
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "nueva-persona-session", FlowId = "flow-1" },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+            _registroFlowServiceMock
+                .Setup(s => s.GetPendingPersonaAsync("flow-1"))
+                .ReturnsAsync((DtoRegistroPendingPersona?)null);
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("NUP_COMP_01", flow.Result.ErrorCode);
+            Assert.Equal(401, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_NuevaPersonaCuandoCreacionFalla_ReturnsFailureWithoutClearingCookie()
+        {
+            var pending = new DtoRegistroPendingPersona { TipoDocumento = "CI", Documento = "1234567-2" };
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "nueva-persona-session", FlowId = "flow-1" },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+            _registroFlowServiceMock
+                .Setup(s => s.GetPendingPersonaAsync("flow-1"))
+                .ReturnsAsync(pending);
+            _registroFlowServiceMock
+                .Setup(s => s.CompletarNuevaPersona(pending, "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<long>.IsFailed(
+                    "REG_PERSONA_99",
+                    nameof(IRegistroFlowService.CompletarNuevaPersona),
+                    "Error al crear la persona.",
+                    500,
+                    default));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.False(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("REG_PERSONA_99", flow.Result.ErrorCode);
+            Assert.Equal("Error al crear la persona.", flow.Result.Message);
+            Assert.Equal(500, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+            _registroFlowServiceMock.Verify(s => s.DeletePendingPersonaAsync(It.IsAny<string>()), Times.Never);
+            _registroFlowServiceMock.Verify(s => s.EliminarFlowSessionAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_NuevaPersonaExitosa_ClearsCookieAndDeletesPendingData()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez"
+            };
+            var pending = new DtoRegistroPendingPersona { TipoDocumento = "CI", Documento = "1234567-2" };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "nueva-persona-session", FlowId = "flow-1" },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+            _registroFlowServiceMock
+                .Setup(s => s.GetPendingPersonaAsync("flow-1"))
+                .ReturnsAsync(pending);
+            _registroFlowServiceMock
+                .Setup(s => s.CompletarNuevaPersona(pending, "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<long>.Ok(codigoPersona, nameof(IRegistroFlowService.CompletarNuevaPersona)));
+            _tokenServiceMock.Setup(t => t.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(t => t.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.True(flow.Result.Success);
+            Assert.Equal("access-token", flow.Result.Data!.AccessToken);
+            Assert.Equal("refresh-token", flow.Result.Data.RefreshToken);
+            Assert.Equal("GenerarTokensParaPersonaAsync", flow.Result.Method);
+            _registroFlowServiceMock.Verify(s => s.DeletePendingPersonaAsync("flow-1"), Times.Once);
+            _registroFlowServiceMock.Verify(s => s.EliminarFlowSessionAsync("flow-1"), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_NuevaPersonaTokenGenerationFalla_NoLimpiaCookieNiRedis()
+        {
+            var pending = new DtoRegistroPendingPersona { TipoDocumento = "CI", Documento = "1234567-2" };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(99L)).Returns((Persona)null!);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "nueva-persona-session", FlowId = "flow-1" },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+            _registroFlowServiceMock
+                .Setup(s => s.GetPendingPersonaAsync("flow-1"))
+                .ReturnsAsync(pending);
+            _registroFlowServiceMock
+                .Setup(s => s.CompletarNuevaPersona(pending, "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<long>.Ok(99L, nameof(IRegistroFlowService.CompletarNuevaPersona)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.False(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("GEN_TOK_01", flow.Result.ErrorCode);
+            _registroFlowServiceMock.Verify(s => s.DeletePendingPersonaAsync(It.IsAny<string>()), Times.Never);
+            _registroFlowServiceMock.Verify(s => s.EliminarFlowSessionAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_PersonaExistenteSinCodigoPersona_ReturnsFailureAndClearsCookie()
+        {
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = null },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("ACT_SES_03", flow.Result.ErrorCode);
+            Assert.Equal(401, flow.Result.HttpCode);
+            Assert.Equal("CompletarPassword", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_PersonaExistenteExitosa_ClearsCookie()
+        {
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _hashTokenStoreMock
+                .Setup(h => h.GetAsync(codigoPersona.ToString()))
+                .ReturnsAsync("stored-hash");
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+            _tokenServiceMock.Setup(t => t.GenerateAccessToken(persona)).Returns("access-token");
+            _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh-token");
+            _tokenServiceMock.Setup(t => t.HashToken("refresh-token")).Returns("refresh-hash");
+            _refreshTokenServiceMock
+                .Setup(r => r.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.True(flow.ClearActivationCookie);
+            Assert.True(flow.Result.Success);
+            Assert.Equal("access-token", flow.Result.Data!.AccessToken);
+            // "CompletarPasswordAsync" es el literal preservado del nombre original del método
+            // (ver CompletarPasswordPersonaExistenteOriginMethod) para no cambiar el body público.
+            Assert.Equal("CompletarPasswordAsync", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_PersonaExistenteCuandoServicioFalla_NoLimpiaCookie()
+        {
+            var codigoPersona = 999L;
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns((Persona)null!);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.False(flow.ClearActivationCookie);
+            Assert.False(flow.Result.Success);
+            Assert.Equal("INI_PAS_03", flow.Result.ErrorCode);
+            // "CompletarPasswordAsync" es el literal preservado del nombre original del método
+            // (ver CompletarPasswordPersonaExistenteOriginMethod) para no cambiar el body público.
+            Assert.Equal("CompletarPasswordAsync", flow.Result.Method);
         }
     }
 }

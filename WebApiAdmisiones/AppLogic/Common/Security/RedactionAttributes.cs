@@ -1,6 +1,6 @@
 using System;
 
-namespace AppLogic.Helpers;
+namespace AppLogic.Common.Security;
 
 public enum RedactionMode
 {

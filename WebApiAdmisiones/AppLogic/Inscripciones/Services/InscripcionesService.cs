@@ -2,7 +2,8 @@
 using AppLogic.Inscripciones.Encuesta.Responses;
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Interfaces;
+using AppLogic.ApiClients.Responses;
 using AppLogic.Inscripciones.Constants;
 using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;
@@ -12,7 +13,7 @@ using AppLogic.Inscripciones.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -28,14 +29,14 @@ namespace AppLogic.Inscripciones.Services
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ITivenosEnvioService _tivenosEnvioService;
-        private readonly InscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
+        private readonly IInscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
         private readonly IEncuestaInicialService _encuestaInicialService;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ITivenosEnvioService tivenosEnvioService,
-            InscripcionesyPagosApiClient inscripcionesyPagosApiClient,
+            IInscripcionesyPagosApiClient inscripcionesyPagosApiClient,
             IEncuestaInicialService encuestaInicialService)
         {
             _uowFactory = uowFactory;
@@ -575,7 +576,7 @@ namespace AppLogic.Inscripciones.Services
             }
         }
 
-        public async Task<OperationResult<DtoObtenerUrlFacturaResponse>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
+        private async Task<OperationResult<DtoObtenerUrlFacturaResponse>> ObtenerUrlFactura(long codigoPersona, DtoObtenerUrlFacturaRequest request)
         {
             const string methodName = nameof(ObtenerUrlFactura);
 
@@ -631,7 +632,7 @@ namespace AppLogic.Inscripciones.Services
             return (url, parametrosEncriptados);
         }
 
-        public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request)
+        private async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCuentaPersonal(long codigoPersona, DtoPagarCuentaPersonalRequest request)
         {
             const string methodName = nameof(PagarCuentaPersonal);
 
@@ -652,7 +653,7 @@ namespace AppLogic.Inscripciones.Services
                 : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
         }
 
-        public OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
+        private OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
         {
             const string methodName = nameof(GuardarMetodoPago);
 

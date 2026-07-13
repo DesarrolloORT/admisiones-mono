@@ -1,4 +1,4 @@
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 

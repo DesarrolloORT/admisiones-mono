@@ -1,4 +1,5 @@
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Interfaces;
+using AppLogic.ApiClients.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -39,7 +40,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // 3. Configurar HttpClient tipado SIN políticas de reintento
-            services.AddHttpClient<InscripcionesyPagosApiClient>(client =>
+            services.AddHttpClient<IInscripcionesyPagosApiClient, InscripcionesyPagosApiClient>(client =>
             {
                 var baseUrl = configuration["ApiClients:InscripcionesYPagos:BaseUrl"]
                     ?? throw new InvalidOperationException(

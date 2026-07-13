@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace BusinessLogic.IServices
 {
@@ -18,14 +16,6 @@ namespace BusinessLogic.IServices
         /// <param name="expiresAt">Fecha y hora de expiración del token.</param>
         /// <returns>Task que representa la operación asíncrona.</returns>
         Task SaveRefreshTokenAsync(long codigoPersona, string sistema, string tokenHash, DateTime expiresAt);
-
-        /// <summary>
-        /// Valida si un refresh token es válido y está activo.
-        /// </summary>
-        /// <param name="sistema">Sistema del token.</param>
-        /// <param name="tokenHash">Hash del refresh token a validar.</param>
-        /// <returns>True si el token es válido y activo, false en caso contrario.</returns>
-        Task<bool> ValidateRefreshTokenAsync(string sistema, string tokenHash);
 
         /// <summary>
         /// Obtiene el código de persona asociado a un refresh token activo y no expirado.

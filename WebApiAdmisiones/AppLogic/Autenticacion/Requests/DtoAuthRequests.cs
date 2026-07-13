@@ -1,4 +1,4 @@
-using AppLogic.Helpers;
+using AppLogic.Common.Security;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 

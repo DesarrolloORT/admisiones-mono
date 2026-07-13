@@ -4,7 +4,7 @@ using AppLogic.Autenticacion.Helpers;
 using AppLogic.Common.Email;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Utilities;
+using AppLogic.Common.Validation;
 using MailORT;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -226,9 +226,8 @@ public class DosFactoresAuthService : IDosFactoresAuthService
             await _sessionStore.DeleteAsync(sessionId);
             await LimpiarRateLimitInicioAsync(session);
 
-            var authResponse = new DtoAuthenticationResponse
-            {
-                Persona = new DtoPersonaAuth
+            var authResponse = AuthenticationResponseBuilder.Build(
+                new DtoPersonaAuth
                 {
                     CodigoPersona = session.CodigoPersona,
                     PrimerNombre = session.PrimerNombre,
@@ -238,11 +237,10 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                     TipoPersona = session.TipoPersona,
                     Documento = session.Documento
                 },
-                AccessToken = session.AccessToken,
-                RefreshToken = session.RefreshToken,
-                RefreshTokenHash = session.RefreshTokenHash,
-                Message = "Verificación completada. Los tokens han sido establecidos como cookies seguras."
-            };
+                session.AccessToken!,
+                session.RefreshToken!,
+                session.RefreshTokenHash!,
+                "Verificación completada. Los tokens han sido establecidos como cookies seguras.");
 
             if (_logger.IsEnabled(LogLevel.Information))
             {

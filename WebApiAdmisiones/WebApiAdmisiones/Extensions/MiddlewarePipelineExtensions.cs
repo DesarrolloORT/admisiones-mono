@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Prometheus;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using WebApiAdmisiones.Observability;
+using WebApiAdmisiones.Security.Observability;
 using WebApiAdmisiones.Security.Middleware;
 
 namespace WebApiAdmisiones.Extensions

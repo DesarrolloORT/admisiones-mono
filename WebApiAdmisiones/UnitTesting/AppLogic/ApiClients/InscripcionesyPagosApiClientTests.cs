@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text;
-using AppLogic.ApiClients;
+using AppLogic.ApiClients.Dtos;
+using AppLogic.ApiClients.Requests;
+using AppLogic.ApiClients.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTesting.AppLogic.ApiClients
@@ -198,6 +200,75 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Contains("Pagos/Carritos/UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
             Assert.Equal(string.Empty, request.Body);
+        }
+
+        // Los 3 tests siguientes cubren métodos sin consumidores en producción ni tests previos
+        // (ObtenerSeniaMinimaAsync, ObtenerCtaCteAsync, ObtenerCursosPagosAsync — ver auditoría,
+        // Grupo C de métodos muertos). Se agregan casos mínimos de éxito para validar que el
+        // refactor a SendAsync no cambió su URL/comportamiento, sin invertir tiempo extra en
+        // cobertura exhaustiva de código sin uso real (no se eliminan por instrucción explícita).
+
+        [Fact]
+        public async Task ObtenerSeniaMinimaAsync_WithSuccess_ReturnsResponse()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """{ "seniaMinima": 1234.50 }"""));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerSeniaMinimaAsync(10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal(1234.50m, result.Data!.SeniaMinima);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("Inscripciones/SeniaMinima?idInscripto=10&idProducto=20", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerSeniaMinimaAsync_WhenApiRejects_ReturnsFailure()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.BadRequest, "inscripcion invalida"));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerSeniaMinimaAsync(10, 20);
+
+            Assert.False(result.Success);
+            Assert.Equal("SENIA_MINIMA_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Contains("Error al obtener la seña mínima", result.Message);
+        }
+
+        [Fact]
+        public async Task ObtenerCtaCteAsync_WithSuccess_ReturnsResponse()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """{ "saldoActual": 100.50, "saldoVencido": 0, "saldoAVencer": 100.50, "movimientos": [] }"""));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerCtaCteAsync();
+
+            Assert.True(result.Success);
+            Assert.Equal(100.50m, result.Data!.SaldoActual);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("Pagos/CtaCte?estado=SALDO_ACTUAL_Y_MOVIMIENTOS", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerCursosPagosAsync_WithSuccess_ReturnsResponse()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """{ "cursos": [], "montoTotal": 0 }"""));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerCursosPagosAsync();
+
+            Assert.True(result.Success);
+            Assert.Empty(result.Data!.Cursos);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("Pagos/Carritos", request.RequestUri);
         }
 
         private static InscripcionesyPagosApiClient CrearClient(HttpMessageHandler handler)

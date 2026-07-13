@@ -6,11 +6,14 @@ using System.Collections.Generic;
 using AzureService.DTOs;
 using AzureService.Interfaces;
 using AppLogic.DevartDTOs;
+using AppLogic.Registro.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using StackExchange.Redis;
 using Utilities;
 using WebApiAdmisiones.Controllers;
 using WebApiAdmisiones.Models;
@@ -209,21 +212,24 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             cacheMock.Verify(
-                s => s.GuardarAsync(
+                s => s.GuardarImagenesTemporalesSiCorrespondeAsync(
                     "CI",
                     "12345672",
-                    It.Is<DtoRegistroDocumentoImagenesTemporales>(i =>
-                        i.DocumentoFrente.NombreArchivo == "documento.pdf"
-                        && i.DocumentoFrente.Archivo.SequenceEqual(request.ArchivoAdjunto.Archivo!)
-                        && i.CaraPersona != null
-                        && i.CaraPersona.NombreArchivo == "cara.jpg"
-                        && i.FechaVencimiento == new DateTime(2030, 1, 1))),
+                    new DateTime(2030, 1, 1),
+                    It.Is<DtoRegistroDocumentoArchivoTemporal>(a =>
+                        a.NombreArchivo == "documento.pdf"
+                        && a.Archivo.SequenceEqual(request.ArchivoAdjunto.Archivo!)),
+                    It.Is<DtoRegistroDocumentoArchivoTemporal?>(a =>
+                        a != null && a.NombreArchivo == "cara.jpg")),
                 Times.Once);
         }
 
         [Fact]
-        public async Task AnalizarAdjunto_WithoutRecognizedDocument_DoesNotStoreImages()
+        public async Task AnalizarAdjunto_WithoutNumeroDocumento_DelegatesDecisionToCacheService()
         {
+            // El controller ya no decide si corresponde guardar (esa decisión ahora vive en
+            // RegistroDocumentoImagenCacheService.GuardarImagenesTemporalesSiCorrespondeAsync):
+            // siempre delega, incluso con NumeroDocumento ausente.
             var reconocimientoMock = new Mock<IReconocimientoDocumento>();
             var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
             var controller = CrearController(
@@ -254,27 +260,38 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             cacheMock.Verify(
-                s => s.GuardarAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DtoRegistroDocumentoImagenesTemporales>()),
-                Times.Never);
+                s => s.GuardarImagenesTemporalesSiCorrespondeAsync(
+                    "CI",
+                    null,
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<DtoRegistroDocumentoArchivoTemporal>(),
+                    It.IsAny<DtoRegistroDocumentoArchivoTemporal?>()),
+                Times.Once);
         }
 
         [Fact]
         public async Task AnalizarAdjunto_WhenCacheFails_ReturnsRecognitionResult()
         {
+            // Usa el service REAL (no un mock de la interfaz) porque el try/catch no-bloqueante
+            // ahora vive dentro de RegistroDocumentoImagenCacheService, no en el controller.
             var reconocimientoMock = new Mock<IReconocimientoDocumento>();
-            var cacheMock = new Mock<IRegistroDocumentoImagenCacheService>();
-            cacheMock
-                .Setup(s => s.GuardarAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DtoRegistroDocumentoImagenesTemporales>()))
+            var redisDbMock = new Mock<IDatabase>();
+            redisDbMock
+                .Setup(d => d.StringSetAsync(
+                    It.IsAny<RedisKey>(),
+                    It.IsAny<RedisValue>(),
+                    It.IsAny<TimeSpan?>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<When>(),
+                    It.IsAny<CommandFlags>()))
                 .ThrowsAsync(new InvalidOperationException("Redis unavailable"));
+            var connectionMock = new Mock<IConnectionMultiplexer>();
+            connectionMock.Setup(c => c.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(redisDbMock.Object);
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
+            var realCacheService = new RegistroDocumentoImagenCacheService(configuration, connectionMock.Object);
             var controller = CrearController(
                 reconocimientoDocumentoService: reconocimientoMock.Object,
-                documentoImagenCacheService: cacheMock.Object);
+                documentoImagenCacheService: realCacheService);
             reconocimientoMock
                 .Setup(s => s.ReconocerDocumentoAsync(It.IsAny<ReconocimientoDocumentoRequest>()))
                 .ReturnsAsync(OperationResult<ReconocimientoDocumentoResponse>.Ok(
