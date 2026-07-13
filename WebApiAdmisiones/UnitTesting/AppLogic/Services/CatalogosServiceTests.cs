@@ -198,12 +198,17 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(20, orientacion.Value);
             Assert.Equal("Ingenieria", orientacion.Label);
 
-            var universidadEducacion = Assert.Single(result.Data.Educacion.Universidades);
-            var universidadDecision = Assert.Single(result.Data.DecisionAcademica.Universidades);
+            Assert.Equal(2, result.Data.Educacion.Universidades.Count);
+            var universidadEducacion = result.Data.Educacion.Universidades[0];
+            var universidadDecision = result.Data.DecisionAcademica.Universidades[0];
             Assert.Equal(30, universidadEducacion.Value);
             Assert.Equal("Universidad ejemplo", universidadEducacion.Label);
             Assert.Equal(universidadEducacion.Value, universidadDecision.Value);
             Assert.Equal(universidadEducacion.Label, universidadDecision.Label);
+
+            var otroEducacion = result.Data.Educacion.Universidades[1];
+            Assert.Equal(0, otroEducacion.Value);
+            Assert.Equal("Otro", otroEducacion.Label);
         }
 
         [Fact]

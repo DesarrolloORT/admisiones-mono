@@ -48,6 +48,7 @@ namespace AppLogic.Catalogos.Services
                     Value = e.CodigoEmpresa,
                     Label = e.Nombre ?? string.Empty
                 })
+                .Append(new DtoUniversidadCatalogo { Value = 0, Label = "Otro" })
                 .ToList();
 
             var response = new DtoEncuestaInicialCatalogosResponse
