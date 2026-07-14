@@ -87,7 +87,21 @@
   display: none;
 }
 
+.scholarship-accordion-item__icon-wrapper {
+  position: relative;
+}
+
+.scholarship-accordion-item__icon-badge {
+  position: absolute;
+  top: calc(-1 * var(--ort-sys-spacing-6));
+  right: calc(-1 * var(--ort-sys-spacing-6));
+}
+
 @media (width >=760px) {
+  .scholarship-process__main {
+    margin: 0;
+  }
+
   .scholarship-step__footer {
     display: flex;
     flex-direction: row-reverse;
@@ -103,14 +117,8 @@
   .scholarship-step-button--back {
     display: inline-flex;
   }
-}
 
-.scholarship-accordion-item__icon-wrapper {
-  position: relative;
-}
-
-.scholarship-accordion-item__icon-badge {
-  position: absolute;
-  top: calc(-1 * var(--ort-sys-spacing-6));
-  right: calc(-1 * var(--ort-sys-spacing-6));
+  .scholarship-screen--narrow {
+    max-width: 56rem;
+  }
 }
