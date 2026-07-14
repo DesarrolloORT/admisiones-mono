@@ -59,6 +59,13 @@
   margin-block: var(--ort-sys-spacing-24);
 }
 
+.scholarship-onboarding__main {
+  display: grid;
+  width: 90%;
+  max-width: 1200px;
+  margin: var(--ort-sys-spacing-24) auto;
+}
+
 @media (width >=760px) {
   .scholarship-onboarding__screen {
     max-width: 60%;
