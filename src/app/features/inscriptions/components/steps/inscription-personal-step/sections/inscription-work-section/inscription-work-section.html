@@ -1,0 +1,49 @@
+<div class="inscription-accordion__content" [formGroup]="facade.workForm">
+  <ort-radio-group
+    class="inscription-choice-list"
+    formControlName="situacionLaboral"
+    legend="¿Trabajás actualmente?"
+    name="situacionLaboral"
+    [aria-describedby]="
+                facade.workForm.controls.situacionLaboral.touched &&
+                facade.workForm.controls.situacionLaboral.hasError('required')
+                  ? 'work-status-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button value="trabaja">Sí, trabajo actualmente</ort-radio-button>
+    <ort-radio-button value="buscando">Estoy buscando trabajo</ort-radio-button>
+    <ort-radio-button value="no-trabaja">No trabajo actualmente</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.workForm.controls.situacionLaboral.touched &&
+  facade.workForm.controls.situacionLaboral.hasError('required')) {
+  <p class="inscription-field-error" id="work-status-error" role="alert">Seleccioná una opción</p>
+  } @if (facade.workForm.controls.situacionLaboral.value === 'trabaja') {
+  <ort-radio-group
+    class="inscription-choice-list"
+    formControlName="tipoJornadaLaboral"
+    legend="Tipo de jornada laboral:"
+    name="tipoJornadaLaboral"
+    [aria-describedby]="
+                facade.workForm.controls.tipoJornadaLaboral.touched &&
+                facade.workForm.controls.tipoJornadaLaboral.hasError('required')
+                  ? 'work-schedule-error'
+                  : null
+              "
+    [disabled]="facade.options.workScheduleOptions().length === 0"
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    @for (option of facade.options.workScheduleOptions(); track option.value) {
+    <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
+    }
+  </ort-radio-group>
+  @if (facade.workForm.controls.tipoJornadaLaboral.touched &&
+  facade.workForm.controls.tipoJornadaLaboral.hasError('required')) {
+  <p class="inscription-field-error" id="work-schedule-error" role="alert">Seleccioná una opción</p>
+  } }
+</div>

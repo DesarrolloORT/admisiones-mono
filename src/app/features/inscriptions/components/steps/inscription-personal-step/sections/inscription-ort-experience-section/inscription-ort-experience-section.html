@@ -1,0 +1,170 @@
+<div class="inscription-accordion__content" [formGroup]="facade.ortExperienceForm">
+  <p class="sr-only" id="experience-rating-scale">
+    Escala de 1 a 5: malo, regular, bueno, muy bueno y excelente.
+  </p>
+  <section aria-label="Asesoramiento" class="inscription-subsection" role="region">
+    <ort-radio-group
+      class="inscription-choice-list"
+      formControlName="reunionAsesoramiento"
+      legend="¿Tuviste una reunión de asesoramiento?"
+      name="reunionAsesoramiento"
+      [aria-describedby]="
+                facade.ortExperienceForm.controls.reunionAsesoramiento.touched &&
+                facade.ortExperienceForm.controls.reunionAsesoramiento.hasError('required')
+                  ? 'advice-meeting-error'
+                  : null
+              "
+      [divider]="true"
+      [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+      [orientation]="orientation()"
+      [required]="true">
+      <ort-radio-button value="si">Sí</ort-radio-button>
+      <ort-radio-button value="no">No</ort-radio-button>
+    </ort-radio-group>
+    @if (facade.ortExperienceForm.controls.reunionAsesoramiento.touched &&
+    facade.ortExperienceForm.controls.reunionAsesoramiento.hasError('required')) {
+    <p class="inscription-field-error" id="advice-meeting-error" role="alert">
+      Seleccioná una opción
+    </p>
+    } @if (facade.ortExperienceForm.controls.reunionAsesoramiento.value === 'si') {
+    <ort-rating
+      aria-describedby="experience-rating-scale"
+      aria-label="Calificación del asesoramiento"
+      formControlName="calificacionAsesoramiento"
+      label="¿Cómo la calificarías?"
+      name="advice-rating"
+      role="region"
+      size="lg"
+      [errorText]="
+                facade.ortExperienceForm.controls.calificacionAsesoramiento.touched &&
+                facade.ortExperienceForm.controls.calificacionAsesoramiento.hasError('required')
+                  ? 'Seleccioná una calificación'
+                  : null
+              "
+      [required]="true"
+      [showValueText]="true"
+      [valueLabels]="facade.options.ratingLabels()" />
+    }
+  </section>
+
+  <section aria-label="Sitio web" class="inscription-subsection" role="region">
+    <ort-radio-group
+      class="inscription-choice-list"
+      formControlName="visitoWeb"
+      legend="¿Visitaste el sitio web de ORT?"
+      name="visitoWeb"
+      [aria-describedby]="
+                facade.ortExperienceForm.controls.visitoWeb.touched &&
+                facade.ortExperienceForm.controls.visitoWeb.hasError('required')
+                  ? 'website-visit-error'
+                  : null
+              "
+      [divider]="true"
+      [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+      [orientation]="orientation()"
+      [required]="true">
+      <ort-radio-button value="si">Sí</ort-radio-button>
+      <ort-radio-button value="no">No</ort-radio-button>
+    </ort-radio-group>
+    @if (facade.ortExperienceForm.controls.visitoWeb.touched &&
+    facade.ortExperienceForm.controls.visitoWeb.hasError('required')) {
+    <p class="inscription-field-error" id="website-visit-error" role="alert">
+      Seleccioná una opción
+    </p>
+    } @if (facade.ortExperienceForm.controls.visitoWeb.value === 'si') {
+    <ort-rating
+      aria-describedby="experience-rating-scale"
+      aria-label="Calificación del sitio web"
+      formControlName="calificacionWeb"
+      label="¿Cómo calificarías el sitio web?"
+      name="website-rating"
+      role="region"
+      size="lg"
+      [errorText]="
+                facade.ortExperienceForm.controls.calificacionWeb.touched &&
+                facade.ortExperienceForm.controls.calificacionWeb.hasError('required')
+                  ? 'Seleccioná una calificación'
+                  : null
+              "
+      [required]="true"
+      [showValueText]="true"
+      [valueLabels]="facade.options.ratingLabels()" />
+    }
+  </section>
+
+  <ort-radio-group
+    class="inscription-choice-list"
+    formControlName="visitoSede"
+    legend="¿Visitaste las instalaciones de ORT?"
+    name="visitoSede"
+    [aria-describedby]="
+                facade.ortExperienceForm.controls.visitoSede.touched &&
+                facade.ortExperienceForm.controls.visitoSede.hasError('required')
+                  ? 'campus-visit-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button value="si">Sí</ort-radio-button>
+    <ort-radio-button value="no">No</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.ortExperienceForm.controls.visitoSede.touched &&
+  facade.ortExperienceForm.controls.visitoSede.hasError('required')) {
+  <p class="inscription-field-error" id="campus-visit-error" role="alert">Seleccioná una opción</p>
+  } @if (facade.ortExperienceForm.controls.visitoSede.value === 'si') {
+  <ort-rating
+    aria-describedby="experience-rating-scale"
+    aria-label="Calificación de las instalaciones"
+    formControlName="calificacionSede"
+    label="¿Cómo calificarías las instalaciones?"
+    name="campus-rating"
+    role="region"
+    size="lg"
+    [errorText]="
+                facade.ortExperienceForm.controls.calificacionSede.touched &&
+                facade.ortExperienceForm.controls.calificacionSede.hasError('required')
+                  ? 'Seleccioná una calificación'
+                  : null
+              "
+    [required]="true"
+    [showValueText]="true"
+    [valueLabels]="facade.options.ratingLabels()" />
+  }
+
+  <ort-radio-group
+    class="inscription-choice-list"
+    formControlName="recuerdaPublicidad"
+    legend="¿Recordás haber visto publicidad de ORT?"
+    name="recuerdaPublicidad"
+    [aria-describedby]="
+                facade.ortExperienceForm.controls.recuerdaPublicidad.touched &&
+                facade.ortExperienceForm.controls.recuerdaPublicidad.hasError('required')
+                  ? 'advertising-memory-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button value="si">Sí</ort-radio-button>
+    <ort-radio-button value="no">No recuerdo</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.ortExperienceForm.controls.recuerdaPublicidad.touched &&
+  facade.ortExperienceForm.controls.recuerdaPublicidad.hasError('required')) {
+  <p class="inscription-field-error" id="advertising-memory-error" role="alert">
+    Seleccioná una opción
+  </p>
+  } @if (facade.ortExperienceForm.controls.recuerdaPublicidad.value === 'si') {
+  <app-responsive-select
+    errorText="Seleccioná una o más opciones"
+    formControlName="mediosPublicidad"
+    label="¿Dónde viste esa publicidad?"
+    placeholder="Seleccioná una o más..."
+    [disabled]="facade.options.advertisingOptions().length === 0"
+    [multiple]="true"
+    [options]="facade.options.advertisingOptions()"
+    [searchable]="true" />
+  }
+</div>
