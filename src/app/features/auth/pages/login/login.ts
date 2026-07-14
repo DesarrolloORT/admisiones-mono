@@ -17,8 +17,8 @@ import {
 } from '../../../../shared/forms/form-error-summary';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { ErrorAlert } from '../../../../shared/ui/error-alert/error-alert';
-import { AuthForm } from '../../components/auth-form/auth-form';
-import { DocumentFields } from '../../components/document-fields/document-fields';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
+import { DocumentFields } from '../../components/shared/document-fields/document-fields';
 import { createLoginForm } from '../../forms/auth-forms';
 import { getApiErrorMessage } from '../../models/api-error-message';
 import { cleanDocumentNumber } from '../../models/document-number';

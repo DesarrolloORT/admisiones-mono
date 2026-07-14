@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
 import { getApiErrorMessage } from '../../models/api-error-message';
 import { AuthSessionService } from '../../services/auth-session';

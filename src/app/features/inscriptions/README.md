@@ -21,7 +21,7 @@ siguiente y dónde tocar para cada tipo de cambio.
 ## Las capas, de afuera hacia adentro
 
 ```
-routes  ──►  page (pages/inscripcion)  ──►  ProcessLayout (stepper + chrome)
+routes  ──►  page (pages/layout)  ──►  ProcessLayout (stepper + chrome)
                      │
                      ├─ providers: store + fachadas + forms store
                      │
@@ -121,13 +121,19 @@ tabla ejecutable `inscription-entry.spec.ts` (intención × estado × encuesta).
 backend manda sobre los datos; la intención manda sobre presentación/navegación
 (por eso `nueva` nunca precarga el paso 1 aunque exista una encuesta previa).
 
-### 8. `pages/` + `components/` — UI
+### 8. `pages/` — UI
 
-- **`pages/inscripcion`** es el contenedor: declara los `providers` (stores y
+- **`pages/layout`** es el contenedor: declara los `providers` (stores y
   fachadas), monta `app-process-layout` y, con un `@switch (process.currentStep())`,
   muestra el componente del paso actual. No tiene lógica de negocio.
-- **`components/inscripcion-*-step`** son los pasos visuales. Hablan con su
-  fachada y disparan `continue()` / `back()`.
+- **`pages/steps/inscripcion-*-step`** son los pasos visuales. Hablan con
+  su fachada y disparan `continue()` / `back()`. El árbol de carpetas refleja
+  quién renderiza a quién: `inscripcion-personal-step/sections/` contiene las
+  6 secciones que **solo** ese paso usa (para ver quién le pasa `orientation`
+  a una sección, el padre está en la carpeta de arriba, no disperso entre 15
+  hermanos). Los diálogos de confirmación (en `layout` y en
+  `inscripcion-confirmation-step`) usan el `ort-dialog` compartido del design
+  system en lugar de un componente propio de la feature.
 
 ---
 

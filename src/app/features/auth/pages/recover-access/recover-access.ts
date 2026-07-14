@@ -13,8 +13,8 @@ import {
   getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
-import { DocumentFields } from '../../components/document-fields/document-fields';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
+import { DocumentFields } from '../../components/shared/document-fields/document-fields';
 import { createRecoverAccessForm } from '../../forms/auth-forms';
 import { formatDocumentForBackend } from '../../models/document-number';
 import { PasswordActivationService } from '../../services/password-activation';

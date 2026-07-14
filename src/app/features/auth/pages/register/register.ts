@@ -8,9 +8,9 @@ import {
   Injector,
 } from '@angular/core';
 
-import { AuthForm } from '../../components/auth-form/auth-form';
-import { RegisterIdentityStep } from '../../components/register-identity-step/register-identity-step';
-import { RegisterPersonalStep } from '../../components/register-personal-step/register-personal-step';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
+import { RegisterIdentityStep } from '../../components/steps/register-identity-step/register-identity-step';
+import { RegisterPersonalStep } from '../../components/steps/register-personal-step/register-personal-step';
 import { RegisterFlowFacade } from '../../facades/register-flow.facade';
 
 @Component({

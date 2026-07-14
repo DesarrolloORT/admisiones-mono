@@ -32,7 +32,7 @@ import {
 } from '../../../../shared/forms/password-validation';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { AuthSessionService } from '../../services/auth-session';
 import { PasswordActivationService } from '../../services/password-activation';
 
