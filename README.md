@@ -1,6 +1,6 @@
 # API Admisiones
 
-API REST de admisiones de ORT Uruguay construida sobre `.NET 10`. La solucion expone endpoints para autenticacion, registro/onboarding, catalogos, persona, inscripciones, preinscripcion, becas y fondo de beca.
+API REST de admisiones de ORT Uruguay construida sobre `.NET 10`. La solucion expone endpoints para autenticacion, registro/onboarding, catalogos, persona, inscripciones y becas.
 
 ## Estructura del repositorio
 
@@ -28,14 +28,12 @@ api-admisiones/
 
 ## Controllers principales
 
-- `LoginController`
+- `AuthController`
 - `RegistroController`
 - `CatalogosController`
 - `InscripcionesController`
-- `PreinscripcionController`
 - `PersonaController`
 - `BecasController`
-- `FondoDeBecaController`
 
 ## Onboarding publico
 
@@ -47,7 +45,7 @@ El flujo publico de onboarding/registro se concentra en `RegistroController`. Ho
 - `GET Registro/PaisesEstadosCiudades`
 - `GET Registro/ProductosVigentes`
 
-`LoginController` queda reservado para autenticacion y ciclo de sesion (`Login`, `RefreshToken`, `Logout`).
+`AuthController` queda reservado para autenticacion y ciclo de sesion (`Login`, `RefreshToken`, `Logout`).
 
 ## Requisitos
 
