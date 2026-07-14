@@ -149,18 +149,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<object>), 500)]
         public async Task<IActionResult> CambiarPassword([FromBody] DtoCambiarPasswordRequest request)
         {
-            if (!_currentUser.UserId.HasValue)
-            {
-                var errorResult = OperationResult<object>.IsFailed(
-                    errorCode: "CAM_PAS_03",
-                    originMethod: nameof(CambiarPassword),
-                    message: "Usuario no autenticado.",
-                    httpCode: 401);
-
-                return ValidateResponse(errorResult);
-            }
-
-            var result = await personaService.CambiarPasswordAsync(_currentUser.UserId.Value, request);
+            var result = await personaService.CambiarPasswordAsync(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 

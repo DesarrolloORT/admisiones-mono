@@ -201,23 +201,28 @@ namespace WebApiAdmisiones.Extensions
                         });
                 });
 
-                options.OnRejected = async (context, cancellationToken) =>
-                {
-                    ReconocimientoDocumentoRateLimitRejections.Inc();
-                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-
-                    var result = OperationResult<ReconocimientoDocumentoResponse>.IsFailed(
-                        "REC_DOC_15",
-                        ReconocimientoDocumentoRateLimitPolicy,
-                        "Se superó el límite de solicitudes de reconocimiento de documentos. Intentá nuevamente en unos minutos.",
-                        429,
-                        default!);
-
-                    await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
-                };
+                // OnRejected NO se asigna acá: RateLimiterOptions es compartido entre todas las
+                // políticas registradas con AddRateLimiter, y la última asignación pisa a las
+                // anteriores. El dispatch único vive en AddLoginRateLimiting.
             });
 
             return services;
+        }
+
+        private static async Task HandleReconocimientoDocumentoRejected(
+            OnRejectedContext context, CancellationToken cancellationToken)
+        {
+            ReconocimientoDocumentoRateLimitRejections.Inc();
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+            var result = OperationResult<ReconocimientoDocumentoResponse>.IsFailed(
+                "REC_DOC_15",
+                ReconocimientoDocumentoRateLimitPolicy,
+                "Se superó el límite de solicitudes de reconocimiento de documentos. Intentá nuevamente en unos minutos.",
+                429,
+                default!);
+
+            await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
         }
 
         /// <summary>
@@ -302,8 +307,21 @@ namespace WebApiAdmisiones.Extensions
                             TimeSpan.FromMinutes(windowMinutes)));
                 });
 
+                // Único punto donde se asigna OnRejected para todas las políticas de rate
+                // limiting: RateLimiterOptions es compartido entre AddRateLimiter
+                // calls, así que despachamos acá por política en vez de dejar que la última
+                // registrada pise a las demás.
                 options.OnRejected = async (context, cancellationToken) =>
                 {
+                    var policyName = context.HttpContext.GetEndpoint()?.Metadata
+                        .GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+
+                    if (policyName == ReconocimientoDocumentoRateLimitPolicy)
+                    {
+                        await HandleReconocimientoDocumentoRejected(context, cancellationToken);
+                        return;
+                    }
+
                     LoginRateLimitRejections.Inc();
 
                     // Obtener información adicional desde Redis
@@ -312,12 +330,12 @@ namespace WebApiAdmisiones.Extensions
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     var remaining = await redisService.GetRemainingAsync(
-                        partitionKey, 
-                        maxIpAttempts, 
+                        partitionKey,
+                        maxIpAttempts,
                         TimeSpan.FromMinutes(windowMinutes));
 
                     var resetTime = await redisService.GetResetTimeAsync(
-                        partitionKey, 
+                        partitionKey,
                         TimeSpan.FromMinutes(windowMinutes));
 
                     // Headers estándar de rate limiting (RFC 6585 + draft IETF)
@@ -327,7 +345,7 @@ namespace WebApiAdmisiones.Extensions
 
                     if (resetTime.HasValue)
                     {
-                        context.HttpContext.Response.Headers["X-RateLimit-Reset"] = 
+                        context.HttpContext.Response.Headers["X-RateLimit-Reset"] =
                             resetTime.Value.ToUnixTimeSeconds().ToString();
                         context.HttpContext.Response.Headers.RetryAfter =
                             ((int)(resetTime.Value - DateTimeOffset.UtcNow).TotalSeconds).ToString();

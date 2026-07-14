@@ -46,10 +46,29 @@ namespace WebApiAdmisiones.Security.Middleware
             {
                 await HandleSanitizationExceptionAsync(context, e, correlationId);
             }
+            catch (UnauthorizedAccessException e)
+            {
+                await HandleUnauthorizedExceptionAsync(context, e, correlationId);
+            }
             catch (Exception ex)
             {
                 await HandleGeneralExceptionAsync(context, ex, correlationId);
             }
+        }
+
+        private async Task HandleUnauthorizedExceptionAsync(HttpContext context, UnauthorizedAccessException e, Guid correlationId)
+        {
+            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            var logMessage = LoggingHelper.FormatError(
+                context,
+                nameof(ExceptionHandlingMiddleware),
+                codigoPersona,
+                "Token válido sin claim de usuario",
+                correlationId);
+
+            _logger.LogWarning(e, "{LogMessage}", logMessage);
+
+            await WriteErrorResponseAsync(context, "AUTH_UNAUTHORIZED", StatusCodes.Status401Unauthorized, e.Message);
         }
 
         private async Task HandleSanitizationExceptionAsync(HttpContext context, InputSanitizationException e, Guid correlationId)

@@ -50,7 +50,6 @@ Se aplicó el patrón de **Extension Methods** para extraer bloques de configura
 - `ConfigureMiddlewarePipeline()` - Configura todo el pipeline HTTP en orden correcto
 - `UseSecurityHeaders()` (privado) - Agrega headers de seguridad (HSTS, CSP, etc.)
 - `UseOptionsPreflight()` (privado) - Maneja requests OPTIONS para CORS
-- `UseJwtTokenRefresh()` (privado) - Configura renovación de tokens JWT
 
 **Beneficios:**
 - Mantiene el orden crítico de middlewares documentado y verificable

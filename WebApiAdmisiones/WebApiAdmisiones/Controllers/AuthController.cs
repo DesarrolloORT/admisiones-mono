@@ -293,7 +293,8 @@ namespace WebApiAdmisiones.Controllers
         /// <returns>Resultado de la operación.</returns>
         /// <response code="200">Logout exitoso.</response>
         /// <remarks>
-        /// Endpoint autenticado para finalizar la sesion del usuario actual. El front puede llamarlo al cerrar sesion para limpiar las cookies HttpOnly emitidas por la API.
+        /// Endpoint público (anónimo a propósito, M-06): solo limpia cookies, no requiere una sesión
+        /// válida — debe poder llamarse aunque el access token ya haya expirado.
         /// </remarks>
         [HttpPost("Logout")]
         [AllowAnonymous]
@@ -316,9 +317,12 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Refresh token inválido, expirado o no encontrado.</response>
         /// <response code="404">Usuario no encontrado en la base de datos.</response>
         /// <remarks>
-        /// Endpoint autenticado por cookie de refresh token. El front no necesita enviar el token en el body; debe llamar este endpoint cuando expire el access token y la API actualizara las cookies si el refresh token sigue vigente.
+        /// Endpoint autenticado por cookie de refresh token, no por el access token de sesión (que puede
+        /// estar vencido). El front no necesita enviar el token en el body; debe llamar este endpoint
+        /// cuando expire el access token y la API actualizara las cookies si el refresh token sigue vigente.
         /// </remarks>
         [HttpPost("RefreshToken")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
         [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]

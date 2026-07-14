@@ -46,7 +46,7 @@ builder.Services.AddSwaggerGen(static options =>
 
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Mi API",
+        Title = "API Admisiones",
         Version = "v1",
         Description = "La autenticación se realiza mediante cookies HttpOnly generadas al iniciar sesión."
     });

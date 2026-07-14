@@ -128,7 +128,7 @@ namespace UnitTesting.Controllers
                 "Se actualizó tu contraseña",
                 nameof(IPersonaService.CambiarPasswordAsync));
 
-            _currentUserMock.Setup(c => c.UserId).Returns(123);
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
             _personaServiceMock
                 .Setup(s => s.CambiarPasswordAsync(123, request))
                 .ReturnsAsync(result);
@@ -141,21 +141,19 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task CambiarPassword_WithoutAuthenticatedUser_ReturnsUnauthorized()
+        public async Task CambiarPassword_WithoutAuthenticatedUser_ThrowsUnauthorizedAccessException()
         {
+            // GetUserId() lanza cuando el token no trae el claim de usuario; el middleware
+            // global (ExceptionHandlingMiddleware) es quien la convierte en 401 (CTL-02).
             var request = new DtoCambiarPasswordRequest
             {
                 PasswordActual = "Password123!",
                 PasswordNueva = "NuevaPassword1!"
             };
+            _currentUserMock.Setup(c => c.GetUserId()).Throws<UnauthorizedAccessException>();
 
-            var response = await _controller.CambiarPassword(request);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _controller.CambiarPassword(request));
 
-            var unauthorizedResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(401, unauthorizedResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<object>>(unauthorizedResult.Value);
-            Assert.False(operationResult.Success);
-            Assert.Equal("CAM_PAS_03", operationResult.ErrorCode);
             _personaServiceMock.Verify(
                 s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
                 Times.Never);

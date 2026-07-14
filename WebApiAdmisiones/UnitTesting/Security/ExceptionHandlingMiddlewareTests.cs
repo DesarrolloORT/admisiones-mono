@@ -113,6 +113,29 @@ namespace UnitTesting.Security
         }
 
         [Fact]
+        public async Task Invoke_WhenUnauthorizedAccessException_ReturnsUnauthorized()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new UnauthorizedAccessException("UserId is not available."),
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+            Assert.StartsWith("application/json", context.Response.ContentType);
+            Assert.Contains("AUTH_UNAUTHORIZED", responseBody);
+        }
+
+        [Fact]
         public async Task Invoke_WhenGeneralException_ReturnsInternalServerError()
         {
             // Arrange
