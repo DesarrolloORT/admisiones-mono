@@ -1,4 +1,10 @@
-<div class="process-layout" [class.process-layout--without-stepper]="!showStepper()">
+<div
+  class="process-layout"
+  [class.process-layout--compact]="viewport() === 'compact'"
+  [class.process-layout--desktop]="viewport() === 'desktop'"
+  [class.process-layout--tablet]="viewport() === 'tablet'"
+  [class.process-layout--wide-mobile]="viewport() === 'wide-mobile'"
+  [class.process-layout--without-stepper]="!showStepper()">
   <div class="process-layout__top">
     <header class="process-layout__header">
       <div
@@ -102,7 +108,7 @@
       </div>
     </header>
 
-    @if (showStepper()) {
+    @if (showStepper() && viewport() !== 'desktop') {
     <p aria-live="polite" class="sr-only" role="status">
       {{ processTitle() }}. {{ stepperSubtitle() }}
     </p>
@@ -124,7 +130,7 @@
   </div>
 
   <div class="process-layout__body">
-    @if (showStepper()) {
+    @if (showStepper() && viewport() === 'desktop') {
     <aside aria-label="Progreso del proceso" class="process-layout__rail">
       <div class="process-layout__rail-inner">
         <ort-expandable-stepper

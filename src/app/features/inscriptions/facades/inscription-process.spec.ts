@@ -361,11 +361,15 @@ describe('InscripcionProcessFacade', () => {
     expect(facade.backLabel()).toBe('Volver al paso 2');
   });
 
-  it('hides the stepper on terminal outcomes and while processing', () => {
-    const { facade, payment } = createFacade(NUEVA, FRESH);
+  it('hides the stepper while reading the regulation, on terminal outcomes and while processing', () => {
+    const { facade, payment, survey } = createFacade(NUEVA, FRESH);
 
     expect(facade.showStepper()).toBe(true);
 
+    survey.readerOpen.set(true);
+    expect(facade.showStepper()).toBe(false);
+
+    survey.readerOpen.set(false);
     payment.view.set('processing');
     expect(facade.showStepper()).toBe(false);
     expect(facade.canGoBack()).toBe(false);

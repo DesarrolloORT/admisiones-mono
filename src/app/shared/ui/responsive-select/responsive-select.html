@@ -48,7 +48,7 @@
   }
 </ort-form-field>
 } @else {
-<div class="responsive-select__mobile">
+<div class="responsive-select__mobile" [class.responsive-select__mobile--multiple]="multiple()">
   <label class="responsive-select__mobile-label" [for]="mobileId()">
     {{ label() }} @if (isRequired()) {
     <span aria-hidden="true">*</span>

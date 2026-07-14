@@ -53,6 +53,7 @@ export class InscripcionProcessFacade {
     () =>
       !this.survey.loadingSurveyState() &&
       !this.survey.surveyLoadError() &&
+      !this.survey.readerOpen() &&
       !this.payment.outcome() &&
       this.payment.view() !== 'processing'
   );
