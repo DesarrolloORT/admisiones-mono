@@ -117,7 +117,10 @@ export class Declaration {
 
   expenses = signal<MonthlyExpense[]>([]);
 
+  protected readonly expenseAmountError = signal(false);
+
   openDrawer() {
+    this.expenseAmountError.set(false);
     this.drawer.set(true);
   }
 
@@ -127,14 +130,14 @@ export class Declaration {
 
   saveExpense(event: SubmitEvent, name: string, amountValue: string, form: HTMLFormElement) {
     event.preventDefault();
+    event.stopPropagation();
 
     const amount = Number(amountValue);
+    const isAmountValid = amount > 1000;
 
-    if (!name.trim()) {
-      return;
-    }
+    this.expenseAmountError.set(!isAmountValid);
 
-    if (!amount || amount <= 1000) {
+    if (!name.trim() || !isAmountValid) {
       return;
     }
 
@@ -148,6 +151,7 @@ export class Declaration {
     ]);
 
     form.reset();
+    this.expenseAmountError.set(false);
     this.closeDrawer();
   }
 
