@@ -17,9 +17,9 @@
   }
 
   <ort-file-uploader
-    display="inline"
     label="Certificado de secundaria (Formula 69) *"
     [acceptedTypes]="['.pdf', '.png', '.jpg']"
+    [display]="fileUploaderDisplay()"
     (filesChanged)="onCertificateFilesChanged($event)" />
   @if (certificateFileControl.invalid && (facade.submitted() || certificateFileControl.touched)) {
   <ort-error>Adjuntá el certificado de secundaria</ort-error>

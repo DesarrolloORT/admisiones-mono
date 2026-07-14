@@ -95,10 +95,10 @@
           }
 
           <ort-file-uploader
-            display="inline"
             label="Adjuntá comprobantes de ingresos"
             multiple="true"
             [acceptedTypes]="['.pdf', '.jpg', '.png']"
+            [display]="fileUploaderDisplay()"
             (filesChanged)="onIncomeProofFilesChanged(member.controls.id.value, $event)" />
           @if (facade.submitted() && isIncomeProofFileMissing(member)) {
           <ort-error>Adjuntá al menos un comprobante de ingresos</ort-error>

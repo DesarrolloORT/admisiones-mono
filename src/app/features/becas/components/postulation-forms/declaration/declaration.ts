@@ -97,6 +97,12 @@ export class Declaration {
     return breakpoint.isXSmall || breakpoint.isSmall ? 'right' : 'left';
   });
 
+  protected readonly fileUploaderDisplay = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'inline' : 'block';
+  });
+
   openDialog: boolean = false;
 
   addMember(): void {
