@@ -253,10 +253,11 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task AutenticarUsuarioLDAPAsync_SuccessfulAuthentication_ReturnsOkWithTokens()
+        public async Task AutenticarUsuarioLDAPAsync_SuccessfulAuthentication_ReturnsOkWithPersonaIdentityAndNoTokens()
         {
-            // Arrange
-            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            // SEG-03: AutenticarUsuarioLDAPAsync ya no emite ni persiste tokens. Eso lo hace
+            // GenerarTokensParaPersonaAsync, recién cuando el llamador decide que el login está
+            // completo (sin 2FA pendiente).
             long codigoPersona = 12345;
             string password = "validpass";
             var ldapSuccessResult = OperationResult<bool>.Ok(true, "AutenticarUsuarioLDAPAsync");
@@ -281,6 +282,51 @@ namespace UnitTesting.AppLogic.Services
             _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, password))
                 .ReturnsAsync(ldapSuccessResult);
 
+            // Act
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", password);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal(codigoPersona, result.Data.CodigoPersona);
+            Assert.Equal("Juan", result.Data.PrimerNombre);
+            Assert.Equal("Carlos", result.Data.SegundoNombre);
+            Assert.Equal("Pérez", result.Data.PrimerApellido);
+            Assert.Equal("Gómez", result.Data.SegundoApellido);
+            Assert.Equal("E", result.Data.TipoPersona);
+            Assert.Equal("1234567-2", result.Data.Documento);
+
+            _tokenServiceMock.Verify(x => x.GenerateAccessToken(It.IsAny<Persona>()), Times.Never);
+            _tokenServiceMock.Verify(x => x.GenerateRefreshToken(), Times.Never);
+            _refreshTokenServiceMock.Verify(
+                x => x.SaveRefreshTokenAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GenerarTokensParaPersonaAsync_Success_ReturnsOkWithTokens()
+        {
+            // Arrange
+            using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
+            long codigoPersona = 12345;
+
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Juan",
+                SegundoNombre = "Carlos",
+                PrimerApellido = "Pérez",
+                SegundoApellido = "Gómez",
+                TipoPersona = "E",
+                Documento = "1234567-2"
+            };
+
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(x => x.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
             _tokenServiceMock.Setup(x => x.GenerateAccessToken(persona)).Returns("access_token_123");
             _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh_token_456");
             _tokenServiceMock.Setup(x => x.HashToken("refresh_token_456")).Returns("hashed_refresh_token");
@@ -293,7 +339,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", password);
+            var result = await _service.GenerarTokensParaPersonaAsync(codigoPersona);
 
             // Assert
             Assert.True(result.Success);
@@ -303,12 +349,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("hashed_refresh_token", result.Data.RefreshTokenHash);
             Assert.NotNull(result.Data.Persona);
             Assert.Equal(codigoPersona, result.Data.Persona.CodigoPersona);
-            Assert.Equal("Juan", result.Data.Persona.PrimerNombre);
-            Assert.Equal("Carlos", result.Data.Persona.SegundoNombre);
-            Assert.Equal("Pérez", result.Data.Persona.PrimerApellido);
-            Assert.Equal("Gómez", result.Data.Persona.SegundoApellido);
-            Assert.Equal("E", result.Data.Persona.TipoPersona);
-            Assert.Equal("1234567-2", result.Data.Persona.Documento);
 
             _refreshTokenServiceMock.Verify(x => x.SaveRefreshTokenAsync(
                 codigoPersona,
@@ -322,18 +362,16 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior()
+        public async Task GenerarTokensParaPersonaAsync_WhenRefreshTokenPersistenceFails_ReturnsFailedWithErrorCode()
         {
             using var scope = new EnvironmentVariableScope(("JWT_REFRESH_EXPIRE_ADMISIONES", "7"));
             const long codigoPersona = 12345;
             var persona = new Persona { CodigoPersona = codigoPersona, Documento = "1234567-2" };
             var uowMock = new Mock<IUnitOfWork>();
             var personasRepoMock = new Mock<IPersonaRepository>();
-            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            personasRepoMock.Setup(x => x.GetByKey(codigoPersona)).Returns(persona);
             uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
             _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
-            _ldapMock.Setup(x => x.AutenticarUsuarioLDAPAsync(codigoPersona, "validpass"))
-                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(AutenticarUsuarioLDAPAsync_WhenRefreshTokenPersistenceFails_PreservesErrorBehavior)));
             _tokenServiceMock.Setup(x => x.GenerateAccessToken(persona)).Returns("access-token");
             _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh-token");
             _tokenServiceMock.Setup(x => x.HashToken("refresh-token")).Returns("refresh-hash");
@@ -341,10 +379,10 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(x => x.SaveRefreshTokenAsync(codigoPersona, "ADMISIONESWEB", "refresh-hash", It.IsAny<DateTime>()))
                 .ThrowsAsync(new InvalidOperationException("Persistence unavailable"));
 
-            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
+            var result = await _service.GenerarTokensParaPersonaAsync(codigoPersona);
 
             Assert.False(result.Success);
-            Assert.Equal("LOGIN_LDAP_99", result.ErrorCode);
+            Assert.Equal("GEN_TOK_99", result.ErrorCode);
             Assert.Equal(500, result.HttpCode);
             Assert.DoesNotContain("Persistence unavailable", result.Message);
             _tokenServiceMock.Verify(x => x.GenerateAccessToken(persona), Times.Once);
@@ -1049,6 +1087,50 @@ namespace UnitTesting.AppLogic.Services
             // "CompletarPasswordAsync" es el literal preservado del nombre original del método
             // (ver CompletarPasswordPersonaExistenteOriginMethod) para no cambiar el body público.
             Assert.Equal("CompletarPasswordAsync", flow.Result.Method);
+        }
+
+        [Fact]
+        public async Task CompletarPasswordFlowAsync_PersonaExistenteCuandoSaveFalla_NoConsumeElLinkDeActivacion()
+        {
+            // SRV-02: si el Save de DB falla después de cambiar la password en LDAP, el link de
+            // activación (hash token en Redis) debe seguir vigente para que el usuario reintente.
+            var codigoPersona = 12345L;
+            var persona = new Persona
+            {
+                CodigoPersona = codigoPersona,
+                PrimerNombre = "Ana",
+                PrimerApellido = "Perez",
+                TipoPersona = "SGI",
+                CodigoVigencia = "SI"
+            };
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
+            uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
+            uowMock.Setup(u => u.Save()).Throws(new InvalidOperationException("DB caída"));
+            _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _hashTokenStoreMock
+                .Setup(h => h.GetAsync(codigoPersona.ToString()))
+                .ReturnsAsync("stored-hash");
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.ForzarCambiarPasswordAsync)));
+            _passwordActivationServiceMock
+                .Setup(s => s.ValidarSessionToken("token"))
+                .Returns(OperationResult<DtoValidatedSession>.Ok(
+                    new DtoValidatedSession { Purpose = "password-activation-session", CodigoPersona = codigoPersona },
+                    nameof(IPasswordActivationService.ValidarSessionToken)));
+
+            var flow = await _service.CompletarPasswordFlowAsync(
+                "token",
+                new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" });
+
+            Assert.False(flow.Result.Success);
+            Assert.Equal("INI_PAS_99", flow.Result.ErrorCode);
+            Assert.Equal(500, flow.Result.HttpCode);
+            _hashTokenStoreMock.Verify(
+                h => h.DeleteAsync(codigoPersona.ToString()),
+                Times.Never);
         }
 
         [Fact]

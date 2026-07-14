@@ -28,28 +28,31 @@ public class DosFactoresAuthService : IDosFactoresAuthService
     private readonly IEmailSender _emailSender;
     private readonly IConfiguration _configuration;
     private readonly ILogger<DosFactoresAuthService> _logger;
+    private readonly IAuthService _authService;
 
     public DosFactoresAuthService(
         ITwoFactorSessionStore sessionStore,
         IRateLimiterService rateLimiter,
         IEmailSender emailSender,
         IConfiguration configuration,
-        ILogger<DosFactoresAuthService> logger)
+        ILogger<DosFactoresAuthService> logger,
+        IAuthService authService)
     {
         _sessionStore = sessionStore;
         _rateLimiter = rateLimiter;
         _emailSender = emailSender;
         _configuration = configuration;
         _logger = logger;
+        _authService = authService;
     }
 
     public async Task<OperationResult<DtoLogin2FARequired>> IniciarAsync(
-        DtoAuthenticationResponse pendingAuth,
+        DtoPersonaAuth persona,
         string email)
     {
         try
         {
-            var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(pendingAuth.Persona.Documento);
+            var normalizedDoc = DocumentUtils.NormalizarDocumentoParaClave(persona.Documento);
             var initLimit = _configuration.GetValue<int?>("Authentication:TwoFactor:MaxInitAttempts") ?? 3;
             var sessionMinutes = ObtenerSessionMinutes();
             var codeMinutes = ObtenerCodeMinutes();
@@ -82,16 +85,13 @@ public class DosFactoresAuthService : IDosFactoresAuthService
 
             var session = new DtoTwoFactorSession
             {
-                CodigoPersona = pendingAuth.Persona.CodigoPersona,
-                PrimerNombre = pendingAuth.Persona.PrimerNombre,
-                SegundoNombre = pendingAuth.Persona.SegundoNombre,
-                PrimerApellido = pendingAuth.Persona.PrimerApellido,
-                SegundoApellido = pendingAuth.Persona.SegundoApellido,
-                TipoPersona = pendingAuth.Persona.TipoPersona,
-                Documento = pendingAuth.Persona.Documento,
-                AccessToken = pendingAuth.AccessToken,
-                RefreshToken = pendingAuth.RefreshToken,
-                RefreshTokenHash = pendingAuth.RefreshTokenHash,
+                CodigoPersona = persona.CodigoPersona,
+                PrimerNombre = persona.PrimerNombre,
+                SegundoNombre = persona.SegundoNombre,
+                PrimerApellido = persona.PrimerApellido,
+                SegundoApellido = persona.SegundoApellido,
+                TipoPersona = persona.TipoPersona,
+                Documento = persona.Documento,
                 CodigoHash = codigoHash,
                 CodigoExpiresAtUtc = codigoExpiresAtUtc,
                 Email = email,
@@ -122,7 +122,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
             {
                 _logger.LogInformation(
                     "2FA iniciado para persona {CodigoPersona}, sesión {SessionId}",
-                    pendingAuth.Persona.CodigoPersona,
+                    persona.CodigoPersona,
                     sessionId);
             }
 
@@ -222,25 +222,18 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                     default!);
             }
 
-            // Código correcto: eliminar sesión y retornar autenticación completa
+            // Código correcto: eliminar sesión y recién ahora emitir y persistir los tokens.
             await _sessionStore.DeleteAsync(sessionId);
             await LimpiarRateLimitInicioAsync(session);
 
-            var authResponse = AuthenticationResponseBuilder.Build(
-                new DtoPersonaAuth
-                {
-                    CodigoPersona = session.CodigoPersona,
-                    PrimerNombre = session.PrimerNombre,
-                    SegundoNombre = session.SegundoNombre,
-                    PrimerApellido = session.PrimerApellido,
-                    SegundoApellido = session.SegundoApellido,
-                    TipoPersona = session.TipoPersona,
-                    Documento = session.Documento
-                },
-                session.AccessToken!,
-                session.RefreshToken!,
-                session.RefreshTokenHash!,
+            var tokenResult = await _authService.GenerarTokensParaPersonaAsync(
+                session.CodigoPersona,
                 "Verificación completada. Los tokens han sido establecidos como cookies seguras.");
+
+            if (!tokenResult.Success)
+            {
+                return tokenResult;
+            }
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
@@ -249,7 +242,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                     session.CodigoPersona);
             }
 
-            return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(VerificarCodigoAsync));
+            return OperationResult<DtoAuthenticationResponse>.Ok(tokenResult.Data!, nameof(VerificarCodigoAsync));
         }
         catch (Exception ex)
         {

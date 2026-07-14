@@ -2,7 +2,7 @@ namespace AppLogic.Autenticacion.Dtos;
 
 /// <summary>
 /// Modelo de sesión 2FA almacenada en Redis durante el flujo de verificación.
-/// Contiene los tokens pendientes y el hash del código de verificación.
+/// Guarda solo la identidad ya verificada contra LDAP y el hash del código de verificación.
 /// </summary>
 public sealed class DtoTwoFactorSession
 {
@@ -13,11 +13,6 @@ public sealed class DtoTwoFactorSession
     public string? SegundoApellido { get; set; }
     public string? TipoPersona { get; set; }
     public string? Documento { get; set; }
-
-    // Tokens pendientes de establecer como cookies tras la verificación
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
-    public string? RefreshTokenHash { get; set; }
 
     // Datos de verificación
     public string? CodigoHash { get; set; }

@@ -42,19 +42,24 @@ namespace UnitTesting.Security
             var authServiceMock = new Mock<IAuthService>();
             authServiceMock
                 .Setup(s => s.AutenticarUsuarioLDAPAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
+                .ReturnsAsync(OperationResult<DtoPersonaAuth>.Ok(
+                    new DtoPersonaAuth
+                    {
+                        CodigoPersona = 123,
+                        Documento = documento,
+                        Email = "test@example.com"
+                    },
+                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
+            authServiceMock
+                .Setup(s => s.GenerarTokensParaPersonaAsync(It.IsAny<long>(), It.IsAny<string>()))
+                .ReturnsAsync((long codigoPersona, string? _) => OperationResult<DtoAuthenticationResponse>.Ok(
                     new DtoAuthenticationResponse
                     {
-                        Persona = new DtoPersonaAuth
-                        {
-                            CodigoPersona = 123,
-                            Documento = documento,
-                            Email = "test@example.com"
-                        },
+                        Persona = new DtoPersonaAuth { CodigoPersona = codigoPersona, Documento = documento },
                         AccessToken = "access-token",
                         RefreshToken = "refresh-token"
                     },
-                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
+                    nameof(IAuthService.GenerarTokensParaPersonaAsync)));
 
             var rateLimiterMock = new Mock<IRateLimiterService>();
             rateLimiterMock
@@ -76,7 +81,7 @@ namespace UnitTesting.Security
 
             var dosFactoresMock = new Mock<IDosFactoresAuthService>();
             dosFactoresMock
-                .Setup(s => s.IniciarAsync(It.IsAny<DtoAuthenticationResponse>(), It.IsAny<string>()))
+                .Setup(s => s.IniciarAsync(It.IsAny<DtoPersonaAuth>(), It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<DtoLogin2FARequired>.Ok(
                     new DtoLogin2FARequired { SessionId = "2fa-session" },
                     nameof(IDosFactoresAuthService.IniciarAsync)));
@@ -145,23 +150,18 @@ namespace UnitTesting.Security
                 rateLimiterMock.Object,
                 emailSenderMock.Object,
                 configuration,
-                Mock.Of<ILogger<DosFactoresAuthService>>());
+                Mock.Of<ILogger<DosFactoresAuthService>>(),
+                Mock.Of<IAuthService>());
 
-            var pendingAuth = new DtoAuthenticationResponse
+            var pendingPersona = new DtoPersonaAuth
             {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = 123,
-                    Documento = documento,
-                    PrimerNombre = "Gabriele",
-                    PrimerApellido = "Test"
-                },
-                AccessToken = "access-token",
-                RefreshToken = "refresh-token",
-                RefreshTokenHash = "refresh-token-hash"
+                CodigoPersona = 123,
+                Documento = documento,
+                PrimerNombre = "Gabriele",
+                PrimerApellido = "Test"
             };
 
-            await sut.IniciarAsync(pendingAuth, "gabriele@ort.edu.uy");
+            await sut.IniciarAsync(pendingPersona, "gabriele@ort.edu.uy");
 
             Assert.NotNull(capturedKey);
             return capturedKey!;

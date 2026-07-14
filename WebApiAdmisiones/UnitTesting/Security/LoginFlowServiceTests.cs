@@ -30,8 +30,11 @@ namespace UnitTesting.Security
             authServiceMock.Verify(
                 s => s.AutenticarUsuarioLDAPAsync("CI", "12345678", "Password1!"),
                 Times.Once);
+            authServiceMock.Verify(
+                s => s.GenerarTokensParaPersonaAsync(123, It.IsAny<string>()),
+                Times.Once);
             dosFactoresMock.Verify(
-                s => s.IniciarAsync(It.IsAny<DtoAuthenticationResponse>(), It.IsAny<string>()),
+                s => s.IniciarAsync(It.IsAny<DtoPersonaAuth>(), It.IsAny<string>()),
                 Times.Never);
         }
 
@@ -54,7 +57,7 @@ namespace UnitTesting.Security
             Assert.Equal("2fa-session", result.TwoFactorResult.Data!.SessionId);
             dosFactoresMock.Verify(
                 s => s.IniciarAsync(
-                    It.Is<DtoAuthenticationResponse>(r => r.Persona.Email == "test@example.com"),
+                    It.Is<DtoPersonaAuth>(p => p.Email == "test@example.com"),
                     "test@example.com"),
                 Times.Once);
         }
@@ -127,19 +130,24 @@ namespace UnitTesting.Security
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>()))
-                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
+                .ReturnsAsync(OperationResult<DtoPersonaAuth>.Ok(
+                    new DtoPersonaAuth
+                    {
+                        CodigoPersona = 123,
+                        Documento = "12345678",
+                        Email = "test@example.com"
+                    },
+                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
+            authServiceMock
+                .Setup(s => s.GenerarTokensParaPersonaAsync(It.IsAny<long>(), It.IsAny<string>()))
+                .ReturnsAsync((long codigoPersona, string? _) => OperationResult<DtoAuthenticationResponse>.Ok(
                     new DtoAuthenticationResponse
                     {
-                        Persona = new DtoPersonaAuth
-                        {
-                            CodigoPersona = 123,
-                            Documento = "12345678",
-                            Email = "test@example.com"
-                        },
+                        Persona = new DtoPersonaAuth { CodigoPersona = codigoPersona, Documento = "12345678" },
                         AccessToken = "access-token",
                         RefreshToken = "refresh-token"
                     },
-                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
+                    nameof(IAuthService.GenerarTokensParaPersonaAsync)));
 
             rateLimiterMock = new Mock<IRateLimiterService>();
             rateLimiterMock
@@ -164,7 +172,7 @@ namespace UnitTesting.Security
 
             dosFactoresMock = new Mock<IDosFactoresAuthService>();
             dosFactoresMock
-                .Setup(s => s.IniciarAsync(It.IsAny<DtoAuthenticationResponse>(), It.IsAny<string>()))
+                .Setup(s => s.IniciarAsync(It.IsAny<DtoPersonaAuth>(), It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<DtoLogin2FARequired>.Ok(
                     new DtoLogin2FARequired { SessionId = "2fa-session" },
                     nameof(IDosFactoresAuthService.IniciarAsync)));

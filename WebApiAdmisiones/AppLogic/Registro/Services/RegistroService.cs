@@ -346,33 +346,58 @@ namespace AppLogic.Registro.Services
                     DateTime.Now);
                 uow.Personas.Add(persona);
                 uow.Save();
+                uow.Commit();
+            }
+            catch (Exception ex)
+            {
+                uow.Rollback();
+                _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
+                return OperationResult<long>.IsFailed(
+                    "REG_PERSONA_99",
+                    nameof(CompletarNuevaPersonaAsync),
+                    "Error al crear la persona.",
+                    500,
+                    default);
+            }
 
-                var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
-                if (!crearUsuario.Success)
-                {
-                    uow.Rollback();
-                    return OperationResult<long>.IsFailed(
-                        crearUsuario.ErrorCode,
-                        nameof(CompletarNuevaPersonaAsync),
-                        crearUsuario.Message,
-                        crearUsuario.HttpCode,
-                        default);
-                }
+            // LDAP fuera de la transacción DB (SRV-01): la persona ya está commiteada, así que un
+            // fallo acá no la revierte. Si queda huérfana (sin usuario LDAP o sin password),
+            // el reintento la encuentra vía GetByDocumento y sigue por CompletarPasswordPersonaPendienteExistenteAsync.
+            var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
+            if (!crearUsuario.Success)
+            {
+                _logger?.LogError(
+                    "Estado inconsistente: persona {CodigoPersona} creada en DB pero sin usuario LDAP ({ErrorCode}).",
+                    persona.CodigoPersona,
+                    crearUsuario.ErrorCode);
+                return OperationResult<long>.IsFailed(
+                    crearUsuario.ErrorCode,
+                    nameof(CompletarNuevaPersonaAsync),
+                    crearUsuario.Message,
+                    crearUsuario.HttpCode,
+                    default);
+            }
 
-                var cambioPassword = await CambiarPasswordLdapAsync(
-                    persona.CodigoPersona.ToString(CultureInfo.InvariantCulture),
-                    passwordNueva);
-                if (!cambioPassword.Success)
-                {
-                    uow.Rollback();
-                    return OperationResult<long>.IsFailed(
-                        cambioPassword.ErrorCode,
-                        nameof(CompletarNuevaPersonaAsync),
-                        cambioPassword.Message,
-                        cambioPassword.HttpCode,
-                        default);
-                }
+            var cambioPassword = await CambiarPasswordLdapAsync(
+                persona.CodigoPersona.ToString(CultureInfo.InvariantCulture),
+                passwordNueva);
+            if (!cambioPassword.Success)
+            {
+                _logger?.LogError(
+                    "Estado inconsistente: persona {CodigoPersona} con usuario LDAP creado pero sin password establecida ({ErrorCode}).",
+                    persona.CodigoPersona,
+                    cambioPassword.ErrorCode);
+                return OperationResult<long>.IsFailed(
+                    cambioPassword.ErrorCode,
+                    nameof(CompletarNuevaPersonaAsync),
+                    cambioPassword.Message,
+                    cambioPassword.HttpCode,
+                    default);
+            }
 
+            try
+            {
+                uow.BeginTransaction();
                 ActualizarMetadataPassword(uow, persona);
                 RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
                 GuardarImagenesDocumentoReconocido(uow, persona, imagenes);
@@ -381,7 +406,9 @@ namespace AppLogic.Registro.Services
             catch (Exception ex)
             {
                 uow.Rollback();
-                _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
+                _logger?.LogError(ex,
+                    "Estado inconsistente: persona {CodigoPersona} con LDAP activo pero metadata/admisión/imágenes sin persistir.",
+                    persona.CodigoPersona);
                 return OperationResult<long>.IsFailed(
                     "REG_PERSONA_99",
                     nameof(CompletarNuevaPersonaAsync),
@@ -453,7 +480,11 @@ namespace AppLogic.Registro.Services
             catch (Exception ex)
             {
                 uow.Rollback();
-                _logger?.LogError(ex, ErrorInesperadoLog, originMethod);
+                // SRV-01: el usuario LDAP ya se creó (arriba, fuera de esta tx) y no se revierte.
+                _logger?.LogError(ex,
+                    "Estado inconsistente: persona {CodigoPersona} con usuario LDAP creado pero admisión sin registrar en {Metodo}.",
+                    persona.CodigoPersona,
+                    originMethod);
                 return OperationResult<object?>.IsFailed(
                     "REG_ADMISIONES_99",
                     originMethod,

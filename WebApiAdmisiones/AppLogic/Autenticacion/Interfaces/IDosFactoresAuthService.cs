@@ -11,8 +11,10 @@ public interface IDosFactoresAuthService
 {
     /// <summary>
     /// Inicia el flujo 2FA: genera un código, lo almacena en Redis y lo envía por email.
+    /// La sesión guarda solo identidad verificada, no tokens estos se emiten recién
+    /// en <see cref="VerificarCodigoAsync"/> cuando el código es correcto.
     /// </summary>
-    Task<OperationResult<DtoLogin2FARequired>> IniciarAsync(DtoAuthenticationResponse pendingAuth, string email);
+    Task<OperationResult<DtoLogin2FARequired>> IniciarAsync(DtoPersonaAuth persona, string email);
 
     /// <summary>
     /// Verifica el código ingresado por el usuario.

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Cryptography;
 using System.Text;
+using Utilities;
 
 namespace UnitTesting.Security
 {
@@ -21,7 +22,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             var service = CreateService(sessionStoreMock: sessionStoreMock, emailSenderMock: emailSenderMock);
 
-            var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
+            var result = await service.IniciarAsync(CreatePendingPersona(), "gabriele@ort.edu.uy");
 
             Assert.True(result.Success);
             Assert.NotNull(result.Data);
@@ -45,7 +46,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             var service = CreateService(sessionStoreMock: sessionStoreMock, rateLimiterMock: rateLimiterMock);
 
-            var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
+            var result = await service.IniciarAsync(CreatePendingPersona(), "gabriele@ort.edu.uy");
 
             Assert.False(result.Success);
             Assert.Equal(429, result.HttpCode);
@@ -65,7 +66,7 @@ namespace UnitTesting.Security
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             var service = CreateService(sessionStoreMock: sessionStoreMock, emailSenderMock: emailSenderMock);
 
-            var result = await service.IniciarAsync(CreatePendingAuth(), "gabriele@ort.edu.uy");
+            var result = await service.IniciarAsync(CreatePendingPersona(), "gabriele@ort.edu.uy");
 
             Assert.False(result.Success);
             Assert.Equal(500, result.HttpCode);
@@ -122,17 +123,64 @@ namespace UnitTesting.Security
                     CodigoPersona = 123,
                     CodigoHash = hash,
                     CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
-                    Documento = "1.234.567-8",
-                    AccessToken = "access-token",
-                    RefreshToken = "refresh-token"
+                    Documento = "1.234.567-8"
                 });
-            var service = CreateService(sessionStoreMock: sessionStoreMock);
+            var authServiceMock = new Mock<IAuthService>();
+            authServiceMock
+                .Setup(a => a.GenerarTokensParaPersonaAsync(123, It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.Ok(
+                    new DtoAuthenticationResponse
+                    {
+                        Persona = new DtoPersonaAuth { CodigoPersona = 123 },
+                        AccessToken = "access-token",
+                        RefreshToken = "refresh-token",
+                        RefreshTokenHash = "refresh-token-hash"
+                    },
+                    nameof(IAuthService.GenerarTokensParaPersonaAsync)));
+            var service = CreateService(sessionStoreMock: sessionStoreMock, authServiceMock: authServiceMock);
 
             var result = await service.VerificarCodigoAsync("session-id", codigo);
 
             Assert.True(result.Success);
             Assert.Equal(123, result.Data!.Persona.CodigoPersona);
             Assert.Equal("access-token", result.Data.AccessToken);
+            sessionStoreMock.Verify(s => s.DeleteAsync("session-id"), Times.Once);
+            authServiceMock.Verify(a => a.GenerarTokensParaPersonaAsync(123, It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task VerificarCodigoAsync_WhenTokenGenerationFails_ReturnsFailureWithoutLeakingTokens()
+        {
+            // SEG-03: si emitir los tokens falla después de un código correcto, la falla se
+            // propaga tal cual (mismo ErrorCode/HttpCode que GenerarTokensParaPersonaAsync).
+            var codigo = "123456";
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(codigo))).ToLowerInvariant();
+            var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
+            sessionStoreMock
+                .Setup(s => s.GetAsync("session-id"))
+                .ReturnsAsync(new DtoTwoFactorSession
+                {
+                    CodigoPersona = 123,
+                    CodigoHash = hash,
+                    CodigoExpiresAtUtc = DateTime.UtcNow.AddMinutes(10),
+                    Documento = "1.234.567-8"
+                });
+            var authServiceMock = new Mock<IAuthService>();
+            authServiceMock
+                .Setup(a => a.GenerarTokensParaPersonaAsync(123, It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    "GEN_TOK_01",
+                    nameof(IAuthService.GenerarTokensParaPersonaAsync),
+                    "Usuario no encontrado en la base de datos.",
+                    404,
+                    default!));
+            var service = CreateService(sessionStoreMock: sessionStoreMock, authServiceMock: authServiceMock);
+
+            var result = await service.VerificarCodigoAsync("session-id", codigo);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_TOK_01", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
             sessionStoreMock.Verify(s => s.DeleteAsync("session-id"), Times.Once);
         }
 
@@ -275,19 +323,13 @@ namespace UnitTesting.Security
             Assert.Equal(remainingTtl, capturedTtl);
         }
 
-        private static DtoAuthenticationResponse CreatePendingAuth() =>
+        private static DtoPersonaAuth CreatePendingPersona() =>
             new()
             {
-                Persona = new DtoPersonaAuth
-                {
-                    CodigoPersona = 123,
-                    Documento = "1.234.567-8",
-                    PrimerNombre = "Gabriele",
-                    PrimerApellido = "Test"
-                },
-                AccessToken = "access-token",
-                RefreshToken = "refresh-token",
-                RefreshTokenHash = "refresh-token-hash"
+                CodigoPersona = 123,
+                Documento = "1.234.567-8",
+                PrimerNombre = "Gabriele",
+                PrimerApellido = "Test"
             };
 
         private static IConfiguration CreateConfiguration() =>
@@ -306,7 +348,8 @@ namespace UnitTesting.Security
         private static DosFactoresAuthService CreateService(
             Mock<ITwoFactorSessionStore>? sessionStoreMock = null,
             Mock<IEmailSender>? emailSenderMock = null,
-            Mock<IRateLimiterService>? rateLimiterMock = null)
+            Mock<IRateLimiterService>? rateLimiterMock = null,
+            Mock<IAuthService>? authServiceMock = null)
         {
             if (sessionStoreMock == null)
             {
@@ -341,12 +384,29 @@ namespace UnitTesting.Security
                     .ReturnsAsync(true);
             }
 
+            if (authServiceMock == null)
+            {
+                authServiceMock = new Mock<IAuthService>();
+                authServiceMock
+                    .Setup(a => a.GenerarTokensParaPersonaAsync(It.IsAny<long>(), It.IsAny<string>()))
+                    .ReturnsAsync((long codigoPersona, string? _) => OperationResult<DtoAuthenticationResponse>.Ok(
+                        new DtoAuthenticationResponse
+                        {
+                            Persona = new DtoPersonaAuth { CodigoPersona = codigoPersona },
+                            AccessToken = "default-access-token",
+                            RefreshToken = "default-refresh-token",
+                            RefreshTokenHash = "default-refresh-token-hash"
+                        },
+                        nameof(IAuthService.GenerarTokensParaPersonaAsync)));
+            }
+
             return new DosFactoresAuthService(
                 sessionStoreMock.Object,
                 rateLimiterMock.Object,
                 emailSenderMock.Object,
                 CreateConfiguration(),
-                Mock.Of<ILogger<DosFactoresAuthService>>());
+                Mock.Of<ILogger<DosFactoresAuthService>>(),
+                authServiceMock.Object);
         }
     }
 }

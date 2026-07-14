@@ -88,7 +88,7 @@ public class AuthService : IAuthService
     /// <param name="documento">Número de documento del usuario.</param>
     /// <param name="pass">Contraseña del usuario.</param>
     /// <returns>OperationResult con la respuesta de autenticación incluyendo tokens y la Persona autenticada si el login es exitoso.</returns>
-    public async Task<OperationResult<DtoAuthenticationResponse>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass)
+    public async Task<OperationResult<DtoPersonaAuth>> AutenticarUsuarioLDAPAsync(string tipoDocumento, string documento, string pass)
     {
         try
         {
@@ -96,7 +96,7 @@ public class AuthService : IAuthService
             var validacion = DocumentUtils.ValidarDocumentoBase(tipoDocumento, documento);
             if (!validacion.IsValid)
             {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoPersonaAuth>.IsFailed(
                     ObtenerCodigoValidacionDocumentoLogin(validacion.Error),
                     nameof(AutenticarUsuarioLDAPAsync),
                     validacion.Message,
@@ -113,7 +113,7 @@ public class AuthService : IAuthService
 
             if (persona == null)
             {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoPersonaAuth>.IsFailed(
                     "LOGIN_LDAP_04",
                     nameof(AutenticarUsuarioLDAPAsync),
                     "No se encontró la persona en la base de datos.",
@@ -126,7 +126,7 @@ public class AuthService : IAuthService
 
             if (!authResult.Success)
             {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
+                return OperationResult<DtoPersonaAuth>.IsFailed(
                     authResult.ErrorCode,
                     nameof(AutenticarUsuarioLDAPAsync),
                     authResult.Message,
@@ -134,17 +134,15 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            var authResponse = await GenerarYPersistirTokensAsync(
-                persona,
-                persona.CodigoPersona,
-                _refreshTokenService);
-
-            return OperationResult<DtoAuthenticationResponse>.Ok(authResponse, nameof(AutenticarUsuarioLDAPAsync));
+            // No se emiten tokens acá (SEG-03): el llamador decide cuándo, según el gate de 2FA.
+            return OperationResult<DtoPersonaAuth>.Ok(
+                AuthenticationResponseBuilder.BuildPersonaAuth(persona),
+                nameof(AutenticarUsuarioLDAPAsync));
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, ErrorInesperadoLog, nameof(AutenticarUsuarioLDAPAsync));
-            return OperationResult<DtoAuthenticationResponse>.IsFailed(
+            return OperationResult<DtoPersonaAuth>.IsFailed(
                 "LOGIN_LDAP_99",
                 nameof(AutenticarUsuarioLDAPAsync),
                 "Error al autenticar usuario.",
@@ -370,12 +368,27 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            await _hashTokenStore.DeleteAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
             persona.FechaUltModifPassword = DateTime.Today;
             persona.UsuarioUltModifPassword = "ADMISIONES";
             GuardarImagenesDocumentoReconocido(uow, persona, imagenes);
             uow.Personas.Update(persona);
-            uow.Save();
+
+            try
+            {
+                uow.Save();
+            }
+            catch (Exception ex)
+            {
+                // La password ya cambió en LDAP (irreversible); el link de activación sigue
+                // vigente para que el usuario reintente en vez de quedar en un estado sin salida.
+                _logger?.LogError(ex,
+                    "Estado inconsistente: password de la persona {CodigoPersona} ya cambiada en LDAP pero no persistida en DB.",
+                    codigoPersona);
+                throw;
+            }
+
+            // El link de activación se consume solo después de confirmar la persistencia en DB.
+            await _hashTokenStore.DeleteAsync(codigoPersona.ToString(CultureInfo.InvariantCulture));
             await EliminarImagenesTemporalesAsync(persona, imagenes);
 
             var authResponse = await GenerarYPersistirTokensAsync(
@@ -497,7 +510,9 @@ public class AuthService : IAuthService
             };
         }
 
-        var tokenResult = await GenerarTokensParaPersonaAsync(crearResult.Data);
+        var tokenResult = await GenerarTokensParaPersonaAsync(
+            crearResult.Data,
+            "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
         var completo = tokenResult.Success && tokenResult.Data != null;
         if (completo)
         {
@@ -648,27 +663,30 @@ public class AuthService : IAuthService
             message);
     }
 
-    private async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona)
+    public async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaAsync(long codigoPersona, string? message = null)
     {
         if (_serviceScopeFactory == null)
         {
             return await GenerarTokensParaPersonaCoreAsync(
                 codigoPersona,
                 _admisionesUowFactory,
-                _refreshTokenService);
+                _refreshTokenService,
+                message);
         }
 
         using var scope = _serviceScopeFactory.CreateScope();
         return await GenerarTokensParaPersonaCoreAsync(
             codigoPersona,
             scope.ServiceProvider.GetRequiredService<BusinessLogic.IDevartRepositories.IUnitOfWorkFactory>(),
-            scope.ServiceProvider.GetRequiredService<IRefreshTokenService>());
+            scope.ServiceProvider.GetRequiredService<IRefreshTokenService>(),
+            message);
     }
 
     private async Task<OperationResult<DtoAuthenticationResponse>> GenerarTokensParaPersonaCoreAsync(
         long codigoPersona,
         BusinessLogic.IDevartRepositories.IUnitOfWorkFactory uowFactory,
-        IRefreshTokenService refreshTokenService)
+        IRefreshTokenService refreshTokenService,
+        string? message)
     {
         try
         {
@@ -689,7 +707,7 @@ public class AuthService : IAuthService
                 persona,
                 codigoPersona,
                 refreshTokenService,
-                "Contraseña creada correctamente. Los tokens han sido establecidos como cookies seguras.");
+                message);
 
             return OperationResult<DtoAuthenticationResponse>.Ok(
                 authResponse,

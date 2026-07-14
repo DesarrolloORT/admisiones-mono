@@ -117,17 +117,26 @@ public class LoginFlowService : ILoginFlowService
                 _rateLimiter.IsAllowedAsync(failUserKey, failUserLimit, failWindow),
                 _rateLimiter.IsAllowedAsync(failIpKey, failIpLimit, failWindow));
 
-            return DtoLoginFlowResult.Fallo(result);
+            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                result.ErrorCode,
+                nameof(EjecutarAsync),
+                result.Message,
+                result.HttpCode,
+                default!));
         }
 
         await Task.WhenAll(
             _rateLimiter.ClearAsync(failUserKey),
             _rateLimiter.ClearAsync(failIpKey));
 
+        var persona = result.Data;
         var minimumScore = _configuration.GetValue<double>("RECAPTCHA_SCORE", 0.5);
 
         if (recaptchaScore > minimumScore)
         {
+            // Sin 2FA pendiente: recién acá se emiten y persisten los tokens.
+            var tokenResult = await _authService.GenerarTokensParaPersonaAsync(persona.CodigoPersona);
+
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation(
@@ -136,10 +145,10 @@ public class LoginFlowService : ILoginFlowService
                     recaptchaScore);
             }
 
-            return DtoLoginFlowResult.LoginExitoso(result);
+            return DtoLoginFlowResult.LoginExitoso(tokenResult);
         }
 
-        if (string.IsNullOrWhiteSpace(result.Data.Persona.Email))
+        if (string.IsNullOrWhiteSpace(persona.Email))
         {
             _logger.LogWarning(
                 "Score reCAPTCHA bajo ({Score}) para {Doc} pero no tiene email registrado. Acceso denegado.",
@@ -162,7 +171,8 @@ public class LoginFlowService : ILoginFlowService
                 request.Documento);
         }
 
-        var twoFactorResult = await _dosFactoresService.IniciarAsync(result.Data, result.Data.Persona.Email);
+        // Todavía no hay tokens: la sesión 2FA solo guarda identidad verificada.
+        var twoFactorResult = await _dosFactoresService.IniciarAsync(persona, persona.Email);
         if (!twoFactorResult.Success)
         {
             return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(

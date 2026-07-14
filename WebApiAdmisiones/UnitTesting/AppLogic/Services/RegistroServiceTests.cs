@@ -371,7 +371,9 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Verify(u => u.Interes, Times.Never);
             _uowMock.Verify(u => u.InteresProductos, Times.Never);
             _uowMock.Verify(u => u.PersonaAdmites, Times.Never);
-            _uowMock.Verify(u => u.Commit(), Times.Once);
+            // SRV-01: la persona se commitea en una tx y el resto (admisión/metadata/imágenes)
+            // en otra, con el LDAP en el medio y fuera de ambas.
+            _uowMock.Verify(u => u.Commit(), Times.Exactly(2));
         }
 
         [Fact]
@@ -432,7 +434,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("1", documentoAgregado.TipoImagen);
             Assert.Equal("123_1.jpg", documentoAgregado.NombreImagen);
             Assert.Equal(new DateTime(2030, 1, 1), documentoAgregado.FechaVtoDocumentoPersona);
-            _uowMock.Verify(u => u.Commit(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Exactly(2));
         }
 
         [Fact]
@@ -473,7 +475,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("123_1.jpg", documentoAgregado!.NombreImagen);
             Assert.Equal(DateTime.Today.AddYears(1), documentoAgregado.FechaVtoDocumentoPersona);
             _uowMock.Verify(u => u.Imagens, Times.Never);
-            _uowMock.Verify(u => u.Commit(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Exactly(2));
         }
 
         [Fact]
@@ -594,6 +596,72 @@ namespace UnitTesting.AppLogic.Services
                 CodigoEstado = 2,
                 CodigoCiudad = 3
             };
+
+        [Fact]
+        public async Task CompletarNuevaPersonaAsync_WhenCrearUsuarioLdapFails_PersonaStaysCommittedNoRollback()
+        {
+            // SRV-01: la persona ya está commiteada cuando se llama a LDAP; un fallo acá no
+            // debe revertir la fila (no hay Rollback) — el reintento la encuentra vía GetByDocumento.
+            var personaRepo = new Mock<IPersonaRepository>();
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA))
+                .Returns(123);
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "LDAP_CREATE_01",
+                    nameof(ILdap.CrearUsuarioAsync),
+                    "No se pudo crear el usuario LDAP.",
+                    500,
+                    false));
+
+            var result = await _service.CompletarNuevaPersonaAsync(CrearPendingPersona(), "NuevaPassword1!");
+
+            Assert.False(result.Success);
+            Assert.Equal("LDAP_CREATE_01", result.ErrorCode);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+            _uowMock.Verify(u => u.Rollback(), Times.Never);
+            _ldapMock.Verify(l => l.ForzarCambiarPasswordAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _uowMock.Verify(u => u.RegistroAdmisiones, Times.Never);
+        }
+
+        [Fact]
+        public async Task CompletarNuevaPersonaAsync_WhenCambiarPasswordLdapFails_PersonaStaysCommittedNoRollback()
+        {
+            var personaRepo = new Mock<IPersonaRepository>();
+            var ciudadRepo = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(default(Persona)!);
+            ciudadRepo.Setup(r => r.GetByKey(1, 2, 3)).Returns(new Ciudad { CodigoPais = 1, CodigoEstado = 2, CodigoCiudad = 3, Nombre = "Montevideo" });
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.Ciudads).Returns(ciudadRepo.Object);
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA))
+                .Returns(123);
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
+            _ldapMock
+                .Setup(l => l.ForzarCambiarPasswordAsync("123", "NuevaPassword1!"))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "LDAP_PWD_01",
+                    nameof(ILdap.ForzarCambiarPasswordAsync),
+                    "No se pudo establecer la password.",
+                    500,
+                    false));
+
+            var result = await _service.CompletarNuevaPersonaAsync(CrearPendingPersona(), "NuevaPassword1!");
+
+            Assert.False(result.Success);
+            Assert.Equal("LDAP_PWD_01", result.ErrorCode);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+            _uowMock.Verify(u => u.Rollback(), Times.Never);
+            _uowMock.Verify(u => u.RegistroAdmisiones, Times.Never);
+        }
 
         private static DtoRegistroPendingPersona CrearPendingPersona()
             => new()
