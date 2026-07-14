@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { effect, inject, signal } from '@angular/core';
+import { computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
@@ -15,8 +16,15 @@ export abstract class ScholarshipProcessPage {
   private readonly document = inject(DOCUMENT);
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
+  private readonly breakpointService = inject(BreakpointService);
 
   protected readonly process = inject(ScholarshipProcessFacade);
+
+  protected readonly showBack = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
+  });
 
   constructor() {
     effect(() => {

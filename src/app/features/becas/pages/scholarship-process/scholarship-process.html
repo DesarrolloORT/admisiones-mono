@@ -1,8 +1,7 @@
 @if (!onboardingCompleted()) {
-<app-home-header [showBack]="true" />
-<main class="scholarship-process__main">
-  <app-scholarship-onboarding [variant]="variant" (continueRequested)="startApplication()" />
-</main>
+<app-home-header [showBack]="showBack()" />
+<app-scholarship-onboarding [variant]="variant" (continueRequested)="startApplication()" />
+
 } @else if (!success()) {
 <app-process-layout
   closeLabel="Cerrar becas"
