@@ -23,6 +23,11 @@ input[ortNumberInput].money-input {
   text-align: right;
 }
 
+.monthly-expenses-grid {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
 .delete-expense-button {
   display: inline-flex;
   align-items: center;
@@ -55,4 +60,14 @@ input[ortNumberInput].money-input {
 
 .scholarship-dialog__list-item-content span {
   font-weight: var(--ort-sys-font-weight-semibold);
+}
+
+@media (width >=760px) {
+  ::ng-deep .ort-dialog.scholarship-dialog .ort-dialog__dialog {
+    max-inline-size: 35rem;
+  }
+
+  .monthly-expenses-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }

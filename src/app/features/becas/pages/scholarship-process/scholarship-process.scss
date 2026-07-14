@@ -147,8 +147,9 @@
     min-width: 15rem;
   }
 
-  .scholarship-accordion__content ort-form-field {
-    max-width: 18rem;
+  .scholarship-accordion__content ort-form-field,
+  .scholarship-accordion__content app-responsive-select {
+    max-width: 45%;
   }
 
   .scholarship-accordion__content ort-form-field.scholarship-form-field--auto {
