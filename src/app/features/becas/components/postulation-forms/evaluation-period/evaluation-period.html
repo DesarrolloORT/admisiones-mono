@@ -7,6 +7,7 @@
   <ort-radio-group
     formControlName="evaluationDate"
     legend="Fecha de prueba"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
     [orientation]="radioGroupOrientation()"
     [required]="true">
     <ort-radio-card-button class="inscription-radio-option" value="fecha1">
