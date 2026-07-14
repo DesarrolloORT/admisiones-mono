@@ -510,6 +510,35 @@ namespace AppLogic.Inscripciones.Services
             return confirmacionResult;
         }
 
+        public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ReactivarInscripcion(long codigoPersona, DtoReactivarInscripcionRequest request)
+        {
+            const string methodName = nameof(ReactivarInscripcion);
+
+            if (request == null || request.IdInscripto <= 0)
+            {
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_REA_00", methodName, "Request invalido.", 400);
+            }
+
+            using var uow = _uowFactory.Create();
+
+            var inscriptoBaja = uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona);
+            if (inscriptoBaja == null)
+            {
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_REA_01", methodName, "No se encontro la inscripcion para la persona.", 404);
+            }
+
+            if (inscriptoBaja.BajaInscr == null || inscriptoBaja.IdOferta == null)
+            {
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_REA_02", methodName, "La inscripcion indicada no esta dada de baja.", 409);
+            }
+
+            return await ConfirmarPreInscripcion(codigoPersona, new DtoConfirmarPreInscripcionRequest
+            {
+                IdOfertaSeleccionada = inscriptoBaja.IdOferta.Value,
+                AceptoReglamento = true
+            });
+        }
+
         #endregion PASO 2 - ENCUESTA INICIAL y PREINSCRIPCIÓN
 
         #region PASO 3 - PAGOS

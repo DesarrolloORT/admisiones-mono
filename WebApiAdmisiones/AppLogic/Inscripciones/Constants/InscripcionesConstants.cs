@@ -12,6 +12,7 @@ namespace AppLogic.Inscripciones.Constants
             public const string PagoPendiente = "Pago pendiente";
             public const string ALaEspera = "A la espera";
             public const string Confirmada = "Confirmada";
+            public const string DadaDeBaja = "Dada de baja";
         }
 
         public static class InteresProducto

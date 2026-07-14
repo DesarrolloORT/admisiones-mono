@@ -29,7 +29,7 @@ namespace DataAccess.DevartRepositories
                 where interes.CodigoPersona == codigoPersona
                     && interesProductoOferta.IdProducto == idProducto
                     && interesProductoOferta.IdOferta == idOferta
-                    && interesProducto.IdGradoInteres == 4m
+                    && (interesProducto.IdGradoInteres == 4m || interesProducto.IdGradoInteres == 5m)
                     && proceso.HabilitadoInteresSitio == "SI"
                 select proceso
             ).FirstOrDefault();

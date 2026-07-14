@@ -99,6 +99,27 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
+        /// Reactiva una inscripcion dada de baja de la persona autenticada, creando una nueva
+        /// inscripcion para la misma oferta.
+        /// </summary>
+        /// <param name="request">Id de la inscripcion dada de baja a reactivar.</param>
+        /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
+        /// <response code="200">Inscripcion reactivada correctamente.</response>
+        /// <response code="400">Solicitud invalida.</response>
+        /// <response code="404">No se encontro la inscripcion para la persona.</response>
+        /// <response code="409">La inscripcion indicada no esta dada de baja, o no esta en un estado valido para reactivar.</response>
+        [HttpPost("Reactivar")]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ReactivarInscripcion([FromBody] DtoReactivarInscripcionRequest request)
+        {
+            var result = await inscripcionesService.ReactivarInscripcion(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
         /// Inicia o confirma el pago de una inscripcion de la persona autenticada.
         /// </summary>
         /// <remarks>

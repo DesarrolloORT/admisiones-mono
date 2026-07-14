@@ -48,6 +48,34 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
+        public async Task ReactivarInscripcion_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoReactivarInscripcionRequest { IdInscripto = 555 };
+            var responseDto = new DtoConfirmarPreInscripcionResponse
+            {
+                Confirmada = true,
+                IdInscripcion = 100,
+                Senia = 1500
+            };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ReactivarInscripcion(1, request))
+                .ReturnsAsync(OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(responseDto, nameof(IInscripcionesService.ReactivarInscripcion)));
+
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = await controller.ReactivarInscripcion(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ReactivarInscripcion(1, request), Times.Once);
+        }
+
+        [Fact]
         public async Task Pagar_DelegatesToServiceWithAuthenticatedUser()
         {
             var serviceMock = new Mock<IInscripcionesService>();

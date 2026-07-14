@@ -604,6 +604,97 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ReactivarInscripcion_WhenRequestInvalido_ReturnsBadRequest()
+        {
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 0 });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_REA_00", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_WhenInscripcionNoEncontrada_ReturnsNotFound()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_REA_01", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_WhenInscripcionNoEstaDeBaja_ReturnsConflict()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = null });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_REA_02", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_WithBaja_ResuelveOfertaYDelegaEnConfirmarPreInscripcion()
+        {
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
+                {
+                  "confirmada": true,
+                  "idInscripcion": 88,
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Analista Programador",
+                    "idComienzo": 40,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 1,
+                    "turno": "Nocturno"
+                  }
+                }
+                """);
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
+                .Returns(999);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = FechaBase });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(88, result.Data.IdInscripcion);
+            Assert.Equal(10, result.Data.Resumen.IdOferta);
+            var requestApi = Assert.Single(handler.Requests);
+            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+        }
+
+        [Fact]
         public void RegistrarInteresProducto_CreaInteresNuevoYPersistenciaRelacionada()
         {
             var personaRepo = new Mock<IPersonaRepository>();
