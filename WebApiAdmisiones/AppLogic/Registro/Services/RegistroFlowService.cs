@@ -1,4 +1,5 @@
 using AppLogic.Registro.Requests;
+using AppLogic.Registro.Constants;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
@@ -29,8 +30,8 @@ public class RegistroFlowService : IRegistroFlowService
     private readonly IPasswordActivationService _passwordActivationService;
     private readonly IConfiguration _configuration;
     private readonly IDatabase _redisDb;
-    private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
-    private readonly ILogger<RegistroFlowService>? _logger;
+    private readonly IRegistroDocumentoImagenCacheService _documentoImagenCacheService;
+    private readonly ILogger<RegistroFlowService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
 
@@ -39,8 +40,8 @@ public class RegistroFlowService : IRegistroFlowService
         IPasswordActivationService passwordActivationService,
         IConfiguration configuration,
         IConnectionMultiplexer redis,
-        IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null,
-        ILogger<RegistroFlowService>? logger = null)
+        IRegistroDocumentoImagenCacheService documentoImagenCacheService,
+        ILogger<RegistroFlowService> logger)
     {
         _registroService = registroService;
         _passwordActivationService = passwordActivationService;
@@ -61,7 +62,7 @@ public class RegistroFlowService : IRegistroFlowService
             TipoDocumento = tipoDocumento,
             Documento = documento,
             CodigoPersona = codigoPersona,
-            Step = "evaluado",
+            Step = RegistroFlowConstants.Step.Evaluado,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -260,17 +261,24 @@ public class RegistroFlowService : IRegistroFlowService
         var mailResult = await _passwordActivationService.EnviarMailNuevaPersonaAsync(flowIdPending, request.Mail, token);
         if (!mailResult.Success)
         {
-            // El registro quedó en Redis; el usuario puede reintentar con la opción de reenvío
+            // El registro quedó en Redis; el usuario puede reintentar con la opción de reenvío.
+            _logger.LogWarning(
+                "No se pudo enviar el mail de activación para el flowId {FlowId}: {ErrorCode}.",
+                flowIdPending,
+                mailResult.ErrorCode);
+
             return OperationResult<RegistroFlowResult>.Ok(
-                new RegistroFlowResult("Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña."),
+                new RegistroFlowResult(
+                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña.",
+                    MailEnviado: false),
                 nameof(ConfirmarNuevaPersonaAsync));
         }
 
         // 5. Actualizar step
-        await ActualizarStepAsync(flowId, "confirmado");
+        await ActualizarStepAsync(flowId, RegistroFlowConstants.Step.Confirmado);
         if (!string.Equals(flowIdPending, flowId, StringComparison.Ordinal))
         {
-            await ActualizarStepAsync(flowIdPending, "confirmado");
+            await ActualizarStepAsync(flowIdPending, RegistroFlowConstants.Step.Confirmado);
         }
 
         return OperationResult<RegistroFlowResult>.Ok(
@@ -372,7 +380,7 @@ public class RegistroFlowService : IRegistroFlowService
     {
         var tipoNormalizado = DocumentUtils.NormalizarMayusculas(tipoDocumento);
         var documentoNormalizado = DocumentUtils.NormalizarMayusculas(documento);
-        if (string.Equals(tipoNormalizado, "CI", StringComparison.Ordinal))
+        if (DocumentUtils.EsCedula(tipoNormalizado))
         {
             documentoNormalizado = new string(documentoNormalizado.Where(char.IsDigit).ToArray());
         }

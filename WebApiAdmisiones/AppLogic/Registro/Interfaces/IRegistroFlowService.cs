@@ -52,5 +52,8 @@ public interface IRegistroFlowService
     Task<OperationResult<long>> CompletarNuevaPersona(DtoRegistroPendingPersona data, string passwordNueva);
 }
 
-/// <summary>Resultado de ConfirmarNuevaPersonaAsync.</summary>
-public record RegistroFlowResult(string Message);
+/// <summary>
+/// Resultado de ConfirmarNuevaPersonaAsync. <see cref="MailEnviado"/> distingue éxito parcial
+/// (registro OK, mail no enviado) de éxito completo.
+/// </summary>
+public record RegistroFlowResult(string Message, bool MailEnviado = true);

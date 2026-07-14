@@ -8,7 +8,7 @@ namespace AppLogic.Registro.Interfaces
     public interface IRegistroService
     {
         Task<OperationResult<DtoRegistroEvaluacionResponse>> EvaluarDocumentoAsync(DtoRegistroEvaluarDocumentoRequest request);
-        Task<OperationResult<object?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request);
+        Task<OperationResult<DtoRegistroConfirmacionResponse?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request);
         Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(DtoRegistroPersonaRequest request);
 
         /// <summary>

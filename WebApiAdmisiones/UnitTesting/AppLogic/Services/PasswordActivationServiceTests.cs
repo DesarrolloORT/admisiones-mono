@@ -4,6 +4,7 @@ using AppLogic.Registro.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -45,7 +46,8 @@ namespace UnitTesting.AppLogic.Services
                 CrearConfiguracion(),
                 emailSender ?? new TestEmailSender(),
                 hashStoreMock?.Object ?? Mock.Of<IHashTokenStore>(),
-                redisMock.Object);
+                redisMock.Object,
+                Mock.Of<ILogger<PasswordActivationService>>());
         }
 
         [Fact]

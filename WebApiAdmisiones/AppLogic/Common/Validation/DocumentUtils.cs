@@ -19,7 +19,15 @@ namespace AppLogic.Common.Validation
             DocumentValidationError Error,
             string Message);
 
-        private static readonly string[] TiposDocumentoPermitidos = ["CI", "DE", "PS", "CC"];
+        public const string TipoDocumentoCedula = "CI";
+
+        private static readonly string[] TiposDocumentoPermitidos = [TipoDocumentoCedula, "DE", "PS", "CC"];
+
+        /// <summary>
+        /// Decisión de negocio central del registro: cédula ⇒ flujo persona, otro documento ⇒ solicitud de alta.
+        /// </summary>
+        public static bool EsCedula(string? tipoDocumento) =>
+            string.Equals(Normalizar(tipoDocumento), TipoDocumentoCedula, StringComparison.Ordinal);
 
         public static DocumentValidationResult ValidarDocumentoBase(string? tipoDocumentoRaw, string? documentoRaw)
         {
@@ -31,7 +39,7 @@ namespace AppLogic.Common.Validation
                 return new DocumentValidationResult(false, DocumentValidationError.InvalidDocumentType, "Tipo de documento inválido.");
             }
 
-            if (tipoDocumento == "CI")
+            if (EsCedula(tipoDocumento))
             {
                 var mensaje = Util.ValidoCI(documento);
                 if (!string.IsNullOrWhiteSpace(mensaje))
@@ -91,7 +99,7 @@ namespace AppLogic.Common.Validation
         {
             var tipoNormalizado = NormalizarTipoDocumento(tipoDocumento);
             var documentoNormalizado = NormalizarMayusculas(documento);
-            return string.Equals(tipoNormalizado, "CI", StringComparison.Ordinal)
+            return EsCedula(tipoNormalizado)
                 ? new string(documentoNormalizado.Where(char.IsDigit).ToArray())
                 : documentoNormalizado;
         }

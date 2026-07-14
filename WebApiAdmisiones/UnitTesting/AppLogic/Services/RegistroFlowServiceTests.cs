@@ -2,6 +2,7 @@ using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
 using Utilities;
@@ -64,7 +65,9 @@ namespace UnitTesting.AppLogic.Services
                 registroServiceMock.Object,
                 passwordActivationMock.Object,
                 CrearConfiguracion(),
-                redisConnectionMock.Object);
+                redisConnectionMock.Object,
+                Mock.Of<IRegistroDocumentoImagenCacheService>(),
+                Mock.Of<ILogger<RegistroFlowService>>());
             var request = CrearRegistroPersonaRequest("new@example.com");
 
             var result = await service.ConfirmarNuevaPersonaAsync(request, newFlowId);
@@ -79,6 +82,72 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(oldFlowId, pending!.FlowId);
             Assert.Equal("new@example.com", pending.Email);
             Assert.NotEqual("old-token-hash", pending.TokenHash);
+        }
+
+        [Fact]
+        public async Task ConfirmarNuevaPersonaAsync_WhenMailFails_ReturnsSuccessWithMailEnviadoFalse()
+        {
+            // SRV-05: un fallo al enviar el mail de activación no debe convertir un registro
+            // exitoso en error; el estado parcial va estructurado en MailEnviado.
+            using var environment = new EnvironmentVariableScope(("PASSWORD_ACTIVATION_SECRET_KEY", Secret));
+            var oldFlowId = "old-flow";
+            var newFlowId = "new-flow";
+            var docKey = "registro:pending-doc:CI:12345672";
+            var pendingKey = $"registro:pending:{oldFlowId}";
+            var flowSessionKey = $"registro:flow-session:{newFlowId}";
+            var redis = new Dictionary<string, string>
+            {
+                [docKey] = oldFlowId,
+                [pendingKey] = JsonSerializer.Serialize(new DtoRegistroPendingPersona
+                {
+                    FlowId = oldFlowId,
+                    TipoDocumento = "CI",
+                    Documento = "12345672",
+                    Email = "old@example.com",
+                    TokenHash = "old-token-hash",
+                    CreatedAt = DateTime.UtcNow
+                }, JsonOptions),
+                [flowSessionKey] = JsonSerializer.Serialize(new DtoRegistroFlowSession
+                {
+                    FlowId = newFlowId,
+                    TipoDocumento = "CI",
+                    Documento = "12345672",
+                    Step = "evaluado",
+                    CreatedAt = DateTime.UtcNow
+                }, JsonOptions)
+            };
+            var redisDbMock = CrearRedisMock(redis);
+            var redisConnectionMock = new Mock<IConnectionMultiplexer>();
+            redisConnectionMock
+                .Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
+                .Returns(redisDbMock.Object);
+            var registroServiceMock = new Mock<IRegistroService>();
+            registroServiceMock
+                .Setup(s => s.ValidarNuevaPersonaAsync(It.IsAny<DtoRegistroPersonaRequest>()))
+                .ReturnsAsync(OperationResult<object?>.Ok(default, nameof(IRegistroService.ValidarNuevaPersonaAsync)));
+            var passwordActivationMock = new Mock<IPasswordActivationService>();
+            passwordActivationMock
+                .Setup(s => s.EnviarMailNuevaPersonaAsync(oldFlowId, "new@example.com", It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<object?>.IsFailed(
+                    "ACT_NUP_99",
+                    nameof(IPasswordActivationService.EnviarMailNuevaPersonaAsync),
+                    "No fue posible enviar el mail.",
+                    500,
+                    default));
+            var service = new RegistroFlowService(
+                registroServiceMock.Object,
+                passwordActivationMock.Object,
+                CrearConfiguracion(),
+                redisConnectionMock.Object,
+                Mock.Of<IRegistroDocumentoImagenCacheService>(),
+                Mock.Of<ILogger<RegistroFlowService>>());
+            var request = CrearRegistroPersonaRequest("new@example.com");
+
+            var result = await service.ConfirmarNuevaPersonaAsync(request, newFlowId);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.False(result.Data!.MailEnviado);
         }
 
         [Fact]
@@ -101,7 +170,8 @@ namespace UnitTesting.AppLogic.Services
                 passwordActivationMock.Object,
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
-                cacheMock.Object);
+                cacheMock.Object,
+                Mock.Of<ILogger<RegistroFlowService>>());
 
             var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");
 
@@ -138,7 +208,8 @@ namespace UnitTesting.AppLogic.Services
                 passwordActivationMock.Object,
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
-                cacheMock.Object);
+                cacheMock.Object,
+                Mock.Of<ILogger<RegistroFlowService>>());
 
             var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");
 

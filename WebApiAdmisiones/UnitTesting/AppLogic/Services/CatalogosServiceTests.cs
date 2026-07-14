@@ -1,6 +1,7 @@
 ﻿using AppLogic.Catalogos.Responses;
 using System.Net;
 using System.Text;
+using AppLogic.ApiClients.Interfaces;
 using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
@@ -26,7 +27,7 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new CatalogosService(_uowFactoryMock.Object);
+            _service = new CatalogosService(_uowFactoryMock.Object, Mock.Of<IInscripcionesyPagosApiClient>());
 
             SetupEncuestaInicialCatalogos();
         }

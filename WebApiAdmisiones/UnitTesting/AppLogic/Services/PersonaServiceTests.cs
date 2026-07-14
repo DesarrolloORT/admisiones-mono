@@ -5,6 +5,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using Xunit;
@@ -52,7 +53,11 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
-            _service = new PersonaService(_uowFactoryMock.Object, _ldapMock.Object, _dbConnectionContextMock.Object);
+            _service = new PersonaService(
+                _uowFactoryMock.Object,
+                _ldapMock.Object,
+                _dbConnectionContextMock.Object,
+                Mock.Of<ILogger<PersonaService>>());
         }
 
         [Fact]

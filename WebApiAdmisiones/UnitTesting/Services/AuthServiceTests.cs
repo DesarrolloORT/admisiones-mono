@@ -6,6 +6,7 @@ using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
 using ConnectionContext;
 using LdapService.Interfaces;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using AppLogic.Autenticacion.Services;
@@ -24,6 +25,8 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<IHashTokenStore> _hashTokenStoreMock;
         private readonly Mock<IRegistroFlowService> _registroFlowServiceMock;
+        private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
+        private readonly Mock<IRegistroDocumentoImagenCacheService> _documentoImagenCacheServiceMock;
         private readonly AuthService _service;
 
         public AuthServiceTests()
@@ -35,6 +38,8 @@ namespace UnitTesting.AppLogic.Services
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _hashTokenStoreMock = new Mock<IHashTokenStore>();
             _registroFlowServiceMock = new Mock<IRegistroFlowService>();
+            _dbConnectionContextMock = new Mock<IDbConnectionContext>();
+            _documentoImagenCacheServiceMock = new Mock<IRegistroDocumentoImagenCacheService>();
 
             _service = new AuthService(
                 _ldapMock.Object,
@@ -43,7 +48,10 @@ namespace UnitTesting.AppLogic.Services
                 _refreshTokenServiceMock.Object,
                 _passwordActivationServiceMock.Object,
                 _hashTokenStoreMock.Object,
-                _registroFlowServiceMock.Object);
+                _registroFlowServiceMock.Object,
+                _dbConnectionContextMock.Object,
+                _documentoImagenCacheServiceMock.Object,
+                Mock.Of<ILogger<AuthService>>());
         }
 
         [Fact]
@@ -57,7 +65,10 @@ namespace UnitTesting.AppLogic.Services
                 _refreshTokenServiceMock.Object,
                 _passwordActivationServiceMock.Object,
                 _hashTokenStoreMock.Object,
-                _registroFlowServiceMock.Object);
+                _registroFlowServiceMock.Object,
+                _dbConnectionContextMock.Object,
+                _documentoImagenCacheServiceMock.Object,
+                Mock.Of<ILogger<AuthService>>());
 
             // Assert
             Assert.NotNull(service);
@@ -798,7 +809,8 @@ namespace UnitTesting.AppLogic.Services
                 _hashTokenStoreMock.Object,
                 _registroFlowServiceMock.Object,
                 dbConnectionContext: dbConnectionContextMock.Object,
-                documentoImagenCacheService: cacheMock.Object);
+                documentoImagenCacheService: cacheMock.Object,
+                logger: Mock.Of<ILogger<AuthService>>());
 
             var result = (await service.CompletarPasswordFlowAsync("token", request)).Result;
 

@@ -43,9 +43,9 @@ public class AuthService : IAuthService
     private readonly IHashTokenStore _hashTokenStore;
     private readonly IRegistroFlowService _registroFlowService;
     private readonly IServiceScopeFactory? _serviceScopeFactory;
-    private readonly IDbConnectionContext? _dbConnectionContext;
-    private readonly IRegistroDocumentoImagenCacheService? _documentoImagenCacheService;
-    private readonly ILogger<AuthService>? _logger;
+    private readonly IDbConnectionContext _dbConnectionContext;
+    private readonly IRegistroDocumentoImagenCacheService _documentoImagenCacheService;
+    private readonly ILogger<AuthService> _logger;
 
     /// <summary>
     /// Constructor del servicio LDAP.
@@ -62,10 +62,10 @@ public class AuthService : IAuthService
         IPasswordActivationService passwordActivationService,
         IHashTokenStore hashTokenStore,
         IRegistroFlowService registroFlowService,
-        IServiceScopeFactory? serviceScopeFactory = null,
-        IDbConnectionContext? dbConnectionContext = null,
-        IRegistroDocumentoImagenCacheService? documentoImagenCacheService = null,
-        ILogger<AuthService>? logger = null)
+        IDbConnectionContext dbConnectionContext,
+        IRegistroDocumentoImagenCacheService documentoImagenCacheService,
+        ILogger<AuthService> logger,
+        IServiceScopeFactory? serviceScopeFactory = null)
     {
         _ldap = ldap;
         _admisionesUowFactory = admisionesUowFactory;
@@ -134,14 +134,14 @@ public class AuthService : IAuthService
                     default!);
             }
 
-            // No se emiten tokens acá (SEG-03): el llamador decide cuándo, según el gate de 2FA.
+            // No se emiten tokens acá: el llamador decide cuándo, según el gate de 2FA.
             return OperationResult<DtoPersonaAuth>.Ok(
                 AuthenticationResponseBuilder.BuildPersonaAuth(persona),
                 nameof(AutenticarUsuarioLDAPAsync));
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(AutenticarUsuarioLDAPAsync));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(AutenticarUsuarioLDAPAsync));
             return OperationResult<DtoPersonaAuth>.IsFailed(
                 "LOGIN_LDAP_99",
                 nameof(AutenticarUsuarioLDAPAsync),
@@ -211,7 +211,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(RefrescarTokensAsync));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(RefrescarTokensAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "REFRESH_TOKEN_99",
                 nameof(RefrescarTokensAsync),
@@ -275,7 +275,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(RecuperarPassword));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(RecuperarPassword));
             return OperationResult<object>.IsSuccess(
                null,
                nameof(RecuperarPassword),
@@ -381,7 +381,7 @@ public class AuthService : IAuthService
             {
                 // La password ya cambió en LDAP (irreversible); el link de activación sigue
                 // vigente para que el usuario reintente en vez de quedar en un estado sin salida.
-                _logger?.LogError(ex,
+                _logger.LogError(ex,
                     "Estado inconsistente: password de la persona {CodigoPersona} ya cambiada en LDAP pero no persistida en DB.",
                     codigoPersona);
                 throw;
@@ -403,7 +403,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, CompletarPasswordPersonaExistenteOriginMethod);
+            _logger.LogError(ex, ErrorInesperadoLog, CompletarPasswordPersonaExistenteOriginMethod);
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "INI_PAS_99",
                 CompletarPasswordPersonaExistenteOriginMethod,
@@ -606,7 +606,7 @@ public class AuthService : IAuthService
         Persona persona,
         DtoRegistroDocumentoImagenesTemporales? imagenes)
     {
-        if (imagenes is null || _dbConnectionContext is null)
+        if (imagenes is null)
         {
             return;
         }
@@ -715,7 +715,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(GenerarTokensParaPersonaAsync));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(GenerarTokensParaPersonaAsync));
             return OperationResult<DtoAuthenticationResponse>.IsFailed(
                 "GEN_TOK_99",
                 nameof(GenerarTokensParaPersonaAsync),

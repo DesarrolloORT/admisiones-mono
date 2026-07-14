@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using AppLogic.Registro.Constants;
 
 namespace AppLogic.Registro.Dtos;
 
@@ -17,10 +18,9 @@ public sealed class DtoRegistroFlowSession
     public long? CodigoPersona { get; set; }
 
     /// <summary>
-    /// Paso actual del flujo.
-    /// Valores: "evaluado" | "identidad_verificada" | "confirmado"
+    /// Paso actual del flujo. Ver <see cref="RegistroFlowConstants.Step"/>.
     /// </summary>
-    public string Step { get; set; } = "evaluado";
+    public string Step { get; set; } = RegistroFlowConstants.Step.Evaluado;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

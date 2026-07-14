@@ -34,7 +34,7 @@ public class PasswordActivationService : IPasswordActivationService
     private readonly IEmailSender _emailSender;
     private readonly IHashTokenStore _hashTokenStore;
     private readonly IDatabase _redisDb;
-    private readonly ILogger<PasswordActivationService>? _logger;
+    private readonly ILogger<PasswordActivationService> _logger;
 
     private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
@@ -44,7 +44,7 @@ public class PasswordActivationService : IPasswordActivationService
         IEmailSender emailSender,
         IHashTokenStore hashTokenStore,
         IConnectionMultiplexer redis,
-        ILogger<PasswordActivationService>? logger = null)
+        ILogger<PasswordActivationService> logger)
     {
         _uowFactory = uowFactory;
         _configuration = configuration;
@@ -133,7 +133,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(EnviarMailNuevaPersonaAsync));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(EnviarMailNuevaPersonaAsync));
             return OperationResult<object?>.IsFailed(
                 "ACT_NUP_99",
                 nameof(EnviarMailNuevaPersonaAsync),
@@ -202,7 +202,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, originMethod);
+            _logger.LogError(ex, ErrorInesperadoLog, originMethod);
             return OperationResult<object?>.IsFailed(
                 flow.CodigoErrorGeneral,
                 originMethod,
@@ -278,7 +278,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(ActivarLinkPasswordAsync));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(ActivarLinkPasswordAsync));
             return Task.FromResult(OperationResult<DtoPasswordActivationSession>.IsFailed(
                 "ACT_LINK_99",
                 nameof(ActivarLinkPasswordAsync),
@@ -463,7 +463,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, ErrorInesperadoLog, nameof(ValidarSessionToken));
+            _logger.LogError(ex, ErrorInesperadoLog, nameof(ValidarSessionToken));
             return OperationResult<DtoValidatedSession>.IsFailed(
                 "ACT_SES_99",
                 nameof(ValidarSessionToken),

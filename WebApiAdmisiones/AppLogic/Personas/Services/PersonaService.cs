@@ -21,7 +21,7 @@ namespace AppLogic.Personas.Services
         IUnitOfWorkFactory uowFactory,
         ILdap ldap,
         IDbConnectionContext dbConnectionContext,
-        ILogger<PersonaService>? logger = null)
+        ILogger<PersonaService> logger)
         : IPersonaService
     {
         public OperationResult<DtoDatosPersona> ObtenerDatosPersona(long codigoPersona)
@@ -178,7 +178,7 @@ namespace AppLogic.Personas.Services
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Error inesperado en {Metodo}", nameof(CambiarPasswordAsync));
+                logger.LogError(ex, "Error inesperado en {Metodo}", nameof(CambiarPasswordAsync));
                 return OperationResult<object>.IsFailed(
                     "CAM_PAS_99",
                     nameof(CambiarPasswordAsync),

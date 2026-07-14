@@ -15,12 +15,7 @@ namespace AppLogic.Catalogos.Services
     public class CatalogosService : ICatalogosService
     {
         private readonly IUnitOfWorkFactory _uowFactory;
-        private readonly IInscripcionesyPagosApiClient? _inscripcionesyPagosApiClient;
-
-        public CatalogosService(IUnitOfWorkFactory uowFactory)
-        {
-            _uowFactory = uowFactory;
-        }
+        private readonly IInscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
 
         public CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPagosApiClient inscripcionesyPagosApiClient)
         {
@@ -255,17 +250,6 @@ namespace AppLogic.Catalogos.Services
                     nameof(ObtenerTurnos),
                     "Nivel de producto no soportado para obtener turnos.",
                     400,
-                    default
-                );
-            }
-
-            if (_inscripcionesyPagosApiClient == null)
-            {
-                return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
-                    "CAT_TURNOS_01",
-                    nameof(ObtenerTurnos),
-                    "Cliente de Inscripciones y Pagos no configurado.",
-                    500,
                     default
                 );
             }

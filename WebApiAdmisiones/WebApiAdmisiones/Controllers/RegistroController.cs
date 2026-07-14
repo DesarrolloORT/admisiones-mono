@@ -1,5 +1,6 @@
 using AppLogic.Registro.Requests;
 using AppLogic.Registro.Responses;
+using AppLogic.Registro.Constants;
 using AppLogic.Registro.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -103,8 +104,8 @@ namespace WebApiAdmisiones.Controllers
         [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.VerificarIdentidad, CaptchaValidationMode.ScoreOnly)]
         [HttpPost("VerificarIdentidad")]
-        [ProducesResponseType(typeof(OperationResult<object>), 200)]
-        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoRegistroConfirmacionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoRegistroConfirmacionResponse>), 400)]
         public async Task<IActionResult> VerificarIdentidad([FromBody] DtoRegistroVerificarIdentidadRequest request)
         {
             var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
@@ -112,7 +113,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (request == null)
             {
-                return ValidateResponse(OperationResult<object?>.IsFailed(
+                return ValidateResponse(OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     "REG_REQUEST_01",
                     nameof(VerificarIdentidad),
                     "La solicitud es obligatoria.",
@@ -127,7 +128,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Success && flowId != null)
             {
-                await registroFlowService.ActualizarStepAsync(flowId, "confirmado");
+                await registroFlowService.ActualizarStepAsync(flowId, RegistroFlowConstants.Step.Confirmado);
             }
 
             return ValidateResponse(result);

@@ -9,6 +9,7 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using LdapService.Interfaces;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using Xunit;
@@ -39,7 +40,8 @@ namespace UnitTesting.AppLogic.Services
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
                 _ldapMock.Object,
-                _passwordActivationServiceMock.Object);
+                _passwordActivationServiceMock.Object,
+                Mock.Of<ILogger<RegistroService>>());
         }
 
         [Fact]
@@ -215,7 +217,8 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.True(result.Success);
-            Assert.Null(result.Data);
+            Assert.NotNull(result.Data);
+            Assert.True(result.Data!.MailEnviado);
             Assert.NotNull(registroAgregado);
             Assert.Equal(2000, registroAgregado!.IdRegistroAdmisiones);
             Assert.Equal(123, registroAgregado.CodigoPersona);
@@ -225,6 +228,47 @@ namespace UnitTesting.AppLogic.Services
                 s => s.EnviarMailLinkPasswordAsync(It.IsAny<Persona>(), nameof(IRegistroService.VerificarIdentidadAsync)),
                 Times.Once);
             _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        [Fact]
+        public async Task VerificarIdentidad_WhenMailFails_ReturnsSuccessWithMailEnviadoFalse()
+        {
+            // SRV-05: un fallo al enviar el mail no debe convertir un registro exitoso en error;
+            // el estado parcial va estructurado en MailEnviado, no solo en el mensaje.
+            var personaRepo = new Mock<IPersonaRepository>();
+            var registroAdmisionesRepo = new Mock<IRegistroAdmisioneRepository>();
+            personaRepo.Setup(r => r.GetByDocumento("1234567-2")).Returns(CrearPersonaExistente());
+            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
+            _uowMock.Setup(u => u.RegistroAdmisiones).Returns(registroAdmisionesRepo.Object);
+            _ldapMock.Setup(l => l.ExisteUsuarioLDAP("123")).ReturnsAsync(false);
+            _ldapMock
+                .Setup(l => l.CrearUsuarioAsync(It.IsAny<LdapService.DTOs.ParamCrearUsuarioLdap>()))
+                .ReturnsAsync(OperationResult<bool>.Ok(true, nameof(ILdap.CrearUsuarioAsync)));
+            _dbConnectionContextMock
+                .Setup(c => c.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES))
+                .Returns(2000);
+            _passwordActivationServiceMock
+                .Setup(s => s.EnviarMailLinkPasswordAsync(
+                    It.Is<Persona>(p => p.CodigoPersona == 123),
+                    nameof(IRegistroService.VerificarIdentidadAsync)))
+                .ReturnsAsync(OperationResult<object?>.IsFailed(
+                    "ACT_PAS_99",
+                    nameof(IRegistroService.VerificarIdentidadAsync),
+                    "No fue posible enviar el mail.",
+                    500,
+                    default));
+
+            var result = await _service.VerificarIdentidadAsync(new DtoRegistroVerificarIdentidadRequest
+            {
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                Mail = "ana@example.com"
+            });
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.False(result.Data!.MailEnviado);
         }
 
         [Fact]

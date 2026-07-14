@@ -28,9 +28,9 @@ namespace AppLogic.Registro.Services
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
         private readonly ILdap _ldap;
-        private readonly IPasswordActivationService? _passwordActivationService;
+        private readonly IPasswordActivationService _passwordActivationService;
         private readonly IServiceScopeFactory? _serviceScopeFactory;
-        private readonly ILogger<RegistroService>? _logger;
+        private readonly ILogger<RegistroService> _logger;
 
         private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
 
@@ -38,9 +38,9 @@ namespace AppLogic.Registro.Services
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ILdap ldap,
-            IPasswordActivationService? passwordActivationService = null,
-            IServiceScopeFactory? serviceScopeFactory = null,
-            ILogger<RegistroService>? logger = null)
+            IPasswordActivationService passwordActivationService,
+            ILogger<RegistroService> logger,
+            IServiceScopeFactory? serviceScopeFactory = null)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
@@ -75,7 +75,7 @@ namespace AppLogic.Registro.Services
             var documento = DocumentUtils.Normalizar(request.Documento);
 
             using var uow = _uowFactory.Create();
-            if (tipoDocumento != "CI")
+            if (!DocumentUtils.EsCedula(tipoDocumento))
             {
                 var solicitudAlta = uow.SolicitudAltas.GetByTipoDocumentoYDocumento(tipoDocumento, documento);
                 if (solicitudAlta != null)
@@ -131,11 +131,11 @@ namespace AppLogic.Registro.Services
                 "La persona existe y requiere verificación de apellido y correo.");
         }
 
-        public async Task<OperationResult<object?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request)
+        public async Task<OperationResult<DtoRegistroConfirmacionResponse?>> VerificarIdentidadAsync(DtoRegistroVerificarIdentidadRequest request)
         {
             if (request == null)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     requestErrorCode,
                     nameof(VerificarIdentidadAsync),
                     requestErrorMessage,
@@ -145,7 +145,7 @@ namespace AppLogic.Registro.Services
             var documentoValidation = DocumentUtils.ValidarDocumentoBase(request.TipoDocumento, request.Documento);
             if (!documentoValidation.IsValid)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     ObtenerCodigoValidacionDocumento(documentoValidation.Error),
                     nameof(VerificarIdentidadAsync),
                     documentoValidation.Message,
@@ -154,9 +154,9 @@ namespace AppLogic.Registro.Services
 
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
             var documento = DocumentUtils.Normalizar(request.Documento);
-            if (tipoDocumento != "CI")
+            if (!DocumentUtils.EsCedula(tipoDocumento))
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     documentTypeErrorCode,
                     nameof(VerificarIdentidadAsync),
                     "VerificarIdentidad solo aplica para cédula de identidad.",
@@ -167,7 +167,7 @@ namespace AppLogic.Registro.Services
             var persona = uow.Personas.GetByDocumento(documento);
             if (persona == null)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     "REG_PERSONA_01",
                     nameof(VerificarIdentidadAsync),
                     "No se pudo traer la persona.",
@@ -177,7 +177,7 @@ namespace AppLogic.Registro.Services
             var existeUsuario = await ExisteUsuarioLdapAsync(persona.CodigoPersona.ToString(CultureInfo.InvariantCulture));
             if (existeUsuario)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     "REG_USUARIO_01",
                     nameof(VerificarIdentidadAsync),
                     "La cedula ingresada ya está registrada.",
@@ -190,7 +190,7 @@ namespace AppLogic.Registro.Services
                 nameof(VerificarIdentidadAsync));
             if (!verificacion.Success)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     verificacion.ErrorCode,
                     nameof(VerificarIdentidadAsync),
                     verificacion.Message,
@@ -225,7 +225,7 @@ namespace AppLogic.Registro.Services
             }
 
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
-            if (tipoDocumento != "CI")
+            if (!DocumentUtils.EsCedula(tipoDocumento))
             {
                 return Task.FromResult(OperationResult<object?>.IsFailed(
                     documentTypeErrorCode,
@@ -351,7 +351,7 @@ namespace AppLogic.Registro.Services
             catch (Exception ex)
             {
                 uow.Rollback();
-                _logger?.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
+                _logger.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
                 return OperationResult<long>.IsFailed(
                     "REG_PERSONA_99",
                     nameof(CompletarNuevaPersonaAsync),
@@ -366,7 +366,7 @@ namespace AppLogic.Registro.Services
             var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
             if (!crearUsuario.Success)
             {
-                _logger?.LogError(
+                _logger.LogError(
                     "Estado inconsistente: persona {CodigoPersona} creada en DB pero sin usuario LDAP ({ErrorCode}).",
                     persona.CodigoPersona,
                     crearUsuario.ErrorCode);
@@ -383,7 +383,7 @@ namespace AppLogic.Registro.Services
                 passwordNueva);
             if (!cambioPassword.Success)
             {
-                _logger?.LogError(
+                _logger.LogError(
                     "Estado inconsistente: persona {CodigoPersona} con usuario LDAP creado pero sin password establecida ({ErrorCode}).",
                     persona.CodigoPersona,
                     cambioPassword.ErrorCode);
@@ -406,7 +406,7 @@ namespace AppLogic.Registro.Services
             catch (Exception ex)
             {
                 uow.Rollback();
-                _logger?.LogError(ex,
+                _logger.LogError(ex,
                     "Estado inconsistente: persona {CodigoPersona} con LDAP activo pero metadata/admisión/imágenes sin persistir.",
                     persona.CodigoPersona);
                 return OperationResult<long>.IsFailed(
@@ -442,7 +442,7 @@ namespace AppLogic.Registro.Services
             }
 
             var tipoDocumento = DocumentUtils.Normalizar(request.TipoDocumento);
-            if (tipoDocumento == "CI")
+            if (DocumentUtils.EsCedula(tipoDocumento))
             {
                 return OperationResult<object?>.IsFailed(
                     documentTypeErrorCode,
@@ -456,7 +456,7 @@ namespace AppLogic.Registro.Services
             return await CrearSolicitudAltaAsync(uow, request);
         }
 
-        private async Task<OperationResult<object?>> CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
+        private async Task<OperationResult<DtoRegistroConfirmacionResponse?>> CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
             IUnitOfWork uow,
             Persona persona,
             string originMethod)
@@ -464,7 +464,7 @@ namespace AppLogic.Registro.Services
             var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
             if (!crearUsuario.Success)
             {
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     crearUsuario.ErrorCode,
                     originMethod,
                     crearUsuario.Message,
@@ -481,11 +481,11 @@ namespace AppLogic.Registro.Services
             {
                 uow.Rollback();
                 // SRV-01: el usuario LDAP ya se creó (arriba, fuera de esta tx) y no se revierte.
-                _logger?.LogError(ex,
+                _logger.LogError(ex,
                     "Estado inconsistente: persona {CodigoPersona} con usuario LDAP creado pero admisión sin registrar en {Metodo}.",
                     persona.CodigoPersona,
                     originMethod);
-                return OperationResult<object?>.IsFailed(
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
                     "REG_ADMISIONES_99",
                     originMethod,
                     "Error al registrar la admisión.",
@@ -518,7 +518,7 @@ namespace AppLogic.Registro.Services
             catch (Exception ex)
             {
                 uow.Rollback();
-                _logger?.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarSolicitudAltaAsync));
+                _logger.LogError(ex, ErrorInesperadoLog, nameof(ConfirmarSolicitudAltaAsync));
                 return Task.FromResult(OperationResult<object?>.IsFailed(
                     "REG_SOLICITUD_99",
                     nameof(ConfirmarSolicitudAltaAsync),
@@ -562,16 +562,8 @@ namespace AppLogic.Registro.Services
                 idSolicitudAlta));
         }
 
-        private async Task<OperationResult<object?>> EnviarMailLinkPasswordAsync(Persona persona, string originMethod)
+        private async Task<OperationResult<DtoRegistroConfirmacionResponse?>> EnviarMailLinkPasswordAsync(Persona persona, string originMethod)
         {
-            if (_passwordActivationService == null)
-            {
-                return OperationResult<object?>.IsSuccess(
-                    null,
-                    originMethod,
-                    "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña.");
-            }
-
             OperationResult<object?> mail;
             if (_serviceScopeFactory != null)
             {
@@ -586,14 +578,21 @@ namespace AppLogic.Registro.Services
 
             if (!mail.Success)
             {
-                return OperationResult<object?>.IsSuccess(
-                    null,
+                // SRV-05: éxito parcial estructurado, no solo en el mensaje — el front decide qué mostrar.
+                _logger.LogWarning(
+                    "No se pudo enviar el mail de activación para la persona {CodigoPersona} en {Metodo}: {ErrorCode}.",
+                    persona.CodigoPersona,
+                    originMethod,
+                    mail.ErrorCode);
+
+                return OperationResult<DtoRegistroConfirmacionResponse?>.IsSuccess(
+                    new DtoRegistroConfirmacionResponse { MailEnviado = false },
                     originMethod,
                     "Tu registro quedó realizado, pero no se envió el mail. Reintentá más tarde desde la opción de recuperación de contraseña.");
             }
 
-            return OperationResult<object?>.IsSuccess(
-                null,
+            return OperationResult<DtoRegistroConfirmacionResponse?>.IsSuccess(
+                new DtoRegistroConfirmacionResponse { MailEnviado = true },
                 originMethod,
                 "Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña.");
         }

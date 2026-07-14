@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Configuration;
 using Utilities;
 using WebApiAdmisiones.Security.Captcha;
 
@@ -43,15 +44,18 @@ namespace WebApiAdmisiones.Security.Captcha
         public const string HeaderName = "X-Captcha-Token";
 
         private readonly IRecaptchaService _recaptchaService;
+        private readonly IConfiguration _configuration;
         private readonly CaptchaValidationMode _mode;
         private readonly string _expectedAction;
 
         public RequireCaptchaFilter(
             IRecaptchaService recaptchaService,
+            IConfiguration configuration,
             CaptchaValidationMode mode,
             string expectedAction = CaptchaActions.Login)
         {
             _recaptchaService = recaptchaService;
+            _configuration = configuration;
             _mode = mode;
             _expectedAction = string.IsNullOrWhiteSpace(expectedAction)
                 ? CaptchaActions.Login
@@ -78,8 +82,9 @@ namespace WebApiAdmisiones.Security.Captcha
 
             context.HttpContext.SetRecaptchaScore(validation.Data);
 
+            var minimumScore = _configuration.GetValue<double>("RECAPTCHA_SCORE", 0.5);
             if (_mode == CaptchaValidationMode.RequireMinimumScore
-                && validation.Data < RecaptchaSettings.MinimumScore)
+                && validation.Data < minimumScore)
             {
                 SetFailureResult(
                     context,

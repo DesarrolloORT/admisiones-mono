@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Security.Captcha;
@@ -22,7 +23,7 @@ namespace UnitTesting.Security
                 .ReturnsAsync(OperationResult<double>.Ok(0.8, nameof(IRecaptchaService.ValidarConScoreAsync)));
 
             var context = CreateContext("token");
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.RequireMinimumScore);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -49,6 +50,7 @@ namespace UnitTesting.Security
             var context = CreateContext("token");
             var filter = new RequireCaptchaFilter(
                 recaptchaMock.Object,
+                CreateConfiguration(),
                 CaptchaValidationMode.RequireMinimumScore,
                 CaptchaActions.EvaluarDocumento);
 
@@ -75,7 +77,7 @@ namespace UnitTesting.Security
                     0d));
 
             var context = CreateContext(token: null);
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.RequireMinimumScore);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -100,7 +102,7 @@ namespace UnitTesting.Security
                 .ReturnsAsync(OperationResult<double>.Ok(0.3, nameof(IRecaptchaService.ValidarConScoreAsync)));
 
             var context = CreateContext("token");
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.RequireMinimumScore);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -129,7 +131,7 @@ namespace UnitTesting.Security
                     0d));
 
             var context = CreateContext(token: null);
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.ScoreOnly);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.ScoreOnly);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -154,7 +156,7 @@ namespace UnitTesting.Security
                 .ReturnsAsync(OperationResult<double>.Ok(0.3, nameof(IRecaptchaService.ValidarConScoreAsync)));
 
             var context = CreateContext("token");
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.ScoreOnly);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.ScoreOnly);
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
@@ -184,7 +186,7 @@ namespace UnitTesting.Security
                     0d));
 
             var context = CreateContext(token: null);
-            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CaptchaValidationMode.RequireMinimumScore);
+            var filter = new RequireCaptchaFilter(recaptchaMock.Object, CreateConfiguration(), CaptchaValidationMode.RequireMinimumScore);
 
             await filter.OnActionExecutionAsync(context, () =>
                 Task.FromResult(CreateExecutedContext(context)));
@@ -194,6 +196,9 @@ namespace UnitTesting.Security
             Assert.Equal("REG_CAPTCHA_01", operationResult.ErrorCode);
             recaptchaMock.Verify(s => s.ValidarConScoreAsync(string.Empty, "login"), Times.Once);
         }
+
+        private static IConfiguration CreateConfiguration() =>
+            new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
         private static ActionExecutingContext CreateContext(string? token)
         {
