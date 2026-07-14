@@ -17,7 +17,7 @@
   @if (selectionControl.invalid && (selectionControl.touched || facade.submitted())) {
   <ort-error>Seleccioná una opción</ort-error>
   } } @if (facade.academicStepData().length === 1 || facade.selectedInscription()) {
-  <ort-form-field>
+  <ort-form-field class="scholarship-form-field--auto">
     <ort-label for="scholarship-career">Carrera</ort-label>
     <input
       aria-label="Carrera"
@@ -28,7 +28,7 @@
       [value]="facade.selectedAcademicStepData().carrera" />
   </ort-form-field>
   <div class="scholarship-form-row">
-    <ort-form-field>
+    <ort-form-field class="scholarship-form-field--auto">
       <ort-label for="scholarship-start">Comienzo</ort-label>
       <input
         aria-label="Comienzo"
@@ -38,7 +38,7 @@
         readonly
         [value]="facade.selectedAcademicStepData().comienzo" />
     </ort-form-field>
-    <ort-form-field>
+    <ort-form-field class="scholarship-form-field--auto">
       <ort-label for="scholarship-shift">Turno</ort-label>
       <input
         aria-label="Turno"

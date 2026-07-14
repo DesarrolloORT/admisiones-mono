@@ -55,6 +55,11 @@
   gap: var(--ort-sys-spacing-16);
 }
 
+.scholarship-form-row {
+  display: grid;
+  gap: var(--ort-sys-spacing-16);
+}
+
 .scholarship-accordion__content ort-error {
   margin-top: calc(var(--ort-sys-spacing-4) - var(--ort-sys-spacing-16));
 }
@@ -119,6 +124,34 @@
   }
 
   .scholarship-screen--narrow {
-    max-width: 56rem;
+    max-width: 50rem;
+  }
+
+  .scholarship-form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scholarship-accordion__content {
+    gap: var(--ort-sys-spacing-24);
+  }
+
+  .scholarship-subsection {
+    gap: var(--ort-sys-spacing-24);
+  }
+
+  .scholarship-accordion__content ort-radio-group {
+    --ort-sys-radio-gap: var(--ort-sys-spacing-16);
+  }
+
+  .scholarship-accordion__content .inscription-radio-option {
+    min-width: 15rem;
+  }
+
+  .scholarship-accordion__content ort-form-field {
+    max-width: 18rem;
+  }
+
+  .scholarship-accordion__content ort-form-field.scholarship-form-field--auto {
+    max-width: 100%;
   }
 }

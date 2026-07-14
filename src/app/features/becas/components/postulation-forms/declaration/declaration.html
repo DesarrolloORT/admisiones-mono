@@ -261,7 +261,7 @@
 
     <ort-form-field>
       <ort-label>¿Cómo piensas solventar tus estudios?</ort-label>
-      <textarea #textareaStudies formControlName="studyPlan" ortInput required></textarea>
+      <textarea #textareaStudies formControlName="studyPlan" ortInput required rows="5"></textarea>
       <ort-hint align="end">{{textareaStudies.value.length}}/400</ort-hint>
     </ort-form-field>
     @if (studyPlanControl.invalid && (facade.submitted() || studyPlanControl.touched)) {
@@ -270,7 +270,7 @@
 
     <ort-form-field>
       <ort-label>Otras observaciones</ort-label>
-      <textarea #textareaObservations formControlName="observations" ortInput></textarea>
+      <textarea #textareaObservations formControlName="observations" ortInput rows="5"></textarea>
       <ort-hint align="end">{{textareaObservations.value.length}}/400</ort-hint>
     </ort-form-field>
   </section>
