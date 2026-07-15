@@ -1,5 +1,4 @@
-using AppLogic.Inscripciones.Requests;
-using AppLogic.Inscripciones.Responses;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
@@ -10,7 +9,7 @@ using AppLogic.Common.Constants;
 
 namespace AppLogic.Inscripciones.Rules
 {
-    internal static class ConfirmarPreInscripcionHelper
+    internal static class ConfirmarPreInscripcionRules
     {
         private const string EstadoDefinitivo = "DEFINITIVO";
 

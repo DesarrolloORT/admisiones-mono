@@ -1,4 +1,4 @@
-namespace AppLogic.Inscripciones.Requests
+namespace AppLogic.Inscripciones.Dtos
 {
     public class DtoInteresProductoRequest
     {

@@ -1,4 +1,4 @@
-using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.Inscripciones.Interfaces;
 using AppLogic.Inscripciones.Encuesta.Services;

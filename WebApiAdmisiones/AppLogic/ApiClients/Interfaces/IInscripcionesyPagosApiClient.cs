@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AppLogic.ApiClients.Dtos;
-using AppLogic.Inscripciones.Responses;
+using AppLogic.Inscripciones.Dtos;
 using Utilities;
 
 namespace AppLogic.ApiClients.Interfaces

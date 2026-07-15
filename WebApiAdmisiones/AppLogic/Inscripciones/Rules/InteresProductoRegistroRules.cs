@@ -1,4 +1,4 @@
-using AppLogic.Inscripciones.Requests;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.Common.Constants;
 using AppLogic.Tivenos.Dtos;
 using BusinessLogic.Entities;
@@ -6,9 +6,9 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
 
-namespace AppLogic.Inscripciones.Factories
+namespace AppLogic.Inscripciones.Rules
 {
-    internal static class InteresProductoRegistroHelper
+    internal static class InteresProductoRegistroRules
     {
         public static OperationResult<DtoTivenosAltaInteresRequest?> RegistrarInteresProducto(
             IUnitOfWork uow,
@@ -56,7 +56,7 @@ namespace AppLogic.Inscripciones.Factories
             long codigoPersona,
             long idProceso)
         {
-            var interes = InteresProductoEntityFactoryHelper.CrearInteres(
+            var interes = InteresProductoEntityFactory.CrearInteres(
                 dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_INTERES),
                 codigoPersona,
                 idProceso);
@@ -75,7 +75,7 @@ namespace AppLogic.Inscripciones.Factories
             if (interesProductoExistente == null)
             {
                 uow.InteresProductos.Add(
-                    InteresProductoEntityFactoryHelper.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
+                    InteresProductoEntityFactory.CrearInteresProducto(interes.IdInteres, idProducto, fechaActual));
                 return esInteresNuevo
                     ? TivenosAltaInteresOperacion.AltaInteresProducto()
                     : TivenosAltaInteresOperacion.AltaActualizarInteres();
@@ -122,7 +122,7 @@ namespace AppLogic.Inscripciones.Factories
             if (personaAdmite == null)
             {
                 uow.PersonaAdmites.Add(
-                    InteresProductoEntityFactoryHelper.CrearPersonaAdmite(codigoPersona, fechaActual));
+                    InteresProductoEntityFactory.CrearPersonaAdmite(codigoPersona, fechaActual));
                 return;
             }
 
@@ -143,7 +143,7 @@ namespace AppLogic.Inscripciones.Factories
             }
 
             uow.InteresProductoOfertas.Add(
-                InteresProductoEntityFactoryHelper.CrearInteresProductoOferta(idInteres, idProducto, idOferta));
+                InteresProductoEntityFactory.CrearInteresProductoOferta(idInteres, idProducto, idOferta));
         }
 
         private static OperationResult<bool> ActualizarEncuestaInicial(

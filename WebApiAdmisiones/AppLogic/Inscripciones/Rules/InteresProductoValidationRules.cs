@@ -5,7 +5,7 @@ using Utilities;
 
 namespace AppLogic.Inscripciones.Rules
 {
-    public static class InteresProductoValidationHelper
+    public static class InteresProductoValidationRules
     {
         public static OperationResult<bool> ValidarRegistroInteresProducto(
             IUnitOfWork uow,

@@ -1,7 +1,5 @@
-using AppLogic.Inscripciones.Encuesta.Requests;
-using AppLogic.Inscripciones.Encuesta.Responses;
-using AppLogic.Inscripciones.Requests;
-using AppLogic.Inscripciones.Responses;
+using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.DevartDTOs;
 using Utilities;
 

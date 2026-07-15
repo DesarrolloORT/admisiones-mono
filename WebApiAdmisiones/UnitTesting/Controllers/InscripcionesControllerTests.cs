@@ -1,5 +1,4 @@
-using AppLogic.Inscripciones.Requests;
-using AppLogic.Inscripciones.Responses;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.Inscripciones.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;

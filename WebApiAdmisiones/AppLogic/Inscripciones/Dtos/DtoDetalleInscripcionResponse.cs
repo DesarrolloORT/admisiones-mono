@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Inscripciones.Responses
+namespace AppLogic.Inscripciones.Dtos
 {
     /// <summary>
     /// Detalle de una inscripción de "Mis carreras". El contenido depende del estado:

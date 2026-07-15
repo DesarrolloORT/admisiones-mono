@@ -1,4 +1,4 @@
-using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

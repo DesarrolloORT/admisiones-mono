@@ -1,5 +1,5 @@
 using AppLogic.Catalogos.Dtos;
-using AppLogic.Inscripciones.Encuesta.Requests;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;

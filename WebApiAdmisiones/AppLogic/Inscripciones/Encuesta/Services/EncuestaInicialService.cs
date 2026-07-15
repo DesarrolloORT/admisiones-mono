@@ -1,6 +1,5 @@
 using AppLogic.Personas.Constants;
-using AppLogic.Inscripciones.Encuesta.Requests;
-using AppLogic.Inscripciones.Encuesta.Responses;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using AppLogic.Inscripciones.Encuesta.Mappers;
 using AppLogic.Inscripciones.Encuesta.Rules;
 using AppLogic.Inscripciones.Encuesta.Validators;

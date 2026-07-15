@@ -2,9 +2,9 @@ using AppLogic.Inscripciones.Constants;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Inscripciones.Factories
+namespace AppLogic.Inscripciones.Rules
 {
-    public static class InteresProductoEntityFactoryHelper
+    public static class InteresProductoEntityFactory
     {
         public static Intere CrearInteres(decimal idInteres, long codigoPersona, long idProceso)
         {

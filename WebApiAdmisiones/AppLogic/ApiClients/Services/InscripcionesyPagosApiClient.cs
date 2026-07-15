@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.ApiClients.Interfaces;
-using AppLogic.Inscripciones.Responses;
+using AppLogic.Inscripciones.Dtos;
 using Microsoft.Extensions.Logging;
 using Utilities;
 

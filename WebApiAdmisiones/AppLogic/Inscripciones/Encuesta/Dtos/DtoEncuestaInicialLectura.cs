@@ -1,6 +1,5 @@
-using AppLogic.Inscripciones.Encuesta.Requests;
 
-namespace AppLogic.Inscripciones.Encuesta.Responses
+namespace AppLogic.Inscripciones.Encuesta.Dtos
 {
     public sealed class DtoEncuestaInicialLectura : DtoGuardarEncuestaInicialRequest
     {

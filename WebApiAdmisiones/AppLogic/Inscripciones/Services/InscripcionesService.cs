@@ -1,14 +1,11 @@
-﻿using AppLogic.Inscripciones.Encuesta.Requests;
-using AppLogic.Inscripciones.Encuesta.Responses;
-using AppLogic.Inscripciones.Requests;
-using AppLogic.Inscripciones.Responses;
+﻿using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.ApiClients.Interfaces;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.Inscripciones.Constants;
 using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Inscripciones.Rules;
-using AppLogic.Inscripciones.Factories;
 using AppLogic.Inscripciones.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Tivenos.Dtos;
@@ -147,7 +144,7 @@ namespace AppLogic.Inscripciones.Services
                     MetodoPago = seniaMinima.MetodoPagoSeniaMinima,
                     Cedula = persona?.Documento?.Trim(),
                     CodigoPersona = codigoPersona,
-                    Senia = ConfirmarPreInscripcionHelper.SumarSenias(carritos.Data?.Carritos)
+                    Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos.Data?.Carritos)
                 };
             }
             else
@@ -164,8 +161,8 @@ namespace AppLogic.Inscripciones.Services
                 Confirmada = true,
                 IdInscripcion = inscripto.IdInscripto,
                 FechaVencimientoPago = inscripto.FechaVtoInscr,
-                Senia = ConfirmarPreInscripcionHelper.SumarSenias(carritos?.Carritos),
-                EstadoCuenta = ConfirmarPreInscripcionHelper.MapearEstadoCuenta(carritos?.EstadoCuenta),
+                Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos?.Carritos),
+                EstadoCuenta = ConfirmarPreInscripcionRules.MapearEstadoCuenta(carritos?.EstadoCuenta),
                 Resumen = MapearResumenDesdeInscripto(inscripto)
             };
         }
@@ -336,7 +333,7 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<bool>.IsFailed("GEN_IP_00", nameof(RegistrarInteresProducto), "Request invalido.", 400);
             }
 
-            var validacion = InteresProductoValidationHelper.ValidarRegistroInteresProducto(
+            var validacion = InteresProductoValidationRules.ValidarRegistroInteresProducto(
                 uow,
                 codigoPersona,
                 request.IdProducto,
@@ -348,7 +345,7 @@ namespace AppLogic.Inscripciones.Services
                 return validacion;
             }
 
-            var validacionOferta = InteresProductoValidationHelper.ObtenerOfertaValidaParaInteres(
+            var validacionOferta = InteresProductoValidationRules.ObtenerOfertaValidaParaInteres(
                 uow,
                 request.IdOferta,
                 request.IdProducto,
@@ -370,7 +367,7 @@ namespace AppLogic.Inscripciones.Services
 
             try
             {
-                var resultado = InteresProductoRegistroHelper.RegistrarInteresProducto(
+                var resultado = InteresProductoRegistroRules.RegistrarInteresProducto(
                     uow,
                     _dbConnectionContext,
                     codigoPersona,
@@ -435,7 +432,7 @@ namespace AppLogic.Inscripciones.Services
         {
             const string methodName = nameof(ConfirmarPreInscripcion);
 
-            var validacionRequest = ConfirmarPreInscripcionHelper.ValidarRequest(request, methodName);
+            var validacionRequest = ConfirmarPreInscripcionRules.ValidarRequest(request, methodName);
             if (!validacionRequest.Success)
             {
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
@@ -459,7 +456,7 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, "No se encontro la oferta seleccionada.", 404);
             }
 
-            var contextoResult = ConfirmarPreInscripcionHelper.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
+            var contextoResult = ConfirmarPreInscripcionRules.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
             if (!contextoResult.Success)
             {
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
@@ -479,7 +476,7 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
             }
 
-            var aceptacion = ConfirmarPreInscripcionHelper.AsegurarAceptacionReglamentoEstudiantil(
+            var aceptacion = ConfirmarPreInscripcionRules.AsegurarAceptacionReglamentoEstudiantil(
                 uow,
                 _dbConnectionContext,
                 codigoPersona,
@@ -492,9 +489,9 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
             }
 
-            var apiRequest = ConfirmarPreInscripcionHelper.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
+            var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
-            var confirmacionResult = ConfirmarPreInscripcionHelper.MapearResultadoApi(apiResult, contexto, methodName);
+            var confirmacionResult = ConfirmarPreInscripcionRules.MapearResultadoApi(apiResult, contexto, methodName);
             if (!confirmacionResult.Success)
             {
                 return confirmacionResult;

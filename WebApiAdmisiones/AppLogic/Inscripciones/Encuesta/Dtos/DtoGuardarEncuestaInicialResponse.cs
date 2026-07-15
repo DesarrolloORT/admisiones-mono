@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AppLogic.Inscripciones.Encuesta.Responses
+namespace AppLogic.Inscripciones.Encuesta.Dtos
 {
     public sealed class DtoGuardarEncuestaInicialResponse
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Inscripciones.Responses
+namespace AppLogic.Inscripciones.Dtos
 {
     public class DtoPagarResponse
     {

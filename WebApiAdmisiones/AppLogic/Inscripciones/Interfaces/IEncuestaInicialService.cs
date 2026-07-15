@@ -1,5 +1,4 @@
-using AppLogic.Inscripciones.Encuesta.Requests;
-using AppLogic.Inscripciones.Encuesta.Responses;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using Utilities;
 
 namespace AppLogic.Inscripciones.Interfaces

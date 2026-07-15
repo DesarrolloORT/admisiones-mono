@@ -1,4 +1,4 @@
-namespace AppLogic.Inscripciones.Responses
+namespace AppLogic.Inscripciones.Dtos
 {
     public class DtoConfirmarPreInscripcionResponse
     {

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace UnitTesting.AppLogic.Helpers
 {
-    public class InteresProductoValidationHelperTests
+    public class InteresProductoValidationRulesTests
     {
         private const string Method = "RegistrarInteresProducto";
 
@@ -17,7 +17,7 @@ namespace UnitTesting.AppLogic.Helpers
             personaRepo.Setup(r => r.ExistePersona(123)).Returns(false);
             uow.Setup(u => u.Personas).Returns(personaRepo.Object);
 
-            var result = InteresProductoValidationHelper.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidationRules.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_01", result.ErrorCode);
@@ -32,7 +32,7 @@ namespace UnitTesting.AppLogic.Helpers
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(false);
             uow.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var result = InteresProductoValidationHelper.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidationRules.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_02", result.ErrorCode);
@@ -47,7 +47,7 @@ namespace UnitTesting.AppLogic.Helpers
             procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(false);
             uow.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
-            var result = InteresProductoValidationHelper.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidationRules.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_03", result.ErrorCode);
@@ -62,7 +62,7 @@ namespace UnitTesting.AppLogic.Helpers
             inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(true);
             uow.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = InteresProductoValidationHelper.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidationRules.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_04", result.ErrorCode);
@@ -77,7 +77,7 @@ namespace UnitTesting.AppLogic.Helpers
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(true);
             uow.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
 
-            var result = InteresProductoValidationHelper.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidationRules.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_05", result.ErrorCode);

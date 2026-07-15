@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AppLogic.Inscripciones.Encuesta.Requests
+namespace AppLogic.Inscripciones.Encuesta.Dtos
 {
     public class DtoGuardarEncuestaInicialRequest
     {

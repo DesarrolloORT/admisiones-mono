@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Inscripciones.Encuesta.Responses
+namespace AppLogic.Inscripciones.Encuesta.Dtos
 {
     public sealed class DtoObtenerEncuestaInicialResponse
     {
