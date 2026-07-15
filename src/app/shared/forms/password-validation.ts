@@ -2,12 +2,7 @@ import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import { PasswordStrengthConfig, ValidationUtils } from '@desarrolloort/ngx-utils';
 
 export type OrtPasswordErrorKey =
-  | 'minChar'
-  | 'maxChar'
-  | 'hasUppercase'
-  | 'hasLowercase'
-  | 'hasNumbers'
-  | 'hasSpecialChars';
+  'minChar' | 'maxChar' | 'hasUppercase' | 'hasLowercase' | 'hasNumbers' | 'hasSpecialChars';
 
 export interface PasswordRequirement {
   label: string;

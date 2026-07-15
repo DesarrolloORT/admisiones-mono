@@ -46,8 +46,7 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
 };
 
 export type ApiRequestHeaders =
-  | HttpHeaders
-  | Record<string, string | number | boolean | null | undefined>;
+  HttpHeaders | Record<string, string | number | boolean | null | undefined>;
 
 @Injectable({ providedIn: 'root' })
 export class ApiHttpClient {
@@ -136,8 +135,7 @@ export class ApiHttpClient {
   public list<TEndpoint extends ApiEndpoint<EndpointDefinition>, TResult>(
     endpoint: TEndpoint,
     mapperOrOptions?:
-      | ((item: EndpointListItem<TEndpoint>) => TResult)
-      | ApiRequestOptions<TEndpoint>,
+      ((item: EndpointListItem<TEndpoint>) => TResult) | ApiRequestOptions<TEndpoint>,
     options?: ApiRequestOptions<TEndpoint>
   ): Observable<Array<EndpointListItem<TEndpoint>> | TResult[]> {
     const mapper = typeof mapperOrOptions === 'function' ? mapperOrOptions : null;

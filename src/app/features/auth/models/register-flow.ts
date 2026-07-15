@@ -1,9 +1,5 @@
 export type RegisterFlowKind =
-  | 'new-person'
-  | 'existing-person'
-  | 'new-application'
-  | 'user-exists'
-  | 'application-exists';
+  'new-person' | 'existing-person' | 'new-application' | 'user-exists' | 'application-exists';
 
 export type RegisterContinuableFlowKind = Extract<
   RegisterFlowKind,

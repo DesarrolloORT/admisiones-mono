@@ -3,12 +3,7 @@ import { expect, Locator, Page } from '@playwright/test';
 import { selectOrtOption } from './ort-controls';
 
 type MetodoPago =
-  | 'cuenta-bancaria'
-  | 'tarjeta-credito'
-  | 'cuenta-personal'
-  | 'banred'
-  | 'abitab'
-  | 'paganza';
+  'cuenta-bancaria' | 'tarjeta-credito' | 'cuenta-personal' | 'banred' | 'abitab' | 'paganza';
 
 const paymentLabels: Record<MetodoPago, string> = {
   'cuenta-bancaria': 'Cuenta bancaria',

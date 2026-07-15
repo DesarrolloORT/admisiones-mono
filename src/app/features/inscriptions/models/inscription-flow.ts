@@ -15,20 +15,10 @@ export type SeccionEncuestaId =
 export type EstadoSeccionEncuesta = 'pendiente' | 'activa' | 'completa';
 
 export type MetodoPago =
-  | 'cuenta-bancaria'
-  | 'cuenta-personal'
-  | 'banred'
-  | 'geopay'
-  | 'abitab'
-  | 'paganza';
+  'cuenta-bancaria' | 'cuenta-personal' | 'banred' | 'geopay' | 'abitab' | 'paganza';
 
 export type MetodoPagoApi =
-  | 'CUENTA_PERSONAL'
-  | 'ABITAB'
-  | 'PAGANZA'
-  | 'BANRED'
-  | 'GEOPAY'
-  | 'SISTARBANC';
+  'CUENTA_PERSONAL' | 'ABITAB' | 'PAGANZA' | 'BANRED' | 'GEOPAY' | 'SISTARBANC';
 
 export type ResultadoPago = 'confirmada' | 'reservada' | 'en-proceso';
 

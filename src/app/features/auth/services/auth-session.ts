@@ -14,8 +14,7 @@ import { AccountService } from './account';
  * - `twoFactorRequired`: caller must navigate to the 2FA page and complete verification.
  */
 export type LoginOutcome =
-  | { kind: 'authenticated'; session: AuthSession }
-  | { kind: 'twoFactorRequired' };
+  { kind: 'authenticated'; session: AuthSession } | { kind: 'twoFactorRequired' };
 
 interface PendingTwoFactorContext {
   documentNumber: string;

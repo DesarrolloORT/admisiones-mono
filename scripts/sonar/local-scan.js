@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 const REQUIRED_ENV = ['SONAR_HOST_URL', 'SONAR_TOKEN', 'SONAR_PROJECT_KEY'];
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';

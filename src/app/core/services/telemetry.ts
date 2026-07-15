@@ -206,8 +206,7 @@ export class TelemetryService {
 
     const capture = (): void => {
       const navigation = performance.getEntriesByType('navigation')[0] as
-        | PerformanceNavigationTiming
-        | undefined;
+        PerformanceNavigationTiming | undefined;
 
       if (!navigation) {
         return;

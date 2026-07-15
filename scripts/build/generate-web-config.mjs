@@ -85,4 +85,3 @@ const webConfig = template.replace('__CSP_POLICY__', escapeXmlAttribute(cspPolic
 writeFileSync(WEB_CONFIG_OUTPUT_PATH, webConfig, 'utf8');
 
 console.log('web.config generado correctamente desde CSP_POLICY de Azure App Configuration.');
-
