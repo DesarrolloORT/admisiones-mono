@@ -405,9 +405,10 @@
     </button>
   </section>
 
-  <ort-drawer title="Nuevo gasto mensual" [open]="drawer()" (openChange)="drawer.set($event)">
+  <ng-template #expenseFormContent>
     <form
       #expenseFormElement
+      class="expense-form"
       id="expenseForm"
       (submit)="saveExpense($event, nameInput.value, amountInput.value, expenseFormElement)">
       <ort-form-field>
@@ -425,9 +426,26 @@
       <ort-error>El monto debe ser mayor a $1.000</ort-error>
       }
     </form>
+  </ng-template>
 
-    <ng-container ortDrawerFooter>
-      <button form="expenseForm" ort-primary-button type="submit">Agregar a la lista</button>
-    </ng-container>
+  <ng-template #expenseFormFooter>
+    <button form="expenseForm" ort-primary-button type="submit">Agregar a la lista</button>
+  </ng-template>
+
+  @if (isMobile()) {
+  <ort-drawer title="Nuevo gasto mensual" [open]="drawer()" (openChange)="drawer.set($event)">
+    <ng-container [ngTemplateOutlet]="expenseFormContent" />
+    <ng-container ortDrawerFooter [ngTemplateOutlet]="expenseFormFooter" />
   </ort-drawer>
+  } @else {
+  <ort-dialog
+    align="start"
+    class="scholarship-dialog"
+    title="Nuevo gasto mensual"
+    [open]="drawer()"
+    (openChange)="drawer.set($event)">
+    <ng-container [ngTemplateOutlet]="expenseFormContent" />
+    <ng-container ortDialogFooter [ngTemplateOutlet]="expenseFormFooter" />
+  </ort-dialog>
+  }
 </div>

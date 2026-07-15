@@ -62,6 +62,10 @@ input[ortNumberInput].money-input {
   font-weight: var(--ort-sys-font-weight-semibold);
 }
 
+.expense-form ort-form-field {
+  max-width: 100%;
+}
+
 @media (width >=760px) {
   ::ng-deep .ort-dialog.scholarship-dialog .ort-dialog__dialog {
     max-inline-size: 35rem;

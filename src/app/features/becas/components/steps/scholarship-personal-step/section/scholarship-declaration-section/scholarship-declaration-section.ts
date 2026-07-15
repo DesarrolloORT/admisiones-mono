@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -48,6 +49,7 @@ type MonthlyExpense = {
     OrtError,
     OrtDivider,
     ResponsiveSelect,
+    NgTemplateOutlet,
   ],
   templateUrl: './scholarship-declaration-section.html',
   styleUrls: [
@@ -104,6 +106,12 @@ export class ScholarshipDeclarationSection {
     const breakpoint = this.breakpointService.breakpoint();
 
     return breakpoint.isXSmall || breakpoint.isSmall ? 'inline' : 'block';
+  });
+
+  protected readonly isMobile = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall;
   });
 
   openDialog: boolean = false;
