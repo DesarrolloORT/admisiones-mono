@@ -1,16 +1,21 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  normalizeContractDocument,
+  normalizeContractsIndex,
+  readJsonFile,
   replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
   toProjectPath,
 } from './codegen-utils.js';
+
+export { normalizeContractDocument, normalizeContractsIndex } from './codegen-utils.js';
 
 const DEFAULTS = {
   contractsPath: '/contracts',
@@ -22,6 +27,7 @@ const { values: flags } = nodeParseArgs({
   options: {
     env: { type: 'string', default: DEFAULTS.env },
     'contracts-path': { type: 'string', default: DEFAULTS.contractsPath },
+    'contracts-dir': { type: 'string' },
     output: { type: 'string', short: 'o', default: DEFAULTS.output },
     help: { type: 'boolean', short: 'h', default: false },
   },
@@ -35,6 +41,8 @@ Usage: node scripts/codegen/update-contracts.js [options]
 Options:
   --env <file>              Environment file inside src/environments/ (default: ${DEFAULTS.env})
   --contracts-path <path>   Contracts index path appended to the API origin (default: ${DEFAULTS.contractsPath})
+  --contracts-dir <dir>     Local snapshot directory with index.json y los contratos
+                            (creado por fetch-api-spec.js); evita el acceso de red al backend
   -o, --output <dir>        Output directory for generated contracts (default: ${DEFAULTS.output})
   -h, --help                Show this help
 `);
@@ -52,28 +60,41 @@ async function main() {
   const outputAbs = resolve(ROOT, output);
   const outputRel = toProjectPath(output);
   const tempOutputAbs = resolve(ROOT, `${output}.tmp-${process.pid}`);
+  const contractsDir = flags['contracts-dir'] ? resolve(ROOT, flags['contracts-dir']) : null;
   let stage = 'resolving contracts source';
   let contractsSource;
 
   try {
-    contractsSource = resolveContractsSource(flags.env, flags['contracts-path']);
+    if (contractsDir) {
+      console.log(`  source    : ${toProjectPath(contractsDir)}/ (snapshot local)`);
+      console.log(`  output    : ${outputRel}/\n`);
+    } else {
+      contractsSource = resolveContractsSource(flags.env, flags['contracts-path']);
 
-    console.log(`  env       : src/environments/${flags.env}`);
-    console.log(`  origin    : ${contractsSource.origin}`);
-    console.log(`  contracts : ${contractsSource.contractsUrl}`);
-    console.log(`  output    : ${outputRel}/\n`);
+      console.log(`  env       : src/environments/${flags.env}`);
+      console.log(`  origin    : ${contractsSource.origin}`);
+      console.log(`  contracts : ${contractsSource.contractsUrl}`);
+      console.log(`  output    : ${outputRel}/\n`);
+    }
 
-    stage = 'downloading contracts index';
-    const index = normalizeContractsIndex(await downloadJson(contractsSource.contractsUrl));
+    stage = contractsDir ? 'reading contracts index from snapshot' : 'downloading contracts index';
+    const index = normalizeContractsIndex(
+      contractsDir
+        ? readJsonFile(resolve(contractsDir, 'index.json'))
+        : await downloadJson(contractsSource.contractsUrl)
+    );
 
-    stage = 'downloading contract files';
+    stage = contractsDir ? 'reading contract files from snapshot' : 'downloading contract files';
     rmSync(tempOutputAbs, { recursive: true, force: true });
     mkdirSync(tempOutputAbs, { recursive: true });
 
     const files = [];
     for (const item of index) {
-      const contractUrl = new URL(item.url, contractsSource.origin).toString();
-      const contract = normalizeContractDocument(await downloadJson(contractUrl));
+      const contract = contractsDir
+        ? normalizeContractDocument(readJsonFile(resolve(contractsDir, item.name)))
+        : normalizeContractDocument(
+            await downloadJson(new URL(item.url, contractsSource.origin).toString())
+          );
       writeFileSync(resolve(tempOutputAbs, item.name), `${JSON.stringify(contract, null, 2)}\n`);
       files.push({ name: item.name, url: item.url, exportName: toContractExportName(item.name) });
     }
@@ -102,42 +123,6 @@ export function resolveContractsSource(envFileName, contractsPath = DEFAULTS.con
     origin: swaggerSource.origin,
     contractsUrl: `${swaggerSource.origin}${contractsPath}`,
   };
-}
-
-export function normalizeContractsIndex(value) {
-  if (!Array.isArray(value)) {
-    throw new Error('/contracts must return an array.');
-  }
-
-  return value.map((item, index) => {
-    if (!item || typeof item !== 'object') {
-      throw new Error(`/contracts item ${index} must be an object.`);
-    }
-
-    const name = item.name;
-    const url = item.url;
-    if (typeof name !== 'string' || !/^[A-Za-z0-9._-]+\.json$/.test(name)) {
-      throw new Error(`/contracts item ${index} has an unsafe name.`);
-    }
-    if (basename(name) !== name) {
-      throw new Error(`/contracts item ${index} name must not contain a path.`);
-    }
-    if (typeof url !== 'string' || !url.startsWith('/contracts/') || url.includes('..')) {
-      throw new Error(`/contracts item ${index} has an unsafe url.`);
-    }
-
-    return { name, url };
-  });
-}
-
-export function normalizeContractDocument(value) {
-  if (typeof value === 'string') {
-    return JSON.parse(value.replace(/^\uFEFF/, ''));
-  }
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error('Contract document must be a JSON object.');
-  }
-  return value;
 }
 
 function renderContractsIndex(files) {

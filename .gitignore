@@ -6,6 +6,9 @@
 # Generated API layer (local-only, regenerate with: npm run update-api)
 src/app/shared/api/generated/
 
+# API spec snapshot (local-only, regenerate with: node scripts/codegen/fetch-api-spec.js)
+.api-spec/
+
 # Compiled output
 /dist
 /tmp

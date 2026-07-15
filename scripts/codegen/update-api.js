@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
 import { DEFAULT_ENVIRONMENT_FILE, ROOT } from './codegen-utils.js';
@@ -9,6 +9,8 @@ const { values: flags } = nodeParseArgs({
     env: { type: 'string', default: DEFAULT_ENVIRONMENT_FILE },
     'swagger-path': { type: 'string' },
     'contracts-path': { type: 'string' },
+    'spec-dir': { type: 'string' },
+    'skip-build': { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -21,6 +23,10 @@ Options:
   --env <file>            Environment file inside src/environments/ (default: ${DEFAULT_ENVIRONMENT_FILE})
   --swagger-path <path>     Swagger doc path appended to the API origin
   --contracts-path <path>   Contracts index path appended to the API origin
+  --spec-dir <dir>          Snapshot local creado por fetch-api-spec.js; genera todo
+                            desde archivos sin acceso de red al backend
+  --skip-build              Omite la compilacion Angular de validacion (util en CI,
+                            donde un job posterior ya compila el proyecto)
   -h, --help              Show this help
 
 The command updates models, endpoints and form contracts, then compiles the Angular serving
@@ -30,12 +36,16 @@ configuration to report API incompatibilities before npm start.
 }
 
 const sharedArgs = ['--env', flags.env];
-if (flags['swagger-path']) {
+if (flags['spec-dir']) {
+  sharedArgs.push('--swagger-file', join(flags['spec-dir'], 'swagger.json'));
+} else if (flags['swagger-path']) {
   sharedArgs.push('--swagger-path', flags['swagger-path']);
 }
 
 const contractsArgs = ['--env', flags.env];
-if (flags['contracts-path']) {
+if (flags['spec-dir']) {
+  contractsArgs.push('--contracts-dir', join(flags['spec-dir'], 'contracts'));
+} else if (flags['contracts-path']) {
   contractsArgs.push('--contracts-path', flags['contracts-path']);
 }
 
@@ -79,9 +89,14 @@ runNodeStage({
   },
 });
 
-validateAngularCompilation();
+if (flags['skip-build']) {
+  console.log('\n==> Compilacion Angular de validacion omitida (--skip-build).');
+  console.log('\n✓ API actualizada; la compatibilidad Angular se valida en el build posterior.');
+} else {
+  validateAngularCompilation();
 
-console.log('\n✓ API actualizada y compatibilidad Angular validada.');
+  console.log('\n✓ API actualizada y compatibilidad Angular validada.');
+}
 
 function runNodeStage({ label, script, args, failure }) {
   console.log(`\n==> ${label}`);
