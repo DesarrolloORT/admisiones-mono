@@ -22,7 +22,7 @@ const DEFAULT_DAILY_LIMIT = 50;
 const DEFAULT_MAX_STALE_MINUTES = 24 * 60;
 const AZURE_PAGE_SIZE = 100;
 const AZURE_NO_LABEL = '\0';
-const SUPPORTED_ENVIRONMENTS = new Set(['local', 'desa', 'test', 'preprod', 'prod']);
+const SUPPORTED_ENVIRONMENTS = new Set(['desa']);
 
 function getArg(name, defaultValue = undefined) {
   const index = process.argv.indexOf(`--${name}`);

@@ -33,7 +33,7 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env preprod
+        run: npm run env:sync -- --env desa
 
       - name: Build
         run: npm run build:staging

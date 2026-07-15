@@ -75,7 +75,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env preprod
+        run: npm run env:sync -- --env desa
 
       - name: Run linters and formatters
         run: npm run lint:check
