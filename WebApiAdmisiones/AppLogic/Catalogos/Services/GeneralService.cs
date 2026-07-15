@@ -51,6 +51,14 @@ namespace AppLogic.Catalogos.Services
             return OperationResult<DateTime>.Ok(fechaVencimiento, nameof(CalcularFechaVencimientoAdmisiones));
         }
 
+        /// <summary>
+        /// Avanza (o retrocede) una fecha una cantidad de días hábiles, salteando sábados, domingos y feriados.
+        /// </summary>
+        /// <param name="uow">Unidad de trabajo activa para consultar feriados.</param>
+        /// <param name="fecha">Fecha de partida.</param>
+        /// <param name="cantDias">Cantidad de días hábiles a contar.</param>
+        /// <param name="restar">Si es <c>true</c> retrocede en el calendario; si es <c>false</c> avanza.</param>
+        /// <returns>Fecha resultante tras contar los días hábiles indicados.</returns>
         private static DateTime AgregarDiasHabilesAFecha(IUnitOfWork uow, DateTime fecha, int cantDias, bool restar)
         {
             int signo = restar ? -1 : 1;
