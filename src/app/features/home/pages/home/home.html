@@ -1,10 +1,17 @@
 @if (homeData() === null) {
 <main class="home-status" id="main-content" role="alert">
-  <h1>No pudimos cargar tu información</h1>
-  <p>Intentá nuevamente en unos minutos.</p>
+  <div class="home-status__section">
+    <ort-status-icon ariaLabel="Error" purpose="error" size="xl" type="gradient" />
+    <h1>No pudimos cargar tu información</h1>
+  </div>
+  <div class="home-status__section">
+    <p>Hubo un error al cargar tu información.</p>
+    <p>Porfavor intente nuevamente en unos minutos.</p>
+  </div>
 </main>
 } @else if (hasActivity()) {
 <app-dashboard [becas]="homeData()!.becas" [inscripciones]="homeData()!.inscripciones" />
+
 } @else {
 <main aria-labelledby="home-title" class="home-main" id="main-content" tabindex="-1">
   <header class="home-welcome">

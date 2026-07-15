@@ -12,6 +12,8 @@
   --home-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
     var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
     var(--ort-sys-elevation-sm-color);
+  display: flex;
+  flex-direction: column;
 
   min-height: 100dvh;
   background: var(--home-page);
