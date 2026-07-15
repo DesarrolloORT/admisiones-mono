@@ -119,6 +119,11 @@
     "typescript": "5.9.3",
     "vitest": "^4.1.0"
   },
+  "overrides": {
+    "concurrently": {
+      "shell-quote": "1.8.4"
+    }
+  },
   "lint-staged": {
     "*.{ts,html}": [
       "eslint --cache --fix",
