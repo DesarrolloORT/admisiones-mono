@@ -1,5 +1,5 @@
 using AppLogic.Catalogos.Interfaces;
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 using AppLogic.DevartDTOs;
 using AppLogic.ApiClients.Dtos;
 using Microsoft.AspNetCore.Authorization;

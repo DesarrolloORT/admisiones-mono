@@ -1,4 +1,4 @@
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 using BusinessLogic.Entities;
 using System.Diagnostics.CodeAnalysis;
 

@@ -1,4 +1,4 @@
-﻿using AppLogic.Catalogos.Responses;
+﻿using AppLogic.Catalogos.Dtos;
 using System.Net;
 using System.Text;
 using AppLogic.ApiClients.Interfaces;

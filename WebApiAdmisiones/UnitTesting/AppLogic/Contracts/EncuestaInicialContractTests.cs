@@ -1,4 +1,4 @@
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 using AppLogic.Inscripciones.Encuesta.Requests;
 using System.Reflection;
 using System.Text.Json;

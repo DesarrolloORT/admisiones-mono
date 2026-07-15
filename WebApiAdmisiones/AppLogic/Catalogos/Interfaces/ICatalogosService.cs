@@ -1,4 +1,4 @@
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.DevartDTOs;
 using Utilities;

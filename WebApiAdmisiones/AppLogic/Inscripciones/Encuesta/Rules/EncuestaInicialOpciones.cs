@@ -1,4 +1,4 @@
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 
 namespace AppLogic.Inscripciones.Encuesta.Rules
 {

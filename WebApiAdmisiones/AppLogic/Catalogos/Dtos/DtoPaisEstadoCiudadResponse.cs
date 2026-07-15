@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Catalogos.Responses
+namespace AppLogic.Catalogos.Dtos
 {
     [ExcludeFromCodeCoverage]
     public class DtoPaisEstadoCiudadResponse

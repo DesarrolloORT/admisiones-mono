@@ -1,6 +1,6 @@
 using AppLogic.Catalogos.Interfaces;
 using AppLogic.Catalogos.Mappers;
-using AppLogic.Catalogos.Responses;
+using AppLogic.Catalogos.Dtos;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.ApiClients.Interfaces;
 using AppLogic.DevartDTOs;
