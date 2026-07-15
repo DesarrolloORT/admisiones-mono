@@ -5,8 +5,37 @@ on:
     types: [published]
 
 jobs:
+  fetch_api_spec:
+    # Job minimo en el runner self-hosted: solo descarga swagger.json + contratos
+    # de la red interna (sin npm ci, sin Java). La generacion corre en la nube.
+    name: Fetch API spec (internal network)
+    runs-on: funcionarios-desa
+    env:
+      API_ORIGIN: ${{ vars.DESA_API_ORIGIN || 'https://apiadmisionesdesa.ort.edu.uy' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Download Swagger and form contracts
+        run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output .api-spec
+
+      - name: Upload API spec snapshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-spec
+          path: .api-spec
+          retention-days: 1
+
   build:
     name: Build
+    needs: fetch_api_spec
     runs-on: blacksmith-8vcpu-ubuntu-2404
     environment: prod
     env:
@@ -31,10 +60,20 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
+        run: npm run env:sync -- --env desa --refresh
+
+      - name: Download API spec snapshot
+        uses: actions/download-artifact@v8
+        with:
+          name: api-spec
+          path: .api-spec
+
+      - name: Generate API contracts
+        # --skip-build: el build de produccion del paso siguiente valida la compilacion.
+        run: npm run update-api -- --spec-dir .api-spec --skip-build
 
       - name: Build
-        run: npm run build
+        run: npx ng build --configuration production
 
       - name: Archive build
         run: |
@@ -75,4 +114,3 @@ jobs:
     with:
       result: ${{ needs.attach-release.result }}
       workflow-name: ${{ github.workflow }}
-
