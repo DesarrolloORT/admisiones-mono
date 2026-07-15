@@ -11,6 +11,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     environment: preprod
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -28,16 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts
 
-      - name: Setup environment variables
-        uses: ./.github/actions/setup-env
-        with:
-          env-filename: staging
-          CSP_POLICY: ${{ vars.CSP_POLICY }}
-          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
-          CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
-        env:
-          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
-          API_URL: ${{ secrets.API_URL }}
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env preprod
 
       - name: Build
         run: npm run build:staging

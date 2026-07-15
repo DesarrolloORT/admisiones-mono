@@ -47,6 +47,10 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
       startsWith(github.event.pull_request.head.ref, 'hotfix/')
     environment: preprod
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -70,16 +74,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Setup environment variables
-        uses: ./.github/actions/setup-env
-        with:
-          env-filename: staging
-          CSP_POLICY: ${{ vars.CSP_POLICY }}
-          RECAPTCHA_NONCE: ${{ vars.RECAPTCHA_NONCE }}
-          CACHING_ENABLED: ${{ vars.CACHING_ENABLED || 'true' }}
-        env:
-          RECAPTCHA_KEY: ${{ secrets.RECAPTCHA_KEY }}
-          API_URL: ${{ secrets.API_URL }}
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env preprod
 
       - name: Run linters and formatters
         run: npm run lint:check
