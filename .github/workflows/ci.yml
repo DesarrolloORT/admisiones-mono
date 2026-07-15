@@ -20,7 +20,7 @@ jobs:
   prepare_api:
     name: Prepare API contracts
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: development-server
+    runs-on: funcionarios-desa
     environment: desarrollo
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -243,4 +243,3 @@ jobs:
       result: ${{ needs.sonar-scan.result }}
       workflow-name: SonarQube Scan
     secrets: inherit
-

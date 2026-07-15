@@ -12,8 +12,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare_api:
+    name: Prepare API contracts
+    runs-on: funcionarios-desa
+    environment: desarrollo
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        shell: pwsh
+        run: |
+          "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" | Set-Content -Path "$HOME/.npmrc"
+          "@desarrolloort:registry=https://npm.pkg.github.com" | Add-Content -Path "$HOME/.npmrc"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env desa
+
+      - name: Generate API contracts
+        run: npm run update-api
+
+      - name: Upload API contracts
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+          retention-days: 1
+
   coverage:
     name: Generate coverage results
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -50,8 +91,11 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
-      - name: Generate API contracts
-        run: npm run update-api
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
 
       - name: Generate coverage
         run: npm run test:sonar
@@ -88,4 +132,3 @@ jobs:
             -D "sonar.branch.name=${{ github.ref_name }}" ^
             -D "sonar.qualitygate.wait=true" ^
             -D "sonar.qualitygate.timeout=300"
-

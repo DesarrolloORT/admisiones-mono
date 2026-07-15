@@ -57,7 +57,7 @@ jobs:
     name: Deploy documentation
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build
-    runs-on: development-server
+    runs-on: funcionarios-desa
     environment: desarrollo
     steps:
       - name: Download documentation artifact
@@ -86,4 +86,3 @@ jobs:
 
           Get-ChildItem -LiteralPath $resolvedTarget -Force | Remove-Item -Recurse -Force
           Copy-Item -Path (Join-Path '${{ github.workspace }}' 'docs-site-build/*') -Destination $resolvedTarget -Recurse -Force
-
