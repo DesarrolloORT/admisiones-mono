@@ -1,6 +1,5 @@
-using AppLogic.ApiClients.Dtos;
 
-namespace AppLogic.ApiClients.Responses
+namespace AppLogic.ApiClients.Dtos
 {
     /// <summary>
     /// DTO para oferta de inscripción (usado en los GET de ofertas).

@@ -3,7 +3,7 @@ using AppLogic.Inscripciones.Encuesta.Responses;
 using AppLogic.Inscripciones.Requests;
 using AppLogic.Inscripciones.Responses;
 using AppLogic.ApiClients.Interfaces;
-using AppLogic.ApiClients.Responses;
+using AppLogic.ApiClients.Dtos;
 using AppLogic.Inscripciones.Constants;
 using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;

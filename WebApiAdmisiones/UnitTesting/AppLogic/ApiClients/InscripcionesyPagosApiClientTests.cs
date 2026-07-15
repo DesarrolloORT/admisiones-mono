@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text;
 using AppLogic.ApiClients.Dtos;
-using AppLogic.ApiClients.Requests;
 using AppLogic.ApiClients.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 

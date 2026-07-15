@@ -1,6 +1,5 @@
-using AppLogic.ApiClients.Dtos;
 
-namespace AppLogic.ApiClients.Requests
+namespace AppLogic.ApiClients.Dtos
 {
     /// <summary>
     /// Request para confirmar una preinscripción.

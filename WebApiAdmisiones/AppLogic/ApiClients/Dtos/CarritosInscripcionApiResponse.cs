@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AppLogic.ApiClients.Responses
+namespace AppLogic.ApiClients.Dtos
 {
     public class CarritosInscripcionApiResponse
     {

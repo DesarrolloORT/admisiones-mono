@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AppLogic.ApiClients.Responses
+namespace AppLogic.ApiClients.Dtos
 {
     /// <summary>
     /// Response de confirmar preinscripción.

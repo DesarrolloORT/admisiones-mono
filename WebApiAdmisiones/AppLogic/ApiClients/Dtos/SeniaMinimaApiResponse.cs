@@ -1,4 +1,4 @@
-namespace AppLogic.ApiClients.Responses
+namespace AppLogic.ApiClients.Dtos
 {
     /// <summary>
     /// Response de la seña mínima a pagar de una inscripción (read-only).

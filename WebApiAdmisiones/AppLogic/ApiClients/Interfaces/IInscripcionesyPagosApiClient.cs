@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AppLogic.ApiClients.Requests;
-using AppLogic.ApiClients.Responses;
+using AppLogic.ApiClients.Dtos;
 using AppLogic.Inscripciones.Responses;
 using Utilities;
 

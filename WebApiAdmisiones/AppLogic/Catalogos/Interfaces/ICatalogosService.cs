@@ -1,5 +1,5 @@
 using AppLogic.Catalogos.Responses;
-using AppLogic.ApiClients.Responses;
+using AppLogic.ApiClients.Dtos;
 using AppLogic.DevartDTOs;
 using Utilities;
 

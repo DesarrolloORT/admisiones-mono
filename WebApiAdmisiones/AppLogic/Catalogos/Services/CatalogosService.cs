@@ -3,7 +3,6 @@ using AppLogic.Catalogos.Mappers;
 using AppLogic.Catalogos.Responses;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.ApiClients.Interfaces;
-using AppLogic.ApiClients.Responses;
 using AppLogic.DevartDTOs;
 using AppLogic.Inscripciones.Encuesta.Rules;
 using BusinessLogic.Entities;
