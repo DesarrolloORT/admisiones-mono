@@ -26,7 +26,7 @@ const MAX_INLINE_SCHEMA_DEPTH = 4;
 const GENERATED_HEADER = `// -----------------------------------------------------------------------------
 // AUTO-GENERATED FILE.
 // Do not edit manually.
-// Run: npm run update-endpoints
+// Run: npm run update-api
 // -----------------------------------------------------------------------------
 `;
 

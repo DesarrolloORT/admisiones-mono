@@ -10,7 +10,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
 - Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json).
 - `npm` para instalar dependencias y ejecutar scripts.
-- Java si se va a usar `npm run update-models` o `npm run update-api`.
+- Java si se va a usar `npm run update-api`.
 - Docker Desktop y la extension Dev Containers de VS Code si se quiere trabajar dentro del contenedor.
 
 ## Instalacion
@@ -43,8 +43,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    Si el Swagger vive en otra ruta:
 
    ```bash
-   npm run update-models -- --swagger-path /swagger/v2/swagger.json
-   npm run update-endpoints -- --swagger-path /swagger/v2/swagger.json
+   npm run update-api -- --swagger-path /swagger/v2/swagger.json
    ```
 
    Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints

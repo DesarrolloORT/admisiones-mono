@@ -103,7 +103,7 @@ Si Azure devuelve más de 100 labels, el script falla en vez de seguir paginando
 npm start                # sync cacheado de desa + ng serve
 npm run start:o          # sync cacheado de desa + ng serve -o
 npm run build:dev        # sync cacheado de desa + build development
-npm run build:prod       # refresh prod + build production
+npm run build            # refresh prod + build production
 npm run env:sync -- --env desa
 npm run env:refresh -- --env desa
 npm run env:offline -- --env desa

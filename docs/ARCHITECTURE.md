@@ -59,9 +59,9 @@ El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
 frontend genera localmente dos salidas tecnicas ignoradas por Git:
 
 - `src/app/shared/api/generated/models/`: modelos TypeScript generados por
-  `npm run update-models`.
+  `npm run update-api`.
 - `src/app/shared/api/generated/endpoints/`: constantes de endpoint generadas
-  por `npm run update-endpoints`.
+  por `npm run update-api`.
 
 El comando recomendado para actualizar ambos contratos es:
 
