@@ -52,6 +52,9 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
+      - name: Generate API contracts
+        run: npm run update-api
+
       - name: Run linters and formatters
         run: npm run lint:check
 
@@ -108,6 +111,9 @@ jobs:
 
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
+
+      - name: Generate API contracts
+        run: npm run update-api
 
       - name: Generate coverage
         run: npm run test:sonar
