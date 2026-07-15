@@ -1,6 +1,6 @@
 @if (!onboardingCompleted()) {
 <app-home-header [showBack]="showBack()" />
-<app-scholarship-onboarding [variant]="variant" (continueRequested)="startApplication()" />
+<app-scholarship-onboarding-step [variant]="variant" (continueRequested)="startApplication()" />
 
 } @else if (!success()) {
 <app-process-layout
@@ -26,5 +26,5 @@
   </main>
 </app-process-layout>
 } @else {
-<app-scholarship-success [variant]="variant" />
+<app-scholarship-success-step [variant]="variant" />
 }
