@@ -9,7 +9,7 @@ import {
   postAuthCompletarPasswordEndpoint,
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
-  postAuthRecuperarContrasenaEndpoint,
+  postAuthRecuperarPasswordEndpoint,
   postAuthReenviarCodigo2FaEndpoint,
   postAuthRefreshTokenEndpoint,
   postAuthVerificarCodigo2FaEndpoint,
@@ -382,7 +382,7 @@ export class AuthEndpoint {
    */
   public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
     return this.api
-      .request(postAuthRecuperarContrasenaEndpoint, {
+      .request(postAuthRecuperarPasswordEndpoint, {
         body: payload,
         withCredentials: true,
         captchaAction: 'RecuperarPassword',

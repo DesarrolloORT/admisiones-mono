@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getPersonaDatosPersonaEndpoint,
-  postPersonaCambiarContrasenaEndpoint,
+  postPersonaCambiarPasswordEndpoint,
   postPersonaValidarTelefonoEndpoint,
   putPersonaDatosPersonaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
@@ -97,7 +97,7 @@ export class AccountEndpoint {
 
   public changePassword(payload: AccountChangePasswordPayload): Observable<void> {
     return this.api
-      .request(postPersonaCambiarContrasenaEndpoint, {
+      .request(postPersonaCambiarPasswordEndpoint, {
         body: {
           passwordActual: payload.currentPassword,
           passwordNueva: payload.password,
