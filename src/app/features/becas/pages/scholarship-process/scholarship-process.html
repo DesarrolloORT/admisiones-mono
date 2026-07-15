@@ -8,7 +8,7 @@
   processTitle="Postulación a becas"
   stepperAriaLabel="Progreso de postulación a becas"
   [currentStepId]="process.currentStep()"
-  [showBack]="process.canGoBack()"
+  [showBack]="showBack() && process.canGoBack()"
   [showStepper]="true"
   [stepperSubtitle]="process.stepLabel()"
   [steps]="process.stepItems()"
