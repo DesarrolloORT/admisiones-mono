@@ -18,13 +18,13 @@ jobs:
     runs-on: blacksmith-8vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
 
       - name: Authenticate to GitHub Packages
         run: |
@@ -37,8 +37,59 @@ jobs:
       - name: Audit dependencies for high/critical vulnerabilities
         run: npm audit --audit-level=high
 
+  prepare_api:
+    name: Prepare API contracts
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (startsWith(github.event.pull_request.head.ref, 'feature/') ||
+      startsWith(github.event.pull_request.head.ref, 'fix/') ||
+      startsWith(github.event.pull_request.head.ref, 'release/') ||
+      startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
+      startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    runs-on: development-server
+    environment: preprod
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        shell: pwsh
+        run: |
+          "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" | Set-Content -Path "$HOME/.npmrc"
+          "@desarrolloort:registry=https://npm.pkg.github.com" | Add-Content -Path "$HOME/.npmrc"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env desa
+
+      - name: Generate API contracts
+        run: npm run update-api
+
+      - name: Upload API contracts
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+          retention-days: 1
+
   CI:
     name: CI Checks (unplanned features/hotfixes or release PRs)
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     if: >
       startsWith(github.event.pull_request.head.ref, 'feature/') ||
@@ -53,13 +104,13 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           cache: 'npm'
 
@@ -77,6 +128,12 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+
       - name: Run linters and formatters
         run: npm run lint:check
 
@@ -84,7 +141,7 @@ jobs:
         run: npm run test:ci
 
       - name: Build
-        run: npm run build:staging
+        run: npx ng build
 
       - name: Run accessibility tests
         run: npm run test:a11y
@@ -101,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check version match
         env:
@@ -162,3 +219,4 @@ jobs:
           fi
 
           echo "Version match confirmed."
+

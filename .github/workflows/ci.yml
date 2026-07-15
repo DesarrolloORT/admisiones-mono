@@ -17,8 +17,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare_api:
+    name: Prepare API contracts
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: development-server
+    environment: desarrollo
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        shell: pwsh
+        run: |
+          "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" | Set-Content -Path "$HOME/.npmrc"
+          "@desarrolloort:registry=https://npm.pkg.github.com" | Add-Content -Path "$HOME/.npmrc"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env desa
+
+      - name: Generate API contracts
+        run: npm run update-api
+
+      - name: Upload API contracts
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+          retention-days: 1
+
   CI:
     name: CI Checks
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     environment: desarrollo
     env:
@@ -27,13 +72,13 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -52,8 +97,11 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
-      - name: Generate API contracts
-        run: npm run update-api
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
 
       - name: Run linters and formatters
         run: npm run lint:check
@@ -62,7 +110,7 @@ jobs:
         run: npm run test:ci
 
       - name: Build
-        run: npm run build:dev
+        run: npx ng build --configuration development
 
       - name: Run accessibility tests
         run: npm run test:a11y
@@ -72,6 +120,7 @@ jobs:
 
   coverage:
     name: Generate coverage results
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     environment: desarrollo
     env:
@@ -80,13 +129,13 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -112,8 +161,11 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
-      - name: Generate API contracts
-        run: npm run update-api
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
 
       - name: Generate coverage
         run: npm run test:sonar
@@ -131,7 +183,7 @@ jobs:
     environment: desarrollo
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -191,3 +243,4 @@ jobs:
       result: ${{ needs.sonar-scan.result }}
       workflow-name: SonarQube Scan
     secrets: inherit
+

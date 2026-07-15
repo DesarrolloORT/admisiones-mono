@@ -12,7 +12,7 @@ jobs:
     if: startsWith(github.head_ref, 'v') || startsWith(github.event.pull_request.title, 'release/v')
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Fetch all history for all tags
 
@@ -74,3 +74,4 @@ jobs:
           # Create and push the new tag.
           git tag "$NEW_TAG"
           git push origin "$NEW_TAG"
+
