@@ -67,7 +67,7 @@ jobs:
           path: docs-site-build
 
       - name: Publish to IIS site directory
-        shell: pwsh
+        shell: powershell
         run: |
           $target = '${{ vars.DOCS_ADMISIONES_SITE_PATH }}'
           if ([string]::IsNullOrWhiteSpace($target)) {
