@@ -1,4 +1,3 @@
-using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using AppLogic.Inscripciones.Constants;
 using AppLogic.Common.Validation;
@@ -8,10 +7,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Utilities;
 
-namespace AppLogic.Registro.Factories
+namespace AppLogic.Registro.Rules
 {
     [ExcludeFromCodeCoverage]
-    public static class RegistroEntityFactoryHelper
+    public static class RegistroEntityFactory
     {
         public static SolicitudAlta CrearSolicitudAlta(long idSolicitudAlta, DtoRegistroPersonaRequest request)
         {

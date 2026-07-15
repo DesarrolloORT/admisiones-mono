@@ -1,5 +1,3 @@
-using AppLogic.Registro.Requests;
-using AppLogic.Registro.Responses;
 using AppLogic.Registro.Dtos;
 using Utilities;
 

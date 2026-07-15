@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Registro.Requests
+namespace AppLogic.Registro.Dtos
 {
     [ExcludeFromCodeCoverage]
     public class DtoRegistroEvaluarDocumentoRequest

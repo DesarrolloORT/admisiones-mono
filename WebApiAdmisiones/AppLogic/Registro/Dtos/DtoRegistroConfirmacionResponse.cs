@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Registro.Responses
+namespace AppLogic.Registro.Dtos
 {
     /// <summary>
     /// Confirma que el registro se completó. <see cref="MailEnviado"/> distingue éxito parcial

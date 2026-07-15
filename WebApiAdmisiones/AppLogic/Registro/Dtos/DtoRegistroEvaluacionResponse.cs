@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Registro.Responses
+namespace AppLogic.Registro.Dtos
 {
     [ExcludeFromCodeCoverage]
     public class DtoRegistroEvaluacionResponse

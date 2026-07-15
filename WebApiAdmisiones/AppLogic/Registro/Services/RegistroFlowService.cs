@@ -1,6 +1,5 @@
-using AppLogic.Registro.Requests;
-using AppLogic.Registro.Constants;
 using AppLogic.Registro.Dtos;
+using AppLogic.Registro.Constants;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
 using System.Text.Json;

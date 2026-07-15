@@ -1,4 +1,4 @@
-using AppLogic.Registro.Requests;
+using AppLogic.Registro.Dtos;
 using System;
 using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
@@ -6,7 +6,7 @@ using Utilities;
 
 namespace AppLogic.Registro.Validators
 {
-    public static class RegistroValidationHelper
+    public static class RegistroValidation
     {
         public static OperationResult<object?> ValidarVerificacionPersonaExistente(
             Persona persona,

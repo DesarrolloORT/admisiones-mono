@@ -1,4 +1,3 @@
-using AppLogic.Registro.Requests;
 using AppLogic.Registro.Dtos;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;

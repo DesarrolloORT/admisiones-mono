@@ -1,7 +1,5 @@
-using AppLogic.Registro.Requests;
-using AppLogic.Registro.Responses;
 using AppLogic.Registro.Dtos;
-using AppLogic.Registro.Factories;
+using AppLogic.Registro.Rules;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Registro.Validators;
 using AppLogic.DevartDTOs;
@@ -184,7 +182,7 @@ namespace AppLogic.Registro.Services
                     409);
             }
 
-            var verificacion = RegistroValidationHelper.ValidarVerificacionPersonaExistente(
+            var verificacion = RegistroValidation.ValidarVerificacionPersonaExistente(
                 persona,
                 request,
                 nameof(VerificarIdentidadAsync));
@@ -339,7 +337,7 @@ namespace AppLogic.Registro.Services
             try
             {
                 uow.BeginTransaction();
-                persona = RegistroEntityFactoryHelper.CrearPersona(
+                persona = RegistroEntityFactory.CrearPersona(
                     _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA),
                     data,
                     ciudad,
@@ -363,7 +361,7 @@ namespace AppLogic.Registro.Services
             // LDAP fuera de la transacción DB (SRV-01): la persona ya está commiteada, así que un
             // fallo acá no la revierte. Si queda huérfana (sin usuario LDAP o sin password),
             // el reintento la encuentra vía GetByDocumento y sigue por CompletarPasswordPersonaPendienteExistenteAsync.
-            var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
+            var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactory.CrearUsuarioLdapRequest(persona));
             if (!crearUsuario.Success)
             {
                 _logger.LogError(
@@ -461,7 +459,7 @@ namespace AppLogic.Registro.Services
             Persona persona,
             string originMethod)
         {
-            var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactoryHelper.CrearUsuarioLdapRequest(persona));
+            var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactory.CrearUsuarioLdapRequest(persona));
             if (!crearUsuario.Success)
             {
                 return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
@@ -502,7 +500,7 @@ namespace AppLogic.Registro.Services
             try
             {
                 uow.BeginTransaction();
-                var solicitud = RegistroEntityFactoryHelper.CrearSolicitudAlta(
+                var solicitud = RegistroEntityFactory.CrearSolicitudAlta(
                     _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_SOLICITUD_ALTA),
                     request);
 
@@ -529,7 +527,7 @@ namespace AppLogic.Registro.Services
 
         private void RegistrarAdmisionPorPersona(IUnitOfWork uow, long codigoPersona)
         {
-            uow.RegistroAdmisiones.Add(RegistroEntityFactoryHelper.CrearRegistroAdmisione(
+            uow.RegistroAdmisiones.Add(RegistroEntityFactory.CrearRegistroAdmisione(
                 _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES),
                 codigoPersona,
                 null));
@@ -556,7 +554,7 @@ namespace AppLogic.Registro.Services
 
         private void RegistrarAdmisionPorSolicitudAlta(IUnitOfWork uow, long idSolicitudAlta)
         {
-            uow.RegistroAdmisiones.Add(RegistroEntityFactoryHelper.CrearRegistroAdmisione(
+            uow.RegistroAdmisiones.Add(RegistroEntityFactory.CrearRegistroAdmisione(
                 _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_REGISTRO_ADMISIONES),
                 null,
                 idSolicitudAlta));
