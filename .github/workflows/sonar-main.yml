@@ -3,8 +3,9 @@ name: SonarQube - Main Branches
 on:
   push:
     branches:
-      - v*.*.*/main
       - main
+      - v*.*.*/main
+      - latest/main
 
 concurrency:
   group: 'sonar-main-${{ github.ref }}'
@@ -14,6 +15,10 @@ jobs:
   coverage:
     name: Generate coverage results
     runs-on: blacksmith-8vcpu-ubuntu-2404
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -41,6 +46,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env desa
+
+      - name: Generate API contracts
+        run: npm run update-api
 
       - name: Generate coverage
         run: npm run test:sonar
@@ -74,5 +85,6 @@ jobs:
             -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
             -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
             -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
+            -D "sonar.branch.name=${{ github.ref_name }}" ^
             -D "sonar.qualitygate.wait=true" ^
             -D "sonar.qualitygate.timeout=300"

@@ -59,9 +59,9 @@ El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
 frontend genera localmente dos salidas tecnicas ignoradas por Git:
 
 - `src/app/shared/api/generated/models/`: modelos TypeScript generados por
-  `npm run update-models`.
+  `npm run update-api`.
 - `src/app/shared/api/generated/endpoints/`: constantes de endpoint generadas
-  por `npm run update-endpoints`.
+  por `npm run update-api`.
 
 El comando recomendado para actualizar ambos contratos es:
 
@@ -97,8 +97,7 @@ Reglas:
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
 - usar `npm run check-api-contracts` para validar que los adapters no filtren
   `generated`, `unknown`, `any` ni casts `as unknown as`.
-- usar `node scripts/codegen/list-endpoints.js` para listar endpoints reales
-  locales y el adapter que los consume.
+- usar `npm run update-api` para regenerar endpoints y validar adapters.
 
 `ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
 `queryParams`. Esto cubre catálogos y datos de referencia sin agregar
@@ -134,7 +133,7 @@ ubicacion preferida es co-localizada.
 
 ### Ambientes locales y generados
 
-Los archivos de `src/environments/` no se versionan. En local se crean a partir de los templates y en CI se generan mediante [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml).
+`src/environments/environment.ts` queda versionado como wrapper estable. Los archivos generados `src/environments/generated-environment.ts` y `src/web.config` no se versionan: en local los crea `npm run env:sync` desde Azure App Configuration y en CI los crea [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml).
 
 ## Puntos de extension esperados
 

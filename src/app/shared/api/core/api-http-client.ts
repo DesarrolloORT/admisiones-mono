@@ -6,7 +6,11 @@ import {
   HttpParams,
 } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { isOperationResult, unwrapOperationResultContext } from '@desarrolloort/ngx-utils';
+import {
+  isOperationResult,
+  suppressGlobalErrorContext,
+  unwrapOperationResultContext,
+} from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -200,7 +204,7 @@ export class ApiHttpClient {
   private resolveContext<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     options: ApiRequestOptions<TEndpoint>
   ): HttpContext {
-    let context = options.context ?? new HttpContext();
+    let context = options.context ?? suppressGlobalErrorContext();
     const captchaAction = options.captchaAction?.trim();
 
     if (captchaAction) {

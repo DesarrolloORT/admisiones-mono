@@ -1,0 +1,88 @@
+name: Admisiones documentation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'docs-site/**'
+      - '.docs/project.json'
+      - '.github/workflows/docs-site-build-deploy.yml'
+  push:
+    branches:
+      - 'v*.*.*/main'
+    paths:
+      - 'docs/**'
+      - 'docs-site/**'
+      - '.docs/project.json'
+      - '.github/workflows/docs-site-build-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admisiones-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix docs-site --ignore-scripts
+
+      - name: Build documentation
+        run: npm run build --prefix docs-site
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: admisiones-docs-site
+          path: docs-site/build
+
+  deploy:
+    name: Deploy documentation
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: development-server
+    environment: desarrollo
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: admisiones-docs-site
+          path: docs-site-build
+
+      - name: Publish to IIS site directory
+        shell: pwsh
+        run: |
+          $target = '${{ vars.DOCS_ADMISIONES_SITE_PATH }}'
+          if ([string]::IsNullOrWhiteSpace($target)) {
+            Write-Host 'DOCS_ADMISIONES_SITE_PATH is not configured. Skipping IIS publish.'
+            return
+          }
+
+          $resolvedTarget = [System.IO.Path]::GetFullPath($target)
+          $root = [System.IO.Path]::GetPathRoot($resolvedTarget)
+          if ($resolvedTarget.TrimEnd('\') -eq $root.TrimEnd('\')) {
+            throw 'DOCS_ADMISIONES_SITE_PATH cannot be a filesystem root.'
+          }
+          if (-not (Test-Path -LiteralPath $resolvedTarget -PathType Container)) {
+            throw "Documentation site directory does not exist: $resolvedTarget"
+          }
+
+          Get-ChildItem -LiteralPath $resolvedTarget -Force | Remove-Item -Recurse -Force
+          Copy-Item -Path (Join-Path '${{ github.workspace }}' 'docs-site-build/*') -Destination $resolvedTarget -Recurse -Force

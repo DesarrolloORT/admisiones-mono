@@ -13,3 +13,19 @@ app-inscripcion-shell
   :is(.ort-step-label, .ort-step-supporting-label) {
   color: var(--ort-sys-base-text-color-body);
 }
+
+@media (width < 52.5rem) {
+  app-process-layout app-inscription-ort-experience-section .ort-rating {
+    display: flex;
+    width: 100%;
+  }
+
+  app-process-layout app-inscription-ort-experience-section .ort-rating__stars {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  app-process-layout app-inscription-ort-experience-section .ort-rating__supporting {
+    text-align: center;
+  }
+}

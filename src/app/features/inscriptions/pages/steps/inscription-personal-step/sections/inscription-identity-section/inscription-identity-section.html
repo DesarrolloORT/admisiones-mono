@@ -1,0 +1,83 @@
+<div class="inscription-accordion__content" [formGroup]="facade.identityForm">
+  <section
+    aria-describedby="identity-document-help"
+    aria-labelledby="identity-document-title"
+    class="inscription-subsection">
+    <h4 id="identity-document-title">Documento de identidad</h4>
+    <p id="identity-document-help">
+      Subí una imagen clara del frente y dorso de tu cédula de identidad. En caso de ser extranjero,
+      podés utilizar el documento emitido por tu país de origen.
+    </p>
+    <ort-file-uploader
+      label="Frente del documento *"
+      [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [initialFiles]="facade.identity.initialIdentityFiles().frente"
+      (filesChanged)="facade.identity.updateIdentityFile('frente', $event)" />
+    @if (facade.isIdentityFileMissing('frente')) {
+    <p class="inscription-field-error" role="alert">Adjuntá la imagen del frente del documento</p>
+    }
+    <ort-file-uploader
+      label="Dorso del documento *"
+      [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [initialFiles]="facade.identity.initialIdentityFiles().dorso"
+      (filesChanged)="facade.identity.updateIdentityFile('dorso', $event)" />
+    @if (facade.isIdentityFileMissing('dorso')) {
+    <p class="inscription-field-error" role="alert">Adjuntá la imagen del dorso del documento</p>
+    }
+    <ort-form-field
+      [hideRequiredMarker]="!!facade.identityForm.controls.vencimientoDocumento.value">
+      <ort-label>Vencimiento</ort-label>
+      <input
+        formControlName="vencimientoDocumento"
+        format="DD/MM/YYYY"
+        ortDateInput
+        placeholder="dd/mm/aaaa"
+        valueType="date" />
+      @if (facade.identityForm.controls.vencimientoDocumento.touched &&
+      facade.identityForm.controls.vencimientoDocumento.hasError('required')) {
+      <ort-error>Ingresá fecha de vencimiento del documento</ort-error>
+      }
+    </ort-form-field>
+  </section>
+
+  <section
+    aria-describedby="identity-selfie-help"
+    aria-labelledby="identity-selfie-title"
+    class="inscription-subsection">
+    <h4 id="identity-selfie-title">Adjuntá una foto tuya</h4>
+    @if(facade.identity.initialIdentityFiles().selfie &&
+    facade.identity.initialIdentityFiles().selfie.length > 0) {
+    <p id="identity-selfie-help">
+      Ya subiste una foto de tu rostro. Si querés cambiarla, podés subir otra.
+    </p>
+    } @else{
+    <p id="identity-selfie-help">Tomá una foto clara de tu rostro para validar tu identidad.</p>
+    }
+    <ort-file-uploader
+      label="Foto del rostro *"
+      [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [initialFiles]="facade.identity.initialIdentityFiles().selfie"
+      [maxFiles]="1"
+      (filesChanged)="facade.identity.updateIdentityFile('selfie', $event)" />
+    @if (facade.isIdentityFileMissing('selfie')) {
+    <p class="inscription-field-error" role="alert">Adjuntá tu imagen de perfil</p>
+    } @if (facade.identity.requiresIdentityConfirmation()) {
+    <ort-checkbox
+      class="inscription-identity-confirmation"
+      formControlName="identidadCorrecta"
+      [aria-describedby]="
+        facade.identityForm.controls.identidadCorrecta.touched &&
+        facade.identityForm.controls.identidadCorrecta.hasError('required')
+          ? 'identity-confirmation-error'
+          : null
+      ">
+      Verifico que la identidad es correcta
+    </ort-checkbox>
+    @if (facade.identityForm.controls.identidadCorrecta.touched &&
+    facade.identityForm.controls.identidadCorrecta.hasError('required')) {
+    <p class="inscription-field-error" id="identity-confirmation-error" role="alert">
+      Confirmá que la identidad es correcta
+    </p>
+    } }
+  </section>
+</div>

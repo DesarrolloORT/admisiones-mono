@@ -155,9 +155,9 @@ Para evitar confusion, usar esta regla simple:
 
 - `src/app/shared/api/generated/models/`: contrato tecnico generado desde Swagger.
   Representa DTOs del backend y puede cambiar cuando se regenera con
-  `npm run update-models`.
+  `npm run update-api`.
 - `src/app/shared/api/generated/endpoints/`: firmas tecnicas de endpoints
-  (method, path, request, response) generadas por `npm run update-endpoints`.
+  (method, path, request, response) generadas por `npm run update-api`.
 - `src/app/features/<feature>/models/`: tipos propios de frontend y dominio de
   la feature. Se usan para formularios, estado local, view models y contratos
   internos entre page/component/service.
@@ -228,14 +228,14 @@ npm run update-api
 
 Esto ejecuta:
 
-- `npm run update-models`: regenera modelos en `src/app/shared/api/generated/models/`.
-- `npm run update-endpoints`: regenera constantes en
+- `npm run update-api`: regenera modelos en `src/app/shared/api/generated/models/`.
+- `npm run update-api`: regenera constantes en
   `src/app/shared/api/generated/endpoints/`.
 
-Para descubrir endpoints reales en el ambiente local:
+Para actualizar endpoints reales en el ambiente local:
 
 ```bash
-node scripts/codegen/list-endpoints.js
+npm run update-api
 ```
 
 Para detectar drift en CI o antes de un PR:

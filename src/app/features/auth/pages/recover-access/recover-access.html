@@ -6,51 +6,7 @@
   title="Recuperar acceso">
   <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <section class="auth-form-section">
-      <ort-form-field [hideRequiredMarker]="!!form.controls.documentType.value">
-        <ort-label>Tipo de documento</ort-label>
-        <ort-select
-          aria-label="Tipo de documento"
-          formControlName="documentType"
-          [id]="'recover-document-type'">
-          <ort-option value="CI">Cédula</ort-option>
-          <ort-option value="PS">Pasaporte</ort-option>
-          <ort-option value="DE">Documento extranjero</ort-option>
-        </ort-select>
-        @if ( form.controls.documentType.touched && form.controls.documentType.hasError('required')
-        ) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        }
-      </ort-form-field>
-
-      <ort-form-field [hideRequiredMarker]="!!form.controls.documentNumber.value">
-        <ort-label>Nro. de documento</ort-label>
-        @if (isCedulaInput()) {
-        <input
-          autocomplete="username"
-          formControlName="documentNumber"
-          ortCedulaInput
-          type="text"
-          [id]="'recover-document-number'" />
-        } @else {
-        <input
-          autocomplete="username"
-          formControlName="documentNumber"
-          ortInput
-          type="text"
-          [id]="'recover-document-number'" />
-        } @if (!isCedulaInput()) {
-        <ort-hint>Sin puntos ni guiones</ort-hint>
-        } @if ( form.controls.documentNumber.touched &&
-        form.controls.documentNumber.hasError('required') ) {
-        <ort-error>Este campo es obligatorio</ort-error>
-        } @if ( form.controls.documentNumber.touched &&
-        form.controls.documentNumber.hasError('cedula') ) {
-        <ort-error>Ingresá un número de cédula válido</ort-error>
-        } @if ( !isCedulaInput() && form.controls.documentNumber.touched &&
-        form.controls.documentNumber.hasError('pattern') ) {
-        <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
-        }
-      </ort-form-field>
+      <app-document-fields autocomplete="username" idPrefix="recover" [form]="form" />
 
       <ort-form-field [hideRequiredMarker]="!!form.controls.primerApellido.value">
         <ort-label>Primer apellido</ort-label>

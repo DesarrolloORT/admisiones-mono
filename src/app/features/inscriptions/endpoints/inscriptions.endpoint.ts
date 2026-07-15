@@ -17,9 +17,15 @@ import {
   postPersonaSubirDocumentoEndpoint,
   postPersonaSubirFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+import type { DtoConfirmadaDetalle } from 'src/app/shared/api/generated/models/dtoConfirmadaDetalle';
 import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
 
-import type { InscripcionDetail, InscripcionSummary } from '../models/inscription-detail';
+import type {
+  InscripcionConfirmedDetail,
+  InscripcionCoordinador,
+  InscripcionDetail,
+  InscripcionSummary,
+} from '../models/inscription-detail';
 import type {
   InscripcionConfirmPreEnrollmentPayload,
   InscripcionIdentityDocument,
@@ -63,23 +69,15 @@ export class InscripcionesEndpoint {
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
             : null,
-          confirmada: response.confirmada
+          seniaMinima: response.seniaMinima
             ? {
-                numeroEstudiante: response.confirmada.numeroEstudiante ?? null,
-                resumen: this.toSummary(response.confirmada.resumen),
-                coordinadorAcademico: response.confirmada.coordinadorAcademico
-                  ? {
-                      nombre: response.confirmada.coordinadorAcademico.nombre ?? null,
-                      email: response.confirmada.coordinadorAcademico.email ?? null,
-                    }
-                  : null,
-                materiasPrimerSemestre:
-                  response.confirmada.materiasPrimerSemestre?.map(materia => ({
-                    idMateria: materia.idMateria ?? null,
-                    nombre: materia.nombre ?? null,
-                  })) ?? [],
+                metodoPago: response.seniaMinima.metodoPago ?? null,
+                cedula: response.seniaMinima.cedula ?? null,
+                codigoPersona: response.seniaMinima.codigoPersona ?? null,
+                senia: response.seniaMinima.senia ?? null,
               }
             : null,
+          confirmada: this.toConfirmedDetail(response.confirmada),
         }))
       );
   }
@@ -225,6 +223,7 @@ export class InscripcionesEndpoint {
       .pipe(
         map(response => ({
           confirmada: response.confirmada === true,
+          enEspera: 'enEspera' in response && response.enEspera === true,
           idInscripcion: response.idInscripcion ?? null,
           fechaVencimientoPago: response.fechaVencimientoPago ?? null,
           seniaInscripcion: response.senia ?? null,
@@ -253,11 +252,13 @@ export class InscripcionesEndpoint {
           success: true,
           resultado: response.resultado ?? null,
           urlPago: response.urlPago ?? null,
+          parametrosEncriptados: response.parametrosEncriptados ?? null,
           mensajes:
             response.mensajes?.map(message => ({
               clave: message.clave ?? null,
               valor: message.valor ?? null,
             })) ?? [],
+          confirmada: this.toConfirmedDetail(response.confirmada),
           message: null,
           errorCode: null,
         })),
@@ -336,6 +337,32 @@ export class InscripcionesEndpoint {
           comienzo: summary.comienzo ?? null,
           idTurno: summary.idTurno ?? null,
           turno: summary.turno ?? null,
+        }
+      : null;
+  }
+
+  private toCoordinador(
+    coordinador: { nombre?: string | null; email?: string | null } | null | undefined
+  ): InscripcionCoordinador | null {
+    return coordinador
+      ? { nombre: coordinador.nombre ?? null, email: coordinador.email ?? null }
+      : null;
+  }
+
+  private toConfirmedDetail(
+    confirmada: DtoConfirmadaDetalle | null | undefined
+  ): InscripcionConfirmedDetail | null {
+    return confirmada
+      ? {
+          numeroEstudiante: confirmada.numeroEstudiante ?? null,
+          resumen: this.toSummary(confirmada.resumen),
+          coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
+          coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),
+          materiasPrimerSemestre:
+            confirmada.materiasPrimerSemestre?.map(materia => ({
+              idMateria: materia.idMateria ?? null,
+              nombre: materia.nombre ?? null,
+            })) ?? [],
         }
       : null;
   }

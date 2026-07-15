@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import { dirname, relative, resolve } from 'node:path';
@@ -63,6 +63,28 @@ export function resolveSwaggerSource(envFileName, swaggerPath) {
     origin: origins[0],
     swaggerUrl: `${origins[0]}${swaggerPath}`,
   };
+}
+
+export function replaceGeneratedDirectory(source, target) {
+  mkdirSync(target, { recursive: true });
+
+  const sourceEntries = new Set(readdirSync(source));
+  for (const entry of readdirSync(target)) {
+    if (!sourceEntries.has(entry)) {
+      rmSync(resolve(target, entry), { recursive: true, force: true });
+    }
+  }
+
+  for (const entry of sourceEntries) {
+    const targetEntry = resolve(target, entry);
+    rmSync(targetEntry, { recursive: true, force: true });
+    cpSync(resolve(source, entry), targetEntry, {
+      recursive: true,
+      force: true,
+    });
+  }
+
+  rmSync(source, { recursive: true, force: true });
 }
 
 export function downloadJson(url, redirectCount = 0) {

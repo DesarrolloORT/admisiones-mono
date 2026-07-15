@@ -28,7 +28,6 @@ export class TwoFactorValidation {
   public readonly email = input.required<string>();
   public readonly isSubmitting = input<boolean>(false);
   public readonly error = input<string | null>(null);
-  public readonly canResend = input<boolean>(true);
 
   public readonly confirm = output<string>();
   public readonly resend = output<void>();
@@ -113,7 +112,7 @@ export class TwoFactorValidation {
   }
 
   protected onResend(): void {
-    if (!this.canResend() || this.isSubmitting()) {
+    if (this.isSubmitting()) {
       return;
     }
     this.resend.emit();

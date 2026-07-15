@@ -8,10 +8,13 @@
 }
 
 .process-layout {
-  width: min(100%, 26.25rem);
+  width: 100%;
   min-height: 100dvh;
-  margin: 0 auto;
   background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout--desktop {
+  background: var(--ort-sys-base-surface-background-page);
 }
 
 .process-layout__top {
@@ -85,9 +88,9 @@
   display: block;
   flex: 0 0 auto;
   object-fit: contain;
-  aspect-ratio: 70 / 36;
-  inline-size: clamp(52px, 8vw, 64px);
-  block-size: auto;
+  width: 56px;
+  height: auto;
+  aspect-ratio: 67 / 30;
 }
 
 .process-layout__brand-divider {
@@ -233,81 +236,70 @@
   font-size: 24px;
 }
 
-@media (width >=30rem) and (width < 52.5rem) {
-  .process-layout {
-    box-shadow: var(--ort-sys-elevation-lg-x) var(--ort-sys-elevation-lg-y)
-      var(--ort-sys-elevation-lg-blur) var(--ort-sys-elevation-lg-spread)
-      var(--ort-sys-elevation-lg-color);
-  }
-}
-
-@media (width >=52.5rem) {
-  .process-layout {
-    width: 100%;
-    margin: 0;
-    background: var(--ort-sys-base-surface-background-page);
-  }
-
-  .process-layout__brand {
-    width: 212px;
-    max-width: none;
-  }
-
-  .process-layout__top {
-    position: static;
-  }
-
-  .process-layout__mobile-stepper {
-    display: none;
-  }
-
-  .process-layout__body {
-    display: grid;
-    grid-template-columns: minmax(18rem, 22.375rem) minmax(0, 1fr);
-    min-height: calc(100dvh - 80px);
-  }
-
-  .process-layout--without-stepper .process-layout__body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .process-layout__rail {
-    display: block;
-    border-right: 1px solid var(--ort-sys-base-border-subtle-color);
-    background: var(--ort-sys-base-surface-background);
-  }
-
-  .process-layout__rail-inner {
-    position: sticky;
-    top: 0;
-    display: grid;
-    align-content: space-between;
-    min-height: calc(100dvh - 80px);
-    padding: var(--ort-sys-spacing-48);
-  }
-
-  .process-layout__main {
-    min-height: auto;
-    padding: var(--ort-sys-spacing-32) var(--ort-sys-spacing-48);
-  }
-
-  .process-layout__close-button {
-    display: none;
-  }
-
-  .process-layout__profile {
-    display: grid;
-  }
-
-  .process-layout__exit {
-    width: fit-content;
-    text-align: start;
-  }
-}
-
-@media (width <=760px) {
+.process-layout:is(.process-layout--compact, .process-layout--wide-mobile, .process-layout--tablet)
   .process-layout__header-content {
-    height: 111px;
-    padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) 0;
-  }
+  height: 6.9375rem;
+  padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) 0;
+}
+
+.process-layout--tablet {
+  --process-layout-inline-padding: clamp(0rem, calc(10.53vw - 4.278rem), 1.25rem);
+}
+
+.process-layout--tablet .process-layout__main {
+  padding-inline: var(--process-layout-inline-padding);
+}
+
+.process-layout--desktop .process-layout__brand {
+  width: 13.25rem;
+  max-width: none;
+}
+
+.process-layout--desktop .process-layout__top {
+  position: static;
+}
+
+.process-layout--desktop .process-layout__body {
+  display: grid;
+  grid-template-columns: minmax(18rem, 22.375rem) minmax(0, 1fr);
+  min-height: calc(100dvh - 5rem);
+}
+
+.process-layout--without-stepper .process-layout__body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.process-layout--desktop .process-layout__rail {
+  display: block;
+  min-width: 0;
+  border-right: 1px solid var(--ort-sys-base-border-subtle-color);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.process-layout--desktop .process-layout__rail-inner {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-content: space-between;
+  min-height: calc(100dvh - 5rem);
+  padding: var(--ort-sys-spacing-48);
+}
+
+.process-layout--desktop .process-layout__main {
+  min-height: auto;
+  padding: var(--ort-sys-spacing-32) var(--ort-sys-spacing-48);
+  padding-inline-start: var(--ort-sys-spacing-36);
+}
+
+.process-layout--desktop .process-layout__close-button {
+  display: none;
+}
+
+.process-layout--desktop .process-layout__profile {
+  display: grid;
+}
+
+.process-layout--desktop .process-layout__exit {
+  width: fit-content;
+  text-align: start;
 }

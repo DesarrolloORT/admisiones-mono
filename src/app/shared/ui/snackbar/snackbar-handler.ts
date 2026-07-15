@@ -41,7 +41,7 @@ export class SnackbarHandler {
       message: config.message,
       supportingText,
       variant,
-      verticalPosition: 'top',
+      verticalPosition: 'bottom',
     });
 
     this.currentRef = ref;

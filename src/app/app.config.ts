@@ -23,7 +23,7 @@ import {
   provideOrtApiErrorHandling,
   UiUtils,
 } from '@desarrolloort/ngx-utils';
-import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
+import { RECAPTCHA_LOADER_OPTIONS, RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha-2';
 import { environment } from 'src/environments/environment';
 
 import { routes } from './app.routes';
@@ -47,6 +47,7 @@ export const appConfig: ApplicationConfig = {
       setConfig({
         system: 'ADMISIONES',
         withCredentials: true,
+        ...(!environment.production && { apiBaseUrl: environment.FDP_API_URL }),
       })
     ),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
@@ -60,6 +61,16 @@ export const appConfig: ApplicationConfig = {
     ),
     importProvidersFrom(RecaptchaV3Module),
     { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.RECAPTCHA_KEY },
+    {
+      provide: RECAPTCHA_LOADER_OPTIONS,
+      useValue: {
+        onBeforeLoad: (url: URL) => {
+          const nonce = getOptionalEnvironmentString('RECAPTCHA_NONCE');
+
+          return nonce ? { url, nonce } : { url };
+        },
+      },
+    },
     ...provideOrtApiErrorHandling({
       notifier: { provide: ApiErrorNotifier, useClass: AppApiErrorNotifier },
     }),
@@ -68,3 +79,9 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(FDPComponentsModule),
   ],
 };
+
+function getOptionalEnvironmentString(key: string): string | undefined {
+  const value = (environment as Record<string, unknown>)[key];
+
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}

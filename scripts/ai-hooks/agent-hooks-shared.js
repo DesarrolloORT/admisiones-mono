@@ -176,7 +176,7 @@ function globToRegExp(pattern) {
   const normalized = normalizePath(pattern).replace(/^\.\//, '');
   let output = '^';
 
-  for (let index = 0; index < normalized.length; ) {
+  for (let index = 0; index < normalized.length;) {
     const char = normalized[index];
 
     if (char === '*') {

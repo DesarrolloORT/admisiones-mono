@@ -1,16 +1,24 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import type { InscripcionDetail } from '../models/inscription-detail';
+import {
+  deriveInitialInscripcionState,
+  type InscripcionInitialSurveyResolved,
+} from '../models/inscription-entry';
 import type { InscripcionInitialSurvey } from '../models/inscription-flow';
 import { Inscripciones, type InscripcionIdentityPreload } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
+import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProposalFacade } from './inscription-proposal';
 import { InscripcionSurveyFacade } from './inscription-survey';
+import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
+import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
 describe('InscripcionSurveyFacade', () => {
   const saveInitialSurvey = vi.fn();
@@ -19,12 +27,15 @@ describe('InscripcionSurveyFacade', () => {
   const uploadIdentityPhoto = vi.fn();
   const getIdentityPreload = vi.fn();
   const getStudentRegulationAcceptance = vi.fn();
+  const payment = { outcome: signal(null) };
 
   beforeEach(() => {
+    payment.outcome.set(null);
     saveInitialSurvey.mockReset().mockReturnValue(of(true));
     confirmPreEnrollment.mockReset().mockReturnValue(
       of({
         confirmada: true,
+        enEspera: false,
         fechaVencimientoPago: null,
         seniaInscripcion: null,
         saldoCuenta: null,
@@ -94,7 +105,7 @@ describe('InscripcionSurveyFacade', () => {
       fechaVencimiento: '2030-02-04',
     });
 
-    expect(survey.requiresIdentityConfirmation()).toBe(true);
+    expect(survey.identity.requiresIdentityConfirmation()).toBe(true);
     expect(survey.identityForm.controls.identidadCorrecta.hasError('required')).toBe(true);
 
     survey.identityForm.controls.identidadCorrecta.setValue(true);
@@ -124,9 +135,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
     forms.academicForm.controls.turno.setValue('300');
@@ -162,9 +173,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
@@ -197,9 +208,9 @@ describe('InscripcionSurveyFacade', () => {
       selfie,
       fechaVencimiento: '2030-02-04',
     });
-    survey.updateIdentityFile('frente', preloadedFileEvent(frente));
-    survey.updateIdentityFile('dorso', preloadedFileEvent(dorso));
-    survey.updateIdentityFile('selfie', preloadedFileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', preloadedFileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', preloadedFileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 1, 4));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
@@ -274,9 +285,9 @@ describe('InscripcionSurveyFacade', () => {
 
     survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
-    survey.updateIdentityFile('frente', fileEvent(frente));
-    survey.updateIdentityFile('dorso', fileEvent(dorso));
-    survey.updateIdentityFile('selfie', fileEvent(selfie));
+    survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
     forms.academicForm.controls.turno.setValue('300');
 
@@ -332,11 +343,56 @@ describe('InscripcionSurveyFacade', () => {
     expect(confirmPreEnrollment).not.toHaveBeenCalled();
     expect(survey.activeSection()).toBe('identidad');
     expect(survey.getSectionState('identidad')).toBe('activa');
-    expect(survey.identityFiles()).toEqual({ frente, dorso, selfie });
+    expect(survey.identity.identityFiles()).toEqual({ frente, dorso, selfie });
     expect(survey.preEnrollmentError()).toBe(
       'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
     );
   });
+
+  it('marks identity complete reactively once files and expiry are set, without pressing Continuar', () => {
+    const { survey } = createFacade(createSurveyResponse({ tieneDerechoEncuesta: false }));
+    const frente = new File(['front'], 'frente.png', { type: 'image/png' });
+    const dorso = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
+
+    survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
+    survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
+
+    expect(survey.getSectionState('identidad')).toBe('completa');
+    // El check aparece sin avanzar de sección (eso sigue siendo tarea de Continuar).
+    expect(survey.activeSection()).toBe('identidad');
+  });
+
+  it.each([
+    {
+      name: 'changing an identity file',
+      mutate: (survey: InscripcionSurveyFacade) =>
+        survey.identity.updateIdentityFile(
+          'selfie',
+          fileEvent(new File(['new'], 'selfie-2.png', { type: 'image/png' }))
+        ),
+    },
+    {
+      name: 'changing the document expiry',
+      mutate: (survey: InscripcionSurveyFacade) =>
+        survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2031, 0, 1)),
+    },
+  ])(
+    'restores reactive identity completion after an upload failure when $name',
+    ({ mutate }: { name: string; mutate: (survey: InscripcionSurveyFacade) => void }) => {
+      uploadIdentityPhoto.mockReturnValue(of(false));
+      const { survey } = prepareFinalizableSurvey();
+
+      survey.continue();
+      expect(survey.getSectionState('identidad')).toBe('activa');
+
+      mutate(survey);
+
+      expect(survey.getSectionState('identidad')).toBe('completa');
+    }
+  );
 
   it.each([
     { failure: 'data false', result: of(false) },
@@ -354,10 +410,11 @@ describe('InscripcionSurveyFacade', () => {
     );
   });
 
-  it('does not navigate when pre-enrollment is not confirmed', () => {
+  it('uses only enEspera to decide between payment and manual review screens', () => {
     confirmPreEnrollment.mockReturnValue(
       of({
         confirmada: false,
+        enEspera: false,
         fechaVencimientoPago: null,
         seniaInscripcion: null,
         saldoCuenta: null,
@@ -369,17 +426,36 @@ describe('InscripcionSurveyFacade', () => {
     survey.continue();
 
     expect(confirmPreEnrollment).toHaveBeenCalledOnce();
-    expect(process.flow.currentStep()).toBe('encuesta');
-    expect(survey.preEnrollmentError()).toBe(
-      'No se pudo confirmar la preinscripción. Intentá nuevamente.'
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBeNull();
+    expect(survey.preEnrollmentError()).toBeNull();
+  });
+
+  it('shows the in-process outcome when pre-enrollment is waiting for manual review', () => {
+    confirmPreEnrollment.mockReturnValue(
+      of({
+        confirmada: true,
+        enEspera: true,
+        idInscripcion: null,
+        fechaVencimientoPago: null,
+        seniaInscripcion: 0,
+        saldoCuenta: null,
+        resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Noche' },
+      })
     );
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBe('inscription-en-proceso');
   });
 
   it('uses school year orientations directly from the selected year catalog', () => {
     const { survey } = createFacade(
       {
         tieneDerechoEncuesta: true,
-        encuesta: null,
+        encuesta: createInitialSurvey({ seccionActiva: 'educacion' }),
         universidadesConsideradas: [],
         universidadesConsideradasOtros: [],
         universidadesEducacionSuperior: [],
@@ -409,8 +485,9 @@ describe('InscripcionSurveyFacade', () => {
         },
       }
     );
+    TestBed.tick();
 
-    expect(survey.schoolYearOptions()).toEqual([
+    expect(survey.options.schoolYearOptions()).toEqual([
       { value: '10', label: '1 EMS' },
       { value: '11', label: '2 EMS' },
       { value: '12', label: '3 EMS' },
@@ -419,17 +496,17 @@ describe('InscripcionSurveyFacade', () => {
     survey.educationForm.patchValue({ cursaSecundaria: 'cursando', anioSecundaria: '10' });
 
     expect(survey.shouldAskBaccalaureateOrientation()).toBe(false);
-    expect(survey.orientationOptions()).toEqual([]);
+    expect(survey.options.orientationOptions()).toEqual([]);
 
     survey.educationForm.controls.anioSecundaria.setValue('11');
 
     expect(survey.shouldAskBaccalaureateOrientation()).toBe(true);
-    expect(survey.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
+    expect(survey.options.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
 
     survey.educationForm.controls.orientacion.setValue('20');
     survey.educationForm.controls.anioSecundaria.setValue('12');
 
-    expect(survey.orientationOptions()).toEqual([{ value: '30', label: 'Economia' }]);
+    expect(survey.options.orientationOptions()).toEqual([{ value: '30', label: 'Economia' }]);
     expect(survey.educationForm.controls.orientacion.value).toBe('');
   });
 
@@ -591,31 +668,216 @@ describe('InscripcionSurveyFacade', () => {
     ).toBe(false);
   });
 
+  it('sets the pre-enrollment error and stops the spinner when confirmation fails', () => {
+    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(confirmPreEnrollment).toHaveBeenCalledOnce();
+    expect(survey.preEnrollmentError()).toBe(
+      'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+    );
+    expect(survey.finalizingPreEnrollment()).toBe(false);
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBeNull();
+  });
+
+  it('reports an error instead of confirming when no shift is selected', () => {
+    const { survey, forms } = prepareFinalizableSurvey();
+    forms.academicForm.controls.turno.setValue('');
+
+    survey.continue();
+
+    expect(uploadIdentityDocument).not.toHaveBeenCalled();
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).not.toHaveBeenCalled();
+    expect(survey.preEnrollmentError()).toBe(
+      'No se pudo confirmar la preinscripción con la oferta seleccionada.'
+    );
+    expect(survey.finalizingPreEnrollment()).toBe(false);
+  });
+
+  it('defers the regulation acceptance lookup until the regulation section is reached', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '10/05/2026' })
+    );
+    const { survey, process } = createFacade(createSurveyResponse());
+
+    expect(getStudentRegulationAcceptance).not.toHaveBeenCalled();
+
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(getStudentRegulationAcceptance).toHaveBeenCalledOnce();
+  });
+
+  it('does not repeat the regulation lookup when navigating back and forth', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: false, fechaAceptacion: null })
+    );
+    const { survey, process } = createFacade(createSurveyResponse());
+
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+    survey.activeSection.set('educacion');
+    TestBed.tick();
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(getStudentRegulationAcceptance).toHaveBeenCalledOnce();
+  });
+
+  it('prefills the regulation section when the student already accepted it', () => {
+    getStudentRegulationAcceptance.mockReturnValue(
+      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '10/05/2026' })
+    );
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(survey.hasAcceptedStudentRegulation()).toBe(true);
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(true);
+    expect(survey.submittedAcceptanceDate()).toEqual(new Date(2026, 4, 10));
+    expect(survey.getSectionState('reglamento')).toBe('completa');
+  });
+
+  it('keeps the regulation unaccepted when the acceptance lookup fails', () => {
+    getStudentRegulationAcceptance.mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('reglamento');
+    TestBed.tick();
+
+    expect(survey.hasAcceptedStudentRegulation()).toBe(false);
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(false);
+    expect(survey.submittedAcceptanceDate()).toBeNull();
+  });
+
+  it('marks the regulation as accepted from the reader', () => {
+    const { survey } = createFacade(createSurveyResponse());
+    survey.openRegulationReader();
+    expect(survey.readerOpen()).toBe(true);
+
+    survey.acceptRegulation();
+
+    expect(survey.regulationForm.controls.aceptaReglamento.value).toBe(true);
+    expect(survey.readerOpen()).toBe(false);
+    expect(survey.activeSection()).toBe('reglamento');
+    expect(survey.getSectionState('reglamento')).toBe('completa');
+  });
+
+  it('closes the reader on back and leaves the step only from the first section', () => {
+    const { survey, process } = createFacade(createSurveyResponse());
+    process.flow.goTo('encuesta');
+    survey.activeSection.set('decision-academica');
+    survey.openRegulationReader();
+
+    survey.back();
+
+    expect(survey.readerOpen()).toBe(false);
+    expect(survey.activeSection()).toBe('decision-academica');
+    expect(process.flow.currentStep()).toBe('encuesta');
+
+    survey.back();
+
+    expect(survey.activeSection()).toBe('educacion');
+    expect(process.flow.currentStep()).toBe('encuesta');
+
+    survey.back();
+
+    expect(process.flow.currentStep()).toBe('propuesta');
+  });
+
+  it('starts an empty survey when the backend has no survey yet', () => {
+    const { survey } = createFacade(null);
+
+    expect(survey.surveyLoadError()).toBeNull();
+    expect(survey.hasInitialSurveyRight()).toBe(true);
+    expect(survey.scenario()).toBe('primera-vez');
+    expect(survey.activeSection()).toBe('educacion');
+    expect(survey.loadingSurveyState()).toBe(false);
+  });
+
+  it('shows the survey load error when the resolver reports a failure', () => {
+    const { survey } = createFacade(null, {}, [], { loadFailed: true });
+
+    expect(survey.surveyLoadError()).toBe(
+      'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
+    );
+  });
+
+  it('fetchResolvedInitialSurvey maps errors to loadFailed and toggles the loading flag', async () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 500 })));
+    const { survey } = createFacade(null, {}, [], { skipApply: true, getInitialSurvey });
+
+    await expect(firstValueFrom(survey.fetchResolvedInitialSurvey())).resolves.toEqual({
+      initialSurvey: null,
+      loadFailed: true,
+    });
+    expect(survey.loadingSurveyState()).toBe(false);
+  });
+
+  it('fetchResolvedInitialSurvey maps a 404 to an empty survey with right', async () => {
+    const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 404 })));
+    const { survey } = createFacade(null, {}, [], { skipApply: true, getInitialSurvey });
+
+    await expect(firstValueFrom(survey.fetchResolvedInitialSurvey())).resolves.toEqual({
+      initialSurvey: expect.objectContaining({ tieneDerechoEncuesta: true, encuesta: null }),
+      loadFailed: false,
+    });
+    expect(survey.loadingSurveyState()).toBe(false);
+  });
+
+  function createSurveyResponse(overrides: Record<string, unknown> = {}) {
+    return {
+      tieneDerechoEncuesta: true,
+      encuesta: null,
+      universidadesConsideradas: [],
+      universidadesConsideradasOtros: [],
+      universidadesEducacionSuperior: [],
+      universidadesEducacionSuperiorOtros: [],
+      opcionesMotivosSeleccionados: [],
+      opcionesPublicidadSeleccionadas: [],
+      ...overrides,
+    };
+  }
+
+  // Detalle mínimo "En proceso" sin bloque `detalle`: retomar-con-detalle mantiene
+  // el comportamiento histórico (encuesta prellena el paso 1 editable y posiciona en
+  // el paso 2). El posicionamiento del flujo y la selección de slice los deriva la
+  // función pura (testeada en inscription-entry.spec); acá solo se aplican.
+  const RESUME_DETAIL: InscripcionDetail = {
+    estado: 'En proceso',
+    detalle: null,
+    pagoPendiente: null,
+    seniaMinima: null,
+    confirmada: null,
+  };
+
   function createFacade(
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
-    careers: unknown[] = []
+    careers: unknown[] = [],
+    options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
   ): {
     survey: InscripcionSurveyFacade;
     process: InscripcionProcessStore;
     forms: InscripcionFormsStore;
   } {
+    const getInitialSurvey = options.getInitialSurvey ?? (() => of(initialSurvey));
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
         InscripcionFormsStore,
         InscripcionProcessStore,
         InscripcionProposalFacade,
+        InscripcionSurveyOptionsFacade,
+        InscripcionSurveyIdentityFacade,
         InscripcionSurveyFacade,
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              data: { initialSurvey: { initialSurvey, loadFailed: false } },
-              queryParamMap: convertToParamMap({}),
-            },
-          },
-        },
         {
           provide: Catalogs,
           useValue: {
@@ -646,12 +908,13 @@ describe('InscripcionSurveyFacade', () => {
               }),
           },
         },
+        { provide: InscripcionPaymentFacade, useValue: payment },
         {
           provide: Inscripciones,
           useValue: {
             getStudentRegulationAcceptance,
             getIdentityPreload,
-            getInitialSurvey: () => of(initialSurvey),
+            getInitialSurvey,
             saveInitialSurvey,
             uploadIdentityDocument,
             uploadIdentityPhoto,
@@ -661,11 +924,26 @@ describe('InscripcionSurveyFacade', () => {
         },
       ],
     });
-    return {
-      survey: TestBed.inject(InscripcionSurveyFacade),
-      process: TestBed.inject(InscripcionProcessStore),
-      forms: TestBed.inject(InscripcionFormsStore),
-    };
+    const survey = TestBed.inject(InscripcionSurveyFacade);
+    const process = TestBed.inject(InscripcionProcessStore);
+    const forms = TestBed.inject(InscripcionFormsStore);
+
+    // Réplica de lo que hace InscripcionProcessFacade.applyInitialState para el slice
+    // de encuesta: deriva y aplica, posicionando el paso al final.
+    if (!options.skipApply) {
+      const resolved: InscripcionInitialSurveyResolved = {
+        initialSurvey: (initialSurvey ?? null) as InscripcionInitialSurveyResolved['initialSurvey'],
+        loadFailed: options.loadFailed ?? false,
+      };
+      const state = deriveInitialInscripcionState({
+        entry: { intent: 'retomar', detail: RESUME_DETAIL },
+        survey: resolved,
+      });
+      survey.applyInitialState(state.survey);
+      process.flow.goTo(state.step);
+    }
+
+    return { survey, process, forms };
   }
 
   function prepareFinalizableSurvey() {
@@ -685,9 +963,9 @@ describe('InscripcionSurveyFacade', () => {
 
     result.survey.identityForm.controls.vencimientoDocumento.setValue(new Date(2030, 1, 4));
     result.survey.identityForm.controls.vencimientoDocumento.markAsDirty();
-    result.survey.updateIdentityFile('frente', fileEvent(frente));
-    result.survey.updateIdentityFile('dorso', fileEvent(dorso));
-    result.survey.updateIdentityFile('selfie', fileEvent(selfie));
+    result.survey.identity.updateIdentityFile('frente', fileEvent(frente));
+    result.survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
+    result.survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     result.survey.regulationForm.controls.aceptaReglamento.setValue(true);
     result.forms.academicForm.controls.turno.setValue('300');
 
@@ -708,21 +986,23 @@ describe('InscripcionSurveyFacade', () => {
     preload: InscripcionIdentityPreload
   ): void {
     (
-      survey as unknown as {
+      survey.identity as unknown as {
         applyIdentityPreload(preload: InscripcionIdentityPreload): void;
       }
     ).applyIdentityPreload(preload);
   }
   function preloadedFileEvent(
     file: File
-  ): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+  ): Parameters<InscripcionSurveyIdentityFacade['updateIdentityFile']>[1] {
     return { value: [{ isValid: true, isPreloaded: true, file }] } as Parameters<
-      InscripcionSurveyFacade['updateIdentityFile']
+      InscripcionSurveyIdentityFacade['updateIdentityFile']
     >[1];
   }
-  function fileEvent(file: File): Parameters<InscripcionSurveyFacade['updateIdentityFile']>[1] {
+  function fileEvent(
+    file: File
+  ): Parameters<InscripcionSurveyIdentityFacade['updateIdentityFile']>[1] {
     return { value: [{ isValid: true, file }] } as Parameters<
-      InscripcionSurveyFacade['updateIdentityFile']
+      InscripcionSurveyIdentityFacade['updateIdentityFile']
     >[1];
   }
 

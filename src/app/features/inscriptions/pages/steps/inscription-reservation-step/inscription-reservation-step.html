@@ -1,0 +1,30 @@
+<section aria-labelledby="reservation-title" class="inscription-screen inscription-screen--success">
+  <header aria-live="polite" class="inscription-success-heading">
+    <span aria-hidden="true" class="inscription-success-heading__icon">
+      <ort-icon>info</ort-icon>
+    </span>
+    <h1 id="reservation-title">{{ facade.reservationInstructions().title }}</h1>
+    <p>{{ facade.reservationInstructions().description }}</p>
+  </header>
+
+  <ort-card aria-labelledby="reservation-instructions-title" role="region">
+    <ort-card-content>
+      <h2 id="reservation-instructions-title">Instrucciones de pago</h2>
+      <p>{{ facade.reservationInstructions().intro }}</p>
+      <ul class="inscription-subject-list">
+        @for (item of facade.reservationInstructions().items; track item.label) {
+        <li>
+          <ort-icon aria-hidden="true">chevron_right</ort-icon>
+          <strong>{{ item.label }}:</strong>
+          {{ item.value }}
+        </li>
+        }
+      </ul>
+      <p>{{ facade.reservationInstructions().help }}</p>
+    </ort-card-content>
+  </ort-card>
+
+  <footer class="inscription-footer">
+    <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
+  </footer>
+</section>

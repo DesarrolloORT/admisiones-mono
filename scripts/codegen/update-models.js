@@ -1,13 +1,5 @@
 import { execSync } from 'node:child_process';
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs as nodeParseArgs } from 'node:util';
@@ -15,6 +7,7 @@ import { parseArgs as nodeParseArgs } from 'node:util';
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
   toProjectPath,
@@ -68,7 +61,6 @@ async function main() {
   const outputAbs = resolve(ROOT, output);
   const outputRel = toProjectPath(output);
   const tempOutputAbs = resolve(ROOT, `${output}.tmp-${process.pid}`);
-  const backupOutputAbs = resolve(ROOT, `${output}.backup-${process.pid}`);
   const tempSwaggerAbs = resolve(ROOT, `${output}.swagger-${process.pid}.json`);
   const tempSwaggerRel = toProjectPath(tempSwaggerAbs);
   const hadExistingModels = hasFiles(outputAbs);
@@ -124,7 +116,7 @@ async function main() {
     flattenModels(tempOutputAbs);
 
     stage = 'replacing generated models';
-    replaceDirectory(tempOutputAbs, outputAbs, backupOutputAbs);
+    replaceGeneratedDirectory(tempOutputAbs, outputAbs);
 
     console.log('\n✓ Models updated successfully.');
   } catch (error) {
@@ -219,28 +211,6 @@ function flattenModels(outputDir) {
 
   rmSync(modelSubdir, { recursive: true });
   console.log('✓ Flattened model/ into models/.');
-}
-
-function replaceDirectory(source, target, backup) {
-  const hadTarget = existsSync(target);
-
-  if (hadTarget) {
-    rmSync(backup, { recursive: true, force: true });
-    renameSync(target, backup);
-  }
-
-  try {
-    cpSync(source, target, { recursive: true, errorOnExist: true });
-    rmSync(source, { recursive: true, force: true });
-  } catch (error) {
-    rmSync(target, { recursive: true, force: true });
-    if (hadTarget && existsSync(backup)) {
-      renameSync(backup, target);
-    }
-    throw error;
-  }
-
-  rmSync(backup, { recursive: true, force: true });
 }
 
 function hasFiles(directory) {

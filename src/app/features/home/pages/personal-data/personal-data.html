@@ -13,7 +13,7 @@
   <ort-skeleton height="48px" variant="rectangular" width="100%" />
 </section>
 } @else if (identityRestricted()) {
-<fdp-datos-personales class="personal-data-form" [isStandalone]="true" />
+<fdp-datos-personales class="personal-data-form" />
 } @else {
 <form class="personal-data-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
   <h2 class="sr-only">Datos personales</h2>

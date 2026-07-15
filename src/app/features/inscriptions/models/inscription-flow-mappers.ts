@@ -6,7 +6,6 @@ import type {
   InscripcionPaymentPayload,
   MetodoPago,
   MetodoPagoApi,
-  ValoresEncuesta,
 } from './inscription-flow';
 import type { InscripcionForms } from './inscription-flow-forms';
 
@@ -17,6 +16,11 @@ const OTHER_OPTION_VALUE = '0';
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
   careers: readonly Career[];
+  /**
+   * Si es `false`, NO se patchea la selección académica desde una encuesta previa.
+   * Se usa en `nueva`, donde el Paso 1 debe quedar virgen.
+   */
+  includeAcademicSelection?: boolean;
 }
 
 export function patchBackendSurveyForms(
@@ -37,14 +41,16 @@ export function patchBackendSurveyForms(
   const schoolInstitution =
     survey.institucionSecundariaId ?? survey.nombreInstitucionSecundaria ?? '';
 
-  forms.academicForm.patchValue(
-    {
-      tipoPropuesta: proposalType,
-      carrera: productId,
-      comienzo: processId,
-    },
-    { emitEvent: false }
-  );
+  if (context.includeAcademicSelection !== false) {
+    forms.academicForm.patchValue(
+      {
+        tipoPropuesta: proposalType,
+        carrera: productId,
+        comienzo: processId,
+      },
+      { emitEvent: false }
+    );
+  }
   forms.educationForm.patchValue(
     {
       cursaSecundaria:
@@ -225,13 +231,26 @@ function toApiPaymentMethod(method: MetodoPago): MetodoPagoApi {
   }
 }
 
-export function getSurveyValues(forms: InscripcionForms): ValoresEncuesta {
-  return {
-    educacion: forms.educationForm.getRawValue(),
-    decisionAcademica: forms.academicDecisionForm.getRawValue(),
-    experienciaOrt: forms.ortExperienceForm.getRawValue(),
-    situacionLaboral: forms.workForm.getRawValue(),
-  };
+// Inverso de toApiPaymentMethod: el bloque seniaMinima trae el método ya elegido
+// como string de API (p.ej. ABITAB/PAGANZA). Lo mapeamos al MetodoPago interno para
+// reutilizar la pantalla de referencias de pago. Un valor desconocido devuelve null.
+export function fromApiPaymentMethod(value: string | null): MetodoPago | null {
+  switch (value) {
+    case 'CUENTA_PERSONAL':
+      return 'cuenta-personal';
+    case 'ABITAB':
+      return 'abitab';
+    case 'PAGANZA':
+      return 'paganza';
+    case 'BANRED':
+      return 'banred';
+    case 'GEOPAY':
+      return 'geopay';
+    case 'SISTARBANC':
+      return 'cuenta-bancaria';
+    default:
+      return null;
+  }
 }
 
 export function serializeDate(value: Date | null): string {

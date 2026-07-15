@@ -329,11 +329,29 @@ export class AuthEndpoint {
   public recognizeDocument(
     payload: DocumentRecognitionRequest
   ): Observable<DocumentRecognitionData> {
-    return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
-      body: payload,
-      withCredentials: true,
-      captchaAction: 'AnalizarAdjunto',
-    });
+    return this.api
+      .request(postRegistroAnalizarAdjuntoEndpoint, {
+        body: payload,
+        withCredentials: true,
+        captchaAction: 'AnalizarAdjunto',
+      })
+      .pipe(
+        map(response => ({
+          campos: response?.campos
+            ? {
+                tipoDocumento: response.campos.tipoDocumento ?? null,
+                numeroDocumento: response.campos.numeroDocumento ?? null,
+                primerNombre: response.campos.primerNombre ?? null,
+                segundoNombre: response.campos.segundoNombre ?? null,
+                primerApellido: response.campos.primerApellido ?? null,
+                segundoApellido: response.campos.segundoApellido ?? null,
+                fechaNacimiento: response.campos.fechaNacimiento ?? null,
+                lugarNacimiento: response.campos.lugarNacimiento ?? null,
+                sexo: response.campos.sexo ?? null,
+              }
+            : undefined,
+        }))
+      );
   }
 
   /**

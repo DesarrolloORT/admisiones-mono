@@ -8,27 +8,33 @@ import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert'
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/inscription-bank-logo';
 import type {
+  InscripcionConfirmedDetail,
+  InscripcionCoordinador,
+  InscripcionDetail,
+} from '../models/inscription-detail';
+import type {
+  ContactoCoordinador,
   InscripcionPaymentResponse,
+  InscripcionReservationData,
   MetodoPago,
   OpcionInscripcion,
   ResultadoPago,
 } from '../models/inscription-flow';
 import { parseResultadoForzado } from '../models/inscription-flow-policy';
 import {
+  buildReservationInstructions,
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
-  getReservationInstructions,
 } from '../models/inscription-flow-view';
 import type { InscripcionOutcome, InscripcionPaymentView } from '../models/inscription-process';
 import {
-  COORDINATORS,
   PAYMENT_OPTIONS,
   type PaymentOption,
   SANTANDER_ACCOUNT_URL,
   STUDENT_SERVICE_LINKS,
-  SUBJECTS,
 } from '../models/inscription-static-data';
+import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -39,6 +45,7 @@ export class InscripcionPaymentFacade {
   private readonly destroyRef = inject(DestroyRef);
   private readonly catalogs = inject(Catalogs);
   private readonly inscriptions = inject(Inscripciones);
+  private readonly externalPaymentSubmitter = inject(ExternalPaymentSubmitter);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
   private readonly proposal = inject(InscripcionProposalFacade);
@@ -47,10 +54,32 @@ export class InscripcionPaymentFacade {
   public readonly paymentOptions = computed<readonly PaymentOption[]>(() =>
     PAYMENT_OPTIONS.flatMap(option => this.resolvePaymentOption(option))
   );
-  public readonly coordinators = COORDINATORS;
   public readonly santanderAccountUrl = SANTANDER_ACCOUNT_URL;
-  public readonly studentNumber = '397654';
   public readonly studentServices = STUDENT_SERVICE_LINKS;
+
+  // Detalle de la inscripción confirmada (número de estudiante, coordinación y
+  // materias). Lo setea applyResumeContext al retomar desde el panel, o se carga
+  // vía getDetail al confirmarse el pago. Si la carga falla queda null y la
+  // pantalla de éxito oculta esas secciones.
+  public readonly confirmedDetail = signal<InscripcionConfirmedDetail | null>(null);
+  // Datos para pagar la reserva (Abitab/Paganza): cédula y número de estudiante.
+  // Lo setea applyPaymentInit al retomar, o se carga vía getDetail al quedar en
+  // reserva desde el flujo fresco. Si falla queda null y la pantalla muestra solo
+  // el monto.
+  public readonly reservationData = signal<InscripcionReservationData | null>(null);
+  public readonly studentNumber = computed(() => this.confirmedDetail()?.numeroEstudiante ?? null);
+  public readonly coordinators = computed<readonly ContactoCoordinador[]>(() => {
+    const detail = this.confirmedDetail();
+    return [
+      toCoordinatorContact('Coordinador(a) Académico:', detail?.coordinadorAcademico),
+      toCoordinatorContact('Coordinador(a) de Cursos:', detail?.coordinadorCursos),
+    ].filter((contact): contact is ContactoCoordinador => contact !== null);
+  });
+  private readonly subjects = computed<readonly string[]>(() =>
+    (this.confirmedDetail()?.materiasPrimerSemestre ?? [])
+      .map(materia => materia.nombre?.trim())
+      .filter((nombre): nombre is string => !!nombre)
+  );
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
@@ -107,13 +136,18 @@ export class InscripcionPaymentFacade {
     formatInscriptionAmount(this.process.preEnrollmentResponse()?.seniaInscripcion)
   );
   public readonly visibleSubjects = computed(() =>
-    this.showAllSubjects() ? SUBJECTS : SUBJECTS.slice(0, 4)
+    this.showAllSubjects() ? this.subjects() : this.subjects().slice(0, 4)
   );
+  public readonly canToggleSubjects = computed(() => this.subjects().length > 4);
   public readonly subjectsToggleLabel = computed(() =>
     this.showAllSubjects() ? 'Ver menos materias' : 'Ver todas las materias'
   );
   public readonly reservationInstructions = computed(() =>
-    getReservationInstructions(this.selectedPaymentMethod())
+    buildReservationInstructions(
+      this.selectedPaymentMethod(),
+      this.process.preEnrollmentResponse(),
+      this.reservationData()
+    )
   );
 
   constructor() {
@@ -169,6 +203,7 @@ export class InscripcionPaymentFacade {
   }
 
   public confirm(): void {
+    if (this.view() === 'processing') return;
     const method = this.paymentForm.controls.metodoPago.value;
     const idInscripcion = this.process.preEnrollmentResponse()?.idInscripcion;
     if (!method) return;
@@ -212,6 +247,11 @@ export class InscripcionPaymentFacade {
       return;
     }
 
+    // Si el backend confirmó el pago en línea ya trae el detalle (número de
+    // estudiante, coordinación y materias): lo usamos directo y evitamos el
+    // getDetail posterior.
+    if (response.confirmada) this.confirmedDetail.set(response.confirmada);
+
     const result = this.forcedResult ?? normalizePaymentResult(response.resultado);
     if (result === 'confirmada') {
       this.finishAt('inscription-confirmada');
@@ -226,7 +266,7 @@ export class InscripcionPaymentFacade {
       return;
     }
     if (isExternalPaymentMethod(method)) {
-      if (response.urlPago && !this.redirectToExternalPayment(response.urlPago)) return;
+      if (!this.submitExternalPayment(response)) return;
       this.finishAt('pago-pendiente-externo');
       return;
     }
@@ -238,14 +278,23 @@ export class InscripcionPaymentFacade {
     this.finishAt('inscription-confirmada');
   }
 
-  private redirectToExternalPayment(value: string): boolean {
-    const url = toHttpUrl(value);
-    if (!url) {
+  private submitExternalPayment(response: InscripcionPaymentResponse): boolean {
+    if (!hasText(response.urlPago) || !hasText(response.parametrosEncriptados)) {
+      this.paymentApiError.set(
+        'La pasarela no devolvió los datos necesarios para iniciar el pago.'
+      );
+      return false;
+    }
+    if (
+      !this.externalPaymentSubmitter.submit({
+        urlPago: response.urlPago,
+        parametrosEncriptados: response.parametrosEncriptados,
+      })
+    ) {
       this.paymentApiError.set('La pasarela devolvió una URL inválida.');
       return false;
     }
 
-    globalThis.location.assign(url);
     return true;
   }
 
@@ -272,20 +321,69 @@ export class InscripcionPaymentFacade {
     return this.paymentOptions().some(option => option.value === selected && !option.disabled);
   }
 
-  public restore(
-    method: MetodoPago | '',
-    response: ReturnType<InscripcionProcessStore['preEnrollmentResponse']>
-  ): void {
-    this.paymentForm.controls.metodoPago.setValue(method, { emitEvent: false });
-    this.syncBankValidator(method);
-    this.process.preEnrollmentResponse.set(response);
-    this.view.set('editing');
-  }
-
   private finishAt(outcome: InscripcionOutcome): void {
     this.outcome.set(outcome);
-    this.process.markCheckpoint();
+    if (outcome === 'inscription-confirmada' && !this.confirmedDetail()) {
+      this.loadDetail(detail => this.confirmedDetail.set(detail.confirmada));
+    }
+    if (outcome === 'reserva' && !this.reservationData()) {
+      this.loadDetail(detail => this.applyReservationDetail(detail));
+    }
   }
+
+  private applyReservationDetail(detail: InscripcionDetail): void {
+    const senia = detail.seniaMinima;
+    if (!senia) return;
+    this.reservationData.set({ cedula: senia.cedula, codigoPersona: senia.codigoPersona });
+  }
+
+  // Carga el Detalle y aplica lo que necesite cada pantalla terminal. Los ids
+  // salen de la propuesta académica en el flujo completo, o de los query params
+  // al retomar el pago desde el panel. Si no hay ids o falla, no rompe: la
+  // pantalla degrada a lo que ya tenga.
+  private loadDetail(apply: (detail: InscripcionDetail) => void): void {
+    const idProducto = this.resolveCatalogId(
+      this.proposal.academicForm.controls.carrera.value,
+      'idProducto'
+    );
+    const idProceso = this.resolveCatalogId(
+      this.proposal.academicForm.controls.comienzo.value,
+      'idProceso'
+    );
+    if (idProducto === null || idProceso === null) return;
+
+    this.inscriptions
+      .getDetail(idProducto, idProceso)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: detail => apply(detail),
+        error: () => undefined,
+      });
+  }
+
+  // En el flujo completo los ids salen de la propuesta académica; al retomar el
+  // pago desde el panel esa sección está vacía y los ids vienen por query params
+  // (los mismos que usa inscriptionDetailResolver).
+  private resolveCatalogId(formValue: string, queryParam: string): number | null {
+    return (
+      toPositiveInteger(formValue) ??
+      toPositiveInteger(this.route.snapshot.queryParamMap.get(queryParam))
+    );
+  }
+}
+
+function toPositiveInteger(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function toCoordinatorContact(
+  role: string,
+  coordinator: InscripcionCoordinador | null | undefined
+): ContactoCoordinador | null {
+  if (!coordinator?.nombre || !coordinator.email) return null;
+  return { role, name: coordinator.nombre, email: coordinator.email };
 }
 
 function isPositiveAmount(value: number | null | undefined): value is number {
@@ -294,6 +392,10 @@ function isPositiveAmount(value: number | null | undefined): value is number {
 
 function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function hasText(value: string | null): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isExternalPaymentMethod(method: MetodoPago): boolean {
@@ -314,13 +416,4 @@ function getPaymentErrorMessage(response: InscripcionPaymentResponse): string {
     response.mensajes.find(message => message.valor?.trim())?.valor ??
     'Intentá nuevamente en unos minutos.'
   );
-}
-
-function toHttpUrl(value: string): string | null {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }

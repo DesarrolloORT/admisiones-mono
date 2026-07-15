@@ -1,24 +1,22 @@
-import { computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
-import { Catalogs } from '../../catalogs/services/catalogs';
 import {
   createIdentityForm,
   createPersonalForm,
   syncDocumentNumberValidators,
 } from '../forms/auth-forms';
 import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
+import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
   CEDULA_DOCUMENT_TYPE,
   cleanDocumentNumber,
   getDocumentNumberLabel,
-  isCedulaDocumentType,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import {
@@ -32,13 +30,12 @@ import { DocumentPrefillResult, DocumentPrefillService } from '../services/docum
 import { RegistrationService } from '../services/registration';
 
 export class RegisterFlowFacade {
-  private readonly catalogs = inject(Catalogs);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly documentPrefill = inject(DocumentPrefillService);
   private readonly registration = inject(RegistrationService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
-  public readonly documentTypes$ = this.catalogs.getDocumentTypes();
   public readonly identityForm = createIdentityForm();
   public readonly personalForm = createPersonalForm();
   public readonly step = signal<RegisterStep>('identity');
@@ -53,8 +50,6 @@ export class RegisterFlowFacade {
     this.identityForm.controls.documentType.valueChanges,
     { initialValue: this.identityForm.controls.documentType.value }
   );
-
-  public readonly isCedulaInput = computed(() => isCedulaDocumentType(this._documentTypeValue()));
 
   public readonly documentNumberLabel = computed(() =>
     getDocumentNumberLabel(this._documentTypeValue())
@@ -140,7 +135,7 @@ export class RegisterFlowFacade {
 
       this.step.set('personal');
     } catch (error) {
-      this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+      this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
     } finally {
       this.isSubmitting.set(false);
     }
@@ -198,13 +193,16 @@ export class RegisterFlowFacade {
         identity: this.getCleanIdentityValues(),
         personal: toAuthRegisterPersonalData(this.personalForm.getRawValue()),
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .pipe(
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: () => {
           this.navigateToEmailConfirmation();
         },
         error: error => {
-          this.showError(this.getApiErrorMessage(error, 'No se pudo completar el registro.'));
+          this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
         },
       });
   }
@@ -236,7 +234,10 @@ export class RegisterFlowFacade {
         primerApellido: primerApellido.value,
         mail: mail.value,
       })
-      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .pipe(
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: result => {
           if (result.success) {
@@ -246,7 +247,7 @@ export class RegisterFlowFacade {
           }
         },
         error: error => {
-          const message = this.getApiErrorMessage(error, 'No se pudo completar el registro.');
+          const message = getApiErrorMessage(error, 'No se pudo completar el registro.');
           this.snackbar.error(message);
         },
       });
@@ -310,10 +311,6 @@ export class RegisterFlowFacade {
     this.registrationFlowId.set(null);
   }
 
-  private getApiErrorMessage(error: unknown, fallback: string): string {
-    return isNormalizedApiError(error) ? error.message : fallback;
-  }
-
   private showError(message: string): void {
     this.snackbar.error(message);
   }
@@ -342,7 +339,7 @@ export class RegisterFlowFacade {
       return;
     }
 
-    this.showError(this.getApiErrorMessage(error, 'No se pudo precargar el documento.'));
+    this.showError(getApiErrorMessage(error, 'No se pudo precargar el documento.'));
   }
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {

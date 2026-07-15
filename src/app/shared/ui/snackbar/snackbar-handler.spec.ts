@@ -42,7 +42,7 @@ describe('SnackbarHandler', () => {
         horizontalPosition: 'center',
         message: 'Guardado',
         variant: 'success',
-        verticalPosition: 'top',
+        verticalPosition: 'bottom',
       })
     );
   });

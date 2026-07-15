@@ -6,9 +6,7 @@ Azure es la fuente de verdad; el repo no guarda valores reales de ambiente.
 ## Requisitos
 
 - Node.js 20 y npm instalados.
-- Azure CLI instalada.
-- Sesión válida con `az login`.
-- Permiso de lectura sobre Azure App Configuration.
+- Cuenta ORT con permiso de lectura sobre Azure App Configuration
 
 Recurso usado por este proyecto:
 
@@ -35,12 +33,7 @@ App Configuration Data Reader
 
    Si GitHub Packages rechaza la instalación, ejecutar `npm login --registry=https://npm.pkg.github.com` con un token que tenga acceso de lectura al paquete y repetir `npm install`.
 
-2. Iniciar sesión en Azure y comprobar la cuenta activa:
-
-   ```powershell
-   az login
-   az account show
-   ```
+2. Iniciar sesión con la cuenta ORT: la primera vez que corra el sync se abre el navegador para autenticarse con Entra ID. La sesión queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`), por lo que los siguientes usos son silenciosos. Para cerrar la sesión local: `npm run env:cache:clear`. Si no se puede abrir el navegador, agregar `--device-code` al comando de sync.
 
 3. Levantar el frontend en `desa`:
 
@@ -110,7 +103,7 @@ Si Azure devuelve más de 100 labels, el script falla en vez de seguir paginando
 npm start                # sync cacheado de desa + ng serve
 npm run start:o          # sync cacheado de desa + ng serve -o
 npm run build:dev        # sync cacheado de desa + build development
-npm run build:prod       # refresh prod + build production
+npm run build            # refresh prod + build production
 npm run env:sync -- --env desa
 npm run env:refresh -- --env desa
 npm run env:offline -- --env desa
@@ -165,46 +158,61 @@ src/web.config
 
 El cache vive bajo `tmp/`, que también está ignorado por Git.
 
-## CSP
+## CSP y `web.config`
 
 La CSP del ambiente debe estar en Azure dentro del JSON, como `CSP_POLICY` o `cspPolicy`.
-El script falla si no existe, porque `web.config` se genera desde ese valor.
+El script falla si no existe, porque `src/web.config` se genera desde ese valor y Angular lo copia al root del build por la entrada `assets` de `angular.json`.
 
-Ejemplo mínimo:
+El `web.config` generado agrega estos headers:
+
+```text
+Cache-Control: no-cache
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Content-Security-Policy: <CSP_POLICY del ambiente>
+Referrer-Policy: no-referrer
+Permissions-Policy: camera=(), geolocation=(), microphone=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+```
+
+Tambien mantiene los MIME types de `.json` y `.webmanifest`, y la regla de rewrite que manda rutas Angular no fisicas a `/index.html`.
+
+Ejemplo minimo:
 
 ```json
 {
   "production": false,
   "API_URL": "https://apiadmisionesdesa.ort.edu.uy",
   "RECAPTCHA_KEY": "site-key-publica",
-  "CSP_POLICY": "object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
+  "RECAPTCHA_NONCE": "admisiones-recaptcha-2026",
+  "CSP_POLICY": "default-src 'self'; script-src 'self' 'nonce-admisiones-recaptcha-2026' 'strict-dynamic' https://www.google.com https://www.gstatic.com; connect-src 'self' https://apiadmisionesdesa.ort.edu.uy https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
 }
 ```
 
-`RECAPTCHA_KEY` es la site key pública usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend.
+`RECAPTCHA_KEY` es la site key publica usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend. Si `RECAPTCHA_KEY` tiene valor, `CSP_POLICY` debe permitir los origenes de Google indicados en el ejemplo; si el ambiente no usa captcha, no hace falta permitirlos ni definir `RECAPTCHA_NONCE`.
+
+`RECAPTCHA_NONCE` debe coincidir exactamente con el nonce incluido en `script-src` (`'nonce-<valor>'`). Angular lo pasa al `<script>` que carga `api.js` de Google (via `RECAPTCHA_LOADER_OPTIONS.onBeforeLoad`), y Google propaga ese mismo nonce a los scripts inline que agrega despues. Como el sitio se sirve como archivos estaticos desde IIS (sin render por request), no es posible generar un nonce distinto por response; por eso se usa un valor fijo por ambiente combinado con `'strict-dynamic'` en vez de los hashes `sha256-...` que se usaban antes. Los hashes se rompen sin aviso cuando Google cambia el contenido del script inline; el nonce fijo + `strict-dynamic` no depende de ese contenido.
 
 ## Problemas comunes
 
-### `az` no se reconoce
+### No se abre el navegador para el login
 
-Validar:
-
-```powershell
-az --version
-```
-
-Si falla, cerrar y abrir PowerShell, CMD, VS Code o Windows Terminal. En Windows la ruta esperada suele ser:
-
-```text
-C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd
-```
-
-### No hay sesión válida
+Ejecutar el sync con device code y seguir las instrucciones en consola:
 
 ```powershell
-az login
-az account show
+npm run env:sync -- --env desa --device-code
 ```
+
+### No hay sesión válida o el login falla
+
+Borrar la sesión local y reintentar (vuelve a pedir login por navegador):
+
+```powershell
+npm run env:cache:clear
+npm run env:sync -- --env desa --refresh
+```
+
+Si aparece un error `AADSTS...` de Entra ID, reportarlo a operaciones: puede ser una política del tenant bloqueando el flujo interactivo.
 
 ### `403 Forbidden`
 

@@ -1,4 +1,4 @@
-import type { InscripcionStep } from './inscription-process';
+import type { InscripcionConfirmedDetail } from './inscription-detail';
 
 export type EscenarioInscripcion = 'primera-vez' | 'parcial' | 'encuesta-completa';
 
@@ -149,6 +149,7 @@ export interface InscripcionStudentRegulationAcceptance {
 export interface InscripcionPreEnrollmentResponse {
   idInscripcion?: number | null;
   confirmada: boolean;
+  enEspera?: boolean;
   fechaVencimientoPago: string | null;
   seniaInscripcion: number | null;
   saldoCuenta: number | null;
@@ -174,9 +175,18 @@ export interface InscripcionPaymentResponse {
   success: boolean;
   resultado: string | null;
   urlPago: string | null;
+  parametrosEncriptados: string | null;
   mensajes: InscripcionPaymentMessage[];
+  confirmada: InscripcionConfirmedDetail | null;
   message: string | null;
   errorCode: string | null;
+}
+
+// Datos que el backend informa para pagar una reserva (Abitab/Paganza). Llegan
+// en el bloque seniaMinima del Detalle; la pantalla de reserva los muestra.
+export interface InscripcionReservationData {
+  cedula: string | null;
+  codigoPersona: number | null;
 }
 
 export interface InscripcionIdentityDocumentFile {
@@ -202,92 +212,6 @@ export interface ArchivosIdentidad {
   selfie: File | null;
 }
 
-export interface ValoresPropuesta {
-  tipoPropuesta: string;
-  carrera: string;
-  comienzo: string;
-  turno: string;
-}
-
-export interface ValoresEncuesta {
-  educacion: {
-    cursaSecundaria: string;
-    anioSecundaria: string;
-    orientacion: string;
-    recursaAnioBachillerato: string;
-    vecesRecursaAnioBachillerato: number | null;
-    lugarSecundaria: string;
-    departamento: string;
-    institucionEducativa: string;
-    estadoEducacionSuperior: string;
-    universidadesEducacionSuperior: string[];
-    universidadEducacionSuperiorOtro: string;
-    formacionMadre: string;
-    tituloOrtMadre: string;
-    formacionPadre: string;
-    tituloOrtPadre: string;
-  };
-  decisionAcademica: {
-    anioDecisionCarrera: string;
-    apoyoDecision: string;
-    anioDecisionOrt: string;
-    otrasUniversidades: string;
-    universidadesInformadas: string[];
-    universidadInformadaOtro: string;
-    certezaDecision: string;
-    motivosOrt: string[];
-  };
-  experienciaOrt: {
-    reunionAsesoramiento: string;
-    calificacionAsesoramiento: number | null;
-    visitoWeb: string;
-    calificacionWeb: number | null;
-    visitoSede: string;
-    calificacionSede: number | null;
-    recuerdaPublicidad: string;
-    mediosPublicidad: string[];
-  };
-  situacionLaboral: {
-    situacionLaboral: string;
-    tipoJornadaLaboral: string;
-  };
-}
-
-export interface BorradorInscripcion {
-  version: 2;
-  escenario: EscenarioInscripcion;
-  paso: InscripcionStep;
-  seccionActiva: SeccionEncuestaId;
-  seccionesCompletas: SeccionEncuestaId[];
-  propuesta: ValoresPropuesta;
-  encuesta: ValoresEncuesta;
-  identidad: {
-    vencimientoDocumento: string;
-  };
-  reglamento: {
-    aceptaReglamento: boolean;
-  };
-  pago: {
-    metodoPago: MetodoPago | '';
-  };
-  preinscription: InscripcionPreEnrollmentResponse | null;
-}
-
-export interface EnvioInscripcion {
-  escenario: EscenarioInscripcion;
-  estadoEncuestaInicial: EstadoEncuestaInicial;
-  propuesta: ValoresPropuesta;
-  encuesta: ValoresEncuesta | null;
-  identidad: {
-    vencimientoDocumento: string;
-    frenteAdjunto: boolean;
-    dorsoAdjunto: boolean;
-    selfieAdjunta: boolean;
-  };
-  reglamentoAceptado: boolean;
-  metodoPago: MetodoPago;
-}
-
 export interface ItemResumenInscripcion {
   icon: string;
   label: string;
@@ -298,13 +222,18 @@ export interface ContactoCoordinador {
   role: string;
   name: string;
   email: string;
-  imageUrl?: string;
+}
+
+export interface ItemInstruccionReserva {
+  label: string;
+  value: string;
 }
 
 export interface InstruccionReserva {
   title: string;
   description: string;
-  items: readonly string[];
+  intro: string;
+  items: readonly ItemInstruccionReserva[];
   help: string;
 }
 

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://ort-docs.ort.edu.uy/schemas/project.schema.json",
+  "id": "admisiones",
+  "slug": "admisiones",
+  "name": "Admisiones",
+  "description": "Flujos de admisión, registro, login e inscripciones.",
+  "kind": "system",
+  "status": "active",
+  "visibility": "internal-ti",
+  "docsUrl": "/admisiones/",
+  "productionUrl": "TODO",
+  "preproductionUrl": "TODO",
+  "latestRelease": {
+    "version": "TODO",
+    "date": "TODO",
+    "url": "TODO"
+  },
+  "repositories": [
+    {
+      "name": "admisiones",
+      "url": "https://github.com/DesarrolloORT/admisiones",
+      "kind": "frontend",
+      "primary": true
+    },
+    {
+      "name": "api-admisiones",
+      "url": "https://github.com/DesarrolloORT/api-admisiones",
+      "kind": "backend"
+    }
+  ],
+  "links": [
+    {
+      "label": "Documentación publicada",
+      "url": "/admisiones/",
+      "kind": "docs"
+    },
+    {
+      "label": "Docs en repo",
+      "url": "https://github.com/DesarrolloORT/admisiones/tree/main/docs",
+      "kind": "docs"
+    },
+    {
+      "label": "Setup",
+      "url": "https://github.com/DesarrolloORT/admisiones/blob/main/docs/SETUP.md",
+      "kind": "docs"
+    },
+    {
+      "label": "Workflow",
+      "url": "https://github.com/DesarrolloORT/admisiones/blob/main/docs/WORKFLOW.md",
+      "kind": "docs"
+    },
+    {
+      "label": "Arquitectura",
+      "url": "https://github.com/DesarrolloORT/admisiones/blob/main/docs/ARCHITECTURE.md",
+      "kind": "docs"
+    },
+    {
+      "label": "Estándares frontend",
+      "url": "https://github.com/DesarrolloORT/admisiones/blob/main/docs/BEST-PRACTICES.md",
+      "kind": "docs"
+    },
+    {
+      "label": "Accesibilidad",
+      "url": "https://github.com/DesarrolloORT/admisiones/blob/main/docs/ACCESSIBILITY.md",
+      "kind": "docs"
+    },
+    {
+      "label": "Frontend",
+      "url": "https://github.com/DesarrolloORT/admisiones",
+      "kind": "repo"
+    },
+    {
+      "label": "Backend",
+      "url": "https://github.com/DesarrolloORT/api-admisiones",
+      "kind": "repo"
+    },
+    {
+      "label": "README API",
+      "url": "https://github.com/DesarrolloORT/api-admisiones/blob/main/README.md",
+      "kind": "docs"
+    }
+  ],
+  "tags": [
+    "admisiones",
+    "registro",
+    "login",
+    "inscripciones",
+    "angular",
+    "api",
+    "documentacion",
+    "setup",
+    "workflow",
+    "arquitectura",
+    "accesibilidad"
+  ],
+  "featured": true,
+  "notes": "Nexo piloto: /admisiones/ será el sitio publicado; mientras tanto el Hub enlaza la documentación versionada en docs/ del frontend."
+}

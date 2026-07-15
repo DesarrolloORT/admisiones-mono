@@ -1,13 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -15,32 +8,34 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
-  OrtSelectModule,
 } from '@desarrolloort/components';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 
 import {
   focusFieldById,
   FormErrorField,
   getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
-import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
-import { createLoginForm, syncDocumentNumberValidators } from '../../forms/auth-forms';
-import { cleanDocumentNumber, isCedulaDocumentType } from '../../models/document-number';
+import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
+import { ErrorAlert } from '../../../../shared/ui/error-alert/error-alert';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
+import { DocumentFields } from '../../components/shared/document-fields/document-fields';
+import { createLoginForm } from '../../forms/auth-forms';
+import { getApiErrorMessage } from '../../models/api-error-message';
+import { cleanDocumentNumber } from '../../models/document-number';
 import { AuthSessionService } from '../../services/auth-session';
 
 @Component({
   selector: 'app-login',
   imports: [
     AuthForm,
+    DocumentFields,
     OrtFormFieldModule,
     OrtInputModule,
-    OrtSelectModule,
     OrtButtonModule,
     OrtIconModule,
     ReactiveFormsModule,
     RouterLink,
+    ErrorAlert,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -48,13 +43,14 @@ import { AuthSessionService } from '../../services/auth-session';
 })
 export class Login {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
-  private readonly snackbar = inject(SnackbarHandler);
   protected readonly form = createLoginForm();
   protected readonly isSubmitting = signal(false);
-  protected readonly showPassword = signal(false);
+  protected readonly passwordVisibility = createPasswordVisibility();
   protected readonly submitted = signal(false);
+  protected readonly formError = signal<string | null>(null);
   private readonly errorFields: FormErrorField[] = [
     {
       controlName: 'documentType',
@@ -66,7 +62,7 @@ export class Login {
       fieldId: 'login-document-number',
       label: 'Nro. de documento',
       messages: {
-        pattern: 'Ingresá solo caracteres alfanuméricos.',
+        pattern: 'Ingresá solo caracteres alfanuméricos o guiones.',
       },
     },
     {
@@ -75,36 +71,13 @@ export class Login {
       label: 'Contraseña',
     },
   ];
-  protected readonly passwordInputType = computed(() =>
-    this.showPassword() ? 'text' : 'password'
-  );
-  protected readonly passwordIcon = computed(() =>
-    this.showPassword() ? 'visibility_off' : 'visibility'
-  );
-  protected readonly passwordToggleLabel = computed(() =>
-    this.showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'
-  );
-  private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
-    initialValue: this.form.controls.documentType.value,
-  });
-
-  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
-  constructor() {
-    effect(() => {
-      syncDocumentNumberValidators(this.form.controls.documentNumber, this.documentTypeValue());
-    });
-  }
-
-  protected togglePasswordVisibility(): void {
-    this.showPassword.update(value => !value);
-  }
-
   protected submit(): void {
     this.submitted.set(true);
+    this.formError.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.snackbar.error('Revisá los campos marcados.');
+      this.formError.set('Revisá los campos marcados.');
       focusFieldById(this.document, getFirstInvalidFieldId(this.form, this.errorFields));
       return;
     }
@@ -120,6 +93,7 @@ export class Login {
         documentNumber: cleanedDocumentNumber,
         password,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: outcome => {
           if (outcome.kind === 'twoFactorRequired') {
@@ -134,14 +108,10 @@ export class Login {
           this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
-          const message = this.getApiErrorMessage(error, 'No se pudo iniciar sesión.');
+          const message = getApiErrorMessage(error, 'No se pudo iniciar sesión.');
           this.isSubmitting.set(false);
-          this.snackbar.error(message);
+          this.formError.set(message);
         },
       });
-  }
-
-  private getApiErrorMessage(error: unknown, fallback: string): string {
-    return isNormalizedApiError(error) ? error.message : fallback;
   }
 }

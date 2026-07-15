@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Replica local del feedback de Sonar sin servidor ni token.
 // Corre lint, cobertura (con umbral) y duplicacion, y resume un quality-gate.
-import { existsSync, readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -119,10 +119,7 @@ function printSummary(results) {
 function runSelfTest() {
   assert.equal(parseLcovLineCoverage('LF:10\nLH:8\nLF:10\nLH:10'), 90);
   assert.equal(parseLcovLineCoverage('sin datos'), null);
-  assert.equal(
-    parseJscpdPercentage('{"statistics":{"total":{"percentage":2.5}}}'),
-    2.5
-  );
+  assert.equal(parseJscpdPercentage('{"statistics":{"total":{"percentage":2.5}}}'), 2.5);
   assert.equal(parseJscpdPercentage('{"statistics":{}}'), null);
   console.log('quality-gate-local self-test OK');
 }

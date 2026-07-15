@@ -1,11 +1,18 @@
 import '@angular/compiler';
 
-import type { InscripcionInitialSurvey } from './inscription-flow';
+import type { InscripcionInitialSurvey, MetodoPago } from './inscription-flow';
 import { createInscripcionForms } from './inscription-flow-forms';
 import {
+  buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
+  buildPaymentPayload,
+  fromApiPaymentMethod,
   hasCompleteUniversityEducation,
+  parseDate,
   patchBackendSurveyForms,
+  serializeDate,
+  toNullableNumber,
+  toWorkStatusFlag,
 } from './inscription-flow-mappers';
 
 const emptySurveyResponse = {
@@ -271,4 +278,207 @@ describe('inscription flow mappers', () => {
       mediosPublicidad: ['9'],
     });
   });
+
+  it.each<{ api: string; method: MetodoPago }>([
+    { api: 'CUENTA_PERSONAL', method: 'cuenta-personal' },
+    { api: 'ABITAB', method: 'abitab' },
+    { api: 'PAGANZA', method: 'paganza' },
+    { api: 'BANRED', method: 'banred' },
+    { api: 'GEOPAY', method: 'geopay' },
+    { api: 'SISTARBANC', method: 'cuenta-bancaria' },
+  ])('maps the API payment method $api back to $method', ({ api, method }) => {
+    expect(fromApiPaymentMethod(api)).toBe(method);
+  });
+
+  it('returns null for unknown API payment methods', () => {
+    expect(fromApiPaymentMethod('TRANSFERENCIA')).toBeNull();
+    expect(fromApiPaymentMethod('')).toBeNull();
+    expect(fromApiPaymentMethod(null)).toBeNull();
+  });
+
+  it('includes the bank only for the bank account payment method', () => {
+    expect(
+      buildPaymentPayload({
+        idInscripcion: 7,
+        metodoPago: 'cuenta-bancaria',
+        idBancoSistarbanc: '110',
+      })
+    ).toEqual({ idInscripto: 7, tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
+
+    expect(
+      buildPaymentPayload({ idInscripcion: 7, metodoPago: 'abitab', idBancoSistarbanc: '110' })
+    ).toEqual({ idInscripto: 7, tipoPago: 'ABITAB', idBancoSistarbanc: null });
+  });
+
+  it('does not build a confirmation payload without a selected shift', () => {
+    const forms = createInscripcionForms();
+
+    expect(buildConfirmPreEnrollmentPayload(forms)).toBeNull();
+
+    forms.academicForm.controls.turno.setValue('300');
+    forms.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    expect(buildConfirmPreEnrollmentPayload(forms)).toEqual({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 300,
+    });
+  });
+
+  it('parses slash and ISO dates and rejects rolled-over or malformed values', () => {
+    expect(parseDate('26/06/2027')).toEqual(new Date(2027, 5, 26));
+    expect(parseDate('2026-06-26T16:29:20')).toEqual(new Date(2026, 5, 26));
+    expect(parseDate('31/02/2027')).toBeNull();
+    expect(parseDate('basura')).toBeNull();
+    expect(parseDate('')).toBeNull();
+    expect(parseDate(null)).toBeNull();
+    expect(parseDate(undefined)).toBeNull();
+  });
+
+  it('serializes dates as yyyy-MM-dd and null as empty string', () => {
+    expect(serializeDate(null)).toBe('');
+    expect(serializeDate(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('maps the work status flag from the form value', () => {
+    expect(toWorkStatusFlag('')).toBeNull();
+    expect(toWorkStatusFlag('trabaja')).toBe(true);
+    expect(toWorkStatusFlag('no-trabaja')).toBe(false);
+  });
+
+  it('parses nullable numbers defensively', () => {
+    expect(toNullableNumber('')).toBeNull();
+    expect(toNullableNumber('abc')).toBeNull();
+    expect(toNullableNumber('Infinity')).toBeNull();
+    expect(toNullableNumber('42')).toBe(42);
+  });
+
+  it('filters invalid ids out of number arrays and nulls empty ones', () => {
+    const forms = createInscripcionForms();
+
+    expect(buildInitialSurveyPayload(forms).motivoEleccionOrtIds).toBeNull();
+
+    forms.academicDecisionForm.controls.motivosOrt.setValue(['abc', '5', '']);
+    expect(buildInitialSurveyPayload(forms).motivoEleccionOrtIds).toEqual([5]);
+
+    forms.academicDecisionForm.controls.motivosOrt.setValue(['abc']);
+    expect(buildInitialSurveyPayload(forms).motivoEleccionOrtIds).toBeNull();
+  });
+
+  it('resolves the school place with ubicacion > institucion > nombre precedence', () => {
+    expect(
+      patchedSchoolPlace({
+        ubicacionSecundariaId: 2,
+        institucionSecundariaId: 99,
+        nombreInstitucionSecundaria: 'Liceo X',
+      })
+    ).toBe('2');
+    expect(
+      patchedSchoolPlace({ institucionSecundariaId: 99, nombreInstitucionSecundaria: 'Liceo X' })
+    ).toBe('1');
+    expect(patchedSchoolPlace({ nombreInstitucionSecundaria: 'Liceo X' })).toBe('2');
+    expect(patchedSchoolPlace({})).toBe('');
+  });
+
+  it('leaves the academic selection untouched when includeAcademicSelection is false', () => {
+    const forms = createInscripcionForms();
+
+    patchBackendSurveyForms(
+      {
+        ...emptySurvey,
+        carreraId: 20,
+        comienzoId: 200,
+        cursaSecundaria: true,
+        anioBachilleratoId: 6,
+      },
+      emptySurveyResponse,
+      { forms, careers: [], includeAcademicSelection: false }
+    );
+
+    // El paso 1 queda virgen; el resto de la encuesta sí se patchea.
+    expect(forms.academicForm.controls.carrera.value).toBe('');
+    expect(forms.academicForm.controls.comienzo.value).toBe('');
+    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('');
+    expect(forms.educationForm.controls.anioSecundaria.value).toBe('6');
+  });
+
+  it('keeps the current proposal type when the survey level cannot be resolved', () => {
+    const forms = createInscripcionForms();
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+
+    const proposalType = patchBackendSurveyForms(
+      { ...emptySurvey, carreraId: 20 },
+      emptySurveyResponse,
+      { forms, careers: [] }
+    );
+
+    expect(proposalType).toBe('3');
+    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('3');
+    expect(forms.academicForm.controls.carrera.value).toBe('20');
+  });
+
+  it('derives the proposal type from the careers catalog when the survey has no level', () => {
+    const forms = createInscripcionForms();
+
+    const proposalType = patchBackendSurveyForms(
+      { ...emptySurvey, carreraId: 20 },
+      emptySurveyResponse,
+      {
+        forms,
+        careers: [
+          {
+            idProducto: 20,
+            idNivelProducto: 2,
+            nombreProducto: 'Tecnicatura',
+            nombreNivelProducto: 'Terciaria',
+          },
+        ],
+      }
+    );
+
+    expect(proposalType).toBe('2');
+    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('2');
+  });
+
+  it('prefers the survey level over the careers catalog and blanks unknown levels', () => {
+    const forms = createInscripcionForms();
+    const careers = [
+      {
+        idProducto: 20,
+        idNivelProducto: 2,
+        nombreProducto: 'Tecnicatura',
+        nombreNivelProducto: 'Terciaria',
+      },
+    ];
+
+    expect(
+      patchBackendSurveyForms(
+        { ...emptySurvey, carreraId: 20, nivelProductoId: 1 },
+        emptySurveyResponse,
+        {
+          forms,
+          careers,
+        }
+      )
+    ).toBe('1');
+
+    expect(
+      patchBackendSurveyForms(
+        { ...emptySurvey, carreraId: 20, nivelProductoId: 99 },
+        emptySurveyResponse,
+        {
+          forms,
+          careers,
+        }
+      )
+    ).toBe('');
+  });
+
+  function patchedSchoolPlace(overrides: Partial<InscripcionInitialSurvey>): string {
+    const forms = createInscripcionForms();
+    patchBackendSurveyForms({ ...emptySurvey, ...overrides }, emptySurveyResponse, {
+      forms,
+      careers: [],
+    });
+    return forms.educationForm.controls.lugarSecundaria.value;
+  }
 });

@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
+import { getApiErrorMessage } from '../../models/api-error-message';
 import { AuthSessionService } from '../../services/auth-session';
 
 @Component({
@@ -16,13 +17,13 @@ import { AuthSessionService } from '../../services/auth-session';
 })
 export class TwoFactorValidationPage {
   private readonly authSession = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
   protected readonly email = signal<string>('');
   protected readonly isSubmitting = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly canResend = signal<boolean>(true);
 
   private readonly sessionId = signal<string>('');
   private readonly documentType = signal<string>('');
@@ -50,15 +51,17 @@ export class TwoFactorValidationPage {
         documentType: this.documentType(),
         documentNumber: this.documentNumber(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.snackbar.success('Código validado correctamente.');
           void this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
-          const message = isNormalizedApiError(error)
-            ? error.message
-            : 'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.';
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.'
+          );
           this.isSubmitting.set(false);
           this.snackbar.error(message);
         },
@@ -75,25 +78,29 @@ export class TwoFactorValidationPage {
     this.error.set(null);
     this.isSubmitting.set(true);
 
-    this.authSession.resendTwoFactorCode(sessionId).subscribe({
-      next: result => {
-        this.sessionId.set(result.sessionId);
+    this.authSession
+      .resendTwoFactorCode(sessionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.sessionId.set(result.sessionId);
 
-        if (result.maskedEmail) {
-          this.email.set(result.maskedEmail);
-        }
+          if (result.maskedEmail) {
+            this.email.set(result.maskedEmail);
+          }
 
-        this.snackbar.success('Código reenviado.');
-        this.isSubmitting.set(false);
-      },
-      error: error => {
-        const message = isNormalizedApiError(error)
-          ? error.message
-          : 'No pudimos reenviar el código. Intentá nuevamente.';
-        this.isSubmitting.set(false);
-        this.snackbar.error(message);
-      },
-    });
+          this.snackbar.success('Código reenviado.');
+          this.isSubmitting.set(false);
+        },
+        error: error => {
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos reenviar el código. Intentá nuevamente.'
+          );
+          this.isSubmitting.set(false);
+          this.snackbar.error(message);
+        },
+      });
   }
 
   private restoreStateFromNavigation(): void {

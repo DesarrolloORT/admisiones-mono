@@ -1,19 +1,28 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 import { AppConfigurationClient } from '@azure/app-configuration';
-import { AzureCliCredential } from '@azure/identity';
+import {
+  deserializeAuthenticationRecord,
+  DeviceCodeCredential,
+  EnvironmentCredential,
+  InteractiveBrowserCredential,
+  serializeAuthenticationRecord,
+  useIdentityPlugin,
+} from '@azure/identity';
 
 const DEFAULT_CACHE_PATH = path.normalize('tmp/env/azure-environment-cache.json');
 const DEFAULT_DAILY_USAGE_PATH = path.normalize('tmp/env/azure-environment-usage.json');
+const DEFAULT_AUTH_RECORD_PATH = path.normalize('tmp/env/azure-auth-record.json');
+const APP_CONFIG_SCOPE = 'https://azconfig.io/.default';
 const DEFAULT_CACHE_TTL_MINUTES = 60;
 const DEFAULT_DAILY_LIMIT = 50;
 const DEFAULT_MAX_STALE_MINUTES = 24 * 60;
 const AZURE_PAGE_SIZE = 100;
+const AZURE_NO_LABEL = '\0';
+const SUPPORTED_ENVIRONMENTS = new Set(['local', 'desa', 'test', 'preprod', 'prod']);
 
 function getArg(name, defaultValue = undefined) {
   const index = process.argv.indexOf(`--${name}`);
@@ -32,7 +41,7 @@ function getArg(name, defaultValue = undefined) {
 }
 
 const ARGUMENTS_WITH_VALUES = new Set([
-  'azure-cli-dir',
+  'auth-record-path',
   'cache-path',
   'cache-ttl-minutes',
   'daily-limit',
@@ -45,6 +54,7 @@ const ARGUMENTS_WITH_VALUES = new Set([
   'max-stale-minutes',
   'output',
   'project',
+  'tenant-id',
   'web-config',
 ]);
 
@@ -108,6 +118,12 @@ function validateRequiredArgs({ project, env, endpoint }) {
 
   if (!env) {
     fail('Falta --env. Ejemplo: --env desa');
+  }
+
+  if (!SUPPORTED_ENVIRONMENTS.has(env)) {
+    fail(
+      `Environment "${env}" no soportado. Valores válidos: ${[...SUPPORTED_ENVIRONMENTS].join(', ')}.`
+    );
   }
 
   if (!endpoint) {
@@ -174,11 +190,13 @@ async function writeJsonFile(filePath, value) {
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
-async function clearCache(cachePath, dailyUsagePath) {
+async function clearCache(cachePath, dailyUsagePath, authRecordPath) {
   await fs.rm(cachePath, { force: true });
   await fs.rm(dailyUsagePath, { force: true });
+  await fs.rm(authRecordPath, { force: true });
   info(`Cache eliminado: ${cachePath}`);
   info(`Contador eliminado: ${dailyUsagePath}`);
+  info(`Sesión eliminada: ${authRecordPath}`);
 }
 
 async function readDailyUsage(dailyUsagePath) {
@@ -195,14 +213,14 @@ async function readDailyUsage(dailyUsagePath) {
   };
 }
 
-async function assertAndRecordAzureRead(dailyUsagePath, dailyLimit) {
+async function assertAndRecordAzureRead(dailyUsagePath, dailyLimit, reads = 1) {
   if (dailyLimit === 0) {
     return;
   }
 
   const usage = await readDailyUsage(dailyUsagePath);
 
-  if (usage.azureReads >= dailyLimit) {
+  if (usage.azureReads + reads > dailyLimit) {
     fail(
       [
         `Guardrail diario alcanzado: ${usage.azureReads}/${dailyLimit} lecturas Azure para ${usage.day}.`,
@@ -213,108 +231,96 @@ async function assertAndRecordAzureRead(dailyUsagePath, dailyLimit) {
 
   await writeJsonFile(dailyUsagePath, {
     day: usage.day,
-    azureReads: usage.azureReads + 1,
+    azureReads: usage.azureReads + reads,
   });
 }
 
-function getUniqueExistingAzureCliDirsOnWindows(customAzureCliDir) {
-  const candidateDirs = [
-    customAzureCliDir,
-    'C:\\Program Files\\Microsoft SDKs\\Azure\\CLI2\\wbin',
-    'C:\\Program Files (x86)\\Microsoft SDKs\\Azure\\CLI2\\wbin',
-    process.env.ProgramFiles
-      ? path.join(process.env.ProgramFiles, 'Microsoft SDKs', 'Azure', 'CLI2', 'wbin')
-      : undefined,
-    process.env['ProgramFiles(x86)']
-      ? path.join(process.env['ProgramFiles(x86)'], 'Microsoft SDKs', 'Azure', 'CLI2', 'wbin')
-      : undefined,
-  ].filter(Boolean);
+async function enableTokenCachePersistence() {
+  try {
+    const { cachePersistencePlugin } = await import('@azure/identity-cache-persistence');
 
-  const unique = [];
+    useIdentityPlugin(cachePersistencePlugin);
 
-  for (const dir of candidateDirs) {
-    const normalized = path.normalize(dir);
-    const alreadyIncluded = unique.some(item => item.toLowerCase() === normalized.toLowerCase());
+    return true;
+  } catch (error) {
+    warn(
+      `No se pudo habilitar la persistencia del token cache (${error?.message ?? 'error desconocido'}). El login por navegador se pedirá más seguido.`
+    );
 
-    if (!alreadyIncluded && existsSync(path.join(normalized, 'az.cmd'))) {
-      unique.push(normalized);
-    }
-  }
-
-  return unique;
-}
-
-function ensureAzureCliInPathOnWindows(customAzureCliDir) {
-  if (process.platform !== 'win32') {
-    return;
-  }
-
-  const currentPath = process.env.PATH ?? '';
-  const pathEntries = currentPath
-    .split(path.delimiter)
-    .filter(Boolean)
-    .map(entry => path.normalize(entry).toLowerCase());
-
-  const existingAzureCliDirs = getUniqueExistingAzureCliDirsOnWindows(customAzureCliDir);
-
-  for (const dir of existingAzureCliDirs) {
-    const normalizedDir = path.normalize(dir);
-
-    if (!pathEntries.includes(normalizedDir.toLowerCase())) {
-      process.env.PATH = `${normalizedDir}${path.delimiter}${currentPath}`;
-      info(`Azure CLI detectado y agregado al PATH del proceso: ${normalizedDir}`);
-      return;
-    }
+    return false;
   }
 }
 
-function assertAzureCliAvailable() {
-  const result = spawnSync('az', ['account', 'show', '--output', 'json'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+async function resolveCredential({ authRecordPath, tenantId, useDeviceCode }) {
+  if (process.env.AZURE_CLIENT_ID && process.env.AZURE_TENANT_ID) {
+    info('Credenciales de service principal detectadas en variables de entorno (CI).');
 
-  if (result.status === 0) {
-    return;
+    return new EnvironmentCredential();
   }
 
-  const stderr = result.stderr?.trim();
-  const stdout = result.stdout?.trim();
-  const details = [stderr, stdout].filter(Boolean).join('\n');
+  const persistenceEnabled = await enableTokenCachePersistence();
+  const savedRecord = await readJsonFile(authRecordPath);
+  const credentialOptions = {
+    tenantId,
+    ...(persistenceEnabled && {
+      tokenCachePersistenceOptions: { enabled: true, name: 'ort-env-sync' },
+    }),
+    ...(savedRecord && {
+      authenticationRecord: deserializeAuthenticationRecord(JSON.stringify(savedRecord)),
+    }),
+  };
+  const credential = useDeviceCode
+    ? new DeviceCodeCredential(credentialOptions)
+    : new InteractiveBrowserCredential(credentialOptions);
 
-  fail(
-    [
-      'No se pudo ejecutar "az account show" desde este proceso Node.',
-      '',
-      'Esto suele pasar por una de estas causas:',
-      '1. Azure CLI no está instalado.',
-      '2. Azure CLI está instalado pero no está en el PATH de esta terminal.',
-      '3. No se ejecutó "az login" con el usuario de Windows actual.',
-      '4. VS Code/PowerShell/CMD quedaron abiertos antes de instalar Azure CLI y no tomaron el PATH nuevo.',
-      '',
-      'Acciones recomendadas:',
-      '1. Cerrar y abrir nuevamente la terminal o VS Code.',
-      '2. Ejecutar: az login',
-      '3. Ejecutar: az account show',
-      '4. Volver a ejecutar: npm start',
-      '',
-      'Ruta estándar esperada en Windows:',
-      'C:\\Program Files\\Microsoft SDKs\\Azure\\CLI2\\wbin\\az.cmd',
-    ].join('\n'),
-    details ? new Error(details) : undefined
-  );
+  if (!savedRecord) {
+    info(
+      useDeviceCode
+        ? 'Primera vez: seguí las instrucciones en consola para iniciar sesión con tu cuenta ORT...'
+        : 'Primera vez: se abrirá el navegador para iniciar sesión con tu cuenta ORT...'
+    );
+
+    try {
+      const record = await credential.authenticate(APP_CONFIG_SCOPE);
+
+      await writeJsonFile(authRecordPath, JSON.parse(serializeAuthenticationRecord(record)));
+      info(`Sesión guardada en ${authRecordPath}. Los próximos usos serán silenciosos.`);
+    } catch (error) {
+      fail(
+        [
+          'No se pudo completar el login por navegador con Entra ID.',
+          '',
+          'Revisar:',
+          '1. Que hayas completado el login en el navegador que se abrió.',
+          '2. Que tu cuenta ORT tenga acceso al tenant correcto (podés forzarlo con --tenant-id o AZURE_TENANT_ID).',
+          '3. Que el tenant permita el flujo interactivo (si ves un error AADSTS, reportalo a operaciones).',
+        ].join('\n'),
+        error
+      );
+    }
+  }
+
+  return credential;
 }
 
 async function writeGeneratedEnvironment(outputPath, config, metadata) {
+  const sourceComment =
+    metadata.source === 'azure'
+      ? `// Env: ${metadata.env}. Source: azure. Azure fetched at: ${metadata.fetchedAt}.`
+      : `// Env: ${metadata.env}. Source: ${metadata.source}.`;
   const fileContent = [
     '// Generated by tools/env/sync-azure-environment.mjs. Do not edit manually.',
-    `// Env: ${metadata.env}. Source: ${metadata.source}. Azure fetched at: ${metadata.fetchedAt}.`,
+    sourceComment,
     `export const generatedEnvironment = ${JSON.stringify(config, null, 2)} as const;`,
     '',
   ].join('\n');
 
-  await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await fs.writeFile(outputPath, fileContent, 'utf8');
+  try {
+    await fs.mkdir(path.dirname(outputPath), { recursive: true });
+    await fs.writeFile(outputPath, fileContent, 'utf8');
+  } catch (error) {
+    fail(`No se pudo escribir el environment generado en ${outputPath}.`, error);
+  }
 }
 
 function escapeXmlAttribute(value) {
@@ -341,6 +347,13 @@ async function writeWebConfig(outputPath, cspPolicy) {
   <system.webServer>
     <httpProtocol>
       <customHeaders>
+        <remove name="Cache-Control" />
+        <remove name="X-Content-Type-Options" />
+        <remove name="X-Frame-Options" />
+        <remove name="Content-Security-Policy" />
+        <remove name="Referrer-Policy" />
+        <remove name="Permissions-Policy" />
+        <remove name="Strict-Transport-Security" />
         <add name="Cache-Control" value="no-cache" />
         <add name="X-Content-Type-Options" value="nosniff" />
         <add name="X-Frame-Options" value="SAMEORIGIN" />
@@ -431,117 +444,161 @@ async function fetchSettingsFromAzure({ client, key, labelFilter }) {
   return page.value.items;
 }
 
-function toIsoDate(value) {
-  return value instanceof Date ? value.toISOString() : value || null;
-}
+async function fetchSettingFromAzure(client, key, label) {
+  const settings = await fetchSettingsFromAzure({ client, key, labelFilter: label });
 
-function buildCache({ endpoint, key, settings, fetchedAt }) {
-  const cacheSettings = {};
-
-  for (const setting of settings) {
-    const label = setting.label ?? '';
-
-    cacheSettings[label] = {
-      config: parseSettingConfig(setting),
-      contentType: setting.contentType ?? null,
-      etag: setting.etag ?? null,
-      lastModified: toIsoDate(setting.lastModified),
-    };
+  if (settings.length !== 1) {
+    fail(`Se esperaba un único setting para key "${key}" con label "${label}".`);
   }
 
-  return {
-    endpoint,
-    key,
-    fetchedAt,
-    settings: cacheSettings,
-  };
+  return settings[0];
 }
 
-function cacheMatches(cache, { endpoint, key }) {
-  return cache?.endpoint === endpoint && cache?.key === key;
+function parseUrlSetting(setting) {
+  const value = setting.value?.trim().replace(/\/+$/, '');
+
+  if (!value) {
+    fail(`La key "${setting.key}" con label "${setting.label}" no tiene una URL.`);
+  }
+
+  let url;
+
+  try {
+    url = new URL(value);
+  } catch {
+    fail(`La key "${setting.key}" con label "${setting.label}" no contiene una URL válida.`);
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    fail(`La URL de "${setting.key}" debe utilizar http o https.`);
+  }
+
+  return value;
+}
+
+function buildEnvironmentConfig({ commonConfig, env, admissionsApiUrl, fdpApiUrl, appVersion }) {
+  const cspTemplate = commonConfig.CSP_POLICY_TEMPLATE;
+
+  if (typeof cspTemplate !== 'string' || !cspTemplate.trim()) {
+    fail('frontend:admisiones:environment debe incluir CSP_POLICY_TEMPLATE.');
+  }
+
+  const cspPolicy = cspTemplate
+    .replaceAll('{{API_URL}}', admissionsApiUrl)
+    .replaceAll('{{FDP_API_URL}}', fdpApiUrl)
+    .trim();
+
+  if (/{{[^{}]+}}/.test(cspPolicy)) {
+    fail('CSP_POLICY_TEMPLATE contiene placeholders sin resolver.');
+  }
+
+  const config = {
+    ...commonConfig,
+    production: env === 'prod',
+    API_URL: admissionsApiUrl,
+    CSP_POLICY: cspPolicy,
+    APP_VERSION: appVersion,
+    FDP_API_URL: fdpApiUrl,
+  };
+
+  delete config.CSP_POLICY_TEMPLATE;
+
+  return config;
+}
+
+function cacheMatches(cache, { endpoint, project }) {
+  return cache?.endpoint === endpoint && cache?.project === project;
 }
 
 async function resolveEnvironmentSetting({
+  authRecordPath,
   cachePath,
   dailyLimit,
   dailyUsagePath,
   endpoint,
-  key,
-  label,
-  labelFilter,
+  project,
+  env,
+  packageVersion,
   refresh,
   offline,
+  tenantId,
   ttlMinutes,
   maxStaleMinutes,
+  useDeviceCode,
 }) {
   const cache = await readJsonFile(cachePath);
-  const matchingCache = cacheMatches(cache, { endpoint, key }) ? cache : null;
-  const cachedSetting = getCachedSetting(matchingCache, label);
+  const matchingCache = cacheMatches(cache, { endpoint, project }) ? cache : null;
+  const cachedSetting = getCachedSetting(matchingCache, env);
 
-  if (cachedSetting && (offline || (!refresh && isCacheFresh(matchingCache, ttlMinutes)))) {
-    return { setting: cachedSetting, source: 'cache', fetchedAt: matchingCache.fetchedAt };
+  if (cachedSetting && (offline || (!refresh && isCacheFresh(cachedSetting, ttlMinutes)))) {
+    return { setting: cachedSetting, source: 'cache', fetchedAt: cachedSetting.fetchedAt };
   }
 
   if (offline) {
     fail(
-      `No hay cache local para label "${label}". Ejecuta npm run env:refresh -- --env ${label}.`
+      `No hay cache local para environment "${env}". Ejecuta npm run env:refresh -- --env ${env}.`
     );
   }
 
   if (cachedSetting && dailyLimit > 0) {
     const usage = await readDailyUsage(dailyUsagePath);
-    const cacheAge = minutesSince(matchingCache.fetchedAt);
+    const cacheAge = minutesSince(cachedSetting.fetchedAt);
 
     if (usage.azureReads >= dailyLimit && cacheAge <= maxStaleMinutes) {
       warn(
         `Guardrail diario alcanzado (${usage.azureReads}/${dailyLimit}); usando cache stale de ${cacheAge} minutos.`
       );
 
-      return { setting: cachedSetting, source: 'stale-cache', fetchedAt: matchingCache.fetchedAt };
+      return { setting: cachedSetting, source: 'stale-cache', fetchedAt: cachedSetting.fetchedAt };
     }
   }
 
-  ensureAzureCliInPathOnWindows(getArg('azure-cli-dir', undefined));
-  assertAzureCliAvailable();
-  await assertAndRecordAzureRead(dailyUsagePath, dailyLimit);
+  await assertAndRecordAzureRead(dailyUsagePath, dailyLimit, 3);
 
-  const credential = new AzureCliCredential();
+  const credential = await resolveCredential({ authRecordPath, tenantId, useDeviceCode });
   const client = new AppConfigurationClient(endpoint, credential);
-  let settings;
+  const commonKey = `frontend:${project}:environment`;
+  const admissionsApiKey = `frontend:${project}:api_base`;
+  const fdpApiKey = 'frontend:fdp:api_base';
+  let commonSetting;
+  let admissionsApiSetting;
+  let fdpApiSetting;
 
   try {
-    settings = await fetchSettingsFromAzure({ client, key, labelFilter });
+    [commonSetting, admissionsApiSetting, fdpApiSetting] = await Promise.all([
+      fetchSettingFromAzure(client, commonKey, AZURE_NO_LABEL),
+      fetchSettingFromAzure(client, admissionsApiKey, env),
+      fetchSettingFromAzure(client, fdpApiKey, env),
+    ]);
   } catch (error) {
     fail(
       [
         'No se pudo leer la configuración desde Azure App Configuration.',
         '',
         'Revisar:',
-        `1. Que exista la key "${key}" con labelFilter "${labelFilter}".`,
-        '2. Que el usuario autenticado con "az login" tenga permiso de lectura.',
+        `1. Que exista "${commonKey}" sin etiqueta y "${admissionsApiKey}"/"${fdpApiKey}" con label "${env}".`,
+        '2. Que tu cuenta tenga el rol "App Configuration Data Reader" sobre el recurso.',
         '3. Que el endpoint sea correcto.',
-        '4. Que "az account show" funcione en esta misma terminal.',
-        '',
-        'Comandos útiles:',
-        'az account show',
-        'az login',
+        `4. Si el problema es de sesión, ejecutar "npm run env:cache:clear" (borra ${authRecordPath}) y reintentar para volver a iniciar sesión.`,
       ].join('\n'),
       error
     );
   }
 
   const fetchedAt = new Date().toISOString();
-  const nextCache = buildCache({ endpoint, key, settings, fetchedAt });
-  const setting = getCachedSetting(nextCache, label);
-
-  if (!setting) {
-    fail(
-      [
-        `No existe label "${label}" para key "${key}".`,
-        `Labels disponibles: ${getCacheLabels(nextCache).join(', ') || '(ninguno)'}`,
-      ].join('\n')
-    );
-  }
+  const config = buildEnvironmentConfig({
+    commonConfig: parseSettingConfig(commonSetting),
+    env,
+    admissionsApiUrl: parseUrlSetting(admissionsApiSetting),
+    fdpApiUrl: parseUrlSetting(fdpApiSetting),
+    appVersion: process.env.APP_VERSION?.trim() || `${packageVersion}-${env}`,
+  });
+  const setting = { config, fetchedAt };
+  const nextCache = {
+    endpoint,
+    project,
+    settings: { ...(matchingCache?.settings ?? {}), [env]: setting },
+  };
 
   await writeJsonFile(cachePath, nextCache);
 
@@ -552,21 +609,33 @@ function runSelfTest() {
   const now = Date.parse('2026-07-02T12:00:00.000Z');
   const cache = {
     endpoint: 'https://example.azconfig.io',
-    key: 'frontend:admisiones:environment',
-    fetchedAt: '2026-07-02T11:30:00.000Z',
+    project: 'admisiones',
     settings: {
-      desa: { config: { CSP_POLICY: "object-src 'none'" } },
-      prod: { config: { CSP_POLICY: "object-src 'none'" } },
+      desa: {
+        config: { CSP_POLICY: "object-src 'none'" },
+        fetchedAt: '2026-07-02T11:30:00.000Z',
+      },
+      prod: {
+        config: { CSP_POLICY: "object-src 'none'" },
+        fetchedAt: '2026-07-02T11:30:00.000Z',
+      },
     },
   };
 
-  assert.equal(isCacheFresh(cache, 60, now), true);
-  assert.equal(isCacheFresh(cache, 20, now), false);
+  assert.equal(isCacheFresh(cache.settings.desa, 60, now), true);
+  assert.equal(isCacheFresh(cache.settings.desa, 20, now), false);
   assert.deepEqual(getCacheLabels(cache), ['desa', 'prod']);
-  assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: cache.key }), true);
-  assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, key: 'other' }), false);
+  assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, project: 'admisiones' }), true);
+  assert.equal(cacheMatches(cache, { endpoint: cache.endpoint, project: 'other' }), false);
   assert.equal(
-    getPositionalArg(['--project', 'admisiones', '--endpoint', 'https://example', '--offline', 'desa']),
+    getPositionalArg([
+      '--project',
+      'admisiones',
+      '--endpoint',
+      'https://example',
+      '--offline',
+      'desa',
+    ]),
     'desa'
   );
   assert.equal(getPositionalArg(['--project', 'admisiones', '--env', 'desa']), undefined);
@@ -577,6 +646,30 @@ function runSelfTest() {
     "script-src 'self'"
   );
   assert.equal(getCspPolicy({ CSP_POLICY: ' ' }), null);
+  assert.deepEqual(
+    buildEnvironmentConfig({
+      commonConfig: {
+        CSP_POLICY_TEMPLATE: 'connect-src {{API_URL}} {{FDP_API_URL}}',
+        CACHING_ENABLED: true,
+      },
+      env: 'desa',
+      admissionsApiUrl: 'https://admisiones.example',
+      fdpApiUrl: 'https://fdp.example',
+      appVersion: '1.2.3-desa',
+    }),
+    {
+      CACHING_ENABLED: true,
+      production: false,
+      API_URL: 'https://admisiones.example',
+      CSP_POLICY: 'connect-src https://admisiones.example https://fdp.example',
+      APP_VERSION: '1.2.3-desa',
+      FDP_API_URL: 'https://fdp.example',
+    }
+  );
+  assert.equal(
+    parseUrlSetting({ key: 'API_URL', label: 'desa', value: 'https://example.test///' }),
+    'https://example.test'
+  );
   info('Self-test OK');
 }
 
@@ -588,9 +681,10 @@ async function main() {
 
   const cachePath = getArg('cache-path', DEFAULT_CACHE_PATH);
   const dailyUsagePath = getArg('daily-usage-path', DEFAULT_DAILY_USAGE_PATH);
+  const authRecordPath = getArg('auth-record-path', DEFAULT_AUTH_RECORD_PATH);
 
   if (hasFlag('clear-cache')) {
-    await clearCache(cachePath, dailyUsagePath);
+    await clearCache(cachePath, dailyUsagePath, authRecordPath);
     return;
   }
 
@@ -600,9 +694,8 @@ async function main() {
 
   validateRequiredArgs({ project, env, endpoint });
 
-  const key = getArg('key', `frontend:${project}:environment`);
-  const label = getArg('label', env);
-  const labelFilter = getArg('label-filter', '*');
+  const tenantId = getArg('tenant-id', process.env.AZURE_TENANT_ID ?? 'organizations');
+  const useDeviceCode = hasFlag('device-code');
   const refresh = hasFlag('refresh');
   const offline = hasFlag('offline');
   const ttlMinutes = getNonNegativeIntegerArg('cache-ttl-minutes', DEFAULT_CACHE_TTL_MINUTES);
@@ -610,28 +703,30 @@ async function main() {
   const maxStaleMinutes = getNonNegativeIntegerArg('max-stale-minutes', DEFAULT_MAX_STALE_MINUTES);
   const outputPath = getArg('output', path.normalize('src/environments/generated-environment.ts'));
   const webConfigPath = getArg('web-config', path.normalize('src/web.config'));
+  const { version: packageVersion } = JSON.parse(await fs.readFile('package.json', 'utf8'));
 
   info(`Project: ${project}`);
   info(`Environment: ${env}`);
-  info(`Label: ${label}`);
-  info(`Label filter: ${labelFilter}`);
   info(`Cache: ${cachePath}`);
   info(`Cache TTL: ${ttlMinutes} minutos`);
   info(`Output: ${outputPath}`);
   info(`Web config: ${webConfigPath}`);
 
   const { setting, source, fetchedAt } = await resolveEnvironmentSetting({
+    authRecordPath,
     cachePath,
     dailyLimit,
     dailyUsagePath,
     endpoint,
-    key,
-    label,
-    labelFilter,
+    project,
+    env,
+    packageVersion,
     refresh,
     offline,
+    tenantId,
     ttlMinutes,
     maxStaleMinutes,
+    useDeviceCode,
   });
   const config = setting.config;
 

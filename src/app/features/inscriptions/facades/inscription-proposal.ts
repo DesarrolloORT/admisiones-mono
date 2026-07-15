@@ -31,6 +31,7 @@ export class InscripcionProposalFacade {
 
   private readonly submitted = signal(false);
   private readonly productInterestError = signal<string | null>(null);
+  private resumeInProgress = false;
 
   public readonly registeringProductInterest = signal(false);
   public readonly academicErrors = computed<OrtErrorItem[]>(() => {
@@ -58,6 +59,11 @@ export class InscripcionProposalFacade {
 
   public continue(): void {
     if (this.registeringProductInterest()) return;
+
+    if (this.resumeInProgress) {
+      this.process.flow.next();
+      return;
+    }
 
     this.submitted.set(true);
     this.productInterestError.set(null);
@@ -88,7 +94,6 @@ export class InscripcionProposalFacade {
             return;
           }
           this.process.flow.next();
-          this.process.markCheckpoint();
         },
         error: () =>
           this.productInterestError.set(
@@ -107,6 +112,11 @@ export class InscripcionProposalFacade {
 
   public loadAcademicOptionsForSurvey(survey: InscripcionInitialSurvey): void {
     this.selection.loadOptions(survey.carreraId, survey.comienzoId, survey.turnoId);
+  }
+
+  public disableForResume(): void {
+    this.resumeInProgress = true;
+    this.academicForm.disable({ emitEvent: false });
   }
 
   private buildProductInterestPayload(): {

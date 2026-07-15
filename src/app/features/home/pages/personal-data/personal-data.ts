@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  CUSTOM_ELEMENTS_SCHEMA,
   inject,
   OnInit,
   signal,
@@ -15,7 +16,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import {
   findCountryByIso2,
   getIso2Codes,
@@ -23,11 +23,11 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtPhoneInputValue,
   ortPhoneValidator,
   OrtSelectModule,
   OrtSkeletonModule,
 } from '@desarrolloort/components';
-import { ComponentModeService, DatosPersonalesComponent } from '@desarrolloort/fdp-components';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
@@ -74,9 +74,8 @@ interface PersonalDataForm {
     OrtSelectModule,
     OrtSkeletonModule,
     ReactiveFormsModule,
-    DatosPersonalesComponent,
   ],
-  providers: [ComponentModeService],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './personal-data.html',
   styleUrl: './personal-data.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

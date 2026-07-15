@@ -20,14 +20,6 @@ export interface RegisterDocumentEvaluation {
   usuarioExistente: boolean;
 }
 
-export const REGISTER_TERMINAL_FLOW_MESSAGES: Record<
-  Extract<RegisterFlowKind, 'user-exists' | 'application-exists'>,
-  string
-> = {
-  'user-exists': 'Ya existe un usuario registrado con este documento.',
-  'application-exists': 'Ya existe una solicitud de alta pendiente para este documento.',
-};
-
 export function resolveRegisterFlow(
   documentType: string,
   evaluation: RegisterDocumentEvaluation

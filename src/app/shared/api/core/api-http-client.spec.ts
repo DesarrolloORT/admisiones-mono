@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import {
   operationResultInterceptor,
   ortApiErrorInterceptor,
+  SUPPRESS_GLOBAL_ERROR,
   provideOrtApiErrorHandling,
 } from '@desarrolloort/ngx-utils';
 import { environment } from 'src/environments/environment';
@@ -68,6 +69,26 @@ describe('ApiHttpClient', () => {
     expect(request.request.headers.get('X-Flow-Id')).toBe('flow-123');
     expect(request.request.headers.has('X-Skip-Empty')).toBe(false);
 
+    request.flush({ ok: true });
+  });
+
+  it('should suppress global API errors by default', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: { ok: boolean };
+    }>({
+      operationId: 'ObtenerPersona',
+      method: 'GET',
+      path: '/persona',
+    });
+
+    api.request(endpoint).subscribe();
+
+    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+
+    expect(request.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
     request.flush({ ok: true });
   });
 

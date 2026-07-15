@@ -1,5 +1,6 @@
 import {
   getCountryCodeFromBirthplace,
+  getStringValue,
   resolveStateCodeFromBirthplace,
   toDateInputValue,
   toRecognizedFormPatch,
@@ -41,5 +42,62 @@ describe('document recognition mapper', () => {
         'Montevideo / URY'
       )
     ).toBe(10);
+  });
+
+  it('should return null when there are no recognized fields', () => {
+    expect(toRecognizedFormPatch(undefined)).toBeNull();
+  });
+
+  it('should filter non-string and blank values via getStringValue', () => {
+    expect(getStringValue(12345)).toBeNull();
+    expect(getStringValue({ foo: 'bar' })).toBeNull();
+    expect(getStringValue('   ')).toBeNull();
+    expect(getStringValue(' Ana ')).toBe('Ana');
+  });
+
+  it('should drop non-string recognized fields from the form patch', () => {
+    expect(
+      toRecognizedFormPatch({
+        primerNombre: 12345 as unknown as string,
+        segundoNombre: '   ',
+      })
+    ).toEqual({
+      identity: {},
+      personal: {},
+      countryCode: null,
+      birthplace: undefined,
+    });
+  });
+
+  it('should return null country code when the birthplace has no known match', () => {
+    expect(getCountryCodeFromBirthplace('Unknown place')).toBeNull();
+    expect(getCountryCodeFromBirthplace(null)).toBeNull();
+    expect(getCountryCodeFromBirthplace(undefined)).toBeNull();
+  });
+
+  it('should resolve Uruguay from a URY birthplace', () => {
+    expect(getCountryCodeFromBirthplace('Montevideo / URY')).toBe(1);
+  });
+
+  it('should return null for an invalid or null date input value', () => {
+    expect(toDateInputValue(null)).toBeNull();
+    expect(toDateInputValue('not-a-date')).toBeNull();
+    expect(toDateInputValue('31/12/2000')).toBeNull();
+  });
+
+  it('should return null when the birthplace department does not exist in the catalog', () => {
+    expect(
+      resolveStateCodeFromBirthplace(
+        [
+          {
+            codigoPais: 1,
+            nombre: 'Uruguay',
+            estado: [{ codigoPais: 1, codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+          },
+        ],
+        1,
+        'Rivera / URY'
+      )
+    ).toBeNull();
   });
 });

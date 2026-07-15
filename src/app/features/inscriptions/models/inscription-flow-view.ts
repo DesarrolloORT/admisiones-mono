@@ -1,11 +1,15 @@
-import type { InstruccionReserva, ItemResumenInscripcion } from './inscription-flow';
+import type {
+  InscripcionReservationData,
+  InstruccionReserva,
+  ItemInstruccionReserva,
+  ItemResumenInscripcion,
+} from './inscription-flow';
 import {
   InscripcionPreEnrollmentResponse,
   MetodoPago,
   OpcionInscripcion,
 } from './inscription-flow';
 import { getOptionLabel } from './inscription-flow-options';
-import { RESERVATION_INSTRUCTIONS } from './inscription-static-data';
 
 export function buildSummaryItems(context: {
   response: InscripcionPreEnrollmentResponse | null;
@@ -68,8 +72,53 @@ export function formatPaymentDeadline(value: string | null | undefined): string 
   return `${day}/${month}/${year}`;
 }
 
-export function getReservationInstructions(method: MetodoPago | null): InstruccionReserva {
-  return method === 'paganza' || method === 'abitab'
-    ? RESERVATION_INSTRUCTIONS[method]
-    : RESERVATION_INSTRUCTIONS.abitab;
+const RESERVATION_HELP =
+  'El pago puede demorar hasta 24 horas hábiles en acreditarse en el sistema.';
+
+// Las instrucciones se arman con la fecha, el monto, la cédula y el número de
+// estudiante (código de persona) reales que informa el backend. Los ítems sin
+// dato real no se muestran (nunca se inventa un placeholder).
+export function buildReservationInstructions(
+  method: MetodoPago | null,
+  response: InscripcionPreEnrollmentResponse | null,
+  reservation: InscripcionReservationData | null
+): InstruccionReserva {
+  const deadline = formatPaymentDeadline(response?.fechaVencimientoPago);
+  const description =
+    deadline === 'No informado'
+      ? 'Realizá el pago de la seña para mantener tu lugar. Si no se acredita, la inscripción se dará de baja automáticamente.'
+      : `Tenés tiempo hasta el ${deadline} para realizar el pago de la seña. Pasada esa fecha, la inscripción se dará de baja automáticamente.`;
+
+  const cedula = reservation?.cedula;
+  const studentNumber =
+    typeof reservation?.codigoPersona === 'number' ? String(reservation.codigoPersona) : null;
+  const amount = formatInscriptionAmount(response?.seniaInscripcion);
+
+  const cedulaItem: ItemInstruccionReserva[] = cedula
+    ? [{ label: 'Cédula de identidad', value: cedula }]
+    : [];
+  const studentItem: ItemInstruccionReserva[] = studentNumber
+    ? [{ label: 'Número de estudiante', value: studentNumber }]
+    : [];
+  const amountItem: ItemInstruccionReserva[] =
+    amount === 'No informado' ? [] : [{ label: 'Monto a pagar', value: amount }];
+
+  if (method === 'paganza') {
+    return {
+      title: '¡Inscripción reservada!',
+      description,
+      intro:
+        'Ingresá a Paganza y realizá un nuevo pago a Universidad ORT Uruguay ingresando la siguiente información:',
+      items: [...studentItem, ...amountItem],
+      help: RESERVATION_HELP,
+    };
+  }
+
+  return {
+    title: '¡Inscripción reservada!',
+    description,
+    intro: 'Dirigite a cualquier local habilitado presentando la siguiente información:',
+    items: [...cedulaItem, ...studentItem, ...amountItem],
+    help: RESERVATION_HELP,
+  };
 }

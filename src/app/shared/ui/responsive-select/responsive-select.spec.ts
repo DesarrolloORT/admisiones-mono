@@ -136,6 +136,9 @@ describe('ResponsiveSelect', () => {
     select.confirmDrawerValue();
 
     expect(fixture.componentInstance.form.controls.option.value).toEqual(['a', 'b']);
+    expect(
+      fixture.nativeElement.querySelector('.responsive-select__mobile--multiple')
+    ).toBeTruthy();
   });
 
   it('supports drawer option arrows and restores focus after confirm', async () => {

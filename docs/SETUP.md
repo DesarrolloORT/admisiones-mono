@@ -10,7 +10,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
 - Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json).
 - `npm` para instalar dependencias y ejecutar scripts.
-- Java si se va a usar `npm run update-models` o `npm run update-api`.
+- Java si se va a usar `npm run update-api`.
 - Docker Desktop y la extension Dev Containers de VS Code si se quiere trabajar dentro del contenedor.
 
 ## Instalacion
@@ -21,12 +21,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Configurar Azure CLI (una sola vez por maquina):
-
-   ```bash
-   az login
-   az account show
-   ```
+2. Iniciar sesion con la cuenta ORT (una sola vez por maquina): la primera vez que se ejecute el sync de environment se abre el navegador para autenticarse con Entra ID. La sesion queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`); no se necesita Azure CLI. Para forzar un nuevo login: `npm run env:cache:clear`. En entornos donde no se pueda abrir el navegador, usar `npm run env:sync -- --env desa --device-code`.
 
    `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 
@@ -48,18 +43,17 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    Si el Swagger vive en otra ruta:
 
    ```bash
-   npm run update-models -- --swagger-path /swagger/v2/swagger.json
-   npm run update-endpoints -- --swagger-path /swagger/v2/swagger.json
+   npm run update-api -- --swagger-path /swagger/v2/swagger.json
    ```
 
    Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints
    tecnicos en `src/app/shared/api/generated/endpoints/`. Esos archivos son
    locales, estan ignorados por Git y no deben editarse manualmente.
 
-   Para descubrir los endpoints reales disponibles en tu ambiente local:
+   Para actualizar los endpoints reales disponibles en tu ambiente local:
 
    ```bash
-   node scripts/codegen/list-endpoints.js
+   npm run update-api
    ```
 
 4. Ajustar la base del repositorio nuevo:

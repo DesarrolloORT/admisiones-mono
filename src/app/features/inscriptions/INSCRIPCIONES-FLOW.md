@@ -50,12 +50,46 @@ flowchart TD
   J --> L[Pago / estado terminal]
 ```
 
+## Intención de entrada × estado × encuesta
+
+Cómo arranca el flujo depende de la **intención de entrada** (decidida por la URL,
+no por el backend) combinada con el estado de la inscripción (`Detalle`) y el de la
+encuesta inicial (`EncuestaInicial`, que es **por persona**). La derivación es pura
+y está fijada por la tabla ejecutable `models/inscription-entry.spec.ts`; esta
+matriz es su lectura de negocio.
+
+- **Nueva** (`/inscripciones`, sin params): el Paso 1 arranca **siempre virgen y
+  editable**, aunque exista una encuesta previa en progreso. La encuesta previa solo
+  se reutiliza al llegar al Paso 2 (prellena respuestas), nunca precarga el Paso 1 ni
+  reposiciona el flujo. `InteresProducto` se envía al continuar.
+- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel): para una
+  inscripción `En proceso` con encuesta y oferta completa, arranca en el Paso 2. Al
+  volver, el Paso 1 se precarga desde la encuesta y queda deshabilitado; continuar
+  vuelve al Paso 2 sin enviar `InteresProducto`.
+
+  | Estado del detalle                      | Dónde arranca / qué muestra                |
+  | --------------------------------------- | ------------------------------------------ |
+  | En proceso + encuesta + oferta completa | Paso 2 en la sección activa de la encuesta |
+  | En proceso + sin encuesta               | Paso 1 editable                            |
+  | En proceso + sin derecho a encuesta     | Paso 1 editable                            |
+  | Pago pendiente / Pendiente sin seña     | Paso 3 (elegir medio de pago)              |
+  | Pago pendiente / Pendiente con seña     | Pantalla de referencias de pago (reserva)  |
+  | Confirmada                              | Pantalla de éxito terminal                 |
+  | A la espera / desconocido               | Pantalla "Inscripción en proceso"          |
+
+  Si `Detalle` falla, los params no son válidos o falta la oferta completa, la
+  excepción anterior no se aplica.
+
+- **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`):
+  reservado para el futuro botón de una inscripción **cancelada**. Reglas de negocio
+  aún sin definir; hoy deriva igual que **nueva** (Paso 1 virgen). El estado
+  `Cancelada` de `Detalle` queda reservado para esta intención.
+
 ## Regla general de valores ocultos
 
 Cuando un campo padre cambia, la UI actualiza validadores y puede ocultar
-campos hijos. En varios casos el valor crudo del hijo queda en el form o en
-el borrador, pero el payload lo ignora y envia `null` cuando el padre indica
-que no aplica.
+campos hijos. En varios casos el valor crudo del hijo queda en el form, pero
+el payload lo ignora y envia `null` cuando el padre indica que no aplica.
 
 Excepciones que si limpian valores:
 
@@ -308,7 +342,11 @@ Resumen:
 - Banred, Geopay y Sistarbanc redirigen a pasarela externa; como todavía no hay
   callback ni consulta de acreditación, el front termina en
   `pago-pendiente-externo` y no en un loader infinito.
-- Abitab y Paganza quedan como reserva/pago pendiente externo con instrucciones.
+- Abitab y Paganza quedan como reserva con instrucciones de pago. La pantalla
+  muestra los datos reales que informa el backend en `seniaMinima`: cédula
+  formateada (Abitab), número de estudiante (`codigoPersona`) y monto. Al retomar
+  llegan en el `Detalle`; en el flujo fresco se consultan con un `getDetail` tras
+  quedar en reserva (si falla, se muestra solo el monto).
 
 ## Catalogos usados
 

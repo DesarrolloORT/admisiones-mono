@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { spawnSync } from 'node:child_process';
-import assert from 'node:assert/strict';
 
 const TARGET_EXTENSIONS = new Set([
   '.css',

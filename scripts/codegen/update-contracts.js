@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs as nodeParseArgs } from 'node:util';
@@ -6,6 +6,7 @@ import { parseArgs as nodeParseArgs } from 'node:util';
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
   toProjectPath,
@@ -51,7 +52,6 @@ async function main() {
   const outputAbs = resolve(ROOT, output);
   const outputRel = toProjectPath(output);
   const tempOutputAbs = resolve(ROOT, `${output}.tmp-${process.pid}`);
-  const backupOutputAbs = resolve(ROOT, `${output}.backup-${process.pid}`);
   let stage = 'resolving contracts source';
   let contractsSource;
 
@@ -85,7 +85,7 @@ async function main() {
     writeFileSync(resolve(tempOutputAbs, 'index.ts'), renderContractsIndex(files));
 
     stage = 'replacing generated contracts';
-    replaceDirectory(tempOutputAbs, outputAbs, backupOutputAbs);
+    replaceGeneratedDirectory(tempOutputAbs, outputAbs);
 
     console.log(`\n✓ Contracts updated successfully: ${files.length} file(s).`);
   } catch (error) {
@@ -168,17 +168,6 @@ function toContractExportName(name) {
     .filter(Boolean);
   const base = words.map(word => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join('');
   return `contract${base || 'Document'}`;
-}
-
-function replaceDirectory(source, target, backup) {
-  rmSync(backup, { recursive: true, force: true });
-  mkdirSync(target, { recursive: true });
-
-  for (const file of readdirSync(source)) {
-    cpSync(resolve(source, file), resolve(target, file), { recursive: true, force: true });
-  }
-
-  rmSync(source, { recursive: true, force: true });
 }
 
 function printFailure({ error, stage, contractsSource, outputRel }) {

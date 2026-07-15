@@ -2,6 +2,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
+  isNormalizedApiError,
   operationResultInterceptor,
   ortApiErrorInterceptor,
   provideOrtApiErrorHandling,
@@ -81,6 +82,76 @@ describe('AccountEndpoint', () => {
     });
   });
 
+  it('should map missing personal data fields to safe defaults', () => {
+    endpoint.getPersonalData().subscribe(result => {
+      expect(result).toEqual({
+        documentType: '',
+        documentNumber: '',
+        firstName: '',
+        secondName: '',
+        firstLastName: '',
+        secondLastName: '',
+        birthDate: '',
+        sex: '',
+        countryCode: null,
+        stateCode: null,
+        cityCode: null,
+        address: '',
+        phone: '',
+        email: '',
+        emailVerification: '',
+        identityRestricted: false,
+      });
+    });
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+    );
+
+    req.flush({ success: true, httpCode: 200, data: {} });
+  });
+
+  it('should fall back emailVerification to mail and map identidadRestringida', () => {
+    endpoint.getPersonalData().subscribe(result => {
+      expect(result.emailVerification).toBe('gabrielaortiz@gmail.com');
+      expect(result.identityRestricted).toBe(true);
+    });
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+    );
+
+    req.flush({
+      success: true,
+      httpCode: 200,
+      data: {
+        mail: 'gabrielaortiz@gmail.com',
+        verificacionMail: null,
+        identidadRestringida: true,
+      },
+    });
+  });
+
+  it('should propagate normalized API failures when loading personal data', () => {
+    let caught: unknown;
+
+    endpoint.getPersonalData().subscribe({
+      error: error => {
+        caught = error;
+      },
+    });
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+    );
+    req.flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+    expect(isNormalizedApiError(caught)).toBe(true);
+    if (isNormalizedApiError(caught)) {
+      expect(caught.status).toBe(500);
+    }
+  });
+
   it('should update only editable personal data fields', () => {
     endpoint
       .updatePersonalData({
@@ -112,6 +183,53 @@ describe('AccountEndpoint', () => {
     req.flush({ success: true, httpCode: 200, data: true });
   });
 
+  it('should return false when the personal data update is rejected', () => {
+    endpoint
+      .updatePersonalData({
+        countryCode: 1,
+        stateCode: 10,
+        cityCode: 100,
+        address: 'Av. 18 de Julio 1360',
+        phone: '99123456',
+        email: 'gabrielaortiz@gmail.com',
+        emailVerification: 'gabrielaortiz@gmail.com',
+      })
+      .subscribe(result => expect(result).toBe(false));
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/DatosPersona') && r.method === 'PUT'
+    );
+
+    req.flush({ success: true, httpCode: 200, data: false });
+  });
+
+  it('should propagate normalized API failures when updating personal data', () => {
+    let caught: unknown;
+
+    endpoint
+      .updatePersonalData({
+        address: '',
+        phone: '',
+        email: '',
+        emailVerification: '',
+      })
+      .subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/DatosPersona') && r.method === 'PUT'
+    );
+    req.flush(null, { status: 400, statusText: 'Bad Request' });
+
+    expect(isNormalizedApiError(caught)).toBe(true);
+    if (isNormalizedApiError(caught)) {
+      expect(caught.status).toBe(400);
+    }
+  });
+
   it('should validate mobile phone numbers', () => {
     endpoint
       .validatePhone({
@@ -140,6 +258,50 @@ describe('AccountEndpoint', () => {
     req.flush({ success: true, httpCode: 200, data: true });
   });
 
+  it('should return false when the phone number is invalid', () => {
+    endpoint
+      .validatePhone({
+        iso2: 'UY',
+        countryPrefix: 598,
+        number: '123',
+        numberE164: null,
+      })
+      .subscribe(result => expect(result).toBe(false));
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/ValidarTelefono') && r.method === 'POST'
+    );
+
+    req.flush({ success: true, httpCode: 200, data: false });
+  });
+
+  it('should propagate normalized API failures when validating phone numbers', () => {
+    let caught: unknown;
+
+    endpoint
+      .validatePhone({
+        iso2: null,
+        countryPrefix: null,
+        number: '',
+        numberE164: null,
+      })
+      .subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+    const req = httpController.expectOne(
+      r => r.url.includes('/Persona/ValidarTelefono') && r.method === 'POST'
+    );
+    req.flush(null, { status: 400, statusText: 'Bad Request' });
+
+    expect(isNormalizedApiError(caught)).toBe(true);
+    if (isNormalizedApiError(caught)) {
+      expect(caught.status).toBe(400);
+    }
+  });
+
   it('should change the authenticated account password', () => {
     endpoint
       .changePassword({
@@ -159,5 +321,30 @@ describe('AccountEndpoint', () => {
     expect(req.request.withCredentials).toBe(true);
 
     req.flush({ success: true, httpCode: 200, data: null });
+  });
+
+  it('should propagate normalized API failures when changing the password', () => {
+    let caught: unknown;
+
+    endpoint
+      .changePassword({
+        currentPassword: 'ActualPassword1!',
+        password: 'NuevaPassword1!',
+      })
+      .subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+    const req = httpController.expectOne(
+      r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'
+    );
+    req.flush(null, { status: 400, statusText: 'Bad Request' });
+
+    expect(isNormalizedApiError(caught)).toBe(true);
+    if (isNormalizedApiError(caught)) {
+      expect(caught.status).toBe(400);
+    }
   });
 });
