@@ -1,11 +1,11 @@
-using AppLogic.Personas.Requests;
+using AppLogic.Personas.Dtos;
 using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Personas.Helpers
+namespace AppLogic.Personas.Rules
 {
-    public static class PersonaIdentityHelper
+    public static class PersonaIdentityRules
     {
         public static bool TieneIdentidadRestringida(Persona persona, bool tieneInscripcionActiva)
         {

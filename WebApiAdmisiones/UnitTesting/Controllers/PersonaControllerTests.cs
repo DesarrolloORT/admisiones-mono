@@ -1,7 +1,6 @@
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Becas.Dtos;
-using AppLogic.Personas.Requests;
-using AppLogic.Personas.Responses;
+using AppLogic.Personas.Dtos;
 using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

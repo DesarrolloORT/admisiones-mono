@@ -1,6 +1,5 @@
 using AppLogic.Autenticacion.Requests;
-using AppLogic.Personas.Requests;
-using AppLogic.Personas.Responses;
+using AppLogic.Personas.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;

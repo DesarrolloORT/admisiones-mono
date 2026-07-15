@@ -1,4 +1,3 @@
-using AppLogic.Personas.Responses;
 using AppLogic.Personas.Dtos;
 using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;

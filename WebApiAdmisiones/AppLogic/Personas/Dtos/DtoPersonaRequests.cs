@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Personas.Requests
+namespace AppLogic.Personas.Dtos
 {
     [ExcludeFromCodeCoverage]
     public class DtoActualizarDatosPersonaRequest

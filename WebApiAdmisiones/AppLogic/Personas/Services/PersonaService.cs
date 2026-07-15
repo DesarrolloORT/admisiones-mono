@@ -1,9 +1,8 @@
 using AppLogic.Autenticacion.Requests;
 using AppLogic.Personas.Constants;
-using AppLogic.Personas.Helpers;
+using AppLogic.Personas.Rules;
 using AppLogic.Personas.Interfaces;
-using AppLogic.Personas.Requests;
-using AppLogic.Personas.Responses;
+using AppLogic.Personas.Dtos;
 using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
 using AppLogic.Common.Validation;
@@ -37,7 +36,7 @@ namespace AppLogic.Personas.Services
                     404);
             }
 
-            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(
+            var identidadRestringida = PersonaIdentityRules.TieneIdentidadRestringida(
                 persona,
                 uow.Inscriptos.TieneInscripcionActiva(codigoPersona));
             return OperationResult<DtoDatosPersona>.Ok(
@@ -64,10 +63,10 @@ namespace AppLogic.Personas.Services
                 return validacion;
             }
 
-            var identidadRestringida = PersonaIdentityHelper.TieneIdentidadRestringida(
+            var identidadRestringida = PersonaIdentityRules.TieneIdentidadRestringida(
                 persona,
                 uow.Inscriptos.TieneInscripcionActiva(codigoPersona));
-            var validacionIdentidad = PersonaIdentityHelper.ValidarCambiosIdentidad(
+            var validacionIdentidad = PersonaIdentityRules.ValidarCambiosIdentidad(
                 persona,
                 request,
                 identidadRestringida,
@@ -87,7 +86,7 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            PersonaIdentityHelper.AplicarCambiosIdentidad(persona, request, identidadRestringida);
+            PersonaIdentityRules.AplicarCambiosIdentidad(persona, request, identidadRestringida);
             persona.CodigoPais = request.CodigoPais;
             persona.CodigoEstado = request.CodigoEstado;
             persona.CodigoCiudad = request.CodigoCiudad;
