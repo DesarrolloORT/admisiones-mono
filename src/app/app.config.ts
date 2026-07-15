@@ -47,6 +47,7 @@ export const appConfig: ApplicationConfig = {
       setConfig({
         system: 'ADMISIONES',
         withCredentials: true,
+        ...(!environment.production && { apiBaseUrl: environment.FDP_API_URL }),
       })
     ),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
