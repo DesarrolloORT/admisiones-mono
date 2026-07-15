@@ -1,7 +1,7 @@
-using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using BusinessLogic.Entities;
 
-namespace AppLogic.Autenticacion.Helpers;
+namespace AppLogic.Autenticacion.Rules;
 
 public static class AuthenticationResponseBuilder
 {

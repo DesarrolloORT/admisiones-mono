@@ -1,8 +1,8 @@
-using AppLogic.Autenticacion.Helpers;
+using AppLogic.Autenticacion.Rules;
 
 namespace UnitTesting.AppLogic.Helpers
 {
-    public class EmailMaskingHelperTests
+    public class EmailMaskingTests
     {
         [Theory]
         [InlineData("gabriele@ort.edu.uy", "g******e@ort.******")]
@@ -11,7 +11,7 @@ namespace UnitTesting.AppLogic.Helpers
         [InlineData("ab@example.com", "a******b@example.******")]
         public void MaskEmail_WithValidEmail_ReturnsMaskedEmail(string email, string expected)
         {
-            var result = EmailMaskingHelper.Mask(email);
+            var result = EmailMasking.Mask(email);
 
             Assert.Equal(expected, result);
         }
@@ -28,7 +28,7 @@ namespace UnitTesting.AppLogic.Helpers
         [InlineData("gabriele@@ort.edu.uy")]
         public void MaskEmail_WithInvalidEmail_ReturnsOnlyMask(string? email)
         {
-            var result = EmailMaskingHelper.Mask(email);
+            var result = EmailMasking.Mask(email);
 
             Assert.Equal("******", result);
         }

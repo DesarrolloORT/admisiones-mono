@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Personas.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;

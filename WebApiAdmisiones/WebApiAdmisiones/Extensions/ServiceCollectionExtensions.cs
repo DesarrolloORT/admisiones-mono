@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;

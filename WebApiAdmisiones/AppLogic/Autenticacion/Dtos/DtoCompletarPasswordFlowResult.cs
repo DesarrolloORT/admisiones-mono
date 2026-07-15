@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using AppLogic.Autenticacion.Responses;
 using Utilities;
 
 namespace AppLogic.Autenticacion.Dtos;

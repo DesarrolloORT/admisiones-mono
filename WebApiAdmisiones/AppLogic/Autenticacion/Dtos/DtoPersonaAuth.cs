@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Autenticacion.Responses
+namespace AppLogic.Autenticacion.Dtos
 {
     /// <summary>
     /// DTO con la información básica de la persona autenticada.

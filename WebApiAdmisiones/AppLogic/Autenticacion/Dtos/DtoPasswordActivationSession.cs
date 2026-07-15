@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace AppLogic.Autenticacion.Responses;
+namespace AppLogic.Autenticacion.Dtos;
 
 /// <summary>
 /// Respuesta del endpoint que valida el link de creacion de password inicial.

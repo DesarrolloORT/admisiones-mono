@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Dtos;
 using Utilities;
 
 namespace AppLogic.Autenticacion.Interfaces;

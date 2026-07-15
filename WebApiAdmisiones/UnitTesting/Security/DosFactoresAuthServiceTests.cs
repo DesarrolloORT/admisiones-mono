@@ -1,4 +1,3 @@
-using AppLogic.Autenticacion.Responses;
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Common.Email;
 using AppLogic.Infrastructure.RateLimiting;

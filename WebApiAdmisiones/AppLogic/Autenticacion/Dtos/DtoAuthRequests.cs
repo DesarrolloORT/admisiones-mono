@@ -2,7 +2,7 @@ using AppLogic.Common.Security;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Autenticacion.Requests
+namespace AppLogic.Autenticacion.Dtos
 {
     /// <summary>
     /// DTO para la solicitud de autenticación de usuario.

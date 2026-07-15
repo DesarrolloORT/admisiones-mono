@@ -1,6 +1,4 @@
 using AppLogic.Autenticacion.Dtos;
-using AppLogic.Autenticacion.Requests;
-using AppLogic.Autenticacion.Responses;
 using AppLogic.Common.Email;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;

@@ -1,6 +1,6 @@
 using System.Text.Json;
-using AppLogic.Autenticacion.Helpers;
-using AppLogic.Autenticacion.Responses;
+using AppLogic.Autenticacion.Rules;
+using AppLogic.Autenticacion.Dtos;
 using BusinessLogic.Entities;
 
 namespace UnitTesting.AppLogic.Helpers

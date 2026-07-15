@@ -1,11 +1,10 @@
-using AppLogic.Autenticacion.Responses;
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Registro.Dtos;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AppLogic.Autenticacion.Helpers;
+using AppLogic.Autenticacion.Rules;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Email;
 using AppLogic.Common.Security;
@@ -75,7 +74,7 @@ public class PasswordActivationService : IPasswordActivationService
                 ActivationPurpose,
                 QueryFlow: null,
                 "Crea tu contraseña de Admisiones",
-                PasswordMailTemplateHelper.ConstruirMailActivacion,
+                PasswordMailTemplate.ConstruirMailActivacion,
                 "Registro realizado correctamente.",
                 "ACT_PAS_01",
                 "ACT_PAS_02",
@@ -93,7 +92,7 @@ public class PasswordActivationService : IPasswordActivationService
                 RecoveryPurpose,
                 "recovery",
                 "Recuperá tu contraseña de Admisiones",
-                PasswordMailTemplateHelper.ConstruirMailRecuperacion,
+                PasswordMailTemplate.ConstruirMailRecuperacion,
                 "Si los datos ingresados son correctos, recibirás un mail con instrucciones para recuperar tu contraseña.",
                 "REC_LINK_01",
                 "REC_LINK_02",
@@ -119,7 +118,7 @@ public class PasswordActivationService : IPasswordActivationService
             var link = PasswordActivationLinkBuilder.ConstruirLink(_configuration, token, flow: "registration");
 
             // Reutilizar plantilla de activación pero sin persona (solo necesitamos el link)
-            var body = PasswordMailTemplateHelper.ConstruirMailActivacionSinPersona(link);
+            var body = PasswordMailTemplate.ConstruirMailActivacionSinPersona(link);
 
             await _emailSender.SendAsync(
                 email.Trim(),

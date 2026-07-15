@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Requests;
+using AppLogic.Autenticacion.Dtos;
 using AppLogic.Personas.Dtos;
 using AppLogic.DevartDTOs;
 using Utilities;

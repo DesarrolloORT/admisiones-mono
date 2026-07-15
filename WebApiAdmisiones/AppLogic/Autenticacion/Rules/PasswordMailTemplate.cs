@@ -3,9 +3,9 @@ using System.Text.Encodings.Web;
 using BusinessLogic.Entities;
 using MailORT;
 
-namespace AppLogic.Autenticacion.Helpers;
+namespace AppLogic.Autenticacion.Rules;
 
-public static class PasswordMailTemplateHelper
+public static class PasswordMailTemplate
 {
     private const string ParrafoSeguridad = "Tu contrase&ntilde;a es privada y su uso es estrictamente personal. Por tu seguridad, no la compartas con nadie. ORT nunca te solicitar&aacute; actualizar tu usuario, contrase&ntilde;a o datos de medios de pago electr&oacute;nicos por e-mail, tel&eacute;fono, SMS, WhatsApp ni redes sociales. M&aacute;s informaci&oacute;n en: <a href=\"https://www.ort.edu.uy/ciberseguridad\" target=\"_blank\" rel=\"noopener noreferrer\">www.ort.edu.uy/ciberseguridad</a>.";
 

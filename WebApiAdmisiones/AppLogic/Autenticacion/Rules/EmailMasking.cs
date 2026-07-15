@@ -1,6 +1,6 @@
-namespace AppLogic.Autenticacion.Helpers
+namespace AppLogic.Autenticacion.Rules
 {
-    public static class EmailMaskingHelper
+    public static class EmailMasking
     {
         private const string MaskValue = "******";
 

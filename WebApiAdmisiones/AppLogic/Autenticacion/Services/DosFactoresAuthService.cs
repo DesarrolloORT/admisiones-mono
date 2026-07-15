@@ -1,6 +1,5 @@
-using AppLogic.Autenticacion.Responses;
 using AppLogic.Autenticacion.Dtos;
-using AppLogic.Autenticacion.Helpers;
+using AppLogic.Autenticacion.Rules;
 using AppLogic.Common.Email;
 using AppLogic.Infrastructure.RateLimiting;
 using AppLogic.Autenticacion.Interfaces;
@@ -130,7 +129,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                 new DtoLogin2FARequired
                 {
                     SessionId = sessionId,
-                    MaskedEmail = EmailMaskingHelper.Mask(email)
+                    MaskedEmail = EmailMasking.Mask(email)
                 },
                 nameof(IniciarAsync));
         }
@@ -354,7 +353,7 @@ public class DosFactoresAuthService : IDosFactoresAuthService
                 new DtoLogin2FARequired
                 {
                     SessionId = sessionId,
-                    MaskedEmail = EmailMaskingHelper.Mask(session.Email),
+                    MaskedEmail = EmailMasking.Mask(session.Email),
                     Message = "Se reenvió un nuevo código de verificación a tu correo electrónico."
                 },
                 nameof(ReenviarCodigoAsync));
