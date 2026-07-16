@@ -523,8 +523,8 @@ namespace AppLogic.Personas.Services
                 {
                     IdImagen = idImagen,
                     CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(persona.CodigoPersona, 3, extension),
-                    TipoImagen = "3",
+                    NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(persona.CodigoPersona, PersonaConstants.TipoImagenFoto, extension),
+                    TipoImagen = PersonaConstants.TipoImagenFoto.ToString(),
                     BlobImagen = fileContent
                 },
                 nameof(GuardarFotoPersona));
@@ -551,8 +551,8 @@ namespace AppLogic.Personas.Services
 
             var extension = DocumentoIdentidadPersonaService.ResolverExtensionPersistida(fileName, ".jpg");
 
-            existing.NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(existing.CodigoPersona ?? 0, 3, extension);
-            existing.TipoImagen = "3";
+            existing.NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(existing.CodigoPersona ?? 0, PersonaConstants.TipoImagenFoto, extension);
+            existing.TipoImagen = PersonaConstants.TipoImagenFoto.ToString();
             existing.BlobImagen = fileContent;
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoPersona));
         }

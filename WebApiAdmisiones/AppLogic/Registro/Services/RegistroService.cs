@@ -681,7 +681,7 @@ namespace AppLogic.Registro.Services
         private static void ActualizarMetadataPassword(IUnitOfWork uow, Persona persona)
         {
             persona.FechaUltModifPassword = DateTime.Today;
-            persona.UsuarioUltModifPassword = "ADMISIONES";
+            persona.UsuarioUltModifPassword = Constantes.kUSERNAME_USUARIO_ADMISIONES;
             uow.Personas.Update(persona);
         }
 

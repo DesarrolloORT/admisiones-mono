@@ -4,7 +4,6 @@ using AppLogic.Becas.Validators;
 using AppLogic.Becas.Interfaces;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
-using System.Text.Json;
 using Utilities;
 
 namespace AppLogic.Becas.Services

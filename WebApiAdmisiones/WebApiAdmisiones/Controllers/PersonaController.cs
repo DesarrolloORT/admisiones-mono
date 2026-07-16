@@ -92,10 +92,8 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Lista mock de becas para la vista del front.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Becas")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 400)]
         public IActionResult ObtenerMisBecas()
         {
             var becas = new List<DtoBecaPersona>
