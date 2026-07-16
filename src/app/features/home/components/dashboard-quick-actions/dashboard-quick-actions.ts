@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
+
+import { HomeService } from '../../services/home';
 
 type CardType = 'careers' | 'scholarships';
 
@@ -15,7 +17,7 @@ const CAREER_ACTIONS: Record<string, ActionConfig> = {
   Pendiente: { type: 'secondary', label: 'Ver instrucciones de pago' },
   'Pago pendiente': { type: 'secondary', label: 'Ver instrucciones de pago' },
   Confirmada: { type: 'secondary', label: 'Ver detalle' },
-  Cancelada: { type: 'secondary', label: 'Reactivar inscripción' },
+  'Dada de baja': { type: 'secondary', label: 'Reactivar inscripción' },
   'A la espera': {
     type: 'text',
     label: 'El coordinador académico de la carrera se pondrá en contacto contigo.',
@@ -38,11 +40,16 @@ const DEFAULT_ACTION: ActionConfig = { type: 'secondary', label: 'Ver detalle' }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardQuickActions {
+  private readonly homeService = inject(HomeService);
+  private readonly router = inject(Router);
+
   readonly status = input.required<string>();
   readonly careerName = input.required<string>();
   readonly cardType = input<CardType>('careers');
   readonly idProducto = input<number | null>(null);
   readonly idProceso = input<number | null>(null);
+  readonly idInscripto = input<number | null>(null);
+  private readonly isReactivating = signal(false);
 
   protected readonly action = computed<ActionConfig>(() => {
     const map = this.cardType() === 'scholarships' ? SCHOLARSHIP_ACTIONS : CAREER_ACTIONS;
@@ -53,7 +60,7 @@ export class DashboardQuickActions {
     idProducto: this.idProducto(),
     idProceso: this.idProceso(),
   }));
-  // Retoma la inscripción en el flujo común; el detalle resuelto posiciona el paso.
+
   protected readonly resumesFlow = computed(
     () =>
       this.cardType() === 'careers' &&
@@ -63,4 +70,26 @@ export class DashboardQuickActions {
       (this.idProducto() ?? 0) > 0 &&
       (this.idProceso() ?? 0) > 0
   );
+  protected readonly reactivatesFlow = computed(
+    () =>
+      this.cardType() === 'careers' &&
+      this.status() === 'Dada de baja' &&
+      Number.isSafeInteger(this.idInscripto()) &&
+      (this.idInscripto() ?? 0) > 0 &&
+      Number.isSafeInteger(this.idProducto()) &&
+      (this.idProducto() ?? 0) > 0 &&
+      Number.isSafeInteger(this.idProceso()) &&
+      (this.idProceso() ?? 0) > 0
+  );
+
+  protected reactivate(): void {
+    const idInscripto = this.idInscripto();
+    if (this.isReactivating() || !idInscripto) return;
+    this.isReactivating.set(true);
+    this.homeService.reactivarInscripcion(idInscripto).subscribe({
+      next: () =>
+        void this.router.navigate(['/inscripciones'], { queryParams: this.resumeQueryParams() }),
+      error: () => this.isReactivating.set(false),
+    });
+  }
 }

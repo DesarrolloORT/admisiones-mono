@@ -83,7 +83,10 @@ matriz es su lectura de negocio.
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`):
   reservado para el futuro botón de una inscripción **cancelada**. Reglas de negocio
   aún sin definir; hoy deriva igual que **nueva** (Paso 1 virgen). El estado
-  `Cancelada` de `Detalle` queda reservado para esta intención.
+  `Cancelada` de `Detalle` queda reservado para esta intención. El botón
+  "Reactivar inscripción" del dashboard (home) no usa este `modo`: hace
+  `POST /Inscripciones/Reactivar` y navega a `retomar` (`idProducto`+`idProceso`)
+  con la inscripción nueva ya creada.
 
 ## Regla general de valores ocultos
 

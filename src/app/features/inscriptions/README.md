@@ -107,7 +107,9 @@ del backend— y devuelve `InscripcionEntryResolved`:
 - `nueva`: sin query params. Paso 1 **siempre** virgen y editable.
 - `retomar`: con `idProducto`+`idProceso` (desde el panel); carga el detalle.
 - `reactivar`: agrega `modo=reactivar` (futuro botón de una inscripción cancelada;
-  reglas TBD, hoy deriva igual que `nueva`).
+  reglas TBD, hoy deriva igual que `nueva`). El botón "Reactivar inscripción" del
+  dashboard (home) no usa este `modo`: hace `POST /Inscripciones/Reactivar` y
+  navega a `retomar` con la inscripción nueva ya creada.
 
 Si el detalle falla, la intención degrada a comportamiento `nueva` (`detail:null`).
 

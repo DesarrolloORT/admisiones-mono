@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
+import { postInscripcionesReactivarEndpoint } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaBecasEndpoint,
   getPersonaInscripcionesEndpoint,
@@ -28,6 +29,15 @@ export class HomeEndpoint {
     return this.api.request(getPersonaBecasEndpoint).pipe(map(data => this.toMisBecas(data)));
   }
 
+  public reactivarInscripcion(idInscripto: number): Observable<boolean> {
+    return this.api
+      .request(postInscripcionesReactivarEndpoint, { body: { idInscripto }, showLoader: true })
+      .pipe(
+        tap(() => this.api.clearCache()),
+        map(() => true)
+      );
+  }
+
   private toMisInscripciones(
     data:
       | { data: DtoVdInscripcionesFresco1y2Devart[] | null }
@@ -38,6 +48,7 @@ export class HomeEndpoint {
     const items = Array.isArray(data) ? data : (data?.data ?? []);
 
     return items.map(item => ({
+      idInscripto: item.idInscripto ?? 0,
       idProducto: item.idProducto ?? 0,
       idProceso: item.idProceso ?? 0,
       idComienzo: item.idComienzo ?? 0,

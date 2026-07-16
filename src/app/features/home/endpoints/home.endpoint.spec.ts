@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
+import { postInscripcionesReactivarEndpoint } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaBecasEndpoint,
   getPersonaInscripcionesEndpoint,
@@ -10,10 +11,10 @@ import { HomeEndpoint } from './home.endpoint';
 
 describe('HomeEndpoint', () => {
   let endpoint: HomeEndpoint;
-  let api: { request: ReturnType<typeof vi.fn> };
+  let api: { request: ReturnType<typeof vi.fn>; clearCache: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    api = { request: vi.fn() };
+    api = { request: vi.fn(), clearCache: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [HomeEndpoint, { provide: ApiHttpClient, useValue: api }],
@@ -26,6 +27,7 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
+          idInscripto: 100,
           idProducto: 10,
           idProceso: 25,
           idComienzo: 20,
@@ -40,6 +42,7 @@ describe('HomeEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
       {
+        idInscripto: 100,
         idProducto: 10,
         idProceso: 25,
         idComienzo: 20,
@@ -83,5 +86,17 @@ describe('HomeEndpoint', () => {
       },
     ]);
     expect(api.request).toHaveBeenCalledWith(getPersonaBecasEndpoint);
+  });
+
+  it('should reactivate an inscripcion and clear the cache', async () => {
+    api.request.mockReturnValueOnce(of({}));
+
+    await expect(firstValueFrom(endpoint.reactivarInscripcion(100))).resolves.toBe(true);
+
+    expect(api.request).toHaveBeenCalledWith(postInscripcionesReactivarEndpoint, {
+      body: { idInscripto: 100 },
+      showLoader: true,
+    });
+    expect(api.clearCache).toHaveBeenCalled();
   });
 });
