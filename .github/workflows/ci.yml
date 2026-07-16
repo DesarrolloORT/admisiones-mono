@@ -48,6 +48,7 @@ jobs:
         with:
           name: api-spec
           path: .api-spec
+          include-hidden-files: true
           retention-days: 1
 
   prepare_api:
