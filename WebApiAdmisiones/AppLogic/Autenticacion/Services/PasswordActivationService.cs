@@ -472,14 +472,14 @@ public class PasswordActivationService : IPasswordActivationService
         }
     }
 
-    /// <summary>Genera un JWT donde el subject es un codigoPersona (long).</summary>
-    private static string GenerarTokenPersona(long codigoPersona, string purpose, TimeSpan duration)
+    /// <summary>Genera un JWT de activación/sesión con el subject, propósito y expiración indicados.</summary>
+    private static string GenerarToken(string sub, string purpose, TimeSpan duration)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, codigoPersona.ToString(CultureInfo.InvariantCulture)),
+            new Claim(JwtRegisteredClaimNames.Sub, sub),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
             new Claim("purpose", purpose)
         };
@@ -493,28 +493,14 @@ public class PasswordActivationService : IPasswordActivationService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>Genera un JWT donde el subject es un codigoPersona (long).</summary>
+    private static string GenerarTokenPersona(long codigoPersona, string purpose, TimeSpan duration)
+        => GenerarToken(codigoPersona.ToString(CultureInfo.InvariantCulture), purpose, duration);
 
     /// <summary>Genera un JWT donde el subject es un flowId (string GUID).</summary>
     public string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, flowId),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-            new Claim("purpose", purpose)
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: Issuer,
-            audience: Audience,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(duration),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
+        => GenerarToken(flowId, purpose, duration);
 
     private static ClaimsPrincipal ValidarJwt(string token)
     {
