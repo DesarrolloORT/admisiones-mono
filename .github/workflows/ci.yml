@@ -41,14 +41,13 @@ jobs:
           node-version: '20'
 
       - name: Download Swagger and form contracts
-        run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output .api-spec
+        run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output api-spec
 
       - name: Upload API spec snapshot
         uses: actions/upload-artifact@v7
         with:
           name: api-spec
-          path: .api-spec
-          include-hidden-files: true
+          path: api-spec
           retention-days: 1
 
   prepare_api:
@@ -88,11 +87,11 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: api-spec
-          path: .api-spec
+          path: api-spec
 
       - name: Generate API contracts
         # --skip-build: el job CI ya compila el proyecto con estos contratos.
-        run: npm run update-api -- --spec-dir .api-spec --skip-build
+        run: npm run update-api -- --spec-dir api-spec --skip-build
 
       - name: Upload API contracts
         uses: actions/upload-artifact@v7
