@@ -18,87 +18,24 @@ concurrency:
 
 jobs:
   fetch_api_spec:
-    # El backend de desa solo es accesible desde la red interna, por eso este job
-    # corre en el runner self-hosted. Se mantiene minimo a proposito (sin npm ci,
-    # sin generacion): descarga swagger.json + contratos y los sube como artifact.
     name: Fetch API spec (internal network)
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: funcionarios-desa
-    env:
-      # Origen de la API de desa; se puede sobreescribir con la variable de repo DESA_API_ORIGIN.
-      API_ORIGIN: ${{ vars.DESA_API_ORIGIN || 'https://apiadmisionesdesa.ort.edu.uy' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          sparse-checkout: scripts
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-
-      - name: Download Swagger and form contracts
-        run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output api-spec
-
-      - name: Upload API spec snapshot
-        uses: actions/upload-artifact@v7
-        with:
-          name: api-spec
-          path: api-spec
-          retention-days: 1
+    uses: ./.github/workflows/fetch-api-spec.yml
+    with:
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
 
   prepare_api:
     name: Prepare API contracts
     needs: fetch_api_spec
-    runs-on: blacksmith-8vcpu-ubuntu-2404
-    environment: desarrollo
-    env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Authenticate to GitHub Packages
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
-
-      - name: Download API spec snapshot
-        uses: actions/download-artifact@v8
-        with:
-          name: api-spec
-          path: api-spec
-
-      - name: Generate API contracts
-        # --skip-build: el job CI ya compila el proyecto con estos contratos.
-        run: npm run update-api -- --spec-dir api-spec --skip-build
-
-      - name: Upload API contracts
-        uses: actions/upload-artifact@v7
-        with:
-          name: api-generated
-          path: src/app/shared/api/generated
-          retention-days: 1
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
 
   CI:
     name: CI Checks

@@ -1,0 +1,44 @@
+name: Fetch API spec (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      checkout-repository:
+        type: string
+        default: ''
+      checkout-ref:
+        type: string
+        default: ''
+
+jobs:
+  fetch_api_spec:
+    # El backend de desa solo es accesible desde la red interna, por eso este job
+    # corre en el runner self-hosted. Se mantiene minimo a proposito (sin npm ci,
+    # sin generacion): descarga swagger.json + contratos y los sube como artifact.
+    name: Fetch API spec (internal network)
+    runs-on: funcionarios-desa
+    env:
+      # Origen de la API de desa; se puede sobreescribir con la variable de repo DESA_API_ORIGIN.
+      API_ORIGIN: ${{ vars.DESA_API_ORIGIN || 'https://apiadmisionesdesa.ort.edu.uy' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.checkout-repository || github.repository }}
+          ref: ${{ inputs.checkout-ref }}
+          sparse-checkout: scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Download Swagger and form contracts
+        run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output api-spec
+
+      - name: Upload API spec snapshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-spec
+          path: api-spec
+          retention-days: 1

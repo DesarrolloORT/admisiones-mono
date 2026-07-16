@@ -1,0 +1,73 @@
+name: Prepare API contracts (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      runs-on:
+        type: string
+        default: blacksmith-8vcpu-ubuntu-2404
+      env-sync-target:
+        type: string
+        default: desa
+      env-sync-refresh:
+        type: boolean
+        default: false
+      checkout-repository:
+        type: string
+        default: ''
+      checkout-ref:
+        type: string
+        default: ''
+
+jobs:
+  prepare_api:
+    name: Prepare API contracts
+    runs-on: ${{ inputs.runs-on }}
+    environment: ${{ inputs.environment }}
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.checkout-repository || github.repository }}
+          ref: ${{ inputs.checkout-ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env ${{ inputs.env-sync-target }} ${{ inputs.env-sync-refresh && '--refresh' || '' }}
+
+      - name: Download API spec snapshot
+        uses: actions/download-artifact@v8
+        with:
+          name: api-spec
+          path: api-spec
+
+      - name: Generate API contracts
+        # --skip-build: el job siguiente compila el proyecto con estos contratos.
+        run: npm run update-api -- --spec-dir api-spec --skip-build
+
+      - name: Upload API contracts
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+          retention-days: 1
