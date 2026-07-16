@@ -4,9 +4,8 @@
 
 .scholarship-process__main {
   display: grid;
-  width: 90%;
-  max-width: 1200px;
   margin: var(--ort-sys-spacing-24) auto;
+  padding-inline: var(--ort-sys-spacing-16);
 }
 
 .scholarship-screen {
@@ -102,9 +101,20 @@
   right: calc(-1 * var(--ort-sys-spacing-6));
 }
 
+form > ort-accordion {
+  margin-inline: calc(var(--ort-sys-spacing-16) * -1);
+}
+
 @media (width >=760px) {
   .scholarship-process__main {
+    width: 90%;
+    max-width: 1200px;
     margin: 0;
+    padding-inline: 0;
+  }
+
+  form > ort-accordion {
+    margin-inline: 0;
   }
 
   .scholarship-step__footer {
