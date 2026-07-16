@@ -39,9 +39,6 @@ import {
 export class CatalogsEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  // TODO: getCatalogosTiposDocumentosEndpoint fue removido del API.
-  // Reimplementar getDocumentTypes() cuando haya un endpoint de reemplazo.
-
   public getCountries(): Observable<Country[]> {
     return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
       map(data =>
