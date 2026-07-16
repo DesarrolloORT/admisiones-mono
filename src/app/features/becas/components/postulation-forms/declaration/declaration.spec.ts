@@ -1,5 +1,13 @@
+import { Declaration } from './declaration';
+
 describe('Declaration', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('opens and closes the expense drawer', () => {
+    const component = new Declaration();
+
+    component.openDrawer();
+    expect(component.drawer()).toBe(true);
+
+    component.closeDrawer();
+    expect(component.drawer()).toBe(false);
   });
 });

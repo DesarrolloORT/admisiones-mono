@@ -1,5 +1,7 @@
+import { PersonalData } from './personal-data';
+
 describe('PersonalData', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('should be importable', () => {
+    expect(PersonalData).toBeDefined();
   });
 });

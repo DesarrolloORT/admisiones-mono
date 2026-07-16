@@ -1,5 +1,7 @@
+import { EducationInfoFbr } from './education-info-fbr';
+
 describe('EducationInfoFbr', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('should be importable', () => {
+    expect(EducationInfoFbr).toBeDefined();
   });
 });

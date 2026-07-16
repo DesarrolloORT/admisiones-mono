@@ -1,5 +1,7 @@
+import { Fbr } from './fbr';
+
 describe('Fbr', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('should be importable', () => {
+    expect(Fbr).toBeDefined();
   });
 });

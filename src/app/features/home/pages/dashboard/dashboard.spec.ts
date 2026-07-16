@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -12,6 +13,7 @@ describe('Dashboard', () => {
     TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
+        provideRouter([]),
         {
           provide: AuthSessionService,
           useValue: {

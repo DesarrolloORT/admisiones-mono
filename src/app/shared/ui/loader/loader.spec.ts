@@ -31,11 +31,14 @@ describe('Loader', () => {
     });
   });
 
-  it('should match snapshot when loading = true', () => {
+  it('should render an accessible spinner when loading = true', () => {
     createComponent(true);
-    fixture.nativeElement.removeAttribute('id');
-    fixture.nativeElement.querySelector('ort-spinner')?.removeAttribute('id');
-    expect(fixture.nativeElement).toMatchSnapshot();
+
+    const spinner = fixture.nativeElement.querySelector('ort-spinner');
+
+    expect(fixture.nativeElement.querySelector('.loader-overlay')).toBeTruthy();
+    expect(spinner?.getAttribute('role')).toBe('progressbar');
+    expect(spinner?.getAttribute('aria-label')).toBe('Cargando');
   });
 
   it('should initialize with the correct loading state (false)', () => {

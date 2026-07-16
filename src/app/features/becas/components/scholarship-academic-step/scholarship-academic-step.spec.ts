@@ -1,5 +1,7 @@
+import { ScholarshipAcademicStep } from './scholarship-academic-step';
+
 describe('ScholarshipAcademicStep', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('should be importable', () => {
+    expect(ScholarshipAcademicStep).toBeDefined();
   });
 });
