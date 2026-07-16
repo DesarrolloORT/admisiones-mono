@@ -3,6 +3,7 @@ import type { MiInscripcion } from './mi-inscripcion';
 describe('MiInscripcion', () => {
   it('keeps the process identifier required by the detail endpoint', () => {
     const inscription: MiInscripcion = {
+      idInscripto: 100,
       idProducto: 20,
       idProceso: 200,
       idComienzo: 2,
