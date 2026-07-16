@@ -227,26 +227,7 @@ public class RegistroFlowService : IRegistroFlowService
         var tokenHash = TokenHashHelper.HashSha256Base64(token);
 
         // 3. Guardar persona pendiente en Redis
-        var pending = new DtoRegistroPendingPersona
-        {
-            FlowId = flowIdPending,
-            TipoDocumento = request.TipoDocumento,
-            Documento = request.Documento,
-            PrimerApellido = request.PrimerApellido,
-            SegundoApellido = request.SegundoApellido,
-            PrimerNombre = request.PrimerNombre,
-            SegundoNombre = request.SegundoNombre,
-            FechaNacimiento = request.FechaNacimiento,
-            Sexo = request.Sexo,
-            Direccion = request.Direccion,
-            Telefono1 = request.Telefono1,
-            Email = request.Mail,
-            CodigoPais = request.CodigoPais,
-            CodigoEstado = request.CodigoEstado,
-            CodigoCiudad = request.CodigoCiudad,
-            TokenHash = tokenHash,
-            CreatedAt = DateTime.UtcNow
-        };
+        var pending = ConstruirPendingPersona(request, flowIdPending, tokenHash);
 
         var pendingJson = JsonSerializer.Serialize(pending, JsonOptions);
         await _redisDb.StringSetAsync($"{PendingPersonaKeyPrefix}{flowIdPending}", pendingJson, ttl);
@@ -282,6 +263,33 @@ public class RegistroFlowService : IRegistroFlowService
         return OperationResult<RegistroFlowResult>.Ok(
             new RegistroFlowResult("Registro realizado correctamente. Revisá tu casilla de mail para activar tu contraseña."),
             nameof(ConfirmarNuevaPersonaAsync));
+    }
+
+    private static DtoRegistroPendingPersona ConstruirPendingPersona(
+        DtoRegistroPersonaRequest request,
+        string flowIdPending,
+        string tokenHash)
+    {
+        return new DtoRegistroPendingPersona
+        {
+            FlowId = flowIdPending,
+            TipoDocumento = request.TipoDocumento,
+            Documento = request.Documento,
+            PrimerApellido = request.PrimerApellido,
+            SegundoApellido = request.SegundoApellido,
+            PrimerNombre = request.PrimerNombre,
+            SegundoNombre = request.SegundoNombre,
+            FechaNacimiento = request.FechaNacimiento,
+            Sexo = request.Sexo,
+            Direccion = request.Direccion,
+            Telefono1 = request.Telefono1,
+            Email = request.Mail,
+            CodigoPais = request.CodigoPais,
+            CodigoEstado = request.CodigoEstado,
+            CodigoCiudad = request.CodigoCiudad,
+            TokenHash = tokenHash,
+            CreatedAt = DateTime.UtcNow
+        };
     }
 
     // ───── PendingPersona ──────────────────────────────────────────────────

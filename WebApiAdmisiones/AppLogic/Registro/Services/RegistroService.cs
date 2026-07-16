@@ -333,32 +333,20 @@ namespace AppLogic.Registro.Services
                     default);
             }
 
-            Persona persona;
-            try
+            var crearPersonaResult = CrearPersonaEnDb(uow, data, ciudad);
+            if (!crearPersonaResult.Success)
             {
-                uow.BeginTransaction();
-                persona = RegistroEntityFactory.CrearPersona(
-                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA),
-                    data,
-                    ciudad,
-                    DateTime.Now);
-                uow.Personas.Add(persona);
-                uow.Save();
-                uow.Commit();
-            }
-            catch (Exception ex)
-            {
-                uow.Rollback();
-                _logger.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
                 return OperationResult<long>.IsFailed(
-                    "REG_PERSONA_99",
+                    crearPersonaResult.ErrorCode,
                     nameof(CompletarNuevaPersonaAsync),
-                    "Error al crear la persona.",
-                    500,
+                    crearPersonaResult.Message,
+                    crearPersonaResult.HttpCode,
                     default);
             }
 
-            // LDAP fuera de la transacción DB (SRV-01): la persona ya está commiteada, así que un
+            var persona = crearPersonaResult.Data!;
+
+            // LDAP fuera de la transacción DB: la persona ya está commiteada, así que un
             // fallo acá no la revierte. Si queda huérfana (sin usuario LDAP o sin password),
             // el reintento la encuentra vía GetByDocumento y sigue por CompletarPasswordPersonaPendienteExistenteAsync.
             var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactory.CrearUsuarioLdapRequest(persona));
@@ -393,6 +381,52 @@ namespace AppLogic.Registro.Services
                     default);
             }
 
+            var persistenciaResult = PersistirMetadataYAdmision(uow, persona, imagenes);
+            if (!persistenciaResult.Success)
+            {
+                return OperationResult<long>.IsFailed(
+                    persistenciaResult.ErrorCode,
+                    nameof(CompletarNuevaPersonaAsync),
+                    persistenciaResult.Message,
+                    persistenciaResult.HttpCode,
+                    default);
+            }
+
+            return OperationResult<long>.Ok(persona.CodigoPersona, nameof(CompletarNuevaPersonaAsync));
+        }
+
+        /// <summary>Tx #1 de CompletarNuevaPersonaAsync: crea la Persona en DB (commit propio, LDAP viene después fuera de esta transacción).</summary>
+        private OperationResult<Persona> CrearPersonaEnDb(IUnitOfWork uow, DtoRegistroPendingPersona data, Ciudad ciudad)
+        {
+            try
+            {
+                uow.BeginTransaction();
+                var persona = RegistroEntityFactory.CrearPersona(
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_PERSONA),
+                    data,
+                    ciudad,
+                    DateTime.Now);
+                uow.Personas.Add(persona);
+                uow.Save();
+                uow.Commit();
+                return OperationResult<Persona>.Ok(persona, nameof(CompletarNuevaPersonaAsync));
+            }
+            catch (Exception ex)
+            {
+                uow.Rollback();
+                _logger.LogError(ex, ErrorInesperadoLog, nameof(CompletarNuevaPersonaAsync));
+                return OperationResult<Persona>.IsFailed(
+                    "REG_PERSONA_99",
+                    nameof(CompletarNuevaPersonaAsync),
+                    "Error al crear la persona.",
+                    500,
+                    default!);
+            }
+        }
+
+        /// <summary>Tx #2 de CompletarNuevaPersonaAsync: metadata de password, alta de admisión e imágenes, después de que LDAP ya quedó activo.</summary>
+        private OperationResult<bool> PersistirMetadataYAdmision(IUnitOfWork uow, Persona persona, DtoRegistroDocumentoImagenesTemporales? imagenes)
+        {
             try
             {
                 uow.BeginTransaction();
@@ -400,6 +434,7 @@ namespace AppLogic.Registro.Services
                 RegistrarAdmisionPorPersona(uow, persona.CodigoPersona);
                 GuardarImagenesDocumentoReconocido(uow, persona, imagenes);
                 uow.Commit();
+                return OperationResult<bool>.Ok(true, nameof(CompletarNuevaPersonaAsync));
             }
             catch (Exception ex)
             {
@@ -407,15 +442,13 @@ namespace AppLogic.Registro.Services
                 _logger.LogError(ex,
                     "Estado inconsistente: persona {CodigoPersona} con LDAP activo pero metadata/admisión/imágenes sin persistir.",
                     persona.CodigoPersona);
-                return OperationResult<long>.IsFailed(
+                return OperationResult<bool>.IsFailed(
                     "REG_PERSONA_99",
                     nameof(CompletarNuevaPersonaAsync),
                     "Error al crear la persona.",
                     500,
-                    default);
+                    default!);
             }
-
-            return OperationResult<long>.Ok(persona.CodigoPersona, nameof(CompletarNuevaPersonaAsync));
         }
 
         public async Task<OperationResult<object?>> ConfirmarSolicitudAltaAsync(DtoRegistroPersonaRequest request)
