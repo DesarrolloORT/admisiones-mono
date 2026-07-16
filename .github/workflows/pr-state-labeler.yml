@@ -54,4 +54,3 @@ jobs:
           # (Assuming your logic determines the PR was approved)
           # Remove state labels (both pending review & pending approval) and add "state: approved"
           gh pr edit "${{ github.event.pull_request.number }}" --remove-label "state: pending review,state: pending approval" --add-label "state: approved"
-

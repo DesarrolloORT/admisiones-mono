@@ -25,4 +25,3 @@ jobs:
       - uses: TimonVS/pr-labeler-action@v5
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
