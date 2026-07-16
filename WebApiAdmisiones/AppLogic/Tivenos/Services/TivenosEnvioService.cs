@@ -8,6 +8,9 @@ namespace AppLogic.Tivenos.Services
 {
     public class TivenosEnvioService : ITivenosEnvioService
     {
+        private const string OrigenAdmisiones = "ADMISIONES";
+        private const string StatusNuevo = "Nuevo";
+
         public OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
             IUnitOfWork uow,
             DtoTivenosAltaInteresRequest request,
@@ -72,12 +75,12 @@ namespace AppLogic.Tivenos.Services
             return new EnvioParaTiveno
             {
                 OrigenLlamador = request.Operacion.OrigenLlamador,
-                Origen = "ADMISIONES",
+                Origen = OrigenAdmisiones,
                 TipoProcesoLlamador = request.Operacion.TipoProcesoLlamador,
                 Disparador = request.Operacion.Disparador,
                 Modulo = "InteresProducto",
                 Metodo = "AltaInteresXSeleccionEnSitio",
-                Status = "Nuevo",
+                Status = StatusNuevo,
                 CodigoSape = request.CodigoPersona,
                 ProcesoId = request.IdProceso,
                 ProductoId = request.IdProducto,
@@ -95,12 +98,12 @@ namespace AppLogic.Tivenos.Services
         {
             return new EnvioParaTiveno
             {
-                Origen = "ADMISIONES",
+                Origen = OrigenAdmisiones,
                 TipoProcesoLlamador = tipoProcesoLlamador,
                 Disparador = disparador,
                 Modulo = "Bachillerato",
                 Metodo = metodo,
-                Status = "Nuevo",
+                Status = StatusNuevo,
                 CodigoSape = request.CodigoPersona,
                 BachilleratoOrientacionId = request.CodigoOrientacion,
             };

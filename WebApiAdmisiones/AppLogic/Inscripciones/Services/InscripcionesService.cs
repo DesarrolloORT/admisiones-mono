@@ -20,8 +20,10 @@ namespace AppLogic.Inscripciones.Services
 {
     public class InscripcionesService : IInscripcionesService
     {
-        private static readonly HashSet<string> TiposPagoFactura = ["BANRED", "SISTARBANC", "GEOPAY"];
-        private static readonly HashSet<string> MetodosPagoExternos = ["ABITAB", "PAGANZA"];
+        private static readonly HashSet<string> TiposPagoFactura =
+            [InscripcionesConstants.TipoPago.Banred, InscripcionesConstants.TipoPago.Sistarbanc, InscripcionesConstants.TipoPago.Geopay];
+        private static readonly HashSet<string> MetodosPagoExternos =
+            [InscripcionesConstants.TipoPago.Abitab, InscripcionesConstants.TipoPago.Paganza];
 
         private readonly IUnitOfWorkFactory _uowFactory;
         private readonly IDbConnectionContext _dbConnectionContext;
@@ -566,8 +568,8 @@ namespace AppLogic.Inscripciones.Services
                         methodName);
                 }
 
-                case "ABITAB":
-                case "PAGANZA":
+                case InscripcionesConstants.TipoPago.Abitab:
+                case InscripcionesConstants.TipoPago.Paganza:
                 {
                     var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripto = request.IdInscripto, MetodoPago = tipoPago });
                     return result.Success
@@ -575,9 +577,9 @@ namespace AppLogic.Inscripciones.Services
                         : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
                 }
 
-                case "BANRED":
-                case "GEOPAY":
-                case "SISTARBANC":
+                case InscripcionesConstants.TipoPago.Banred:
+                case InscripcionesConstants.TipoPago.Geopay:
+                case InscripcionesConstants.TipoPago.Sistarbanc:
                 {
                     var result = await ObtenerUrlFactura(codigoPersona, new DtoObtenerUrlFacturaRequest
                     {
@@ -616,7 +618,7 @@ namespace AppLogic.Inscripciones.Services
             }
 
             var idBancoSistarbanc = request.IdBancoSistarbanc?.Trim();
-            if (tipoPagoNormalizado == "SISTARBANC" && string.IsNullOrWhiteSpace(idBancoSistarbanc))
+            if (tipoPagoNormalizado == InscripcionesConstants.TipoPago.Sistarbanc && string.IsNullOrWhiteSpace(idBancoSistarbanc))
             {
                 return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed("INS_UF_03", methodName, "IdBancoSistarbanc requerido para SISTARBANC.", 400);
             }
@@ -628,7 +630,7 @@ namespace AppLogic.Inscripciones.Services
                     return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
             }
 
-            var banco = tipoPagoNormalizado == "SISTARBANC" ? idBancoSistarbanc! : string.Empty;
+            var banco = tipoPagoNormalizado == InscripcionesConstants.TipoPago.Sistarbanc ? idBancoSistarbanc! : string.Empty;
             var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripto, tipoPagoNormalizado, banco);
             if (!urlResult.Success)
             {

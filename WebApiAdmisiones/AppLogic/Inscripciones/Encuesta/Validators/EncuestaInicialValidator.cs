@@ -57,7 +57,7 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
             }
 
             pendientes.AddSi(!TieneEducacionSuperiorRespondido(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
-            if (string.Equals(encuesta.TieneEducacionSuperiorEncuestaIni, "SI", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(encuesta.TieneEducacionSuperiorEncuestaIni, EncuestaInicialState.Si, StringComparison.OrdinalIgnoreCase))
                 pendientes.AddSi((uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Count ?? 0) == 0, section, "universidadEducacionSuperiorIds");
 
             var padre = EncuestaInicialState.LeerInt(encuesta.InstruccionPadreEncuestaIni);
@@ -123,9 +123,9 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
 
         private static bool TieneEducacionSuperiorRespondido(string? value)
         {
-            return string.Equals(value, "SI", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(value, "SE", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(value, "NO", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(value, EncuestaInicialState.Si, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, EncuestaInicialState.SiExterior, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, EncuestaInicialState.No, StringComparison.OrdinalIgnoreCase);
         }
 
         private sealed class PendingBuilder(long idEncuestaIni)

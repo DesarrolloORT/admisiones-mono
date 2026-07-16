@@ -15,6 +15,15 @@ namespace AppLogic.Inscripciones.Constants
             public const string DadaDeBaja = "Dada de baja";
         }
 
+        public static class TipoPago
+        {
+            public const string Banred = "BANRED";
+            public const string Sistarbanc = "SISTARBANC";
+            public const string Geopay = "GEOPAY";
+            public const string Abitab = "ABITAB";
+            public const string Paganza = "PAGANZA";
+        }
+
         public static class InteresProducto
         {
             public const string ObservacionesWeb = "ALTA DESDE ADMISIONES WEB";

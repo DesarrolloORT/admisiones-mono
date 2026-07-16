@@ -207,7 +207,7 @@ namespace AppLogic.Catalogos.Services
                 );
             }
 
-            if (producto.IdNivelProducto == 3 || producto.IdNivelProducto == 4)
+            if (EsNivelProducto3y4(producto.IdNivelProducto))
             {
                 var ofertas = uow.VdOfertasDisponibles3y4s
                     .GetOfertasDisponibles(idCarrera)
@@ -242,7 +242,7 @@ namespace AppLogic.Catalogos.Services
                 return OperationResult<List<OfertaInscripcionDto>>.Ok(response, nameof(ObtenerTurnos));
             }
 
-            if (producto.IdNivelProducto != 1 && producto.IdNivelProducto != 2)
+            if (!EsNivelProducto1y2(producto.IdNivelProducto))
             {
                 return OperationResult<List<OfertaInscripcionDto>>.IsFailed(
                     "CAT_TURNOS_04",
@@ -290,5 +290,11 @@ namespace AppLogic.Catalogos.Services
             var entidades = uow.TipoDescuentos.GetFondosDeBecaVigentesPorProducto(idProducto);
             return OperationResult<IEnumerable<DtoTipoDescuentoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerFondosDeBecaPorProducto));
         }
+
+        // Agrupación de IdNivelProducto ya usada en el resto del código para separar fuentes de datos
+        // (VdOfertasDisponibles3y4 / VdProductosDisponibles1y2).
+        private static bool EsNivelProducto3y4(long idNivelProducto) => idNivelProducto is 3 or 4;
+
+        private static bool EsNivelProducto1y2(long idNivelProducto) => idNivelProducto is 1 or 2;
     }
 }

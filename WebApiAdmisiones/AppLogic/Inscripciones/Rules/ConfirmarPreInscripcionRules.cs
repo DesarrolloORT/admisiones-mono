@@ -1,4 +1,5 @@
 using AppLogic.Inscripciones.Dtos;
+using AppLogic.Inscripciones.Encuesta.Rules;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
@@ -11,8 +12,6 @@ namespace AppLogic.Inscripciones.Rules
 {
     internal static class ConfirmarPreInscripcionRules
     {
-        private const string EstadoDefinitivo = "DEFINITIVO";
-
         public static OperationResult<bool> ValidarRequest(DtoConfirmarPreInscripcionRequest request, string methodName)
         {
             if (request == null)
@@ -49,7 +48,7 @@ namespace AppLogic.Inscripciones.Rules
             }
 
             if (!string.Equals(oferta.InscripcionesAbiertasOferta, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(oferta.Supraoferta?.EstadoSupraoferta, "D", StringComparison.OrdinalIgnoreCase))
+                || !string.Equals(oferta.Supraoferta?.EstadoSupraoferta, CommonConstants.EstadoSupraoferta.Definitivo, StringComparison.OrdinalIgnoreCase))
             {
                 return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
                     "INS_CPI_16",
@@ -60,7 +59,7 @@ namespace AppLogic.Inscripciones.Rules
 
             var encuestaAdmision = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
             if (encuestaAdmision != null
-                && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
+                && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EncuestaInicialState.EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
             {
                 return ResolverContextoConEncuestaAdmisionDefinitiva(
                     uow,

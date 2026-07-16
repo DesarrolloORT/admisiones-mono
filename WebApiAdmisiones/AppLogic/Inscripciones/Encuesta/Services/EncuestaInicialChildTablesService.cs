@@ -1,4 +1,5 @@
 using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Inscripciones.Encuesta.Rules;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -63,13 +64,14 @@ namespace AppLogic.Inscripciones.Encuesta.Services
             long codigoPersona,
             DtoGuardarEncuestaInicialRequest request)
         {
-            if (request.EstadoEducacionSuperiorPreviaId is 2 or 3)
+            if (request.EstadoEducacionSuperiorPreviaId is EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior
+                or EncuestaInicialState.EstadoEducacionSuperiorPrevia.No)
             {
                 uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);
                 return;
             }
 
-            if (request.EstadoEducacionSuperiorPreviaId == 1
+            if (request.EstadoEducacionSuperiorPreviaId == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay
                 && (request.UniversidadEducacionSuperiorIds != null || TieneOtros(request.UniversidadEducacionSuperiorOtros)))
             {
                 uow.EducacionSuperiorAdmisions.RemoveByPersona(codigoPersona);

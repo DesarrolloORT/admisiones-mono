@@ -98,9 +98,9 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
             {
                 encuesta.TieneEducacionSuperiorEncuestaIni = request.EstadoEducacionSuperiorPreviaId.Value switch
                 {
-                    1 => CommonConstants.Booleanos.Si,
-                    2 => "SE",
-                    3 => CommonConstants.Booleanos.No,
+                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay => CommonConstants.Booleanos.Si,
+                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior => EncuestaInicialState.SiExterior,
+                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.No => CommonConstants.Booleanos.No,
                     _ => encuesta.TieneEducacionSuperiorEncuestaIni
                 };
             }
@@ -175,7 +175,7 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
             if (!request.TrabajaActualmente.HasValue)
                 return false;
 
-            persona.TrabajaActualmente = request.TrabajaActualmente.Value ? "S" : "N";
+            persona.TrabajaActualmente = EncuestaInicialState.BoolToSNCorto(request.TrabajaActualmente.Value);
             persona.TipoJornada = request.TrabajaActualmente.Value
                 ? request.TipoJornadaId.HasValue ? (byte)request.TipoJornadaId.Value : persona.TipoJornada
                 : null;
@@ -231,8 +231,8 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
                 TipoJornadaId = persona.TipoJornada,
                 UniversidadConsideradaIds = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
                 UniversidadConsideradaOtros = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList(),
-                UniversidadEducacionSuperiorIds = estadoEducacionSuperior == 1 ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,
-                UniversidadEducacionSuperiorOtros = estadoEducacionSuperior == 1 ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList() : null,
+                UniversidadEducacionSuperiorIds = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,
+                UniversidadEducacionSuperiorOtros = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList() : null,
                 PublicidadOrtIds = uow.PublicidadEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(p => p.IdPublicidad).ToList(),
                 MotivoEleccionOrtIds = uow.MotivoEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(m => m.IdMotivo).ToList()
             };
@@ -241,11 +241,11 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
         private static long? LeerEstadoEducacionSuperior(string? value)
         {
             if (string.Equals(value, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase))
-                return 1;
-            if (string.Equals(value, "SE", StringComparison.OrdinalIgnoreCase))
-                return 2;
+                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay;
+            if (string.Equals(value, EncuestaInicialState.SiExterior, StringComparison.OrdinalIgnoreCase))
+                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior;
             if (string.Equals(value, CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
-                return 3;
+                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.No;
 
             return null;
         }

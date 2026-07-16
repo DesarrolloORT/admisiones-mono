@@ -9,5 +9,11 @@ namespace AppLogic.Common.Constants
             public const string Si = "SI";
             public const string No = "NO";
         }
+
+        /// <summary>Valores de EstadoSupraoferta (Oferta.Supraoferta).</summary>
+        public static class EstadoSupraoferta
+        {
+            public const string Definitivo = "D";
+        }
     }
 }
