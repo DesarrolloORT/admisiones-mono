@@ -19,4 +19,7 @@ const metadata = {
   docsUrl: `${origin}${baseUrl}`,
 };
 
-await writeFile(path.join(root, 'static', 'deployment.json'), `${JSON.stringify(metadata, null, 2)}\n`);
+await writeFile(
+  path.join(root, 'static', 'deployment.json'),
+  `${JSON.stringify(metadata, null, 2)}\n`
+);
