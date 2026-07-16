@@ -24,6 +24,15 @@
   [queryParams]="resumeQueryParams()">
   {{ action().label }}
 </a>
+} @else if (reactivatesFlow()) {
+<button
+  class="quick-actions__btn"
+  ort-secondary-button
+  type="button"
+  [attr.aria-label]="ariaLabel()"
+  (click)="reactivate()">
+  {{ action().label }}
+</button>
 } @else {
 <button
   class="quick-actions__btn"
