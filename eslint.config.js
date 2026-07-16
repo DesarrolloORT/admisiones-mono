@@ -22,6 +22,7 @@ export default [
       '**/coverage/',
       '**/dist/',
       '**/docs-site/build/',
+      '**/docs-site/.docusaurus/',
       '**/node_modules/',
       '**/.angular/',
       '**/index.html',

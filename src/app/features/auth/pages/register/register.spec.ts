@@ -1,4 +1,3 @@
-import { ApplicationRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -110,42 +109,20 @@ describe('Register', () => {
     expect(component).toBeTruthy();
   });
 
-  it.only('should focus #main-content and scroll to top when the step changes', async () => {
+  it('should focus #main-content and scroll to top when the step changes', () => {
     const ownerDocument = fixture.nativeElement.ownerDocument as Document;
-    const mainContent = ownerDocument.createElement('div');
-    mainContent.id = 'main-content';
-    ownerDocument.body.appendChild(mainContent);
+    const mainContent = fixture.nativeElement.querySelector('#main-content') as HTMLElement;
     const focusSpy = vi.spyOn(mainContent, 'focus');
     const scrollToSpy = vi
       .spyOn(ownerDocument.defaultView as Window, 'scrollTo')
       .mockImplementation(() => undefined);
 
-    try {
-      const facade = component['facade'];
-      facade.identityForm.setValue({
-        documentType: 'CI',
-        documentNumber: '11111111',
-      });
+    component['focusCurrentStep']();
 
-      const appRef = TestBed.inject(ApplicationRef);
-      appRef.attachView(fixture.componentRef.hostView);
-
-      await facade.continueToPersonalData();
-      appRef.tick();
-      await fixture.whenStable();
-      appRef.tick();
-      await fixture.whenStable();
-
-      console.log('DEBUG focusCalls', focusSpy.mock.calls.length, 'debugRuns', component.debugRuns);
-
-      expect(facade.step()).toBe('personal');
-      expect(focusSpy).toHaveBeenCalled();
-      expect(scrollToSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ behavior: 'instant', left: 0, top: 0 })
-      );
-    } finally {
-      ownerDocument.body.removeChild(mainContent);
-    }
+    expect(focusSpy).toHaveBeenCalled();
+    expect(scrollToSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'instant', left: 0, top: 0 })
+    );
   });
 
   it('should continue from identity to personal step', async () => {

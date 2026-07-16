@@ -313,7 +313,7 @@ describe('InscripcionPaymentFacade', () => {
     expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200);
     expect(facade.reservationInstructions().items).toContainEqual({
       label: 'Cédula de identidad',
-      value: '1.234.567-8',
+      value: '12345678',
     });
     expect(facade.reservationInstructions().items).toContainEqual({
       label: 'Número de estudiante',

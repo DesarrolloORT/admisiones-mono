@@ -311,7 +311,7 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBeUndefined());
 
     const req = httpController.expectOne(
-      r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'
+      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
     );
 
     expect(req.request.body).toEqual({
@@ -338,7 +338,7 @@ describe('AccountEndpoint', () => {
       });
 
     const req = httpController.expectOne(
-      r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'
+      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
     );
     req.flush(null, { status: 400, statusText: 'Bad Request' });
 
