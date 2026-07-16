@@ -143,7 +143,8 @@ namespace AppLogic.Catalogos.Services
                                 .Select(x => new DtoCarreraResponse
                                 {
                                     IdProducto = x.IdProducto,
-                                    NombreProducto = x.NombreProducto
+                                    NombreProducto = x.NombreProducto,
+                                    IdProceso = x.IdProceso
                                 })
                                 .ToList()
                         })
@@ -162,7 +163,8 @@ namespace AppLogic.Catalogos.Services
             producto.IdEscuela,
             producto.NombreExtensoEscuela,
             producto.OrdenListadoEscuela,
-            producto.OrdenListadoNivelProducto);
+            producto.OrdenListadoNivelProducto,
+            null);
 
         private static CarreraCatalogoItem ToCarreraCatalogoItem(VdOfertasDisponibles3y4 oferta) => new(
             oferta.IdProducto!.Value,
@@ -172,7 +174,8 @@ namespace AppLogic.Catalogos.Services
             oferta.IdEscuela,
             oferta.NombreExtensoEscuela,
             null,
-            null);
+            null,
+            (long)oferta.IdProceso);
 
         private sealed record CarreraCatalogoItem(
             long IdProducto,
@@ -182,7 +185,8 @@ namespace AppLogic.Catalogos.Services
             long IdEscuela,
             string? NombreEscuela,
             long? OrdenEscuela,
-            long? OrdenProducto);
+            long? OrdenProducto,
+            long? IdProceso);
 
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
         {

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace AppLogic.Catalogos.Dtos
 {
@@ -23,6 +24,8 @@ namespace AppLogic.Catalogos.Dtos
     {
         public long IdProducto { get; set; }
         public string? NombreProducto { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public long? IdProceso { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
