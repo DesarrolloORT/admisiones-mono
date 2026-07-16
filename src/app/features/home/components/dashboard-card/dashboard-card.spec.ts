@@ -11,6 +11,7 @@ describe('DashboardCard', () => {
     });
     const fixture = TestBed.createComponent(DashboardCard);
     fixture.componentRef.setInput('inscripcion', {
+      idInscripto: 100,
       idProducto: 20,
       idProceso: 200,
       idComienzo: 2,
