@@ -4,11 +4,8 @@
 
 .responsive-select__mobile {
   display: grid;
-  gap: var(--ort-sys-textfield-gap);
-}
-
-.responsive-select__mobile--multiple {
   grid-template-columns: minmax(0, 1fr);
+  gap: var(--ort-sys-textfield-gap);
   min-width: 0;
 }
 
