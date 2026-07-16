@@ -26,13 +26,9 @@ export class Register {
   private readonly injector = inject(Injector);
   protected readonly facade = inject(RegisterFlowFacade);
 
-  public debugRuns = 0;
-
   constructor() {
     effect(() => {
       this.facade.step();
-      this.debugRuns++;
-
       afterNextRender(() => this.focusCurrentStep(), { injector: this.injector });
     });
   }
@@ -40,7 +36,6 @@ export class Register {
   private focusCurrentStep(): void {
     const main = this.document.getElementById('main-content');
 
-    console.log('DEBUG focusCurrentStep', !!main, main?.outerHTML, typeof main?.focus);
     main?.focus();
     this.document.defaultView?.scrollTo({ behavior: 'instant', left: 0, top: 0 });
   }

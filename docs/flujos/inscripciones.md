@@ -1,58 +1,464 @@
-# Inscripciones
+---
+slug: /flujos/inscripciones
+title: Flujo de inscripciones
+description: Pasos, campos condicionales, payloads y casos borde de la inscripción.
+businessId: admisiones.inscripciones
+sourcePaths:
+  - src/app/features/inscriptions/
+  - src/app/features/home/pages/dashboard/
+  - src/app/features/home/services/home.ts
+  - src/app/features/home/endpoints/home.endpoint.ts
+  - src/app/shared/process-flow/
+---
 
-## Objetivo
+import SourceLink from '@site/src/components/SourceLink';
 
-Permitir que una persona autenticada seleccione propuesta academica, complete
-datos requeridos, confirme la preinscripcion y elija un metodo de pago o reserva.
+# Flow manual de inscripciones
 
-## Entrada del usuario
+> Tipo: reference
 
-Ruta protegida `/inscripciones`. El flujo inicia con seleccion de propuesta,
-continua con encuesta/datos personales/identidad/reglamento y termina en pago o
-estado terminal.
+Fuente de verdad frontend: `src/app/features/inscriptions/**`.
 
-## Recorrido frontend
+Este documento describe el comportamiento actual de la pantalla: que campos
+muestran u ocultan otros, que pasa cuando cambia una seleccion padre y que
+valores llegan al backend. No uses el raw value de los formularios como contrato:
+el contrato backend sale de `inscription-flow-mappers.ts`.
 
-- Ruta o feature Angular: `src/app/features/inscriptions/inscriptions.routes.ts`.
-- Componentes principales: `Inscripcion`, pasos de propuesta academica,
-  informacion personal, confirmacion, reserva y exito.
-- Servicio de feature: `Inscripciones`.
-- Endpoint adapter: `InscripcionesEndpoint`.
+## Acciones y evidencia end-to-end
 
-Detalle vigente:
-[Flow manual de inscripciones](../../src/app/features/inscriptions/INSCRIPCIONES-FLOW.md).
+| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                      | Backend                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /Inscripciones/InteresProducto`                                     | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/InscripcionesController.cs">InscripcionesController</SourceLink> → <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Inscripciones/Services/InscripcionesService.cs">InscripcionesService</SourceLink> |
+| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /Inscripciones/ConfirmarPreInscripcion` | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/PersonaController.cs">PersonaController</SourceLink> + InscripcionesController                                                                                                                                  |
+| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /Inscripciones/Pagar`                                               | InscripcionesController → InscripcionesService → API interna de pagos                                                                                                                                                                                                                          |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                   | `POST /Inscripciones/Reactivar`                                           | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
 
-## Recorrido backend
+Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
-- Controller o endpoint backend: `POST /Inscripciones/InteresProducto`,
-  `GET/POST /Inscripciones/EncuestaInicial`,
-  `POST /Inscripciones/ConfirmarPreInscripcion`,
-  `POST /Inscripciones/Pagar`, `POST /Persona/SubirDocumento` y
-  `POST /Persona/SubirFoto`.
-- Service o caso de uso principal: interes de producto, encuesta inicial,
-  validacion de identidad, reglamento, preinscripcion y pago.
-- DTOs/contratos relevantes: interes de producto, encuesta inicial,
-  confirmacion de preinscripcion, pago y archivos de identidad.
-- Link al repo backend:
-  [DesarrolloORT/api-admisiones](https://github.com/DesarrolloORT/api-admisiones).
+## Pasos y escenarios
 
-## Estados y errores
+El flujo tiene 3 pasos. El **paso 1** (Propuesta academica) avanza con
+`POST /Inscripciones/InteresProducto`. El **paso 2** (Informacion personal)
+guarda primero los cambios de identidad, luego llama a
+`POST /Inscripciones/EncuestaInicial` y finalmente a
+`POST /Inscripciones/ConfirmarPreInscripcion`. El **paso 3** (Confirmacion /
+pago) llama a `POST /Inscripciones/Pagar`; el detalle operativo forma parte de esta misma página.
 
-- Validaciones visibles: cascada de propuesta, campos condicionales de encuesta,
-  identidad, aceptacion de reglamento y metodo de pago.
-- Errores esperados: carga de identidad fallida, encuesta no guardada,
-  preinscripcion no confirmada, metodo de pago sin callback automatico o pago
-  externo pendiente.
-- Mensajes al usuario: los errores bloquean el avance del paso y conservan el
-  borrador local cuando aplica.
+Antes de entrar al paso 2 se consulta `GET /Inscripciones/EncuestaInicial`.
+Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
+secciones de Educacion, decision academica, experiencia ORT, situacion
+laboral, identidad y reglamento. Si `tieneDerechoEncuesta === false`, solo
+se muestran identidad y reglamento. Si la encuesta ya viene completa no se
+muestran secciones de encuesta.
 
-## Accesibilidad
+```mermaid
+flowchart TD
+  A[Propuesta academica] -->|InteresProducto OK| B{Estado de encuesta}
+  B -->|Pendiente o en progreso| C[Encuesta + identidad + reglamento]
+  B -->|Sin derecho| D[Identidad + reglamento]
+  B -->|Completa| E[Identidad + reglamento]
+  C --> F[Identidad + reglamento]
+  D --> F
+  E --> F
+  F --> G[Subir documento y foto en paralelo]
+  G -->|Ambos OK| H[Guardar encuesta]
+  G -->|Error| M[Reabrir identidad sin check]
+  H -->|OK| I[Confirmar preinscripcion]
+  H -->|Error| K[Mostrar error y permanecer]
+  I -->|Confirmada| J[Seleccion de pago]
+  I -->|Error| K[Mostrar error y permanecer]
+  J --> L[Pago / estado terminal]
+```
 
-Los pasos deben mantener encabezados claros, controles con nombre accesible,
-errores por seccion y navegacion de teclado. Los campos condicionales no deben
-dejar controles ocultos como unica fuente de informacion.
+## Intención de entrada × estado × encuesta
 
-## Pendientes
+Cómo arranca el flujo depende de la **intención de entrada** (decidida por la URL,
+no por el backend) combinada con el estado de la inscripción (`Detalle`) y el de la
+encuesta inicial (`EncuestaInicial`, que es **por persona**). La derivación es pura
+y está fijada por la tabla ejecutable `models/inscription-entry.spec.ts`; esta
+matriz es su lectura de negocio.
 
-- TODO: confirmar URL publicada de Swagger/OpenAPI del backend.
-- TODO: confirmar callback o consulta automatica para pagos externos.
+- **Nueva** (`/inscripciones`, sin params): el Paso 1 arranca **siempre virgen y
+  editable**, aunque exista una encuesta previa en progreso. La encuesta previa solo
+  se reutiliza al llegar al Paso 2 (prellena respuestas), nunca precarga el Paso 1 ni
+  reposiciona el flujo. `InteresProducto` se envía al continuar.
+- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel): para una
+  inscripción `En proceso` con encuesta y oferta completa, arranca en el Paso 2. Al
+  volver, el Paso 1 se precarga desde la encuesta y queda deshabilitado; continuar
+  vuelve al Paso 2 sin enviar `InteresProducto`.
+
+  | Estado del detalle                      | Dónde arranca / qué muestra                |
+  | --------------------------------------- | ------------------------------------------ |
+  | En proceso + encuesta + oferta completa | Paso 2 en la sección activa de la encuesta |
+  | En proceso + sin encuesta               | Paso 1 editable                            |
+  | En proceso + sin derecho a encuesta     | Paso 1 editable                            |
+  | Pago pendiente / Pendiente sin seña     | Paso 3 (elegir medio de pago)              |
+  | Pago pendiente / Pendiente con seña     | Pantalla de referencias de pago (reserva)  |
+  | Confirmada                              | Pantalla de éxito terminal                 |
+  | A la espera / desconocido               | Pantalla "Inscripción en proceso"          |
+
+  Si `Detalle` falla, los params no son válidos o falta la oferta completa, la
+  excepción anterior no se aplica.
+
+- **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`):
+  reservado para el futuro botón de una inscripción **cancelada**. Reglas de negocio
+  aún sin definir; hoy deriva igual que **nueva** (Paso 1 virgen). El estado
+  `Cancelada` de `Detalle` queda reservado para esta intención. El botón
+  "Reactivar inscripción" del dashboard (home) no usa este `modo`: hace
+  `POST /Inscripciones/Reactivar` y navega a `retomar` (`idProducto`+`idProceso`)
+  con la inscripción nueva ya creada.
+
+## Regla general de valores ocultos
+
+Cuando un campo padre cambia, la UI actualiza validadores y puede ocultar
+campos hijos. En varios casos el valor crudo del hijo queda en el form, pero
+el payload lo ignora y envia `null` cuando el padre indica que no aplica.
+
+Excepciones que si limpian valores:
+
+- Propuesta academica: cambiar `tipoPropuesta` limpia `carrera`, `comienzo` y
+  `turno`; cambiar `carrera` limpia `comienzo` y `turno`; cambiar `comienzo`
+  limpia `turno`.
+- Bachillerato: cambiar `anioSecundaria` limpia `orientacion` si el valor anterior
+  ya no existe en las orientaciones vigentes para ese año.
+- Institucion educativa: cambiar `departamento` limpia `institucionEducativa`
+  solo si el valor anterior no existe en el nuevo catalogo cargado.
+- Pago: cambiar `metodoPago` a algo distinto de `cuenta-bancaria` limpia
+  `banco`.
+
+## Matriz de campos condicionales
+
+| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                        |
+| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------- |
+| `cursaSecundaria = cursando`            | `anioSecundaria`                        | Requerido               | Conserva valor crudo                | `anioBachillerato = null`                   |
+| Año con orientaciones                   | `orientacion`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `orientacionBachilleratoId = null`          |
+| `recursaAnioBachillerato = si`          | `vecesRecursaAnioBachillerato`          | Entero mayor que 0      | Conserva valor crudo                | `vecesRecursaAnioBachillerato = null`       |
+| `lugarSecundaria = 1`                   | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `nombreInstitucion...` |
+| `lugarSecundaria != 1`                  | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `institucionSecundariaId = null`            |
+| `estadoEducacionSuperior = 1`           | `universidadesEducacionSuperior`        | Seleccion requerida     | Conserva valor crudo                | `universidadEducacionSuperiorIds = null`    |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                       |
+| Formacion de madre o padre es `5` o `6` | `tituloOrtMadre` o `tituloOrtPadre`     | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                         |
+| `otrasUniversidades = si`               | `universidadesInformadas`               | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                          |
+| Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
+| `situacionLaboral = trabaja`            | `tipoJornadaLaboral`                    | Requerido               | Conserva valor crudo                | `tipoJornadaId = null`                      |
+| Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
+| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `idBancoSistarbanc`           |
+
+Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
+verificada al nodo exacto. No se publican enlaces generales ni placeholders.
+
+## Casos borde consolidados
+
+- Ocultar un control no garantiza que su valor crudo se elimine; los mappers son
+  la frontera que envia `null` cuando no aplica.
+- Cambiar la institucion de Uruguay a exterior puede conservar temporalmente el
+  id anterior como texto.
+- Una opcion dependiente se conserva mientras siga existiendo en el catalogo
+  nuevo; si desaparece, se limpia.
+- La encuesta completa oculta sus secciones, pero identidad y reglamento
+  mantienen sus propias reglas.
+- El paso de pago llama al backend; los pagos externos terminan en `pago-pendiente-externo` hasta que exista confirmación automática.
+- `resultado=en-proceso` fuerza el estado terminal "Inscripcion en proceso" para
+  cualquier metodo.
+
+## Paso 1: propuesta academica
+
+El paso tiene cuatro campos en cascada. `tipoPropuesta` es una constante local
+filtrada por niveles disponibles (`1` carrera universitaria, `2` tecnicatura,
+`3` actualizacion profesional); no se envia directo al backend pero filtra las
+carreras disponibles. `carrera` usa el `idProducto` como string, proveniente de
+`GET /Catalogos/Carreras`, y se envia como `idProducto` y `carreraId`. `comienzo`
+usa el `idProceso` como string, proveniente de
+`GET /Catalogos/Comienzos?idCarrera=<carrera>`, y se envia como
+`idProcesoSeleccionado` y `comienzoId`. `turno` usa el `idOferta` como string,
+proveniente de `GET /Catalogos/Turnos?idCarrera=<carrera>&idProceso=<comienzo>`,
+y se envia como `idOferta` e `idOfertaSeleccionada`.
+
+Al continuar se llama a `POST /Inscripciones/InteresProducto` con:
+
+```json
+{
+  "idOferta": "Number(turno)",
+  "idProcesoSeleccionado": "Number(comienzo)",
+  "idProducto": "Number(carrera)"
+}
+```
+
+## Paso 2: informacion personal
+
+### Educacion
+
+`cursaSecundaria` controla si se muestra `anioSecundaria`. Si pasa a
+`no-cursando` el año queda crudo en el form pero no se envia; el backend recibe
+`anioBachillerato = null`. Si cursa secundaria y el año elegido trae
+orientaciones en `educacion.aniosBachillerato[].orientaciones`, se muestra
+`orientacion` directamente. No hay selector intermedio de tipo nacional o
+internacional. Si el año no trae orientaciones o cambia a uno donde la seleccion
+anterior no existe, se envia `orientacionBachilleratoId = null`.
+
+`recursaAnioBachillerato` es requerido. Si vale `si`, se muestra
+`vecesRecursaAnioBachillerato` y se exige un numero mayor a 0. Si vale `no`, la
+cantidad puede quedar cruda en el form pero el backend recibe
+`vecesRecursaAnioBachillerato = null`.
+`lugarSecundaria` decide el control de institucion educativa. Con valor `1`
+(Uruguay) se muestran `departamento` e `institucionEducativa` como select; el
+backend recibe `ubicacionUltimoAnioSecundariaId = 1`,
+`institucionSecundariaId = Number(institucionEducativa)` y
+`nombreInstitucionSecundaria = null`. Con valor `2` (exterior)
+`institucionEducativa` pasa a texto libre; el backend recibe
+`ubicacionUltimoAnioSecundariaId = 2`, `institucionSecundariaId = null` y
+`nombreInstitucionSecundaria = <texto>`. Cambiar de Uruguay a exterior no limpia
+el control, por lo que puede conservar el id anterior como texto.
+
+`estadoEducacionSuperior = 1` muestra el multiple `universidadesEducacionSuperior`.
+Si la seleccion incluye `Otro` (`0`), se muestra el `ortInput`
+`universidadEducacionSuperiorOtro` y el backend recibe
+`universidadEducacionSuperiorOtros = [texto]`. Si cambia a otro valor o no esta
+seleccionado `0`, la seleccion y el texto pueden quedar crudos pero el backend
+recibe `universidadEducacionSuperiorIds = null` o
+`universidadEducacionSuperiorOtros = null`, segun corresponda.
+`formacionMadre` con valor `5` o `6` muestra `tituloOrtMadre` (si/no). Si cambia
+a otro valor el titulo queda crudo pero se envia `null`. Lo mismo aplica a
+`formacionPadre` y `tituloOrtPadre`.
+
+### Decision academica
+
+`otrasUniversidades = si` muestra el multiple `universidadesInformadas`. Si la
+seleccion incluye `Otro` (`0`), se muestra el `ortInput`
+`universidadInformadaOtro` y el backend recibe `universidadConsideradaOtros =
+[texto]`. Si pasa a `no`, la seleccion queda cruda pero el backend recibe
+`universidadConsideradaIds = null` y `universidadConsideradaOtros = null`.
+`certezaDecision` no tiene hijos condicionales; `1` es decidido/a y `2` es con
+dudas, y se envia como `nivelDecisionId`.
+Los campos directos de esta seccion son `anioDecisionCarrera` (`anioDecisionCarreraId`),
+`apoyoDecision` (`apoyoDecisionId`), `anioDecisionOrt` (`anioDecisionOrtId`) y
+`motivosOrt` (`motivoEleccionOrtIds`), todos con ids de catalogo.
+
+### Experiencia con ORT
+
+Cuatro campos booleanos (si/no) tienen ratings condicionales: `reunionAsesoramiento`,
+`visitoWeb`, `visitoSede` y `recuerdaPublicidad`. En cada caso, si el campo padre
+vale `si` se muestra el rating o multiple correspondiente (`calificacionAsesoramiento`,
+`calificacionWeb`, `calificacionSede`, `mediosPublicidad`). Si cambia a `no`, el
+valor hijo queda crudo pero el backend recibe `null` para ese campo. Los ratings
+envian el numero elegido y las etiquetas salen del catalogo de valoraciones si esta
+disponible.
+
+### Situacion laboral
+
+`situacionLaboral` con valor `trabaja` muestra `tipoJornadaLaboral`. El backend
+recibe `trabajaActualmente = true` y `tipoJornadaId = Number(tipoJornadaLaboral)`.
+Con `buscando` o `no-trabaja` no se muestra ningun hijo; el backend recibe
+`trabajaActualmente = false` y `tipoJornadaId = null`. El valor viejo de jornada
+queda crudo en el form pero se ignora.
+
+Completar Situacion laboral solo valida y marca el expansible. No dispara llamadas
+HTTP; la encuesta se guarda junto con el resto del cierre del paso 2.
+
+### Identidad
+
+Se precargan datos desde `GET /Persona/Documento` y `GET /Persona/Foto`. La
+seccion requiere frente y dorso del documento (`File`, `image/jpeg` o `image/png`),
+selfie (`File`, `image/jpeg` o `image/png`) y `vencimientoDocumento` (`Date`).
+
+Si frente, dorso, vencimiento y selfie ya vinieron completos desde el backend, se
+muestra el checkbox `Verifico que la identidad es correcta` (`identidadCorrecta`)
+y la seccion queda invalida hasta marcarlo. Si alguno vino `null`, no se pide ese
+checkbox: el flujo normal pide completar solo el dato faltante.
+
+Si el usuario elimina un archivo, queda `null` y la seccion vuelve a invalida. Si
+sube o cambia archivos, el front guarda esos cambios antes de confirmar la
+preinscripcion. `identidadCorrecta` es solo de UI y no se envia al backend.
+
+Al cerrar el paso 2, si se toco frente/dorso o cambio el vencimiento se llama a
+`POST /Persona/SubirDocumento`; si se toco la selfie se llama a
+`POST /Persona/SubirFoto`.
+
+### Reglamento
+
+`GET /Inscripciones/ReglamentoEstudiantil` indica si el reglamento ya fue aceptado.
+Si ya fue aceptado, la UI oculta el checkbox y marca `aceptaReglamento = true`
+automaticamente; el backend recibe `aceptoReglamento = true`. Si no fue aceptado,
+se muestra un checkbox requerido y el backend recibe `aceptoReglamento = true`
+solo si el usuario lo marca.
+
+## Payload de encuesta inicial
+
+Se envia con `POST /Inscripciones/EncuestaInicial` al cerrar el paso 2, despues de
+guardar correctamente los cambios de identidad y antes de confirmar la
+preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
+envian `null` cuando no aplican.
+
+- `carreraId`: `Number(carrera)`.
+- `comienzoId`: `Number(comienzo)`.
+- `orientacionBachilleratoId`: `Number(orientacion)` si cursa secundaria y el año elegido tiene orientaciones.
+- `anioBachillerato`: `Number(anioSecundaria)` si `cursaSecundaria = cursando`.
+- `recursaAnioBachillerato`: `si -> true`, `no -> false`.
+- `vecesRecursaAnioBachillerato`: cantidad solo si `recursaAnioBachillerato = si`; si no, `null`.
+- `nivelFormacionPadreTutorId`: `Number(formacionPadre)`.
+- `nivelFormacionMadreTutorId`: `Number(formacionMadre)`.
+- `anioDecisionCarreraId`: `Number(anioDecisionCarrera)`.
+- `anioDecisionOrtId`: `Number(anioDecisionOrt)`.
+- `seInformoEnOtrasUniversidades`: `si -> true`, `no -> false`.
+- `informacionOtrasUniversidadesLinea1` y `Linea2`: sin campo UI, siempre `null`.
+- `apoyoDecisionId`: `Number(apoyoDecision)`.
+- `institucionSecundariaId`: `Number(institucionEducativa)` solo si `lugarSecundaria = 1`.
+- `nombreInstitucionSecundaria`: texto de `institucionEducativa` si `lugarSecundaria != 1`.
+- `ubicacionUltimoAnioSecundariaId`: `Number(lugarSecundaria)`.
+- `estadoEducacionSuperiorPreviaId`: `Number(estadoEducacionSuperior)`.
+- `nivelDecisionId`: `Number(certezaDecision)`.
+- `tuvoAsesoramientoOrt`: `si -> true`, `no -> false`.
+- `valoracionAsesoramientoOrtId`: rating si `reunionAsesoramiento = si`.
+- `visitoSitioWebOrt`: `si -> true`, `no -> false`.
+- `valoracionSitioWebOrtId`: rating si `visitoWeb = si`.
+- `visitoInstalacionesOrt`: `si -> true`, `no -> false`.
+- `valoracionInstalacionesOrtId`: rating si `visitoSede = si`.
+- `recuerdaPublicidadOrt`: `si -> true`, `no -> false`.
+- `madreTutorEgresadoOrt`: `tituloOrtMadre` (`si -> true`, `no -> false`), solo si `formacionMadre` es `5` o `6`.
+- `padreTutorEgresadoOrt`: `tituloOrtPadre` (`si -> true`, `no -> false`), solo si `formacionPadre` es `5` o `6`.
+- `trabajaActualmente`: `trabaja -> true`; `buscando` o `no-trabaja -> false`.
+- `tipoJornadaId`: `Number(tipoJornadaLaboral)` solo si `situacionLaboral = trabaja`.
+- `universidadConsideradaIds`: `universidadesInformadas.map(Number)` solo si `otrasUniversidades = si`; incluye `0` si selecciona `Otro`.
+- `universidadConsideradaOtros`: `[universidadInformadaOtro.trim()]` solo si `universidadConsideradaIds` incluye `0`; si no, `null`.
+- `universidadEducacionSuperiorIds`: `universidadesEducacionSuperior.map(Number)` solo si `estadoEducacionSuperior = 1`; incluye `0` si selecciona `Otro`.
+- `universidadEducacionSuperiorOtros`: `[universidadEducacionSuperiorOtro.trim()]` solo si `universidadEducacionSuperiorIds` incluye `0`; si no, `null`.
+- `publicidadOrtIds`: `mediosPublicidad.map(Number)` solo si `recuerdaPublicidad = si`.
+- `motivoEleccionOrtIds`: `motivosOrt.map(Number)`, `null` si no hay seleccion.
+
+## Confirmacion de preinscripcion
+
+Despues de completar la ultima seccion del paso 2 el front vuelve a validar todas
+las secciones visibles. Si alguna quedo invalida por navegacion manual o borrador,
+vuelve a esa seccion y no llama al backend de confirmacion.
+
+Orden de cierre:
+
+1. En paralelo, `POST /Persona/SubirDocumento` si se toco frente/dorso o cambio
+   el vencimiento, y `POST /Persona/SubirFoto` si se toco la selfie.
+2. `POST /Inscripciones/EncuestaInicial`, solo si las cargas de identidad
+   requeridas terminaron correctamente y la persona tiene derecho a encuesta.
+3. `POST /Inscripciones/ConfirmarPreInscripcion` con:
+
+```json
+{
+  "aceptoReglamento": "Boolean(aceptaReglamento)",
+  "idOfertaSeleccionada": "Number(turno)"
+}
+```
+
+Si el backend responde `confirmada === true`, se avanza al paso de pago. Si no,
+se muestra error y no se avanza. Si Documento o Foto falla por HTTP,
+`OperationResult.success === false` o `data === false`, no se guarda la encuesta:
+se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
+el check de completada.
+
+## Paso 3: pago
+
+El paso llama a `POST /Inscripciones/Pagar`. El adapter traduce los métodos propios de la UI al contrato backend y la fachada decide si termina confirmado, reservado o pendiente en una pasarela externa.
+
+## Pago: detalle operativo
+
+## Contrato del paso
+
+Payload feature:
+
+```json
+{
+  "idInscripcion": 1072704,
+  "metodoPago": "cuenta-bancaria",
+  "idBancoSistarbanc": "brou"
+}
+```
+
+Mapping adapter:
+
+| UI                | API               | `idBancoSistarbanc` |
+| ----------------- | ----------------- | ------------------- |
+| `cuenta-personal` | `CUENTA_PERSONAL` | `null`              |
+| `abitab`          | `ABITAB`          | `null`              |
+| `paganza`         | `PAGANZA`         | `null`              |
+| `banred`          | `BANRED`          | `null`              |
+| `geopay`          | `GEOPAY`          | `null`              |
+| `cuenta-bancaria` | `SISTARBANC`      | código del banco    |
+
+`tarjeta-credito` no queda como método activo hasta que el backend confirme un
+`tipoPago` propio o su mapeo dentro de Sistarbanc.
+
+## Flujo por método
+
+```mermaid
+flowchart TD
+  A[Inscripción con pago pendiente] --> B[POST /Inscripciones/Pagar]
+  B --> C{Método}
+  C -->|CUENTA_PERSONAL| D{Backend confirma pago}
+  D -->|OK| E[Inscripción confirmada]
+  D -->|Error| F[Permanece en pago con error]
+  C -->|ABITAB / PAGANZA| G[Reserva / pago pendiente externo]
+  C -->|BANRED / GEOPAY / SISTARBANC| H{Backend devuelve urlPago}
+  H -->|Sí| I[Front redirige a pasarela]
+  H -->|No| J[Pago pendiente externo]
+  I --> J
+```
+
+## Respuesta de `/Inscripciones/Pagar`
+
+El adapter mapea `resultado`, `urlPago`, `parametrosEncriptados`, `mensajes` y el
+bloque `confirmada` (número de estudiante, coordinación y materias) cuando el
+backend confirma el pago en línea (p. ej. cuenta personal). Con eso la pantalla de
+éxito pinta el detalle sin un `getDetail` adicional; ese `getDetail` queda solo
+como fallback si la respuesta no trae `confirmada`.
+
+## Estados frontend
+
+- `processing`: solo mientras responde `/Inscripciones/Pagar`.
+- `inscription-confirmada`: pago confirmado por backend. Usa `confirmada` de la
+  respuesta de Pagar; si no vino, cae al `getDetail`.
+- `reserva`: Abitab o Paganza quedan con instrucciones de pago. Se muestran la
+  cédula (Abitab), el número de estudiante y el monto que informa `seniaMinima`.
+  En el flujo fresco se consultan con un `getDetail` tras quedar en reserva; si
+  falla, se muestra solo el monto.
+- `pago-pendiente-externo`: Banred, Geopay o Sistarbanc ya salieron a pasarela o
+  quedaron esperando definición de acreditación.
+- `editing`: errores de validación o error de backend; el usuario puede corregir
+  y reintentar.
+
+## Brecha pendiente
+
+Para Banred, Geopay y Sistarbanc el front redirige fuera del proyecto. Hoy este
+proyecto no recibe callback ni consulta de estado para saber si el usuario pagó.
+Por eso el estado default al volver o no poder confirmar es
+`pago-pendiente-externo`, nunca un loader infinito.
+
+Cuando backend defina callback, polling o endpoint de consulta, ese mecanismo debe
+actualizar este estado a `inscription-confirmada` o mostrar error final.
+
+### Contrato con las páginas Pagos\*Gestion.aspx
+
+Las tres pasarelas intermedias (`PagosBanRedGestion.aspx`,
+`PagosGeoPayGestion.aspx`, `PagosSistarbancGestion.aspx`, en LogicaORT) leen el
+POST así: `Request.Form["data"].Split('=')[1].Split('"')[0]` — extraen lo que
+está entre el primer `=` y la primera `"`. Por eso el front envía
+`data = {"params":"parametrosEncriptados=<blob>"}` (mismo formato que Gestion_V2
+en producción). El backend de admisiones ya le quitó el prefijo
+`parametrosEncriptados=` a la URL original (`SepararUrlYParametrosEncriptados`
+en `InscripcionesService.cs`), así que el front lo reconstruye.
+
+### Salteo del intermediario ASPX (propuesta a backend)
+
+El ASPX desencripta el blob, crea la transacción contra BanRed y recién ahí
+redirige a la pasarela. El front no puede replicar ese paso: la clave de
+desencriptación es server-side.
+
+Propuesta: que `POST /Inscripciones/Pagar` devuelva directamente la URL final de
+la pasarela (BanRed) ya resuelta. Con eso admisiones muestra todo el detalle del
+pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
+
+## Catalogos usados
+
+- Carreras: `GET /Catalogos/Carreras`
+- Comienzos: `GET /Catalogos/Comienzos?idCarrera=<idProducto>`
+- Turnos: `GET /Catalogos/Turnos?idCarrera=<idProducto>&idProceso=<idProceso>`
+- Encuesta inicial: `GET /Catalogos/EncuestaInicial`
+- Departamentos: `GET /Catalogos/PaisesEstadosCiudades` filtrando Uruguay (`codigoPais = 1`)
+- Instituciones: `GET /Catalogos/Instituciones?codigoPais=1&codigoEstado=<departamento>`
+- Bancos: `GET /Catalogos/Bancos`

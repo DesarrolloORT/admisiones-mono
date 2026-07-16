@@ -70,7 +70,8 @@ Reglas:
 - actualizar [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) si aparece un gap de `@desarrolloort/components`;
 - actualizar [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md) si cambia la
   estrategia de smoke, regression, assisted, nightly o datos E2E;
-- si se usa una exencion documental, dejar el motivo visible.
+- si se usa una exencion documental, escribir `docs-none: <motivo>` en el cuerpo
+  del PR; el gate rechaza motivos vacios.
 
 ## Referencias
 

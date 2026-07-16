@@ -24,6 +24,13 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - Las fechas de API permanecen como `string | null` en contratos de feature; la conversion a `Date` se hace explicitamente en facades/UI.
 - `npm run update-api` y `npm run check-api-contracts` deben fallar si un adapter filtra generated o un endpoint se genera con `response: unknown`.
 
+## Knowledge hub
+
+- `docs/index.md` es el catalogo central de comportamiento y autoridades.
+- Antes de cambiar logica de login, registro o inscripciones, leer la pagina con el `businessId` correspondiente en `docs/flujos/`.
+- Actualizar la pagina canonica en el mismo PR o declarar `docs-none: <motivo>`.
+- Usar CodeGraph para codigo frontend y los enlaces configurados por el portal para evidencia backend; no duplicar DTOs ni reglas internas.
+
 ## Perfiles
 
 - common: baseline comun y CodeGraph.

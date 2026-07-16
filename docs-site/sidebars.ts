@@ -11,6 +11,16 @@ const sidebars = {
       label: 'Arquitectura',
     },
     {
+      type: 'doc',
+      id: 'arquitectura/flujo-pasos',
+      label: 'Flujos paso a paso',
+    },
+    {
+      type: 'doc',
+      id: 'DOCUMENTATION-GUIDELINES',
+      label: 'Knowledge hub',
+    },
+    {
       type: 'category',
       label: 'Workflow/Setup',
       items: [

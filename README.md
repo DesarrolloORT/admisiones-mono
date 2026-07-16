@@ -49,13 +49,14 @@ El alcance incluye:
 
 - Metadata para el Hub: [.docs/project.json](.docs/project.json)
 - Sitio documental publicado: URL prevista https://ort-docs.ort.edu.uy/admisiones/
-- Fuente documental: [docs/](docs/)
+- Mapa central de conocimiento: [docs/index.md](docs/index.md)
+- Flujos canonicos: [login](docs/flujos/login.md), [registro](docs/flujos/registro.md) e [inscripciones](docs/flujos/inscripciones.md)
 
 ## Requisitos
 
 | Herramienta | Version minima | Notas                                |
 | ----------- | -------------- | ------------------------------------ |
-| Node.js     | 20.x           | Recomendado usar LTS                 |
+| Node.js     | 22.x           | Recomendado usar LTS                 |
 | npm         | 10.x           | Incluido con Node.js                 |
 | Angular CLI | 21.x           | Solo para desarrollo local           |
 | Docker      | Opcional       | Requerido para entorno en contenedor |
@@ -112,7 +113,6 @@ Documentacion relacionada:
 - [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
 - [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md)
-- [docs/codegen/update-endpoints.md](docs/codegen/update-endpoints.md)
 
 > [!IMPORTANT]
 > Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.

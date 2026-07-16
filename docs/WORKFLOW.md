@@ -31,7 +31,7 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 
 ## Hooks y validaciones automaticas
 
-- [`.husky/pre-commit`](../.husky/pre-commit) ejecuta:
+- [`.husky/pre-commit`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.husky/pre-commit) ejecuta:
 
   ```bash
   node scripts/testing/check-missing-tests.js --staged && npx lint-staged
@@ -63,7 +63,7 @@ Las automatizaciones listadas abajo son parte de la base de la plantilla. Un pro
 
 ### CI para ramas versionadas
 
-Archivo: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+Archivo: [`.github/workflows/ci.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/ci.yml)
 
 Se dispara al crear un pull request hacia una rama con patron `v*.*.*/main`.
 
@@ -101,7 +101,7 @@ Notas:
 
 ### Despliegue a Produccion
 
-Archivo: [`.github/workflows/cd.yml`](../.github/workflows/cd.yml)
+Archivo: [`.github/workflows/cd.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/cd.yml)
 
 Disparador: ejecucion manual con requisito de contraseña.
 
@@ -117,7 +117,7 @@ Variables requeridas si el proyecto conserva este workflow:
 
 ### Despliegue a Desarrollo
 
-Archivo: [`.github/workflows/dev-test-deploy.yml`](../.github/workflows/dev-test-deploy.yml)
+Archivo: [`.github/workflows/dev-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/dev-test-deploy.yml)
 
 Disparadores:
 
@@ -126,7 +126,7 @@ Disparadores:
 
 ### Despliegue a Preproduccion
 
-Archivo: [`.github/workflows/preprod-test-deploy.yml`](../.github/workflows/preprod-test-deploy.yml)
+Archivo: [`.github/workflows/preprod-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/preprod-test-deploy.yml)
 
 Disparadores:
 
@@ -135,7 +135,7 @@ Disparadores:
 
 ### Release
 
-Archivo: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+Archivo: [`.github/workflows/release.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/release.yml)
 
 Disparador: publicacion de release.
 
@@ -145,7 +145,7 @@ Variable requerida si el proyecto conserva este workflow:
 
 ### Rollback
 
-Archivo: [`.github/workflows/rollback.yml`](../.github/workflows/rollback.yml)
+Archivo: [`.github/workflows/rollback.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/rollback.yml)
 
 Disparador: ejecucion manual con contraseña.
 
@@ -153,19 +153,16 @@ Usa las mismas variables de despliegue que `cd.yml`.
 
 ### Otras automatizaciones
 
-- [`.github/workflows/pr-to-main.yml`](../.github/workflows/pr-to-main.yml): auditoria de dependencias, CI para ramas `feature/*`, `fix/*`, `hotfix/*` y `dependabot/*`, y validacion de version.
-- [`.github/workflows/e2e-nightly.yml`](../.github/workflows/e2e-nightly.yml):
-  E2E semanal o manual contra preprod controlado cuando `E2E_BASE_URL` esta configurado.
-- [`.github/workflows/pr-title-lint.yml`](../.github/workflows/pr-title-lint.yml): exige titulos `release/vX.Y.Z` en PRs a `main`.
-- [`.github/workflows/tag-on-push.yml`](../.github/workflows/tag-on-push.yml): genera tags de preproduccion.
-- [`.github/workflows/label-manager.yml`](../.github/workflows/label-manager.yml): administra etiquetas del repositorio.
-- [`.github/workflows/labeler.yml`](../.github/workflows/labeler.yml): etiqueta PRs automaticamente.
-- [`.github/workflows/pr-state-labeler.yml`](../.github/workflows/pr-state-labeler.yml): gestiona etiquetas de estado de PR.
-- [`.github/workflows/notification.yml`](../.github/workflows/notification.yml): centraliza notificaciones.
-- [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml): genera `src/environments/generated-environment.ts` y `src/web.config`; `CSP_POLICY` es obligatorio y se escribe como header `Content-Security-Policy`.
+- [`.github/workflows/pr-to-main.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/pr-to-main.yml): auditoria de dependencias, CI para ramas `feature/*`, `fix/*`, `hotfix/*` y `dependabot/*`, y validacion de version.
+- [`.github/workflows/pr-title-lint.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/pr-title-lint.yml): exige titulos `release/vX.Y.Z` en PRs a `main`.
+- [`.github/workflows/tag-on-push.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/tag-on-push.yml): genera tags de preproduccion.
+- [`.github/workflows/label-manager.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/label-manager.yml): administra etiquetas del repositorio.
+- [`.github/workflows/labeler.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/labeler.yml): etiqueta PRs automaticamente.
+- [`.github/workflows/pr-state-labeler.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/pr-state-labeler.yml): gestiona etiquetas de estado de PR.
+- [`.github/workflows/notification.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/notification.yml): centraliza notificaciones.
 
 ## Referencias relacionadas
 
 - [docs/SETUP.md](./SETUP.md)
-- [README.md](../README.md)
-- [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [README.md](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/README.md)
+- [CONTRIBUTING.md](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/CONTRIBUTING.md)

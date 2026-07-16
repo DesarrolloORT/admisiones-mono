@@ -133,7 +133,7 @@ ubicacion preferida es co-localizada.
 
 ### Ambientes locales y generados
 
-`src/environments/environment.ts` queda versionado como wrapper estable. Los archivos generados `src/environments/generated-environment.ts` y `src/web.config` no se versionan: en local los crea `npm run env:sync` desde Azure App Configuration y en CI los crea [`.github/actions/setup-env/action.yml`](../.github/actions/setup-env/action.yml).
+`src/environments/environment.ts` queda versionado como wrapper estable. Los archivos generados `src/environments/generated-environment.ts` y `src/web.config` no se versionan: en local los crea `npm run env:sync` desde Azure App Configuration y los workflows de CI los generan antes de compilar.
 
 ## Puntos de extension esperados
 
@@ -182,7 +182,7 @@ sesión), llamá a `catalogs.clearCache()`.
 
 ## Referencias relacionadas
 
-- [README.md](../README.md)
+- [README.md](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/README.md)
 - [docs/SETUP.md](./SETUP.md)
 - [docs/WORKFLOW.md](./WORKFLOW.md)
 - [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md)

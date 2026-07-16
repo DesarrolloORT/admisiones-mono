@@ -5,7 +5,8 @@
   "scripts": {
     "site": "docusaurus start --host 127.0.0.1 --port 4300",
     "start": "docusaurus start --host 127.0.0.1 --port 4300",
-    "build": "docusaurus build",
+    "generate:deployment-metadata": "node scripts/generate-deployment-metadata.mjs",
+    "build": "npm run generate:deployment-metadata && docusaurus build",
     "serve": "docusaurus serve --host 127.0.0.1 --port 4300"
   },
   "dependencies": {

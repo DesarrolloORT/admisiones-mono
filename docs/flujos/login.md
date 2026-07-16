@@ -1,51 +1,142 @@
-# Login
+---
+slug: /flujos/login
+title: Inicio de sesion
+description: Flujo de login, 2FA, refresh de token y proteccion de rutas.
+businessId: admisiones.login
+sourcePaths:
+  - src/app/features/auth/pages/login/
+  - src/app/features/auth/pages/two-factor-validation/
+  - src/app/features/auth/services/auth-session.ts
+  - src/app/features/auth/endpoints/auth.endpoint.ts
+  - src/app/core/guards/
+  - src/app/core/interceptors/
+---
 
-## Objetivo
+import SourceLink from '@site/src/components/SourceLink';
 
-Permitir que una persona con cuenta activa inicie sesion, complete 2FA cuando
-corresponda y acceda a rutas protegidas.
+# Inicio de sesion
 
-## Entrada del usuario
+> Tipo: explanation
 
-Pantalla `/iniciar-sesion`, formulario de tipo de documento, numero de documento
-y password. Si el backend exige segundo factor, el usuario continua por
-`/confirmacion-correo/verificar-codigo` y `/verificar-codigo`.
+Este documento cubre el inicio de sesion con credenciales, la rama de verificacion por correo en dos factores, la hidratacion de sesion para rutas protegidas y el refresh automatico de access token.
 
-## Recorrido frontend
+## Recorrido completo
 
-- Ruta o feature Angular: `src/app/features/auth/auth.routes.ts`.
-- Componentes principales: `Login`, `EmailConfirmation` y `TwoFactorValidationPage`.
-- Servicio de feature: `AuthSessionService`.
-- Endpoint adapter: `AuthEndpoint`.
+```mermaid
+sequenceDiagram
+  actor U as Usuario
+  participant L as Login UI
+  participant S as AuthSessionService
+  participant A as AuthEndpoint
+  participant I as Http interceptors
+  participant API as AuthController
+  participant D as Cookies / DB / Email
+  participant C as Confirmacion correo
+  participant T as 2FA UI
+  participant G as Auth guard
 
-Detalle vigente: [Inicio de sesion](../LOGIN-FLOW.md).
+  U->>L: Completa documento y password
+  L->>S: login(payload)
+  S->>A: login(LoginPayload)
+  A->>I: POST /Auth/Login + captcha login
+  I->>API: Request con X-Captcha-Token
+  API->>D: Valida credenciales y politica 2FA
 
-## Recorrido backend
+  alt Credenciales validas sin 2FA
+    API-->>A: 200 + persona + cookies HttpOnly
+    A-->>S: authenticated
+    S->>S: storeSession(AuthSession)
+    L->>G: Navega a /inicio
+    G->>S: ensureAuthenticatedSession()
+  else Requiere 2FA
+    API-->>A: 202 + sessionId + maskedEmail
+    A-->>S: twoFactorRequired
+    S->>S: Guarda contexto 2FA en memoria
+    L->>C: Navega a /confirmacion-correo/verificar-codigo
+    U->>C: Ingresar codigo
+    C->>T: Navega a /verificar-codigo
+    T->>S: completeTwoFactor(sessionId, code)
+    S->>A: verifyTwoFactorCode(...)
+    A->>API: POST /Auth/VerificarCodigo2FA + captcha
+    API->>D: Consume codigo y emite cookies HttpOnly
+    A-->>S: persona
+    S->>S: storeSession(AuthSession)
+    T->>G: Navega a /inicio
+  else Credenciales invalidas o rate limit
+    API-->>A: 401 / 429
+    A-->>L: Error normalizado
+    L-->>U: Mensaje visible
+  end
 
-- Controller o endpoint backend: `POST /Auth/Login`,
-  `POST /Auth/VerificarCodigo2FA`, `POST /Auth/ReenviarCodigo2FA`,
-  `POST /Auth/RefreshToken` y `POST /Auth/Logout`.
-- Service o caso de uso principal: autenticacion, 2FA por correo y refresh de
-  token en `api-admisiones`.
-- DTOs/contratos relevantes: resultado de login autenticado o con 2FA pendiente,
-  verificacion de codigo y refresh por cookies HttpOnly.
-- Link al repo backend:
-  [DesarrolloORT/api-admisiones](https://github.com/DesarrolloORT/api-admisiones).
+  opt Request protegida con access token vencido
+    I->>S: refreshAccessToken()
+    S->>A: POST /Auth/RefreshToken
+    A->>API: Cookie refresh HttpOnly
+    API-->>I: Nuevas cookies
+    I->>API: Reintenta request original
+  end
+```
 
-## Estados y errores
+## Acciones y referencias
 
-- Validaciones visibles: documento, password y codigo 2FA de seis digitos.
-- Errores esperados: credenciales invalidas, rate limit, codigo 2FA invalido o
-  sesion expirada.
-- Mensajes al usuario: se normalizan desde `AuthEndpoint` y la UI mantiene la
-  sesion local solo para presentacion y guards.
+| Accion visible             | Angular                                                                     | Servicio                                   | Adapter y contrato                            | API / Backend                   |
+| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------- | ------------------------------- |
+| Iniciar sesion             | `Login.submit()` en `src/app/features/auth/pages/login/login.ts`            | `AuthSessionService.login()`               | `AuthEndpoint.login()` mapea `LoginResult`    | `POST /Auth/Login`              |
+| Ver confirmacion de codigo | `/confirmacion-correo/verificar-codigo` usa `TWO_FACTOR_EMAIL_CONFIRMATION` | Contexto 2FA queda en `AuthSessionService` | Respuesta 202 con `sessionId` y `maskedEmail` | Email con codigo 2FA            |
+| Ingresar codigo            | `TwoFactorValidationPage.verify()` y componente `TwoFactorValidation`       | `completeTwoFactor(...)`                   | `verifyTwoFactorCode(...)`                    | `POST /Auth/VerificarCodigo2FA` |
+| Reenviar codigo            | `TwoFactorValidationPage.resend()`                                          | `resendTwoFactorCode(sessionId)`           | `resendTwoFactorCode(...)`                    | `POST /Auth/ReenviarCodigo2FA`  |
+| Entrar a ruta protegida    | `authGuard` / `authMatchGuard`                                              | `ensureAuthenticatedSession()`             | `AccountService.getPersonalData()`            | Cookies HttpOnly vigentes       |
+| Refresh automatico         | `authRefreshInterceptor`                                                    | `refreshAccessToken()`                     | `refreshToken()`                              | `POST /Auth/RefreshToken`       |
+| Cerrar sesion              | Layout de home llama `AuthSessionService.logout()`                          | `logout()` limpia estado local             | `logout()`                                    | `POST /Auth/Logout`             |
 
-## Accesibilidad
+## Estados, contratos y sesiones
 
-Los campos deben mantener labels visibles o accesibles, foco operativo por
-teclado y errores asociados al control. El flujo 2FA permite pegar el codigo y
-mantiene navegacion de foco entre inputs.
+La UI usa tipos propios de la feature y no consume DTOs generados directamente. `AuthEndpoint` es la unica capa de auth que importa endpoints generados.
 
-## Pendientes
+| Estado              | Origen                                            | Frontend                                                      | Efecto                                        |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------- |
+| `authenticated`     | `POST /Auth/Login` 200                            | Guarda `AuthSession` con documento y primer nombre            | Navega a `/inicio`                            |
+| `twoFactorRequired` | `POST /Auth/Login` 202                            | Guarda `sessionId`, documento y correo enmascarado en memoria | Navega a confirmacion de correo               |
+| Sesion hidratada    | Guard en ruta protegida                           | `ensureAuthenticatedSession()` consulta datos personales      | Permite `/inicio`, `/inscripciones`, `/becas` |
+| Token refrescado    | 401 en request con credenciales fuera de `/Auth/` | Refresh compartido con `shareReplay`                          | Reintenta el request original una vez         |
+| Sesion invalida     | Refresh falla o guard no hidrata                  | Limpia `AuthSession`, cache y drafts de inscripcion           | Redirige a login o rechaza navegacion         |
 
-- TODO: confirmar URL publicada de Swagger/OpenAPI del backend.
+Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend solo mantiene estado de presentacion (`AuthSession`) para guards, cabecera y mensajes.
+
+## Validaciones y seguridad
+
+- Login requiere tipo de documento, numero y password.
+- Para cedula, el numero se limpia/formatea antes de llegar al backend.
+- `POST /Auth/Login`, `POST /Auth/VerificarCodigo2FA` y `POST /Auth/ReenviarCodigo2FA` declaran `captchaAction`; el interceptor agrega el header de captcha.
+- `POST /Auth/Login` usa mensajes custom para `401` y `429`.
+- El refresh no se intenta para endpoints `/Auth/` para evitar loops.
+- Los drafts de inscripcion en `sessionStorage` se limpian al cerrar o invalidar sesion.
+
+## Casos borde
+
+- Si el usuario recarga `/verificar-codigo`, el contexto 2FA en memoria se pierde y la page vuelve a `/iniciar-sesion`.
+- El codigo 2FA acepta seis digitos, mueve foco entre inputs y permite pegar un codigo completo.
+- Reenviar codigo puede devolver nuevo `sessionId`; el frontend reemplaza el valor previo.
+- Si refresh falla, se limpia la sesion local y no se reintenta indefinidamente.
+- Si el request original vuelve a responder 401 despues del refresh, se limpia la sesion.
+
+## Fuentes vigentes
+
+- Frontend: <SourceLink repo="frontend" path="src/app/features/auth/pages/login/login.ts">login page</SourceLink>, <SourceLink repo="frontend" path="src/app/features/auth/services/auth-session.ts">session service</SourceLink> y <SourceLink repo="frontend" path="src/app/features/auth/endpoints/auth.endpoint.ts">HTTP adapter</SourceLink>.
+- Backend: <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/AuthController.cs">AuthController</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Autenticacion/">módulo Autenticacion</SourceLink>.
+
+## Evidencia
+
+- Frontend:
+  - `src/app/features/auth/pages/login/login.spec.ts`
+  - `src/app/features/auth/pages/two-factor-validation/two-factor-validation.spec.ts`
+  - `src/app/features/auth/endpoints/auth.endpoint.spec.ts`
+  - `src/app/features/auth/services/auth-session.spec.ts`
+  - `src/app/core/interceptors/http.spec.ts`
+- Backend:
+  - [`AuthController`][back-auth-controller]
+  - El contrato publico se publica por OpenAPI y se regenera en frontend con `npm run update-api`.
+
+Los enlaces de Figma se agregan solamente cuando existe una URL verificada con `node-id`. Actualmente no hay nodos verificados para este flujo.
+
+[back-auth-controller]: https://github.com/DesarrolloORT/api-admisiones/blob/6161d5deb2e5ef9d4a84930013481196a6fd5e1d/WebApiAdmisiones/WebApiAdmisiones/Controllers/AuthController.cs
