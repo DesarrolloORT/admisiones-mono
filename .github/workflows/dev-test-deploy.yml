@@ -77,7 +77,15 @@ jobs:
           name: build-artifact
 
       - name: Delete existing files from site directory
-        run: Remove-Item -Recurse -Force '${{vars.DEV_SERVER_SITE_PATH}}\*'
+        run: |
+          $sitePath = '${{ vars.DEV_SERVER_SITE_PATH }}'
+          if ([string]::IsNullOrWhiteSpace($sitePath)) {
+            throw "vars.DEV_SERVER_SITE_PATH no esta configurada para el environment 'desarrollo'; se aborta para evitar borrar la raiz del disco."
+          }
+          if (-not (Test-Path -LiteralPath $sitePath)) {
+            throw "El path '$sitePath' no existe en este runner; se aborta el borrado."
+          }
+          Remove-Item -Recurse -Force (Join-Path $sitePath '*')
 
       - name: Copy Build files into site directory
         run: Copy-Item -Path .\* -Destination '${{vars.DEV_SERVER_SITE_PATH}}' -Recurse
