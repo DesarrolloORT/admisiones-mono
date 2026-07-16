@@ -26,6 +26,8 @@ namespace AppLogic.Catalogos.Dtos
         public string? NombreProducto { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public long? IdProceso { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? TieneSeminario { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
