@@ -3,7 +3,6 @@ using AppLogic.DevartDTOs;
 using AppLogic.Becas.Validators;
 using AppLogic.Becas.Interfaces;
 using BusinessLogic.IDevartRepositories;
-using ConnectionContext;
 using Utilities;
 
 namespace AppLogic.Becas.Services
@@ -11,12 +10,10 @@ namespace AppLogic.Becas.Services
     public class FondoDeBecaService : IFondoDeBecaServices
     {
         private readonly IUnitOfWorkFactory _uowFactory;
-        private readonly IDbConnectionContext _dbConnectionContext;
 
-        public FondoDeBecaService(IUnitOfWorkFactory uowFactory, IDbConnectionContext dbConnectionContext)
+        public FondoDeBecaService(IUnitOfWorkFactory uowFactory)
         {
             _uowFactory = uowFactory;
-            _dbConnectionContext = dbConnectionContext;
         }
 
         #region TIPOS DECLARACIÓN JURADA
