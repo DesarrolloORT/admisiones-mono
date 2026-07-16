@@ -21,14 +21,13 @@ public class RegistroFlowService : IRegistroFlowService
 {
     private const string NuevaPersonaPurpose = "nueva-persona-activacion";
     private const string FlowSessionKeyPrefix = "registro:flow-session:";
-    private const string PendingPersonaKeyPrefix = "registro:pending:";
-    private const string PendingPersonaDocumentoKeyPrefix = "registro:pending-doc:";
 
     private readonly IRegistroService _registroService;
     private readonly IPasswordActivationService _passwordActivationService;
     private readonly IConfiguration _configuration;
     private readonly IDatabase _redisDb;
     private readonly IRegistroDocumentoImagenCacheService _documentoImagenCacheService;
+    private readonly IPendingPersonaStore _pendingPersonaStore;
     private readonly ILogger<RegistroFlowService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
@@ -39,6 +38,7 @@ public class RegistroFlowService : IRegistroFlowService
         IConfiguration configuration,
         IConnectionMultiplexer redis,
         IRegistroDocumentoImagenCacheService documentoImagenCacheService,
+        IPendingPersonaStore pendingPersonaStore,
         ILogger<RegistroFlowService> logger)
     {
         _registroService = registroService;
@@ -46,6 +46,7 @@ public class RegistroFlowService : IRegistroFlowService
         _configuration = configuration;
         _redisDb = redis.GetDatabase();
         _documentoImagenCacheService = documentoImagenCacheService;
+        _pendingPersonaStore = pendingPersonaStore;
         _logger = logger;
     }
 
@@ -228,13 +229,7 @@ public class RegistroFlowService : IRegistroFlowService
 
         // 3. Guardar persona pendiente en Redis
         var pending = ConstruirPendingPersona(request, flowIdPending, tokenHash);
-
-        var pendingJson = JsonSerializer.Serialize(pending, JsonOptions);
-        await _redisDb.StringSetAsync($"{PendingPersonaKeyPrefix}{flowIdPending}", pendingJson, ttl);
-        await _redisDb.StringSetAsync(
-            CrearPendingDocumentoKey(request.TipoDocumento, request.Documento),
-            flowIdPending,
-            ttl);
+        await _pendingPersonaStore.SaveAsync(pending, ttl);
 
         // 4. Enviar mail de activación
         var mailResult = await _passwordActivationService.EnviarMailNuevaPersonaAsync(flowIdPending, request.Mail, token);
@@ -295,26 +290,10 @@ public class RegistroFlowService : IRegistroFlowService
     // ───── PendingPersona ──────────────────────────────────────────────────
 
     public Task<DtoRegistroPendingPersona?> GetPendingPersonaAsync(string flowId)
-        => GetPendingPersonaInternalAsync(flowId);
+        => _pendingPersonaStore.GetAsync(flowId);
 
-    private async Task<DtoRegistroPendingPersona?> GetPendingPersonaInternalAsync(string flowId)
-    {
-        var json = await _redisDb.StringGetAsync($"{PendingPersonaKeyPrefix}{flowId}");
-        if (!json.HasValue) return null;
-
-        return JsonSerializationHelper.TryDeserialize<DtoRegistroPendingPersona>(json.ToString(), JsonOptions);
-    }
-
-    public async Task DeletePendingPersonaAsync(string flowId)
-    {
-        var pending = await GetPendingPersonaInternalAsync(flowId);
-        if (pending != null)
-        {
-            await _redisDb.KeyDeleteAsync(CrearPendingDocumentoKey(pending.TipoDocumento, pending.Documento));
-        }
-
-        await _redisDb.KeyDeleteAsync($"{PendingPersonaKeyPrefix}{flowId}");
-    }
+    public Task DeletePendingPersonaAsync(string flowId)
+        => _pendingPersonaStore.DeleteAsync(flowId);
 
     public Task<OperationResult<long>> CompletarNuevaPersona(DtoRegistroPendingPersona data, string passwordNueva)
         => CompletarNuevaPersonaAsync(data, passwordNueva);
@@ -358,39 +337,7 @@ public class RegistroFlowService : IRegistroFlowService
         string documento,
         string fallbackFlowId)
     {
-        var docKey = CrearPendingDocumentoKey(tipoDocumento, documento);
-        var existingFlowId = await _redisDb.StringGetAsync(docKey);
-        if (!existingFlowId.HasValue)
-        {
-            return fallbackFlowId;
-        }
-
-        var flowId = existingFlowId.ToString();
-        if (string.IsNullOrWhiteSpace(flowId))
-        {
-            await _redisDb.KeyDeleteAsync(docKey);
-            return fallbackFlowId;
-        }
-
-        var pending = await GetPendingPersonaInternalAsync(flowId);
-        if (pending != null)
-        {
-            return flowId;
-        }
-
-        await _redisDb.KeyDeleteAsync(docKey);
-        return fallbackFlowId;
-    }
-
-    private static string CrearPendingDocumentoKey(string tipoDocumento, string documento)
-    {
-        var tipoNormalizado = DocumentUtils.NormalizarMayusculas(tipoDocumento);
-        var documentoNormalizado = DocumentUtils.NormalizarMayusculas(documento);
-        if (DocumentUtils.EsCedula(tipoNormalizado))
-        {
-            documentoNormalizado = new string(documentoNormalizado.Where(char.IsDigit).ToArray());
-        }
-
-        return $"{PendingPersonaDocumentoKeyPrefix}{tipoNormalizado}:{documentoNormalizado}";
+        var flowId = await _pendingPersonaStore.ResolverFlowIdPorDocumentoAsync(tipoDocumento, documento);
+        return flowId ?? fallbackFlowId;
     }
 }

@@ -1,6 +1,7 @@
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Common.Email;
 using AppLogic.Registro.Dtos;
+using AppLogic.Registro.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +12,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Moq;
-using StackExchange.Redis;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 using AppLogic.Autenticacion.Services;
@@ -35,18 +35,14 @@ namespace UnitTesting.AppLogic.Services
             IUnitOfWorkFactory? uowFactory = null,
             IEmailSender? emailSender = null,
             Mock<IHashTokenStore>? hashStoreMock = null,
-            Mock<IDatabase>? redisDbMock = null)
+            Mock<IPendingPersonaStore>? pendingPersonaStoreMock = null)
         {
-            var redisMock = new Mock<IConnectionMultiplexer>();
-            var dbMock = redisDbMock ?? new Mock<IDatabase>();
-            redisMock.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(dbMock.Object);
-
             return new PasswordActivationService(
                 uowFactory ?? Mock.Of<IUnitOfWorkFactory>(),
                 CrearConfiguracion(),
                 emailSender ?? new TestEmailSender(),
                 hashStoreMock?.Object ?? Mock.Of<IHashTokenStore>(),
-                redisMock.Object,
+                pendingPersonaStoreMock?.Object ?? Mock.Of<IPendingPersonaStore>(),
                 Mock.Of<ILogger<PasswordActivationService>>());
         }
 
@@ -250,17 +246,15 @@ namespace UnitTesting.AppLogic.Services
                 TokenHash = HashTokenForTest(token),
                 CreatedAt = DateTime.UtcNow
             };
-            var redisDbMock = new Mock<IDatabase>();
-            redisDbMock
-                .Setup(d => d.StringGetAsync(
-                    It.Is<RedisKey>(k => k == $"registro:pending:{flowId}"),
-                    It.IsAny<CommandFlags>()))
-                .ReturnsAsync((RedisValue)JsonSerializer.Serialize(pending, new JsonSerializerOptions
+            var pendingPersonaStoreMock = new Mock<IPendingPersonaStore>();
+            pendingPersonaStoreMock
+                .Setup(s => s.GetRawAsync(flowId))
+                .ReturnsAsync(JsonSerializer.Serialize(pending, new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 }));
 
-            var service = CrearServicio(redisDbMock: redisDbMock);
+            var service = CrearServicio(pendingPersonaStoreMock: pendingPersonaStoreMock);
 
             var result = await service.ActivarLinkPasswordAsync(token);
 

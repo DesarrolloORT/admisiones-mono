@@ -69,6 +69,7 @@ namespace UnitTesting.AppLogic.Services
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
                 Mock.Of<IRegistroDocumentoImagenCacheService>(),
+                new PendingPersonaRedisStore(redisConnectionMock.Object),
                 Mock.Of<ILogger<RegistroFlowService>>());
             var request = CrearRegistroPersonaRequest("new@example.com");
 
@@ -145,6 +146,7 @@ namespace UnitTesting.AppLogic.Services
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
                 Mock.Of<IRegistroDocumentoImagenCacheService>(),
+                new PendingPersonaRedisStore(redisConnectionMock.Object),
                 Mock.Of<ILogger<RegistroFlowService>>());
             var request = CrearRegistroPersonaRequest("new@example.com");
 
@@ -176,6 +178,7 @@ namespace UnitTesting.AppLogic.Services
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
                 cacheMock.Object,
+                Mock.Of<IPendingPersonaStore>(),
                 Mock.Of<ILogger<RegistroFlowService>>());
 
             var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");
@@ -214,6 +217,7 @@ namespace UnitTesting.AppLogic.Services
                 CrearConfiguracion(),
                 redisConnectionMock.Object,
                 cacheMock.Object,
+                Mock.Of<IPendingPersonaStore>(),
                 Mock.Of<ILogger<RegistroFlowService>>());
 
             var result = await service.CompletarNuevaPersona(pending, "NuevaPassword1!");

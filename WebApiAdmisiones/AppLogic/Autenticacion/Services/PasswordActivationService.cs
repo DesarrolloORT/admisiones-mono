@@ -9,12 +9,12 @@ using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Email;
 using AppLogic.Common.Security;
 using AppLogic.Common.Serialization;
+using AppLogic.Registro.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using StackExchange.Redis;
 using Utilities;
 
 namespace AppLogic.Autenticacion.Services;
@@ -32,7 +32,7 @@ public class PasswordActivationService : IPasswordActivationService
     private readonly IConfiguration _configuration;
     private readonly IEmailSender _emailSender;
     private readonly IHashTokenStore _hashTokenStore;
-    private readonly IDatabase _redisDb;
+    private readonly IPendingPersonaStore _pendingPersonaStore;
     private readonly ILogger<PasswordActivationService> _logger;
 
     private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
@@ -42,14 +42,14 @@ public class PasswordActivationService : IPasswordActivationService
         IConfiguration configuration,
         IEmailSender emailSender,
         IHashTokenStore hashTokenStore,
-        IConnectionMultiplexer redis,
+        IPendingPersonaStore pendingPersonaStore,
         ILogger<PasswordActivationService> logger)
     {
         _uowFactory = uowFactory;
         _configuration = configuration;
         _emailSender = emailSender;
         _hashTokenStore = hashTokenStore;
-        _redisDb = redis.GetDatabase();
+        _pendingPersonaStore = pendingPersonaStore;
         _logger = logger;
     }
 
@@ -332,10 +332,9 @@ public class PasswordActivationService : IPasswordActivationService
                 default!);
         }
 
-        var pendingKey = $"registro:pending:{flowId}";
-        var pendingJson = await _redisDb.StringGetAsync(pendingKey);
+        var pendingJson = await _pendingPersonaStore.GetRawAsync(flowId);
 
-        if (!pendingJson.HasValue)
+        if (pendingJson == null)
         {
             return OperationResult<DtoPasswordActivationSession>.IsFailed(
                 "ACT_LINK_NUP_02",
@@ -346,7 +345,7 @@ public class PasswordActivationService : IPasswordActivationService
         }
 
         var pending = JsonSerializationHelper.TryDeserialize<DtoRegistroPendingPersona>(
-            pendingJson.ToString(),
+            pendingJson,
             JsonSerializationDefaults.Redis);
 
         if (pending == null)

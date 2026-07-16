@@ -121,6 +121,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPendingPersonaStore, PendingPersonaRedisStore>();
             services.AddScoped<IPasswordActivationService, PasswordActivationService>();
             services.AddScoped<IHashTokenStore, RedisHashTokenStore>();
             services.AddScoped<IRegistroFlowService, RegistroFlowService>();
