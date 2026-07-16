@@ -584,24 +584,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_WhenOfertaNoCoincideConEncuesta_ReturnsConflict()
-        {
-            SetupPersona(123);
-            SetupOfertaConfirmacion(10, 21, 40, 1);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
-
-            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
-            {
-                AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
-            });
-
-            Assert.False(result.Success);
-            Assert.Equal("INS_CPI_15", result.ErrorCode);
-            Assert.Equal(409, result.HttpCode);
-        }
-
-        [Fact]
         public async Task ReactivarInscripcion_WhenRequestInvalido_ReturnsBadRequest()
         {
             var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 0 });

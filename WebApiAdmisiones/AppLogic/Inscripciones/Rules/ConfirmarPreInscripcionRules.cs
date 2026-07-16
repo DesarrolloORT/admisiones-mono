@@ -235,16 +235,6 @@ namespace AppLogic.Inscripciones.Rules
                     400);
             }
 
-            if (encuestaAdmision.IdProducto!.Value != idProductoOferta
-                || encuestaAdmision.IdComienzo!.Value != idComienzoOferta)
-            {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    "INS_CPI_15",
-                    methodName,
-                    "La oferta seleccionada no coincide con la encuesta inicial de admision.",
-                    409);
-            }
-
             var procesoInteres = uow.InteresProductoOfertas.GetProcesoPorInteresActivoOferta(
                 codigoPersona,
                 idProductoOferta,
@@ -252,15 +242,6 @@ namespace AppLogic.Inscripciones.Rules
             if (procesoInteres == null || procesoInteres.IdProceso <= 0)
             {
                 return ErrorInteresOfertaNoEncontrado(methodName);
-            }
-
-            if (procesoInteres.IdProceso != encuestaAdmision.IdProceso!.Value)
-            {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
-                    "INS_CPI_15",
-                    methodName,
-                    "La oferta seleccionada no coincide con el proceso de la encuesta inicial de admision.",
-                    409);
             }
 
             return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
