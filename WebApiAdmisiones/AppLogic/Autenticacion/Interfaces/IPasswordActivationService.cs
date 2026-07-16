@@ -19,4 +19,10 @@ public interface IPasswordActivationService
 
     /// <summary>Valida la sesión temporal y retorna el tipo de sesión + identificador.</summary>
     OperationResult<DtoValidatedSession> ValidarSessionToken(string sessionToken);
+
+    /// <summary>
+    /// Genera el JWT de activación para un flujo pendiente (sub = flowId). Lo consume
+    /// RegistroFlowService al confirmar una persona nueva (registro diferido vía Redis).
+    /// </summary>
+    string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration);
 }

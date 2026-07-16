@@ -58,6 +58,9 @@ namespace UnitTesting.AppLogic.Services
                 .ReturnsAsync(OperationResult<object?>.Ok(default, nameof(IRegistroService.ValidarNuevaPersonaAsync)));
             var passwordActivationMock = new Mock<IPasswordActivationService>();
             passwordActivationMock
+                .Setup(s => s.GenerarTokenFlowId(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                .Returns("generated-token");
+            passwordActivationMock
                 .Setup(s => s.EnviarMailNuevaPersonaAsync(oldFlowId, "new@example.com", It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<object?>.IsSuccess(null, nameof(IPasswordActivationService.EnviarMailNuevaPersonaAsync), "OK"));
             var service = new RegistroFlowService(
@@ -125,6 +128,9 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(s => s.ValidarNuevaPersonaAsync(It.IsAny<DtoRegistroPersonaRequest>()))
                 .ReturnsAsync(OperationResult<object?>.Ok(default, nameof(IRegistroService.ValidarNuevaPersonaAsync)));
             var passwordActivationMock = new Mock<IPasswordActivationService>();
+            passwordActivationMock
+                .Setup(s => s.GenerarTokenFlowId(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                .Returns("generated-token");
             passwordActivationMock
                 .Setup(s => s.EnviarMailNuevaPersonaAsync(oldFlowId, "new@example.com", It.IsAny<string>()))
                 .ReturnsAsync(OperationResult<object?>.IsFailed(

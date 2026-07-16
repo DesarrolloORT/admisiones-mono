@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Utilities;
 using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Autenticacion.Services;
 
 namespace AppLogic.Registro.Services;
 
@@ -224,7 +223,7 @@ public class RegistroFlowService : IRegistroFlowService
             request.TipoDocumento,
             request.Documento,
             flowId);
-        var token = PasswordActivationService.GenerarTokenFlowIdPublic(flowIdPending, NuevaPersonaPurpose, ttl);
+        var token = _passwordActivationService.GenerarTokenFlowId(flowIdPending, NuevaPersonaPurpose, ttl);
         var tokenHash = TokenHashHelper.HashSha256Base64(token);
 
         // 3. Guardar persona pendiente en Redis

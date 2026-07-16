@@ -495,7 +495,7 @@ public class PasswordActivationService : IPasswordActivationService
     }
 
     /// <summary>Genera un JWT donde el subject es un flowId (string GUID).</summary>
-    private static string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration)
+    public string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ObtenerSecretKey()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -515,9 +515,6 @@ public class PasswordActivationService : IPasswordActivationService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-    internal static string GenerarTokenFlowIdPublic(string flowId, string purpose, TimeSpan duration)
-        => GenerarTokenFlowId(flowId, purpose, duration);
 
     private static ClaimsPrincipal ValidarJwt(string token)
     {
