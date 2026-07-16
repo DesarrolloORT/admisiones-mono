@@ -516,18 +516,14 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var extension = DocumentoIdentidadPersonaService.ResolverExtensionPersistida(fileName, ".jpg");
+            var nuevaFoto = new Imagen
+            {
+                IdImagen = idImagen,
+                CodigoPersona = persona.CodigoPersona
+            };
+            DocumentoIdentidadPersonaService.AplicarDatosFoto(nuevaFoto, persona.CodigoPersona, fileContent, fileName);
 
-            return OperationResult<Imagen>.Ok(
-                new Imagen
-                {
-                    IdImagen = idImagen,
-                    CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(persona.CodigoPersona, PersonaConstants.TipoImagenFoto, extension),
-                    TipoImagen = PersonaConstants.TipoImagenFoto.ToString(),
-                    BlobImagen = fileContent
-                },
-                nameof(GuardarFotoPersona));
+            return OperationResult<Imagen>.Ok(nuevaFoto, nameof(GuardarFotoPersona));
         }
 
         private static OperationResult<bool> ModificarFotoPersona(Imagen existing, byte[] fileContent, string fileName)
@@ -549,11 +545,7 @@ namespace AppLogic.Personas.Services
                     400);
             }
 
-            var extension = DocumentoIdentidadPersonaService.ResolverExtensionPersistida(fileName, ".jpg");
-
-            existing.NombreImagen = DocumentoIdentidadPersonaService.ConstruirNombrePersistido(existing.CodigoPersona ?? 0, PersonaConstants.TipoImagenFoto, extension);
-            existing.TipoImagen = PersonaConstants.TipoImagenFoto.ToString();
-            existing.BlobImagen = fileContent;
+            DocumentoIdentidadPersonaService.AplicarDatosFoto(existing, existing.CodigoPersona ?? 0, fileContent, fileName);
             return OperationResult<bool>.Ok(true, nameof(ModificarFotoPersona));
         }
 

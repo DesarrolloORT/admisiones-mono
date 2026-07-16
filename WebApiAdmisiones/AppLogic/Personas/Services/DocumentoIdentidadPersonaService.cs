@@ -292,26 +292,17 @@ namespace AppLogic.Personas.Services
             var fotoExistente = uow.Imagens.GetFotoByPersona(persona.CodigoPersona);
             if (fotoExistente is null)
             {
-                uow.Imagens.Add(new Imagen
+                var nuevaFoto = new Imagen
                 {
                     IdImagen = dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_IMAGEN),
-                    CodigoPersona = persona.CodigoPersona,
-                    NombreImagen = ConstruirNombrePersistido(
-                        persona.CodigoPersona,
-                        PersonaConstants.TipoImagenFoto,
-                        ResolverExtensionPersistida(cara.NombreArchivo, ".jpg")),
-                    TipoImagen = PersonaConstants.TipoImagenFoto.ToString(),
-                    BlobImagen = cara.Archivo
-                });
+                    CodigoPersona = persona.CodigoPersona
+                };
+                AplicarDatosFoto(nuevaFoto, persona.CodigoPersona, cara.Archivo, cara.NombreArchivo);
+                uow.Imagens.Add(nuevaFoto);
             }
             else
             {
-                fotoExistente.NombreImagen = ConstruirNombrePersistido(
-                    persona.CodigoPersona,
-                    PersonaConstants.TipoImagenFoto,
-                    ResolverExtensionPersistida(cara.NombreArchivo, ".jpg"));
-                fotoExistente.TipoImagen = PersonaConstants.TipoImagenFoto.ToString();
-                fotoExistente.BlobImagen = cara.Archivo;
+                AplicarDatosFoto(fotoExistente, persona.CodigoPersona, cara.Archivo, cara.NombreArchivo);
                 uow.Imagens.Update(fotoExistente);
             }
         }
@@ -325,6 +316,18 @@ namespace AppLogic.Personas.Services
         public static string ConstruirNombrePersistido(long codigoPersona, int tipoImagen, string extension)
         {
             return $"{codigoPersona}_{tipoImagen}{extension}";
+        }
+
+        /// <summary>
+        /// Construcción pura de nombre/tipo/blob de la foto de persona (TipoImagenFoto); no valida el
+        /// archivo (los callers validan con FileValidator cuando corresponde, cada uno con su propio gating).
+        /// </summary>
+        public static void AplicarDatosFoto(Imagen imagen, long codigoPersona, byte[] fileContent, string? fileName)
+        {
+            var extension = ResolverExtensionPersistida(fileName, ".jpg");
+            imagen.NombreImagen = ConstruirNombrePersistido(codigoPersona, PersonaConstants.TipoImagenFoto, extension);
+            imagen.TipoImagen = PersonaConstants.TipoImagenFoto.ToString();
+            imagen.BlobImagen = fileContent;
         }
 
         public static string ResolverCodigoValidacionDocumento(
