@@ -37,185 +37,24 @@ jobs:
       checkout-ref: ${{ github.event.pull_request.head.ref }}
     secrets: inherit
 
-  CI:
+  ci:
     name: CI Checks
     needs: prepare_api
-    runs-on: blacksmith-8vcpu-ubuntu-2404
-    environment: desarrollo
-    env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Authenticate to GitHub Packages
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
-
-      - name: Download API contracts
-        uses: actions/download-artifact@v8
-        with:
-          name: api-generated
-          path: src/app/shared/api/generated
-
-      - name: Run linters and formatters
-        run: npm run lint:check
-
-      - name: Run Tests
-        run: npm run test:ci
-
-      - name: Build
-        run: npx ng build --configuration development
-
-      - name: Run accessibility tests
-        run: npm run test:a11y
-
-      - name: Run E2E smoke tests
-        run: npm run test:e2e:smoke
-
-  coverage:
-    name: Generate coverage results
-    needs: prepare_api
-    runs-on: blacksmith-8vcpu-ubuntu-2404
-    environment: desarrollo
-    env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Cache node modules
-        uses: actions/cache@v5
-        with:
-          path: |
-            node_modules
-            ~/.cache/vitest
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Authenticate to GitHub Packages
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
-
-      - name: Download API contracts
-        uses: actions/download-artifact@v8
-        with:
-          name: api-generated
-          path: src/app/shared/api/generated
-
-      - name: Generate coverage
-        run: npm run test:sonar
-
-      - name: Upload coverage files
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage
-          path: coverage
-
-  sonar-scan:
-    name: SonarQube Scan
-    runs-on: sonar-runner
-    needs: coverage
-    environment: desarrollo
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Download coverage files
-        uses: actions/download-artifact@v8
-        with:
-          name: coverage
-          path: coverage
-
-      - name: SonarQube Scan
-        shell: cmd
-        run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File C:\sonar-scanner\run.ps1 ^
-            -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
-            -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
-            -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
-            -D "sonar.branch.name=${{ github.head_ref }}" ^
-            -D "sonar.scm.disabled=true" ^
-            -D "sonar.sources=src" ^
-            -D "sonar.tests=src" ^
-            -D "sonar.exclusions=**/*.spec.ts,src/environments/**" ^
-            -D "sonar.javascript.lcov.reportPaths=coverage/admisiones/lcov.info" ^
-            -D "sonar.test.inclusions=**/*.spec.ts" ^
-            -D "sonar.sourceEncoding=UTF-8"
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Deliver Quality Gate Result
-        uses: DesarrolloORT/sonarqube-quality-gate-action@v1
-        with:
-          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
-          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}
-          sonar-token: ${{ secrets.SONAR_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.head_ref }}
-          fail-on-quality-gate-error: true
-
-  notify_ci_execution:
-    name: Notify CI checks execution status
-    if: always()
-    needs: CI
-    uses: ./.github/workflows/notification.yml
+    uses: ./.github/workflows/ci-checks.yml
     with:
-      result: ${{ needs.CI.result }}
-      workflow-name: CI Checks
+      environment: desarrollo
+      build-configuration: development
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
     secrets: inherit
 
-  notify_sonar_execution:
-    name: Notify SonarQube Scan execution status
-    if: always()
-    needs: sonar-scan
-    uses: ./.github/workflows/notification.yml
+  sonar:
+    name: SonarQube Scan
+    needs: ci
+    uses: ./.github/workflows/sonar-scan.yml
     with:
-      result: ${{ needs.sonar-scan.result }}
-      workflow-name: SonarQube Scan
+      branch: ${{ github.head_ref }}
+      pr-mode: true
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
     secrets: inherit

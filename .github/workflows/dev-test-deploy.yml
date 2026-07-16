@@ -1,9 +1,7 @@
 name: Deploy to Development Environment
 
+# Deploy manual: se dispara desde Actions -> Run workflow sobre la rama deseada.
 on:
-  push:
-    branches:
-      - v*.*.*/main
   workflow_dispatch:
 
 jobs:
@@ -45,7 +43,7 @@ jobs:
           echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa

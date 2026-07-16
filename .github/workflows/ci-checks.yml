@@ -1,0 +1,87 @@
+name: CI checks (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      build-configuration:
+        type: string
+        default: ''
+      runs-on:
+        type: string
+        default: blacksmith-8vcpu-ubuntu-2404
+      env-sync-target:
+        type: string
+        default: desa
+      checkout-repository:
+        type: string
+        default: ''
+      checkout-ref:
+        type: string
+        default: ''
+
+jobs:
+  ci:
+    name: CI Checks
+    runs-on: ${{ inputs.runs-on }}
+    environment: ${{ inputs.environment }}
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.checkout-repository || github.repository }}
+          ref: ${{ inputs.checkout-ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env:sync -- --env ${{ inputs.env-sync-target }}
+
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+
+      - name: Run linters and formatters
+        run: npm run lint:check
+
+      - name: Run tests with coverage
+        run: npm run test:ci
+
+      - name: Build
+        run: npx ng build ${{ inputs.build-configuration != '' && format('--configuration {0}', inputs.build-configuration) || '' }}
+
+      - name: Run accessibility tests
+        run: npm run test:a11y
+
+      - name: Run E2E smoke tests
+        run: npm run test:e2e:smoke
+
+      - name: Upload coverage files
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 1
