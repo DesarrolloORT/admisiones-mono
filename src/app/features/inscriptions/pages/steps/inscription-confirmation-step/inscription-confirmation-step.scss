@@ -121,7 +121,7 @@
 
 .inscription-summary-list__item dt ort-icon {
   grid-row: span 2;
-  color: var(--ort-sys-base-icon-color-subtle);
+  color: var(--ort-sys-base-icon-color);
   font-size: 1.5rem;
 }
 
@@ -142,12 +142,17 @@
 }
 
 @media (width >= 52.5rem) {
+  .inscription-screen {
+    max-width: none;
+  }
+
   .inscription-payment-layout {
     grid-template-areas:
       'main summary'
       'main submit';
     grid-template-columns: minmax(0, 40.8125rem) minmax(19rem, 19.375rem);
     gap: var(--ort-sys-spacing-36);
+    align-content: start;
     width: min(100%, 62.4375rem);
   }
 
@@ -163,6 +168,7 @@
 
   .inscription-payment-submit {
     grid-area: submit;
+    align-self: end;
     order: initial;
   }
 }
