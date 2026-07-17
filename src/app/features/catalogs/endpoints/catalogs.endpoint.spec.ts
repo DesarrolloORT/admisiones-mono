@@ -34,7 +34,7 @@ describe('CatalogsEndpoint', () => {
           escuelas: [
             {
               nombreEscuela: 'Facultad de Diseño',
-              productos: [{ idProducto: 20, nombreProducto: 'Diseño' }],
+              productos: [{ idProducto: 20, idProceso: 10, nombreProducto: 'Diseño' }],
             },
           ],
         },
@@ -45,6 +45,7 @@ describe('CatalogsEndpoint', () => {
       expect(result).toEqual([
         {
           idProducto: 20,
+          idProceso: 10,
           idNivelProducto: 1,
           nombreProducto: 'Diseño',
           nombreNivelProducto: 'Carreras',

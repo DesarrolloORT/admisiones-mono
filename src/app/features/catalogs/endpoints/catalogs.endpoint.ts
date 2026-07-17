@@ -63,6 +63,7 @@ export class CatalogsEndpoint {
           (nivel.escuelas ?? []).flatMap(escuela =>
             (escuela.productos ?? []).map(producto => ({
               idProducto: producto.idProducto ?? 0,
+              idProceso: producto.idProceso ?? null,
               idNivelProducto: nivel.idNivelProducto ?? 0,
               nombreProducto: producto.nombreProducto ?? '',
               nombreNivelProducto: nivel.nombreNivelProducto ?? '',
