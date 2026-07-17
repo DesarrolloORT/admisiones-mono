@@ -86,10 +86,12 @@
 
   <ort-card aria-label="Cuenta SOY Santander" role="region">
     <ort-card-content class="inscription-santander-content">
-      <h3 class="inscription-santander" id="santander-title">
-        Santander
-        <span class="sr-only">Cuenta SOY</span>
-      </h3>
+      <ort-icon
+        aria-hidden="true"
+        size="xl"
+        type="svg"
+        [svgContent]="getBankSvg('SANTANDER_FULL')" />
+      <span class="sr-only">Santander Cuenta SOY</span>
       <p>
         Por convenio entre ORT y Banco Santander, nuestros estudiantes pueden acceder a una cuenta
         bancaria muy fácilmente.

@@ -231,6 +231,9 @@ ort-card h3 {
   line-height: var(--ort-sys-line-height-24);
 }
 
+.inscription-santander-content ort-icon {
+  width: 8rem;
+}
 @media (width >= 52.5rem) {
   .inscription-screen--success {
     width: min(100%, 40.875rem);

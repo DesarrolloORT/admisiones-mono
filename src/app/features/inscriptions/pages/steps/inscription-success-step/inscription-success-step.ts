@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  getBankSvg,
   OrtButtonModule,
   OrtCardModule,
   OrtIconModule,
@@ -17,5 +18,6 @@ import { InscripcionPaymentFacade } from '../../../facades/inscription-payment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InscripcionSuccessStep {
+  protected readonly getBankSvg = getBankSvg;
   protected readonly facade = inject(InscripcionPaymentFacade);
 }
