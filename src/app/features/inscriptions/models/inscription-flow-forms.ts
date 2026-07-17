@@ -54,6 +54,8 @@ export function createInscripcionForms() {
       carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
       comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
       turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      // Solo aplica a Actualización profesional
+      seminarios: new FormControl<string[]>([], { nonNullable: true }),
     }),
     educationForm: new FormGroup({
       cursaSecundaria: new FormControl('', {

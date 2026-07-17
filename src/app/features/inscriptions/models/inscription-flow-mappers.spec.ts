@@ -320,7 +320,21 @@ describe('inscription flow mappers', () => {
 
     expect(buildConfirmPreEnrollmentPayload(forms)).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      idOfertasSeleccionadas: [300],
+    });
+  });
+
+  it('builds the AP confirmation payload from the selected seminars', () => {
+    const forms = createInscripcionForms();
+    forms.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    expect(buildConfirmPreEnrollmentPayload(forms, true)).toBeNull();
+
+    forms.academicForm.controls.seminarios.setValue(['300', '301']);
+
+    expect(buildConfirmPreEnrollmentPayload(forms, true)).toEqual({
+      aceptoReglamento: true,
+      idOfertasSeleccionadas: [300, 301],
     });
   });
 
