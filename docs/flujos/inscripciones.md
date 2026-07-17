@@ -200,10 +200,8 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 - No hay selects de Comienzo ni Turno. Al elegir un programa aparece un
   **multi-select de Seminarios** (oculto hasta entonces), cada uno con su fecha
   de comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
-- Catálogo: `Catalogs.getSeminarios(idPrograma)` compone hoy
-  Comienzos→Turnos (cada proceso es un seminario y aporta su `idOferta`);
-  cuando el backend publique el catálogo con fecha por seminario solo cambia
-  ese adapter.
+- Catálogo: el `idProceso` del producto y su `idProducto` llaman
+  `GET /Catalogos/Turnos`; el resultado llena el multiselect de seminarios.
 - Al continuar se llama `POST /Inscripciones/InteresProducto`. El contrato de
   feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
   primera oferta hasta que el backend acepte el array.
