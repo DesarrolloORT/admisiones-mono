@@ -108,7 +108,12 @@ export interface InscripcionInitialSurveyPayload {
 
 export interface InscripcionConfirmPreEnrollmentPayload {
   aceptoReglamento: boolean;
-  idOfertaSeleccionada: number;
+  /**
+   * Ofertas confirmadas. Los tipos 1/2 envían una sola; Actualización profesional
+   * envía una por seminario cuando el backend habilite el array (hoy el adapter
+   * manda la primera).
+   */
+  idOfertasSeleccionadas: number[];
 }
 
 export interface InscripcionIdentityUploadFile {
@@ -126,7 +131,7 @@ export interface InscripcionIdentityPhotoUploadPayload {
   archivoAdjunto: InscripcionIdentityUploadFile;
 }
 export interface InscripcionProductInterestPayload {
-  idOferta: number;
+  idOfertas: number[];
   idProcesoSeleccionado: number;
   idProducto: number;
 }
@@ -243,6 +248,12 @@ export const SECCIONES_ENCUESTA: readonly SeccionEncuestaId[] = [
 ];
 
 export const SECCIONES_ENCUESTA_COMPLETA: readonly SeccionEncuestaId[] = [
+  'identidad',
+  'reglamento',
+];
+
+export const SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL: readonly SeccionEncuestaId[] = [
+  'situacion-laboral',
   'identidad',
   'reglamento',
 ];
