@@ -9,5 +9,7 @@ namespace AppLogic.ApiClients.Dtos
         public long IdOferta { get; set; }
         public DtoTurno Turno { get; set; } = new();
         public string? HorarioReferencia { get; set; }
+        public DateTime? FechaReferencia { get; set; }
+        public string? DescripcionOferta { get; set; }
     }
 }
