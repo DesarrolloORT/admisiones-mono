@@ -37,11 +37,13 @@ export class InscripcionProposalFacade {
   public readonly academicErrors = computed<OrtErrorItem[]>(() => {
     if (!this.submitted()) return [];
 
+    const terminology = this.selection.terminology();
     const formErrors = buildFormErrors(this.academicForm, [
       { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
-      { controlName: 'carrera', fieldId: '', label: 'Carrera' },
-      { controlName: 'comienzo', fieldId: '', label: 'Comienzo' },
+      { controlName: 'carrera', fieldId: '', label: terminology.careerLabel },
+      { controlName: 'comienzo', fieldId: '', label: terminology.startLabel },
       { controlName: 'turno', fieldId: '', label: 'Turno' },
+      { controlName: 'seminarios', fieldId: '', label: terminology.startLabel },
     ]);
     const interestError = this.productInterestError();
     return interestError ? [...formErrors, { message: interestError }] : formErrors;
@@ -120,16 +122,34 @@ export class InscripcionProposalFacade {
   }
 
   private buildProductInterestPayload(): {
-    idOferta: number;
+    idOfertas: number[];
     idProcesoSeleccionado: number;
     idProducto: number;
   } | null {
     const idProducto = toNullableNumber(this.academicForm.controls.carrera.value);
+    if (idProducto === null) return null;
+
+    if (this.selection.isProfessionalUpdate()) {
+      const seminars = this.selection.seminars();
+      const selected = this.academicForm.controls.seminarios.value
+        .map(value => seminars.find(seminar => seminar.idOferta.toString() === value))
+        .filter(seminar => seminar !== undefined);
+      if (selected.length !== 0) {
+        return {
+          idOfertas: selected.map(seminar => seminar!.idOferta),
+          idProcesoSeleccionado: selected[0]!.idProceso,
+          idProducto,
+        };
+      } else {
+        return null;
+      }
+    }
+
     const idProcesoSeleccionado = toNullableNumber(this.academicForm.controls.comienzo.value);
     const idOferta = toNullableNumber(this.academicForm.controls.turno.value);
-    return idProducto === null || idProcesoSeleccionado === null || idOferta === null
+    return idProcesoSeleccionado === null || idOferta === null
       ? null
-      : { idOferta, idProcesoSeleccionado, idProducto };
+      : { idOfertas: [idOferta], idProcesoSeleccionado, idProducto };
   }
 }
 
