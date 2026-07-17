@@ -64,9 +64,18 @@ describe('AcademicProposalSelect', () => {
                   nombreNivelProducto: 'Carrera universitaria',
                   nombreEscuela: 'Facultad de Ingeniería',
                 },
+                {
+                  idProducto: 40,
+                  idNivelProducto: 3,
+                  idProceso: 210,
+                  nombreProducto: 'Programa de Asesoramiento Financiero',
+                  nombreNivelProducto: 'Actualización profesional',
+                },
               ]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
+            getSeminarios: () =>
+              of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }]),
           },
         },
       ],
@@ -143,6 +152,33 @@ describe('AcademicProposalSelect', () => {
     expect(form.controls.carrera.touched).toBe(true);
   });
 
+  it('keeps the current field labels for non-AP proposals (regression guard)', () => {
+    form.controls.tipoPropuesta.setValue('1');
+    fixture.detectChanges();
+
+    expect(fieldLabel(fixture, 'academic-proposal-career')).toContain('Carrera');
+    expect(fieldLabel(fixture, 'academic-proposal-start')).toContain('Comienzo');
+    expect(fieldLabel(fixture, 'academic-proposal-shift')).toContain('Turno');
+    expect(fixture.nativeElement.querySelector('#academic-proposal-seminars-mobile')).toBeNull();
+  });
+
+  it('shows Programa and reveals Seminario only after picking a program in AP', () => {
+    form.controls.tipoPropuesta.setValue('3');
+    fixture.detectChanges();
+
+    expect(fieldLabel(fixture, 'academic-proposal-career')).toContain('Programa');
+    expect(fixture.nativeElement.querySelector('#academic-proposal-seminars-mobile')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#academic-proposal-start-mobile')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
+
+    form.controls.carrera.setValue('40');
+    fixture.detectChanges();
+
+    expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Seminario');
+    expect(fixture.nativeElement.querySelector('#academic-proposal-start-mobile')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
+  });
+
   it('shows required errors after controls are touched', () => {
     form.markAllAsTouched();
     form.updateValueAndValidity();
@@ -162,6 +198,13 @@ describe('AcademicProposalSelect', () => {
   });
 });
 
+function fieldLabel(fixture: ComponentFixture<AcademicProposalSelect>, id: string): string {
+  return (
+    (fixture.nativeElement.querySelector(`label[for="${id}-mobile"]`) as HTMLElement | null)
+      ?.textContent ?? ''
+  );
+}
+
 function createForm(): FormGroup<AcademicProposalForm> {
   return new FormGroup<AcademicProposalForm>({
     tipoPropuesta: new FormControl('', {
@@ -171,5 +214,6 @@ function createForm(): FormGroup<AcademicProposalForm> {
     carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
     comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
     turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    seminarios: new FormControl<string[]>([], { nonNullable: true }),
   });
 }
