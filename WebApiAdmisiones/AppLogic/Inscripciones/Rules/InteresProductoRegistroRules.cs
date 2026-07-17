@@ -37,7 +37,7 @@ namespace AppLogic.Inscripciones.Rules
                 codigoPersona,
                 request.IdProducto,
                 request.IdProcesoSeleccionado,
-                ofertas[0].Supraoferta.IdComienzo,
+                ofertas[0].Supraoferta?.IdComienzo ?? 0,
                 methodName);
             if (!resultadoEncuesta.Success)
             {
@@ -166,6 +166,7 @@ namespace AppLogic.Inscripciones.Rules
             encuesta.IdProducto = idProducto;
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo;
+            uow.EncuestaIniAdmisions.Update(encuesta);
             return OperationResult<bool>.Ok(true, methodName);
         }
     }

@@ -812,7 +812,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ReactivarInscripcion_WhenRequestInvalido_ReturnsBadRequest()
         {
-            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 0 });
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripcion = 0 });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_00", result.ErrorCode);
@@ -826,7 +826,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripcion = 555 });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_01", result.ErrorCode);
@@ -842,7 +842,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = null });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+            var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripcion = 555 });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_02", result.ErrorCode);
@@ -892,7 +892,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((AceptacionReglamentoEst)null);
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            var result = await service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 555 });
+            var result = await service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripcion = 555 });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
@@ -2724,7 +2724,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "SISTARBANC",
                 IdBancoSistarbanc = "001"
             });
@@ -2752,7 +2752,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "BANRED"
             });
 
@@ -2766,7 +2766,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "SISTARBANC"
             });
 
@@ -2786,7 +2786,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "BANRED"
             });
 
@@ -2809,7 +2809,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "BANRED"
             });
 
@@ -2870,7 +2870,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
@@ -2903,7 +2903,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
@@ -2926,7 +2926,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = " abitab " });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = " abitab " });
 
             Assert.True(result.Success);
             Assert.Equal("METODO_GUARDADO", result.Data!.Resultado);
@@ -2947,7 +2947,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "BANRED" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "BANRED" });
 
             Assert.True(result.Success);
             Assert.Equal("URL_GENERADA", result.Data!.Resultado);
@@ -2960,7 +2960,7 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task Pagar_WithInvalidTipoPago_ReturnsBadRequest()
         {
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "OTRO" });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "OTRO" });
 
             Assert.False(result.Success);
             Assert.Equal("INS_PAG_01", result.ErrorCode);
@@ -2988,7 +2988,7 @@ namespace UnitTesting.AppLogic.Services
                 """));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal(2, result.Data!.Mensajes.Count);
@@ -3007,7 +3007,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("INS_PC_02", result.ErrorCode);
@@ -3026,7 +3026,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -3046,7 +3046,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripto = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -3069,7 +3069,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "ABITAB"
             });
 
@@ -3096,7 +3096,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = " paganza "
             });
 
@@ -3109,7 +3109,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "TARJETA"
             });
 
@@ -3128,7 +3128,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "ABITAB"
             });
 
@@ -3150,7 +3150,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripto = 555,
+                IdInscripcion = 555,
                 TipoPago = "PAGANZA"
             });
 

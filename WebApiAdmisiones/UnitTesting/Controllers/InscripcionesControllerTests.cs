@@ -59,7 +59,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new DtoReactivarInscripcionRequest { IdInscripto = 555 };
+            var request = new DtoReactivarInscripcionRequest { IdInscripcion = 555 };
             var responseDto = new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
@@ -89,7 +89,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new DtoPagarRequest { IdInscripto = 555, TipoPago = "BANRED" };
+            var request = new DtoPagarRequest { IdInscripcion = 555, TipoPago = "BANRED" };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             serviceMock

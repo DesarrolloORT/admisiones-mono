@@ -22,21 +22,21 @@ namespace AppLogic.Inscripciones.Dtos
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DtoConfirmarPreInscripcionResponse? PagoPendiente { get; set; }
 
-        /// <summary>Solo cuando el estado es "Pago pendiente" Y ya eligió método de pago (existe seña mínima).</summary>
+        /// <summary>Solo cuando el estado es "Pago pendiente" Y ya eligió método de pago (existe reserva mínima).</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DtoSeniaMinima? SeniaMinima { get; set; }
+        public DtoReservaMinima? ReservaMinima { get; set; }
 
         /// <summary>Solo se completa cuando el estado es "Confirmada".</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DtoConfirmadaDetalle? Confirmada { get; set; }
     }
 
-    public class DtoSeniaMinima
+    public class DtoReservaMinima
     {
-        public string MetodoPago { get; set; } = string.Empty; // ABITAB / PAGANZA
+        public string TipoPago { get; set; } = string.Empty; // ABITAB / PAGANZA
         public string? Cedula { get; set; }
         public long CodigoPersona { get; set; }                 // número de estudiante
-        public decimal Senia { get; set; }
+        public decimal PagoReserva { get; set; }
     }
 
     public class DtoConfirmadaDetalle

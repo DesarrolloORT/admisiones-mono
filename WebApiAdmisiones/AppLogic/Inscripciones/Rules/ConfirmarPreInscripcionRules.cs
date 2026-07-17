@@ -1,3 +1,4 @@
+using AppLogic.Inscripciones.Constants;
 using AppLogic.Inscripciones.Dtos;
 using AppLogic.Inscripciones.Encuesta.Rules;
 using AppLogic.ApiClients.Dtos;
@@ -29,7 +30,7 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        public static OperationResult<ContextoConfirmacionPreInscripcion> ObtenerContextoConfirmacion(
+        public static OperationResult<DatosConfirmacionOferta> ObtenerDatosConfirmacionOferta(
             IUnitOfWork uow,
             long codigoPersona,
             Oferta oferta,
@@ -42,7 +43,7 @@ namespace AppLogic.Inscripciones.Rules
                 || idComienzoOferta <= 0
                 || oferta.IdTurno <= 0)
             {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                return OperationResult<DatosConfirmacionOferta>.IsFailed(
                     "INS_CPI_08",
                     methodName,
                     "La oferta seleccionada no contiene producto, comienzo o turno validos.",
@@ -52,7 +53,7 @@ namespace AppLogic.Inscripciones.Rules
             if (!string.Equals(oferta.InscripcionesAbiertasOferta, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase)
                 || !string.Equals(oferta.Supraoferta?.EstadoSupraoferta, CommonConstants.EstadoSupraoferta.Definitivo, StringComparison.OrdinalIgnoreCase))
             {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                return OperationResult<DatosConfirmacionOferta>.IsFailed(
                     "INS_CPI_16",
                     methodName,
                     "La oferta seleccionada no se encuentra abierta para inscripcion.",
@@ -63,7 +64,7 @@ namespace AppLogic.Inscripciones.Rules
             if (encuestaAdmision != null
                 && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EncuestaInicialState.EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
             {
-                return ResolverContextoConEncuestaAdmisionDefinitiva(
+                return ArmarDatosConfirmacionDesdeEncuestaDefinitiva(
                     uow,
                     codigoPersona,
                     oferta,
@@ -82,7 +83,7 @@ namespace AppLogic.Inscripciones.Rules
                     : "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.";
                 var httpCode = encuestaAdmision == null ? 404 : 409;
 
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                return OperationResult<DatosConfirmacionOferta>.IsFailed(
                     errorCode,
                     methodName,
                     message,
@@ -98,8 +99,8 @@ namespace AppLogic.Inscripciones.Rules
                 return ErrorInteresOfertaNoEncontrado(methodName);
             }
 
-            return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
-                new ContextoConfirmacionPreInscripcion(
+            return OperationResult<DatosConfirmacionOferta>.Ok(
+                new DatosConfirmacionOferta(
                     idOfertaSeleccionada,
                     idProductoOferta,
                     proceso.IdProceso,
@@ -112,7 +113,7 @@ namespace AppLogic.Inscripciones.Rules
         }
 
         public static ConfirmarPreInscripcionMultipleApiRequest CrearApiRequestMultiple(
-            ContextoConfirmacionPreInscripcion contexto,
+            DatosConfirmacionOferta contexto,
             List<long> idsOfertasSeleccionadas)
         {
             return new ConfirmarPreInscripcionMultipleApiRequest
@@ -120,7 +121,7 @@ namespace AppLogic.Inscripciones.Rules
                 IdProducto = contexto.IdProducto,
                 IdProceso = contexto.IdProceso,
                 IdsOfertasSeleccionadas = idsOfertasSeleccionadas,
-                TipoInscripcion = "ONLINE",
+                TipoInscripcion = InscripcionesConstants.TipoInscripcion.Online,
                 Turno = new DtoTurno { IdTurno = contexto.IdTurno }
             };
         }
@@ -177,81 +178,7 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
         }
 
-        public static OperationResult<DtoConfirmarPreInscripcionResponse> MapearResultadoApiMultiple(
-            OperationResult<ConfirmarPreInscripcionMultipleApiResponse> apiResult,
-            ContextoConfirmacionPreInscripcion contexto,
-            string methodName)
-        {
-            if (!apiResult.Success)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
-            }
-
-            if (apiResult.Data == null)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_13", methodName, "La API interna no devolvio datos de confirmacion.", 502);
-            }
-
-            return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                MapearConfirmacionPreInscripcionMultiple(apiResult.Data, contexto),
-                methodName);
-        }
-
-        private static DtoConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcionMultiple(
-            ConfirmarPreInscripcionMultipleApiResponse source,
-            ContextoConfirmacionPreInscripcion contexto)
-        {
-            var ofertas = source.Ofertas
-                .Select(o => new DtoResultadoInscripcionOferta
-                {
-                    IdOferta = o.IdOferta,
-                    IdInscripcion = o.IdInscripcion,
-                    FechaVencimientoPago = o.FechaVencimientoPago,
-                    PagoReserva = (decimal)o.ValorSeniaMinima
-                })
-                .ToList();
-
-            return new DtoConfirmarPreInscripcionResponse
-            {
-                Confirmada = source.Confirmada || source.Respuesta,
-                EnEspera = source.InscripcionPendiente,
-                EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
-                Resumen = MapearResumen(source.Resumen, contexto),
-                Ofertas = ofertas,
-                // El alumno paga todas las ofertas confirmadas de una sola vez, no elige: el front recibe
-                // directamente el total (para nivel 1 y 2, con una sola oferta, coincide con esa unica seña).
-                PagoReserva = ofertas.Sum(o => o.PagoReserva)
-            };
-        }
-
-        private static DtoResumenInscripcion MapearResumen(ResumenInscripcionApiDto? source, ContextoConfirmacionPreInscripcion contexto)
-        {
-            return new DtoResumenInscripcion
-            {
-                IdOferta = source != null && source.IdOferta > 0 ? source.IdOferta : contexto.IdOferta,
-                IdProducto = source?.IdProducto ?? contexto.IdProducto,
-                Carrera = source?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
-                IdComienzo = source?.IdComienzo ?? contexto.IdComienzo,
-                Comienzo = source?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
-                IdTurno = source?.IdTurno ?? contexto.IdTurno,
-                Turno = source?.Turno ?? contexto.Turno?.NombreTurno
-            };
-        }
-
-        public static DtoEstadoCuenta? MapearEstadoCuenta(EstadoCuentaApiDto? source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            return new DtoEstadoCuenta
-            {
-                SaldoActual = source.SaldoActual
-            };
-        }
-
-        private static OperationResult<ContextoConfirmacionPreInscripcion> ResolverContextoConEncuestaAdmisionDefinitiva(
+        private static OperationResult<DatosConfirmacionOferta> ArmarDatosConfirmacionDesdeEncuestaDefinitiva(
             IUnitOfWork uow,
             long codigoPersona,
             Oferta oferta,
@@ -262,7 +189,7 @@ namespace AppLogic.Inscripciones.Rules
         {
             if (encuestaAdmision.FechaVtoAdmision.HasValue && encuestaAdmision.FechaVtoAdmision.Value.Date < DateTime.Today)
             {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                return OperationResult<DatosConfirmacionOferta>.IsFailed(
                     "INS_CPI_12",
                     methodName,
                     "La encuesta inicial de admision se encuentra vencida.",
@@ -271,7 +198,7 @@ namespace AppLogic.Inscripciones.Rules
 
             if (!TieneDatosConfirmacionValidos(encuestaAdmision.IdProducto, encuestaAdmision.IdProceso, encuestaAdmision.IdComienzo))
             {
-                return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+                return OperationResult<DatosConfirmacionOferta>.IsFailed(
                     "INS_CPI_08",
                     methodName,
                     "La encuesta inicial de admision no contiene producto, proceso o comienzo validos.",
@@ -287,8 +214,8 @@ namespace AppLogic.Inscripciones.Rules
                 return ErrorInteresOfertaNoEncontrado(methodName);
             }
 
-            return OperationResult<ContextoConfirmacionPreInscripcion>.Ok(
-                new ContextoConfirmacionPreInscripcion(
+            return OperationResult<DatosConfirmacionOferta>.Ok(
+                new DatosConfirmacionOferta(
                     oferta.IdOferta,
                     idProductoOferta,
                     procesoInteres.IdProceso,
@@ -305,9 +232,9 @@ namespace AppLogic.Inscripciones.Rules
             return carritos?.Sum(c => c.PagoReserva) ?? 0;
         }
 
-        private static OperationResult<ContextoConfirmacionPreInscripcion> ErrorInteresOfertaNoEncontrado(string methodName)
+        private static OperationResult<DatosConfirmacionOferta> ErrorInteresOfertaNoEncontrado(string methodName)
         {
-            return OperationResult<ContextoConfirmacionPreInscripcion>.IsFailed(
+            return OperationResult<DatosConfirmacionOferta>.IsFailed(
                 "INS_CPI_14",
                 methodName,
                 "No existe interes activo para la oferta seleccionada.",
@@ -327,7 +254,7 @@ namespace AppLogic.Inscripciones.Rules
         }
     }
 
-    internal sealed record ContextoConfirmacionPreInscripcion(
+    internal sealed record DatosConfirmacionOferta(
         long IdOferta,
         long IdProducto,
         long IdProceso,

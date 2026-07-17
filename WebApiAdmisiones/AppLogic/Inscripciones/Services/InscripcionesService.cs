@@ -3,6 +3,7 @@ using AppLogic.Inscripciones.Dtos;
 using AppLogic.ApiClients.Interfaces;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.Inscripciones.Constants;
+using AppLogic.Inscripciones.Mappers;
 using AppLogic.Personas.Constants;
 using AppLogic.DevartDTOs;
 using AppLogic.Inscripciones.Rules;
@@ -49,15 +50,15 @@ namespace AppLogic.Inscripciones.Services
         {
             using var uow = _uowFactory.Create();
 
-            var fresco1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
-            var estado = fresco1y2?.EstadoInscripcion;
-            var idInscripto = (long?)fresco1y2?.IdInscripto;
+            var inscripcionNivel1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
+            var estado = inscripcionNivel1y2?.EstadoInscripcion;
+            var idInscripto = (long?)inscripcionNivel1y2?.IdInscripto;
 
             if (estado == null)
             {
-                var fresco3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
-                estado = fresco3y4?.EstadoInscripcion;
-                idInscripto = (long?)fresco3y4?.IdInscripto;
+                var inscripcionNivel3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
+                estado = inscripcionNivel3y4?.EstadoInscripcion;
+                idInscripto = (long?)inscripcionNivel3y4?.IdInscripto;
             }
 
             if (estado == null)
@@ -75,7 +76,7 @@ namespace AppLogic.Inscripciones.Services
             {
                 case InscripcionesConstants.EstadoInscripcion.EnProceso:
                     var oferta = uow.InteresProductoOfertas.GetOfertaSeleccionada(codigoPersona, idProducto, idProceso);
-                    response.Detalle = MapearOfertaResumen(oferta, idProceso);
+                    response.Detalle = InscripcionesMapper.MapearOfertaResumen(oferta, idProceso);
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
@@ -109,7 +110,7 @@ namespace AppLogic.Inscripciones.Services
 
         /// <summary>
         /// Arma el detalle de una inscripción en estado "Pago pendiente". Si ya eligió método de pago
-        /// (existe seña mínima) devuelve el bloque compacto <see cref="DtoSeniaMinima"/>; si no, el payload
+        /// (existe reserva mínima) devuelve el bloque compacto <see cref="DtoReservaMinima"/>; si no, el payload
         /// completo. Devuelve un resultado de error para cortar, o null si completó el response correctamente.
         /// </summary>
         private async Task<OperationResult<DtoDetalleInscripcionResponse>?> ArmarPagoPendiente(
@@ -137,186 +138,30 @@ namespace AppLogic.Inscripciones.Services
                     carritos.HttpCode);
             }
 
-            var seniaMinima = uow.InscriptoSeniaMinima.GetByKey(inscriptoPago.IdInscripto);
-            if (seniaMinima != null)
+            var reservaMinima = uow.InscriptoSeniaMinima.GetByKey(inscriptoPago.IdInscripto);
+            if (reservaMinima != null)
             {
                 var persona = uow.Personas.GetByKey(codigoPersona);
-                response.SeniaMinima = new DtoSeniaMinima
+                response.ReservaMinima = new DtoReservaMinima
                 {
-                    MetodoPago = seniaMinima.MetodoPagoSeniaMinima,
+                    TipoPago = reservaMinima.MetodoPagoSeniaMinima,
                     Cedula = persona?.Documento?.Trim(),
                     CodigoPersona = codigoPersona,
-                    Senia = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos.Data?.Carritos)
+                    PagoReserva = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos.Data?.Carritos)
                 };
             }
             else
             {
-                response.PagoPendiente = MapearPagoPendiente(inscriptoPago, carritos.Data);
+                response.PagoPendiente = InscripcionesMapper.MapearPagoPendiente(inscriptoPago, carritos.Data);
             }
             return null;
-        }
-
-        private static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
-        {
-            var pagoReserva = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos?.Carritos);
-            return new DtoConfirmarPreInscripcionResponse
-            {
-                Confirmada = true,
-                EstadoCuenta = ConfirmarPreInscripcionRules.MapearEstadoCuenta(carritos?.EstadoCuenta),
-                Resumen = MapearResumenDesdeInscripto(inscripto),
-                Ofertas =
-                [
-                    new DtoResultadoInscripcionOferta
-                    {
-                        IdOferta = inscripto.IdOferta ?? 0,
-                        IdInscripcion = inscripto.IdInscripto,
-                        FechaVencimientoPago = inscripto.FechaVtoInscr,
-                        PagoReserva = pagoReserva
-                    }
-                ],
-                PagoReserva = pagoReserva
-            };
         }
 
         private static DtoConfirmadaDetalle ConstruirDetalleConfirmada(IUnitOfWork uow, long codigoPersona, Inscripto inscripto)
         {
             var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(inscripto.IdInscripto);
             var materias = uow.VdInscriptoCreditoAlumnos.GetByInscripto(inscripto.IdInscripto);
-            return MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
-        }
-
-        private static DtoConfirmadaDetalle MapearConfirmada(
-            long codigoPersona,
-            Inscripto inscripto,
-            ICollection<VdInscriptoCoordinadore> coordinadores,
-            ICollection<VdInscriptoCreditoAlumno> materias)
-        {
-            var coordinadorAcademico = MapearCoordinadorAcademico(coordinadores);
-            var coordinadorCursos = MapearCoordinadorCursos(coordinadores);
-            if (EsMismoCoordinador(coordinadorAcademico, coordinadorCursos))
-            {
-                coordinadorCursos = null;
-            }
-
-            return new DtoConfirmadaDetalle
-            {
-                NumeroEstudiante = codigoPersona,
-                Resumen = MapearResumenDesdeInscripto(inscripto),
-                CoordinadorAcademico = coordinadorAcademico?.Dto,
-                CoordinadorCursos = coordinadorCursos?.Dto,
-                MateriasPrimerSemestre = materias
-                    .Where(m => m.IdMateria.HasValue)
-                    .GroupBy(m => m.IdMateria!.Value)
-                    .Select(g => new DtoMateria { IdMateria = g.Key, Nombre = g.First().DescripcionMateria?.Trim() })
-                    .ToList()
-            };
-        }
-
-        private static CoordinadorMapeado? MapearCoordinadorAcademico(IEnumerable<VdInscriptoCoordinadore> coordinadores)
-        {
-            var coordinador = coordinadores.FirstOrDefault(c =>
-                !string.IsNullOrWhiteSpace(c.CooacadPrimerNombre)
-                || !string.IsNullOrWhiteSpace(c.CooacadPrimerApellido)
-                || !string.IsNullOrWhiteSpace(c.MailAcad));
-
-            return coordinador == null
-                ? null
-                : new CoordinadorMapeado(
-                    new DtoCoordinador
-                    {
-                        Nombre = NombreCompleto(coordinador.CooacadPrimerNombre, coordinador.CooacadPrimerApellido),
-                        Email = coordinador.MailAcad?.Trim()
-                    },
-                    coordinador.CooacadCodigo);
-        }
-
-        private static CoordinadorMapeado? MapearCoordinadorCursos(IEnumerable<VdInscriptoCoordinadore> coordinadores)
-        {
-            var coordinador = coordinadores.FirstOrDefault(c =>
-                !string.IsNullOrWhiteSpace(c.CoorespPrimerNombre)
-                || !string.IsNullOrWhiteSpace(c.CoorespPrimerApellido)
-                || !string.IsNullOrWhiteSpace(c.MailResp));
-
-            return coordinador == null
-                ? null
-                : new CoordinadorMapeado(
-                    new DtoCoordinador
-                    {
-                        Nombre = NombreCompleto(coordinador.CoorespPrimerNombre, coordinador.CoorespPrimerApellido),
-                        Email = coordinador.MailResp?.Trim()
-                    },
-                    coordinador.CoorespCodigo);
-        }
-
-        private static bool EsMismoCoordinador(CoordinadorMapeado? academico, CoordinadorMapeado? cursos)
-        {
-            if (academico == null || cursos == null)
-            {
-                return false;
-            }
-
-            if (academico.Codigo.HasValue && cursos.Codigo.HasValue)
-            {
-                return academico.Codigo.Value == cursos.Codigo.Value;
-            }
-
-            return TextoIgual(academico.Dto.Email, cursos.Dto.Email)
-                || TextoIgual(academico.Dto.Nombre, cursos.Dto.Nombre);
-        }
-
-        private static bool TextoIgual(string? izquierda, string? derecha)
-        {
-            return !string.IsNullOrWhiteSpace(izquierda)
-                && !string.IsNullOrWhiteSpace(derecha)
-                && string.Equals(izquierda.Trim(), derecha.Trim(), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string? NombreCompleto(string? nombre, string? apellido)
-        {
-            var partes = new[] { nombre?.Trim(), apellido?.Trim() }
-                .Where(p => !string.IsNullOrWhiteSpace(p));
-
-            var completo = string.Join(" ", partes);
-            return string.IsNullOrWhiteSpace(completo) ? null : completo;
-        }
-
-        private sealed record CoordinadorMapeado(DtoCoordinador Dto, long? Codigo);
-
-        private static DtoResumenInscripcion MapearResumenDesdeInscripto(Inscripto inscripto)
-        {
-            var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
-            var comienzo = inscripto.Oferta?.Supraoferta?.Comienzo;
-            return new DtoResumenInscripcion
-            {
-                IdOferta = inscripto.IdOferta ?? 0,
-                IdProducto = producto?.IdProducto ?? 0,
-                Carrera = producto?.NombreWebProducto ?? producto?.NombreExtensoProducto ?? producto?.NombreProducto,
-                IdComienzo = comienzo?.IdComienzo ?? 0,
-                Comienzo = comienzo?.NombreComienzo,
-                IdTurno = inscripto.Oferta?.IdTurno ?? 0,
-                Turno = inscripto.Oferta?.Turno?.NombreTurno
-            };
-        }
-
-        private static DtoResumenInscripcion? MapearOfertaResumen(Oferta? oferta, long idProceso)
-        {
-            if (oferta == null)
-            {
-                return null;
-            }
-
-            var producto = oferta.Supraoferta?.Paquete?.Producto;
-            var comienzo = oferta.Supraoferta?.Comienzo;
-            return new DtoResumenInscripcion
-            {
-                IdOferta = oferta.IdOferta,
-                IdProducto = producto?.IdProducto ?? 0,
-                Carrera = producto?.NombreWebProducto ?? producto?.NombreExtensoProducto ?? producto?.NombreProducto,
-                IdComienzo = idProceso,
-                Comienzo = comienzo?.NombreComienzo,
-                IdTurno = oferta.IdTurno,
-                Turno = oferta.Turno?.NombreTurno
-            };
+            return InscripcionesMapper.MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
         }
 
         public OperationResult<DtoAceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
@@ -364,6 +209,19 @@ namespace AppLogic.Inscripciones.Services
                 return validacion;
             }
 
+            var ofertasValidas = ValidarYObtenerOfertas(uow, request);
+            if (!ofertasValidas.Success)
+            {
+                return OperationResult<bool>.IsFailed(
+                    ofertasValidas.ErrorCode, nameof(RegistrarInteresProducto), ofertasValidas.Message, ofertasValidas.HttpCode);
+            }
+
+            return RegistrarInteresYEncolarTivenos(uow, codigoPersona, request, ofertasValidas.Data!);
+        }
+
+        /// <summary>Valida cada oferta solicitada y devuelve las entidades cargadas, o el primer error.</summary>
+        private static OperationResult<List<Oferta>> ValidarYObtenerOfertas(IUnitOfWork uow, DtoInteresProductoRequest request)
+        {
             var ofertas = new List<Oferta>();
             foreach (var idOferta in request.IdsOferta)
             {
@@ -375,7 +233,7 @@ namespace AppLogic.Inscripciones.Services
                     nameof(RegistrarInteresProducto));
                 if (!validacionOferta.Success)
                 {
-                    return OperationResult<bool>.IsFailed(
+                    return OperationResult<List<Oferta>>.IsFailed(
                         validacionOferta.ErrorCode,
                         nameof(RegistrarInteresProducto),
                         validacionOferta.Message,
@@ -385,10 +243,19 @@ namespace AppLogic.Inscripciones.Services
                 ofertas.Add(validacionOferta.Data!);
             }
 
+            return OperationResult<List<Oferta>>.Ok(ofertas, nameof(RegistrarInteresProducto));
+        }
+
+        /// <summary>
+        /// Registra el interés por producto y encola el alta en Tivenos dentro de una única transacción.
+        /// Hace rollback ante cualquier error o excepción.
+        /// </summary>
+        private OperationResult<bool> RegistrarInteresYEncolarTivenos(
+            IUnitOfWork uow, long codigoPersona, DtoInteresProductoRequest request, List<Oferta> ofertas)
+        {
             var fechaActual = DateTime.Now;
 
             uow.BeginTransaction();
-
             try
             {
                 var resultado = InteresProductoRegistroRules.RegistrarInteresProducto(
@@ -428,7 +295,6 @@ namespace AppLogic.Inscripciones.Services
                 }
 
                 uow.Commit();
-
                 return OperationResult<bool>.Ok(true, nameof(RegistrarInteresProducto));
             }
             catch
@@ -479,45 +345,13 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
-            ContextoConfirmacionPreInscripcion? contexto = null;
-            foreach (var idOfertaSeleccionada in request.IdsOfertasSeleccionadas)
+            var ofertasCompatibles = ValidarOfertasCompatibles(uow, codigoPersona, request, methodName);
+            if (!ofertasCompatibles.Success)
             {
-                var oferta = uow.Ofertas.GetByKeyWithRelated(idOfertaSeleccionada);
-                if (oferta == null)
-                {
-                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, $"No se encontro la oferta seleccionada: {idOfertaSeleccionada}.", 404);
-                }
-
-                var contextoOfertaResult = ConfirmarPreInscripcionRules.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
-                if (!contextoOfertaResult.Success)
-                {
-                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                        contextoOfertaResult.ErrorCode,
-                        methodName,
-                        contextoOfertaResult.Message,
-                        contextoOfertaResult.HttpCode);
-                }
-
-                if (contexto == null)
-                {
-                    contexto = contextoOfertaResult.Data!;
-                }
-                else
-                {
-                    var requiereMismoComienzo = contexto.Producto?.IdNivelProducto is not (3 or 4);
-
-                    if (contexto.IdProducto != contextoOfertaResult.Data!.IdProducto
-                        || contexto.IdTurno != contextoOfertaResult.Data.IdTurno
-                        || (requiereMismoComienzo && contexto.IdComienzo != contextoOfertaResult.Data.IdComienzo))
-                    {
-                        return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                            "INS_CPI_17",
-                            methodName,
-                            "Todas las ofertas seleccionadas deben pertenecer al mismo producto y turno (y al mismo comienzo para nivel 1 y 2).",
-                            400);
-                    }
-                }
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                    ofertasCompatibles.ErrorCode, methodName, ofertasCompatibles.Message, ofertasCompatibles.HttpCode);
             }
+            var contexto = ofertasCompatibles.Data!;
 
             var validacionDocumentos = DocumentoIdentidadPersonaService.ValidarDocumentosIdentidadParaConfirmacion(
                 uow,
@@ -532,7 +366,7 @@ namespace AppLogic.Inscripciones.Services
                 uow,
                 _dbConnectionContext,
                 codigoPersona,
-                contexto!.IdProducto,
+                contexto.IdProducto,
                 contexto.IdComienzo,
                 request.AceptoReglamento,
                 methodName);
@@ -543,21 +377,77 @@ namespace AppLogic.Inscripciones.Services
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
-            return ConfirmarPreInscripcionRules.MapearResultadoApiMultiple(apiResult, contexto, methodName);
+            return InscripcionesMapper.MapearResultadoApiMultiple(apiResult, contexto, methodName);
+        }
+
+        /// <summary>
+        /// Recorre las ofertas seleccionadas, valida cada una y verifica que sean compatibles entre sí
+        /// (mismo producto y turno, y mismo comienzo para nivel 1 y 2). Devuelve los datos de confirmación
+        /// consolidados de la selección, o el primer error encontrado.
+        /// </summary>
+        private static OperationResult<DatosConfirmacionOferta> ValidarOfertasCompatibles(
+            IUnitOfWork uow, long codigoPersona, DtoConfirmarPreInscripcionRequest request, string methodName)
+        {
+            DatosConfirmacionOferta? seleccion = null;
+            foreach (var idOfertaSeleccionada in request.IdsOfertasSeleccionadas)
+            {
+                var oferta = uow.Ofertas.GetByKeyWithRelated(idOfertaSeleccionada);
+                if (oferta == null)
+                {
+                    return OperationResult<DatosConfirmacionOferta>.IsFailed("INS_CPI_15", methodName, $"No se encontro la oferta seleccionada: {idOfertaSeleccionada}.", 404);
+                }
+
+                var datosOferta = ConfirmarPreInscripcionRules.ObtenerDatosConfirmacionOferta(uow, codigoPersona, oferta, methodName);
+                if (!datosOferta.Success)
+                {
+                    return datosOferta;
+                }
+
+                if (seleccion == null)
+                {
+                    seleccion = datosOferta.Data!;
+                }
+                else if (!EsOfertaCompatibleConSeleccion(seleccion, datosOferta.Data!))
+                {
+                    return OperationResult<DatosConfirmacionOferta>.IsFailed(
+                        "INS_CPI_17",
+                        methodName,
+                        "Todas las ofertas seleccionadas deben pertenecer al mismo producto y turno (y al mismo comienzo para nivel 1 y 2).",
+                        400);
+                }
+            }
+
+            return OperationResult<DatosConfirmacionOferta>.Ok(seleccion!, methodName);
+        }
+
+        private static bool EsOfertaCompatibleConSeleccion(DatosConfirmacionOferta seleccion, DatosConfirmacionOferta oferta)
+        {
+            if (seleccion.IdProducto != oferta.IdProducto || seleccion.IdTurno != oferta.IdTurno)
+            {
+                return false;
+            }
+
+            return !RequiereMismoComienzoEntreOfertas(seleccion) || seleccion.IdComienzo == oferta.IdComienzo;
+        }
+
+        /// <summary>Nivel 1 y 2 exigen que todas las ofertas compartan comienzo; nivel 3 y 4 no.</summary>
+        private static bool RequiereMismoComienzoEntreOfertas(DatosConfirmacionOferta datos)
+        {
+            return datos.Producto?.IdNivelProducto is not (3 or 4);
         }
 
         public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ReactivarInscripcion(long codigoPersona, DtoReactivarInscripcionRequest request)
         {
             const string methodName = nameof(ReactivarInscripcion);
 
-            if (request == null || request.IdInscripto <= 0)
+            if (request == null || request.IdInscripcion <= 0)
             {
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_REA_00", methodName, "Request invalido.", 400);
             }
 
             using var uow = _uowFactory.Create();
 
-            var inscriptoBaja = uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona);
+            var inscriptoBaja = uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona);
             if (inscriptoBaja == null)
             {
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_REA_01", methodName, "No se encontro la inscripcion para la persona.", 404);
@@ -591,26 +481,26 @@ namespace AppLogic.Inscripciones.Services
             var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
             switch (tipoPago)
             {
-                case "CUENTA_PERSONAL":
+                case InscripcionesConstants.TipoPago.CuentaPersonal:
                 {
-                    var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripto = request.IdInscripto });
+                    var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripcion = request.IdInscripcion });
                     if (!result.Success)
                         return OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
 
                     using var uow = _uowFactory.Create();
-                    var inscripto = uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona);
+                    var inscripto = uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona);
                     var detalle = inscripto != null ? ConstruirDetalleConfirmada(uow, codigoPersona, inscripto) : null;
                     return OperationResult<DtoPagarResponse>.Ok(
-                        new DtoPagarResponse { Resultado = "PAGO_CONFIRMADO", Mensajes = result.Data ?? new(), Confirmada = detalle },
+                        new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.PagoConfirmado, Mensajes = result.Data ?? new(), Confirmada = detalle },
                         methodName);
                 }
 
                 case InscripcionesConstants.TipoPago.Abitab:
                 case InscripcionesConstants.TipoPago.Paganza:
                 {
-                    var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripto = request.IdInscripto, MetodoPago = tipoPago });
+                    var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripcion = request.IdInscripcion, TipoPago = tipoPago });
                     return result.Success
-                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = "METODO_GUARDADO" }, methodName)
+                        ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.MetodoGuardado }, methodName)
                         : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
                 }
 
@@ -620,14 +510,14 @@ namespace AppLogic.Inscripciones.Services
                 {
                     var result = await ObtenerUrlFactura(codigoPersona, new DtoObtenerUrlFacturaRequest
                     {
-                        IdInscripto = request.IdInscripto,
+                        IdInscripcion = request.IdInscripcion,
                         TipoPago = tipoPago,
                         IdBancoSistarbanc = request.IdBancoSistarbanc
                     });
                     return result.Success
                         ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse
                         {
-                            Resultado = "URL_GENERADA",
+                            Resultado = InscripcionesConstants.ResultadoPago.UrlGenerada,
                             UrlPago = result.Data!.Url,
                             ParametrosEncriptados = result.Data.ParametrosEncriptados
                         }, methodName)
@@ -643,7 +533,7 @@ namespace AppLogic.Inscripciones.Services
         {
             const string methodName = nameof(ObtenerUrlFactura);
 
-            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_UF_00", "INS_UF_01", methodName);
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_UF_00", "INS_UF_01", methodName);
             if (!validacion.Success)
                 return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
@@ -662,13 +552,13 @@ namespace AppLogic.Inscripciones.Services
 
             using (var uow = _uowFactory.Create())
             {
-                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripto, codigoPersona, "INS_UF_04", methodName);
+                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_UF_04", methodName);
                 if (!pertenencia.Success)
                     return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
             }
 
             var banco = tipoPagoNormalizado == InscripcionesConstants.TipoPago.Sistarbanc ? idBancoSistarbanc! : string.Empty;
-            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripto, tipoPagoNormalizado, banco);
+            var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripcion, tipoPagoNormalizado, banco);
             if (!urlResult.Success)
             {
                 return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
@@ -684,14 +574,14 @@ namespace AppLogic.Inscripciones.Services
 
         private static (string Url, string? ParametrosEncriptados) SepararUrlYParametrosEncriptados(string urlCompleta)
         {
-            var idx = urlCompleta.IndexOf(MarcadorParametrosEncriptados, StringComparison.Ordinal);
-            if (idx <= 0)
+            var indiceMarcador = urlCompleta.IndexOf(MarcadorParametrosEncriptados, StringComparison.Ordinal);
+            if (indiceMarcador <= 0)
             {
                 return (urlCompleta, null);
             }
 
-            var url = urlCompleta[..(idx - 1)];
-            var parametrosEncriptados = Uri.UnescapeDataString(urlCompleta[(idx + MarcadorParametrosEncriptados.Length)..]);
+            var url = urlCompleta[..(indiceMarcador - 1)];
+            var parametrosEncriptados = Uri.UnescapeDataString(urlCompleta[(indiceMarcador + MarcadorParametrosEncriptados.Length)..]);
             return (url, parametrosEncriptados);
         }
 
@@ -699,18 +589,18 @@ namespace AppLogic.Inscripciones.Services
         {
             const string methodName = nameof(PagarCuentaPersonal);
 
-            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_PC_00", "INS_PC_01", methodName);
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_PC_00", "INS_PC_01", methodName);
             if (!validacion.Success)
                 return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
             using (var uow = _uowFactory.Create())
             {
-                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripto, codigoPersona, "INS_PC_02", methodName);
+                var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_PC_02", methodName);
                 if (!pertenencia.Success)
                     return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
             }
 
-            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdInscripto);
+            var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdInscripcion);
             return pagoResult.Success
                 ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
                 : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
@@ -720,33 +610,32 @@ namespace AppLogic.Inscripciones.Services
         {
             const string methodName = nameof(GuardarMetodoPago);
 
-            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripto, "INS_MP_00", "INS_MP_01", methodName);
+            var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_MP_00", "INS_MP_01", methodName);
             if (!validacion.Success)
                 return OperationResult<bool>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
 
-            var metodoPago = request.MetodoPago?.Trim().ToUpperInvariant();
-            var metodoPagoNormalizado = metodoPago ?? string.Empty;
-            if (!MetodosPagoExternos.Contains(metodoPagoNormalizado))
+            var tipoPagoNormalizado = request.TipoPago?.Trim().ToUpperInvariant() ?? string.Empty;
+            if (!MetodosPagoExternos.Contains(tipoPagoNormalizado))
             {
-                return OperationResult<bool>.IsFailed("INS_MP_02", methodName, "MetodoPago invalido.", 400);
+                return OperationResult<bool>.IsFailed("INS_MP_02", methodName, "TipoPago invalido.", 400);
             }
 
             using var uow = _uowFactory.Create();
 
-            if (uow.Inscriptos.GetDetalleByKey(request.IdInscripto, codigoPersona) == null)
+            if (uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona) == null)
             {
                 return OperationResult<bool>.IsFailed("INS_MP_03", methodName, "No se encontro la inscripcion para la persona.", 404);
             }
 
-            if (uow.InscriptoSeniaMinima.GetByKey(request.IdInscripto) != null)
+            if (uow.InscriptoSeniaMinima.GetByKey(request.IdInscripcion) != null)
             {
-                return OperationResult<bool>.IsFailed("INS_MP_04", methodName, "La senia minima ya fue registrada para la inscripcion.", 409);
+                return OperationResult<bool>.IsFailed("INS_MP_04", methodName, "La reserva minima ya fue registrada para la inscripcion.", 409);
             }
 
             uow.InscriptoSeniaMinima.Add(new InscriptoSeniaMinimum
             {
-                IdInscripto = request.IdInscripto,
-                MetodoPagoSeniaMinima = metodoPagoNormalizado
+                IdInscripto = request.IdInscripcion,
+                MetodoPagoSeniaMinima = tipoPagoNormalizado
             });
             uow.Save();
 
@@ -755,7 +644,7 @@ namespace AppLogic.Inscripciones.Services
 
         private static OperationResult<long> ValidarRequestInscripcion<TRequest>(
             TRequest request,
-            Func<TRequest, long> obtenerIdInscripto,
+            Func<TRequest, long> obtenerIdInscripcion,
             string codigoRequestInvalido,
             string codigoIdInvalido,
             string methodName)
@@ -764,10 +653,10 @@ namespace AppLogic.Inscripciones.Services
             if (request == null)
                 return OperationResult<long>.IsFailed(codigoRequestInvalido, methodName, "Request invalido.", 400);
 
-            var idInscripto = obtenerIdInscripto(request);
-            return idInscripto > 0
-                ? OperationResult<long>.Ok(idInscripto, methodName)
-                : OperationResult<long>.IsFailed(codigoIdInvalido, methodName, "IdInscripto invalido.", 400);
+            var idInscripcion = obtenerIdInscripcion(request);
+            return idInscripcion > 0
+                ? OperationResult<long>.Ok(idInscripcion, methodName)
+                : OperationResult<long>.IsFailed(codigoIdInvalido, methodName, "IdInscripcion invalido.", 400);
         }
 
         private static OperationResult<bool> ValidarPertenenciaInscripto(
