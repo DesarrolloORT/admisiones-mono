@@ -52,7 +52,7 @@ namespace AppLogic.Inscripciones.Mappers
 
             return new DtoConfirmadaDetalle
             {
-                NumeroEstudiante = codigoPersona,
+                CodigoPersona = codigoPersona,
                 Resumen = MapearResumenDesdeInscripto(inscripto),
                 CoordinadorAcademico = coordinadorAcademico?.Coordinador,
                 CoordinadorCursos = coordinadorCursos?.Coordinador,

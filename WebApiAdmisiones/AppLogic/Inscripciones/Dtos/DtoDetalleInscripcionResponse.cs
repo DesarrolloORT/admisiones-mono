@@ -35,13 +35,13 @@ namespace AppLogic.Inscripciones.Dtos
     {
         public string TipoPago { get; set; } = string.Empty; // ABITAB / PAGANZA
         public string? Cedula { get; set; }
-        public long CodigoPersona { get; set; }                 // número de estudiante
+        public long CodigoPersona { get; set; }
         public decimal PagoReserva { get; set; }
     }
 
     public class DtoConfirmadaDetalle
     {
-        public long NumeroEstudiante { get; set; }
+        public long CodigoPersona { get; set; }
         public DtoResumenInscripcion Resumen { get; set; } = new();
         public DtoCoordinador? CoordinadorAcademico { get; set; }
         public DtoCoordinador? CoordinadorCursos { get; set; }

@@ -2629,7 +2629,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("Confirmada", result.Data!.Estado);
             Assert.NotNull(result.Data.Confirmada);
-            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
             Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
             Assert.Equal("maria.rodriguez@ort.edu.uy", result.Data.Confirmada.CoordinadorAcademico.Email);
@@ -2876,7 +2876,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
             Assert.Single(result.Data.Mensajes);
             Assert.NotNull(result.Data.Confirmada);
-            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
             Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
             Assert.Single(result.Data.Confirmada.MateriasPrimerSemestre);
@@ -2908,7 +2908,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
             Assert.NotNull(result.Data.Confirmada);
-            Assert.Equal(123, result.Data.Confirmada!.NumeroEstudiante);
+            Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
             Assert.Null(result.Data.Confirmada.CoordinadorAcademico);
             Assert.Empty(result.Data.Confirmada.MateriasPrimerSemestre);
         }
