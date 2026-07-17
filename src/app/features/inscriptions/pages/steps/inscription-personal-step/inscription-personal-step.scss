@@ -25,3 +25,12 @@
   font-size: var(--ort-sys-body-sm-text-size);
   line-height: var(--ort-sys-body-sm-line-height);
 }
+
+.back-button {
+  display: none;
+}
+@media (width >= 52.5rem) {
+  .back-button {
+    display: block;
+  }
+}
