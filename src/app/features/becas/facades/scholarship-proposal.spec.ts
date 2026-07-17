@@ -26,6 +26,7 @@ describe('ScholarshipProposalFacade', () => {
       carrera: '20',
       comienzo: '200',
       turno: '300',
+      seminarios: [],
     });
     facade.continue();
 
