@@ -344,6 +344,14 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<bool>.IsFailed("GEN_IP_00", nameof(RegistrarInteresProducto), "Request invalido.", 400);
             }
 
+            var validacionOfertasSolicitadas = InteresProductoValidationRules.ValidarOfertasSolicitadas(
+                request.IdsOferta,
+                nameof(RegistrarInteresProducto));
+            if (!validacionOfertasSolicitadas.Success)
+            {
+                return validacionOfertasSolicitadas;
+            }
+
             var validacion = InteresProductoValidationRules.ValidarRegistroInteresProducto(
                 uow,
                 codigoPersona,
@@ -356,22 +364,27 @@ namespace AppLogic.Inscripciones.Services
                 return validacion;
             }
 
-            var validacionOferta = InteresProductoValidationRules.ObtenerOfertaValidaParaInteres(
-                uow,
-                request.IdOferta,
-                request.IdProducto,
-                request.IdProcesoSeleccionado,
-                nameof(RegistrarInteresProducto));
-            if (!validacionOferta.Success)
+            var ofertas = new List<Oferta>();
+            foreach (var idOferta in request.IdsOferta)
             {
-                return OperationResult<bool>.IsFailed(
-                    validacionOferta.ErrorCode,
-                    nameof(RegistrarInteresProducto),
-                    validacionOferta.Message,
-                    validacionOferta.HttpCode);
+                var validacionOferta = InteresProductoValidationRules.ObtenerOfertaValidaParaInteres(
+                    uow,
+                    idOferta,
+                    request.IdProducto,
+                    request.IdProcesoSeleccionado,
+                    nameof(RegistrarInteresProducto));
+                if (!validacionOferta.Success)
+                {
+                    return OperationResult<bool>.IsFailed(
+                        validacionOferta.ErrorCode,
+                        nameof(RegistrarInteresProducto),
+                        validacionOferta.Message,
+                        validacionOferta.HttpCode);
+                }
+
+                ofertas.Add(validacionOferta.Data!);
             }
 
-            var oferta = validacionOferta.Data!;
             var fechaActual = DateTime.Now;
 
             uow.BeginTransaction();
@@ -383,7 +396,7 @@ namespace AppLogic.Inscripciones.Services
                     _dbConnectionContext,
                     codigoPersona,
                     request,
-                    oferta,
+                    ofertas,
                     fechaActual,
                     nameof(RegistrarInteresProducto));
                 if (!resultado.Success)
