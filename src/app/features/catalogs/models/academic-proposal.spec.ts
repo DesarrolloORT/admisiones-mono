@@ -1,4 +1,11 @@
-import { getAcademicCareerOptions, getAvailableAcademicProposalTypes } from './academic-proposal';
+import {
+  getAcademicCareerOptions,
+  getAcademicProposalTerminology,
+  getAvailableAcademicProposalTypes,
+  isProfessionalUpdateLevel,
+  isProfessionalUpdateType,
+  toAcademicSeminarOption,
+} from './academic-proposal';
 
 describe('academic proposal options', () => {
   const careers = [
@@ -28,5 +35,35 @@ describe('academic proposal options', () => {
     expect(getAcademicCareerOptions(careers, '2')).toEqual([
       { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);
+  });
+
+  it('detects the professional update proposal by type and by product level', () => {
+    expect(isProfessionalUpdateType('3')).toBe(true);
+    expect(isProfessionalUpdateType('1')).toBe(false);
+    expect(isProfessionalUpdateType('')).toBe(false);
+    expect(isProfessionalUpdateLevel(3)).toBe(true);
+    expect(isProfessionalUpdateLevel(4)).toBe(true);
+    expect(isProfessionalUpdateLevel(1)).toBe(false);
+    expect(isProfessionalUpdateLevel(null)).toBe(false);
+  });
+
+  it('uses Programa/Seminario terminology only for professional update', () => {
+    expect(getAcademicProposalTerminology('3').careerLabel).toBe('Programa');
+    expect(getAcademicProposalTerminology('3').startLabel).toBe('Seminario');
+    for (const value of ['1', '2', '', '9']) {
+      expect(getAcademicProposalTerminology(value).careerLabel).toBe('Carrera');
+      expect(getAcademicProposalTerminology(value).startLabel).toBe('Comienzo');
+    }
+  });
+
+  it('maps a seminar to a select option with its start date as description', () => {
+    expect(
+      toAcademicSeminarOption({
+        idOferta: 300,
+        idProceso: 200,
+        nombre: 'Marco legal y tributario',
+        fechaComienzo: '19/05/2026',
+      })
+    ).toEqual({ value: '300', label: 'Marco legal y tributario', description: '19/05/2026' });
   });
 });
