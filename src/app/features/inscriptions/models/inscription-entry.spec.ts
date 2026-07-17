@@ -99,6 +99,22 @@ function detail(values: Partial<InscripcionDetail> = {}): InscripcionDetail {
   };
 }
 
+// El nivel del producto llega resuelto por el resolver; `null` = catálogo caído o
+// producto fuera del catálogo (se deriva como hasta ahora).
+function retomar(
+  detail: InscripcionDetail | null,
+  idNivelProducto: number | null = null
+): InscripcionEntryResolved {
+  return { intent: 'retomar', detail, idNivelProducto };
+}
+
+function reactivar(
+  detail: InscripcionDetail | null,
+  idNivelProducto: number | null = null
+): InscripcionEntryResolved {
+  return { intent: 'reactivar', detail, idNivelProducto };
+}
+
 const DETAIL = {
   enProcesoFull: detail({ estado: 'En proceso', detalle: FULL_SUMMARY }),
   enProcesoNoDetalle: detail({ estado: 'En proceso', detalle: null }),
@@ -256,7 +272,7 @@ describe('deriveInitialInscripcionState', () => {
     // Intención RETOMAR degradada (Detalle falló) ⇒ se comporta como nueva.
     [
       'retomar sin detalle (Detalle falló) + en-progreso',
-      { intent: 'retomar', detail: null },
+      retomar(null),
       RESOLVED.enProgreso('decision-academica'),
       {
         step: 'propuesta',
@@ -271,7 +287,7 @@ describe('deriveInitialInscripcionState', () => {
     // Intención RETOMAR con detalle: comportamiento "continuar" preservado.
     [
       'retomar En proceso + detalle full + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.enProgreso('situacion-laboral'),
       {
         step: 'encuesta',
@@ -284,7 +300,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar En proceso + detalle full + fresh',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.fresh,
       {
         step: 'propuesta',
@@ -298,7 +314,7 @@ describe('deriveInitialInscripcionState', () => {
     [
       // La excepción solo aplica cuando existe una encuesta para precargar el Paso 1.
       'retomar En proceso + detalle full + sin derecho',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.sinDerecho,
       {
         step: 'propuesta',
@@ -312,7 +328,7 @@ describe('deriveInitialInscripcionState', () => {
     [
       // Sin encuesta para precargar, el Paso 1 sigue editable.
       'retomar En proceso + detalle sin producto + sin derecho',
-      { intent: 'retomar', detail: DETAIL.enProcesoDetalleSinProducto },
+      retomar(DETAIL.enProcesoDetalleSinProducto),
       RESOLVED.sinDerecho,
       {
         step: 'propuesta',
@@ -325,7 +341,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar En proceso + detalle full + completa',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.completa,
       {
         step: 'encuesta',
@@ -338,7 +354,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar En proceso + detalle full + loadFailed',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.loadFailed,
       {
         step: 'propuesta',
@@ -353,7 +369,7 @@ describe('deriveInitialInscripcionState', () => {
     // Una oferta incompleta no activa la excepción de reanudación.
     [
       'retomar En proceso + detalle sin producto + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoDetalleSinProducto },
+      retomar(DETAIL.enProcesoDetalleSinProducto),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'encuesta',
@@ -366,7 +382,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar En proceso + sin detalle (bloque null) + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoNoDetalle },
+      retomar(DETAIL.enProcesoNoDetalle),
       RESOLVED.enProgreso('decision-academica'),
       {
         step: 'encuesta',
@@ -378,10 +394,108 @@ describe('deriveInitialInscripcionState', () => {
       },
     ],
 
+    // Actualización profesional (nivel 3/4): retoma en paso 2 SIN exigir encuesta;
+    // el paso 1 se precarga desde el Detalle (ver its de academicPrefill).
+    [
+      'retomar AP (nivel 3) En proceso + fresh',
+      retomar(DETAIL.enProcesoFull, 3),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP (nivel 4) En proceso + sin derecho',
+      retomar(DETAIL.enProcesoFull, 4),
+      RESOLVED.sinDerecho,
+      {
+        step: 'encuesta',
+        survey: 'identity-only',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP En proceso + encuesta por-persona en-progreso',
+      retomar(DETAIL.enProcesoFull, 3),
+      RESOLVED.enProgreso('educacion'),
+      {
+        step: 'encuesta',
+        survey: 'prefilled',
+        activeSection: 'educacion',
+        includeAcademic: true,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      // Sin oferta completa no hay nada que retomar: paso 1 editable.
+      'retomar AP En proceso + detalle sin producto + fresh',
+      retomar(DETAIL.enProcesoDetalleSinProducto, 3),
+      RESOLVED.fresh,
+      {
+        step: 'propuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: false,
+        payment: 'none',
+      },
+    ],
+    [
+      // Guard de regresión: nivel 1 conserva el comportamiento actual exacto.
+      'retomar nivel 1 En proceso + fresh (sin cambios)',
+      retomar(DETAIL.enProcesoFull, 1),
+      RESOLVED.fresh,
+      {
+        step: 'propuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: false,
+        payment: 'none',
+      },
+    ],
+    [
+      // Catálogo caído ⇒ nivel null ⇒ AP degrada al comportamiento actual.
+      'retomar AP con nivel null (catálogo caído) + fresh',
+      retomar(DETAIL.enProcesoFull, null),
+      RESOLVED.fresh,
+      {
+        step: 'propuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: false,
+        payment: 'none',
+      },
+    ],
+    [
+      // La rama AP aplica solo a 'En proceso'; los estados de pago no cambian.
+      'retomar AP Pago pendiente sin seña',
+      retomar(DETAIL.pagoPendienteSinSenia, 3),
+      RESOLVED.fresh,
+      {
+        step: 'pago',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: false,
+        payment: 'awaiting-method',
+      },
+    ],
+
     // Estados de pago / terminales.
     [
       'retomar Pago pendiente sin seña',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteSinSenia },
+      retomar(DETAIL.pagoPendienteSinSenia),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'pago',
@@ -394,7 +508,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar Pago pendiente con seña',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      retomar(DETAIL.pagoPendienteConSenia),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'propuesta',
@@ -407,7 +521,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar Pendiente sin seña',
-      { intent: 'retomar', detail: DETAIL.pendienteSinSenia },
+      retomar(DETAIL.pendienteSinSenia),
       RESOLVED.fresh,
       {
         step: 'pago',
@@ -420,7 +534,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar Pendiente con seña',
-      { intent: 'retomar', detail: DETAIL.pendienteConSenia },
+      retomar(DETAIL.pendienteConSenia),
       RESOLVED.fresh,
       {
         step: 'propuesta',
@@ -435,7 +549,7 @@ describe('deriveInitialInscripcionState', () => {
     // queda `true` pero es inocuo: el outcome terminal oculta paso 1/2.
     [
       'retomar Confirmada',
-      { intent: 'retomar', detail: DETAIL.confirmada },
+      retomar(DETAIL.confirmada),
       RESOLVED.completa,
       {
         step: 'propuesta',
@@ -448,7 +562,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar Confirmada + loadFailed (error+retry gana en template)',
-      { intent: 'retomar', detail: DETAIL.confirmada },
+      retomar(DETAIL.confirmada),
       RESOLVED.loadFailed,
       {
         step: 'propuesta',
@@ -461,7 +575,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar A la espera',
-      { intent: 'retomar', detail: DETAIL.aLaEspera },
+      retomar(DETAIL.aLaEspera),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'propuesta',
@@ -474,7 +588,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar estado desconocido/null',
-      { intent: 'retomar', detail: DETAIL.desconocido },
+      retomar(DETAIL.desconocido),
       RESOLVED.fresh,
       {
         step: 'propuesta',
@@ -487,7 +601,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'retomar Pago pendiente con seña + sin derecho',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      retomar(DETAIL.pagoPendienteConSenia),
       RESOLVED.sinDerecho,
       {
         step: 'propuesta',
@@ -502,7 +616,7 @@ describe('deriveInitialInscripcionState', () => {
     // Intención REACTIVAR (provisional = nueva) hasta que negocio defina reglas.
     [
       'reactivar Cancelada + detalle full (provisional = nueva)',
-      { intent: 'reactivar', detail: DETAIL.cancelada },
+      reactivar(DETAIL.cancelada),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'propuesta',
@@ -515,7 +629,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'reactivar sin detalle (Detalle falló)',
-      { intent: 'reactivar', detail: null },
+      reactivar(null),
       RESOLVED.fresh,
       {
         step: 'propuesta',
@@ -536,7 +650,7 @@ describe('deriveInitialInscripcionState', () => {
 
   it('reconstructs preEnrollment (monto/vencimiento/resumen) for pending payment', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.pagoPendienteSinSenia },
+      entry: retomar(DETAIL.pagoPendienteSinSenia),
       survey: RESOLVED.fresh,
     });
     expect(state.preEnrollment).toEqual({
@@ -551,7 +665,7 @@ describe('deriveInitialInscripcionState', () => {
 
   it('maps the chosen deposit method for a reserva outcome', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      entry: retomar(DETAIL.pagoPendienteConSenia),
       survey: RESOLVED.fresh,
     });
     expect(state.payment).toEqual({
@@ -563,15 +677,40 @@ describe('deriveInitialInscripcionState', () => {
 
   it('carries the confirmed detail for a confirmada outcome', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.confirmada },
+      entry: retomar(DETAIL.confirmada),
       survey: RESOLVED.completa,
     });
     expect(state.payment).toEqual({ kind: 'confirmada', detail: DETAIL.confirmada.confirmada });
   });
 
+  it('builds the academic prefill from the detail when resuming an AP inscription', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, 3),
+      survey: RESOLVED.fresh,
+    });
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '3',
+      carrera: '20',
+      seminarios: ['300'],
+    });
+  });
+
+  it('does not prefill the academic step outside the AP resume scenario', () => {
+    const nivel1 = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, 1),
+      survey: RESOLVED.enProgreso('educacion'),
+    });
+    const nueva = deriveInitialInscripcionState({
+      entry: { intent: 'nueva' },
+      survey: RESOLVED.fresh,
+    });
+    expect(nivel1.academicPrefill).toBeNull();
+    expect(nueva.academicPrefill).toBeNull();
+  });
+
   it('computes completed sections up to the active one', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      entry: retomar(DETAIL.enProcesoFull),
       survey: RESOLVED.enProgreso('experiencia-ort'),
     });
     expect(state.survey.kind === 'prefilled' && state.survey.completedSections).toEqual([

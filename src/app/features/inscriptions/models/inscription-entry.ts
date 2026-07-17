@@ -1,4 +1,8 @@
 import {
+  getAcademicProposalTypeByLevel,
+  isProfessionalUpdateLevel,
+} from '../../catalogs/models/academic-proposal';
+import {
   detailToPreEnrollment,
   type InscripcionConfirmedDetail,
   type InscripcionDetail,
@@ -50,8 +54,8 @@ export const EMPTY_INITIAL_SURVEY_RESPONSE: InscripcionInitialSurveyResponse = {
  */
 export type InscripcionEntryResolved =
   | { intent: 'nueva' }
-  | { intent: 'retomar'; detail: InscripcionDetail | null }
-  | { intent: 'reactivar'; detail: InscripcionDetail | null };
+  | { intent: 'retomar'; detail: InscripcionDetail | null; idNivelProducto: number | null }
+  | { intent: 'reactivar'; detail: InscripcionDetail | null; idNivelProducto: number | null };
 
 export type InscripcionEntryIntent = InscripcionEntryResolved['intent'];
 
@@ -81,12 +85,20 @@ export type InscripcionPaymentInit =
   | { kind: 'confirmada'; detail: InscripcionConfirmedDetail | null }
   | { kind: 'en-proceso' };
 
+/** Precarga del paso 1 al retomar una inscripción AP (sin encuesta que la provea). */
+export interface InscripcionAcademicPrefill {
+  tipoPropuesta: string;
+  carrera: string;
+  seminarios: string[];
+}
+
 export interface InscripcionInitialState {
   step: InscripcionStep;
   survey: InscripcionSurveyInit;
   payment: InscripcionPaymentInit;
   resumeInProgress: boolean;
   preEnrollment: InscripcionPreEnrollmentResponse | null;
+  academicPrefill: InscripcionAcademicPrefill | null;
 }
 
 /**
@@ -109,7 +121,7 @@ export function deriveInitialInscripcionState(
       // `detail` queda disponible en el contexto para esa derivación futura.
       return deriveNueva(ctx);
     case 'retomar':
-      return deriveRetomar(ctx, ctx.entry.detail);
+      return deriveRetomar(ctx, ctx.entry.detail, ctx.entry.idNivelProducto);
   }
 }
 
@@ -120,28 +132,36 @@ function deriveNueva(ctx: InscripcionEntryContext): InscripcionInitialState {
     payment: { kind: 'none' },
     resumeInProgress: false,
     preEnrollment: null,
+    academicPrefill: null,
   };
 }
 
 function deriveRetomar(
   ctx: InscripcionEntryContext,
-  detail: InscripcionDetail | null
+  detail: InscripcionDetail | null,
+  idNivelProducto: number | null
 ): InscripcionInitialState {
   // Detalle falló (params inválidos o error de red) ⇒ degradar a nueva.
   if (!detail) return deriveNueva(ctx);
 
   const survey = deriveSurvey(ctx, true);
   const product = detail.detalle;
+  const productComplete =
+    product !== null &&
+    product.idProducto !== null &&
+    product.idComienzo !== null &&
+    product.idOferta !== null;
+  // AP retoma sin encuesta: la precarga del paso 1 sale del Detalle. Con nivel
+  // desconocido (catálogo caído) se degrada al comportamiento actual.
+  const professionalUpdate = isProfessionalUpdateLevel(idNivelProducto);
   const base = {
     survey,
     resumeInProgress:
       detail.estado === 'En proceso' &&
-      survey.kind === 'prefilled' &&
-      product !== null &&
-      product.idProducto !== null &&
-      product.idComienzo !== null &&
-      product.idOferta !== null,
+      productComplete &&
+      (professionalUpdate || survey.kind === 'prefilled'),
     preEnrollment: detailToPreEnrollment(detail),
+    academicPrefill: null,
   } satisfies Partial<InscripcionInitialState>;
 
   switch (detail.estado) {
@@ -168,6 +188,20 @@ function deriveRetomar(
         payment: { kind: 'confirmada', detail: detail.confirmada },
       };
     case 'En proceso':
+      if (professionalUpdate && productComplete) {
+        return {
+          ...base,
+          step: 'encuesta',
+          payment: { kind: 'none' },
+          academicPrefill: {
+            tipoPropuesta: getAcademicProposalTypeByLevel(idNivelProducto as number)?.value ?? '',
+            carrera: String(product.idProducto),
+            // Hoy el Detalle trae una sola oferta; será un array cuando el
+            // backend soporte múltiples seminarios por inscripción.
+            seminarios: [String(product.idOferta)],
+          },
+        };
+      }
       return {
         ...base,
         step: survey.kind === 'prefilled' ? 'encuesta' : 'propuesta',
