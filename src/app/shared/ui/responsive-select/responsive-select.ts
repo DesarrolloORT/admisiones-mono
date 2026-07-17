@@ -24,6 +24,7 @@ export interface ResponsiveSelectOption {
   value: string;
   label: string;
   icon?: string;
+  description?: string;
 }
 
 export interface ResponsiveSelectOptionGroup {
