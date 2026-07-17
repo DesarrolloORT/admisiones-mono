@@ -53,6 +53,25 @@ export class InscripcionPage {
     ).toBeVisible();
   }
 
+  // Actualización profesional: Programa + multi-select de seminarios; el selector
+  // de seminarios permanece oculto hasta elegir un programa y no hay Comienzo/Turno.
+  public async fillProfessionalUpdateProposal(): Promise<void> {
+    await this.chooseRadio('tipoPropuesta', 'Actualización profesional');
+    await expect(this.responsiveSelect('carrera')).toContainText('Programa');
+    await expect(this.responsiveSelect('seminarios')).toHaveCount(0);
+    await expect(this.responsiveSelect('comienzo')).toHaveCount(0);
+    await expect(this.responsiveSelect('turno')).toHaveCount(0);
+
+    await this.select('carrera', 'Programa de Asesoramiento Financiero');
+    await expect(this.responsiveSelect('seminarios')).toContainText('Seminario');
+    await this.select('seminarios', 'Marco legal y tributario');
+    await this.continue();
+
+    await expect(
+      this.page.getByRole('heading', { name: 'Información personal', exact: true })
+    ).toBeVisible();
+  }
+
   public async fillEducation(): Promise<void> {
     await this.chooseRadio('cursaSecundaria', 'Sí, estoy cursando');
     await this.chooseRadio('anioSecundaria', 'Durante secundaria');
@@ -370,16 +389,8 @@ export class InscripcionPage {
     await this.page.keyboard.press('Home');
     for (let index = 0; index < 30; index += 1) {
       if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          await this.page.keyboard.press('Enter');
-          if ((await combobox.textContent())?.includes(option)) {
-            await this.page.keyboard.press('Escape');
-            return;
-          }
-        }
-
+        await this.page.keyboard.press('Tab');
         await expect(combobox).toContainText(option);
-        await this.page.keyboard.press('Escape');
         return;
       }
 

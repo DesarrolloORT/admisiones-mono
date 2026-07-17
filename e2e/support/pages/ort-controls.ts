@@ -11,18 +11,15 @@ export async function selectOrtOption(
   await trigger.focus();
   await page.keyboard.press('Enter');
 
-  const optionByRole = page.getByRole('option', { name: optionName });
+  const listboxId = await trigger.getAttribute('aria-controls');
+  if (!listboxId) throw new Error('El select no expuso el listbox activo.');
 
-  if ((await optionByRole.count()) > 0) {
-    await optionByRole.first().click();
-    await page.keyboard.press('Escape');
-    return;
-  }
-
-  const optionByText = page.locator('ort-option').filter({ hasText: optionName }).last();
+  const optionByText = page.locator(`#${listboxId}`).locator('ort-option').filter({
+    hasText: optionName,
+  });
 
   await expect(optionByText).toBeVisible();
-  await optionByText.click();
+  await optionByText.first().click();
   await page.keyboard.press('Escape');
 }
 
