@@ -15,6 +15,9 @@ namespace AppLogic.Inscripciones.Dtos
 
         /// <summary>Un resultado por cada oferta confirmada (1 elemento para nivel 1 y 2, 1 o mas para nivel 3 y 4).</summary>
         public List<DtoResultadoInscripcionOferta> Ofertas { get; set; } = new();
+
+        /// <summary>Total a pagar de reserva, suma de todas las ofertas confirmadas (el alumno paga todo junto, no elige).</summary>
+        public decimal PagoReserva { get; set; }
     }
 
     public class DtoResultadoInscripcionOferta
@@ -22,7 +25,7 @@ namespace AppLogic.Inscripciones.Dtos
         public long IdOferta { get; set; }
         public long? IdInscripcion { get; set; }
         public DateTime? FechaVencimientoPago { get; set; }
-        public decimal Senia { get; set; }
+        public decimal PagoReserva { get; set; }
     }
 
     public class DtoResumenInscripcion

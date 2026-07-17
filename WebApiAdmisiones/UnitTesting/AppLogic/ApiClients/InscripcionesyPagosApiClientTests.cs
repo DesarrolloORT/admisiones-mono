@@ -188,7 +188,7 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.Equal(3210.50m, result.Data!.EstadoCuenta!.SaldoActual);
             var carrito = Assert.Single(result.Data.Carritos);
             Assert.Equal("123|20|1|30|55", carrito.IdCarrito);
-            Assert.Equal(1234.50m, carrito.Senia);
+            Assert.Equal(1234.50m, carrito.PagoReserva);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Get, request.Method);
             Assert.Contains("Pagos/Carritos?idInscripcion=55", request.RequestUri);

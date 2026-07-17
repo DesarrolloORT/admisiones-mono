@@ -146,7 +146,7 @@ namespace AppLogic.Inscripciones.Services
                     MetodoPago = seniaMinima.MetodoPagoSeniaMinima,
                     Cedula = persona?.Documento?.Trim(),
                     CodigoPersona = codigoPersona,
-                    Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos.Data?.Carritos)
+                    Senia = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos.Data?.Carritos)
                 };
             }
             else
@@ -158,6 +158,7 @@ namespace AppLogic.Inscripciones.Services
 
         private static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
         {
+            var pagoReserva = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos?.Carritos);
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
@@ -170,9 +171,10 @@ namespace AppLogic.Inscripciones.Services
                         IdOferta = inscripto.IdOferta ?? 0,
                         IdInscripcion = inscripto.IdInscripto,
                         FechaVencimientoPago = inscripto.FechaVtoInscr,
-                        Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos?.Carritos)
+                        PagoReserva = pagoReserva
                     }
-                ]
+                ],
+                PagoReserva = pagoReserva
             };
         }
 
@@ -523,23 +525,7 @@ namespace AppLogic.Inscripciones.Services
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
-            var confirmacionResult = ConfirmarPreInscripcionRules.MapearResultadoApiMultiple(apiResult, contexto, methodName);
-            if (!confirmacionResult.Success)
-            {
-                return confirmacionResult;
-            }
-
-            // La confirmación de LogicaORT puede no traer la fecha de vencimiento; se lee de T_INSCRIPTO.
-            foreach (var resultadoOferta in confirmacionResult.Data!.Ofertas)
-            {
-                if (resultadoOferta.FechaVencimientoPago == null && resultadoOferta.IdInscripcion.HasValue)
-                {
-                    var inscriptoConfirmado = uow.Inscriptos.GetByKey(resultadoOferta.IdInscripcion.Value);
-                    resultadoOferta.FechaVencimientoPago = inscriptoConfirmado?.FechaVtoInscr;
-                }
-            }
-
-            return confirmacionResult;
+            return ConfirmarPreInscripcionRules.MapearResultadoApiMultiple(apiResult, contexto, methodName);
         }
 
         public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ReactivarInscripcion(long codigoPersona, DtoReactivarInscripcionRequest request)

@@ -369,7 +369,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
-            Assert.Equal(2500, result.Data.Ofertas[0].Senia);
+            Assert.Equal(2500, result.Data.Ofertas[0].PagoReserva);
+            Assert.Equal(2500, result.Data.PagoReserva);
             Assert.Equal(10, result.Data.Resumen.IdOferta);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
             Assert.NotNull(result.Data.EstadoCuenta);
@@ -684,9 +685,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(2, result.Data.Ofertas.Count);
             Assert.Equal(10, result.Data.Ofertas[0].IdOferta);
             Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
-            Assert.Equal(250, result.Data.Ofertas[0].Senia);
+            Assert.Equal(250, result.Data.Ofertas[0].PagoReserva);
             Assert.Equal(11, result.Data.Ofertas[1].IdOferta);
             Assert.Equal(78, result.Data.Ofertas[1].IdInscripcion);
+            Assert.Equal(200, result.Data.Ofertas[1].PagoReserva);
+            Assert.Equal(450, result.Data.PagoReserva);
             var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("ConfirmarPreInscripcionMultiple", requestApi.RequestUri);
             Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
@@ -2360,7 +2363,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(result.Data.PagoPendiente);
             Assert.True(result.Data.PagoPendiente!.Confirmada);
             Assert.Equal(555, result.Data.PagoPendiente!.Ofertas[0].IdInscripcion);
-            Assert.Equal(1500.50m, result.Data.PagoPendiente.Ofertas[0].Senia);
+            Assert.Equal(1500.50m, result.Data.PagoPendiente.Ofertas[0].PagoReserva);
+            Assert.Equal(1500.50m, result.Data.PagoPendiente.PagoReserva);
             Assert.Equal(3210.50m, result.Data.PagoPendiente.EstadoCuenta!.SaldoActual);
             Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.Ofertas[0].FechaVencimientoPago);
             Assert.Equal("Analista programador", result.Data.PagoPendiente.Resumen.Carrera);

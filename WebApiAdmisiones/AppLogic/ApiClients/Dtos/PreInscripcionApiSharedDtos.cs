@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace AppLogic.ApiClients.Dtos
 {
-    public class CarritoSeniaApiDto
+    public class CarritoPagoReservaApiDto
     {
         public string IdCarrito { get; set; } = string.Empty;
-        public decimal Senia { get; set; }
+
+        public decimal PagoReserva { get; set; }
     }
 
     public class ResumenInscripcionApiDto

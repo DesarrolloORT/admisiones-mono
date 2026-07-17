@@ -34,7 +34,7 @@ namespace UnitTesting.Controllers
                         IdOferta = 10,
                         IdInscripcion = 100,
                         FechaVencimientoPago = new DateTime(2026, 6, 30),
-                        Senia = 1500
+                        PagoReserva = 1500
                     }
                 ]
             };
@@ -65,7 +65,7 @@ namespace UnitTesting.Controllers
                 Confirmada = true,
                 Ofertas =
                 [
-                    new DtoResultadoInscripcionOferta { IdOferta = 10, IdInscripcion = 100, Senia = 1500 }
+                    new DtoResultadoInscripcionOferta { IdOferta = 10, IdInscripcion = 100, PagoReserva = 1500 }
                 ]
             };
 

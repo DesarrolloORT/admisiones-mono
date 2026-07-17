@@ -201,21 +201,26 @@ namespace AppLogic.Inscripciones.Rules
             ConfirmarPreInscripcionMultipleApiResponse source,
             ContextoConfirmacionPreInscripcion contexto)
         {
+            var ofertas = source.Ofertas
+                .Select(o => new DtoResultadoInscripcionOferta
+                {
+                    IdOferta = o.IdOferta,
+                    IdInscripcion = o.IdInscripcion,
+                    FechaVencimientoPago = o.FechaVencimientoPago,
+                    PagoReserva = (decimal)o.ValorSeniaMinima
+                })
+                .ToList();
+
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = source.Confirmada || source.Respuesta,
                 EnEspera = source.InscripcionPendiente,
                 EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
                 Resumen = MapearResumen(source.Resumen, contexto),
-                Ofertas = source.Ofertas
-                    .Select(o => new DtoResultadoInscripcionOferta
-                    {
-                        IdOferta = o.IdOferta,
-                        IdInscripcion = o.IdInscripcion,
-                        FechaVencimientoPago = o.FechaVencimientoPago,
-                        Senia = (decimal)o.ValorSeniaMinima
-                    })
-                    .ToList()
+                Ofertas = ofertas,
+                // El alumno paga todas las ofertas confirmadas de una sola vez, no elige: el front recibe
+                // directamente el total (para nivel 1 y 2, con una sola oferta, coincide con esa unica seña).
+                PagoReserva = ofertas.Sum(o => o.PagoReserva)
             };
         }
 
@@ -295,9 +300,9 @@ namespace AppLogic.Inscripciones.Rules
                 methodName);
         }
 
-        internal static decimal SumarSenias(IEnumerable<CarritoSeniaApiDto>? carritos)
+        internal static decimal SumarPagoReserva(IEnumerable<CarritoPagoReservaApiDto>? carritos)
         {
-            return carritos?.Sum(c => c.Senia) ?? 0;
+            return carritos?.Sum(c => c.PagoReserva) ?? 0;
         }
 
         private static OperationResult<ContextoConfirmacionPreInscripcion> ErrorInteresOfertaNoEncontrado(string methodName)
