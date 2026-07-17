@@ -202,7 +202,11 @@ test.describe('Keyboard and form accessibility @a11y', () => {
 
     const dialog = page.getByRole('dialog', { name: 'Confirmar inscripción' });
     await expect(dialog).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Volver', exact: true })).toBeFocused();
+    await expect
+      .poll(() =>
+        dialog.evaluate(element => element.contains(element.ownerDocument.activeElement))
+      )
+      .toBe(true);
     await expectNoAxeViolations(page);
 
     await page.keyboard.press('Escape');

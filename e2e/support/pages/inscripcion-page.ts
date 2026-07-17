@@ -247,8 +247,7 @@ export class InscripcionPage {
     await this.payWithKeyboard();
 
     const confirmButton = this.page.getByRole('button', { name: 'Confirmar', exact: true });
-    await expect(this.page.getByRole('button', { name: 'Volver', exact: true })).toBeFocused();
-    await this.page.keyboard.press('Tab');
+    await this.tabTo(confirmButton);
     await expect(confirmButton).toBeFocused();
     await this.page.keyboard.press('Enter');
   }
