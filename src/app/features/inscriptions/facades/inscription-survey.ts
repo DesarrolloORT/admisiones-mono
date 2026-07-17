@@ -114,7 +114,10 @@ export class InscripcionSurveyFacade {
         ? 'parcial'
         : 'primera-vez'
   );
-  public readonly visibleSections = computed(() => getSeccionesVisibles(this.scenario()));
+  private readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
+  public readonly visibleSections = computed(() =>
+    getSeccionesVisibles(this.scenario(), this.isProfessionalUpdate())
+  );
   public readonly sectionItems = computed(() =>
     this.visibleSections().map(section => ({
       id: section,
@@ -167,6 +170,12 @@ export class InscripcionSurveyFacade {
     this.observeForms();
     this.observeIdentityConfirmation();
     this.deferStudentRegulationAcceptance();
+    // Si la sección activa deja de ser visible (p. ej. AP arranca 'fresh' con
+    // 'educacion'), se reubica en la primera visible. No-op para tipos 1/2.
+    effect(() => {
+      const sections = this.visibleSections();
+      if (!sections.includes(this.activeSection())) this.activeSection.set(sections[0]);
+    });
     // El posicionamiento del flujo y la aplicación del estado inicial los hace
     // `InscripcionProcessFacade` (único inicializador) vía `applyInitialState`.
   }
@@ -359,7 +368,7 @@ export class InscripcionSurveyFacade {
   }
 
   public savePartial(): Observable<boolean> {
-    if (!this.hasInitialSurveyRight()) return of(true);
+    if (!this.hasInitialSurveyRight() || this.isProfessionalUpdate()) return of(true);
     return this.inscriptions.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
   }
 
@@ -377,7 +386,10 @@ export class InscripcionSurveyFacade {
   private finishSurveyStep(): void {
     if (!this.ensureAllVisibleSectionsValid()) return;
 
-    const confirmPayload = buildConfirmPreEnrollmentPayload(this.formsStore.forms);
+    const confirmPayload = buildConfirmPreEnrollmentPayload(
+      this.formsStore.forms,
+      this.isProfessionalUpdate()
+    );
     if (!confirmPayload) {
       this.preEnrollmentError.set(
         'No se pudo confirmar la preinscripción con la oferta seleccionada.'

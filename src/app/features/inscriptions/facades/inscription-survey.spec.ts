@@ -20,6 +20,15 @@ import { InscripcionSurveyFacade } from './inscription-survey';
 import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
 import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
+const AP_CAREERS = [
+  {
+    idProducto: 30,
+    idNivelProducto: 3,
+    nombreProducto: 'Programa de Asesoramiento Financiero',
+    nombreNivelProducto: 'Actualización profesional',
+  },
+];
+
 describe('InscripcionSurveyFacade', () => {
   const saveInitialSurvey = vi.fn();
   const confirmPreEnrollment = vi.fn();
@@ -85,6 +94,56 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
+  it('reduces AP flows to work status, identity and regulation and repositions the section', () => {
+    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+
+    expect(survey.activeSection()).toBe('educacion');
+
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    TestBed.tick();
+
+    expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
+    expect(survey.activeSection()).toBe('situacion-laboral');
+  });
+
+  it('does not persist the initial survey for AP even with survey rights', async () => {
+    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  it('confirms an AP pre-enrollment with the selected seminars and no survey POST', () => {
+    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.seminarios.setValue(['300']);
+    TestBed.tick();
+
+    forms.workForm.controls.situacionLaboral.setValue('no-trabaja');
+    const frente = preloadFile('frente.png');
+    const dorso = preloadFile('dorso.png');
+    const selfie = preloadFile('selfie.png');
+    applyIdentityPreload(survey, {
+      frente,
+      dorso,
+      selfie,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    survey.continue();
+
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      idOfertasSeleccionadas: [300],
+    });
+  });
+
   it('completes identity and advances when confirming a complete backend preload', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: false,
@@ -148,7 +207,7 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      idOfertasSeleccionadas: [300],
     });
   });
 
@@ -301,7 +360,7 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).toHaveBeenCalledWith(selfie);
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      idOfertasSeleccionadas: [300],
     });
   });
 
@@ -884,6 +943,8 @@ describe('InscripcionSurveyFacade', () => {
             getCareers: () => of(careers),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
+            getSeminarios: () =>
+              of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }]),
             getCountryLocations: () => of([]),
             getInstituciones: () => of([]),
             getInitialSurveyCatalogs: () =>
@@ -936,7 +997,7 @@ describe('InscripcionSurveyFacade', () => {
         loadFailed: options.loadFailed ?? false,
       };
       const state = deriveInitialInscripcionState({
-        entry: { intent: 'retomar', detail: RESUME_DETAIL },
+        entry: { intent: 'retomar', detail: RESUME_DETAIL, idNivelProducto: null },
         survey: resolved,
       });
       survey.applyInitialState(state.survey);
