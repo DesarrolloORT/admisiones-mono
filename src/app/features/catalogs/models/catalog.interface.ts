@@ -42,6 +42,7 @@ export interface LocationCountry {
 
 export interface Career {
   idProducto: number;
+  idProceso?: number | null;
   idNivelProducto: number;
   nombreProducto: string;
   nombreNivelProducto: string;
@@ -58,6 +59,13 @@ export interface Turno {
   idTurno: number;
   nombreTurno: string;
   horarioReferencia: string;
+}
+
+export interface Seminario {
+  idOferta: number;
+  idProceso: number;
+  nombre: string;
+  fechaComienzo: string | null;
 }
 
 export type ReasonForChoice = CatalogItem;
