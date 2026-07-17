@@ -161,11 +161,18 @@ namespace AppLogic.Inscripciones.Services
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
-                IdInscripcion = inscripto.IdInscripto,
-                FechaVencimientoPago = inscripto.FechaVtoInscr,
-                Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos?.Carritos),
                 EstadoCuenta = ConfirmarPreInscripcionRules.MapearEstadoCuenta(carritos?.EstadoCuenta),
-                Resumen = MapearResumenDesdeInscripto(inscripto)
+                Resumen = MapearResumenDesdeInscripto(inscripto),
+                Ofertas =
+                [
+                    new DtoResultadoInscripcionOferta
+                    {
+                        IdOferta = inscripto.IdOferta ?? 0,
+                        IdInscripcion = inscripto.IdInscripto,
+                        FechaVencimientoPago = inscripto.FechaVtoInscr,
+                        Senia = ConfirmarPreInscripcionRules.SumarSenias(carritos?.Carritos)
+                    }
+                ]
             };
         }
 
@@ -430,6 +437,11 @@ namespace AppLogic.Inscripciones.Services
             return _encuestaInicialService.GuardarEncuestaInicial(codigoPersona, request);
         }
 
+        /// <summary>
+        /// Confirma la preinscripcion de una o varias ofertas (nivel 1 y 2 manda una unica oferta en la
+        /// lista, nivel 3 y 4 puede mandar varias). Siempre llama a la variante multiple de LogicaORT,
+        /// que soporta ambos casos en una unica transaccion.
+        /// </summary>
         public async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarPreInscripcion(long codigoPersona, DtoConfirmarPreInscripcionRequest request)
         {
             const string methodName = nameof(ConfirmarPreInscripcion);
@@ -452,23 +464,41 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_05", methodName, PersonaConstants.PersonaNoEncontradaMessage, 404);
             }
 
-            var oferta = uow.Ofertas.GetByKeyWithRelated(request.IdOfertaSeleccionada);
-            if (oferta == null)
+            ContextoConfirmacionPreInscripcion? contexto = null;
+            foreach (var idOfertaSeleccionada in request.IdsOfertasSeleccionadas)
             {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, "No se encontro la oferta seleccionada.", 404);
+                var oferta = uow.Ofertas.GetByKeyWithRelated(idOfertaSeleccionada);
+                if (oferta == null)
+                {
+                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed("INS_CPI_15", methodName, $"No se encontro la oferta seleccionada: {idOfertaSeleccionada}.", 404);
+                }
+
+                var contextoOfertaResult = ConfirmarPreInscripcionRules.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
+                if (!contextoOfertaResult.Success)
+                {
+                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                        contextoOfertaResult.ErrorCode,
+                        methodName,
+                        contextoOfertaResult.Message,
+                        contextoOfertaResult.HttpCode);
+                }
+
+                if (contexto == null)
+                {
+                    contexto = contextoOfertaResult.Data!;
+                }
+                else if (contexto.IdProducto != contextoOfertaResult.Data!.IdProducto
+                    || contexto.IdComienzo != contextoOfertaResult.Data.IdComienzo
+                    || contexto.IdTurno != contextoOfertaResult.Data.IdTurno)
+                {
+                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                        "INS_CPI_17",
+                        methodName,
+                        "Todas las ofertas seleccionadas deben pertenecer al mismo producto, comienzo y turno.",
+                        400);
+                }
             }
 
-            var contextoResult = ConfirmarPreInscripcionRules.ObtenerContextoConfirmacion(uow, codigoPersona, oferta, methodName);
-            if (!contextoResult.Success)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                    contextoResult.ErrorCode,
-                    methodName,
-                    contextoResult.Message,
-                    contextoResult.HttpCode);
-            }
-
-            var contexto = contextoResult.Data!;
             var validacionDocumentos = DocumentoIdentidadPersonaService.ValidarDocumentosIdentidadParaConfirmacion(
                 uow,
                 persona,
@@ -482,7 +512,7 @@ namespace AppLogic.Inscripciones.Services
                 uow,
                 _dbConnectionContext,
                 codigoPersona,
-                contexto.IdProducto,
+                contexto!.IdProducto,
                 contexto.IdComienzo,
                 request.AceptoReglamento,
                 methodName);
@@ -491,19 +521,22 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
             }
 
-            var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
-            var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
-            var confirmacionResult = ConfirmarPreInscripcionRules.MapearResultadoApi(apiResult, contexto, methodName);
+            var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
+            var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
+            var confirmacionResult = ConfirmarPreInscripcionRules.MapearResultadoApiMultiple(apiResult, contexto, methodName);
             if (!confirmacionResult.Success)
             {
                 return confirmacionResult;
             }
 
             // La confirmación de LogicaORT puede no traer la fecha de vencimiento; se lee de T_INSCRIPTO.
-            if (confirmacionResult.Data!.FechaVencimientoPago == null && confirmacionResult.Data.IdInscripcion.HasValue)
+            foreach (var resultadoOferta in confirmacionResult.Data!.Ofertas)
             {
-                var inscriptoConfirmado = uow.Inscriptos.GetByKey(confirmacionResult.Data.IdInscripcion.Value);
-                confirmacionResult.Data.FechaVencimientoPago = inscriptoConfirmado?.FechaVtoInscr;
+                if (resultadoOferta.FechaVencimientoPago == null && resultadoOferta.IdInscripcion.HasValue)
+                {
+                    var inscriptoConfirmado = uow.Inscriptos.GetByKey(resultadoOferta.IdInscripcion.Value);
+                    resultadoOferta.FechaVencimientoPago = inscriptoConfirmado?.FechaVtoInscr;
+                }
             }
 
             return confirmacionResult;
@@ -533,7 +566,7 @@ namespace AppLogic.Inscripciones.Services
 
             return await ConfirmarPreInscripcion(codigoPersona, new DtoConfirmarPreInscripcionRequest
             {
-                IdOfertaSeleccionada = inscriptoBaja.IdOferta.Value,
+                IdsOfertasSeleccionadas = [inscriptoBaja.IdOferta.Value],
                 AceptoReglamento = true
             });
         }

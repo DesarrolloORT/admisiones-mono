@@ -19,9 +19,11 @@ namespace AppLogic.Inscripciones.Rules
                 return OperationResult<bool>.IsFailed("INS_CPI_01", methodName, "Request invalido.", 400);
             }
 
-            if (request.IdOfertaSeleccionada <= 0)
+            if (request.IdsOfertasSeleccionadas == null
+                || request.IdsOfertasSeleccionadas.Count == 0
+                || request.IdsOfertasSeleccionadas.Any(id => id <= 0))
             {
-                return OperationResult<bool>.IsFailed("INS_CPI_03", methodName, "La oferta seleccionada es invalida.", 400);
+                return OperationResult<bool>.IsFailed("INS_CPI_03", methodName, "Debe indicar al menos una oferta seleccionada valida.", 400);
             }
 
             return OperationResult<bool>.Ok(true, methodName);
@@ -109,15 +111,15 @@ namespace AppLogic.Inscripciones.Rules
                 methodName);
         }
 
-        public static ConfirmarPreInscripcionApiRequest CrearApiRequest(
+        public static ConfirmarPreInscripcionMultipleApiRequest CrearApiRequestMultiple(
             ContextoConfirmacionPreInscripcion contexto,
-            long idOfertaSeleccionada)
+            List<long> idsOfertasSeleccionadas)
         {
-            return new ConfirmarPreInscripcionApiRequest
+            return new ConfirmarPreInscripcionMultipleApiRequest
             {
                 IdProducto = contexto.IdProducto,
                 IdProceso = contexto.IdProceso,
-                IdOfertaSeleccionada = idOfertaSeleccionada,
+                IdsOfertasSeleccionadas = idsOfertasSeleccionadas,
                 TipoInscripcion = "ONLINE",
                 Turno = new DtoTurno { IdTurno = contexto.IdTurno }
             };
@@ -175,8 +177,8 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<DtoAceptacionReglamentoEstDevart>.Ok(entidad.ToDto(), methodName);
         }
 
-        public static OperationResult<DtoConfirmarPreInscripcionResponse> MapearResultadoApi(
-            OperationResult<ConfirmarPreInscripcionApiResponse> apiResult,
+        public static OperationResult<DtoConfirmarPreInscripcionResponse> MapearResultadoApiMultiple(
+            OperationResult<ConfirmarPreInscripcionMultipleApiResponse> apiResult,
             ContextoConfirmacionPreInscripcion contexto,
             string methodName)
         {
@@ -191,8 +193,44 @@ namespace AppLogic.Inscripciones.Rules
             }
 
             return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                MapearConfirmacionPreInscripcion(apiResult.Data, contexto),
+                MapearConfirmacionPreInscripcionMultiple(apiResult.Data, contexto),
                 methodName);
+        }
+
+        private static DtoConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcionMultiple(
+            ConfirmarPreInscripcionMultipleApiResponse source,
+            ContextoConfirmacionPreInscripcion contexto)
+        {
+            return new DtoConfirmarPreInscripcionResponse
+            {
+                Confirmada = source.Confirmada || source.Respuesta,
+                EnEspera = source.InscripcionPendiente,
+                EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
+                Resumen = MapearResumen(source.Resumen, contexto),
+                Ofertas = source.Ofertas
+                    .Select(o => new DtoResultadoInscripcionOferta
+                    {
+                        IdOferta = o.IdOferta,
+                        IdInscripcion = o.IdInscripcion,
+                        FechaVencimientoPago = o.FechaVencimientoPago,
+                        Senia = (decimal)o.ValorSeniaMinima
+                    })
+                    .ToList()
+            };
+        }
+
+        private static DtoResumenInscripcion MapearResumen(ResumenInscripcionApiDto? source, ContextoConfirmacionPreInscripcion contexto)
+        {
+            return new DtoResumenInscripcion
+            {
+                IdOferta = source != null && source.IdOferta > 0 ? source.IdOferta : contexto.IdOferta,
+                IdProducto = source?.IdProducto ?? contexto.IdProducto,
+                Carrera = source?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
+                IdComienzo = source?.IdComienzo ?? contexto.IdComienzo,
+                Comienzo = source?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
+                IdTurno = source?.IdTurno ?? contexto.IdTurno,
+                Turno = source?.Turno ?? contexto.Turno?.NombreTurno
+            };
         }
 
         public static DtoEstadoCuenta? MapearEstadoCuenta(EstadoCuentaApiDto? source)
@@ -255,31 +293,6 @@ namespace AppLogic.Inscripciones.Rules
                     oferta.Supraoferta.Comienzo ?? encuestaAdmision.Comienzo,
                     oferta.Turno),
                 methodName);
-        }
-
-        private static DtoConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcion(
-            ConfirmarPreInscripcionApiResponse source,
-            ContextoConfirmacionPreInscripcion contexto)
-        {
-            return new DtoConfirmarPreInscripcionResponse
-            {
-                Confirmada = source.Confirmada || source.Success,
-                EnEspera = source.InscripcionPendiente,
-                IdInscripcion = source.IdInscripcion,
-                FechaVencimientoPago = source.FechaVencimientoPago,
-                Senia = SumarSenias(source.Carritos),
-                EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
-                Resumen = new DtoResumenInscripcion
-                {
-                    IdOferta = source.Resumen != null && source.Resumen.IdOferta > 0 ? source.Resumen.IdOferta : contexto.IdOferta,
-                    IdProducto = source.Resumen?.IdProducto ?? contexto.IdProducto,
-                    Carrera = source.Resumen?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
-                    IdComienzo = source.Resumen?.IdComienzo ?? contexto.IdComienzo,
-                    Comienzo = source.Resumen?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
-                    IdTurno = source.Resumen?.IdTurno ?? contexto.IdTurno,
-                    Turno = source.Resumen?.Turno ?? contexto.Turno?.NombreTurno
-                }
-            };
         }
 
         internal static decimal SumarSenias(IEnumerable<CarritoSeniaApiDto>? carritos)

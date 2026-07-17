@@ -91,28 +91,14 @@ namespace UnitTesting.AppLogic.ApiClients
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcionAsync_WithSuccess_ReturnsResponse()
+        public async Task ConfirmarPreInscripcionMultipleAsync_WithSuccess_ReturnsResponse()
         {
             var handler = new StubHttpMessageHandler(_ =>
                 JsonResponse(HttpStatusCode.OK, """
                 {
+                  "respuesta": true,
                   "confirmada": true,
-                  "message": "confirmada",
-                  "idInscripcion": 55,
-                  "fechaVencimientoPago": "2026-06-30T00:00:00",
-                  "carritos": [
-                    {
-                      "idCarrito": "123|20|1|30|55",
-                      "senia": 1234.50
-                    },
-                    {
-                      "idCarrito": "123|20|1|30|56",
-                      "senia": 800
-                    }
-                  ],
-                  "estadoCuenta": {
-                    "saldoActual": 3210.50
-                  },
+                  "inscripcionPendiente": false,
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista en TI",
@@ -120,42 +106,66 @@ namespace UnitTesting.AppLogic.ApiClients
                     "comienzo": "Marzo 2026",
                     "idTurno": 7,
                     "turno": "Nocturno"
+                  },
+                  "ofertas": [
+                    { "idOferta": 40, "idInscripcion": 55, "fechaVencimientoPago": "2026-06-30T00:00:00", "valorCuota": 1000, "valorSeniaMinima": 250 },
+                    { "idOferta": 41, "idInscripcion": 56, "fechaVencimientoPago": "2026-06-30T00:00:00", "valorCuota": 800, "valorSeniaMinima": 200 }
+                  ],
+                  "estadoCuenta": {
+                    "saldoActual": 3210.50
                   }
                 }
                 """));
             var client = CrearClient(handler);
 
-            var result = await client.ConfirmarPreInscripcionAsync(new ConfirmarPreInscripcionApiRequest
+            var result = await client.ConfirmarPreInscripcionMultipleAsync(new ConfirmarPreInscripcionMultipleApiRequest
             {
                 IdProducto = 20,
                 IdProceso = 30,
-                IdOfertaSeleccionada = 40,
+                IdsOfertasSeleccionadas = [40, 41],
                 TipoInscripcion = "ONLINE",
                 Turno = new DtoTurno { IdTurno = 7 }
             });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(55, result.Data!.IdInscripcion);
-            Assert.Equal(new DateTime(2026, 6, 30), result.Data!.FechaVencimientoPago);
-            Assert.Equal(2, result.Data!.Carritos.Count);
-            Assert.Equal("123|20|1|30|55", result.Data.Carritos[0].IdCarrito);
-            Assert.Equal(1234.50m, result.Data.Carritos[0].Senia);
-            Assert.Equal("123|20|1|30|56", result.Data.Carritos[1].IdCarrito);
-            Assert.Equal(800, result.Data.Carritos[1].Senia);
+            Assert.False(result.Data.InscripcionPendiente);
+            Assert.Equal("Analista en TI", result.Data.Resumen!.Carrera);
+            Assert.Equal(2, result.Data.Ofertas.Count);
+            Assert.Equal(40, result.Data.Ofertas[0].IdOferta);
+            Assert.Equal(55, result.Data.Ofertas[0].IdInscripcion);
+            Assert.Equal(41, result.Data.Ofertas[1].IdOferta);
+            Assert.Equal(56, result.Data.Ofertas[1].IdInscripcion);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
-            Assert.Equal("Analista en TI", result.Data!.Resumen!.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
+            Assert.Contains("ConfirmarPreInscripcionMultiple", request.RequestUri);
             Assert.Contains("tipoInscripcion=ONLINE", request.RequestUri);
             Assert.Contains("idProducto=20", request.RequestUri);
             Assert.Contains("idProceso=30", request.RequestUri);
-            Assert.Contains("idOfertaSeleccionada=40", request.RequestUri);
-            Assert.DoesNotContain("\"idOfertaSeleccionada\":40", request.Body);
-            Assert.DoesNotContain("\"idProducto\":20", request.Body);
-            Assert.Contains("\"idTurno\":7", request.Body);
-            Assert.DoesNotContain("\"tipoInscripcion\":\"WEB\"", request.Body);
+            Assert.Contains("idsOfertasSeleccionadas=40", request.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=41", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcionMultipleAsync_WhenApiRejects_ReturnsFailure()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.BadRequest, "combinacion invalida"));
+            var client = CrearClient(handler);
+
+            var result = await client.ConfirmarPreInscripcionMultipleAsync(new ConfirmarPreInscripcionMultipleApiRequest
+            {
+                IdProducto = 20,
+                IdProceso = 30,
+                IdsOfertasSeleccionadas = [40],
+                TipoInscripcion = "ONLINE",
+                Turno = new DtoTurno { IdTurno = 7 }
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("CONFIRMAR_PREINSCRIPCION_MULTIPLE_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]

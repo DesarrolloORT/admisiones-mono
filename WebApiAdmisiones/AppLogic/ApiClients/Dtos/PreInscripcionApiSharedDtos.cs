@@ -1,0 +1,24 @@
+namespace AppLogic.ApiClients.Dtos
+{
+    public class CarritoSeniaApiDto
+    {
+        public string IdCarrito { get; set; } = string.Empty;
+        public decimal Senia { get; set; }
+    }
+
+    public class ResumenInscripcionApiDto
+    {
+        public long IdOferta { get; set; }
+        public long IdProducto { get; set; }
+        public string? Carrera { get; set; }
+        public long IdComienzo { get; set; }
+        public string? Comienzo { get; set; }
+        public long IdTurno { get; set; }
+        public string? Turno { get; set; }
+    }
+
+    public class EstadoCuentaApiDto
+    {
+        public decimal SaldoActual { get; set; }
+    }
+}

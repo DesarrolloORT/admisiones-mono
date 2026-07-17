@@ -203,7 +203,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.False(result.Success);
@@ -252,7 +252,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = false,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.True(result.Success);
@@ -278,7 +278,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.False(result.Success);
@@ -308,7 +308,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.False(result.Success);
@@ -324,14 +324,6 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "confirmada": true,
-                  "idInscripcion": 77,
-                  "fechaVencimientoPago": "2026-07-01T00:00:00",
-                  "carritos": [
-                    {
-                      "idCarrito": "123|20|1|40|77",
-                      "senia": 2500
-                    }
-                  ],
                   "estadoCuenta": {
                     "saldoActual": 3210.50
                   },
@@ -342,7 +334,10 @@ namespace UnitTesting.AppLogic.Services
                     "comienzo": "Marzo 2026",
                     "idTurno": 1,
                     "turno": "Nocturno"
-                  }
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 77, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorCuota": 5000, "valorSeniaMinima": 2500 }
+                  ]
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -368,13 +363,13 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(77, result.Data.IdInscripcion);
-            Assert.Equal(2500, result.Data.Senia);
+            Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
+            Assert.Equal(2500, result.Data.Ofertas[0].Senia);
             Assert.Equal(10, result.Data.Resumen.IdOferta);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
             Assert.NotNull(result.Data.EstadoCuenta);
@@ -385,7 +380,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
-            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
             Assert.Contains("\"idTurno\":1", requestApi.Body);
             Assert.DoesNotContain("Pagos/CtaCte", requestApi.RequestUri);
         }
@@ -397,10 +392,12 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "confirmada": true,
-                  "idInscripcion": 78,
                   "estadoCuenta": {
                     "saldoActual": 3210.50
-                  }
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 78 }
+                  ]
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -430,12 +427,12 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(78, result.Data.IdInscripcion);
+            Assert.Equal(78, result.Data.Ofertas[0].IdInscripcion);
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
         }
@@ -447,7 +444,9 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "confirmada": true,
-                  "idInscripcion": 79
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 79 }
+                  ]
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -477,15 +476,15 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(79, result.Data.IdInscripcion);
+            Assert.Equal(79, result.Data.Ofertas[0].IdInscripcion);
             Assert.Null(result.Data.EstadoCuenta);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("ConfirmarPreInscripcion", request.RequestUri);
+            Assert.Contains("ConfirmarPreInscripcionMultiple", request.RequestUri);
             Assert.DoesNotContain("Pagos/CtaCte", request.RequestUri);
         }
 
@@ -496,7 +495,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = ConfirmacionConEstadoCuentaHandler(
                 """
                 {
-                  "success": true,
+                  "confirmada": true,
                   "estadoCuenta": {
                     "saldoActual": 3210.50
                   }
@@ -536,7 +535,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.True(result.Success);
@@ -554,7 +553,7 @@ namespace UnitTesting.AppLogic.Services
             var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("idProducto=20", requestApi.RequestUri);
             Assert.Contains("idProceso=30", requestApi.RequestUri);
-            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
             Assert.Contains("tipoInscripcion=ONLINE", requestApi.RequestUri);
             Assert.Contains("\"idTurno\":1", requestApi.Body);
         }
@@ -575,12 +574,123 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10
+                IdsOfertasSeleccionadas = [10]
             });
 
             Assert.False(result.Success);
             Assert.Equal("INS_CPI_14", result.ErrorCode);
             Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenRequestHasNoOfertas_ReturnsBadRequest()
+        {
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = []
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_03", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WhenOfertasBelongToDifferentProductos_ReturnsBadRequest()
+        {
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 21, 40, 1));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 21, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10, 11]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_17", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_WithMultipleOfertas_ReturnsResultPerOferta()
+        {
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "respuesta": true,
+                  "confirmada": true,
+                  "inscripcionPendiente": false,
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Analista Programador",
+                    "idComienzo": 40,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 1,
+                    "turno": "Nocturno"
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 77, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorCuota": 1000, "valorSeniaMinima": 250 },
+                    { "idOferta": 11, "idInscripcion": 78, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorCuota": 800, "valorSeniaMinima": 200 }
+                  ]
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 40, 1));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40)).Returns(new AceptacionReglamentoEst
+            {
+                IdAceptacionReglamentoEst = 999,
+                CodigoPersona = 123,
+                IdProducto = 20,
+                IdComienzo = 40
+            });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10, 11]
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.False(result.Data.EnEspera);
+            Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
+            Assert.Equal(2, result.Data.Ofertas.Count);
+            Assert.Equal(10, result.Data.Ofertas[0].IdOferta);
+            Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
+            Assert.Equal(250, result.Data.Ofertas[0].Senia);
+            Assert.Equal(11, result.Data.Ofertas[1].IdOferta);
+            Assert.Equal(78, result.Data.Ofertas[1].IdInscripcion);
+            var requestApi = Assert.Single(handler.Requests);
+            Assert.Contains("ConfirmarPreInscripcionMultiple", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=11", requestApi.RequestUri);
         }
 
         [Fact]
@@ -630,7 +740,6 @@ namespace UnitTesting.AppLogic.Services
                 """
                 {
                   "confirmada": true,
-                  "idInscripcion": 88,
                   "resumen": {
                     "idProducto": 20,
                     "carrera": "Analista Programador",
@@ -638,7 +747,10 @@ namespace UnitTesting.AppLogic.Services
                     "comienzo": "Marzo 2026",
                     "idTurno": 1,
                     "turno": "Nocturno"
-                  }
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 88 }
+                  ]
                 }
                 """);
             var service = CrearServiceConApi(handler);
@@ -668,10 +780,10 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(88, result.Data.IdInscripcion);
+            Assert.Equal(88, result.Data.Ofertas[0].IdInscripcion);
             Assert.Equal(10, result.Data.Resumen.IdOferta);
             var requestApi = Assert.Single(handler.Requests);
-            Assert.Contains("idOfertaSeleccionada=10", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
         }
 
         [Fact]
@@ -1911,7 +2023,8 @@ namespace UnitTesting.AppLogic.Services
             long idTurno,
             string nombreExtenso = "Analista Programador",
             string nombre = "AP",
-            string nombreComienzo = "Marzo 2026")
+            string nombreComienzo = "Marzo 2026",
+            long idNivelProducto = 1)
         {
             return new Oferta
             {
@@ -1931,7 +2044,8 @@ namespace UnitTesting.AppLogic.Services
                         {
                             IdProducto = idProducto,
                             NombreProducto = nombre,
-                            NombreExtensoProducto = nombreExtenso
+                            NombreExtensoProducto = nombreExtenso,
+                            IdNivelProducto = idNivelProducto
                         }
                     }
                 }
@@ -2245,10 +2359,10 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Pago pendiente", result.Data!.Estado);
             Assert.NotNull(result.Data.PagoPendiente);
             Assert.True(result.Data.PagoPendiente!.Confirmada);
-            Assert.Equal(555, result.Data.PagoPendiente!.IdInscripcion);
-            Assert.Equal(1500.50m, result.Data.PagoPendiente.Senia);
+            Assert.Equal(555, result.Data.PagoPendiente!.Ofertas[0].IdInscripcion);
+            Assert.Equal(1500.50m, result.Data.PagoPendiente.Ofertas[0].Senia);
             Assert.Equal(3210.50m, result.Data.PagoPendiente.EstadoCuenta!.SaldoActual);
-            Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.FechaVencimientoPago);
+            Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.Ofertas[0].FechaVencimientoPago);
             Assert.Equal("Analista programador", result.Data.PagoPendiente.Resumen.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos?idInscripcion=555", request.RequestUri);
