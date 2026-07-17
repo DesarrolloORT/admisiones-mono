@@ -502,15 +502,20 @@ namespace AppLogic.Inscripciones.Services
                 {
                     contexto = contextoOfertaResult.Data!;
                 }
-                else if (contexto.IdProducto != contextoOfertaResult.Data!.IdProducto
-                    || contexto.IdComienzo != contextoOfertaResult.Data.IdComienzo
-                    || contexto.IdTurno != contextoOfertaResult.Data.IdTurno)
+                else
                 {
-                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                        "INS_CPI_17",
-                        methodName,
-                        "Todas las ofertas seleccionadas deben pertenecer al mismo producto, comienzo y turno.",
-                        400);
+                    var requiereMismoComienzo = contexto.Producto?.IdNivelProducto is not (3 or 4);
+
+                    if (contexto.IdProducto != contextoOfertaResult.Data!.IdProducto
+                        || contexto.IdTurno != contextoOfertaResult.Data.IdTurno
+                        || (requiereMismoComienzo && contexto.IdComienzo != contextoOfertaResult.Data.IdComienzo))
+                    {
+                        return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                            "INS_CPI_17",
+                            methodName,
+                            "Todas las ofertas seleccionadas deben pertenecer al mismo producto y turno (y al mismo comienzo para nivel 1 y 2).",
+                            400);
+                    }
                 }
             }
 

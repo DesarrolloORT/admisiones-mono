@@ -697,6 +697,119 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ConfirmarPreInscripcion_ConProductoNivel3y4YComienzosDistintos_ConfirmaConExito()
+        {
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "respuesta": true,
+                  "confirmada": true,
+                  "inscripcionPendiente": false,
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Analista Programador",
+                    "idComienzo": 40,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 1,
+                    "turno": "Nocturno"
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 77, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorCuota": 1000, "valorSeniaMinima": 250 },
+                    { "idOferta": 11, "idInscripcion": 78, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorCuota": 800, "valorSeniaMinima": 200 }
+                  ]
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, idNivelProducto: 3));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 41, 1, idNivelProducto: 3));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40)).Returns(new AceptacionReglamentoEst
+            {
+                IdAceptacionReglamentoEst = 999,
+                CodigoPersona = 123,
+                IdProducto = 20,
+                IdComienzo = 40
+            });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10, 11]
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmada);
+            Assert.Equal(2, result.Data.Ofertas.Count);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_ConProductoNivel1y2YComienzosDistintos_DevuelveBadRequest()
+        {
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, idNivelProducto: 1));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 41, 1, idNivelProducto: 1));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10, 11]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_17", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_ConTurnosDistintos_DevuelveBadRequest()
+        {
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, idNivelProducto: 3));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 40, 3, idNivelProducto: 3));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10, 11]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_17", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
         public async Task ReactivarInscripcion_WhenRequestInvalido_ReturnsBadRequest()
         {
             var result = await _service.ReactivarInscripcion(123, new DtoReactivarInscripcionRequest { IdInscripto = 0 });
