@@ -1,6 +1,6 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { FormGroup } from '@angular/forms';
+import { type FormGroup, Validators } from '@angular/forms';
 import { of, Subscription } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
@@ -9,12 +9,15 @@ import {
   type AcademicProposalOption,
   getAcademicCareerOptions,
   getAcademicProposalLevelIds,
+  getAcademicProposalTerminology,
   getAcademicProposalTypeByLevel,
   getAvailableAcademicProposalTypes,
+  isProfessionalUpdateType,
+  toAcademicSeminarOption,
   toAcademicShiftOption,
   toAcademicStartOption,
 } from '../models/academic-proposal';
-import type { Career, Comienzo, Turno } from '../models/catalog.interface';
+import type { Career, Comienzo, Seminario, Turno } from '../models/catalog.interface';
 import { Catalogs } from './catalogs';
 
 export class AcademicProposalSelection {
@@ -32,24 +35,36 @@ export class AcademicProposalSelection {
   public readonly loadingStarts = signal(false);
   public readonly loadingShifts = signal(false);
   public readonly initialized = signal(false);
+  private readonly seminarsState = signal<readonly Seminario[]>([]);
+  public readonly loadingSeminars = signal(false);
 
   public readonly proposalOptions = computed(() =>
     getAvailableAcademicProposalTypes(this.careersState())
   );
+  public readonly isProfessionalUpdate = computed(() =>
+    isProfessionalUpdateType(this.proposalTypeValue())
+  );
+  public readonly terminology = computed(() =>
+    getAcademicProposalTerminology(this.proposalTypeValue())
+  );
   public readonly careerOptions = computed(() =>
     getAcademicCareerOptions(this.careersState(), this.proposalTypeValue())
   );
+  public readonly seminarOptions = computed(() =>
+    this.seminarsState().map(toAcademicSeminarOption)
+  );
   public readonly careersLoadingMessage = computed(() =>
-    this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
+    this.loadingCareers() ? this.terminology().careerLoadingMessage : ''
   );
   public readonly startsLoadingMessage = computed(() => {
-    if (!this.loadingStarts()) return '';
+    if (!this.loadingStarts() && !this.loadingSeminars()) return '';
+    const terminology = this.terminology();
     const career = getOptionLabel(
       this.careerOptions(),
       this.form?.controls.carrera.value ?? '',
-      'la carrera seleccionada'
+      terminology.careerFallbackLabel
     );
-    return `Estamos cargando los comienzos para "${career}".`;
+    return `Estamos cargando ${terminology.startNoun} para "${career}".`;
   });
   public readonly shiftsLoadingMessage = computed(() => {
     if (!this.loadingShifts()) return '';
@@ -72,6 +87,7 @@ export class AcademicProposalSelection {
     this.formSubscriptions = new Subscription();
     this.form = form;
     this.proposalTypeValue.set(form.controls.tipoPropuesta.value);
+    this.syncValidatorsForProposalType(form);
     this.subscribeToForm(form);
     this.loadCareers(form);
   }
@@ -82,6 +98,7 @@ export class AcademicProposalSelection {
 
   public setProposalType(value: string): void {
     this.proposalTypeValue.set(value);
+    if (this.form) this.syncValidatorsForProposalType(this.form);
   }
 
   public canSelectCareer(): boolean {
@@ -96,6 +113,39 @@ export class AcademicProposalSelection {
     return (
       !!this.form?.controls.carrera.value && !this.loadingStarts() && this.startOptions().length > 0
     );
+  }
+
+  public seminars(): readonly Seminario[] {
+    return this.seminarsState();
+  }
+
+  public canSelectSeminars(): boolean {
+    return (
+      !!this.form?.controls.carrera.value &&
+      !this.loadingSeminars() &&
+      this.seminarOptions().length > 0
+    );
+  }
+
+  /** Carga el catálogo de seminarios de un programa (también para precarga en retomar). */
+  public loadSeminars(idPrograma: number): void {
+    const idProceso = this.careersState().find(
+      career => career.idProducto === idPrograma
+    )?.idProceso;
+    if (typeof idProceso !== 'number' || !Number.isSafeInteger(idProceso) || idProceso <= 0) {
+      this.seminarsState.set([]);
+      return;
+    }
+
+    this.loadingSeminars.set(true);
+    this.catalogs
+      .getSeminarios(idPrograma, idProceso)
+      .pipe(
+        catchError(() => of<Seminario[]>([])),
+        finalize(() => this.loadingSeminars.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(seminars => this.seminarsState.set(seminars));
   }
 
   public canSelectShift(): boolean {
@@ -163,6 +213,7 @@ export class AcademicProposalSelection {
             if (proposalType) {
               form.controls.tipoPropuesta.setValue(proposalType, { emitEvent: false });
               this.proposalTypeValue.set(proposalType);
+              this.syncValidatorsForProposalType(form);
             }
           }
         },
@@ -180,6 +231,8 @@ export class AcademicProposalSelection {
         form.controls.carrera.setValue('');
         this.startOptions.set([]);
         this.shiftOptions.set([]);
+        this.seminarsState.set([]);
+        this.syncValidatorsForProposalType(form);
       })
     );
 
@@ -188,13 +241,20 @@ export class AcademicProposalSelection {
         .pipe(
           tap(() => {
             form.controls.comienzo.setValue('');
+            form.controls.seminarios.setValue([]);
             this.startOptions.set([]);
             this.shiftOptions.set([]);
+            this.seminarsState.set([]);
           }),
           switchMap(value => {
             const careerId = toNullableNumber(value);
             if (careerId === null) {
               this.loadingStarts.set(false);
+              return of<Comienzo[]>([]);
+            }
+
+            if (this.isProfessionalUpdate()) {
+              this.loadSeminars(careerId);
               return of<Comienzo[]>([]);
             }
 
@@ -232,6 +292,18 @@ export class AcademicProposalSelection {
         )
         .subscribe(shifts => this.shiftOptions.set(shifts.map(toAcademicShiftOption)))
     );
+  }
+
+  // AP no usa comienzo/turno (los seminarios traen la oferta); el resto conserva
+  // la validación actual. Se sincroniza al conectar y al cambiar el tipo.
+  private syncValidatorsForProposalType(form: FormGroup<AcademicProposalForm>): void {
+    const professionalUpdate = isProfessionalUpdateType(form.controls.tipoPropuesta.value);
+    form.controls.comienzo.setValidators(professionalUpdate ? null : Validators.required);
+    form.controls.turno.setValidators(professionalUpdate ? null : Validators.required);
+    form.controls.seminarios.setValidators(professionalUpdate ? Validators.required : null);
+    form.controls.comienzo.updateValueAndValidity({ emitEvent: false });
+    form.controls.turno.updateValueAndValidity({ emitEvent: false });
+    form.controls.seminarios.updateValueAndValidity({ emitEvent: false });
   }
 
   private requireForm(): FormGroup<AcademicProposalForm> {
