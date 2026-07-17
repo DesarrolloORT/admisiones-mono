@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import {
@@ -11,11 +12,11 @@ import {
   EducationalInstitution,
   InitialSurveyCatalogs,
   LocationCountry,
+  Seminario,
   Turno,
 } from '../models/catalog.interface';
 
-// TODO: reemplazar cuando el endpoint getCatalogosTiposDocumentos vuelva al API.
-const STATIC_DOCUMENT_TYPES: DocumentType[] = [
+const DOCUMENT_TYPES: DocumentType[] = [
   { id: 1, label: 'Cédula', code: 'CI' },
   { id: 2, label: 'Pasaporte', code: 'PS' },
   { id: 3, label: 'Documento extranjero', code: 'DE' },
@@ -28,7 +29,7 @@ export class Catalogs {
   private readonly endpoint = inject(CatalogsEndpoint);
 
   public getDocumentTypes(): Observable<DocumentType[]> {
-    return of(STATIC_DOCUMENT_TYPES);
+    return of(DOCUMENT_TYPES);
   }
 
   public getCountries(): Observable<Country[]> {
@@ -64,6 +65,21 @@ export class Catalogs {
 
   public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
     return this.endpoint.getTurnos(idCarrera, idProceso);
+  }
+
+  public getSeminarios(idPrograma: number, idProceso: number): Observable<Seminario[]> {
+    return this.endpoint.getTurnos(idPrograma, idProceso).pipe(
+      map(turnos =>
+        turnos.map(turno => ({
+          idOferta: turno.idOferta,
+          idProceso,
+          nombre: turno.horarioReferencia
+            ? `${turno.nombreTurno} (${turno.horarioReferencia})`
+            : turno.nombreTurno,
+          fechaComienzo: null,
+        }))
+      )
+    );
   }
 
   public clearCache(): void {
