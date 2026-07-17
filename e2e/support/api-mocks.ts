@@ -86,14 +86,46 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
             },
           ],
         },
+        {
+          idNivelProducto: 3,
+          nombreNivelProducto: 'Actualización profesional',
+          escuelas: [
+            {
+              nombreEscuela: 'Facultad de Administración',
+              productos: [
+                { idProducto: 40, nombreProducto: 'Programa de Asesoramiento Financiero' },
+              ],
+            },
+          ],
+        },
       ]);
     }
 
     if (path === '/Catalogos/Comienzos') {
-      return fulfillOperation(route, [{ idProceso: 200, nombreProceso: 'Marzo 2027' }]);
+      // El producto 40 (Actualización profesional) devuelve sus seminarios como
+      // procesos; el resto conserva el comienzo único del flujo tradicional.
+      return fulfillOperation(
+        route,
+        url.searchParams.get('idCarrera') === '40'
+          ? [
+              { idProceso: 210, nombreProceso: 'Marco legal y tributario' },
+              { idProceso: 211, nombreProceso: 'Renta fija y renta variable' },
+            ]
+          : [{ idProceso: 200, nombreProceso: 'Marzo 2027' }]
+      );
     }
 
     if (path === '/Catalogos/Turnos') {
+      const idProceso = url.searchParams.get('idProceso');
+      if (url.searchParams.get('idCarrera') === '40') {
+        return fulfillOperation(route, [
+          {
+            idOferta: idProceso === '211' ? 311 : 310,
+            horarioReferencia: '',
+            turno: { idTurno: 11, nombreTurno: 'Seminario' },
+          },
+        ]);
+      }
       return fulfillOperation(route, [
         {
           idOferta: 300,

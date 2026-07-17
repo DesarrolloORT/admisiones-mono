@@ -64,6 +64,45 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 
+  test('actualización profesional recorre el flujo reducido sin encuesta y confirma @regression', async ({
+    page,
+  }) => {
+    await setup(page, 'empty');
+    const inscription = new InscripcionPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/Inscripciones/EncuestaInicial');
+
+    await inscription.goto();
+    const interestRequest = waitForPost(page, '/Inscripciones/InteresProducto');
+    await inscription.fillProfessionalUpdateProposal();
+
+    expect((await interestRequest).postDataJSON()).toEqual({
+      idOferta: 310,
+      idProcesoSeleccionado: 210,
+      idProducto: 40,
+    });
+
+    // Flujo reducido: sin Educación / Decisión académica / Experiencia ORT.
+    await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Decisión académica', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Experiencia con ORT', { exact: true })).toHaveCount(0);
+
+    await inscription.fillWorkStatus();
+    await inscription.fillIdentity();
+    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    await inscription.acceptRegulation();
+
+    expect(surveySaveRequests).toHaveLength(0);
+    expect((await preEnrollmentRequest).postDataJSON()).toEqual({
+      aceptoReglamento: true,
+      idOfertaSeleccionada: 310,
+    });
+
+    await inscription.selectPayment('cuenta-personal');
+    await inscription.confirmPayment();
+
+    await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
+  });
+
   test('sin derecho a encuesta oculta expansibles de encuesta y no guarda EncuestaInicial @regression', async ({
     page,
   }) => {

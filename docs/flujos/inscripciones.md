@@ -5,6 +5,7 @@ description: Pasos, campos condicionales, payloads y casos borde de la inscripci
 businessId: admisiones.inscripciones
 sourcePaths:
   - src/app/features/inscriptions/
+  - src/app/features/catalogs/
   - src/app/features/home/pages/dashboard/
   - src/app/features/home/services/home.ts
   - src/app/features/home/endpoints/home.endpoint.ts
@@ -183,6 +184,62 @@ Al continuar se llama a `POST /Inscripciones/InteresProducto` con:
   "idProducto": "Number(carrera)"
 }
 ```
+
+## Actualización profesional (niveles 3 y 4)
+
+Cuando el tipo de propuesta es `3` (Actualización profesional, productos con
+`idNivelProducto` 3 o 4) el flujo cambia de estructura. La detección vive en una
+única fuente reactiva: `AcademicProposalSelection.isProfessionalUpdate`
+(`isProfessionalUpdateType` en `academic-proposal.ts`), sincronizada también en
+precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
+
+### Paso 1 AP: Programa + Seminarios
+
+- El selector de carrera se muestra como **Programa** (misma UI y validaciones;
+  la terminología es data-driven en `ACADEMIC_PROPOSAL_TYPES.terminology`).
+- No hay selects de Comienzo ni Turno. Al elegir un programa aparece un
+  **multi-select de Seminarios** (oculto hasta entonces), cada uno con su fecha
+  de comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
+- Catálogo: `Catalogs.getSeminarios(idPrograma)` compone hoy
+  Comienzos→Turnos (cada proceso es un seminario y aporta su `idOferta`);
+  cuando el backend publique el catálogo con fecha por seminario solo cambia
+  ese adapter.
+- Al continuar se llama `POST /Inscripciones/InteresProducto`. El contrato de
+  feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
+  primera oferta hasta que el backend acepte el array.
+
+### Paso 2 AP reducido
+
+`getSeccionesVisibles(escenario, actualizacionProfesional)` filtra por
+intersección con `SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL`
+(`situacion-laboral`, `identidad`, `reglamento`); sin derecho a encuesta o con
+encuesta completa quedan solo `identidad` y `reglamento`. Un clamp en
+`InscripcionSurveyFacade` reposiciona la sección activa si dejó de ser visible.
+
+**AP no envía `POST /Inscripciones/EncuestaInicial`** (ni al cerrar el paso 2 ni
+al guardar y salir: guard en `savePartial`). Consecuencia documentada: las
+respuestas de Situación laboral no se persisten en ningún endpoint y se pierden
+entre sesiones. La confirmación usa el mecanismo existente
+(`ConfirmarPreInscripcion`, con array de ofertas en el contrato de feature y la
+primera oferta en el adapter durante la transición) y el paso 3 (pago) no cambia.
+
+### Retomar AP "En proceso"
+
+El resolver de entrada cruza el Detalle contra `GET /Catalogos/Carreras` para
+resolver `idNivelProducto` (si el catálogo falla queda `null` y se deriva como
+un retomar tradicional). Con nivel 3/4 y oferta completa, `deriveRetomar`
+arranca en el paso 2 **sin exigir encuesta prefilled** y produce un
+`academicPrefill` (programa + seminarios desde el Detalle) que
+`InscripcionProcessFacade` aplica después del slice de encuesta —así una
+encuesta por-persona vieja no pisa el paso 1— y bloquea el paso 1
+(`disableForResume`). No hay datos de Situación laboral para precargar
+(consecuencia de no enviar la encuesta).
+
+### Pendientes de backend
+
+- Array de `idOferta` en `InteresProducto` y `ConfirmarPreInscripcion`.
+- Fecha de comienzo por seminario en el catálogo (hoy `fechaComienzo = null`).
+- Detalle con múltiples ofertas para retomar un AP multi-seminario.
 
 ## Paso 2: informacion personal
 
