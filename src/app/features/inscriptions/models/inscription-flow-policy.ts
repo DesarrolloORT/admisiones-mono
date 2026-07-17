@@ -3,6 +3,7 @@ import {
   ResultadoPago,
   SeccionEncuestaId,
   SECCIONES_ENCUESTA,
+  SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL,
   SECCIONES_ENCUESTA_COMPLETA,
 } from './inscription-flow';
 
@@ -11,7 +12,11 @@ export function parseResultadoForzado(value: string | null): ResultadoPago | nul
 }
 
 export function getSeccionesVisibles(
-  escenario: EscenarioInscripcion
+  escenario: EscenarioInscripcion,
+  actualizacionProfesional = false
 ): readonly SeccionEncuestaId[] {
-  return escenario === 'encuesta-completa' ? SECCIONES_ENCUESTA_COMPLETA : SECCIONES_ENCUESTA;
+  const base = escenario === 'encuesta-completa' ? SECCIONES_ENCUESTA_COMPLETA : SECCIONES_ENCUESTA;
+  return actualizacionProfesional
+    ? base.filter(seccion => SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL.includes(seccion))
+    : base;
 }

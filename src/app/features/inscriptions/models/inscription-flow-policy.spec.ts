@@ -14,4 +14,19 @@ describe('inscription flow policy', () => {
   it('limits a completed survey to identity and regulation', () => {
     expect(getSeccionesVisibles('encuesta-completa')).toEqual(['identidad', 'reglamento']);
   });
+
+  it('reduces professional update flows to work status, identity and regulation', () => {
+    expect(getSeccionesVisibles('primera-vez', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
+    expect(getSeccionesVisibles('parcial', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
+    // Intersección: sin derecho o con encuesta completa quedan identidad+reglamento.
+    expect(getSeccionesVisibles('encuesta-completa', true)).toEqual(['identidad', 'reglamento']);
+  });
 });

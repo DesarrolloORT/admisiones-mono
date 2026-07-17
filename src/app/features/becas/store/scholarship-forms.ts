@@ -16,5 +16,6 @@ export class ScholarshipFormsStore {
     carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
     comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
     turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    seminarios: new FormControl<string[]>([], { nonNullable: true }),
   });
 }
