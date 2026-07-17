@@ -107,6 +107,16 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, initialSurveyCatalogs());
     }
 
+    if (path === '/Catalogos/Instituciones') {
+      return fulfillOperation(route, [
+        { codigoEmpresa: 500, nombre: 'Liceo Nº 1', codigoPais: 1, codigoEstado: 10 },
+      ]);
+    }
+
+    if (path === '/Persona/SubirDocumento' || path === '/Persona/SubirFoto') {
+      return fulfillOperation(route, true);
+    }
+
     if (path === '/Persona/Documento' && request.method() === 'GET') {
       return fulfillOperation(
         route,
@@ -208,11 +218,16 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, true);
     }
 
+    if (path === '/Inscripciones/Pagar') {
+      return fulfillOperation(route, { resultado: 'Confirmada' });
+    }
+
     if (path === '/Inscripciones/ConfirmarPreInscripcion') {
       return fulfillOperation(route, {
         confirmada: true,
         idInscripcion: 7001,
-        seniaInscripcion: 15500,
+        senia: 15500,
+        estadoCuenta: { saldoActual: 20000 },
         fechaVencimientoPago: '2027-03-04',
         resumen: {
           idProducto: 20,
