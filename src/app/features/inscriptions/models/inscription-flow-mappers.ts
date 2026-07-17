@@ -196,13 +196,20 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   };
 }
 
-export function buildConfirmPreEnrollmentPayload(forms: InscripcionForms) {
-  const idOfertaSeleccionada = toNullableNumber(forms.academicForm.controls.turno.value);
-  if (idOfertaSeleccionada === null) return null;
+export function buildConfirmPreEnrollmentPayload(
+  forms: InscripcionForms,
+  actualizacionProfesional = false
+) {
+  const idOfertasSeleccionadas = actualizacionProfesional
+    ? (toNumberArray(forms.academicForm.controls.seminarios.value) ?? [])
+    : [toNullableNumber(forms.academicForm.controls.turno.value)].filter(
+        (oferta): oferta is number => oferta !== null
+      );
+  if (idOfertasSeleccionadas.length === 0) return null;
 
   return {
     aceptoReglamento: forms.regulationForm.controls.aceptaReglamento.value,
-    idOfertaSeleccionada,
+    idOfertasSeleccionadas,
   };
 }
 
