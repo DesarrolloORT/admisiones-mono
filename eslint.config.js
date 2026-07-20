@@ -1,20 +1,10 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { FlatCompat } from '@eslint/eslintrc';
+import angular from 'angular-eslint';
 import js from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import tseslint from 'typescript-eslint';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
-
-export default [
+export default tseslint.config(
   {
     ignores: [
       '**/tests/',
@@ -40,17 +30,11 @@ export default [
       'simple-import-sort/exports': 'error',
     },
   },
-  ...compat
-    .extends(
-      'eslint:recommended',
-      'plugin:@typescript-eslint/recommended',
-      'plugin:@angular-eslint/recommended',
-      'plugin:@angular-eslint/template/process-inline-templates'
-    )
-    .map(config => ({
-      ...config,
-      files: ['**/*.ts'],
-    })),
+  {
+    files: ['**/*.ts'],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended, ...angular.configs.tsRecommended],
+    processor: angular.processInlineTemplates,
+  },
   {
     files: ['src/app/**/*.ts'],
 
@@ -78,6 +62,7 @@ export default [
       '@angular-eslint/use-component-selector': ['error'],
       '@angular-eslint/use-lifecycle-interface': ['error'],
       '@angular-eslint/use-injectable-provided-in': ['error'],
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
     },
   },
   {
@@ -173,17 +158,9 @@ export default [
       ],
     },
   },
-  ...compat
-    .extends(
-      'plugin:@angular-eslint/template/recommended',
-      'plugin:@angular-eslint/template/accessibility'
-    )
-    .map(config => ({
-      ...config,
-      files: ['**/*.html'],
-    })),
   {
     files: ['**/*.html'],
+    extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
     rules: {
       '@angular-eslint/template/prefer-control-flow': 'error',
       '@angular-eslint/template/alt-text': 'error',
@@ -212,4 +189,4 @@ export default [
     },
   },
   eslintConfigPrettier,
-];
+);
