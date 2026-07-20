@@ -1,5 +1,6 @@
 import {
   booleanAttribute,
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -47,6 +48,7 @@ let nextResponsiveSelectId = 0;
     OrtSelectModule,
   ],
   templateUrl: './responsive-select.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './responsive-select.scss',
 })
 export class ResponsiveSelect implements ControlValueAccessor {
