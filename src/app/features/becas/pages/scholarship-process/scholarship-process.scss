@@ -101,6 +101,15 @@
   right: calc(-1 * var(--ort-sys-spacing-6));
 }
 
+.scholarship-accordion-item__title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.scholarship-accordion-item__title-group ort-accordion-description {
+  color: var(--ort-sys-base-text-error-color);
+}
+
 form > ort-accordion {
   margin-inline: calc(var(--ort-sys-spacing-16) * -1);
 }

@@ -30,13 +30,12 @@
                 type="dot" />
               }
             </div>
-            Tu inscripción
+            <div class="scholarship-accordion-item__title-group">
+              Tu inscripción @if (facade.inscriptionStatus.hasError()) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
           </ort-accordion-title>
-          @if (facade.inscriptionStatus.hasError()) {
-          <ort-accordion-description>
-            <ort-error>Información pendiente</ort-error>
-          </ort-accordion-description>
-          }
         </ort-accordion-header>
         <ort-accordion-body>
           <app-scholarship-inscription-section />
@@ -60,13 +59,12 @@
                 type="dot" />
               }
             </div>
-            Período de evaluación
+            <div class="scholarship-accordion-item__title-group">
+              Período de evaluación @if (facade.evaluationStatus.hasError()) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
           </ort-accordion-title>
-          @if (facade.evaluationStatus.hasError()) {
-          <ort-accordion-description>
-            <ort-error>Información pendiente</ort-error>
-          </ort-accordion-description>
-          }
         </ort-accordion-header>
         <ort-accordion-body>
           <app-scholarship-evaluation-period-section />
