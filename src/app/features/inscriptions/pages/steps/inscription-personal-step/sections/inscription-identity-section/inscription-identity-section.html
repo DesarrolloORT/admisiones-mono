@@ -11,6 +11,7 @@
     <ort-file-uploader
       label="Frente del documento *"
       [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [display]="fileUploaderDisplay()"
       [initialFiles]="facade.identity.initialIdentityFiles().frente"
       (filesChanged)="facade.identity.updateIdentityFile('frente', $event)" />
     @if (facade.isIdentityFileMissing('frente')) {
@@ -19,6 +20,7 @@
     <ort-file-uploader
       label="Dorso del documento *"
       [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [display]="fileUploaderDisplay()"
       [initialFiles]="facade.identity.initialIdentityFiles().dorso"
       (filesChanged)="facade.identity.updateIdentityFile('dorso', $event)" />
     @if (facade.isIdentityFileMissing('dorso')) {
@@ -56,6 +58,7 @@
     <ort-file-uploader
       label="Foto del rostro *"
       [acceptedTypes]="facade.identity.acceptedImageTypes"
+      [display]="fileUploaderDisplay()"
       [initialFiles]="facade.identity.initialIdentityFiles().selfie"
       [maxFiles]="1"
       (filesChanged)="facade.identity.updateIdentityFile('selfie', $event)" />
