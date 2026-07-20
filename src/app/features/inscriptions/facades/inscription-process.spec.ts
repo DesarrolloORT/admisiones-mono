@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -151,6 +152,35 @@ describe('InscripcionProcessFacade', () => {
     expect(survey.applyInitialState).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'prefilled', includeAcademicSelection: true })
     );
+    expect(proposal.disableForResume).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).toBe('encuesta');
+  });
+
+  it('prefills and locks step 1 from the detail when resuming an AP inscription', () => {
+    const detalle = {
+      idOferta: 300,
+      idProducto: 21,
+      carrera: 'Programa de Asesoramiento Financiero',
+      idComienzo: 200,
+      comienzo: 'Abril 2026',
+      idTurno: 10,
+      turno: 'Noche',
+    };
+    const { process, proposal } = createFacade(
+      retomar(
+        { estado: 'En proceso', detalle, pagoPendiente: null, seniaMinima: null, confirmada: null },
+        3
+      ),
+      FRESH
+    );
+
+    TestBed.tick();
+
+    expect(proposal.academicForm.controls.tipoPropuesta.value).toBe('3');
+    expect(proposal.academicForm.controls.carrera.value).toBe('21');
+    expect(proposal.academicForm.controls.seminarios.value).toEqual(['300']);
+    expect(proposal.setProposalType).toHaveBeenCalledWith('3');
+    expect(proposal.selection.loadSeminars).toHaveBeenCalledWith(21);
     expect(proposal.disableForResume).toHaveBeenCalledOnce();
     expect(process.flow.currentStep()).toBe('encuesta');
   });
@@ -381,8 +411,11 @@ describe('InscripcionProcessFacade', () => {
   });
 });
 
-function retomar(detail: InscripcionDetail): InscripcionEntryResolved {
-  return { intent: 'retomar', detail };
+function retomar(
+  detail: InscripcionDetail,
+  idNivelProducto: number | null = null
+): InscripcionEntryResolved {
+  return { intent: 'retomar', detail, idNivelProducto };
 }
 
 function inProgressSurvey(
@@ -414,6 +447,15 @@ function createFacade(
   const proposal = {
     initialized: signal(initialized),
     catalogError: signal<string | null>(null),
+    academicForm: new FormGroup({
+      tipoPropuesta: new FormControl('', { nonNullable: true }),
+      carrera: new FormControl('', { nonNullable: true }),
+      comienzo: new FormControl('', { nonNullable: true }),
+      turno: new FormControl('', { nonNullable: true }),
+      seminarios: new FormControl<string[]>([], { nonNullable: true }),
+    }),
+    setProposalType: vi.fn(),
+    selection: { loadSeminars: vi.fn() },
     continue: vi.fn(),
     disableForResume: vi.fn(),
   };

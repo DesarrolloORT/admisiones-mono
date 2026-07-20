@@ -5,6 +5,7 @@ import { finalize } from 'rxjs/operators';
 
 import {
   deriveInitialInscripcionState,
+  type InscripcionAcademicPrefill,
   type InscripcionEntryContext,
   type InscripcionEntryResolved,
   type InscripcionInitialState,
@@ -162,9 +163,23 @@ export class InscripcionProcessFacade {
   private applyInitialState(state: InscripcionInitialState): void {
     this.process.preEnrollmentResponse.set(state.preEnrollment);
     this.survey.applyInitialState(state.survey);
+    // Después de aplicar la encuesta: si la persona tiene una encuesta previa de
+    // otro flujo, el paso 1 debe quedar con el programa del Detalle, no con la
+    // carrera de esa encuesta.
+    if (state.academicPrefill) this.applyAcademicPrefill(state.academicPrefill);
     if (state.resumeInProgress) this.proposal.disableForResume();
     this.applyPaymentInit(state.payment);
     this.process.flow.goTo(state.step);
+  }
+
+  private applyAcademicPrefill(prefill: InscripcionAcademicPrefill): void {
+    const controls = this.proposal.academicForm.controls;
+    controls.tipoPropuesta.setValue(prefill.tipoPropuesta, { emitEvent: false });
+    controls.carrera.setValue(prefill.carrera, { emitEvent: false });
+    controls.seminarios.setValue([...prefill.seminarios], { emitEvent: false });
+    this.proposal.setProposalType(prefill.tipoPropuesta);
+    const idPrograma = Number(prefill.carrera);
+    if (Number.isFinite(idPrograma)) this.proposal.selection.loadSeminars(idPrograma);
   }
 
   private applyPaymentInit(payment: InscripcionPaymentInit): void {
