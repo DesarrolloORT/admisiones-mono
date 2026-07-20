@@ -202,6 +202,7 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
   de comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /Catalogos/Turnos`; el resultado llena el multiselect de seminarios.
+- Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.
 - Al continuar se llama `POST /Inscripciones/InteresProducto`. El contrato de
   feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
   primera oferta hasta que el backend acepte el array.
@@ -236,7 +237,6 @@ encuesta por-persona vieja no pisa el paso 1— y bloquea el paso 1
 ### Pendientes de backend
 
 - Array de `idOferta` en `InteresProducto` y `ConfirmarPreInscripcion`.
-- Fecha de comienzo por seminario en el catálogo (hoy `fechaComienzo = null`).
 - Detalle con múltiples ofertas para retomar un AP multi-seminario.
 
 ## Paso 2: informacion personal
