@@ -8,6 +8,7 @@ import {
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionDetail } from '../models/inscription-detail';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
 import { Inscripciones } from '../services/inscriptions';
@@ -15,11 +16,17 @@ import { inscriptionDetailResolver, resolveEntryIntent } from './inscription-det
 
 describe('inscriptionDetailResolver', () => {
   let getDetail: ReturnType<typeof vi.fn>;
+  let getCareers: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     getDetail = vi.fn();
+    getCareers = vi.fn().mockReturnValue(of([]));
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Inscripciones, useValue: { getDetail } }],
+      providers: [
+        provideRouter([]),
+        { provide: Inscripciones, useValue: { getDetail } },
+        { provide: Catalogs, useValue: { getCareers } },
+      ],
     });
   });
 
@@ -30,8 +37,42 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail,
+      idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
+  });
+
+  it('resolves the product level from the careers catalog', async () => {
+    const detail = createDetail('En proceso', 21);
+    getDetail.mockReturnValue(of(detail));
+    getCareers.mockReturnValue(
+      of([
+        {
+          idProducto: 21,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+      ])
+    );
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail,
+      idNivelProducto: 3,
+    });
+  });
+
+  it('keeps a null level when the careers catalog fails', async () => {
+    const detail = createDetail('En proceso', 21);
+    getDetail.mockReturnValue(of(detail));
+    getCareers.mockReturnValue(throwError(() => new Error('failed')));
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail,
+      idNivelProducto: null,
+    });
   });
 
   it('resolves the "reactivar" intent when modo=reactivar is present', async () => {
@@ -40,7 +81,7 @@ describe('inscriptionDetailResolver', () => {
 
     await expect(
       resolve({ idProducto: '20', idProceso: '200', modo: 'reactivar' })
-    ).resolves.toEqual({ intent: 'reactivar', detail });
+    ).resolves.toEqual({ intent: 'reactivar', detail, idNivelProducto: null });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
   });
 
@@ -58,6 +99,7 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail: null,
+      idNivelProducto: null,
     });
   });
 
@@ -112,7 +154,24 @@ describe('inscriptionDetailResolver', () => {
     return firstValueFrom(result as Observable<InscripcionEntryResolved>);
   }
 
-  function createDetail(estado: string): InscripcionDetail {
-    return { estado, detalle: null, pagoPendiente: null, seniaMinima: null, confirmada: null };
+  function createDetail(estado: string, idProducto: number | null = null): InscripcionDetail {
+    return {
+      estado,
+      detalle:
+        idProducto === null
+          ? null
+          : {
+              idOferta: 300,
+              idProducto,
+              carrera: 'Programa de Asesoramiento Financiero',
+              idComienzo: 200,
+              comienzo: 'Abril 2026',
+              idTurno: 10,
+              turno: 'Noche',
+            },
+      pagoPendiente: null,
+      seniaMinima: null,
+      confirmada: null,
+    };
   }
 });
