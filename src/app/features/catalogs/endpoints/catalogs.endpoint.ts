@@ -162,6 +162,8 @@ export class CatalogsEndpoint {
             idTurno: item.turno?.idTurno ?? 0,
             nombreTurno: item.turno?.nombreTurno ?? '',
             horarioReferencia: item.horarioReferencia ?? '',
+            descripcionOferta: item.descripcionOferta ?? '',
+            fechaReferencia: item.fechaReferencia ?? null,
           }))
         )
       );

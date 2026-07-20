@@ -59,6 +59,8 @@ export interface Turno {
   idTurno: number;
   nombreTurno: string;
   horarioReferencia: string;
+  descripcionOferta: string;
+  fechaReferencia: string | null;
 }
 
 export interface Seminario {

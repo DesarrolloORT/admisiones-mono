@@ -155,6 +155,8 @@ describe('CatalogsEndpoint', () => {
             nombreTurno: 'Nocturno',
           },
           horarioReferencia: '19:00 a 23:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
         },
       ])
     );
@@ -166,6 +168,8 @@ describe('CatalogsEndpoint', () => {
           idTurno: 2,
           nombreTurno: 'Nocturno',
           horarioReferencia: '19:00 a 23:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
         },
       ]);
     });
