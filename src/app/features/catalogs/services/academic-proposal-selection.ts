@@ -12,6 +12,7 @@ import {
   getAcademicProposalTerminology,
   getAcademicProposalTypeByLevel,
   getAvailableAcademicProposalTypes,
+  isProfessionalUpdateLevel,
   isProfessionalUpdateType,
   toAcademicSeminarOption,
   toAcademicShiftOption,
@@ -164,6 +165,11 @@ export class AcademicProposalSelection {
     const form = this.requireForm();
     if (careerId === null) return;
 
+    if (this.isProfessionalUpdateCareer(careerId)) {
+      this.loadSeminars(careerId);
+      return;
+    }
+
     this.catalogs
       .getComienzos(careerId)
       .pipe(
@@ -253,7 +259,7 @@ export class AcademicProposalSelection {
               return of<Comienzo[]>([]);
             }
 
-            if (this.isProfessionalUpdate()) {
+            if (this.isProfessionalUpdateCareer(careerId)) {
               this.loadSeminars(careerId);
               return of<Comienzo[]>([]);
             }
@@ -304,6 +310,14 @@ export class AcademicProposalSelection {
     form.controls.comienzo.updateValueAndValidity({ emitEvent: false });
     form.controls.turno.updateValueAndValidity({ emitEvent: false });
     form.controls.seminarios.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // El nivel del producto manda: un producto AP nunca debe disparar getComienzos,
+  // aunque el tipo de propuesta del form quede desincronizado (p. ej. re-aplicación
+  // de una encuesta previa de otro flujo).
+  private isProfessionalUpdateCareer(careerId: number): boolean {
+    const career = this.careersState().find(item => item.idProducto === careerId);
+    return career ? isProfessionalUpdateLevel(career.idNivelProducto) : this.isProfessionalUpdate();
   }
 
   private requireForm(): FormGroup<AcademicProposalForm> {

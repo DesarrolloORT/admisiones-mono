@@ -208,7 +208,7 @@ describe('Inscripciones', () => {
   });
 
   it('delegates pre-enrollment confirmation', () => {
-    const payload = { aceptoReglamento: true, idOfertaSeleccionada: 300 };
+    const payload = { aceptoReglamento: true, idOfertasSeleccionadas: [300] };
 
     service.confirmPreEnrollment(payload).subscribe();
 

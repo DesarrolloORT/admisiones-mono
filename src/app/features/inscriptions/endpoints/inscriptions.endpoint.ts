@@ -216,7 +216,9 @@ export class InscripcionesEndpoint {
       .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
         body: {
           aceptoReglamento: payload.aceptoReglamento,
-          idOfertaSeleccionada: payload.idOfertaSeleccionada,
+          // TODO(backend): ConfirmarPreInscripcion aceptará un array de ofertas
+          // para Actualización profesional; hasta ese contrato se envía la primera.
+          idOfertaSeleccionada: payload.idOfertasSeleccionadas[0],
         },
         showLoader: true,
       })
@@ -270,7 +272,9 @@ export class InscripcionesEndpoint {
     return this.api
       .request(postInscripcionesInteresProductoEndpoint, {
         body: {
-          idOferta: payload.idOferta,
+          // TODO(backend): InteresProducto aceptará un array de ofertas para
+          // Actualización profesional; hasta ese contrato se envía la primera.
+          idOferta: payload.idOfertas[0],
           idProcesoSeleccionado: payload.idProcesoSeleccionado,
           idProducto: payload.idProducto,
         },

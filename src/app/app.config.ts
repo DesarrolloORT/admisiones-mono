@@ -1,5 +1,5 @@
 import { LocationStrategy, PathLocationStrategy, registerLocaleData } from '@angular/common';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import localeEsUy from '@angular/common/locales/es-UY';
 import {
   ApplicationConfig,
@@ -52,6 +52,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
     provideHttpClient(
+      withXhr(),
       withInterceptors([
         httpInterceptor,
         ortApiErrorInterceptor,

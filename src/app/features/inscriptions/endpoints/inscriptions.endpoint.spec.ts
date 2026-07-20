@@ -349,7 +349,7 @@ describe('InscripcionesEndpoint', () => {
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
     );
-    const payload = { aceptoReglamento: true, idOfertaSeleccionada: 300 };
+    const payload = { aceptoReglamento: true, idOfertasSeleccionadas: [300] };
 
     await expect(firstValueFrom(endpoint.confirmPreEnrollment(payload))).resolves.toEqual({
       confirmada: true,
@@ -361,7 +361,7 @@ describe('InscripcionesEndpoint', () => {
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {
-      body: payload,
+      body: { aceptoReglamento: true, idOfertaSeleccionada: 300 },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -490,12 +490,13 @@ describe('InscripcionesEndpoint', () => {
     );
   });
   it('maps product interest payload and boolean response', async () => {
-    const payload = { idOferta: 300, idProcesoSeleccionado: 200, idProducto: 20 };
+    const payload = { idOfertas: [300], idProcesoSeleccionado: 200, idProducto: 20 };
 
     await expect(firstValueFrom(endpoint.registerProductInterest(payload))).resolves.toBe(true);
 
+    // Contrato transicional: el backend recibe una sola oferta hasta soportar array.
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesInteresProductoEndpoint, {
-      body: payload,
+      body: { idOferta: 300, idProcesoSeleccionado: 200, idProducto: 20 },
       showLoader: true,
     });
   });
@@ -505,7 +506,8 @@ describe('InscripcionesEndpoint', () => {
     const operations: readonly (() => Observable<unknown>)[] = [
       () => endpoint.getDetail(20, 200),
       () => endpoint.saveInitialSurvey(createSurveyPayload()),
-      () => endpoint.confirmPreEnrollment({ aceptoReglamento: true, idOfertaSeleccionada: 300 }),
+      () =>
+        endpoint.confirmPreEnrollment({ aceptoReglamento: true, idOfertasSeleccionadas: [300] }),
       () => endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 
