@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -22,7 +22,10 @@ describe('AuthEndpoint', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClient(
+          withXhr(),
+          withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+        ),
         provideHttpClientTesting(),
         ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
       ],

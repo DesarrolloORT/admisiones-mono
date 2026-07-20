@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -11,6 +11,7 @@ import { LocationSelect } from './location-select';
 @Component({
   imports: [LocationSelect, ReactiveFormsModule],
   selector: 'app-test-host',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <form [formGroup]="form"><app-location-select formControlName="location" /></form>
   `,
