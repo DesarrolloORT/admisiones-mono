@@ -507,7 +507,7 @@ namespace AppLogic.Inscripciones.Services
                 var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(contexto, persona);
                 var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
                 var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(contexto, codigoPersona, xml);
-                var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(codigoPersona.ToString());
+                var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
 
                 var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 

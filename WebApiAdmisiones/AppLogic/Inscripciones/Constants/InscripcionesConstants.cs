@@ -43,6 +43,7 @@ namespace AppLogic.Inscripciones.Constants
             public const long IdEstadoProcesoInicio = 57156;
             public const long IdEstadoProcesoSolicitud = 57157;
             public const long IdGrupoResponsable = 48;
+            public const string UsuarioSistema = "ADMISIONES";
         }
     }
 }
