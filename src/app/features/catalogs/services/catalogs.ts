@@ -73,10 +73,8 @@ export class Catalogs {
         turnos.map(turno => ({
           idOferta: turno.idOferta,
           idProceso,
-          nombre: turno.horarioReferencia
-            ? `${turno.nombreTurno} (${turno.horarioReferencia})`
-            : turno.nombreTurno,
-          fechaComienzo: null,
+          nombre: turno.descripcionOferta,
+          fechaComienzo: turno.fechaReferencia,
         }))
       )
     );

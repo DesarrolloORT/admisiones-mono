@@ -161,6 +161,32 @@ describe('Catalogs', () => {
     expect(endpointMock.getTurnos).toHaveBeenCalledWith(20, 10);
   });
 
+  it('should map seminars using the offer description and reference date', () => {
+    endpointMock.getTurnos.mockReturnValue(
+      of([
+        {
+          idOferta: 30,
+          idTurno: 2,
+          nombreTurno: 'Nocturno',
+          horarioReferencia: '19:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
+        },
+      ])
+    );
+
+    service.getSeminarios(20, 10).subscribe(data => {
+      expect(data).toEqual([
+        {
+          idOferta: 30,
+          idProceso: 10,
+          nombre: 'Seminario de marco legal',
+          fechaComienzo: '19/05/2026',
+        },
+      ]);
+    });
+  });
+
   it('should delegate clearCache to the endpoint', () => {
     service.clearCache();
 
