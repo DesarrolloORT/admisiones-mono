@@ -4,5 +4,6 @@ namespace AppLogic.Inscripciones.Dtos
     {
         public bool AceptoReglamento { get; set; }
         public long IdOfertaSeleccionada { get; set; }
+        public bool EsInscripcionCorporativa { get; set; }
     }
 }

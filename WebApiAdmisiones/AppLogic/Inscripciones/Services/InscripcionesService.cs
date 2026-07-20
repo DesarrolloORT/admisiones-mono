@@ -14,6 +14,7 @@ using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using ModBandejaAppLogic.Interfaces;
 using Utilities;
 
 namespace AppLogic.Inscripciones.Services
@@ -30,19 +31,22 @@ namespace AppLogic.Inscripciones.Services
         private readonly ITivenosEnvioService _tivenosEnvioService;
         private readonly IInscripcionesyPagosApiClient _inscripcionesyPagosApiClient;
         private readonly IEncuestaInicialService _encuestaInicialService;
+        private readonly IBandejaService _bandejaService;
 
         public InscripcionesService(
             IUnitOfWorkFactory uowFactory,
             IDbConnectionContext dbConnectionContext,
             ITivenosEnvioService tivenosEnvioService,
             IInscripcionesyPagosApiClient inscripcionesyPagosApiClient,
-            IEncuestaInicialService encuestaInicialService)
+            IEncuestaInicialService encuestaInicialService,
+            IBandejaService bandejaService)
         {
             _uowFactory = uowFactory;
             _dbConnectionContext = dbConnectionContext;
             _tivenosEnvioService = tivenosEnvioService;
             _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
             _encuestaInicialService = encuestaInicialService;
+            _bandejaService = bandejaService;
         }
 
         public async Task<OperationResult<DtoDetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
@@ -489,6 +493,35 @@ namespace AppLogic.Inscripciones.Services
             if (!aceptacion.Success)
             {
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
+            }
+
+            if (request.EsInscripcionCorporativa)
+            {
+                var validacionNivel = ConfirmarPreInscripcionRules.ValidarNivelCorporativo(contexto, methodName);
+                if (!validacionNivel.Success)
+                {
+                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                        validacionNivel.ErrorCode, methodName, validacionNivel.Message, validacionNivel.HttpCode);
+                }
+
+                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(contexto, persona);
+                var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
+                var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(contexto, codigoPersona, xml);
+
+                var altaResult = _bandejaService.AltaTramiteWorkflow(
+                    dtoTramite,
+                    dtoInstancia,
+                    new[] { InscripcionesConstants.BandejaCorporativa.IdEstadoProceso },
+                    InscripcionesConstants.BandejaCorporativa.IdGrupoResponsable);
+
+                if (!altaResult.Success)
+                {
+                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                        altaResult.ErrorCode, methodName, altaResult.Message, altaResult.HttpCode);
+                }
+
+                return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
+                    ConfirmarPreInscripcionRules.MapearResultadoCorporativo(contexto), methodName);
             }
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequest(contexto, request.IdOfertaSeleccionada);

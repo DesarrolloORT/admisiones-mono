@@ -7,6 +7,8 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
 using AppLogic.Common.Constants;
+using AppLogic.Inscripciones.Constants;
+using ModBandejaAppLogic.DevartDTOs;
 
 namespace AppLogic.Inscripciones.Rules
 {
@@ -120,6 +122,81 @@ namespace AppLogic.Inscripciones.Rules
                 IdOfertaSeleccionada = idOfertaSeleccionada,
                 TipoInscripcion = "ONLINE",
                 Turno = new DtoTurno { IdTurno = contexto.IdTurno }
+            };
+        }
+
+        public static OperationResult<bool> ValidarNivelCorporativo(ContextoConfirmacionPreInscripcion contexto, string methodName)
+        {
+            var idNivel = contexto.Producto?.IdNivelProducto;
+            if (idNivel != 3 && idNivel != 4)
+            {
+                return OperationResult<bool>.IsFailed(
+                    "INS_CPI_17",
+                    methodName,
+                    "La inscripcion corporativa solo esta disponible para productos de nivel 3 o 4.",
+                    400);
+            }
+            return OperationResult<bool>.Ok(true, methodName);
+        }
+
+        public static string CrearXmlInstanciaCorporativa(ContextoConfirmacionPreInscripcion contexto, Persona persona)
+        {
+            var nombreAlumno = $"({persona.CodigoPersona}) {persona.PrimerNombre} {persona.PrimerApellido}".Trim();
+            return "<TAREA>" +
+                $"<FIELD propertyName=\"Alumno\" name=\"Alumno\" data=\" {nombreAlumno}\"></FIELD>" +
+                $"<FIELD propertyName=\"Comienzo\" name=\"Comienzo\" data=\" {contexto.Comienzo?.NombreComienzo}\"></FIELD>" +
+                $"<FIELD propertyName=\"Producto\" name=\"Producto\" data=\" {contexto.Producto?.NombreProducto}\"></FIELD>" +
+                $"<FIELD propertyName=\"Oferta\" name=\"Oferta Turno\" data=\" ({contexto.IdOferta}) {contexto.Turno?.NombreTurno}\"></FIELD>" +
+                "<FIELD propertyName=\"Motivo\" name=\"Motivo\" data=\" Inscripcion corporativa\"></FIELD>" +
+                "</TAREA>";
+        }
+
+        public static DtoTramiteBandejaDevartModBandeja CrearDtoTramiteCorporativo(long codigoPersona)
+        {
+            return new DtoTramiteBandejaDevartModBandeja
+            {
+                CodigoPersona = codigoPersona,
+                IdGrupoResponsable = InscripcionesConstants.BandejaCorporativa.IdGrupoResponsable,
+                IdProceso = InscripcionesConstants.BandejaCorporativa.IdProceso,
+                ObservacionesTramiteBandeja = string.Empty,
+                TitularTramiteBandeja = "Inscripcion corporativa",
+            };
+        }
+
+        public static DtoInstanciaWorkflowDevartModBandeja CrearDtoInstanciaCorporativa(
+            ContextoConfirmacionPreInscripcion contexto,
+            long codigoPersona,
+            string xml)
+        {
+            var ahora = DateTime.Now;
+            return new DtoInstanciaWorkflowDevartModBandeja
+            {
+                IdProceso = InscripcionesConstants.BandejaCorporativa.IdProceso,
+                DescripcionInstanciaWorkflow = "Inscripcion corporativa",
+                SolicitanteInstanciaWorkflow = codigoPersona,
+                IdObjetoInstanciaWorkflow = contexto.IdOferta,
+                FechaVtoInstanciaWorkflow = ahora.AddDays(5),
+                XmlInstanciaWorkflow = xml,
+                IdDepartamento = contexto.Producto?.IdDepartamento,
+            };
+        }
+
+        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(ContextoConfirmacionPreInscripcion contexto)
+        {
+            return new DtoConfirmarPreInscripcionResponse
+            {
+                Confirmada = false,
+                EnEspera = true,
+                Resumen = new DtoResumenInscripcion
+                {
+                    IdOferta = contexto.IdOferta,
+                    IdProducto = contexto.IdProducto,
+                    Carrera = contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
+                    IdComienzo = contexto.IdComienzo,
+                    Comienzo = contexto.Comienzo?.NombreComienzo,
+                    IdTurno = contexto.IdTurno,
+                    Turno = contexto.Turno?.NombreTurno
+                }
             };
         }
 

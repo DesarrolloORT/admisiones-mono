@@ -127,9 +127,19 @@ namespace UnitTesting.Modulos
         }
 
         [Fact]
-        public void AltaTramiteWorkflow_AddsInstanciaAndOneBandejaPerEstado_SavesOnce()
+        public void AltaTramiteWorkflow_AddsTramiteInstanciaAndOneBandejaPerEstado_SavesOnce()
         {
-            var dto = new DtoInstanciaWorkflowDevartModBandeja
+            var dtoTramite = new DtoTramiteBandejaDevartModBandeja
+            {
+                CodigoPersona = 1,
+                IdGrupoResponsable = 39,
+                IdProceso = 89,
+                TitularTramiteBandeja = "Inscripcion corporativa",
+                UsuarioIngreso = "user",
+                FechaIngreso = DateTime.Now,
+                HoraIngreso = "12:00"
+            };
+            var dtoInstancia = new DtoInstanciaWorkflowDevartModBandeja
             {
                 IdInstanciaWorkflow = 0,
                 DescripcionInstanciaWorkflow = "desc",
@@ -138,6 +148,11 @@ namespace UnitTesting.Modulos
                 FechaIngreso = DateTime.Now,
                 IdProceso = 89
             };
+
+            var tramiteRepo = new Mock<ITramiteBandejaRepository>();
+            tramiteRepo.Setup(r => r.NextId(It.IsAny<string>())).Returns(789);
+            tramiteRepo.Setup(r => r.Add(It.IsAny<TramiteBandeja>()));
+            _mockUow.Setup(u => u.TramiteBandejas).Returns(tramiteRepo.Object);
 
             var instanciaRepo = new Mock<IInstanciaWorkflowRepository>();
             instanciaRepo.Setup(r => r.NextId(It.IsAny<string>())).Returns(123);
@@ -155,11 +170,12 @@ namespace UnitTesting.Modulos
 
             var service = new BandejaService(_mockUowFactory.Object);
 
-            var result = service.AltaTramiteWorkflow(dto, new long[] { 8104, 8105 }, 39);
+            var result = service.AltaTramiteWorkflow(dtoTramite, dtoInstancia, new long[] { 8104, 8105 }, 39);
 
             Assert.True(result.Success);
             Assert.Equal(123, result.Data);
-            instanciaRepo.Verify(r => r.Add(It.Is<InstanciaWorkflow>(i => i.IdInstanciaWorkflow == 123)), Times.Once);
+            tramiteRepo.Verify(r => r.Add(It.Is<TramiteBandeja>(t => t.IdTramiteBandeja == 789)), Times.Once);
+            instanciaRepo.Verify(r => r.Add(It.Is<InstanciaWorkflow>(i => i.IdInstanciaWorkflow == 123 && i.IdTramiteBandeja == 789)), Times.Once);
             bandejaRepo.Verify(r => r.Add(It.Is<Bandeja>(b => b.IdInstanciaWorkflow == 123 && b.IdEstadoProceso == 8104 && b.IdGrupoResponsable == 39)), Times.Once);
             bandejaRepo.Verify(r => r.Add(It.Is<Bandeja>(b => b.IdInstanciaWorkflow == 123 && b.IdEstadoProceso == 8105 && b.IdGrupoResponsable == 39)), Times.Once);
             _mockUow.Verify(u => u.Save(), Times.Once);

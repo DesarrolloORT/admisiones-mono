@@ -13,6 +13,8 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Microsoft.Extensions.Logging.Abstractions;
+using ModBandejaAppLogic.DevartDTOs;
+using ModBandejaAppLogic.Interfaces;
 using Moq;
 using System.Collections.Generic;
 using System.Net;
@@ -29,6 +31,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly Mock<IGeneralService> _generalServiceMock;
         private readonly Mock<ITivenosEnvioService> _tivenosEnvioServiceMock;
+        private readonly Mock<IBandejaService> _bandejaServiceMock;
         private readonly InscripcionesService _service;
 
         public InscripcionesServiceTests()
@@ -38,6 +41,7 @@ namespace UnitTesting.AppLogic.Services
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
             _generalServiceMock = new Mock<IGeneralService>();
             _tivenosEnvioServiceMock = new Mock<ITivenosEnvioService>();
+            _bandejaServiceMock = new Mock<IBandejaService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _dbConnectionContextMock
                 .Setup(d => d.CurrentDateTime())
@@ -79,7 +83,8 @@ namespace UnitTesting.AppLogic.Services
                 _dbConnectionContextMock.Object,
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
-                CrearEncuestaInicialServiceReal());
+                CrearEncuestaInicialServiceReal(),
+                _bandejaServiceMock.Object);
         }
 
         // Construye la implementación real de EncuestaInicialService con los mismos mocks,
@@ -137,7 +142,8 @@ namespace UnitTesting.AppLogic.Services
                 _dbConnectionContextMock.Object,
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
-                encuestaInicialService);
+                encuestaInicialService,
+                _bandejaServiceMock.Object);
         }
 
         [Fact]
@@ -259,6 +265,97 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.Confirmada);
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(1000, aceptacionAgregada!.IdAceptacionReglamentoEst);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaNivel3_AltaEnBandejaSinLlamarApi()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1, idNivelProducto: 3);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 999, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            DtoTramiteBandejaDevartModBandeja? dtoTramite = null;
+            DtoInstanciaWorkflowDevartModBandeja? dtoInstancia = null;
+            IEnumerable<long>? idsEstadoProceso = null;
+            long? idGrupoResponsable = null;
+            _bandejaServiceMock
+                .Setup(s => s.AltaTramiteWorkflow(
+                    It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
+                    It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
+                    It.IsAny<IEnumerable<long>>(),
+                    It.IsAny<long>()))
+                .Callback<DtoTramiteBandejaDevartModBandeja, DtoInstanciaWorkflowDevartModBandeja, IEnumerable<long>, long>(
+                    (t, i, e, g) => { dtoTramite = t; dtoInstancia = i; idsEstadoProceso = e; idGrupoResponsable = g; })
+                .Returns(global::Utilities.OperationResult<long>.Ok(555, "AltaTramiteWorkflow"));
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                EsInscripcionCorporativa = true
+            });
+
+            Assert.True(result.Success);
+            Assert.False(result.Data!.Confirmada);
+            Assert.True(result.Data.EnEspera);
+            Assert.Equal(10, result.Data.Resumen.IdOferta);
+            Assert.NotNull(dtoTramite);
+            Assert.Equal(89, dtoTramite!.IdProceso);
+            Assert.Equal(48, dtoTramite.IdGrupoResponsable);
+            Assert.NotNull(dtoInstancia);
+            Assert.Equal(89, dtoInstancia!.IdProceso);
+            Assert.Contains("AP", dtoInstancia.XmlInstanciaWorkflow);
+            Assert.Equal(new long[] { 59367 }, idsEstadoProceso);
+            Assert.Equal(48, idGrupoResponsable);
+            _bandejaServiceMock.Verify(
+                s => s.AltaTramiteWorkflow(
+                    It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
+                    It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
+                    It.IsAny<IEnumerable<long>>(),
+                    It.IsAny<long>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaNivel1_ReturnsBadRequestSinTocarBandeja()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1, idNivelProducto: 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 999, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdOfertaSeleccionada = 10,
+                EsInscripcionCorporativa = true
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_17", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _bandejaServiceMock.Verify(
+                s => s.AltaTramiteWorkflow(
+                    It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
+                    It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
+                    It.IsAny<IEnumerable<long>>(),
+                    It.IsAny<long>()),
+                Times.Never);
         }
 
         [Fact]
@@ -1705,12 +1802,13 @@ namespace UnitTesting.AppLogic.Services
             long idTurno,
             string nombreExtenso = "Analista Programador",
             string nombre = "AP",
-            string nombreComienzo = "Marzo 2026")
+            string nombreComienzo = "Marzo 2026",
+            long idNivelProducto = 0)
         {
             var ofertaRepo = new Mock<IOfertaRepository>();
             ofertaRepo
                 .Setup(r => r.GetByKeyWithRelated(idOferta))
-                .Returns(OfertaValida(idOferta, idProducto, idComienzo, idTurno, nombreExtenso, nombre, nombreComienzo));
+                .Returns(OfertaValida(idOferta, idProducto, idComienzo, idTurno, nombreExtenso, nombre, nombreComienzo, idNivelProducto));
             _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
         }
 
@@ -1911,7 +2009,8 @@ namespace UnitTesting.AppLogic.Services
             long idTurno,
             string nombreExtenso = "Analista Programador",
             string nombre = "AP",
-            string nombreComienzo = "Marzo 2026")
+            string nombreComienzo = "Marzo 2026",
+            long idNivelProducto = 0)
         {
             return new Oferta
             {
@@ -1931,7 +2030,8 @@ namespace UnitTesting.AppLogic.Services
                         {
                             IdProducto = idProducto,
                             NombreProducto = nombre,
-                            NombreExtensoProducto = nombreExtenso
+                            NombreExtensoProducto = nombreExtenso,
+                            IdNivelProducto = idNivelProducto
                         }
                     }
                 }
@@ -2086,7 +2186,8 @@ namespace UnitTesting.AppLogic.Services
                 _dbConnectionContextMock.Object,
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
-                CrearEncuestaInicialServiceReal());
+                CrearEncuestaInicialServiceReal(),
+                _bandejaServiceMock.Object);
         }
 
         private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
