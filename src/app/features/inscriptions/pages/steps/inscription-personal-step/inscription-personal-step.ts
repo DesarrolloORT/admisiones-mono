@@ -1,5 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { OrtAccordionModule, OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
+import {
+  OrtAccordionModule,
+  OrtBadgeModule,
+  OrtButtonModule,
+  OrtIconModule,
+} from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 
@@ -26,6 +31,7 @@ const DESKTOP_MIN_WIDTH = 840;
     OrtAccordionModule,
     OrtButtonModule,
     OrtIconModule,
+    OrtBadgeModule,
   ],
   templateUrl: './inscription-personal-step.html',
   styleUrls: ['../../layout.scss', './inscription-personal-step.scss'],
