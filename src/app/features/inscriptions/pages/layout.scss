@@ -135,7 +135,7 @@ ort-card a[ort-primary-button] {
 
 .inscription-subsection {
   display: grid;
-  gap: var(--ort-sys-spacing-16);
+  gap: var(--ort-sys-spacing-24);
 }
 
 .inscription-subsection h2,
@@ -223,6 +223,15 @@ ort-card h4 {
   margin-top: var(--ort-sys-spacing-24);
 }
 
+.regulation-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ort-sys-color-primary-500);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 @media (width >=48rem) {
   .inscription-choice-list > ort-radio-button:not(:first-of-type),
   .inscription-choice-list > ort-radio-card-button:not(:first-of-type),
@@ -237,6 +246,15 @@ ort-card h4 {
     gap: var(--ort-sys-spacing-40);
     max-width: 40.8125rem;
     padding: 0;
+  }
+
+  .inscription-regulation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 80rem;
+    min-height: calc(100dvh - 9rem);
+    margin-inline: auto;
   }
 
   .inscription-screen__header {
@@ -298,6 +316,10 @@ ort-card h4 {
     justify-content: space-between;
   }
 
+  .inscription-regulation-footer__accept {
+    order: 1;
+  }
+
   .inscription-footer button,
   .inscription-footer a,
   ort-card button,
@@ -315,5 +337,9 @@ ort-card h4 {
   .inscription-in-process .inscription-footer a,
   .inscription-in-process .inscription-footer button {
     min-width: 20rem;
+  }
+
+  .regulation-button {
+    display: none;
   }
 }
