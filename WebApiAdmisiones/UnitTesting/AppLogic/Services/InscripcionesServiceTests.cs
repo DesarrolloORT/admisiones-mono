@@ -284,16 +284,14 @@ namespace UnitTesting.AppLogic.Services
 
             DtoTramiteBandejaDevartModBandeja? dtoTramite = null;
             DtoInstanciaWorkflowDevartModBandeja? dtoInstancia = null;
-            IEnumerable<long>? idsEstadoProceso = null;
-            long? idGrupoResponsable = null;
+            IEnumerable<DtoBandejaDevartModBandeja>? dtosBandeja = null;
             _bandejaServiceMock
                 .Setup(s => s.AltaTramiteWorkflow(
                     It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
                     It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
-                    It.IsAny<IEnumerable<long>>(),
-                    It.IsAny<long>()))
-                .Callback<DtoTramiteBandejaDevartModBandeja, DtoInstanciaWorkflowDevartModBandeja, IEnumerable<long>, long>(
-                    (t, i, e, g) => { dtoTramite = t; dtoInstancia = i; idsEstadoProceso = e; idGrupoResponsable = g; })
+                    It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()))
+                .Callback<DtoTramiteBandejaDevartModBandeja, DtoInstanciaWorkflowDevartModBandeja, IEnumerable<DtoBandejaDevartModBandeja>>(
+                    (t, i, b) => { dtoTramite = t; dtoInstancia = i; dtosBandeja = b; })
                 .Returns(global::Utilities.OperationResult<long>.Ok(555, "AltaTramiteWorkflow"));
 
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
@@ -313,14 +311,21 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(dtoInstancia);
             Assert.Equal(89, dtoInstancia!.IdProceso);
             Assert.Contains("AP", dtoInstancia.XmlInstanciaWorkflow);
-            Assert.Equal(new long[] { 59367 }, idsEstadoProceso);
-            Assert.Equal(48, idGrupoResponsable);
+            Assert.NotNull(dtosBandeja);
+            var bandejas = dtosBandeja!.ToList();
+            Assert.Equal(2, bandejas.Count);
+            var inicio = Assert.Single(bandejas, b => b.IdEstadoProceso == 57156);
+            Assert.Equal(48, inicio.IdGrupoResponsable);
+            Assert.NotNull(inicio.FechaTomadoBandeja);
+            Assert.Equal("SIGUIENTE", inicio.AccionMenu);
+            var solicitud = Assert.Single(bandejas, b => b.IdEstadoProceso == 57157);
+            Assert.Equal(48, solicitud.IdGrupoResponsable);
+            Assert.Equal(DateTime.MinValue, solicitud.FechaTomadoBandeja);
             _bandejaServiceMock.Verify(
                 s => s.AltaTramiteWorkflow(
                     It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
                     It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
-                    It.IsAny<IEnumerable<long>>(),
-                    It.IsAny<long>()),
+                    It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()),
                 Times.Once);
         }
 
@@ -353,8 +358,7 @@ namespace UnitTesting.AppLogic.Services
                 s => s.AltaTramiteWorkflow(
                     It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
                     It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
-                    It.IsAny<IEnumerable<long>>(),
-                    It.IsAny<long>()),
+                    It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()),
                 Times.Never);
         }
 

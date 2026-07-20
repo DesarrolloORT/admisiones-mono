@@ -40,7 +40,8 @@ namespace AppLogic.Inscripciones.Constants
         public static class BandejaCorporativa
         {
             public const long IdProceso = 89;
-            public const long IdEstadoProceso = 59367;
+            public const long IdEstadoProcesoInicio = 57156;
+            public const long IdEstadoProcesoSolicitud = 57157;
             public const long IdGrupoResponsable = 48;
         }
     }

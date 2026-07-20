@@ -181,6 +181,44 @@ namespace AppLogic.Inscripciones.Rules
             };
         }
 
+        public static IEnumerable<DtoBandejaDevartModBandeja> CrearBandejasCorporativas(string usuarioIngreso)
+        {
+            var ahora = DateTime.Now;
+            var hora = ahora.ToString(InscripcionesConstants.InteresProducto.FormatoHora);
+
+            return new[]
+            {
+                // Paso 1 (inicio de tramite): se auto-completa al instante para avanzar al paso real, igual que OrdenWF==1 en legacy (proceso 75).
+                new DtoBandejaDevartModBandeja
+                {
+                    IdEstadoProceso = InscripcionesConstants.BandejaCorporativa.IdEstadoProcesoInicio,
+                    IdGrupoResponsable = InscripcionesConstants.BandejaCorporativa.IdGrupoResponsable,
+                    FechaIngresoBandeja = ahora,
+                    FechaTomadoBandeja = ahora,
+                    UsuarioTomadoBandeja = usuarioIngreso,
+                    FechaRealizadoBandeja = ahora,
+                    FechaVencimientoBandeja = ahora,
+                    AccionMenu = "SIGUIENTE",
+                    UsuarioAccionMenu = usuarioIngreso,
+                    FechaAccionMenu = ahora,
+                    FechaReasignadoBandeja = ahora,
+                    ReasignadoPorBandeja = usuarioIngreso,
+                },
+                // Paso 2 (solicitud): queda pendiente de verdad para el grupo responsable (TipoPara "PARA_UN_GRUPO" en legacy).
+                new DtoBandejaDevartModBandeja
+                {
+                    IdEstadoProceso = InscripcionesConstants.BandejaCorporativa.IdEstadoProcesoSolicitud,
+                    IdGrupoResponsable = InscripcionesConstants.BandejaCorporativa.IdGrupoResponsable,
+                    FechaIngresoBandeja = ahora,
+                    FechaTomadoBandeja = DateTime.MinValue,
+                    UsuarioTomadoBandeja = string.Empty,
+                    FechaVencimientoBandeja = ahora.AddDays(5),
+                    FechaReasignadoBandeja = ahora,
+                    ReasignadoPorBandeja = usuarioIngreso,
+                }
+            };
+        }
+
         public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(ContextoConfirmacionPreInscripcion contexto)
         {
             return new DtoConfirmarPreInscripcionResponse

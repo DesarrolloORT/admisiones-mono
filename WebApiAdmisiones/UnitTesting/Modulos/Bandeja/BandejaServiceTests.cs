@@ -170,7 +170,13 @@ namespace UnitTesting.Modulos
 
             var service = new BandejaService(_mockUowFactory.Object);
 
-            var result = service.AltaTramiteWorkflow(dtoTramite, dtoInstancia, new long[] { 8104, 8105 }, 39);
+            var dtosBandeja = new[]
+            {
+                new DtoBandejaDevartModBandeja { IdEstadoProceso = 8104, IdGrupoResponsable = 39 },
+                new DtoBandejaDevartModBandeja { IdEstadoProceso = 8105, IdGrupoResponsable = 39 }
+            };
+
+            var result = service.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 
             Assert.True(result.Success);
             Assert.Equal(123, result.Data);
