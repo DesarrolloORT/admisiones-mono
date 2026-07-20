@@ -1100,7 +1100,7 @@ namespace UnitTesting.AppLogic.Services
                 EstadoEncuestaIniAdmision = "DEFINITIVO",
                 CursaSecundariaActualmenteEncuestaIni = "SI",
                 VecesSextoEncuestaIni = "2",
-                TieneEducacionSuperiorEncuestaIni = "SE",
+                TieneEducacionSuperiorEncuestaIni = "SI", // Exterior: "SI" sin universidades -> id 2
                 ComparAmigoFamEncuestaIni = "SI",
                 InforOtrasAntesEncuestaIni = "NO"
             });
@@ -1323,6 +1323,35 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(400, result.HttpCode);
             Assert.Equal("INS_EI_25", result.ErrorCode);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        [Fact]
+        public void GuardarEncuestaInicial_EducacionSuperiorExterior_PersisteSiSinUniversidades()
+        {
+            SetupPersonaValida();
+
+            EncuestaIniAdmision? encuestaAgregada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(903);
+
+            var superiorRepo = new Mock<IEducacionSuperiorAdmisionRepository>();
+            _uowMock.Setup(u => u.EducacionSuperiorAdmisions).Returns(superiorRepo.Object);
+
+            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
+            {
+                EstadoEducacionSuperiorPreviaId = 2
+            });
+
+            Assert.True(result.Success);
+            Assert.NotNull(encuestaAgregada);
+            Assert.Equal("SI", encuestaAgregada!.TieneEducacionSuperiorEncuestaIni);
+            superiorRepo.Verify(r => r.RemoveByPersona(123), Times.Once);
         }
 
         [Fact]

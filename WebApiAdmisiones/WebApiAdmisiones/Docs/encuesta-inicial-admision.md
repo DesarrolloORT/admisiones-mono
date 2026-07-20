@@ -143,6 +143,18 @@ Esta sección releva la trayectoria educativa previa del postulante y el nivel d
 | `2` | Sí, en el exterior |
 | `3` | No |
 
+En base (`TIENE_EDUCACION_SUPERIOR_ENCUESTA_INI`):
+
+```text
+1 (Uruguay)  -> "SI" + universidades en EDUCACION_SUPERIOR_ADMISION.
+2 (Exterior) -> "SI" sin universidades.
+3 (No)       -> "NO".
+
+En la lectura el id se reconstruye: "SI" con universidades = 1, "SI" sin
+universidades = 2, "NO" = 3. La columna es un booleano SI/NO compartido con
+el sistema legacy (no guarda un tercer valor para exterior).
+```
+
 #### `nivelFormacionPadreTutorId` / `nivelFormacionMadreTutorId`
 
 | Valor | Label |
