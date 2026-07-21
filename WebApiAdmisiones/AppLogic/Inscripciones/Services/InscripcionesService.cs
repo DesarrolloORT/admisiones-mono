@@ -403,7 +403,7 @@ namespace AppLogic.Inscripciones.Services
                 }
 
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                    ConfirmarPreInscripcionRules.MapearResultadoCorporativo(ofertasSeleccionadas), methodName);
+                    ConfirmarPreInscripcionRules.MapearResultadoCorporativo(), methodName);
             }
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);

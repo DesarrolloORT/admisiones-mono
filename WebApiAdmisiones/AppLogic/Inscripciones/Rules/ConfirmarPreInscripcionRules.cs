@@ -227,26 +227,14 @@ namespace AppLogic.Inscripciones.Rules
             };
         }
 
-        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(IReadOnlyList<DatosConfirmacionOferta> ofertas)
+        // La inscripcion corporativa siempre va "a la espera": el front muestra la pantalla generica de ese
+        // estado, que no trae detalle. El response solo necesita los flags; el detalle va en el XML de la instancia.
+        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo()
         {
-            var cabecera = ofertas[0];
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = false,
-                EnEspera = true,
-                Resumen = new DtoCabeceraInscripcion
-                {
-                    IdProducto = cabecera.IdProducto,
-                    Carrera = cabecera.Producto?.NombreExtensoProducto ?? cabecera.Producto?.NombreProducto
-                },
-                Inscripciones = ofertas
-                    .Select(o => new DtoInscripcionOferta
-                    {
-                        IdOferta = o.IdOferta,
-                        Comienzo = o.Comienzo?.NombreComienzo,
-                        Turno = o.Turno?.NombreTurno
-                    })
-                    .ToList()
+                EnEspera = true
             };
         }
 

@@ -309,7 +309,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.False(result.Data!.Confirmada);
             Assert.True(result.Data.EnEspera);
-            Assert.Equal(10, Assert.Single(result.Data.Inscripciones).IdOferta);
+            // "A la espera" es una pantalla generica: el response no trae detalle de ofertas.
+            Assert.Empty(result.Data.Inscripciones);
             Assert.NotNull(dtoTramite);
             Assert.Equal(89, dtoTramite!.IdProceso);
             Assert.Equal(48, dtoTramite.IdGrupoResponsable);
@@ -382,9 +383,8 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.EnEspera);
-            Assert.Equal(2, result.Data.Inscripciones.Count);
-            Assert.Contains(result.Data.Inscripciones, o => o.IdOferta == 10 && o.Comienzo == "Marzo 2026");
-            Assert.Contains(result.Data.Inscripciones, o => o.IdOferta == 11 && o.Comienzo == "Agosto 2026");
+            // "A la espera": el response son solo flags; el detalle multi-oferta va en el XML.
+            Assert.Empty(result.Data.Inscripciones);
 
             Assert.NotNull(dtoInstancia);
             var xml = dtoInstancia!.XmlInstanciaWorkflow;
