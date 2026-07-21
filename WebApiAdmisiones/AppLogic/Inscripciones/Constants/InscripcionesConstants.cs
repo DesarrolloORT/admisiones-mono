@@ -50,5 +50,14 @@ namespace AppLogic.Inscripciones.Constants
             public const int TipoAccionRegistroSitioAdmisiones = 109;
             public const int LugarInteresWeb = 8;
         }
+
+        public static class BandejaCorporativa
+        {
+            public const long IdProceso = 89;
+            public const long IdEstadoProcesoInicio = 57156;
+            public const long IdEstadoProcesoSolicitud = 57157;
+            public const long IdGrupoResponsable = 48;
+            public const string UsuarioSistema = "ADMISIONES";
+        }
     }
 }
