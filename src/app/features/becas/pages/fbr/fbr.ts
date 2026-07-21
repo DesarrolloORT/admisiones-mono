@@ -5,7 +5,6 @@ import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
 import { ScholarshipAcademicStep } from '../../components/scholarship-academic-step/scholarship-academic-step';
-import { ScholarshipOnboarding } from '../../components/scholarship-onboarding/scholarship-onboarding';
 import { ScholarshipPersonalStep } from '../../components/scholarship-personal-step/scholarship-personal-step';
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
@@ -14,7 +13,7 @@ import { ScholarshipProcessStore } from '../../store/scholarship-process';
 
 @Component({
   selector: 'app-fbr',
-  imports: [ProcessLayout, ScholarshipOnboarding, ScholarshipAcademicStep, ScholarshipPersonalStep],
+  imports: [ProcessLayout, ScholarshipAcademicStep, ScholarshipPersonalStep],
   providers: [
     AcademicProposalSelection,
     ScholarshipFormsStore,

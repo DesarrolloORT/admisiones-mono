@@ -15,7 +15,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import {
   OrtButton,
-  OrtButtonBaseDirective,
   OrtExpandableStepperModule,
   OrtExpandableStepperStep,
   OrtIconModule,
@@ -38,7 +37,6 @@ type ProcessLayoutViewport = 'compact' | 'wide-mobile' | 'tablet' | 'desktop';
     OrtExpandableStepperModule,
     OrtIconModule,
     RouterLink,
-    OrtButtonBaseDirective,
     OrtButton,
   ],
   templateUrl: './process-layout.html',

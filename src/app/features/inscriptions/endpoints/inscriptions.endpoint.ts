@@ -59,15 +59,17 @@ export class InscripcionesEndpoint {
       .pipe(
         map(response => ({
           estado: response.estado ?? null,
-          detalle: this.toSummary(response.detalle),
+          detalle: this.toSummary(response.detalle?.resumen, response.detalle?.intereses?.[0]),
           pagoPendiente: response.pagoPendiente
             ? {
-                idInscripcion: response.pagoPendiente.ofertas?.[0]?.idInscripcion ?? null,
+                idInscripcion: response.pagoPendiente.inscripciones?.[0]?.idInscripcion ?? null,
                 senia: response.pagoPendiente.pagoReserva ?? null,
                 saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
-                fechaVencimientoPago:
-                  response.pagoPendiente.ofertas?.[0]?.fechaVencimientoPago ?? null,
-                resumen: this.toSummary(response.pagoPendiente.resumen),
+                fechaVencimientoPago: response.pagoPendiente.resumen?.fechaVencimientoPago ?? null,
+                resumen: this.toSummary(
+                  response.pagoPendiente.resumen,
+                  response.pagoPendiente.inscripciones?.[0]
+                ),
               }
             : null,
           seniaMinima: response.reservaMinima
@@ -225,15 +227,15 @@ export class InscripcionesEndpoint {
         map(response => ({
           confirmada: response.confirmada === true,
           enEspera: 'enEspera' in response && response.enEspera === true,
-          idInscripcion: response.ofertas?.[0]?.idInscripcion ?? null,
-          fechaVencimientoPago: response.ofertas?.[0]?.fechaVencimientoPago ?? null,
+          idInscripcion: response.inscripciones?.[0]?.idInscripcion ?? null,
+          fechaVencimientoPago: response.resumen?.fechaVencimientoPago ?? null,
           seniaInscripcion: response.pagoReserva ?? null,
           saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
           resumen: response.resumen
             ? {
                 carrera: response.resumen.carrera ?? null,
-                comienzo: response.resumen.comienzo ?? null,
-                turno: response.resumen.turno ?? null,
+                comienzo: response.inscripciones?.[0]?.comienzo ?? null,
+                turno: response.inscripciones?.[0]?.turno ?? null,
               }
             : null,
         })),
@@ -326,17 +328,18 @@ export class InscripcionesEndpoint {
           turno?: string | null;
         }
       | null
-      | undefined
+      | undefined,
+    oferta?: { idOferta?: number; comienzo?: string | null; turno?: string | null } | null
   ): InscripcionSummary | null {
     return summary
       ? {
-          idOferta: summary.idOferta ?? null,
+          idOferta: oferta?.idOferta ?? summary.idOferta ?? null,
           idProducto: summary.idProducto ?? null,
           carrera: summary.carrera ?? null,
           idComienzo: summary.idComienzo ?? null,
-          comienzo: summary.comienzo ?? null,
+          comienzo: oferta?.comienzo ?? summary.comienzo ?? null,
           idTurno: summary.idTurno ?? null,
-          turno: summary.turno ?? null,
+          turno: oferta?.turno ?? summary.turno ?? null,
         }
       : null;
   }

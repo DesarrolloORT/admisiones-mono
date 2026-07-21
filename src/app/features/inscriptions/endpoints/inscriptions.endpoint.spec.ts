@@ -345,7 +345,8 @@ describe('InscripcionesEndpoint', () => {
         fechaVencimientoPago: null,
         pagoReserva: 0,
         estadoCuenta: { saldoActual: 70000 },
-        resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
+        resumen: { carrera: 'Sistemas' },
+        inscripciones: [{ comienzo: 'Marzo', turno: 'Matutino' }],
       })
     );
     const payload = { aceptoReglamento: true, idOfertasSeleccionadas: [300] };
