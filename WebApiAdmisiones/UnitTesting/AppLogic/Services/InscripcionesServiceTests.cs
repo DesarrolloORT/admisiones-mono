@@ -302,14 +302,14 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
+                IdsOfertasSeleccionadas = new() { 10 },
                 EsInscripcionCorporativa = true
             });
 
             Assert.True(result.Success);
             Assert.False(result.Data!.Confirmada);
             Assert.True(result.Data.EnEspera);
-            Assert.Equal(10, result.Data.Resumen.IdOferta);
+            Assert.Equal(10, Assert.Single(result.Data.Inscripciones).IdOferta);
             Assert.NotNull(dtoTramite);
             Assert.Equal(89, dtoTramite!.IdProceso);
             Assert.Equal(48, dtoTramite.IdGrupoResponsable);
@@ -352,7 +352,7 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
-                IdOfertaSeleccionada = 10,
+                IdsOfertasSeleccionadas = new() { 10 },
                 EsInscripcionCorporativa = true
             });
 

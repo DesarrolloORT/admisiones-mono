@@ -128,7 +128,7 @@ namespace AppLogic.Inscripciones.Rules
             };
         }
 
-        public static OperationResult<bool> ValidarNivelCorporativo(ContextoConfirmacionPreInscripcion contexto, string methodName)
+        public static OperationResult<bool> ValidarNivelCorporativo(DatosConfirmacionOferta contexto, string methodName)
         {
             var idNivel = contexto.Producto?.IdNivelProducto;
             if (idNivel != 3 && idNivel != 4)
@@ -142,7 +142,7 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        public static string CrearXmlInstanciaCorporativa(ContextoConfirmacionPreInscripcion contexto, Persona persona)
+        public static string CrearXmlInstanciaCorporativa(DatosConfirmacionOferta contexto, Persona persona)
         {
             var nombreAlumno = $"({persona.CodigoPersona}) {persona.PrimerNombre} {persona.PrimerApellido}".Trim();
             return "<TAREA>" +
@@ -167,7 +167,7 @@ namespace AppLogic.Inscripciones.Rules
         }
 
         public static DtoInstanciaWorkflowDevartModBandeja CrearDtoInstanciaCorporativa(
-            ContextoConfirmacionPreInscripcion contexto,
+            DatosConfirmacionOferta contexto,
             long codigoPersona,
             string xml)
         {
@@ -222,21 +222,25 @@ namespace AppLogic.Inscripciones.Rules
             };
         }
 
-        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(ContextoConfirmacionPreInscripcion contexto)
+        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(DatosConfirmacionOferta contexto)
         {
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = false,
                 EnEspera = true,
-                Resumen = new DtoResumenInscripcion
+                Resumen = new DtoCabeceraInscripcion
                 {
-                    IdOferta = contexto.IdOferta,
                     IdProducto = contexto.IdProducto,
-                    Carrera = contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
-                    IdComienzo = contexto.IdComienzo,
-                    Comienzo = contexto.Comienzo?.NombreComienzo,
-                    IdTurno = contexto.IdTurno,
-                    Turno = contexto.Turno?.NombreTurno
+                    Carrera = contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto
+                },
+                Inscripciones = new List<DtoInscripcionOferta>
+                {
+                    new()
+                    {
+                        IdOferta = contexto.IdOferta,
+                        Comienzo = contexto.Comienzo?.NombreComienzo,
+                        Turno = contexto.Turno?.NombreTurno
+                    }
                 }
             };
         }

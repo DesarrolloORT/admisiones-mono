@@ -406,10 +406,6 @@ namespace AppLogic.Inscripciones.Services
                     ConfirmarPreInscripcionRules.MapearResultadoCorporativo(contexto), methodName);
             }
 
-            var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequest(contexto, request.IdOfertaSeleccionada);
-            var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionAsync(apiRequest);
-            var confirmacionResult = ConfirmarPreInscripcionRules.MapearResultadoApi(apiResult, contexto, methodName);
-            if (!confirmacionResult.Success)
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
 
