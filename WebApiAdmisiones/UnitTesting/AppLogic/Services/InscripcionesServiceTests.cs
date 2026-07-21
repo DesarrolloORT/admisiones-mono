@@ -335,6 +335,66 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaMultiplesOfertas_ListaTodasEnXmlYResponse()
+        {
+            SetupPersona(123);
+
+            // Dos ofertas del mismo producto (20) y turno (1) con comienzos distintos: valido en nivel 3/4.
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10))
+                .Returns(OfertaValida(10, 20, 40, 1, nombreComienzo: "Marzo 2026", idNivelProducto: 3));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11))
+                .Returns(OfertaValida(11, 20, 41, 1, nombreComienzo: "Agosto 2026", idNivelProducto: 3));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10))
+                .Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11))
+                .Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesRepo.Object);
+
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 999, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            DtoInstanciaWorkflowDevartModBandeja? dtoInstancia = null;
+            _bandejaServiceMock
+                .Setup(s => s.AltaTramiteWorkflow(
+                    It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
+                    It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
+                    It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()))
+                .Callback<DtoTramiteBandejaDevartModBandeja, DtoInstanciaWorkflowDevartModBandeja, IEnumerable<DtoBandejaDevartModBandeja>>(
+                    (t, i, b) => dtoInstancia = i)
+                .Returns(global::Utilities.OperationResult<long>.Ok(555, "AltaTramiteWorkflow"));
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = new() { 10, 11 },
+                EsInscripcionCorporativa = true
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.EnEspera);
+            Assert.Equal(2, result.Data.Inscripciones.Count);
+            Assert.Contains(result.Data.Inscripciones, o => o.IdOferta == 10 && o.Comienzo == "Marzo 2026");
+            Assert.Contains(result.Data.Inscripciones, o => o.IdOferta == 11 && o.Comienzo == "Agosto 2026");
+
+            Assert.NotNull(dtoInstancia);
+            var xml = dtoInstancia!.XmlInstanciaWorkflow;
+            Assert.Contains("(10) Marzo 2026", xml);
+            Assert.Contains("(11) Agosto 2026", xml);
+            // El comienzo va dentro de cada oferta: ya no existe un field Comienzo aparte.
+            Assert.DoesNotContain("propertyName=\"Comienzo\"", xml);
+        }
+
+        [Fact]
         public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaNivel1_ReturnsBadRequestSinTocarBandeja()
         {
             SetupPersona(123);

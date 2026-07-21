@@ -142,14 +142,18 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        public static string CrearXmlInstanciaCorporativa(DatosConfirmacionOferta contexto, Persona persona)
+        public static string CrearXmlInstanciaCorporativa(IReadOnlyList<DatosConfirmacionOferta> ofertas, Persona persona)
         {
+            // Producto es compartido por todas las ofertas seleccionadas (la validacion de compatibilidad lo exige).
+            var producto = ofertas[0].Producto?.NombreProducto;
             var nombreAlumno = $"({persona.CodigoPersona}) {persona.PrimerNombre} {persona.PrimerApellido}".Trim();
+            // Cada oferta lleva su propio comienzo (en nivel 3 y 4 pueden diferir), por eso no hay un field Comienzo aparte.
+            var listaOfertas = string.Join(" | ",
+                ofertas.Select(o => $"({o.IdOferta}) {o.Comienzo?.NombreComienzo} - {o.Turno?.NombreTurno}"));
             return "<TAREA>" +
                 $"<FIELD propertyName=\"Alumno\" name=\"Alumno\" data=\" {nombreAlumno}\"></FIELD>" +
-                $"<FIELD propertyName=\"Comienzo\" name=\"Comienzo\" data=\" {contexto.Comienzo?.NombreComienzo}\"></FIELD>" +
-                $"<FIELD propertyName=\"Producto\" name=\"Producto\" data=\" {contexto.Producto?.NombreProducto}\"></FIELD>" +
-                $"<FIELD propertyName=\"Oferta\" name=\"Oferta Turno\" data=\" ({contexto.IdOferta}) {contexto.Turno?.NombreTurno}\"></FIELD>" +
+                $"<FIELD propertyName=\"Producto\" name=\"Producto\" data=\" {producto}\"></FIELD>" +
+                $"<FIELD propertyName=\"Oferta\" name=\"Oferta Turno\" data=\" {listaOfertas}\"></FIELD>" +
                 "<FIELD propertyName=\"Motivo\" name=\"Motivo\" data=\" Inscripcion corporativa\"></FIELD>" +
                 "</TAREA>";
         }
@@ -177,6 +181,7 @@ namespace AppLogic.Inscripciones.Rules
                 IdProceso = InscripcionesConstants.BandejaCorporativa.IdProceso,
                 DescripcionInstanciaWorkflow = "Inscripcion corporativa",
                 SolicitanteInstanciaWorkflow = codigoPersona,
+                // IdObjetoInstanciaWorkflow es un solo long: referencia la primera oferta; el detalle completo va en el XML.
                 IdObjetoInstanciaWorkflow = contexto.IdOferta,
                 FechaVtoInstanciaWorkflow = ahora.AddDays(5),
                 XmlInstanciaWorkflow = xml,
@@ -222,26 +227,26 @@ namespace AppLogic.Inscripciones.Rules
             };
         }
 
-        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(DatosConfirmacionOferta contexto)
+        public static DtoConfirmarPreInscripcionResponse MapearResultadoCorporativo(IReadOnlyList<DatosConfirmacionOferta> ofertas)
         {
+            var cabecera = ofertas[0];
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = false,
                 EnEspera = true,
                 Resumen = new DtoCabeceraInscripcion
                 {
-                    IdProducto = contexto.IdProducto,
-                    Carrera = contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto
+                    IdProducto = cabecera.IdProducto,
+                    Carrera = cabecera.Producto?.NombreExtensoProducto ?? cabecera.Producto?.NombreProducto
                 },
-                Inscripciones = new List<DtoInscripcionOferta>
-                {
-                    new()
+                Inscripciones = ofertas
+                    .Select(o => new DtoInscripcionOferta
                     {
-                        IdOferta = contexto.IdOferta,
-                        Comienzo = contexto.Comienzo?.NombreComienzo,
-                        Turno = contexto.Turno?.NombreTurno
-                    }
-                }
+                        IdOferta = o.IdOferta,
+                        Comienzo = o.Comienzo?.NombreComienzo,
+                        Turno = o.Turno?.NombreTurno
+                    })
+                    .ToList()
             };
         }
 

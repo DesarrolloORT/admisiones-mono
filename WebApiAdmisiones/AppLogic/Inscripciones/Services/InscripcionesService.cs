@@ -389,7 +389,7 @@ namespace AppLogic.Inscripciones.Services
                         validacionNivel.ErrorCode, methodName, validacionNivel.Message, validacionNivel.HttpCode);
                 }
 
-                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(contexto, persona);
+                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(ofertasSeleccionadas, persona);
                 var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
                 var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(contexto, codigoPersona, xml);
                 var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
@@ -403,7 +403,7 @@ namespace AppLogic.Inscripciones.Services
                 }
 
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                    ConfirmarPreInscripcionRules.MapearResultadoCorporativo(contexto), methodName);
+                    ConfirmarPreInscripcionRules.MapearResultadoCorporativo(ofertasSeleccionadas), methodName);
             }
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
