@@ -42,7 +42,12 @@
 }
 
 .inscription-alert ort-icon {
+  display: none;
   flex: 0 0 auto;
+}
+
+.inscription-alert--info ort-icon {
+  color: var(--ort-sys-alert-title-color-information);
 }
 
 .inscription-alert span {
@@ -71,11 +76,12 @@
 
 .inscription-summary-list__item dt {
   grid-column: 1 / -1;
+  align-items: center;
 }
 
 .inscription-summary-list__item dt ort-icon {
   grid-row: span 2;
-  color: var(--ort-sys-base-icon-color-subtle);
+  color: var(--ort-sys-base-icon-color);
   font-size: 1.5rem;
 }
 
@@ -129,8 +135,9 @@
 .inscription-contact p {
   margin: 0;
   color: var(--ort-sys-list-title-color);
-  font-weight: 600;
-  font-size: var(--ort-sys-body-text-size);
+  font-weight: var(--ort-sys-font-weight-semibold);
+  font-size: var(--ort-sys-font-size-16);
+  font-family: var(--ort-sys-body-font-family);
   line-height: var(--ort-sys-body-line-height);
 }
 
@@ -149,8 +156,8 @@
 ort-card h3 {
   margin: var(--ort-sys-spacing-8) 0 0;
   color: var(--ort-sys-base-text-color-headline);
-  font-size: var(--ort-sys-body-text-size);
-  line-height: var(--ort-sys-body-line-height);
+  font-size: var(--ort-sys-font-size-20);
+  line-height: var(--ort-sys-line-height-30);
 }
 
 .inscription-subject-list {
@@ -164,8 +171,7 @@ ort-card h3 {
   display: flex;
   gap: var(--ort-sys-spacing-8);
   align-items: center;
-  color: var(--ort-sys-base-text-color-headline);
-  font-weight: 600;
+  color: var(--ort-sys-base-text-color-body);
   font-size: var(--ort-sys-body-text-size);
   line-height: var(--ort-sys-body-line-height);
 }
@@ -179,11 +185,25 @@ ort-card h3 {
   color: var(--ort-sys-color-error);
 }
 
-.inscription-santander-header {
-  display: flex;
+.inscription-santander-content {
+  display: grid;
+  grid-template-areas:
+    'title'
+    'body'
+    'button';
   gap: var(--ort-sys-spacing-16);
-  justify-content: space-between;
-  align-items: center;
+}
+
+.inscription-santander-content h3 {
+  grid-area: title;
+}
+
+.inscription-santander-content p {
+  grid-area: body;
+}
+
+.inscription-santander-cta {
+  grid-area: button;
 }
 
 .inscription-services {
@@ -203,6 +223,17 @@ ort-card h3 {
   width: 100%;
 }
 
+#career-subject-list-title {
+  margin-top: var(--ort-sys-spacing-16);
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(-ort-sys-font-size-16);
+  font-family: var(--ort-sys-body-font-family);
+  line-height: var(--ort-sys-line-height-24);
+}
+
+.inscription-santander-content ort-icon {
+  width: 8rem;
+}
 @media (width >= 52.5rem) {
   .inscription-screen--success {
     width: min(100%, 40.875rem);
@@ -216,5 +247,21 @@ ort-card h3 {
 
   .inscription-services__links {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .inscription-services__links a[ort-secondary-button] {
+    width: 100%;
+  }
+
+  .inscription-alert ort-icon {
+    display: block;
+  }
+
+  .inscription-santander-content {
+    grid-template-areas:
+      'title button'
+      'body body';
+    grid-template-columns: 1fr auto;
+    align-items: center;
   }
 }

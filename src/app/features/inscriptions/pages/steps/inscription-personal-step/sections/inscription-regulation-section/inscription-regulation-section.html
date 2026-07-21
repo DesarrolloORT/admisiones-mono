@@ -6,7 +6,7 @@
     reconocimiento y aceptación del Reglamento Estudiantil de Universidad ORT Uruguay.
   </p>
 
-  <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
+  <button ort-tonal-button type="button" (click)="facade.openRegulationReader()">
     Ver reglamento
   </button>
 
@@ -15,7 +15,11 @@
     Te recomendamos leer el Reglamento Estudiantil. En él se detallan los derechos,
     responsabilidades y condiciones que rigen tu vida académica en la universidad.
   </p>
-  <button ort-secondary-button type="button" (click)="facade.openRegulationReader()">
+  <button
+    class="regulation-button"
+    ort-tonal-button
+    type="button"
+    (click)="facade.openRegulationReader()">
     Ver reglamento
   </button>
   <ort-checkbox
@@ -26,7 +30,13 @@
         ? 'regulation-acceptance-error'
         : null
     ">
-    Acepto el reglamento estudiantil.
+    <p>
+      He leído y acepto el
+      <button class="regulation-link" type="button" (click)="facade.openRegulationReader()">
+        reglamento estudiantil
+      </button>
+      de la universidad.
+    </p>
   </ort-checkbox>
   @if (facade.regulationForm.controls.aceptaReglamento.touched &&
   facade.regulationForm.controls.aceptaReglamento.hasError('required')) {

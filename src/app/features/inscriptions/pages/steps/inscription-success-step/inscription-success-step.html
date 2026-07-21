@@ -2,12 +2,10 @@
   aria-labelledby="inscription-success-title"
   class="inscription-screen inscription-screen--success">
   <header aria-live="polite" class="inscription-success-heading">
-    <span aria-hidden="true" class="inscription-success-heading__icon">
-      <ort-icon>check</ort-icon>
-    </span>
+    <ort-status-icon aria-hidden="true" purpose="success" size="xl" type="gradient" />
     <h2 id="inscription-success-title">¡Confirmamos tu inscripción!</h2>
     <p>
-      Podrás consultar esta información en cualquier momento desde “Mis carreras” en el panel
+      Podrás consultar esta información en cualquier momento desde "Mis carreras" en el panel
       principal.
     </p>
   </header>
@@ -23,13 +21,13 @@
   } @if (facade.coordinators().length > 0) {
   <ort-card aria-labelledby="coordinators-title" role="region">
     <ort-card-content>
-      <h3 id="coordinators-title">Coordinadores académicos</h3>
+      <h3 id="coordinators-title">Coordinadores</h3>
       <p>Tus contactos principales durante el desarrollo de tus estudios en ORT serán:</p>
       <div class="inscription-contact-list">
         @for (coordinator of facade.coordinators(); track coordinator.email) {
         <article class="inscription-contact">
           <span aria-hidden="true" class="inscription-contact__avatar">
-            <ort-icon>person</ort-icon>
+            <ort-icon filled>person</ort-icon>
           </span>
           <div>
             <h3>{{ coordinator.role }}</h3>
@@ -87,26 +85,25 @@
   </ort-card>
 
   <ort-card aria-label="Cuenta SOY Santander" role="region">
-    <ort-card-content>
-      <div class="inscription-santander-header">
-        <h3 class="inscription-santander" id="santander-title">
-          Santander
-          <span class="sr-only">Cuenta SOY</span>
-        </h3>
-        <a
-          ort-secondary-button
-          rel="noopener noreferrer"
-          target="_blank"
-          [href]="facade.santanderAccountUrl">
-          Quiero mi cuenta SOY
-        </a>
-      </div>
+    <ort-card-content class="inscription-santander-content">
+      <ort-icon
+        aria-hidden="true"
+        size="xl"
+        type="svg"
+        [svgContent]="getBankSvg('SANTANDER_FULL')" />
+      <span class="sr-only">Santander Cuenta SOY</span>
       <p>
-        Como estudiante de ORT, podés acceder a la
-        <strong>Cuenta SOY</strong>
-        , una cuenta bancaria sin costo de mantenimiento por tres años. Incluye beneficios como
-        tarjeta de crédito y la posibilidad de pagar tus estudios de forma ágil y sencilla.
+        Por convenio entre ORT y Banco Santander, nuestros estudiantes pueden acceder a una cuenta
+        bancaria muy fácilmente.
       </p>
+      <a
+        class="inscription-santander-cta"
+        ort-secondary-button
+        rel="noopener noreferrer"
+        target="_blank"
+        [href]="facade.santanderAccountUrl">
+        Quiero mi cuenta SOY
+      </a>
     </ort-card-content>
   </ort-card>
 

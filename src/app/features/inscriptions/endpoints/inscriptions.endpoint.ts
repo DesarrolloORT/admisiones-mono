@@ -247,7 +247,6 @@ export class InscripcionesEndpoint {
     return this.api
       .request(postInscripcionesPagarEndpoint, {
         body,
-        showLoader: true,
       })
       .pipe(
         map(response => ({

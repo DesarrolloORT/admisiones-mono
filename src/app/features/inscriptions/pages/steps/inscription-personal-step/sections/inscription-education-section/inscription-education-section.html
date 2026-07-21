@@ -213,79 +213,80 @@
     aria-describedby="parents-education-help"
     aria-labelledby="parents-education-title"
     class="inscription-subsection">
-    <h4 id="parents-education-title">Educación de padres o tutores</h4>
-    <p id="parents-education-help">Indicá el nivel de formación máximo alcanzado.</p>
-    <div class="inscription-form__row">
-      <section aria-labelledby="mother-education-title" class="inscription-form__stack">
-        <h5 id="mother-education-title">Madre o tutor</h5>
-        <app-responsive-select
-          aria-label="Nivel máximo alcanzado de madre o tutor"
-          errorText="Seleccioná una opción"
-          formControlName="formacionMadre"
-          label="Nivel máximo alcanzado"
-          [disabled]="facade.options.loadingInitialSurveyCatalogs()"
-          [options]="facade.options.educationLevelOptions()" />
-        @if (facade.shouldAskMotherOrtDegree()) {
-        <ort-radio-group
-          class="inscription-choice-list"
-          formControlName="tituloOrtMadre"
-          legend="¿Obtuvo el título en ORT?"
-          name="mother-ort-degree"
-          [aria-describedby]="
+    <div>
+      <h4 id="parents-education-title">Educación de padres o tutores</h4>
+      <p id="parents-education-help">Indicá el nivel de formación máximo alcanzado.</p>
+    </div>
+
+    <section aria-labelledby="mother-education-title" class="inscription-form__stack">
+      <h5 id="mother-education-title">Madre o tutor</h5>
+      <app-responsive-select
+        aria-label="Nivel máximo alcanzado de madre o tutor"
+        errorText="Seleccioná una opción"
+        formControlName="formacionMadre"
+        label="Nivel máximo alcanzado"
+        [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+        [options]="facade.options.educationLevelOptions()" />
+      @if (facade.shouldAskMotherOrtDegree()) {
+      <ort-radio-group
+        class="inscription-choice-list"
+        formControlName="tituloOrtMadre"
+        legend="¿Obtuvo el título en ORT?"
+        name="mother-ort-degree"
+        [aria-describedby]="
                       facade.educationForm.controls.tituloOrtMadre.touched &&
                       facade.educationForm.controls.tituloOrtMadre.hasError('required')
                         ? 'mother-ort-degree-error'
                         : null
                     "
-          [divider]="true"
-          [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
-          [orientation]="orientation()"
-          [required]="true">
-          <ort-radio-button value="si">Sí</ort-radio-button>
-          <ort-radio-button value="no">No</ort-radio-button>
-        </ort-radio-group>
-        @if (facade.educationForm.controls.tituloOrtMadre.touched &&
-        facade.educationForm.controls.tituloOrtMadre.hasError('required')) {
-        <p class="inscription-field-error" id="mother-ort-degree-error" role="alert">
-          Seleccioná una opción
-        </p>
-        } }
-      </section>
-      <section aria-labelledby="father-education-title" class="inscription-form__stack">
-        <h5 id="father-education-title">Padre o tutor</h5>
-        <app-responsive-select
-          aria-label="Nivel máximo alcanzado de padre o tutor"
-          errorText="Seleccioná una opción"
-          formControlName="formacionPadre"
-          label="Nivel máximo alcanzado"
-          [disabled]="facade.options.loadingInitialSurveyCatalogs()"
-          [options]="facade.options.educationLevelOptions()" />
-        @if (facade.shouldAskFatherOrtDegree()) {
-        <ort-radio-group
-          class="inscription-choice-list"
-          formControlName="tituloOrtPadre"
-          legend="¿Obtuvo el título en ORT?"
-          name="father-ort-degree"
-          [aria-describedby]="
+        [divider]="true"
+        [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+        [orientation]="orientation()"
+        [required]="true">
+        <ort-radio-button value="si">Sí</ort-radio-button>
+        <ort-radio-button value="no">No</ort-radio-button>
+      </ort-radio-group>
+      @if (facade.educationForm.controls.tituloOrtMadre.touched &&
+      facade.educationForm.controls.tituloOrtMadre.hasError('required')) {
+      <p class="inscription-field-error" id="mother-ort-degree-error" role="alert">
+        Seleccioná una opción
+      </p>
+      } }
+    </section>
+    <section aria-labelledby="father-education-title" class="inscription-form__stack">
+      <h5 id="father-education-title">Padre o tutor</h5>
+      <app-responsive-select
+        aria-label="Nivel máximo alcanzado de padre o tutor"
+        errorText="Seleccioná una opción"
+        formControlName="formacionPadre"
+        label="Nivel máximo alcanzado"
+        [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+        [options]="facade.options.educationLevelOptions()" />
+      @if (facade.shouldAskFatherOrtDegree()) {
+      <ort-radio-group
+        class="inscription-choice-list"
+        formControlName="tituloOrtPadre"
+        legend="¿Obtuvo el título en ORT?"
+        name="father-ort-degree"
+        [aria-describedby]="
                       facade.educationForm.controls.tituloOrtPadre.touched &&
                       facade.educationForm.controls.tituloOrtPadre.hasError('required')
                         ? 'father-ort-degree-error'
                         : null
                     "
-          [divider]="true"
-          [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
-          [orientation]="orientation()"
-          [required]="true">
-          <ort-radio-button value="si">Sí</ort-radio-button>
-          <ort-radio-button value="no">No</ort-radio-button>
-        </ort-radio-group>
-        @if (facade.educationForm.controls.tituloOrtPadre.touched &&
-        facade.educationForm.controls.tituloOrtPadre.hasError('required')) {
-        <p class="inscription-field-error" id="father-ort-degree-error" role="alert">
-          Seleccioná una opción
-        </p>
-        } }
-      </section>
-    </div>
+        [divider]="true"
+        [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+        [orientation]="orientation()"
+        [required]="true">
+        <ort-radio-button value="si">Sí</ort-radio-button>
+        <ort-radio-button value="no">No</ort-radio-button>
+      </ort-radio-group>
+      @if (facade.educationForm.controls.tituloOrtPadre.touched &&
+      facade.educationForm.controls.tituloOrtPadre.hasError('required')) {
+      <p class="inscription-field-error" id="father-ort-degree-error" role="alert">
+        Seleccioná una opción
+      </p>
+      } }
+    </section>
   </section>
 </div>

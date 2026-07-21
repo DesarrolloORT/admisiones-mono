@@ -13,6 +13,7 @@ import {
   OrtDialog,
   OrtIconModule,
   OrtSpinnerModule,
+  OrtStatusIconModule,
 } from '@desarrolloort/components';
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
@@ -47,6 +48,7 @@ import { InscripcionSuccessStep } from './steps/inscription-success-step/inscrip
     OrtIconModule,
     OrtSpinnerModule,
     RouterLink,
+    OrtStatusIconModule,
   ],
   providers: [
     AcademicProposalSelection,

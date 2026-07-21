@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtCheckboxModule,
@@ -6,6 +6,7 @@ import {
   OrtFileUploaderModule,
   OrtFormFieldModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { InscripcionSurveyFacade } from '../../../../../facades/inscription-survey';
 
@@ -24,4 +25,11 @@ import { InscripcionSurveyFacade } from '../../../../../facades/inscription-surv
 })
 export class InscripcionIdentitySection {
   protected readonly facade = inject(InscripcionSurveyFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
+  protected readonly fileUploaderDisplay = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+
+    return breakpoint.isXSmall || breakpoint.isSmall ? 'inline' : 'block';
+  });
 }

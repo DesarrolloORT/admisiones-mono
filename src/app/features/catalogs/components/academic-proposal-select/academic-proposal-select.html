@@ -9,13 +9,13 @@
       [formGroup]="form()">
       <ort-radio-group
         formControlName="tipoPropuesta"
-        indicatorPosition="right"
         legend="Propuesta académica"
         name="proposal"
         orientation="vertical"
         [aria-describedby]="proposalTypeErrorId()"
         [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
         [divider]="true"
+        [indicatorPosition]="isMobile() ? 'right' : 'left'"
         [required]="true">
         @for (option of selection().proposalOptions(); track option.value) {
         <ort-radio-card-button

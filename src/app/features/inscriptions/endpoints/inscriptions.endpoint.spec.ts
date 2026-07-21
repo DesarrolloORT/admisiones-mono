@@ -401,7 +401,6 @@ describe('InscripcionesEndpoint', () => {
         tipoPago: 'SISTARBANC',
         idBancoSistarbanc: 'brou',
       },
-      showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
