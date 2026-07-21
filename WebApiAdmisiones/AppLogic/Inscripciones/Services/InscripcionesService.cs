@@ -75,8 +75,8 @@ namespace AppLogic.Inscripciones.Services
             switch (estado)
             {
                 case InscripcionesConstants.EstadoInscripcion.EnProceso:
-                    var oferta = uow.InteresProductoOfertas.GetOfertaSeleccionada(codigoPersona, idProducto, idProceso);
-                    response.Detalle = InscripcionesMapper.MapearOfertaResumen(oferta, idProceso);
+                    var ofertas = uow.InteresProductoOfertas.GetOfertasSeleccionadas(codigoPersona, idProducto, idProceso);
+                    response.Detalle = ofertas.Count > 0 ? InscripcionesMapper.MapearDetalleEnProceso(ofertas) : null;
                     break;
 
                 case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
@@ -351,7 +351,8 @@ namespace AppLogic.Inscripciones.Services
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
                     ofertasCompatibles.ErrorCode, methodName, ofertasCompatibles.Message, ofertasCompatibles.HttpCode);
             }
-            var contexto = ofertasCompatibles.Data!;
+            var ofertasSeleccionadas = ofertasCompatibles.Data!;
+            var contexto = ofertasSeleccionadas[0];
 
             var validacionDocumentos = DocumentoIdentidadPersonaService.ValidarDocumentosIdentidadParaConfirmacion(
                 uow,
@@ -377,7 +378,12 @@ namespace AppLogic.Inscripciones.Services
 
             var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
             var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
-            return InscripcionesMapper.MapearResultadoApiMultiple(apiResult, contexto, methodName);
+
+            // La descripción de oferta solo existe para nivel 3 y 4 (vista de ofertas disponibles); en nivel 1 y 2 el diccionario queda vacío.
+            var descripcionesOferta = uow.VdOfertasDisponibles3y4s.GetOfertasDisponibles(contexto.IdProducto)
+                .GroupBy(o => o.IdOferta)
+                .ToDictionary(g => g.Key, g => g.First().DescripcionOferta);
+            return InscripcionesMapper.MapearResultadoApiMultiple(apiResult, ofertasSeleccionadas, descripcionesOferta, methodName);
         }
 
         /// <summary>
@@ -385,39 +391,38 @@ namespace AppLogic.Inscripciones.Services
         /// (mismo producto y turno, y mismo comienzo para nivel 1 y 2). Devuelve los datos de confirmación
         /// consolidados de la selección, o el primer error encontrado.
         /// </summary>
-        private static OperationResult<DatosConfirmacionOferta> ValidarOfertasCompatibles(
+        private static OperationResult<List<DatosConfirmacionOferta>> ValidarOfertasCompatibles(
             IUnitOfWork uow, long codigoPersona, DtoConfirmarPreInscripcionRequest request, string methodName)
         {
-            DatosConfirmacionOferta? seleccion = null;
+            var seleccionadas = new List<DatosConfirmacionOferta>();
             foreach (var idOfertaSeleccionada in request.IdsOfertasSeleccionadas)
             {
                 var oferta = uow.Ofertas.GetByKeyWithRelated(idOfertaSeleccionada);
                 if (oferta == null)
                 {
-                    return OperationResult<DatosConfirmacionOferta>.IsFailed("INS_CPI_15", methodName, $"No se encontro la oferta seleccionada: {idOfertaSeleccionada}.", 404);
+                    return OperationResult<List<DatosConfirmacionOferta>>.IsFailed("INS_CPI_15", methodName, $"No se encontro la oferta seleccionada: {idOfertaSeleccionada}.", 404);
                 }
 
                 var datosOferta = ConfirmarPreInscripcionRules.ObtenerDatosConfirmacionOferta(uow, codigoPersona, oferta, methodName);
                 if (!datosOferta.Success)
                 {
-                    return datosOferta;
+                    return OperationResult<List<DatosConfirmacionOferta>>.IsFailed(
+                        datosOferta.ErrorCode, methodName, datosOferta.Message, datosOferta.HttpCode);
                 }
 
-                if (seleccion == null)
+                if (seleccionadas.Count > 0 && !EsOfertaCompatibleConSeleccion(seleccionadas[0], datosOferta.Data!))
                 {
-                    seleccion = datosOferta.Data!;
-                }
-                else if (!EsOfertaCompatibleConSeleccion(seleccion, datosOferta.Data!))
-                {
-                    return OperationResult<DatosConfirmacionOferta>.IsFailed(
+                    return OperationResult<List<DatosConfirmacionOferta>>.IsFailed(
                         "INS_CPI_17",
                         methodName,
                         "Todas las ofertas seleccionadas deben pertenecer al mismo producto y turno (y al mismo comienzo para nivel 1 y 2).",
                         400);
                 }
+
+                seleccionadas.Add(datosOferta.Data!);
             }
 
-            return OperationResult<DatosConfirmacionOferta>.Ok(seleccion!, methodName);
+            return OperationResult<List<DatosConfirmacionOferta>>.Ok(seleccionadas, methodName);
         }
 
         private static bool EsOfertaCompatibleConSeleccion(DatosConfirmacionOferta seleccion, DatosConfirmacionOferta oferta)

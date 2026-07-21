@@ -27,16 +27,16 @@ namespace UnitTesting.Controllers
             var responseDto = new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
-                Ofertas =
+                Resumen = new DtoCabeceraInscripcion { FechaVencimientoPago = new DateTime(2026, 6, 30) },
+                Inscripciones =
                 [
-                    new DtoResultadoInscripcionOferta
+                    new DtoInscripcionOferta
                     {
                         IdOferta = 10,
-                        IdInscripcion = 100,
-                        FechaVencimientoPago = new DateTime(2026, 6, 30),
-                        PagoReserva = 1500
+                        IdInscripcion = 100
                     }
-                ]
+                ],
+                PagoReserva = 1500
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
@@ -63,10 +63,11 @@ namespace UnitTesting.Controllers
             var responseDto = new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
-                Ofertas =
+                Inscripciones =
                 [
-                    new DtoResultadoInscripcionOferta { IdOferta = 10, IdInscripcion = 100, PagoReserva = 1500 }
-                ]
+                    new DtoInscripcionOferta { IdOferta = 10, IdInscripcion = 100 }
+                ],
+                PagoReserva = 1500
             };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);

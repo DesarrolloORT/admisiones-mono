@@ -50,6 +50,11 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(r => r.GetByPersona(It.IsAny<long>()))
                 .Returns((EncuestaIni)null);
             _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
+            var ofertasDisponibles3y4Repo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            ofertasDisponibles3y4Repo
+                .Setup(r => r.GetOfertasDisponibles(It.IsAny<long>()))
+                .Returns(new List<VdOfertasDisponibles3y4>());
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(ofertasDisponibles3y4Repo.Object);
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
                     It.IsAny<IUnitOfWork>(),
@@ -368,11 +373,12 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
-            Assert.Equal(2500, result.Data.Ofertas[0].PagoReserva);
+            Assert.Equal(77, result.Data.Inscripciones[0].IdInscripcion);
+            Assert.Equal(10, result.Data.Inscripciones[0].IdOferta);
             Assert.Equal(2500, result.Data.PagoReserva);
-            Assert.Equal(10, result.Data.Resumen.IdOferta);
+            Assert.Equal(20, result.Data.Resumen.IdProducto);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
+            Assert.Equal(new DateTime(2026, 7, 1), result.Data.Resumen.FechaVencimientoPago);
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
             Assert.NotNull(aceptacionAgregada);
@@ -433,7 +439,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(78, result.Data.Ofertas[0].IdInscripcion);
+            Assert.Equal(78, result.Data.Inscripciones[0].IdInscripcion);
             Assert.NotNull(result.Data.EstadoCuenta);
             Assert.Equal(3210.50m, result.Data.EstadoCuenta!.SaldoActual);
         }
@@ -482,7 +488,7 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(79, result.Data.Ofertas[0].IdInscripcion);
+            Assert.Equal(79, result.Data.Inscripciones[0].IdInscripcion);
             Assert.Null(result.Data.EstadoCuenta);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("ConfirmarPreInscripcionMultiple", request.RequestUri);
@@ -542,9 +548,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
             Assert.Equal(20, result.Data.Resumen.IdProducto);
-            Assert.Equal(40, result.Data.Resumen.IdComienzo);
             Assert.Equal("Analista en TI", result.Data.Resumen.Carrera);
-            Assert.Equal("Marzo 2026", result.Data.Resumen.Comienzo);
             Assert.NotNull(aceptacionAgregada);
             Assert.Equal(20, aceptacionAgregada!.IdProducto);
             Assert.Equal(40, aceptacionAgregada.IdComienzo);
@@ -682,13 +686,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.Confirmada);
             Assert.False(result.Data.EnEspera);
             Assert.Equal("Analista Programador", result.Data.Resumen.Carrera);
-            Assert.Equal(2, result.Data.Ofertas.Count);
-            Assert.Equal(10, result.Data.Ofertas[0].IdOferta);
-            Assert.Equal(77, result.Data.Ofertas[0].IdInscripcion);
-            Assert.Equal(250, result.Data.Ofertas[0].PagoReserva);
-            Assert.Equal(11, result.Data.Ofertas[1].IdOferta);
-            Assert.Equal(78, result.Data.Ofertas[1].IdInscripcion);
-            Assert.Equal(200, result.Data.Ofertas[1].PagoReserva);
+            Assert.Equal(2, result.Data.Inscripciones.Count);
+            Assert.Equal(10, result.Data.Inscripciones[0].IdOferta);
+            Assert.Equal(77, result.Data.Inscripciones[0].IdInscripcion);
+            Assert.Equal(11, result.Data.Inscripciones[1].IdOferta);
+            Assert.Equal(78, result.Data.Inscripciones[1].IdInscripcion);
             Assert.Equal(450, result.Data.PagoReserva);
             var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("ConfirmarPreInscripcionMultiple", requestApi.RequestUri);
@@ -725,8 +727,8 @@ namespace UnitTesting.AppLogic.Services
             SetupDocumentosValidos(123);
 
             var ofertaRepo = new Mock<IOfertaRepository>();
-            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, idNivelProducto: 3));
-            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 41, 1, idNivelProducto: 3));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, idNivelProducto: 3, nombreComienzo: "Marzo 2026"));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 41, 1, idNivelProducto: 3, nombreComienzo: "Agosto 2026"));
             _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
 
             var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
@@ -752,7 +754,10 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(2, result.Data.Ofertas.Count);
+            Assert.Equal(2, result.Data.Inscripciones.Count);
+            // El comienzo es por oferta: en nivel 3 y 4 cada oferta conserva el suyo.
+            Assert.Equal("Marzo 2026", result.Data.Inscripciones[0].Comienzo);
+            Assert.Equal("Agosto 2026", result.Data.Inscripciones[1].Comienzo);
         }
 
         [Fact]
@@ -896,8 +901,8 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmada);
-            Assert.Equal(88, result.Data.Ofertas[0].IdInscripcion);
-            Assert.Equal(10, result.Data.Resumen.IdOferta);
+            Assert.Equal(88, result.Data.Inscripciones[0].IdInscripcion);
+            Assert.Equal(10, result.Data.Inscripciones[0].IdOferta);
             var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
         }
@@ -2485,25 +2490,17 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertaSeleccionada()
+        public async Task ObtenerDetalleInscripcion_WhenEnProceso_ReturnsOfertasSeleccionadas()
         {
             SetupFresco(global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.EnProceso);
-            var oferta = new Oferta
+            // Nivel 3 y 4: el interés puede abarcar varias ofertas con distinto comienzo.
+            var ofertas = new List<Oferta>
             {
-                IdOferta = 99,
-                IdTurno = 5,
-                Turno = new Turno { IdTurno = 5, NombreTurno = "Matutino" },
-                Supraoferta = new Supraoferta
-                {
-                    Comienzo = new Comienzo { IdComienzo = 7, NombreComienzo = "Marzo 2026" },
-                    Paquete = new Paquete
-                    {
-                        Producto = new Producto { IdProducto = 10, NombreWebProducto = "Licenciatura en DiseÃ±o GrÃ¡fico" }
-                    }
-                }
+                OfertaValida(99, 10, 7, 5, nombre: "AP", nombreExtenso: "Analista Programador", nombreComienzo: "Marzo 2026"),
+                OfertaValida(100, 10, 8, 5, nombre: "AP", nombreExtenso: "Analista Programador", nombreComienzo: "Agosto 2026")
             };
             var interesRepo = new Mock<IInteresProductoOfertaRepository>();
-            interesRepo.Setup(r => r.GetOfertaSeleccionada(123, 10, 20)).Returns(oferta);
+            interesRepo.Setup(r => r.GetOfertasSeleccionadas(123, 10, 20)).Returns(ofertas);
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesRepo.Object);
 
             var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
@@ -2511,11 +2508,16 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("En proceso", result.Data!.Estado);
             Assert.NotNull(result.Data.Detalle);
-            Assert.Equal(99, result.Data.Detalle!.IdOferta);
-            Assert.Equal(10, result.Data.Detalle!.IdProducto);
-            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Detalle.Carrera);
-            Assert.Equal("Marzo 2026", result.Data.Detalle.Comienzo);
-            Assert.Equal("Matutino", result.Data.Detalle.Turno);
+            Assert.Equal(10, result.Data.Detalle!.Resumen.IdProducto);
+            Assert.Equal("Analista Programador", result.Data.Detalle.Resumen.Carrera);
+            Assert.Null(result.Data.Detalle.Resumen.FechaVencimientoPago);
+            Assert.Equal(2, result.Data.Detalle.Intereses.Count);
+            Assert.Equal(99, result.Data.Detalle.Intereses[0].IdOferta);
+            Assert.Equal("Marzo 2026", result.Data.Detalle.Intereses[0].Comienzo);
+            Assert.Equal("Nocturno", result.Data.Detalle.Intereses[0].Turno);
+            Assert.Null(result.Data.Detalle.Intereses[0].IdInscripcion);
+            Assert.Equal(100, result.Data.Detalle.Intereses[1].IdOferta);
+            Assert.Equal("Agosto 2026", result.Data.Detalle.Intereses[1].Comienzo);
         }
 
         [Fact]
@@ -2577,11 +2579,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Pago pendiente", result.Data!.Estado);
             Assert.NotNull(result.Data.PagoPendiente);
             Assert.True(result.Data.PagoPendiente!.Confirmada);
-            Assert.Equal(555, result.Data.PagoPendiente!.Ofertas[0].IdInscripcion);
-            Assert.Equal(1500.50m, result.Data.PagoPendiente.Ofertas[0].PagoReserva);
+            Assert.Equal(555, result.Data.PagoPendiente!.Inscripciones[0].IdInscripcion);
+            Assert.Equal(99, result.Data.PagoPendiente.Inscripciones[0].IdOferta);
             Assert.Equal(1500.50m, result.Data.PagoPendiente.PagoReserva);
             Assert.Equal(3210.50m, result.Data.PagoPendiente.EstadoCuenta!.SaldoActual);
-            Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.Ofertas[0].FechaVencimientoPago);
+            Assert.Equal(new DateTime(2026, 7, 1), result.Data.PagoPendiente.Resumen.FechaVencimientoPago);
             Assert.Equal("Analista programador", result.Data.PagoPendiente.Resumen.Carrera);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos?idInscripcion=555", request.RequestUri);

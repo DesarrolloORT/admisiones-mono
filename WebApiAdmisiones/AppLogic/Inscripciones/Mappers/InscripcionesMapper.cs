@@ -18,19 +18,25 @@ namespace AppLogic.Inscripciones.Mappers
         public static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
         {
             var pagoReserva = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos?.Carritos);
+            var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
             return new DtoConfirmarPreInscripcionResponse
             {
                 Confirmada = true,
                 EstadoCuenta = MapearEstadoCuenta(carritos?.EstadoCuenta),
-                Resumen = MapearResumenDesdeInscripto(inscripto),
-                Ofertas =
+                Resumen = new DtoCabeceraInscripcion
+                {
+                    IdProducto = producto?.IdProducto ?? 0,
+                    Carrera = NombreCarrera(producto),
+                    FechaVencimientoPago = inscripto.FechaVtoInscr
+                },
+                Inscripciones =
                 [
-                    new DtoResultadoInscripcionOferta
+                    new DtoInscripcionOferta
                     {
-                        IdOferta = inscripto.IdOferta ?? 0,
                         IdInscripcion = inscripto.IdInscripto,
-                        FechaVencimientoPago = inscripto.FechaVtoInscr,
-                        PagoReserva = pagoReserva
+                        IdOferta = inscripto.IdOferta ?? 0,
+                        Comienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
+                        Turno = inscripto.Oferta?.Turno?.NombreTurno
                     }
                 ],
                 PagoReserva = pagoReserva
@@ -66,7 +72,8 @@ namespace AppLogic.Inscripciones.Mappers
 
         public static OperationResult<DtoConfirmarPreInscripcionResponse> MapearResultadoApiMultiple(
             OperationResult<ConfirmarPreInscripcionMultipleApiResponse> apiResult,
-            DatosConfirmacionOferta contexto,
+            List<DatosConfirmacionOferta> ofertasContexto,
+            Dictionary<long, string?> descripciones,
             string methodName)
         {
             if (!apiResult.Success)
@@ -80,8 +87,30 @@ namespace AppLogic.Inscripciones.Mappers
             }
 
             return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                MapearConfirmacionPreInscripcionMultiple(apiResult.Data, contexto),
+                MapearConfirmacionPreInscripcionMultiple(apiResult.Data, ofertasContexto, descripciones),
                 methodName);
+        }
+
+        /// <summary>Detalle del estado "En proceso": cabecera compartida + una entrada por cada oferta con interés (nivel 3 y 4 puede traer varias).</summary>
+        public static DtoDetalleEnProceso MapearDetalleEnProceso(ICollection<Oferta> ofertas)
+        {
+            var producto = ofertas.FirstOrDefault()?.Supraoferta?.Paquete?.Producto;
+            return new DtoDetalleEnProceso
+            {
+                Resumen = new DtoCabeceraInscripcion
+                {
+                    IdProducto = producto?.IdProducto ?? 0,
+                    Carrera = NombreCarrera(producto)
+                },
+                Intereses = ofertas
+                    .Select(o => new DtoInscripcionOferta
+                    {
+                        IdOferta = o.IdOferta,
+                        Comienzo = o.Supraoferta?.Comienzo?.NombreComienzo,
+                        Turno = o.Turno?.NombreTurno
+                    })
+                    .ToList()
+            };
         }
 
         public static DtoResumenInscripcion MapearResumenDesdeInscripto(Inscripto inscripto)
@@ -100,38 +129,31 @@ namespace AppLogic.Inscripciones.Mappers
             };
         }
 
-        public static DtoResumenInscripcion? MapearOfertaResumen(Oferta? oferta, long idProceso)
-        {
-            if (oferta == null)
-            {
-                return null;
-            }
-
-            var producto = oferta.Supraoferta?.Paquete?.Producto;
-            var comienzo = oferta.Supraoferta?.Comienzo;
-            return new DtoResumenInscripcion
-            {
-                IdOferta = oferta.IdOferta,
-                IdProducto = producto?.IdProducto ?? 0,
-                Carrera = NombreCarrera(producto),
-                IdComienzo = idProceso,
-                Comienzo = comienzo?.NombreComienzo,
-                IdTurno = oferta.IdTurno,
-                Turno = oferta.Turno?.NombreTurno
-            };
-        }
-
         private static DtoConfirmarPreInscripcionResponse MapearConfirmacionPreInscripcionMultiple(
             ConfirmarPreInscripcionMultipleApiResponse source,
-            DatosConfirmacionOferta contexto)
+            List<DatosConfirmacionOferta> ofertasContexto,
+            Dictionary<long, string?> descripciones)
         {
-            var ofertas = source.Ofertas
-                .Select(o => new DtoResultadoInscripcionOferta
+            // comienzo y turno son por oferta (en nivel 3 y 4 el comienzo puede diferir): se toman de los
+            // datos cargados de cada oferta, no del resumen consolidado de la API.
+            var datosPorOferta = ofertasContexto
+                .GroupBy(o => o.IdOferta)
+                .ToDictionary(g => g.Key, g => g.First());
+            var cabecera = ofertasContexto.First();
+
+            var inscripciones = source.Ofertas
+                .Select(o =>
                 {
-                    IdOferta = o.IdOferta,
-                    IdInscripcion = o.IdInscripcion,
-                    FechaVencimientoPago = o.FechaVencimientoPago,
-                    PagoReserva = (decimal)o.ValorSeniaMinima
+                    datosPorOferta.TryGetValue(o.IdOferta, out var datos);
+                    descripciones.TryGetValue(o.IdOferta, out var descripcion);
+                    return new DtoInscripcionOferta
+                    {
+                        IdInscripcion = o.IdInscripcion,
+                        IdOferta = o.IdOferta,
+                        Comienzo = datos?.Comienzo?.NombreComienzo,
+                        Turno = datos?.Turno?.NombreTurno,
+                        DescripcionOferta = descripcion
+                    };
                 })
                 .ToList();
 
@@ -140,25 +162,17 @@ namespace AppLogic.Inscripciones.Mappers
                 Confirmada = source.Confirmada || source.Respuesta,
                 EnEspera = source.InscripcionPendiente,
                 EstadoCuenta = MapearEstadoCuenta(source.EstadoCuenta),
-                Resumen = MapearResumen(source.Resumen, contexto),
-                Ofertas = ofertas,
+                Resumen = new DtoCabeceraInscripcion
+                {
+                    IdProducto = source.Resumen != null && source.Resumen.IdProducto > 0 ? source.Resumen.IdProducto : cabecera.IdProducto,
+                    Carrera = source.Resumen?.Carrera ?? NombreCarrera(cabecera.Producto),
+                    // El vencimiento es el mismo para todas las ofertas: se toma el de la primera.
+                    FechaVencimientoPago = source.Ofertas.FirstOrDefault()?.FechaVencimientoPago
+                },
+                Inscripciones = inscripciones,
                 // El alumno paga todas las ofertas confirmadas de una sola vez, no elige: el front recibe
                 // directamente el total (para nivel 1 y 2, con una sola oferta, coincide con esa unica seña).
-                PagoReserva = ofertas.Sum(o => o.PagoReserva)
-            };
-        }
-
-        private static DtoResumenInscripcion MapearResumen(ResumenInscripcionApiDto? source, DatosConfirmacionOferta contexto)
-        {
-            return new DtoResumenInscripcion
-            {
-                IdOferta = source != null && source.IdOferta > 0 ? source.IdOferta : contexto.IdOferta,
-                IdProducto = source?.IdProducto ?? contexto.IdProducto,
-                Carrera = source?.Carrera ?? contexto.Producto?.NombreExtensoProducto ?? contexto.Producto?.NombreProducto,
-                IdComienzo = source?.IdComienzo ?? contexto.IdComienzo,
-                Comienzo = source?.Comienzo ?? contexto.Comienzo?.NombreComienzo,
-                IdTurno = source?.IdTurno ?? contexto.IdTurno,
-                Turno = source?.Turno ?? contexto.Turno?.NombreTurno
+                PagoReserva = source.Ofertas.Sum(o => (decimal)o.ValorSeniaMinima)
             };
         }
 
