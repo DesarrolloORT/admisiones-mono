@@ -46,7 +46,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         estado: 'Confirmada',
         confirmada: {
-          numeroEstudiante: 397654,
+          codigoPersona: 397654,
           resumen: { idProducto: 20, carrera: 'Sistemas' },
           coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
           materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Programación' }, {}],
@@ -90,7 +90,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         estado: 'Confirmada',
         confirmada: {
-          numeroEstudiante: 397654,
+          codigoPersona: 397654,
           coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
           coordinadorCursos: { nombre: 'Beto Cursos', email: 'beto@example.com' },
         },
@@ -111,11 +111,11 @@ describe('InscripcionesEndpoint', () => {
     apiMock.request.mockReturnValueOnce(
       of({
         estado: 'Pago pendiente',
-        seniaMinima: {
-          metodoPago: 'ABITAB',
+        reservaMinima: {
+          tipoPago: 'ABITAB',
           cedula: '12345678',
           codigoPersona: 555,
-          senia: 3339,
+          pagoReserva: 3339,
         },
       })
     );
@@ -139,9 +139,8 @@ describe('InscripcionesEndpoint', () => {
       of({
         estado: 'Pago pendiente',
         pagoPendiente: {
-          idInscripcion: 1072704,
-          fechaVencimientoPago: '2026-06-26T16:29:20',
-          senia: 3339,
+          ofertas: [{ idInscripcion: 1072704, fechaVencimientoPago: '2026-06-26T16:29:20' }],
+          pagoReserva: 3339,
           estadoCuenta: { saldoActual: 70000 },
           resumen: { carrera: 'Arquitectura' },
         },
@@ -344,7 +343,7 @@ describe('InscripcionesEndpoint', () => {
         enEspera: true,
         idInscripcion: null,
         fechaVencimientoPago: null,
-        senia: 0,
+        pagoReserva: 0,
         estadoCuenta: { saldoActual: 70000 },
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
       })
@@ -361,7 +360,7 @@ describe('InscripcionesEndpoint', () => {
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {
-      body: { aceptoReglamento: true, idOfertaSeleccionada: 300 },
+      body: { aceptoReglamento: true, idsOfertasSeleccionadas: [300] },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -413,7 +412,7 @@ describe('InscripcionesEndpoint', () => {
         parametrosEncriptados: null,
         mensajes: [],
         confirmada: {
-          numeroEstudiante: 34692671,
+          codigoPersona: 34692671,
           resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
           coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
           coordinadorCursos: null,
@@ -493,9 +492,8 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.registerProductInterest(payload))).resolves.toBe(true);
 
-    // Contrato transicional: el backend recibe una sola oferta hasta soportar array.
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesInteresProductoEndpoint, {
-      body: { idOferta: 300, idProcesoSeleccionado: 200, idProducto: 20 },
+      body: { idsOferta: [300], idProcesoSeleccionado: 200, idProducto: 20 },
       showLoader: true,
     });
   });

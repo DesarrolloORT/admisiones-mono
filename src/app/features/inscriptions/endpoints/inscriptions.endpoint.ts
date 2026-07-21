@@ -62,19 +62,20 @@ export class InscripcionesEndpoint {
           detalle: this.toSummary(response.detalle),
           pagoPendiente: response.pagoPendiente
             ? {
-                idInscripcion: response.pagoPendiente.idInscripcion ?? null,
-                senia: response.pagoPendiente.senia ?? null,
+                idInscripcion: response.pagoPendiente.ofertas?.[0]?.idInscripcion ?? null,
+                senia: response.pagoPendiente.pagoReserva ?? null,
                 saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
-                fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
+                fechaVencimientoPago:
+                  response.pagoPendiente.ofertas?.[0]?.fechaVencimientoPago ?? null,
                 resumen: this.toSummary(response.pagoPendiente.resumen),
               }
             : null,
-          seniaMinima: response.seniaMinima
+          seniaMinima: response.reservaMinima
             ? {
-                metodoPago: response.seniaMinima.metodoPago ?? null,
-                cedula: response.seniaMinima.cedula ?? null,
-                codigoPersona: response.seniaMinima.codigoPersona ?? null,
-                senia: response.seniaMinima.senia ?? null,
+                metodoPago: response.reservaMinima.tipoPago ?? null,
+                cedula: response.reservaMinima.cedula ?? null,
+                codigoPersona: response.reservaMinima.codigoPersona ?? null,
+                senia: response.reservaMinima.pagoReserva ?? null,
               }
             : null,
           confirmada: this.toConfirmedDetail(response.confirmada),
@@ -216,9 +217,7 @@ export class InscripcionesEndpoint {
       .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
         body: {
           aceptoReglamento: payload.aceptoReglamento,
-          // TODO(backend): ConfirmarPreInscripcion aceptará un array de ofertas
-          // para Actualización profesional; hasta ese contrato se envía la primera.
-          idOfertaSeleccionada: payload.idOfertasSeleccionadas[0],
+          idsOfertasSeleccionadas: payload.idOfertasSeleccionadas,
         },
         showLoader: true,
       })
@@ -226,9 +225,9 @@ export class InscripcionesEndpoint {
         map(response => ({
           confirmada: response.confirmada === true,
           enEspera: 'enEspera' in response && response.enEspera === true,
-          idInscripcion: response.idInscripcion ?? null,
-          fechaVencimientoPago: response.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.senia ?? null,
+          idInscripcion: response.ofertas?.[0]?.idInscripcion ?? null,
+          fechaVencimientoPago: response.ofertas?.[0]?.fechaVencimientoPago ?? null,
+          seniaInscripcion: response.pagoReserva ?? null,
           saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
           resumen: response.resumen
             ? {
@@ -271,9 +270,7 @@ export class InscripcionesEndpoint {
     return this.api
       .request(postInscripcionesInteresProductoEndpoint, {
         body: {
-          // TODO(backend): InteresProducto aceptará un array de ofertas para
-          // Actualización profesional; hasta ese contrato se envía la primera.
-          idOferta: payload.idOfertas[0],
+          idsOferta: payload.idOfertas,
           idProcesoSeleccionado: payload.idProcesoSeleccionado,
           idProducto: payload.idProducto,
         },
@@ -357,7 +354,7 @@ export class InscripcionesEndpoint {
   ): InscripcionConfirmedDetail | null {
     return confirmada
       ? {
-          numeroEstudiante: confirmada.numeroEstudiante ?? null,
+          numeroEstudiante: confirmada.codigoPersona ?? null,
           resumen: this.toSummary(confirmada.resumen),
           coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
           coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),

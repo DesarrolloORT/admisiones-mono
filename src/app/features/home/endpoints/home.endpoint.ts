@@ -29,9 +29,9 @@ export class HomeEndpoint {
     return this.api.request(getPersonaBecasEndpoint).pipe(map(data => this.toMisBecas(data)));
   }
 
-  public reactivarInscripcion(idInscripto: number): Observable<boolean> {
+  public reactivarInscripcion(idInscripcion: number): Observable<boolean> {
     return this.api
-      .request(postInscripcionesReactivarEndpoint, { body: { idInscripto }, showLoader: true })
+      .request(postInscripcionesReactivarEndpoint, { body: { idInscripcion }, showLoader: true })
       .pipe(
         tap(() => this.api.clearCache()),
         map(() => true)
