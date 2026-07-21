@@ -15,6 +15,7 @@ import {
   OrtSpinnerModule,
   OrtStatusIconModule,
 } from '@desarrolloort/components';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
@@ -66,6 +67,7 @@ import { InscripcionSuccessStep } from './steps/inscription-success-step/inscrip
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Layout {
+  private readonly authSession = inject(AuthSessionService);
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
   protected readonly process = inject(InscripcionProcessFacade);
@@ -82,6 +84,10 @@ export class Layout {
 
       afterNextRender(() => this.focusCurrentScreen(), { injector: this.injector });
     });
+  }
+
+  protected logout(): void {
+    this.authSession.logout();
   }
 
   private focusCurrentScreen(): void {

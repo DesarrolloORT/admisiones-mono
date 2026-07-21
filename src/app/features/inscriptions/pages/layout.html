@@ -10,7 +10,8 @@
   [stepperSubtitle]="process.stepLabel()"
   [steps]="process.stepItems()"
   (back)="process.back()"
-  (closeFlow)="process.requestExit()">
+  (closeFlow)="process.requestExit()"
+  (logoutRequested)="logout()">
   @if (survey.loadingSurveyState()) {
   <section
     aria-labelledby="loading-survey-title"
