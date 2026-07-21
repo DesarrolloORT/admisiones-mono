@@ -20,7 +20,7 @@ namespace DataAccess.DevartRepositories
                     && p.HabilitadoInteresSitio == "SI"
                     && p.ProcesoProductos.Any(pp =>
                         pp.IdProducto == idProducto
-                        && (pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2)
+                        && (pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2 || pp.Producto.IdNivelProducto == 3 || pp.Producto.IdNivelProducto == 4)
                         && pp.Producto.VisibleAdmisionesProducto == "SI"
                         && pp.Producto.InscribibleProducto == "SI"
                         && pp.Producto.PermiteInteresadoProducto == "SI"
@@ -46,7 +46,7 @@ namespace DataAccess.DevartRepositories
                     p.HabilitadoInteresSitio == "SI"
                     && p.ProcesoProductos.Any(pp =>
                         pp.IdProducto == idProducto
-                        && (pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2)
+                        && (pp.Producto.IdNivelProducto == 1 || pp.Producto.IdNivelProducto == 2 || pp.Producto.IdNivelProducto == 3 || pp.Producto.IdNivelProducto == 4)
                         && pp.Producto.VisibleAdmisionesProducto == "SI"
                         && pp.Producto.InscribibleProducto == "SI"
                         && pp.Producto.PermiteInteresadoProducto == "SI"

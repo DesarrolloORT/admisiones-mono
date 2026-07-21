@@ -29,38 +29,37 @@ namespace AppLogic.ApiClients.Services
         #region Inscripciones
 
         /// <summary>
-        /// Confirma una preinscripción en la API de Inscripciones y Pagos.
-        /// Corresponde a: POST /ConfirmarPreInscripcion
+        /// Confirma una preinscripción (una o varias ofertas a la vez) en la API de Inscripciones y Pagos.
+        /// Corresponde a: POST /ConfirmarPreInscripcionMultiple
         /// </summary>
-        /// <param name="request">Datos de la preinscripción a confirmar</param>
-        /// <returns>Resultado de la confirmación</returns>
-        public async Task<OperationResult<ConfirmarPreInscripcionApiResponse>> ConfirmarPreInscripcionAsync(
-            ConfirmarPreInscripcionApiRequest request)
+        public async Task<OperationResult<ConfirmarPreInscripcionMultipleApiResponse>> ConfirmarPreInscripcionMultipleAsync(
+            ConfirmarPreInscripcionMultipleApiRequest request)
         {
-            return await SendAsync<ConfirmarPreInscripcionApiResponse>(
+            return await SendAsync<ConfirmarPreInscripcionMultipleApiResponse>(
                 () =>
                 {
                     if (_logger.IsEnabled(LogLevel.Information))
                     {
                         _logger.LogInformation(
-                        "Confirmando preinscripción - Producto: {IdProducto}, Proceso: {IdProceso}, Oferta: {IdOferta}",
+                        "Confirmando preinscripción múltiple - Producto: {IdProducto}, Proceso: {IdProceso}, Ofertas: {IdsOfertas}",
                         request.IdProducto,
                         request.IdProceso,
-                        request.IdOfertaSeleccionada
+                        string.Join(",", request.IdsOfertasSeleccionadas)
                         );
                     }
 
-                    var url = "ORTSecure/Inscripciones/ConfirmarPreInscripcion"
+                    var idsQuery = string.Join("&", request.IdsOfertasSeleccionadas.Select(id => $"idsOfertasSeleccionadas={id}"));
+                    var url = "ORTSecure/Inscripciones/ConfirmarPreInscripcionMultiple"
                         + $"?tipoInscripcion={Uri.EscapeDataString(request.TipoInscripcion)}"
                         + $"&idProducto={request.IdProducto}"
                         + $"&idProceso={request.IdProceso}"
-                        + $"&idOfertaSeleccionada={request.IdOfertaSeleccionada}";
+                        + (idsQuery.Length > 0 ? "&" + idsQuery : "");
 
                     return _httpClient.PostAsJsonAsync(url, request.Turno);
                 },
-                "CONFIRMAR_PREINSCRIPCION_01",
-                nameof(ConfirmarPreInscripcionAsync),
-                "La API rechazó la confirmación");
+                "CONFIRMAR_PREINSCRIPCION_MULTIPLE_01",
+                nameof(ConfirmarPreInscripcionMultipleAsync),
+                "La API rechazó la confirmación múltiple");
         }
 
         /// <summary>

@@ -13,11 +13,11 @@ namespace AppLogic.ApiClients.Interfaces
     public interface IInscripcionesyPagosApiClient
     {
         /// <summary>
-        /// Confirma una preinscripción en la API de Inscripciones y Pagos.
-        /// Corresponde a: POST /ConfirmarPreInscripcion
+        /// Confirma una preinscripción (una o varias ofertas a la vez) en la API de Inscripciones y Pagos.
+        /// Corresponde a: POST /ConfirmarPreInscripcionMultiple
         /// </summary>
-        Task<OperationResult<ConfirmarPreInscripcionApiResponse>> ConfirmarPreInscripcionAsync(
-            ConfirmarPreInscripcionApiRequest request);
+        Task<OperationResult<ConfirmarPreInscripcionMultipleApiResponse>> ConfirmarPreInscripcionMultipleAsync(
+            ConfirmarPreInscripcionMultipleApiRequest request);
 
         /// <summary>
         /// Obtiene la seña mínima a pagar de una inscripción existente (read-only).
