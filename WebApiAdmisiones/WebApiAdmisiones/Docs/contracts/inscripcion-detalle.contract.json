@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "description": "Contrato de respuesta de las pantallas de inscripción: confirmar preinscripción, reactivar y detalle de 'Mis carreras'. Documenta la forma del JSON que recibe el front para que sepa qué renderizar en cada estado.",
+  "conventions": {
+    "propertyNaming": "camelCase",
+    "nullHandling": "Los campos marcados omitEmpty NO aparecen en el JSON cuando su valor es null (System.Text.Json JsonIgnoreCondition.WhenWritingNull). El front debe tratarlos como opcionales.",
+    "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio está en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla."
+  },
+  "envelope": {
+    "dto": "OperationResult<T>",
+    "fields": {
+      "success": { "type": "boolean", "desc": "true si la operación fue OK." },
+      "httpCode": { "type": "integer", "desc": "Código HTTP (200/400/404/409/502)." },
+      "errorCode": { "type": "string", "desc": "Código de negocio cuando success=false (ej. INS_CPI_17). Vacío si OK." },
+      "method": { "type": "string", "desc": "Nombre del método backend que respondió." },
+      "message": { "type": "string", "desc": "Mensaje de error legible cuando success=false." },
+      "data": { "type": "object|null", "desc": "Payload; null en error." }
+    }
+  },
+  "types": {
+    "DtoCabeceraInscripcion": {
+      "desc": "Cabecera común a todas las ofertas de la selección. Producto y turno son iguales para todas; el comienzo puede diferir en nivel 3 y 4, por eso el comienzo va por oferta, no acá.",
+      "fields": {
+        "idProducto": { "type": "long", "desc": "Id del producto/carrera." },
+        "carrera": { "type": "string|null", "desc": "Nombre de la carrera (web, extenso o corto, el primero disponible)." },
+        "fechaVencimientoPago": { "type": "datetime", "omitEmpty": true, "desc": "Fecha límite de pago de la reserva, igual para todas las ofertas. Ausente mientras no hay confirmación (estado 'En proceso')." }
+      }
+    },
+    "DtoInscripcionOferta": {
+      "desc": "Una entrada por oferta. Los campos presentes dependen del estado (ver endpoints).",
+      "fields": {
+        "idInscripcion": { "type": "long", "omitEmpty": true, "desc": "Id de la inscripción generada. Ausente en 'En proceso' (todavía no hay inscripción)." },
+        "idOferta": { "type": "long", "desc": "Id de la oferta." },
+        "comienzo": { "type": "string|null", "desc": "Nombre del comienzo de esta oferta (puede variar entre ofertas en nivel 3 y 4)." },
+        "turno": { "type": "string|null", "desc": "Nombre del turno de esta oferta (igual para todas)." },
+        "descripcionOferta": { "type": "string|null", "omitEmpty": true, "desc": "Descripción de la oferta. Solo nivel 3 y 4 (sale de la vista de ofertas disponibles); ausente en nivel 1 y 2." }
+      }
+    },
+    "DtoEstadoCuenta": {
+      "fields": {
+        "saldoActual": { "type": "decimal", "desc": "Saldo actual de la cuenta corriente del alumno." }
+      }
+    },
+    "DtoReservaMinima": {
+      "desc": "Bloque compacto para 'Pago pendiente' cuando el alumno YA eligió método de pago externo (Abitab/Paganza).",
+      "fields": {
+        "tipoPago": { "type": "string", "desc": "ABITAB | PAGANZA." },
+        "cedula": { "type": "string|null", "desc": "Documento del alumno." },
+        "codigoPersona": { "type": "long", "desc": "Código de persona." },
+        "pagoReserva": { "type": "decimal", "desc": "Total de reserva a pagar." }
+      }
+    },
+    "DtoResumenInscripcion": {
+      "desc": "Resumen de UNA inscripción confirmada (solo estado 'Confirmada'). Distinto de la cabecera: acá sí trae ids de oferta/comienzo/turno porque es una única inscripción.",
+      "fields": {
+        "idOferta": { "type": "long" },
+        "idProducto": { "type": "long" },
+        "carrera": { "type": "string|null" },
+        "idComienzo": { "type": "long" },
+        "comienzo": { "type": "string|null" },
+        "idTurno": { "type": "long" },
+        "turno": { "type": "string|null" }
+      }
+    },
+    "DtoCoordinador": {
+      "fields": {
+        "nombre": { "type": "string|null" },
+        "email": { "type": "string|null" }
+      }
+    },
+    "DtoMateria": {
+      "fields": {
+        "idMateria": { "type": "long" },
+        "nombre": { "type": "string|null" }
+      }
+    }
+  },
+  "endpoints": {
+    "confirmarPreInscripcion": {
+      "method": "POST",
+      "route": "Inscripciones/ConfirmarPreInscripcion",
+      "requestDto": "DtoConfirmarPreInscripcionRequest",
+      "request": {
+        "idsOfertasSeleccionadas": { "type": "long[]", "desc": "Una oferta para nivel 1 y 2; una o varias para nivel 3 y 4." },
+        "aceptoReglamento": { "type": "boolean", "desc": "Aceptación del reglamento estudiantil." }
+      },
+      "dataDto": "DtoConfirmarPreInscripcionResponse",
+      "data": {
+        "confirmada": { "type": "boolean", "desc": "La preinscripción quedó confirmada." },
+        "enEspera": { "type": "boolean", "desc": "true si la inscripción fue a bandeja ('A la espera'). El front muestra 'Inscripción en proceso'." },
+        "resumen": { "type": "DtoCabeceraInscripcion", "desc": "Cabecera común; fechaVencimientoPago presente." },
+        "estadoCuenta": { "type": "DtoEstadoCuenta|null", "desc": "Saldo del alumno si la API lo devolvió." },
+        "inscripciones": { "type": "DtoInscripcionOferta[]", "desc": "Una por oferta confirmada. Trae idInscripcion; comienzo/turno por oferta; descripcionOferta en nivel 3 y 4." },
+        "pagoReserva": { "type": "decimal", "desc": "TOTAL de reserva (suma de todas las ofertas). El alumno paga todo junto, no elige." }
+      },
+      "frontHint": "Mostrar la cabecera (carrera + vencimiento), listar 'inscripciones' (para nivel 3 y 4 pueden ser varias, cada una con su comienzo) y el total 'pagoReserva'. Si enEspera=true, mostrar 'en proceso' en vez de 'confirmada'.",
+      "mainErrors": ["INS_CPI_01", "INS_CPI_03", "INS_CPI_05", "INS_CPI_15", "INS_CPI_16", "INS_CPI_17", "INS_CPI_02", "INS_CPI_13"]
+    },
+    "reactivarInscripcion": {
+      "method": "POST",
+      "route": "Inscripciones/Reactivar",
+      "requestDto": "DtoReactivarInscripcionRequest",
+      "request": {
+        "idInscripcion": { "type": "long", "desc": "Inscripción dada de baja a reactivar." }
+      },
+      "dataDto": "DtoConfirmarPreInscripcionResponse",
+      "data": "Idéntico a confirmarPreInscripcion.data (delega en ConfirmarPreInscripcion con la oferta de la baja).",
+      "mainErrors": ["INS_REA_00", "INS_REA_01", "INS_REA_02"]
+    },
+    "obtenerDetalleInscripcion": {
+      "method": "GET",
+      "route": "Inscripciones/Detalle",
+      "query": {
+        "idProducto": { "type": "long" },
+        "idProceso": { "type": "long" }
+      },
+      "dataDto": "DtoDetalleInscripcionResponse",
+      "desc": "El contenido depende de 'estado'. Solo se completa el bloque del estado actual; el resto se omite (omitEmpty).",
+      "data": {
+        "estado": { "type": "string", "desc": "Uno de: 'En proceso' | 'A la espera' | 'Pago pendiente' | 'Confirmada'." },
+        "detalle": { "type": "DtoDetalleEnProceso", "omitEmpty": true, "desc": "Solo estado 'En proceso'." },
+        "pagoPendiente": { "type": "DtoConfirmarPreInscripcionResponse", "omitEmpty": true, "desc": "Solo 'Pago pendiente' cuando aún NO eligió método de pago. Misma forma que confirmarPreInscripcion.data." },
+        "reservaMinima": { "type": "DtoReservaMinima", "omitEmpty": true, "desc": "Solo 'Pago pendiente' cuando YA eligió método de pago externo." },
+        "confirmada": { "type": "DtoConfirmadaDetalle", "omitEmpty": true, "desc": "Solo estado 'Confirmada'." }
+      },
+      "estados": {
+        "En proceso": {
+          "presentes": ["estado", "detalle"],
+          "detalle": {
+            "dto": "DtoDetalleEnProceso",
+            "resumen": "DtoCabeceraInscripcion (sin fechaVencimientoPago: todavía no hay pago).",
+            "intereses": "DtoInscripcionOferta[] — una o varias ofertas con interés (nivel 3 y 4). Cada ítem trae idOferta/comienzo/turno; SIN idInscripcion (aún no hay inscripción)."
+          }
+        },
+        "A la espera": {
+          "presentes": ["estado"],
+          "frontHint": "Solo el estado, sin detalle. Mostrar 'Inscripción en proceso / en espera'."
+        },
+        "Pago pendiente": {
+          "presentes": ["estado", "pagoPendiente | reservaMinima"],
+          "frontHint": "Si vino 'reservaMinima', ya eligió método externo: mostrar cédula + total. Si vino 'pagoPendiente', ofrecer los métodos de pago (misma forma que confirmarPreInscripcion.data)."
+        },
+        "Confirmada": {
+          "presentes": ["estado", "confirmada"],
+          "confirmada": {
+            "dto": "DtoConfirmadaDetalle",
+            "fields": {
+              "codigoPersona": "long",
+              "resumen": "DtoResumenInscripcion (una única inscripción, con ids de oferta/comienzo/turno).",
+              "coordinadorAcademico": "DtoCoordinador|null",
+              "coordinadorCursos": "DtoCoordinador|null",
+              "materiasPrimerSemestre": "DtoMateria[]"
+            }
+          }
+        }
+      },
+      "mainErrors": ["INS_DET_01", "INS_DET_02"]
+    }
+  }
+}
