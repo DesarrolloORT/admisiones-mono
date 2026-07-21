@@ -16,7 +16,7 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
             var pendientes = new PendingBuilder(encuesta.IdEncuestaIni);
 
             ValidarDatosTecnicos(encuesta, pendientes);
-            ValidarEducacion(uow, encuesta, codigoPersona, pendientes);
+            ValidarEducacion(uow, encuesta, pendientes);
             ValidarDecisionAcademica(uow, encuesta, codigoPersona, pendientes);
             ValidarExperienciaOrt(uow, encuesta, codigoPersona, pendientes);
             ValidarSituacionLaboral(persona, pendientes);
@@ -35,7 +35,6 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
         private static void ValidarEducacion(
             IUnitOfWork uow,
             EncuestaIniAdmision encuesta,
-            long codigoPersona,
             PendingBuilder pendientes)
         {
             var section = EncuestaInicialState.Educacion;
@@ -56,9 +55,9 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
                     pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
             }
 
-            pendientes.AddSi(!TieneEducacionSuperiorRespondido(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
-            if (string.Equals(encuesta.TieneEducacionSuperiorEncuestaIni, EncuestaInicialState.Si, StringComparison.OrdinalIgnoreCase))
-                pendientes.AddSi((uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Count ?? 0) == 0, section, "universidadEducacionSuperiorIds");
+            // "SI" (Uruguay/Exterior) o "NO" cuentan como respondido. Las universidades no se validan
+            // aquí: Uruguay siempre tiene >=1 (INS_EI_63) y Exterior no lleva (INS_EI_25).
+            pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(encuesta.TieneEducacionSuperiorEncuestaIni), section, "estadoEducacionSuperiorPreviaId");
 
             var padre = EncuestaInicialState.LeerInt(encuesta.InstruccionPadreEncuestaIni);
             var madre = EncuestaInicialState.LeerInt(encuesta.InstruccionMadreEncuestaIni);
@@ -119,13 +118,6 @@ namespace AppLogic.Inscripciones.Encuesta.Validators
             pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(persona.TrabajaActualmente), section, "trabajaActualmente");
             if (EncuestaInicialState.SNToBool(persona.TrabajaActualmente) == true)
                 pendientes.AddSi(!persona.TipoJornada.HasValue, section, "tipoJornadaId");
-        }
-
-        private static bool TieneEducacionSuperiorRespondido(string? value)
-        {
-            return string.Equals(value, EncuestaInicialState.Si, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(value, EncuestaInicialState.SiExterior, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(value, EncuestaInicialState.No, StringComparison.OrdinalIgnoreCase);
         }
 
         private sealed class PendingBuilder(long idEncuestaIni)

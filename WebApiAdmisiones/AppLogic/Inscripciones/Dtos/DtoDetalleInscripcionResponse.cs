@@ -14,38 +14,57 @@ namespace AppLogic.Inscripciones.Dtos
     {
         public string Estado { get; set; } = string.Empty;
 
-        /// <summary>Oferta seleccionada. Solo se completa cuando el estado es "En proceso".</summary>
+        /// <summary>Ofertas seleccionadas (una o varias para nivel 3 y 4). Solo se completa cuando el estado es "En proceso".</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DtoResumenInscripcion? Detalle { get; set; }
+        public DtoDetalleEnProceso? Detalle { get; set; }
 
         /// <summary>Solo se completa cuando el estado es "Pago pendiente" y aún no eligió método de pago.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DtoConfirmarPreInscripcionResponse? PagoPendiente { get; set; }
 
-        /// <summary>Solo cuando el estado es "Pago pendiente" Y ya eligió método de pago (existe seña mínima).</summary>
+        /// <summary>Solo cuando el estado es "Pago pendiente" Y ya eligió método de pago (existe reserva mínima).</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DtoSeniaMinima? SeniaMinima { get; set; }
+        public DtoReservaMinima? ReservaMinima { get; set; }
 
         /// <summary>Solo se completa cuando el estado es "Confirmada".</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DtoConfirmadaDetalle? Confirmada { get; set; }
     }
 
-    public class DtoSeniaMinima
+    public class DtoReservaMinima
     {
-        public string MetodoPago { get; set; } = string.Empty; // ABITAB / PAGANZA
+        public string TipoPago { get; set; } = string.Empty; // ABITAB / PAGANZA
         public string? Cedula { get; set; }
-        public long CodigoPersona { get; set; }                 // número de estudiante
-        public decimal Senia { get; set; }
+        public long CodigoPersona { get; set; }
+        public decimal PagoReserva { get; set; }
+    }
+
+    /// <summary>Detalle del estado "En proceso": cabecera compartida + las ofertas en las que se registró interés.</summary>
+    public class DtoDetalleEnProceso
+    {
+        public DtoCabeceraInscripcion Resumen { get; set; } = new();
+        public List<DtoInscripcionOferta> Intereses { get; set; } = new();
     }
 
     public class DtoConfirmadaDetalle
     {
-        public long NumeroEstudiante { get; set; }
+        public long CodigoPersona { get; set; }
         public DtoResumenInscripcion Resumen { get; set; } = new();
         public DtoCoordinador? CoordinadorAcademico { get; set; }
         public DtoCoordinador? CoordinadorCursos { get; set; }
         public List<DtoMateria> MateriasPrimerSemestre { get; set; } = new();
+    }
+
+    /// <summary>Resumen de una única inscripción confirmada (pantalla "Mis carreras" en estado Confirmada).</summary>
+    public class DtoResumenInscripcion
+    {
+        public long IdOferta { get; set; }
+        public long IdProducto { get; set; }
+        public string? Carrera { get; set; }
+        public long IdComienzo { get; set; }
+        public string? Comienzo { get; set; }
+        public long IdTurno { get; set; }
+        public string? Turno { get; set; }
     }
 
     public class DtoCoordinador

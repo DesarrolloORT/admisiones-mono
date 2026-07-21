@@ -242,7 +242,9 @@ namespace AppLogic.Catalogos.Services
                                 IdTurno = oferta.IdTurno,
                                 NombreTurno = turno?.NombreTurno
                             },
-                            HorarioReferencia = null
+                            HorarioReferencia = null,
+                            FechaReferencia = oferta.FechaReferencia,
+                            DescripcionOferta = oferta.DescripcionOferta
                         };
                     })
                     .ToList();

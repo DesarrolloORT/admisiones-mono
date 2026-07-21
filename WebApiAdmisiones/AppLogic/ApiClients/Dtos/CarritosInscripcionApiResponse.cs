@@ -4,7 +4,7 @@ namespace AppLogic.ApiClients.Dtos
 {
     public class CarritosInscripcionApiResponse
     {
-        public List<CarritoSeniaApiDto> Carritos { get; set; } = new();
+        public List<CarritoPagoReservaApiDto> Carritos { get; set; } = new();
         public EstadoCuentaApiDto? EstadoCuenta { get; set; }
     }
 }

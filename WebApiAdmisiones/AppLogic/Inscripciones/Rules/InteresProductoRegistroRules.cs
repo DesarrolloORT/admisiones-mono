@@ -15,7 +15,7 @@ namespace AppLogic.Inscripciones.Rules
             IDbConnectionContext dbConnectionContext,
             long codigoPersona,
             DtoInteresProductoRequest request,
-            Oferta oferta,
+            List<Oferta> ofertas,
             DateTime fechaActual,
             string methodName)
         {
@@ -27,14 +27,17 @@ namespace AppLogic.Inscripciones.Rules
 
             var operacionTivenos = ActivarInteresProducto(uow, interes, request.IdProducto, fechaActual, esInteresNuevo);
             AsegurarPersonaAdmite(uow, codigoPersona, fechaActual);
-            AsegurarInteresProductoOferta(uow, interes, request.IdProducto, request.IdOferta);
+            foreach (var idOferta in request.IdsOferta)
+            {
+                AsegurarInteresProductoOferta(uow, interes, request.IdProducto, idOferta);
+            }
 
             var resultadoEncuesta = ActualizarEncuestaInicial(
                 uow,
                 codigoPersona,
                 request.IdProducto,
                 request.IdProcesoSeleccionado,
-                oferta.Supraoferta.IdComienzo,
+                ofertas[0].Supraoferta?.IdComienzo ?? 0,
                 methodName);
             if (!resultadoEncuesta.Success)
             {
@@ -163,6 +166,7 @@ namespace AppLogic.Inscripciones.Rules
             encuesta.IdProducto = idProducto;
             encuesta.IdProceso = idProceso;
             encuesta.IdComienzo = idComienzo;
+            uow.EncuestaIniAdmisions.Update(encuesta);
             return OperationResult<bool>.Ok(true, methodName);
         }
     }

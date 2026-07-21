@@ -11,7 +11,6 @@ namespace AppLogic.Inscripciones.Encuesta.Rules
         internal const string TipoInscripcionSoloEncuesta = "SOLO_ENCUESTA_INI";
         internal const string Si = "SI";
         internal const string No = "NO";
-        internal const string SiExterior = "SE";
         private const string SiCorto = "S";
         private const string NoCorto = "N";
 

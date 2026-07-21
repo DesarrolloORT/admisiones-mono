@@ -1,12 +1,24 @@
 using AppLogic.Common.Constants;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
+using System.Collections.Generic;
+using System.Linq;
 using Utilities;
 
 namespace AppLogic.Inscripciones.Rules
 {
     public static class InteresProductoValidationRules
     {
+        public static OperationResult<bool> ValidarOfertasSolicitadas(List<long>? idsOferta, string method)
+        {
+            if (idsOferta == null || idsOferta.Count == 0 || idsOferta.Any(id => id <= 0))
+            {
+                return OperationResult<bool>.IsFailed("GEN_IP_11", method, "Debe indicar al menos una oferta valida.", 400);
+            }
+
+            return OperationResult<bool>.Ok(true, method);
+        }
+
         public static OperationResult<bool> ValidarRegistroInteresProducto(
             IUnitOfWork uow,
             long codigoPersona,

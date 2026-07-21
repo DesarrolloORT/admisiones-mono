@@ -98,8 +98,8 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
             {
                 encuesta.TieneEducacionSuperiorEncuestaIni = request.EstadoEducacionSuperiorPreviaId.Value switch
                 {
-                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay => CommonConstants.Booleanos.Si,
-                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior => EncuestaInicialState.SiExterior,
+                    EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay
+                        or EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior => CommonConstants.Booleanos.Si,
                     EncuestaInicialState.EstadoEducacionSuperiorPrevia.No => CommonConstants.Booleanos.No,
                     _ => encuesta.TieneEducacionSuperiorEncuestaIni
                 };
@@ -191,7 +191,8 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
             DtoGuardarEncuestaInicialResponse pendientes)
         {
             var vecesRecursa = EncuestaInicialState.LeerInt(encuesta.VecesSextoEncuestaIni);
-            var estadoEducacionSuperior = LeerEstadoEducacionSuperior(encuesta.TieneEducacionSuperiorEncuestaIni);
+            var educacionSuperior = uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona);
+            var estadoEducacionSuperior = LeerEstadoEducacionSuperior(encuesta.TieneEducacionSuperiorEncuestaIni, educacionSuperior?.Count > 0);
 
             return new DtoEncuestaInicialLectura
             {
@@ -231,23 +232,25 @@ namespace AppLogic.Inscripciones.Encuesta.Mappers
                 TipoJornadaId = persona.TipoJornada,
                 UniversidadConsideradaIds = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
                 UniversidadConsideradaOtros = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList(),
-                UniversidadEducacionSuperiorIds = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,
-                UniversidadEducacionSuperiorOtros = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? uow.EducacionSuperiorAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList() : null,
+                UniversidadEducacionSuperiorIds = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? educacionSuperior?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,
+                UniversidadEducacionSuperiorOtros = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? educacionSuperior?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList() : null,
                 PublicidadOrtIds = uow.PublicidadEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(p => p.IdPublicidad).ToList(),
                 MotivoEleccionOrtIds = uow.MotivoEleccionAdmisions?.GetByPersona(codigoPersona)?.Select(m => m.IdMotivo).ToList()
             };
         }
 
-        private static long? LeerEstadoEducacionSuperior(string? value)
+        private static long? LeerEstadoEducacionSuperior(string? value, bool tieneUniversidades)
         {
-            if (string.Equals(value, CommonConstants.Booleanos.Si, StringComparison.OrdinalIgnoreCase))
-                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay;
-            if (string.Equals(value, EncuestaInicialState.SiExterior, StringComparison.OrdinalIgnoreCase))
-                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior;
-            if (string.Equals(value, CommonConstants.Booleanos.No, StringComparison.OrdinalIgnoreCase))
-                return EncuestaInicialState.EstadoEducacionSuperiorPrevia.No;
-
-            return null;
+            // "SI" cubre Uruguay y Exterior; se distingue por la presencia de universidades
+            // (invariante garantizado por INS_EI_63 / INS_EI_25 en el guardado).
+            return EncuestaInicialState.SNToBool(value) switch
+            {
+                true => tieneUniversidades
+                    ? EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay
+                    : EncuestaInicialState.EstadoEducacionSuperiorPrevia.Exterior,
+                false => EncuestaInicialState.EstadoEducacionSuperiorPrevia.No,
+                _ => null
+            };
         }
 
         private static decimal ResolverCantAniosAnioBachiller(IUnitOfWork uow, long value)

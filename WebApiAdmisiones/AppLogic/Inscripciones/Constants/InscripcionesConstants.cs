@@ -22,6 +22,20 @@ namespace AppLogic.Inscripciones.Constants
             public const string Geopay = "GEOPAY";
             public const string Abitab = "ABITAB";
             public const string Paganza = "PAGANZA";
+            public const string CuentaPersonal = "CUENTA_PERSONAL";
+        }
+
+        /// <summary>Valores del campo <c>Resultado</c> de <c>DtoPagarResponse</c> que interpreta el frontend.</summary>
+        public static class ResultadoPago
+        {
+            public const string PagoConfirmado = "PAGO_CONFIRMADO";
+            public const string MetodoGuardado = "METODO_GUARDADO";
+            public const string UrlGenerada = "URL_GENERADA";
+        }
+
+        public static class TipoInscripcion
+        {
+            public const string Online = "ONLINE";
         }
 
         public static class InteresProducto
