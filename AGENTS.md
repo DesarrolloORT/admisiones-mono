@@ -4,6 +4,8 @@ Instrucciones para cualquier agente (o humano) que implemente features, bugs o r
 
 > Nota sobre `.github/copilot-instructions.md`: es el baseline compartido del equipo, pero su contenido actual describe otro proyecto (API Ficha de Persona: rutas `FichaDePersona/`, `WebApiFDP.sln`, .NET 9). Los **patrones** que describe (OperationResult, UoW, Devart, tests) sí aplican; los **paths y comandos** no. Ante conflicto, manda este archivo.
 
+> Legibilidad para humanos: [`docs/GUIA-ESTILO-CODIGO.md`](docs/GUIA-ESTILO-CODIGO.md) explica cómo escribir código que se lea de corrido (propagación de errores con `Failure().As<T>()`, guard clauses, validadores de una-regla-por-`if`, dónde va cada validación). Lo mecánico (namespaces file-scoped, prefijo `_`, formato) lo aplica el `.editorconfig` de la raíz.
+
 ## Prioridades
 
 1. Resuelve con el menor contexto y la menor salida útil posible.
