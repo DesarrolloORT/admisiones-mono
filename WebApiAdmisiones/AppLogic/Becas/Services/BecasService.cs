@@ -5,26 +5,20 @@ using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
-namespace AppLogic.Becas.Services
+namespace AppLogic.Becas.Services;
+
+public class BecasService(IUnitOfWorkFactory uowFactory) : IBecasService
 {
-    public class BecasService : IBecasService
+    private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
+
+    public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripcionesConfirmadas(long codigoPersona)
     {
-        private readonly IUnitOfWorkFactory _uowFactory;
+        using var uow = _uowFactory.Create();
+        var dtos = uow.VdInscripcionesFresco1y2s
+            .GetInscripcionesFrescoHabilitadas(codigoPersona)
+            .Where(i => i.EstadoInscripcion == InscripcionesConstants.EstadoInscripcion.Confirmada)
+            .ToDtos();
 
-        public BecasService(IUnitOfWorkFactory uowFactory)
-        {
-            _uowFactory = uowFactory;
-        }
-
-        public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripcionesConfirmadas(long codigoPersona)
-        {
-            using var uow = _uowFactory.Create();
-            var dtos = uow.VdInscripcionesFresco1y2s
-                .GetInscripcionesFrescoHabilitadas(codigoPersona)
-                .Where(i => i.EstadoInscripcion == InscripcionesConstants.EstadoInscripcion.Confirmada)
-                .ToDtos();
-
-            return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripcionesConfirmadas));
-        }
+        return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripcionesConfirmadas));
     }
 }
