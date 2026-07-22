@@ -1,8 +1,7 @@
-namespace AppLogic.Tivenos.Dtos
+namespace AppLogic.Tivenos.Dtos;
+
+public sealed class DtoTivenosBachilleratoRequest
 {
-    public sealed class DtoTivenosBachilleratoRequest
-    {
-        public long CodigoPersona { get; init; }
-        public long? CodigoOrientacion { get; init; }
-    }
+    public long CodigoPersona { get; init; }
+    public long? CodigoOrientacion { get; init; }
 }

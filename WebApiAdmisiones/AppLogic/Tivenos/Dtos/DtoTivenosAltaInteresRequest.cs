@@ -1,10 +1,9 @@
-namespace AppLogic.Tivenos.Dtos
+namespace AppLogic.Tivenos.Dtos;
+
+public sealed class DtoTivenosAltaInteresRequest
 {
-    public sealed class DtoTivenosAltaInteresRequest
-    {
-        public long CodigoPersona { get; init; }
-        public long IdProducto { get; init; }
-        public long IdProceso { get; init; }
-        public TivenosAltaInteresOperacion Operacion { get; init; } = new();
-    }
+    public long CodigoPersona { get; init; }
+    public long IdProducto { get; init; }
+    public long IdProceso { get; init; }
+    public TivenosAltaInteresOperacion Operacion { get; init; } = new();
 }
