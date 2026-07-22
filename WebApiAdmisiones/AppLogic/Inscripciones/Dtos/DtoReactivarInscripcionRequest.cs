@@ -1,7 +1,6 @@
-namespace AppLogic.Inscripciones.Dtos
+namespace AppLogic.Inscripciones.Dtos;
+
+public class DtoReactivarInscripcionRequest
 {
-    public class DtoReactivarInscripcionRequest
-    {
-        public long IdInscripcion { get; set; }
-    }
+    public long IdInscripcion { get; set; }
 }
