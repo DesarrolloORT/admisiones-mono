@@ -223,6 +223,55 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ConfirmarPreInscripcion_EncuestaDefinitivaVencidaSinConfirmacionHistorica_DevuelveEncuestaVencida()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitivaVencida(123));
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_12", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_EncuestaDefinitivaVencidaPeroYaConfirmadaEnEncuestaIni_NoDevuelveEncuestaVencida()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, EncuestaDefinitivaVencida(123));
+            SetupEncuestaIni(123, new EncuestaIni { CodigoPersona = 123 });
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.GetByPersona(123))
+                .Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = false,
+                IdsOfertasSeleccionadas = [10]
+            });
+
+            // Llega a la validacion de reglamento (INS_CPI_02): prueba que no corto antes por INS_CPI_12.
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_02", result.ErrorCode);
+        }
+
+        [Fact]
         public async Task ConfirmarPreInscripcion_WhenReglamentoNotAcceptedButHasPriorAcceptance_Confirms()
         {
             AceptacionReglamentoEst? aceptacionAgregada = null;
@@ -2571,6 +2620,13 @@ namespace UnitTesting.AppLogic.Services
                 IdComienzo = 40,
                 FechaVtoAdmision = DateTime.Today.AddDays(10)
             };
+        }
+
+        private static EncuestaIniAdmision EncuestaDefinitivaVencida(long codigoPersona)
+        {
+            var encuesta = EncuestaDefinitiva(codigoPersona);
+            encuesta.FechaVtoAdmision = DateTime.Today.AddDays(-1);
+            return encuesta;
         }
 
         private static StubHttpMessageHandler ConfirmacionConEstadoCuentaHandler(string confirmacionBody)

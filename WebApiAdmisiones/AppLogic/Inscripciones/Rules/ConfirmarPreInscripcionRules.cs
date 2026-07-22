@@ -313,7 +313,9 @@ internal static class ConfirmarPreInscripcionRules
         long idComienzoOferta,
         string methodName)
     {
-        if (encuestaAdmision.FechaVtoAdmision.HasValue && encuestaAdmision.FechaVtoAdmision.Value.Date < DateTime.Today)
+        if (encuestaAdmision.FechaVtoAdmision.HasValue
+            && encuestaAdmision.FechaVtoAdmision.Value.Date < DateTime.Today
+            && uow.EncuestaInis.GetByPersona(codigoPersona) == null)
         {
             return OperationResult<DatosConfirmacionOferta>.IsFailed(
                 "INS_CPI_12",
