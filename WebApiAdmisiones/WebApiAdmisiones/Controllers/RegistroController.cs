@@ -38,7 +38,7 @@ namespace WebApiAdmisiones.Controllers
         private async Task<(string? FlowId, IActionResult? Error)> ValidarFlowEvaluadoAsync()
         {
             var flowId = ObtenerFlowId();
-            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: "evaluado");
+            var flowValidation = await registroFlowService.ValidarFlowSessionAsync(flowId, stepEsperado: RegistroFlowConstants.Step.Evaluado);
             return (flowId, flowValidation != null ? ValidateResponse(flowValidation) : null);
         }
 
@@ -291,7 +291,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (result.Success && flowId != null)
             {
-                await registroFlowService.ActualizarStepAsync(flowId, "confirmado");
+                await registroFlowService.ActualizarStepAsync(flowId, RegistroFlowConstants.Step.Confirmado);
             }
 
             return ValidateResponse(result);

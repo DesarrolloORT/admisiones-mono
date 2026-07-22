@@ -8,7 +8,7 @@ using Utilities;
 
 namespace AppLogic.Becas.Services;
 
-public class FondoDeBecaService(IUnitOfWorkFactory uowFactory) : IFondoDeBecaServices
+public class FondoDeBecaService(IUnitOfWorkFactory uowFactory) : IFondoDeBecaService
 {
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
 

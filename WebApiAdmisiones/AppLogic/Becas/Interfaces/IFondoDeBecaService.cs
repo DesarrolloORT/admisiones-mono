@@ -4,7 +4,7 @@ using Utilities;
 
 namespace AppLogic.Becas.Interfaces;
 
-public interface IFondoDeBecaServices
+public interface IFondoDeBecaService
 {
     #region TIPOS DECLARACIÓN JURADA
 
