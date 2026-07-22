@@ -24,6 +24,15 @@ internal static class EncuestaInicialState
         internal const int No = 3;
     }
 
+    /// <summary>
+    /// Códigos de UbicacionUltimoAnioSecundariaId (ver EncuestaInicialOpciones.UbicacionesUltimoAnioSecundaria).
+    /// </summary>
+    internal static class UbicacionUltimoAnioSecundaria
+    {
+        internal const int Uruguay = 1;
+        internal const int Exterior = 2;
+    }
+
     internal const string Educacion = "educacion";
     internal const string DecisionAcademica = "decisionAcademica";
     internal const string ExperienciaOrt = "experienciaOrt";

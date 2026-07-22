@@ -8,7 +8,12 @@ namespace AppLogic.Inscripciones.Encuesta.Validators;
 
 public static class EncuestaInicialCatalogValidator
 {
-    private const long CodigoUbicacionUruguay = 1;
+    /// <summary>IdNivelProducto que identifica una carrera universitaria (a diferencia de terciarias u otros niveles).</summary>
+    private const long NivelProductoUniversitario = 1;
+
+    /// <summary>Cuarto año de bachillerato, identificado según cuál campo resolvió el año: IdAnioBachiller usa la numeración corta (1-6), CantAniosAnioBachiller la cantidad de años acumulados (hasta 12).</summary>
+    private const long IdAnioBachillerCuartoAnio = 4;
+    private const long CantAniosBachilleratoCuartoAnio = 10;
 
     public static OperationResult<bool> ValidarRequestParcial(
         IUnitOfWork uow,
@@ -94,7 +99,7 @@ public static class EncuestaInicialCatalogValidator
             return OperationResult<bool>.IsFailed("INS_EI_06", methodName, "Ultimo anio de bachillerato invalido.", 400);
 
         if (aplicaBachillerato
-            && producto?.IdNivelProducto == 1
+            && producto?.IdNivelProducto == NivelProductoUniversitario
             && request.AnioBachillerato.HasValue
             && EsCuartoBachillerato(uow, request.AnioBachillerato.Value))
             return OperationResult<bool>.IsFailed("INS_EI_64", methodName, "Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año.", 400);
@@ -102,7 +107,7 @@ public static class EncuestaInicialCatalogValidator
         if (aplicaBachillerato && request.OrientacionBachilleratoId.HasValue && !TituloCatalogado(uow, request.OrientacionBachilleratoId.Value))
             return OperationResult<bool>.IsFailed("INS_EI_22", methodName, "El titulo indicado es invalido.", 400);
 
-        if (request.UbicacionUltimoAnioSecundariaId == CodigoUbicacionUruguay)
+        if (request.UbicacionUltimoAnioSecundariaId == EncuestaInicialState.UbicacionUltimoAnioSecundaria.Uruguay)
         {
             if (request.InstitucionSecundariaId is <= 0)
                 return OperationResult<bool>.IsFailed("INS_EI_19", methodName, "Institucion invalida.", 400);
@@ -114,7 +119,7 @@ public static class EncuestaInicialCatalogValidator
         if (!empresas.Success)
             return empresas;
 
-        if (request.EstadoEducacionSuperiorPreviaId == 1)
+        if (request.EstadoEducacionSuperiorPreviaId == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay)
         {
             empresas = ValidarEmpresas(uow, request.UniversidadEducacionSuperiorIds, request.UniversidadEducacionSuperiorOtros, methodName);
             if (!empresas.Success)
@@ -146,11 +151,11 @@ public static class EncuestaInicialCatalogValidator
             && (!request.VecesRecursaAnioBachillerato.HasValue || request.VecesRecursaAnioBachillerato.Value < 1))
             return OperationResult<bool>.IsFailed("INS_EI_52", methodName, "Debe indicar una cantidad valida de veces que recursa el anio de bachillerato.", 400);
 
-        if (request.EstadoEducacionSuperiorPreviaId == 1
+        if (request.EstadoEducacionSuperiorPreviaId == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay
             && (request.UniversidadEducacionSuperiorIds == null || request.UniversidadEducacionSuperiorIds.Count == 0)
             && !TieneOtros(request.UniversidadEducacionSuperiorOtros))
             return OperationResult<bool>.IsFailed("INS_EI_63", methodName, "Debe indicar al menos una universidad de educacion superior.", 400);
-        if (request.EstadoEducacionSuperiorPreviaId != 1
+        if (request.EstadoEducacionSuperiorPreviaId != EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay
             && (request.UniversidadEducacionSuperiorIds?.Count > 0 || TieneOtros(request.UniversidadEducacionSuperiorOtros)))
             return OperationResult<bool>.IsFailed("INS_EI_25", methodName, "Universidad seleccionada invalida.", 400);
 
@@ -220,9 +225,9 @@ public static class EncuestaInicialCatalogValidator
     private static bool EsCuartoBachillerato(IUnitOfWork uow, long value)
     {
         var anio = ResolverAnioBachiller(uow, value);
-        return value is 4 or 10
-            || anio?.IdAnioBachiller == 4
-            || anio?.CantAniosAnioBachiller == 10;
+        return value is IdAnioBachillerCuartoAnio or CantAniosBachilleratoCuartoAnio
+            || anio?.IdAnioBachiller == IdAnioBachillerCuartoAnio
+            || anio?.CantAniosAnioBachiller == CantAniosBachilleratoCuartoAnio;
     }
 
     private static bool TieneOtros(List<string>? otros)

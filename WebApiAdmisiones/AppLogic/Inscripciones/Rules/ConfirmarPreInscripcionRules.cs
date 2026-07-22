@@ -15,6 +15,10 @@ namespace AppLogic.Inscripciones.Rules;
 
 internal static class ConfirmarPreInscripcionRules
 {
+    /// <summary>Niveles de producto terciario/universitario (ver vistas *3y4* en Devart); únicos habilitados para inscripción corporativa.</summary>
+    private const long NivelProducto3 = 3;
+    private const long NivelProducto4 = 4;
+
     public static OperationResult<bool> ValidarRequest(DtoConfirmarPreInscripcionRequest request, string methodName)
     {
         if (request == null)
@@ -131,7 +135,7 @@ internal static class ConfirmarPreInscripcionRules
     public static OperationResult<bool> ValidarNivelCorporativo(DatosConfirmacionOferta contexto, string methodName)
     {
         var idNivel = contexto.Producto?.IdNivelProducto;
-        if (idNivel != 3 && idNivel != 4)
+        if (idNivel != NivelProducto3 && idNivel != NivelProducto4)
         {
             return OperationResult<bool>.IsFailed(
                 "INS_CPI_17",

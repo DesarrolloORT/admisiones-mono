@@ -40,9 +40,9 @@ internal static class EncuestaInicialValidator
         var section = EncuestaInicialState.Educacion;
         pendientes.AddSi(!encuesta.UltimoanioSecundariaEncuestaIni.HasValue, section, "ubicacionUltimoAnioSecundariaId");
 
-        if (encuesta.UltimoanioSecundariaEncuestaIni == 1)
+        if (encuesta.UltimoanioSecundariaEncuestaIni == EncuestaInicialState.UbicacionUltimoAnioSecundaria.Uruguay)
             pendientes.AddSi(!encuesta.CodigoInstitucionBac.HasValue || encuesta.CodigoInstitucionBac <= 0, section, "institucionSecundariaId");
-        if (encuesta.UltimoanioSecundariaEncuestaIni == 2)
+        if (encuesta.UltimoanioSecundariaEncuestaIni == EncuestaInicialState.UbicacionUltimoAnioSecundaria.Exterior)
             pendientes.AddSi(string.IsNullOrWhiteSpace(encuesta.NombreInstSecEncuestaIni), section, "nombreInstitucionSecundaria");
 
         pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(encuesta.CursaSecundariaActualmenteEncuestaIni), section, "cursaSecundariaActualmente");
