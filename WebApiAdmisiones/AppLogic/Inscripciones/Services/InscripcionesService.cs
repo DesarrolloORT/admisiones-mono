@@ -389,17 +389,25 @@ namespace AppLogic.Inscripciones.Services
                         validacionNivel.ErrorCode, methodName, validacionNivel.Message, validacionNivel.HttpCode);
                 }
 
-                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(ofertasSeleccionadas, persona);
-                var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
-                var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(contexto, codigoPersona, xml);
-                var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
-
-                var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
-
-                if (!altaResult.Success)
+                // un tramite + una instancia + una fila en T_INST_WORKFLOW_INSCRIPCION por oferta.
+                foreach (var oferta in ofertasSeleccionadas)
                 {
-                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                        altaResult.ErrorCode, methodName, altaResult.Message, altaResult.HttpCode);
+                    var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(oferta, persona);
+                    var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
+                    var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
+                    var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
+
+                    var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
+
+                    if (!altaResult.Success)
+                    {
+                        return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
+                            altaResult.ErrorCode, methodName, altaResult.Message, altaResult.HttpCode);
+                    }
+
+                    uow.InstWorkflowInscripcions.Add(
+                        ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
+                    uow.Save();
                 }
 
                 return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(

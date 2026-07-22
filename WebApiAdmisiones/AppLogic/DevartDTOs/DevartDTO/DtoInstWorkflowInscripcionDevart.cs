@@ -33,11 +33,7 @@ namespace AppLogic.DevartDTOs
 
         public decimal? IdProducto { get; set; }
 
-        #endregion
-
-        #region Navigation Properties
-
-        public DtoInstanciaWorkflowDevart InstanciaWorkflow { get; set; }
+        public long? IdOferta { get; set; }
 
         #endregion
     }

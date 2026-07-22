@@ -142,18 +142,15 @@ namespace AppLogic.Inscripciones.Rules
             return OperationResult<bool>.Ok(true, methodName);
         }
 
-        public static string CrearXmlInstanciaCorporativa(IReadOnlyList<DatosConfirmacionOferta> ofertas, Persona persona)
+        // Un trámite (y un XML) por oferta, cada instancia describe una sola oferta.
+        public static string CrearXmlInstanciaCorporativa(DatosConfirmacionOferta contexto, Persona persona)
         {
-            // Producto es compartido por todas las ofertas seleccionadas (la validacion de compatibilidad lo exige).
-            var producto = ofertas[0].Producto?.NombreProducto;
             var nombreAlumno = $"({persona.CodigoPersona}) {persona.PrimerNombre} {persona.PrimerApellido}".Trim();
-            // Cada oferta lleva su propio comienzo (en nivel 3 y 4 pueden diferir), por eso no hay un field Comienzo aparte.
-            var listaOfertas = string.Join(" | ",
-                ofertas.Select(o => $"({o.IdOferta}) {o.Comienzo?.NombreComienzo} - {o.Turno?.NombreTurno}"));
             return "<TAREA>" +
                 $"<FIELD propertyName=\"Alumno\" name=\"Alumno\" data=\" {nombreAlumno}\"></FIELD>" +
-                $"<FIELD propertyName=\"Producto\" name=\"Producto\" data=\" {producto}\"></FIELD>" +
-                $"<FIELD propertyName=\"Oferta\" name=\"Oferta Turno\" data=\" {listaOfertas}\"></FIELD>" +
+                $"<FIELD propertyName=\"Comienzo\" name=\"Comienzo\" data=\" {contexto.Comienzo?.NombreComienzo}\"></FIELD>" +
+                $"<FIELD propertyName=\"Producto\" name=\"Producto\" data=\" {contexto.Producto?.NombreProducto}\"></FIELD>" +
+                $"<FIELD propertyName=\"Oferta\" name=\"Oferta Turno\" data=\" ({contexto.IdOferta}) {contexto.Turno?.NombreTurno}\"></FIELD>" +
                 "<FIELD propertyName=\"Motivo\" name=\"Motivo\" data=\" Inscripcion corporativa\"></FIELD>" +
                 "</TAREA>";
         }
@@ -235,6 +232,19 @@ namespace AppLogic.Inscripciones.Rules
             {
                 Confirmada = false,
                 EnEspera = true
+            };
+        }
+
+        // Fila estructurada de la inscripcion corporativa.
+        public static InstWorkflowInscripcion CrearInstWorkflowInscripcionCorporativa(DatosConfirmacionOferta oferta, long idInstancia)
+        {
+            return new InstWorkflowInscripcion
+            {
+                IdInstanciaWorkflow = idInstancia,
+                IdOferta = oferta.IdOferta,
+                IdTurno = oferta.IdTurno,
+                IdComienzo = oferta.IdComienzo,
+                IdProducto = oferta.IdProducto
             };
         }
 

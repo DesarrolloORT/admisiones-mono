@@ -299,6 +299,12 @@ namespace UnitTesting.AppLogic.Services
                     (t, i, b) => { dtoTramite = t; dtoInstancia = i; dtosBandeja = b; })
                 .Returns(global::Utilities.OperationResult<long>.Ok(555, "AltaTramiteWorkflow"));
 
+            var instInscripciones = new List<InstWorkflowInscripcion>();
+            var instInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instInscripcionRepo.Setup(r => r.Add(It.IsAny<InstWorkflowInscripcion>()))
+                .Callback<InstWorkflowInscripcion>(x => instInscripciones.Add(x));
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instInscripcionRepo.Object);
+
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
                 AceptoReglamento = true,
@@ -311,6 +317,13 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data.EnEspera);
             // "A la espera" es una pantalla generica: el response no trae detalle de ofertas.
             Assert.Empty(result.Data.Inscripciones);
+            // Se carga una fila en T_INST_WORKFLOW_INSCRIPCION (1:1 con la instancia).
+            var fila = Assert.Single(instInscripciones);
+            Assert.Equal(555m, fila.IdInstanciaWorkflow);
+            Assert.Equal(10L, fila.IdOferta!.Value);
+            Assert.Equal(40m, fila.IdComienzo!.Value);
+            Assert.Equal(1m, fila.IdTurno!.Value);
+            Assert.Equal(20m, fila.IdProducto!.Value);
             Assert.NotNull(dtoTramite);
             Assert.Equal(89, dtoTramite!.IdProceso);
             Assert.Equal(48, dtoTramite.IdGrupoResponsable);
@@ -336,7 +349,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaMultiplesOfertas_ListaTodasEnXmlYResponse()
+        public async Task ConfirmarPreInscripcion_EsInscripcionCorporativaMultiplesOfertas_CreaUnTramiteYFilaPorOferta()
         {
             SetupPersona(123);
 
@@ -364,15 +377,22 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 999, CodigoPersona = 123 });
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            DtoInstanciaWorkflowDevartModBandeja? dtoInstancia = null;
+            // Un XML por trámite (una oferta cada uno, forma legacy).
+            var xmls = new List<string>();
             _bandejaServiceMock
                 .Setup(s => s.AltaTramiteWorkflow(
                     It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
                     It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
                     It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()))
                 .Callback<DtoTramiteBandejaDevartModBandeja, DtoInstanciaWorkflowDevartModBandeja, IEnumerable<DtoBandejaDevartModBandeja>>(
-                    (t, i, b) => dtoInstancia = i)
+                    (t, i, b) => xmls.Add(i.XmlInstanciaWorkflow))
                 .Returns(global::Utilities.OperationResult<long>.Ok(555, "AltaTramiteWorkflow"));
+
+            var instInscripciones = new List<InstWorkflowInscripcion>();
+            var instInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
+            instInscripcionRepo.Setup(r => r.Add(It.IsAny<InstWorkflowInscripcion>()))
+                .Callback<InstWorkflowInscripcion>(x => instInscripciones.Add(x));
+            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instInscripcionRepo.Object);
 
             var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
             {
@@ -383,15 +403,24 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             Assert.True(result.Data!.EnEspera);
-            // "A la espera": el response son solo flags; el detalle multi-oferta va en el XML.
+            // "A la espera": el response son solo flags.
             Assert.Empty(result.Data.Inscripciones);
 
-            Assert.NotNull(dtoInstancia);
-            var xml = dtoInstancia!.XmlInstanciaWorkflow;
-            Assert.Contains("(10) Marzo 2026", xml);
-            Assert.Contains("(11) Agosto 2026", xml);
-            // El comienzo va dentro de cada oferta: ya no existe un field Comienzo aparte.
-            Assert.DoesNotContain("propertyName=\"Comienzo\"", xml);
+            // Un trámite (instancia + XML) por oferta.
+            _bandejaServiceMock.Verify(
+                s => s.AltaTramiteWorkflow(
+                    It.IsAny<DtoTramiteBandejaDevartModBandeja>(),
+                    It.IsAny<DtoInstanciaWorkflowDevartModBandeja>(),
+                    It.IsAny<IEnumerable<DtoBandejaDevartModBandeja>>()),
+                Times.Exactly(2));
+            Assert.Equal(2, xmls.Count);
+            Assert.Contains(xmls, x => x.Contains("(10)") && x.Contains("Marzo 2026"));
+            Assert.Contains(xmls, x => x.Contains("(11)") && x.Contains("Agosto 2026"));
+
+            // Una fila en T_INST_WORKFLOW_INSCRIPCION por oferta, con su comienzo.
+            Assert.Equal(2, instInscripciones.Count);
+            Assert.Contains(instInscripciones, f => f.IdOferta == 10 && f.IdComienzo == 40);
+            Assert.Contains(instInscripciones, f => f.IdOferta == 11 && f.IdComienzo == 41);
         }
 
         [Fact]

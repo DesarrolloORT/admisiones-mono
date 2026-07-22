@@ -35,11 +35,9 @@
         <File Name="TituloOrt.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="CausalInscrPago.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="InstanciaWorkflow.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="InstWorkflowInscripcion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="AccesoSitiosantander.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="BachilleratoPersona.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="AnioBachiller.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Accion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="DeclaracionJuradaWeb.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="TipoVivienda.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="TipoDescuento.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
@@ -59,7 +57,6 @@
         <File Name="VdFrescoProductoAdmisione.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="Feriado.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="PersonaAdmite.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
-        <File Name="Actividad.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IngresoMensualNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="EgresoMensualNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IntegranteNfDj.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
@@ -86,6 +83,7 @@
         <File Name="VdInscriptoCoordinadore.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="VdInscriptoCreditoAlumno.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="VdProductosDisponibles1y2.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
+        <File Name="InstWorkflowInscripcion.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\DevartEntities" />
         <File Name="IUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
@@ -149,16 +147,12 @@
         <File Name="ICausalInscrPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IInstanciaWorkflowRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IInstanciaWorkflowRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IInstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IInstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IAccesoSitiosantanderRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IAccesoSitiosantanderRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IBachilleratoPersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IBachilleratoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IAnioBachillerRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IAnioBachillerRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IAccionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IAccionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IDeclaracionJuradaWebRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IDeclaracionJuradaWebRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="ITipoViviendaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
@@ -197,8 +191,6 @@
         <File Name="IFeriadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IPersonaAdmiteRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IPersonaAdmiteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
-        <File Name="IActividadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
-        <File Name="IActividadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IIngresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IIngresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IEgresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
@@ -251,6 +243,8 @@
         <File Name="IVdInscriptoCreditoAlumnoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="IVdProductosDisponibles1y2Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
         <File Name="IVdProductosDisponibles1y2Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
+        <File Name="IInstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" OverwriteMode="None" />
+        <File Name="IInstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\BusinessLogic\DevartEFCore\IDevartRepositories" />
         <File Name="EntityFrameworkRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWork.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EntityFrameworkUnitOfWorkFactory.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
@@ -314,16 +308,12 @@
         <File Name="CausalInscrPagoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="InstanciaWorkflowRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="InstanciaWorkflowRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="InstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="InstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="AccesoSitiosantanderRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="AccesoSitiosantanderRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="BachilleratoPersonaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="BachilleratoPersonaRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="AnioBachillerRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="AnioBachillerRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="AccionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="AccionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="DeclaracionJuradaWebRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="DeclaracionJuradaWebRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="TipoViviendaRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
@@ -362,8 +352,6 @@
         <File Name="FeriadoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="PersonaAdmiteRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="PersonaAdmiteRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
-        <File Name="ActividadRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
-        <File Name="ActividadRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="IngresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="IngresoMensualNfDjRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="EgresoMensualNfDjRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
@@ -416,6 +404,8 @@
         <File Name="VdInscriptoCreditoAlumnoRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="VdProductosDisponibles1y2Repository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
         <File Name="VdProductosDisponibles1y2Repository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
+        <File Name="InstWorkflowInscripcionRepository.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" OverwriteMode="None" />
+        <File Name="InstWorkflowInscripcionRepository.Generated.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\DataAccess\DevartDataAccess\DevartRepositories" />
         <File Name="DtoPaisDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoCiudadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEmpresaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -446,11 +436,9 @@
         <File Name="DtoTituloOrtDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoCausalInscrPagoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoInstanciaWorkflowDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoInstWorkflowInscripcionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoAccesoSitiosantanderDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoBachilleratoPersonaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoAnioBachillerDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoAccionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoDeclaracionJuradaWebDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoTipoViviendaDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoTipoDescuentoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -470,7 +458,6 @@
         <File Name="DtoVdFrescoProductoAdmisioneDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoFeriadoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoPersonaAdmiteDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
-        <File Name="DtoActividadDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoIngresoMensualNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoEgresoMensualNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoIntegranteNfDjDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
@@ -497,6 +484,7 @@
         <File Name="DtoVdInscriptoCoordinadoreDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoVdInscriptoCreditoAlumnoDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="DtoVdProductosDisponibles1y2Devart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
+        <File Name="DtoInstWorkflowInscripcionDevart.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO" />
         <File Name="PaisConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="CiudadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EmpresaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -527,11 +515,9 @@
         <File Name="TituloOrtConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="CausalInscrPagoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="InstanciaWorkflowConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="InstWorkflowInscripcionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="AccesoSitiosantanderConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="BachilleratoPersonaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="AnioBachillerConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="AccionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="DeclaracionJuradaWebConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="TipoViviendaConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="TipoDescuentoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -551,7 +537,6 @@
         <File Name="VdFrescoProductoAdmisioneConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="FeriadoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="PersonaAdmiteConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
-        <File Name="ActividadConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="IngresoMensualNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="EgresoMensualNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="IntegranteNfDjConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
@@ -578,6 +563,7 @@
         <File Name="VdInscriptoCoordinadoreConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="VdInscriptoCreditoAlumnoConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
         <File Name="VdProductosDisponibles1y2Converter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
+        <File Name="InstWorkflowInscripcionConverter.cs" DestinationFolder="C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>

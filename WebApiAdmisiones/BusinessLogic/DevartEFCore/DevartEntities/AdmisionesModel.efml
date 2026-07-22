@@ -2485,29 +2485,6 @@
       <column name="ID_CATEGORIA_WORKFLOW" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
-  <class name="InstWorkflowInscripcion" entity-set="InstWorkflowInscripcions" table="T_INST_WORKFLOW_INSCRIPCION" schema="CREADOR" p1:Guid="6326f33b-79af-48a9-968c-89d8bd941102">
-    <id name="IdInstanciaWorkflow" type="Decimal" p1:ValidateRequired="true" p1:Guid="44e16f1b-7744-4a43-99ed-35b7f827b77b">
-      <column name="ID_INSTANCIA_WORKFLOW" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </id>
-    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="c3580134-c54e-47b9-9008-27b350a6948a">
-      <column name="ID_TURNO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="968cb702-09a2-4c17-b8bb-3b1d43cff180">
-      <column name="ID_COMIENZO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="74690b93-a3e8-4d9a-800a-014cd1b45fda">
-      <column name="ID_PRODUCTO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
-    </property>
-    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="1d5d588d-af81-4982-98d8-782d35938029" p1:GenerateDTO="False">
-      <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="d4d69d1e-c11e-4b38-8d64-f49ee1934dff" p1:GenerateDTO="False">
-      <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
-    </property>
-    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="55bfc155-26ab-4822-9ad4-14eee1ead43d" p1:GenerateDTO="False">
-      <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-  </class>
   <class name="AccesoSitiosantander" entity-set="AccesoSitiosantanders" table="T_ACCESO_SITIOSANTANDER" schema="CREADOR" p1:Guid="c9bf83c5-cd8d-4088-83aa-177eb6c66c82">
     <composite-id>
       <key-property name="FechaAccesoSitiosantander" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="72202f09-39f4-486e-945b-125cd320eab5">
@@ -5354,6 +5331,32 @@
       <column name="ORDEN_LISTADO_ESCUELA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
+  <class name="InstWorkflowInscripcion" entity-set="InstWorkflowInscripcions" table="T_INST_WORKFLOW_INSCRIPCION" schema="CREADOR" p1:Guid="440c9ce4-c962-4926-8214-fffd4e4e0df3">
+    <id name="IdInstanciaWorkflow" type="Decimal" p1:ValidateRequired="true" p1:Guid="a295610f-1c95-4db7-97f0-4771c4e68d90">
+      <column name="ID_INSTANCIA_WORKFLOW" not-null="True" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </id>
+    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6838de63-af9f-4b47-a5f4-353d3fe9c09c">
+      <column name="ID_TURNO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="91e0aeda-5130-4fad-a7b8-958355e2b6d7">
+      <column name="ID_COMIENZO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="8739c9b1-4cbe-4844-bbfa-847fc68cbc9d">
+      <column name="ID_PRODUCTO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="UsuarioIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="30" p1:ValidateRequired="true" p1:Guid="6b4b1b63-d2ed-4014-a277-25dd818708a9" p1:GenerateDTO="False">
+      <column name="USUARIO_INGRESO" default="user" not-null="True" length="30" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaIngreso" type="DateTime" value-generated="OnAdd" p1:ValidateRequired="true" p1:Guid="689046a4-1fae-4ca2-8a99-cafcb8e67499" p1:GenerateDTO="False">
+      <column name="FECHA_INGRESO" default="trunc(sysdate)" not-null="True" sql-type="DATE" p1:unicode="False" />
+    </property>
+    <property name="HoraIngreso" type="String" value-generated="OnAdd" p1:ValidateMaxLength="8" p1:ValidateRequired="true" p1:Guid="dfbda2ea-d5c8-428d-ad65-2446706c8d20" p1:GenerateDTO="False">
+      <column name="HORA_INGRESO" default="to_char(sysdate, 'hh24:mi:ss')" not-null="True" length="8" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="IdOferta" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5c08cc73-a903-467c-b8c3-acc2944505f9">
+      <column name="ID_OFERTA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+  </class>
   <associations>
     <association name="Ciudad_Empresa" cardinality="OneToMany" p1:Guid="f6598624-97fb-4240-8557-16caff48fec6">
       <end1 multiplicity="ZeroOrOne" name="Ciudad" class="Empresa" relation-class="Ciudad" constrained="True" lazy="False" p1:Guid="9a1021ca-c1df-418e-bdbf-ce374718367a">
@@ -5985,14 +5988,6 @@
       </end1>
       <end2 multiplicity="Many" name="EncuestaIniAdmisions" class="Producto" relation-class="EncuestaIniAdmision" lazy="False" p1:Guid="b3417215-1848-4b10-b938-9025ba3141ce">
         <property name="IdProducto" />
-      </end2>
-    </association>
-    <association name="InstanciaWorkflow_InstWorkflowInscripcion" cardinality="OneToOne" p1:Guid="cf2dd54f-216b-48fe-bf21-293e0d18d013">
-      <end1 multiplicity="One" name="InstanciaWorkflow" class="InstWorkflowInscripcion" relation-class="InstanciaWorkflow" constrained="True" lazy="False" p1:Guid="b01e4c3c-0d42-4991-9f83-251a01eadf02">
-        <property name="IdInstanciaWorkflow" />
-      </end1>
-      <end2 multiplicity="ZeroOrOne" name="InstWorkflowInscripcion" class="InstanciaWorkflow" relation-class="InstWorkflowInscripcion" constrained="False" lazy="False" p1:Guid="dbfe074e-02b9-46a2-b553-81b7aa407371">
-        <property name="IdInstanciaWorkflow" />
       </end2>
     </association>
     <association name="Persona_RefreshToken" cardinality="OneToMany" p1:Guid="29e986e7-ac4b-4b09-9ff9-93be4480e5c1">
