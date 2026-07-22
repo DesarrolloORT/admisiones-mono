@@ -8,6 +8,7 @@ using AppLogic.Inscripciones.Interfaces;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -112,21 +113,13 @@ namespace AppLogic.Inscripciones.Encuesta.Services
             var validacion = EncuestaInicialCatalogValidator.ValidarRequestParcial(uow, request, nameof(GuardarEncuestaInicial));
             if (!validacion.Success)
             {
-                return OperationResult<DtoGuardarEncuestaInicialResponse>.IsFailed(
-                    validacion.ErrorCode,
-                    nameof(GuardarEncuestaInicial),
-                    validacion.Message,
-                    validacion.HttpCode);
+                return validacion.Failure().As<DtoGuardarEncuestaInicialResponse>(nameof(GuardarEncuestaInicial));
             }
 
             var contexto = ResolverContextoAdmision(uow, codigoPersona, request);
             if (!contexto.Success)
             {
-                return OperationResult<DtoGuardarEncuestaInicialResponse>.IsFailed(
-                    contexto.ErrorCode,
-                    nameof(GuardarEncuestaInicial),
-                    contexto.Message,
-                    contexto.HttpCode);
+                return contexto.Failure().As<DtoGuardarEncuestaInicialResponse>(nameof(GuardarEncuestaInicial));
             }
 
             var encuesta = ObtenerEncuestaParaGuardar(uow, codigoPersona, request, contexto.Data);
@@ -171,11 +164,7 @@ namespace AppLogic.Inscripciones.Encuesta.Services
                     if (!finalizacion.Success)
                     {
                         uow.Rollback();
-                        return OperationResult<DtoGuardarEncuestaInicialResponse>.IsFailed(
-                            finalizacion.ErrorCode,
-                            nameof(GuardarEncuestaInicial),
-                            finalizacion.Message,
-                            finalizacion.HttpCode);
+                        return finalizacion.Failure().As<DtoGuardarEncuestaInicialResponse>(nameof(GuardarEncuestaInicial));
                     }
                 }
 
@@ -290,11 +279,7 @@ namespace AppLogic.Inscripciones.Encuesta.Services
                 var fechaVencimientoResult = generalService.CalcularFechaVencimientoAdmisiones(uow, codigoPersona, encuesta.IdProceso.Value);
                 if (!fechaVencimientoResult.Success)
                 {
-                    return OperationResult<bool>.IsFailed(
-                        fechaVencimientoResult.ErrorCode,
-                        nameof(GuardarEncuestaInicial),
-                        fechaVencimientoResult.Message,
-                        fechaVencimientoResult.HttpCode);
+                    return fechaVencimientoResult.Failure().As<bool>(nameof(GuardarEncuestaInicial));
                 }
 
                 encuesta.FechaVtoAdmision = fechaVencimientoResult.Data;
@@ -314,7 +299,7 @@ namespace AppLogic.Inscripciones.Encuesta.Services
             var datos = ObtenerDatosBachilleratoDefinitivo(encuesta, methodName);
             if (!datos.Success)
             {
-                return OperationResult<bool>.IsFailed(datos.ErrorCode, methodName, datos.Message, datos.HttpCode);
+                return datos.Failure().As<bool>(methodName);
             }
 
             var datosBachillerato = datos.Data!;

@@ -3,6 +3,7 @@ using AppLogic.ApiClients.Dtos;
 using AppLogic.Inscripciones.Dtos;
 using AppLogic.Inscripciones.Rules;
 using BusinessLogic.Entities;
+using AppLogic.Helpers;
 using Utilities;
 
 namespace AppLogic.Inscripciones.Mappers
@@ -77,9 +78,7 @@ namespace AppLogic.Inscripciones.Mappers
             string methodName)
         {
             if (!apiResult.Success)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(apiResult.ErrorCode, methodName, apiResult.Message, apiResult.HttpCode);
-            }
+                return apiResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
             if (apiResult.Data == null)
             {

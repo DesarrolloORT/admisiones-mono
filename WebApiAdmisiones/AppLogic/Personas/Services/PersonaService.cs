@@ -6,6 +6,7 @@ using AppLogic.Personas.Dtos;
 using AppLogic.Personas.Validators;
 using AppLogic.DevartDTOs;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -163,13 +164,7 @@ namespace AppLogic.Personas.Services
                     request.PasswordNueva);
 
                 if (!cambioPassword.Success)
-                {
-                    return OperationResult<object>.IsFailed(
-                        cambioPassword.ErrorCode,
-                        nameof(CambiarPasswordAsync),
-                        cambioPassword.Message,
-                        cambioPassword.HttpCode);
-                }
+                    return cambioPassword.Failure().As<object>(nameof(CambiarPasswordAsync));
 
                 return OperationResult<object>.Ok(
                     "Se actualizó tu contraseña",
@@ -213,13 +208,7 @@ namespace AppLogic.Personas.Services
                 fechaVencimientoDocumentoDefinitivo,
                 nameof(ObtenerDocumentoPersona));
             if (!frente.Success)
-            {
-                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
-                    frente.ErrorCode,
-                    nameof(ObtenerDocumentoPersona),
-                    frente.Message,
-                    frente.HttpCode);
-            }
+                return frente.Failure().As<DtoDocumentoPersonaResponse>(nameof(ObtenerDocumentoPersona));
 
             var dorso = DocumentoIdentidadPersonaService.ObtenerDocumentoOpcionalParaConsulta(
                 uow,
@@ -228,13 +217,7 @@ namespace AppLogic.Personas.Services
                 fechaVencimientoDocumentoDefinitivo,
                 nameof(ObtenerDocumentoPersona));
             if (!dorso.Success)
-            {
-                return OperationResult<DtoDocumentoPersonaResponse>.IsFailed(
-                    dorso.ErrorCode,
-                    nameof(ObtenerDocumentoPersona),
-                    dorso.Message,
-                    dorso.HttpCode);
-            }
+                return dorso.Failure().As<DtoDocumentoPersonaResponse>(nameof(ObtenerDocumentoPersona));
 
             if (frente.Data is null && dorso.Data is null)
             {
@@ -277,13 +260,7 @@ namespace AppLogic.Personas.Services
                     fileName);
 
                 if (!resultadoGuardado.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoGuardado.ErrorCode,
-                        nameof(SubirFotoPersona),
-                        resultadoGuardado.Message,
-                        resultadoGuardado.HttpCode);
-                }
+                    return resultadoGuardado.Failure().As<bool>(nameof(SubirFotoPersona));
 
                 uow.Imagens.Add(resultadoGuardado.Data!);
             }
@@ -291,13 +268,7 @@ namespace AppLogic.Personas.Services
             {
                 var resultadoModificacion = ModificarFotoPersona(imagenExistente, fileContent, fileName);
                 if (!resultadoModificacion.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoModificacion.ErrorCode,
-                        nameof(SubirFotoPersona),
-                        resultadoModificacion.Message,
-                        resultadoModificacion.HttpCode);
-                }
+                    return resultadoModificacion.Failure().As<bool>(nameof(SubirFotoPersona));
 
                 uow.Imagens.Update(imagenExistente);
             }
@@ -393,13 +364,7 @@ namespace AppLogic.Personas.Services
                     nameof(SubirDocumentoPersona));
 
                 if (!resultadoGuardado.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoGuardado.ErrorCode,
-                        nameof(SubirDocumentoPersona),
-                        resultadoGuardado.Message,
-                        resultadoGuardado.HttpCode);
-                }
+                    return resultadoGuardado.Failure().As<bool>(nameof(SubirDocumentoPersona));
 
                 uow.ImagenTemporals.Add(resultadoGuardado.Data!);
             }
@@ -413,13 +378,7 @@ namespace AppLogic.Personas.Services
                     fileName,
                     nameof(SubirDocumentoPersona));
                 if (!resultadoModificacion.Success)
-                {
-                    return OperationResult<bool>.IsFailed(
-                        resultadoModificacion.ErrorCode,
-                        nameof(SubirDocumentoPersona),
-                        resultadoModificacion.Message,
-                        resultadoModificacion.HttpCode);
-                }
+                    return resultadoModificacion.Failure().As<bool>(nameof(SubirDocumentoPersona));
 
                 uow.ImagenTemporals.Update(documentoExistente);
             }
@@ -452,13 +411,7 @@ namespace AppLogic.Personas.Services
                 documento.NombreArchivo,
                 nameof(SubirDocumentoPersona));
             if (!validacion.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    validacion.ErrorCode,
-                    nameof(SubirDocumentoPersona),
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
+                return validacion.Failure().As<bool>(nameof(SubirDocumentoPersona));
 
             return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
         }

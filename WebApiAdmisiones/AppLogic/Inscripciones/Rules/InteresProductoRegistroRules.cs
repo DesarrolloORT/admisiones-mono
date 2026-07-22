@@ -4,6 +4,7 @@ using AppLogic.Tivenos.Dtos;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using AppLogic.Helpers;
 using Utilities;
 
 namespace AppLogic.Inscripciones.Rules
@@ -40,13 +41,7 @@ namespace AppLogic.Inscripciones.Rules
                 ofertas[0].Supraoferta?.IdComienzo ?? 0,
                 methodName);
             if (!resultadoEncuesta.Success)
-            {
-                return OperationResult<DtoTivenosAltaInteresRequest?>.IsFailed(
-                    resultadoEncuesta.ErrorCode,
-                    methodName,
-                    resultadoEncuesta.Message,
-                    resultadoEncuesta.HttpCode);
-            }
+                return resultadoEncuesta.Failure().As<DtoTivenosAltaInteresRequest?>(methodName);
 
             return OperationResult<DtoTivenosAltaInteresRequest?>.Ok(
                 CrearRequestTivenos(codigoPersona, request, operacionTivenos),

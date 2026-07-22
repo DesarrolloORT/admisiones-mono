@@ -3,6 +3,7 @@ using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Constants;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -42,13 +43,7 @@ namespace AppLogic.Personas.Services
             {
                 var validacionTemporal = ValidarDocumentoTemporalParaConsulta(temporal, methodName);
                 if (!validacionTemporal.Success)
-                {
-                    return OperationResult<DtoDocumentoPersonaConsulta?>.IsFailed(
-                        validacionTemporal.ErrorCode,
-                        methodName,
-                        validacionTemporal.Message,
-                        validacionTemporal.HttpCode);
-                }
+                    return validacionTemporal.Failure().As<DtoDocumentoPersonaConsulta?>(methodName);
 
                 return OperationResult<DtoDocumentoPersonaConsulta?>.Ok(
                     new DtoDocumentoPersonaConsulta
@@ -74,13 +69,7 @@ namespace AppLogic.Personas.Services
                 fechaVencimientoDocumentoDefinitivo,
                 methodName);
             if (!validacionDefinitivo.Success)
-            {
-                return OperationResult<DtoDocumentoPersonaConsulta?>.IsFailed(
-                    validacionDefinitivo.ErrorCode,
-                    methodName,
-                    validacionDefinitivo.Message,
-                    validacionDefinitivo.HttpCode);
-            }
+                return validacionDefinitivo.Failure().As<DtoDocumentoPersonaConsulta?>(methodName);
 
             return OperationResult<DtoDocumentoPersonaConsulta?>.Ok(
                 new DtoDocumentoPersonaConsulta
@@ -153,13 +142,7 @@ namespace AppLogic.Personas.Services
         {
             var validacion = FileValidator.ValidateImageFile(fileContent, fileName, methodName);
             if (!validacion.Success)
-            {
-                return OperationResult<ImagenTemporal>.IsFailed(
-                    validacion.ErrorCode,
-                    methodName,
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
+                return validacion.Failure().As<ImagenTemporal>(methodName);
 
             return OperationResult<ImagenTemporal>.Ok(
                 new ImagenTemporal
@@ -187,13 +170,7 @@ namespace AppLogic.Personas.Services
         {
             var validacion = FileValidator.ValidateImageFile(fileContent, fileName, methodName);
             if (!validacion.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    validacion.ErrorCode,
-                    methodName,
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
+                return validacion.Failure().As<bool>(methodName);
 
             existente.NombreImagen = ConstruirNombrePersistido(
                 existente.CodigoPersona ?? 0,
@@ -464,13 +441,7 @@ namespace AppLogic.Personas.Services
                 methodName,
                 "GEN_DA_03");
             if (!validacionFecha.Success)
-            {
-                return OperationResult<byte[]>.IsFailed(
-                    validacionFecha.ErrorCode,
-                    methodName,
-                    validacionFecha.Message,
-                    validacionFecha.HttpCode);
-            }
+                return validacionFecha.Failure().As<byte[]>(methodName);
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
             {
@@ -494,13 +465,7 @@ namespace AppLogic.Personas.Services
                 methodName,
                 "GEN_DA_03");
             if (!validacionFecha.Success)
-            {
-                return OperationResult<byte[]>.IsFailed(
-                    validacionFecha.ErrorCode,
-                    methodName,
-                    validacionFecha.Message,
-                    validacionFecha.HttpCode);
-            }
+                return validacionFecha.Failure().As<byte[]>(methodName);
 
             if (documento.BlobImagen == null || documento.BlobImagen.Length == 0)
             {

@@ -12,6 +12,7 @@ using AppLogic.Personas.Services;
 using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -134,13 +135,7 @@ namespace AppLogic.Inscripciones.Services
 
             var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
             if (!carritos.Success)
-            {
-                return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
-                    carritos.ErrorCode,
-                    nameof(ObtenerDetalleInscripcion),
-                    carritos.Message,
-                    carritos.HttpCode);
-            }
+                return carritos.Failure().As<DtoDetalleInscripcionResponse>(nameof(ObtenerDetalleInscripcion));
 
             var reservaMinima = uow.InscriptoSeniaMinima.GetByKey(inscriptoPago.IdInscripto);
             if (reservaMinima != null)
@@ -215,10 +210,7 @@ namespace AppLogic.Inscripciones.Services
 
             var ofertasValidas = ValidarYObtenerOfertas(uow, request);
             if (!ofertasValidas.Success)
-            {
-                return OperationResult<bool>.IsFailed(
-                    ofertasValidas.ErrorCode, nameof(RegistrarInteresProducto), ofertasValidas.Message, ofertasValidas.HttpCode);
-            }
+                return ofertasValidas.Failure().As<bool>(nameof(RegistrarInteresProducto));
 
             return RegistrarInteresYEncolarTivenos(uow, codigoPersona, request, ofertasValidas.Data!);
         }
@@ -236,13 +228,7 @@ namespace AppLogic.Inscripciones.Services
                     request.IdProcesoSeleccionado,
                     nameof(RegistrarInteresProducto));
                 if (!validacionOferta.Success)
-                {
-                    return OperationResult<List<Oferta>>.IsFailed(
-                        validacionOferta.ErrorCode,
-                        nameof(RegistrarInteresProducto),
-                        validacionOferta.Message,
-                        validacionOferta.HttpCode);
-                }
+                    return validacionOferta.Failure().As<List<Oferta>>(nameof(RegistrarInteresProducto));
 
                 ofertas.Add(validacionOferta.Data!);
             }
@@ -273,11 +259,7 @@ namespace AppLogic.Inscripciones.Services
                 if (!resultado.Success)
                 {
                     uow.Rollback();
-                    return OperationResult<bool>.IsFailed(
-                        resultado.ErrorCode,
-                        nameof(RegistrarInteresProducto),
-                        resultado.Message,
-                        resultado.HttpCode);
+                    return resultado.Failure().As<bool>(nameof(RegistrarInteresProducto));
                 }
 
                 if (resultado.Data != null)
@@ -290,11 +272,7 @@ namespace AppLogic.Inscripciones.Services
                     if (!resultadoTivenos.Success)
                     {
                         uow.Rollback();
-                        return OperationResult<bool>.IsFailed(
-                            resultadoTivenos.ErrorCode,
-                            nameof(RegistrarInteresProducto),
-                            resultadoTivenos.Message,
-                            resultadoTivenos.HttpCode);
+                        return resultadoTivenos.Failure().As<bool>(nameof(RegistrarInteresProducto));
                     }
                 }
 
@@ -333,13 +311,7 @@ namespace AppLogic.Inscripciones.Services
 
             var validacionRequest = ConfirmarPreInscripcionRules.ValidarRequest(request, methodName);
             if (!validacionRequest.Success)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                    validacionRequest.ErrorCode,
-                    methodName,
-                    validacionRequest.Message,
-                    validacionRequest.HttpCode);
-            }
+                return validacionRequest.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
             using var uow = _uowFactory.Create();
 
@@ -351,10 +323,7 @@ namespace AppLogic.Inscripciones.Services
 
             var ofertasCompatibles = ValidarOfertasCompatibles(uow, codigoPersona, request, methodName);
             if (!ofertasCompatibles.Success)
-            {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                    ofertasCompatibles.ErrorCode, methodName, ofertasCompatibles.Message, ofertasCompatibles.HttpCode);
-            }
+                return ofertasCompatibles.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
             var ofertasSeleccionadas = ofertasCompatibles.Data!;
             var contexto = ofertasSeleccionadas[0];
 
@@ -364,7 +333,7 @@ namespace AppLogic.Inscripciones.Services
                 methodName);
             if (!validacionDocumentos.Success)
             {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(validacionDocumentos.ErrorCode, methodName, validacionDocumentos.Message, validacionDocumentos.HttpCode);
+                return validacionDocumentos.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
             }
 
             var aceptacion = ConfirmarPreInscripcionRules.AsegurarAceptacionReglamentoEstudiantil(
@@ -377,17 +346,14 @@ namespace AppLogic.Inscripciones.Services
                 methodName);
             if (!aceptacion.Success)
             {
-                return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(aceptacion.ErrorCode, methodName, aceptacion.Message, aceptacion.HttpCode);
+                return aceptacion.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
             }
 
             if (request.EsInscripcionCorporativa)
             {
                 var validacionNivel = ConfirmarPreInscripcionRules.ValidarNivelCorporativo(contexto, methodName);
                 if (!validacionNivel.Success)
-                {
-                    return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                        validacionNivel.ErrorCode, methodName, validacionNivel.Message, validacionNivel.HttpCode);
-                }
+                    return validacionNivel.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
                 // un tramite + una instancia + una fila en T_INST_WORKFLOW_INSCRIPCION por oferta.
                 foreach (var oferta in ofertasSeleccionadas)
@@ -400,10 +366,7 @@ namespace AppLogic.Inscripciones.Services
                     var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 
                     if (!altaResult.Success)
-                    {
-                        return OperationResult<DtoConfirmarPreInscripcionResponse>.IsFailed(
-                            altaResult.ErrorCode, methodName, altaResult.Message, altaResult.HttpCode);
-                    }
+                        return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
                     uow.InstWorkflowInscripcions.Add(
                         ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
@@ -443,10 +406,7 @@ namespace AppLogic.Inscripciones.Services
 
                 var datosOferta = ConfirmarPreInscripcionRules.ObtenerDatosConfirmacionOferta(uow, codigoPersona, oferta, methodName);
                 if (!datosOferta.Success)
-                {
-                    return OperationResult<List<DatosConfirmacionOferta>>.IsFailed(
-                        datosOferta.ErrorCode, methodName, datosOferta.Message, datosOferta.HttpCode);
-                }
+                    return datosOferta.Failure().As<List<DatosConfirmacionOferta>>(methodName);
 
                 if (seleccionadas.Count > 0 && !EsOfertaCompatibleConSeleccion(seleccionadas[0], datosOferta.Data!))
                 {
@@ -528,7 +488,7 @@ namespace AppLogic.Inscripciones.Services
                 {
                     var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripcion = request.IdInscripcion });
                     if (!result.Success)
-                        return OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                        return result.Failure().As<DtoPagarResponse>(methodName);
 
                     using var uow = _uowFactory.Create();
                     var inscripto = uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona);
@@ -544,7 +504,7 @@ namespace AppLogic.Inscripciones.Services
                     var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripcion = request.IdInscripcion, TipoPago = tipoPago });
                     return result.Success
                         ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.MetodoGuardado }, methodName)
-                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                        : result.Failure().As<DtoPagarResponse>(methodName);
                 }
 
                 case InscripcionesConstants.TipoPago.Banred:
@@ -564,7 +524,7 @@ namespace AppLogic.Inscripciones.Services
                             UrlPago = result.Data!.Url,
                             ParametrosEncriptados = result.Data.ParametrosEncriptados
                         }, methodName)
-                        : OperationResult<DtoPagarResponse>.IsFailed(result.ErrorCode, methodName, result.Message, result.HttpCode);
+                        : result.Failure().As<DtoPagarResponse>(methodName);
                 }
 
                 default:
@@ -578,7 +538,7 @@ namespace AppLogic.Inscripciones.Services
 
             var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_UF_00", "INS_UF_01", methodName);
             if (!validacion.Success)
-                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+                return validacion.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
 
             var tipoPago = request.TipoPago?.Trim().ToUpperInvariant();
             var tipoPagoNormalizado = tipoPago ?? string.Empty;
@@ -597,15 +557,13 @@ namespace AppLogic.Inscripciones.Services
             {
                 var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_UF_04", methodName);
                 if (!pertenencia.Success)
-                    return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+                    return pertenencia.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
             }
 
             var banco = tipoPagoNormalizado == InscripcionesConstants.TipoPago.Sistarbanc ? idBancoSistarbanc! : string.Empty;
             var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripcion, tipoPagoNormalizado, banco);
             if (!urlResult.Success)
-            {
-                return OperationResult<DtoObtenerUrlFacturaResponse>.IsFailed(urlResult.ErrorCode, methodName, urlResult.Message, urlResult.HttpCode);
-            }
+                return urlResult.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
 
             var (url, parametrosEncriptados) = SepararUrlYParametrosEncriptados(urlResult.Data);
             return OperationResult<DtoObtenerUrlFacturaResponse>.Ok(
@@ -634,19 +592,19 @@ namespace AppLogic.Inscripciones.Services
 
             var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_PC_00", "INS_PC_01", methodName);
             if (!validacion.Success)
-                return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+                return validacion.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
 
             using (var uow = _uowFactory.Create())
             {
                 var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_PC_02", methodName);
                 if (!pertenencia.Success)
-                    return OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pertenencia.ErrorCode, methodName, pertenencia.Message, pertenencia.HttpCode);
+                    return pertenencia.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
             }
 
             var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdInscripcion);
             return pagoResult.Success
                 ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
-                : OperationResult<List<DtoMensajePagoCarrito>>.IsFailed(pagoResult.ErrorCode, methodName, pagoResult.Message, pagoResult.HttpCode);
+                : pagoResult.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
         }
 
         private OperationResult<bool> GuardarMetodoPago(long codigoPersona, DtoGuardarMetodoPagoRequest request)
@@ -655,7 +613,7 @@ namespace AppLogic.Inscripciones.Services
 
             var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_MP_00", "INS_MP_01", methodName);
             if (!validacion.Success)
-                return OperationResult<bool>.IsFailed(validacion.ErrorCode, methodName, validacion.Message, validacion.HttpCode);
+                return validacion.Failure().As<bool>(methodName);
 
             var tipoPagoNormalizado = request.TipoPago?.Trim().ToUpperInvariant() ?? string.Empty;
             if (!MetodosPagoExternos.Contains(tipoPagoNormalizado))

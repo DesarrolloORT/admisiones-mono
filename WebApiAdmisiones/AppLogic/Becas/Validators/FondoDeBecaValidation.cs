@@ -1,6 +1,7 @@
 using AppLogic.Becas.Constants;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
+using AppLogic.Helpers;
 using Utilities;
 
 namespace AppLogic.Becas.Validators
@@ -58,13 +59,7 @@ namespace AppLogic.Becas.Validators
         {
             var validacion = FileValidator.ValidateDeclaracionJuradaAttachment(fileContent, fileName, methodName);
             if (!validacion.Success)
-            {
-                return OperationResult<string>.IsFailed(
-                    validacion.ErrorCode,
-                    methodName,
-                    validacion.Message,
-                    validacion.HttpCode);
-            }
+                return validacion.Failure().As<string>(methodName);
 
             return FileValidator.SanitizeDeclaracionJuradaAttachmentName(fileName, methodName);
         }

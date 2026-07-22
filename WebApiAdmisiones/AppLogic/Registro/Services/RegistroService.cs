@@ -6,6 +6,7 @@ using AppLogic.DevartDTOs;
 using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
@@ -188,11 +189,7 @@ namespace AppLogic.Registro.Services
                 nameof(VerificarIdentidadAsync));
             if (!verificacion.Success)
             {
-                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
-                    verificacion.ErrorCode,
-                    nameof(VerificarIdentidadAsync),
-                    verificacion.Message,
-                    verificacion.HttpCode);
+                return verificacion.Failure().As<DtoRegistroConfirmacionResponse?>(nameof(VerificarIdentidadAsync));
             }
 
             return await CrearUsuarioRegistrarAdmisionYEnviarMailLinkPasswordAsync(
@@ -325,23 +322,13 @@ namespace AppLogic.Registro.Services
                 nameof(CompletarNuevaPersonaAsync));
             if (!imagenesValidation.Success)
             {
-                return OperationResult<long>.IsFailed(
-                    imagenesValidation.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    imagenesValidation.Message,
-                    imagenesValidation.HttpCode,
-                    default);
+                return imagenesValidation.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             var crearPersonaResult = CrearPersonaEnDb(uow, data, ciudad);
             if (!crearPersonaResult.Success)
             {
-                return OperationResult<long>.IsFailed(
-                    crearPersonaResult.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    crearPersonaResult.Message,
-                    crearPersonaResult.HttpCode,
-                    default);
+                return crearPersonaResult.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             var persona = crearPersonaResult.Data!;
@@ -356,12 +343,7 @@ namespace AppLogic.Registro.Services
                     "Estado inconsistente: persona {CodigoPersona} creada en DB pero sin usuario LDAP ({ErrorCode}).",
                     persona.CodigoPersona,
                     crearUsuario.ErrorCode);
-                return OperationResult<long>.IsFailed(
-                    crearUsuario.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    crearUsuario.Message,
-                    crearUsuario.HttpCode,
-                    default);
+                return crearUsuario.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             var cambioPassword = await CambiarPasswordLdapAsync(
@@ -373,23 +355,13 @@ namespace AppLogic.Registro.Services
                     "Estado inconsistente: persona {CodigoPersona} con usuario LDAP creado pero sin password establecida ({ErrorCode}).",
                     persona.CodigoPersona,
                     cambioPassword.ErrorCode);
-                return OperationResult<long>.IsFailed(
-                    cambioPassword.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    cambioPassword.Message,
-                    cambioPassword.HttpCode,
-                    default);
+                return cambioPassword.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             var persistenciaResult = PersistirMetadataYAdmision(uow, persona, imagenes);
             if (!persistenciaResult.Success)
             {
-                return OperationResult<long>.IsFailed(
-                    persistenciaResult.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    persistenciaResult.Message,
-                    persistenciaResult.HttpCode,
-                    default);
+                return persistenciaResult.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             return OperationResult<long>.Ok(persona.CodigoPersona, nameof(CompletarNuevaPersonaAsync));
@@ -495,11 +467,7 @@ namespace AppLogic.Registro.Services
             var crearUsuario = await CrearUsuarioLdapAsync(RegistroEntityFactory.CrearUsuarioLdapRequest(persona));
             if (!crearUsuario.Success)
             {
-                return OperationResult<DtoRegistroConfirmacionResponse?>.IsFailed(
-                    crearUsuario.ErrorCode,
-                    originMethod,
-                    crearUsuario.Message,
-                    crearUsuario.HttpCode);
+                return crearUsuario.Failure().As<DtoRegistroConfirmacionResponse?>(originMethod);
             }
 
             try
@@ -683,12 +651,7 @@ namespace AppLogic.Registro.Services
 
             if (!cambioPassword.Success)
             {
-                return OperationResult<long>.IsFailed(
-                    cambioPassword.ErrorCode,
-                    nameof(CompletarNuevaPersonaAsync),
-                    cambioPassword.Message,
-                    cambioPassword.HttpCode,
-                    default);
+                return cambioPassword.Failure().As<long>(nameof(CompletarNuevaPersonaAsync));
             }
 
             ActualizarMetadataPassword(uow, persona);

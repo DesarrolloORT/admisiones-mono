@@ -42,6 +42,9 @@ if (!ingresoResult.Success || ingresoResult.Data is null)
 `Failure().As<T>()` preserva `ErrorCode`, `Method`, `Message` y `HttpCode` exactos: no cambia
 el contrato con el front, sólo borra el boilerplate.
 
+Si propagás desde un validador/regla cuyo nombre **no** querés que aparezca en la respuesta,
+re-sellá el método de origen: `return validacion.Failure().As<TipoDestino>(methodName);`
+
 ---
 
 ## 2. Métodos de servicio: guard clauses y un solo nivel de indentación
