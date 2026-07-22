@@ -340,33 +340,52 @@ public class InscripcionesService(
         }
 
         if (request.EsInscripcionCorporativa)
+            return ConfirmarInscripcionCorporativa(uow, codigoPersona, persona, ofertasSeleccionadas, methodName);
+
+        return await ConfirmarInscripcionOnlineAsync(uow, contexto, ofertasSeleccionadas, request, methodName);
+    }
+
+    /// <summary>Un tramite + una instancia + una fila en T_INST_WORKFLOW_INSCRIPCION por oferta.</summary>
+    private OperationResult<DtoConfirmarPreInscripcionResponse> ConfirmarInscripcionCorporativa(
+        IUnitOfWork uow,
+        long codigoPersona,
+        Persona persona,
+        List<DatosConfirmacionOferta> ofertasSeleccionadas,
+        string methodName)
+    {
+        var contexto = ofertasSeleccionadas[0];
+        var validacionNivel = ConfirmarPreInscripcionRules.ValidarNivelCorporativo(contexto, methodName);
+        if (!validacionNivel.Success)
+            return validacionNivel.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
+
+        foreach (var oferta in ofertasSeleccionadas)
         {
-            var validacionNivel = ConfirmarPreInscripcionRules.ValidarNivelCorporativo(contexto, methodName);
-            if (!validacionNivel.Success)
-                return validacionNivel.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
+            var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(oferta, persona);
+            var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
+            var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
+            var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
 
-            // un tramite + una instancia + una fila en T_INST_WORKFLOW_INSCRIPCION por oferta.
-            foreach (var oferta in ofertasSeleccionadas)
-            {
-                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(oferta, persona);
-                var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
-                var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
-                var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
+            var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 
-                var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
+            if (!altaResult.Success)
+                return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
-                if (!altaResult.Success)
-                    return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
-
-                uow.InstWorkflowInscripcions.Add(
-                    ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
-                uow.Save();
-            }
-
-            return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
-                ConfirmarPreInscripcionRules.MapearResultadoCorporativo(), methodName);
+            uow.InstWorkflowInscripcions.Add(
+                ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
+            uow.Save();
         }
 
+        return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
+            ConfirmarPreInscripcionRules.MapearResultadoCorporativo(), methodName);
+    }
+
+    private async Task<OperationResult<DtoConfirmarPreInscripcionResponse>> ConfirmarInscripcionOnlineAsync(
+        IUnitOfWork uow,
+        DatosConfirmacionOferta contexto,
+        List<DatosConfirmacionOferta> ofertasSeleccionadas,
+        DtoConfirmarPreInscripcionRequest request,
+        string methodName)
+    {
         var apiRequest = ConfirmarPreInscripcionRules.CrearApiRequestMultiple(contexto, request.IdsOfertasSeleccionadas);
         var apiResult = await _inscripcionesyPagosApiClient.ConfirmarPreInscripcionMultipleAsync(apiRequest);
 

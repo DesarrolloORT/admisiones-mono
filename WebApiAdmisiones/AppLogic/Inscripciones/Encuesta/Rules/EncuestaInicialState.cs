@@ -59,6 +59,7 @@ internal static class EncuestaInicialState
 
     internal static bool IsAnsweredSN(string? value) => SNToBool(value).HasValue;
 
+    /// <summary>5 (Formación universitaria completa) o 6 (Estudios de postgrado) en NivelesFormacionTutores.</summary>
     internal static bool EsInstruccionAlta(int? value) => value is 5 or 6;
 
     internal static int? LeerInt(string? value)

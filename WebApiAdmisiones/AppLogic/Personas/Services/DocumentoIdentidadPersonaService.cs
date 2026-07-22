@@ -16,6 +16,9 @@ public static class DocumentoIdentidadPersonaService
 {
     private const string TipoImagenDocumentoIdentidadPersistido = "1";
 
+    /// <summary>Código de error cuando falta subir el documento (frente o dorso), sea temporal o definitivo.</summary>
+    private const string CodigoDocumentoFaltante = "INS_CPI_09";
+
     public static bool EsTipoDocumentoValido(int tipo)
     {
         return tipo == PersonaConstants.DocumentoPersona.Frente
@@ -101,18 +104,21 @@ public static class DocumentoIdentidadPersonaService
             return definitivos;
         }
 
-        if (temporales.ErrorCode != "INS_CPI_09")
+        if (!EsDocumentoFaltante(temporales))
         {
             return temporales;
         }
 
-        if (definitivos.ErrorCode != "INS_CPI_09" || definitivoEsDorso)
+        if (!EsDocumentoFaltante(definitivos) || definitivoEsDorso)
         {
             return definitivos;
         }
 
         return temporales;
     }
+
+    private static bool EsDocumentoFaltante(OperationResult<bool> resultado)
+        => resultado.ErrorCode == CodigoDocumentoFaltante;
 
     public static OperationResult<bool> ValidarFechaVencimientoDocumento(
         DateTime? fechaVencimiento,
@@ -531,7 +537,7 @@ public static class DocumentoIdentidadPersonaService
     private static OperationResult<bool> DocumentoFaltante(string lado, string methodName)
     {
         return OperationResult<bool>.IsFailed(
-            "INS_CPI_09",
+            CodigoDocumentoFaltante,
             methodName,
             $"Debe subir el documento de identidad ({lado}).",
             404);
