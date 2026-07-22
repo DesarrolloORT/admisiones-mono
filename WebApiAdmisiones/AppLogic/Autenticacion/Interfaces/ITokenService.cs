@@ -1,11 +1,10 @@
 using BusinessLogic.Entities;
 
-namespace AppLogic.Autenticacion.Interfaces
+namespace AppLogic.Autenticacion.Interfaces;
+
+public interface ITokenService
 {
-    public interface ITokenService
-    {
-        string GenerateAccessToken(Persona user);
-        string GenerateRefreshToken();
-        string HashToken(string token);
-    }
+    string GenerateAccessToken(Persona user);
+    string GenerateRefreshToken();
+    string HashToken(string token);
 }
