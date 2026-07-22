@@ -1,14 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppLogic.Registro.Dtos
+namespace AppLogic.Registro.Dtos;
+
+/// <summary>
+/// Confirma que el registro se completó. <see cref="MailEnviado"/> distingue éxito parcial
+/// (registro OK, mail de activación no enviado) de éxito completo (SRV-05).
+/// </summary>
+[ExcludeFromCodeCoverage]
+public class DtoRegistroConfirmacionResponse
 {
-    /// <summary>
-    /// Confirma que el registro se completó. <see cref="MailEnviado"/> distingue éxito parcial
-    /// (registro OK, mail de activación no enviado) de éxito completo (SRV-05).
-    /// </summary>
-    [ExcludeFromCodeCoverage]
-    public class DtoRegistroConfirmacionResponse
-    {
-        public bool MailEnviado { get; set; } = true;
-    }
+    public bool MailEnviado { get; set; } = true;
 }
