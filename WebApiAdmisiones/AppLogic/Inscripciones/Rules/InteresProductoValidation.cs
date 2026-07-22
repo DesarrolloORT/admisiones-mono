@@ -7,7 +7,7 @@ using Utilities;
 
 namespace AppLogic.Inscripciones.Rules;
 
-public static class InteresProductoValidationRules
+public static class InteresProductoValidation
 {
     public static OperationResult<bool> ValidarOfertasSolicitadas(List<long>? idsOferta, string method)
     {

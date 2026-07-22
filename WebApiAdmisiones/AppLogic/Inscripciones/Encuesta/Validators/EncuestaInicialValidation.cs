@@ -5,7 +5,7 @@ using BusinessLogic.IDevartRepositories;
 
 namespace AppLogic.Inscripciones.Encuesta.Validators;
 
-internal static class EncuestaInicialValidator
+internal static class EncuestaInicialValidation
 {
     internal static DtoGuardarEncuestaInicialResponse ValidarCompletitudDesdeBase(
         IUnitOfWork uow,
@@ -51,7 +51,7 @@ internal static class EncuestaInicialValidator
             var anio = EncuestaInicialState.LeerLong(encuesta.UltimoAnioSextoEncuestaIni)
                 ?? EncuestaInicialState.LeerLong(encuesta.AniosInstruccionEncuestaIni);
             pendientes.AddSi(!anio.HasValue, section, "anioBachillerato");
-            if (anio.HasValue && EncuestaInicialCatalogValidator.AnioBachillerTieneOrientaciones(uow, anio.Value))
+            if (anio.HasValue && EncuestaInicialCatalogValidation.AnioBachillerTieneOrientaciones(uow, anio.Value))
                 pendientes.AddSi(!encuesta.CodigoTitulo.HasValue || encuesta.CodigoTitulo <= 0, section, "orientacionBachilleratoId");
         }
 

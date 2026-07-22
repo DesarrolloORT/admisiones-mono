@@ -87,9 +87,17 @@ partilo en privados con nombre. El nombre del privado es la documentación.
 ## 3. Validadores: un lugar, una regla por `if`
 
 Toda la validación de negocio de un dominio va en **una** clase estática `*Validation`
-(unificamos el sufijo; `*Validator` y `*Rules` quedan **deprecados** para código nuevo). Cada
-regla es un `if` con guard clause y **un código de error único**, de modo que la regla de
-negocio empata 1:1 con la línea de código.
+(sufijo unificado — ya no quedan `*Validator` en el repo). Cada regla es un `if` con guard
+clause y **un código de error único**, de modo que la regla de negocio empata 1:1 con la
+línea de código.
+
+**`*Validation` vs `*Rules`:** si la clase SOLO valida (devuelve `OperationResult<bool>` o
+similar, sin mutar entidades ni construir DTOs de negocio), es `*Validation`. Si mezcla
+validación con lógica de negocio — mutar una entidad (`PersonaIdentityRules.AplicarCambiosIdentidad`),
+armar un XML/DTO para otro sistema (`ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa`) —
+queda como `*Rules`; renombrarla a `*Validation` sería mentir sobre su responsabilidad.
+Si una clase `*Rules` termina siendo 100% validación pura, ahí sí se renombra (pasó con
+`InteresProductoValidationRules` → `InteresProductoValidation`).
 
 ```csharp
 // ✅ Legible: se lee como una lista de reglas

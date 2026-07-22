@@ -254,7 +254,7 @@ internal static class EncuestaInicialMapper
     }
 
     private static decimal ResolverCantAniosAnioBachiller(IUnitOfWork uow, long value)
-        => EncuestaInicialCatalogValidator.ResolverAnioBachiller(uow, value)?.CantAniosAnioBachiller ?? value;
+        => EncuestaInicialCatalogValidation.ResolverAnioBachiller(uow, value)?.CantAniosAnioBachiller ?? value;
 
     private static string GenerarClaveEncuesta(long idProducto, string? documento)
     {

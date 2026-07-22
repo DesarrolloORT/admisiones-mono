@@ -6,7 +6,7 @@ using Utilities;
 
 namespace AppLogic.Inscripciones.Encuesta.Validators;
 
-public static class EncuestaInicialCatalogValidator
+public static class EncuestaInicialCatalogValidation
 {
     /// <summary>IdNivelProducto que identifica una carrera universitaria (a diferencia de terciarias u otros niveles).</summary>
     private const long NivelProductoUniversitario = 1;

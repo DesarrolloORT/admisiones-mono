@@ -178,7 +178,7 @@ public class InscripcionesService(
             return OperationResult<bool>.IsFailed("GEN_IP_00", nameof(RegistrarInteresProducto), "Request invalido.", 400);
         }
 
-        var validacionOfertasSolicitadas = InteresProductoValidationRules.ValidarOfertasSolicitadas(
+        var validacionOfertasSolicitadas = InteresProductoValidation.ValidarOfertasSolicitadas(
             request.IdsOferta,
             nameof(RegistrarInteresProducto));
         if (!validacionOfertasSolicitadas.Success)
@@ -186,7 +186,7 @@ public class InscripcionesService(
             return validacionOfertasSolicitadas;
         }
 
-        var validacion = InteresProductoValidationRules.ValidarRegistroInteresProducto(
+        var validacion = InteresProductoValidation.ValidarRegistroInteresProducto(
             uow,
             codigoPersona,
             request.IdProducto,
@@ -211,7 +211,7 @@ public class InscripcionesService(
         var ofertas = new List<Oferta>();
         foreach (var idOferta in request.IdsOferta)
         {
-            var validacionOferta = InteresProductoValidationRules.ObtenerOfertaValidaParaInteres(
+            var validacionOferta = InteresProductoValidation.ObtenerOfertaValidaParaInteres(
                 uow,
                 idOferta,
                 request.IdProducto,

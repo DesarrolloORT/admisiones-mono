@@ -63,7 +63,7 @@ public sealed class EncuestaInicialService(
                 "La persona no tiene encuesta inicial.",
                 200);
 
-        var pendientes = EncuestaInicialValidator.ValidarCompletitudDesdeBase(uow, encuesta, persona, codigoPersona);
+        var pendientes = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuesta, persona, codigoPersona);
         return OperationResult<DtoObtenerEncuestaInicialResponse>.Ok(
             new DtoObtenerEncuestaInicialResponse
             {
@@ -110,7 +110,7 @@ public sealed class EncuestaInicialService(
                 403);
         }
 
-        var validacion = EncuestaInicialCatalogValidator.ValidarRequestParcial(uow, request, nameof(GuardarEncuestaInicial));
+        var validacion = EncuestaInicialCatalogValidation.ValidarRequestParcial(uow, request, nameof(GuardarEncuestaInicial));
         if (!validacion.Success)
         {
             return validacion.Failure().As<DtoGuardarEncuestaInicialResponse>(nameof(GuardarEncuestaInicial));
@@ -155,7 +155,7 @@ public sealed class EncuestaInicialService(
 
             var encuestaPersistida = uow.EncuestaIniAdmisions.GetByKey(encuesta.IdEncuestaIni) ?? encuesta;
             var personaPersistida = uow.Personas.GetByKey(codigoPersona) ?? persona;
-            var response = EncuestaInicialValidator.ValidarCompletitudDesdeBase(uow, encuestaPersistida, personaPersistida, codigoPersona);
+            var response = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuestaPersistida, personaPersistida, codigoPersona);
 
             encuesta.EstadoEncuestaIniAdmision = response.Estado;
             if (response.Estado == EncuestaInicialState.EstadoDefinitivo)
