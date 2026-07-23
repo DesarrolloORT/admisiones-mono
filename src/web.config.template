@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <httpProtocol>
+      <customHeaders>
+        <remove name="Cache-Control" />
+        <remove name="X-Content-Type-Options" />
+        <remove name="X-Frame-Options" />
+        <remove name="Content-Security-Policy" />
+        <remove name="Referrer-Policy" />
+        <remove name="Permissions-Policy" />
+        <remove name="Strict-Transport-Security" />
+        <add name="Cache-Control" value="no-cache" />
+        <add name="X-Content-Type-Options" value="nosniff" />
+        <add name="X-Frame-Options" value="SAMEORIGIN" />
+        <add name="Content-Security-Policy" value="{{CSP_POLICY_XML}}" />
+        <add name="Referrer-Policy" value="no-referrer" />
+        <add name="Permissions-Policy" value="camera=(), geolocation=(), microphone=()" />
+        <add name="Strict-Transport-Security" value="max-age=31536000; includeSubDomains" />
+      </customHeaders>
+    </httpProtocol>
+    <staticContent>
+      <remove fileExtension=".json" />
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+      <remove fileExtension=".webmanifest" />
+      <mimeMap fileExtension=".webmanifest" mimeType="application/manifest+json" />
+    </staticContent>
+    <rewrite>
+      <rules>
+        <rule name="Angular Routes" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>

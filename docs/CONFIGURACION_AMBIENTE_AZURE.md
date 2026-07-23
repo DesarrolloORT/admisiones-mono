@@ -1,21 +1,16 @@
 # Levantar el frontend con Azure y cambiar de ambiente
 
-Este proyecto obtiene la configuración frontend desde Azure App Configuration.
-Azure es la fuente de verdad; el repo no guarda valores reales de ambiente.
+Este proyecto obtiene la configuración frontend desde Azure App Configuration mediante
+`@desarrolloort/azure-env-sync`. Azure es la fuente de verdad; el repo no guarda valores
+reales ni lógica propia de sincronización.
 
 ## Requisitos
 
 - Node.js 20 y npm instalados.
 - Cuenta ORT con permiso de lectura sobre Azure App Configuration
 
-Recurso usado por este proyecto:
-
-```text
-App Configuration: AppConfigurationDesarrolloIA
-Endpoint: https://appconfigurationdesarrolloia.azconfig.io
-Key: frontend:admisiones:environment
-Label desa: desa
-```
+La convención compartida lee `frontend:<proyecto>:environment` con el label del ambiente. El
+valor es el JSON final para Angular; no hay presets ni transformaciones por aplicación.
 
 Rol mínimo:
 
@@ -49,33 +44,16 @@ El archivo generado no debe editarse manualmente.
 
 ## Cambiar de ambiente
 
-Detener el servidor, sincronizar el label requerido y levantar Angular directamente:
-
-```powershell
-npm run env:sync -- --env prod
-npx ng serve
-```
-
-Reemplazar `prod` por el label disponible en Azure. Para ignorar el cache y obtener la versión más reciente:
-
-```powershell
-npm run env:refresh -- --env prod
-npx ng serve
-```
-
-No usar `npm start` después de seleccionar otro ambiente: su `prestart` vuelve a sincronizar `desa`.
-
-Para volver al ambiente de desarrollo, basta con ejecutar `npm start`.
+Cada label existente en Azure es un ambiente válido. Se selecciona con
+`npm run env:sync -- --env <ambiente>` sin agregar configuración local.
 
 ## Flujo interno
 
 ```text
 npm start
-  → prestart
-  → npm run env:sync -- --env desa
+  → npm run env:desa
   → usa cache local si tiene menos de 60 minutos
   → si no hay cache fresco, lee Azure App Configuration una vez
-  → cachea todos los labels disponibles para la key
   → genera src/environments/generated-environment.ts
   → actualiza src/web.config con la CSP del ambiente
   → ejecuta ng serve
@@ -83,19 +61,17 @@ npm start
 
 ## Guardrails
 
-Defaults del script:
+Defaults del paquete compartido:
 
 ```text
 Cache local: tmp/env/azure-environment-cache.json
 TTL: 60 minutos
 Máximo local por día: 50 lecturas Azure
 Máximo cache stale de fallback: 24 horas
-Label filter: *
 ```
 
-La lectura Azure usa `listConfigurationSettings` con la key `frontend:<project>:environment` y `labelFilter=*`, por lo que normalmente baja todos los ambientes en una sola página/request y después elige localmente el label pedido con `--env`.
-
-Si Azure devuelve más de 100 labels, el script falla en vez de seguir paginando para no gastar requests sin querer. En ese caso usar `--label-filter desa,prod` o un label concreto.
+Autenticación, cache, límites y lectura de Azure pertenecen a
+`@desarrolloort/azure-env-sync`; este repo solo indica proyecto y ambiente.
 
 ## Scripts
 
@@ -103,12 +79,11 @@ Si Azure devuelve más de 100 labels, el script falla en vez de seguir paginando
 npm start                # sync cacheado de desa + ng serve
 npm run start:o          # sync cacheado de desa + ng serve -o
 npm run build:dev        # sync cacheado de desa + build development
-npm run build            # refresh prod + build production
+npm run build            # refresh de desa + build production
 npm run env:sync -- --env desa
 npm run env:refresh -- --env desa
 npm run env:offline -- --env desa
 npm run env:cache:clear
-npm run test:env-sync
 ```
 
 ## Forzar o evitar Azure
@@ -181,8 +156,8 @@ Ejemplo minimo:
 
 ```json
 {
-  "production": false,
   "API_URL": "https://apiadmisionesdesa.ort.edu.uy",
+  "FDP_API_URL": "https://fdp.example",
   "RECAPTCHA_KEY": "site-key-publica",
   "RECAPTCHA_NONCE": "admisiones-recaptcha-2026",
   "CSP_POLICY": "default-src 'self'; script-src 'self' 'nonce-admisiones-recaptcha-2026' 'strict-dynamic' https://www.google.com https://www.gstatic.com; connect-src 'self' https://apiadmisionesdesa.ort.edu.uy https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
