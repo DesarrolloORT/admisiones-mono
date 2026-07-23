@@ -12,6 +12,7 @@ using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModBandejaAppLogic.DevartDTOs;
 using ModBandejaAppLogic.Interfaces;
@@ -32,6 +33,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<IGeneralService> _generalServiceMock;
         private readonly Mock<ITivenosEnvioService> _tivenosEnvioServiceMock;
         private readonly Mock<IBandejaService> _bandejaServiceMock;
+        private readonly Mock<IServiceScopeFactory> _bandejaServiceScopeFactoryMock;
         private readonly InscripcionesService _service;
 
         public InscripcionesServiceTests()
@@ -42,6 +44,7 @@ namespace UnitTesting.AppLogic.Services
             _generalServiceMock = new Mock<IGeneralService>();
             _tivenosEnvioServiceMock = new Mock<ITivenosEnvioService>();
             _bandejaServiceMock = new Mock<IBandejaService>();
+            _bandejaServiceScopeFactoryMock = CrearBandejaServiceScopeFactoryMock(_bandejaServiceMock.Object);
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
             _dbConnectionContextMock
                 .Setup(d => d.CurrentDateTime())
@@ -89,7 +92,23 @@ namespace UnitTesting.AppLogic.Services
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
                 CrearEncuestaInicialServiceReal(),
-                _bandejaServiceMock.Object);
+                _bandejaServiceScopeFactoryMock.Object);
+        }
+
+        // InscripcionesService resuelve IBandejaService desde un scope de DI propio por cada
+        // oferta (ver ConfirmarInscripcionCorporativa), asi que el mock del scope factory siempre
+        // devuelve el mismo IBandejaService mockeado, sin importar cuantas veces se llame.
+        private static Mock<IServiceScopeFactory> CrearBandejaServiceScopeFactoryMock(IBandejaService bandejaService)
+        {
+            var serviceProviderMock = new Mock<IServiceProvider>();
+            serviceProviderMock.Setup(p => p.GetService(typeof(IBandejaService))).Returns(bandejaService);
+
+            var scopeMock = new Mock<IServiceScope>();
+            scopeMock.Setup(s => s.ServiceProvider).Returns(serviceProviderMock.Object);
+
+            var scopeFactoryMock = new Mock<IServiceScopeFactory>();
+            scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
+            return scopeFactoryMock;
         }
 
         // Construye la implementación real de EncuestaInicialService con los mismos mocks,
@@ -148,7 +167,7 @@ namespace UnitTesting.AppLogic.Services
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
                 encuestaInicialService,
-                _bandejaServiceMock.Object);
+                _bandejaServiceScopeFactoryMock.Object);
         }
 
         [Fact]
@@ -528,6 +547,53 @@ namespace UnitTesting.AppLogic.Services
             Assert.False(result.Success);
             Assert.Equal("INS_CPI_07", result.ErrorCode);
             Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_Nivel1SinEncuestaInicial_DevuelveNotFound()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1, idNivelProducto: 1);
+            SetupEncuesta(123, null);
+
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10]
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_06", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ConfirmarPreInscripcion_Nivel3SinEncuestaInicial_NoRequiereEncuesta()
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1, idNivelProducto: 3);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns((AceptacionReglamentoEst)null);
+            aceptacionRepo
+                .Setup(r => r.GetByPersona(123))
+                .Returns((AceptacionReglamentoEst)null);
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            // No se llama a SetupEncuesta: nivel 3 y 4 no deben ni consultar T_ENCUESTA_INI_ADMISION.
+            var result = await _service.ConfirmarPreInscripcion(123, new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = false,
+                IdsOfertasSeleccionadas = [10]
+            });
+
+            // Llega a la validacion de reglamento (INS_CPI_02): prueba que nivel 3 no exige encuesta.
+            Assert.False(result.Success);
+            Assert.Equal("INS_CPI_02", result.ErrorCode);
         }
 
         [Fact]
@@ -2671,7 +2737,7 @@ namespace UnitTesting.AppLogic.Services
                 _tivenosEnvioServiceMock.Object,
                 apiClient,
                 CrearEncuestaInicialServiceReal(),
-                _bandejaServiceMock.Object);
+                _bandejaServiceScopeFactoryMock.Object);
         }
 
         private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)

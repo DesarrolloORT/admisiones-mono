@@ -66,6 +66,14 @@ internal static class ConfirmarPreInscripcionRules
                 409);
         }
 
+        // Nivel 3 y 4 no requieren encuesta inicial de admision: es un
+        // requisito propio de nivel 1 y 2.
+        var idNivelProducto = oferta.Supraoferta?.Paquete?.Producto?.IdNivelProducto;
+        if (idNivelProducto == NivelProducto3 || idNivelProducto == NivelProducto4)
+        {
+            return ObtenerDatosConfirmacionPorInteres(uow, codigoPersona, oferta, idProductoOferta, idOfertaSeleccionada, idComienzoOferta, methodName);
+        }
+
         var encuestaAdmision = uow.EncuestaIniAdmisions.GetByPersona(codigoPersona);
         if (encuestaAdmision != null
             && string.Equals(encuestaAdmision.EstadoEncuestaIniAdmision, EncuestaInicialState.EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
@@ -96,6 +104,18 @@ internal static class ConfirmarPreInscripcionRules
                 httpCode);
         }
 
+        return ObtenerDatosConfirmacionPorInteres(uow, codigoPersona, oferta, idProductoOferta, idOfertaSeleccionada, idComienzoOferta, methodName);
+    }
+
+    private static OperationResult<DatosConfirmacionOferta> ObtenerDatosConfirmacionPorInteres(
+        IUnitOfWork uow,
+        long codigoPersona,
+        Oferta oferta,
+        long idProductoOferta,
+        long idOfertaSeleccionada,
+        long idComienzoOferta,
+        string methodName)
+    {
         var proceso = uow.InteresProductoOfertas.GetProcesoPorInteresActivoOferta(
             codigoPersona,
             idProductoOferta,

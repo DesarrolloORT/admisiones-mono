@@ -16,6 +16,7 @@ using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using Microsoft.Extensions.DependencyInjection;
 using ModBandejaAppLogic.Interfaces;
 using Utilities;
 
@@ -27,7 +28,7 @@ public class InscripcionesService(
     ITivenosEnvioService tivenosEnvioService,
     IInscripcionesyPagosApiClient inscripcionesyPagosApiClient,
     IEncuestaInicialService encuestaInicialService,
-    IBandejaService bandejaService) : IInscripcionesService
+    IServiceScopeFactory serviceScopeFactory) : IInscripcionesService
 {
     private static readonly HashSet<string> TiposPagoFactura =
         [InscripcionesConstants.TipoPago.Banred, InscripcionesConstants.TipoPago.Sistarbanc, InscripcionesConstants.TipoPago.Geopay];
@@ -39,7 +40,7 @@ public class InscripcionesService(
     private readonly ITivenosEnvioService _tivenosEnvioService = tivenosEnvioService;
     private readonly IInscripcionesyPagosApiClient _inscripcionesyPagosApiClient = inscripcionesyPagosApiClient;
     private readonly IEncuestaInicialService _encuestaInicialService = encuestaInicialService;
-    private readonly IBandejaService _bandejaService = bandejaService;
+    private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
 
     public async Task<OperationResult<DtoDetalleInscripcionResponse>> ObtenerDetalleInscripcion(long codigoPersona, long idProducto, long idProceso)
     {
@@ -365,7 +366,14 @@ public class InscripcionesService(
             var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
             var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
 
-            var altaResult = _bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
+            // El IBandejaService del modulo Bandeja (Core) dispone su DbContext al terminar cada
+            // llamada, aunque ese contexto es compartido (scoped) por DI. Con varias ofertas este
+            // metodo se llama mas de una vez por request, y la segunda llamada reventaria con
+            // ObjectDisposedException si reusara el service del scope principal. Se resuelve en un
+            // scope de DI propio por oferta para que cada llamada tenga su propio contexto.
+            using var bandejaScope = _serviceScopeFactory.CreateScope();
+            var bandejaService = bandejaScope.ServiceProvider.GetRequiredService<IBandejaService>();
+            var altaResult = bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 
             if (!altaResult.Success)
                 return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
