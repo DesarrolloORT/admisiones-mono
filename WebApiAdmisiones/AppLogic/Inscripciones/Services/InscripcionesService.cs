@@ -359,28 +359,41 @@ public class InscripcionesService(
         if (!validacionNivel.Success)
             return validacionNivel.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
 
-        foreach (var oferta in ofertasSeleccionadas)
+        uow.BeginTransaction();
+        try
         {
-            var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(oferta, persona);
-            var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
-            var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
-            var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
+            foreach (var oferta in ofertasSeleccionadas)
+            {
+                var xml = ConfirmarPreInscripcionRules.CrearXmlInstanciaCorporativa(oferta, persona);
+                var dtoTramite = ConfirmarPreInscripcionRules.CrearDtoTramiteCorporativo(codigoPersona);
+                var dtoInstancia = ConfirmarPreInscripcionRules.CrearDtoInstanciaCorporativa(oferta, codigoPersona, xml);
+                var dtosBandeja = ConfirmarPreInscripcionRules.CrearBandejasCorporativas(InscripcionesConstants.BandejaCorporativa.UsuarioSistema);
 
-            // El IBandejaService del modulo Bandeja (Core) dispone su DbContext al terminar cada
-            // llamada, aunque ese contexto es compartido (scoped) por DI. Con varias ofertas este
-            // metodo se llama mas de una vez por request, y la segunda llamada reventaria con
-            // ObjectDisposedException si reusara el service del scope principal. Se resuelve en un
-            // scope de DI propio por oferta para que cada llamada tenga su propio contexto.
-            using var bandejaScope = _serviceScopeFactory.CreateScope();
-            var bandejaService = bandejaScope.ServiceProvider.GetRequiredService<IBandejaService>();
-            var altaResult = bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
+                // El IBandejaService del modulo Bandeja (Core) dispone su DbContext al terminar cada
+                // llamada, aunque ese contexto es compartido (scoped) por DI. Con varias ofertas este
+                // metodo se llama mas de una vez por request, y la segunda llamada reventaria con
+                // ObjectDisposedException si reusara el service del scope principal. Se resuelve en un
+                // scope de DI propio por oferta para que cada llamada tenga su propio contexto.
+                using var bandejaScope = _serviceScopeFactory.CreateScope();
+                var bandejaService = bandejaScope.ServiceProvider.GetRequiredService<IBandejaService>();
+                var altaResult = bandejaService.AltaTramiteWorkflow(dtoTramite, dtoInstancia, dtosBandeja);
 
-            if (!altaResult.Success)
-                return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
+                if (!altaResult.Success)
+                {
+                    uow.Rollback();
+                    return altaResult.Failure().As<DtoConfirmarPreInscripcionResponse>(methodName);
+                }
 
-            uow.InstWorkflowInscripcions.Add(
-                ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
-            uow.Save();
+                uow.InstWorkflowInscripcions.Add(
+                    ConfirmarPreInscripcionRules.CrearInstWorkflowInscripcionCorporativa(oferta, altaResult.Data));
+            }
+
+            uow.Commit();
+        }
+        catch
+        {
+            uow.Rollback();
+            throw;
         }
 
         return OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(
