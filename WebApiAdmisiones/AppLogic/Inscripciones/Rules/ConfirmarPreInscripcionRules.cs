@@ -233,7 +233,7 @@ internal static class ConfirmarPreInscripcionRules
                 FechaReasignadoBandeja = ahora,
                 ReasignadoPorBandeja = usuarioIngreso,
             },
-            // Paso 2 (solicitud): queda pendiente de verdad para el grupo responsable (TipoPara "PARA_UN_GRUPO" en legacy).
+            // Paso 2 (solicitud): queda pendiente de verdad para el grupo responsable.
             new DtoBandejaDevartModBandeja
             {
                 IdEstadoProceso = InscripcionesConstants.BandejaCorporativa.IdEstadoProcesoSolicitud,

@@ -488,9 +488,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(250)]
         public string? EmailOrtPersona { get; set; }
 
-        [StringLength(200)]
-        public string? HashTokenPassword { get; set; }
-
         #endregion
 
         #region Navigation Properties
