@@ -606,7 +606,6 @@ namespace UnitTesting.AppLogic.Services
                 PrimerApellido = "Perez",
                 TipoPersona = "SGI",
                 CodigoVigencia = "SI",
-                HashTokenPassword = "hash"
             };
             var request = new DtoCompletarPasswordInicialRequest
             {
@@ -617,6 +616,9 @@ namespace UnitTesting.AppLogic.Services
             personasRepoMock.Setup(r => r.GetByKey(codigoPersona)).Returns(persona);
             uowMock.Setup(u => u.Personas).Returns(personasRepoMock.Object);
             _uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
+            _hashTokenStoreMock
+                .Setup(h => h.GetAsync(codigoPersona.ToString()))
+                .ReturnsAsync("stored-hash");
             _ldapMock
                 .Setup(l => l.ForzarCambiarPasswordAsync(codigoPersona.ToString(), request.PasswordNueva))
                 .ReturnsAsync(OperationResult<bool>.IsFailed(
@@ -634,7 +636,7 @@ namespace UnitTesting.AppLogic.Services
             var result = (await _service.CompletarPasswordFlowAsync("token", request)).Result;
 
             Assert.False(result.Success);
-            Assert.Equal("hash", persona.HashTokenPassword);
+            _hashTokenStoreMock.Verify(h => h.DeleteAsync(codigoPersona.ToString()), Times.Never);
             uowMock.Verify(u => u.Save(), Times.Never);
         }
 
