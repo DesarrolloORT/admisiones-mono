@@ -4,6 +4,7 @@ using AppLogic.Autenticacion.Interfaces;
 using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using AppLogic.Helpers;
 using Utilities;
 
 namespace AppLogic.Autenticacion.Services;
@@ -115,12 +116,7 @@ public class LoginFlowService : ILoginFlowService
                 _rateLimiter.IsAllowedAsync(failUserKey, failUserLimit, failWindow),
                 _rateLimiter.IsAllowedAsync(failIpKey, failIpLimit, failWindow));
 
-            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
-                result.ErrorCode,
-                nameof(EjecutarAsync),
-                result.Message,
-                result.HttpCode,
-                default!));
+            return DtoLoginFlowResult.Fallo(result.Failure().As<DtoAuthenticationResponse>(nameof(EjecutarAsync)));
         }
 
         await Task.WhenAll(
@@ -173,12 +169,7 @@ public class LoginFlowService : ILoginFlowService
         var twoFactorResult = await _dosFactoresService.IniciarAsync(persona, persona.Email);
         if (!twoFactorResult.Success)
         {
-            return DtoLoginFlowResult.Fallo(OperationResult<DtoAuthenticationResponse>.IsFailed(
-                twoFactorResult.ErrorCode,
-                nameof(EjecutarAsync),
-                twoFactorResult.Message,
-                twoFactorResult.HttpCode,
-                default!));
+            return DtoLoginFlowResult.Fallo(twoFactorResult.Failure().As<DtoAuthenticationResponse>(nameof(EjecutarAsync)));
         }
 
         return DtoLoginFlowResult.Requiere2FA(

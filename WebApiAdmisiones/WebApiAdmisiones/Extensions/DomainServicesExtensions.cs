@@ -130,7 +130,7 @@ namespace WebApiAdmisiones.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddHttpClient<IRecaptchaService, RecaptchaService>();
-            services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
+            services.AddScoped<IFondoDeBecaService, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
 
             // Servicio de correo.

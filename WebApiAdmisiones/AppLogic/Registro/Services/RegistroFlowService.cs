@@ -9,6 +9,7 @@ using AppLogic.Common.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using AppLogic.Helpers;
 using Utilities;
 using AppLogic.Autenticacion.Interfaces;
 
@@ -165,11 +166,7 @@ public class RegistroFlowService : IRegistroFlowService
         var result = await ValidarDocumentoFlowResultAsync(flowId, tipoDocumento, documento, originMethod);
         if (result == null) return null;
 
-        return OperationResult<object?>.IsFailed(
-            result.ErrorCode,
-            originMethod,
-            result.Message,
-            result.HttpCode);
+        return result.Failure().As<object?>(originMethod);
     }
 
     public async Task ActualizarStepAsync(string flowId, string nuevoStep)
@@ -199,12 +196,7 @@ public class RegistroFlowService : IRegistroFlowService
         var validacion = await _registroService.ValidarNuevaPersonaAsync(request);
         if (!validacion.Success)
         {
-            return OperationResult<RegistroFlowResult>.IsFailed(
-                validacion.ErrorCode,
-                nameof(ConfirmarNuevaPersonaAsync),
-                validacion.Message,
-                validacion.HttpCode,
-                default!);
+            return validacion.Failure().As<RegistroFlowResult>(nameof(ConfirmarNuevaPersonaAsync));
         }
 
         var flowDocumentoValidation = await ValidarDocumentoFlowResultAsync(

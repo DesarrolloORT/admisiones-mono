@@ -1,11 +1,10 @@
-namespace AppLogic.ApiClients.Dtos
+namespace AppLogic.ApiClients.Dtos;
+
+/// <summary>
+/// DTO para turno (usado en confirmar preinscripción).
+/// </summary>
+public class DtoTurno
 {
-    /// <summary>
-    /// DTO para turno (usado en confirmar preinscripción).
-    /// </summary>
-    public class DtoTurno
-    {
-        public long IdTurno { get; set; }
-        public string? NombreTurno { get; set; }
-    }
+    public long IdTurno { get; set; }
+    public string? NombreTurno { get; set; }
 }

@@ -1,7 +1,6 @@
-namespace AppLogic.ApiClients.Dtos
+namespace AppLogic.ApiClients.Dtos;
+
+public class EstadoCuentaApiDto
 {
-    public class EstadoCuentaApiDto
-    {
-        public decimal SaldoActual { get; set; }
-    }
+    public decimal SaldoActual { get; set; }
 }

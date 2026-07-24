@@ -4,37 +4,36 @@ using AppLogic.Common.Validation;
 using BusinessLogic.Entities;
 using Utilities;
 
-namespace AppLogic.Registro.Validators
+namespace AppLogic.Registro.Validators;
+
+public static class RegistroValidation
 {
-    public static class RegistroValidation
+    public static OperationResult<object?> ValidarVerificacionPersonaExistente(
+        Persona persona,
+        DtoRegistroVerificarIdentidadRequest request,
+        string method)
     {
-        public static OperationResult<object?> ValidarVerificacionPersonaExistente(
-            Persona persona,
-            DtoRegistroVerificarIdentidadRequest request,
-            string method)
+        var apellidoEntrada = DocumentUtils.NormalizarMayusculas(request.PrimerApellido);
+        var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
+            ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
+            : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
+
+        if (DocumentUtils.Normalizar(persona.TipoDocumento) != DocumentUtils.Normalizar(request.TipoDocumento)
+            || DocumentUtils.Normalizar(persona.Documento) != DocumentUtils.Normalizar(request.Documento)
+            || apellidoPersona != apellidoEntrada
+            || !string.Equals(
+                DocumentUtils.Normalizar(persona.Email),
+                DocumentUtils.Normalizar(request.Mail),
+                StringComparison.OrdinalIgnoreCase))
         {
-            var apellidoEntrada = DocumentUtils.NormalizarMayusculas(request.PrimerApellido);
-            var apellidoPersona = !string.IsNullOrWhiteSpace(persona.PrimerApellidoMay)
-                ? DocumentUtils.Normalizar(persona.PrimerApellidoMay)
-                : DocumentUtils.NormalizarMayusculas(persona.PrimerApellido);
-
-            if (DocumentUtils.Normalizar(persona.TipoDocumento) != DocumentUtils.Normalizar(request.TipoDocumento)
-                || DocumentUtils.Normalizar(persona.Documento) != DocumentUtils.Normalizar(request.Documento)
-                || apellidoPersona != apellidoEntrada
-                || !string.Equals(
-                    DocumentUtils.Normalizar(persona.Email),
-                    DocumentUtils.Normalizar(request.Mail),
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                return OperationResult<object?>.IsFailed(
-                    "REG_PERSONA_VERIF_01",
-                    method,
-                    "No podemos completar el registro ya que hemos encontrado inconsistencias en los datos ingresados.",
-                    400);
-            }
-
-            return OperationResult<object?>.Ok(default, method);
+            return OperationResult<object?>.IsFailed(
+                "REG_PERSONA_VERIF_01",
+                method,
+                "No podemos completar el registro ya que hemos encontrado inconsistencias en los datos ingresados.",
+                400);
         }
 
+        return OperationResult<object?>.Ok(default, method);
     }
+
 }

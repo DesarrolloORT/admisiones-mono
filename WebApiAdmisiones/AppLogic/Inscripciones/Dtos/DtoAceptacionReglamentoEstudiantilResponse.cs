@@ -1,8 +1,7 @@
-namespace AppLogic.Inscripciones.Dtos
+namespace AppLogic.Inscripciones.Dtos;
+
+public class DtoAceptacionReglamentoEstudiantilResponse
 {
-    public class DtoAceptacionReglamentoEstudiantilResponse
-    {
-        public bool AceptoReglamentoEstudiantil { get; set; }
-        public DateTime? FechaAceptacion { get; set; }
-    }
+    public bool AceptoReglamentoEstudiantil { get; set; }
+    public DateTime? FechaAceptacion { get; set; }
 }

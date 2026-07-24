@@ -1,36 +1,35 @@
-namespace AppLogic.Autenticacion.Rules
+namespace AppLogic.Autenticacion.Rules;
+
+public static class EmailMasking
 {
-    public static class EmailMasking
+    private const string MaskValue = "******";
+
+    public static string Mask(string? email)
     {
-        private const string MaskValue = "******";
+        if (string.IsNullOrWhiteSpace(email))
+            return MaskValue;
 
-        public static string Mask(string? email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return MaskValue;
+        var normalizedEmail = email.Trim();
+        var atIndex = normalizedEmail.IndexOf('@');
 
-            var normalizedEmail = email.Trim();
-            var atIndex = normalizedEmail.IndexOf('@');
+        if (atIndex <= 0 || atIndex != normalizedEmail.LastIndexOf('@') || atIndex == normalizedEmail.Length - 1)
+            return MaskValue;
 
-            if (atIndex <= 0 || atIndex != normalizedEmail.LastIndexOf('@') || atIndex == normalizedEmail.Length - 1)
-                return MaskValue;
+        var local = normalizedEmail[..atIndex];
+        var domain = normalizedEmail[(atIndex + 1)..];
+        var firstDotIndex = domain.IndexOf('.');
 
-            var local = normalizedEmail[..atIndex];
-            var domain = normalizedEmail[(atIndex + 1)..];
-            var firstDotIndex = domain.IndexOf('.');
+        if (firstDotIndex <= 0 || firstDotIndex == domain.Length - 1)
+            return MaskValue;
 
-            if (firstDotIndex <= 0 || firstDotIndex == domain.Length - 1)
-                return MaskValue;
+        return $"{MaskLocalPart(local)}@{domain[..firstDotIndex]}.{MaskValue}";
+    }
 
-            return $"{MaskLocalPart(local)}@{domain[..firstDotIndex]}.{MaskValue}";
-        }
+    private static string MaskLocalPart(string local)
+    {
+        if (local.Length == 1)
+            return $"{local[0]}{MaskValue}";
 
-        private static string MaskLocalPart(string local)
-        {
-            if (local.Length == 1)
-                return $"{local[0]}{MaskValue}";
-
-            return $"{local[0]}{MaskValue}{local[^1]}";
-        }
+        return $"{local[0]}{MaskValue}{local[^1]}";
     }
 }

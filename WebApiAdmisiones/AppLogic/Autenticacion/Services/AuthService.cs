@@ -6,6 +6,7 @@ using AppLogic.Registro.Dtos;
 using AppLogic.Registro.Interfaces;
 using AppLogic.Personas.Services;
 using AppLogic.Common.Validation;
+using AppLogic.Helpers;
 using BusinessLogic.Entities;
 using BusinessLogic.IServices;
 using ConnectionContext;
@@ -124,12 +125,7 @@ public class AuthService : IAuthService
 
             if (!authResult.Success)
             {
-                return OperationResult<DtoPersonaAuth>.IsFailed(
-                    authResult.ErrorCode,
-                    nameof(AutenticarUsuarioLDAPAsync),
-                    authResult.Message,
-                    authResult.HttpCode,
-                    default!);
+                return authResult.Failure().As<DtoPersonaAuth>(nameof(AutenticarUsuarioLDAPAsync));
             }
 
             // No se emiten tokens acá: el llamador decide cuándo, según el gate de 2FA.
@@ -344,12 +340,7 @@ public class AuthService : IAuthService
                 CompletarPasswordPersonaExistenteOriginMethod);
             if (!imagenesValidation.Success)
             {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    imagenesValidation.ErrorCode,
-                    CompletarPasswordPersonaExistenteOriginMethod,
-                    imagenesValidation.Message,
-                    imagenesValidation.HttpCode,
-                    default!);
+                return imagenesValidation.Failure().As<DtoAuthenticationResponse>(CompletarPasswordPersonaExistenteOriginMethod);
             }
 
             var cambioPassword = await _ldap.ForzarCambiarPasswordAsync(
@@ -358,12 +349,7 @@ public class AuthService : IAuthService
 
             if (!cambioPassword.Success)
             {
-                return OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    cambioPassword.ErrorCode,
-                    CompletarPasswordPersonaExistenteOriginMethod,
-                    cambioPassword.Message,
-                    cambioPassword.HttpCode,
-                    default!);
+                return cambioPassword.Failure().As<DtoAuthenticationResponse>(CompletarPasswordPersonaExistenteOriginMethod);
             }
 
             persona.FechaUltModifPassword = DateTime.Today;
@@ -427,12 +413,7 @@ public class AuthService : IAuthService
             return new DtoCompletarPasswordFlowResult
             {
                 ClearActivationCookie = true,
-                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    sessionResult.ErrorCode,
-                    CompletarPasswordOriginMethod,
-                    sessionResult.Message,
-                    sessionResult.HttpCode,
-                    default!)
+                Result = sessionResult.Failure().As<DtoAuthenticationResponse>(CompletarPasswordOriginMethod)
             };
         }
 
@@ -499,12 +480,7 @@ public class AuthService : IAuthService
             return new DtoCompletarPasswordFlowResult
             {
                 ClearActivationCookie = false,
-                Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
-                    crearResult.ErrorCode,
-                    CompletarPasswordOriginMethod,
-                    crearResult.Message,
-                    crearResult.HttpCode,
-                    default!)
+                Result = crearResult.Failure().As<DtoAuthenticationResponse>(CompletarPasswordOriginMethod)
             };
         }
 
