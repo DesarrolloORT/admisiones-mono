@@ -49,8 +49,9 @@ Antes de entrar al paso 2 se consulta `GET /Inscripciones/EncuestaInicial`.
 Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
 secciones de Educacion, decision academica, experiencia ORT, situacion
 laboral, identidad y reglamento. Si `tieneDerechoEncuesta === false`, solo
-se muestran identidad y reglamento. Si la encuesta ya viene completa no se
-muestran secciones de encuesta.
+se muestran identidad y reglamento, salvo en Actualización profesional, donde
+también se pregunta si la inscripción es corporativa. Si la encuesta ya viene
+completa no se muestran secciones de encuesta, con la misma excepción para AP.
 
 ```mermaid
 flowchart TD
@@ -211,16 +212,22 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 
 `getSeccionesVisibles(escenario, actualizacionProfesional)` filtra por
 intersección con `SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL`
-(`situacion-laboral`, `identidad`, `reglamento`); sin derecho a encuesta o con
-encuesta completa quedan solo `identidad` y `reglamento`. Un clamp en
-`InscripcionSurveyFacade` reposiciona la sección activa si dejó de ser visible.
+(`situacion-laboral`, `identidad`, `reglamento`). Las tres se muestran siempre
+para AP, incluso sin derecho a encuesta o con una encuesta completa, para
+preguntar en todos los casos si la inscripción es corporativa. Un clamp en
+`InscripcionSurveyFacade` reposiciona la sección activa si dejó de ser visible o
+cambió la primera sección aplicable.
+
+En `situacion-laboral`, AP reemplaza los campos laborales por la pregunta
+**¿A título de quién deseás realizar la inscripción?**. La selección es obligatoria
+y se representa como `isCorporate`: título personal es `false` y corporativa es
+`true`. Los tipos 1/2 conservan Situación laboral y envían `isCorporate = false`.
 
 **AP no envía `POST /Inscripciones/EncuestaInicial`** (ni al cerrar el paso 2 ni
-al guardar y salir: guard en `savePartial`). Consecuencia documentada: las
-respuestas de Situación laboral no se persisten en ningún endpoint y se pierden
-entre sesiones. La confirmación usa el mecanismo existente
-(`ConfirmarPreInscripcion`, con array de ofertas en el contrato de feature y la
-primera oferta en el adapter durante la transición) y el paso 3 (pago) no cambia.
+al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
+`ConfirmarPreInscripcion`. Una inscripción personal continúa al paso 3; una
+corporativa termina en la pantalla "Inscripción corporativa pendiente" y espera
+que la empresa acredite el pago.
 
 ### Retomar AP "En proceso"
 
@@ -231,8 +238,9 @@ arranca en el paso 2 **sin exigir encuesta prefilled** y produce un
 `academicPrefill` (programa + seminarios desde el Detalle) que
 `InscripcionProcessFacade` aplica después del slice de encuesta —así una
 encuesta por-persona vieja no pisa el paso 1— y bloquea el paso 1
-(`disableForResume`). No hay datos de Situación laboral para precargar
-(consecuencia de no enviar la encuesta).
+(`disableForResume`). El Detalle no informa si la inscripción es corporativa, por
+lo que al retomar un estado pendiente se mantiene la pantalla genérica
+"Inscripción en proceso".
 
 ### Pendientes de backend
 
@@ -397,12 +405,15 @@ Orden de cierre:
 ```json
 {
   "aceptoReglamento": "Boolean(aceptaReglamento)",
-  "idOfertaSeleccionada": "Number(turno)"
+  "esInscripcionCorporativa": "isCorporate para AP; false para los demás tipos",
+  "idsOfertasSeleccionadas": "seminarios.map(Number) para AP; [Number(turno)] para los demás"
 }
 ```
 
-Si el backend responde `confirmada === true`, se avanza al paso de pago. Si no,
-se muestra error y no se avanza. Si Documento o Foto falla por HTTP,
+Si `esInscripcionCorporativa === true`, una respuesta exitosa termina en la
+pantalla de espera del pago empresarial sin abrir el paso de pago. Para las demás
+inscripciones, `enEspera === true` muestra "Inscripción en proceso" y el resto
+avanza al paso de pago. Si Documento o Foto falla por HTTP,
 `OperationResult.success === false` o `data === false`, no se guarda la encuesta:
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
 el check de completada.
