@@ -116,11 +116,15 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
         return fulfillOperation(route, [
           {
             idOferta: 310,
+            descripcionOferta: 'Marco legal y tributario',
+            fechaReferencia: '2027-03-10',
             horarioReferencia: '',
             turno: { idTurno: 11, nombreTurno: 'Marco legal y tributario' },
           },
           {
             idOferta: 311,
+            descripcionOferta: 'Renta fija y renta variable',
+            fechaReferencia: '2027-04-10',
             horarioReferencia: '',
             turno: { idTurno: 12, nombreTurno: 'Renta fija y renta variable' },
           },

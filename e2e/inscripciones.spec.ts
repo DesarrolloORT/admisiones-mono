@@ -54,17 +54,17 @@ test.describe('Inscripción inicial', () => {
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [300],
     });
 
-    await inscription.selectPayment('cuenta-personal');
-    await inscription.confirmPayment();
-
-    await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 
-  test('actualización profesional recorre el flujo reducido sin encuesta y confirma @regression', async ({
+  test('actualización profesional personal recorre el flujo reducido y abre el pago @regression', async ({
     page,
   }) => {
     await setup(page, 'empty');
@@ -76,17 +76,18 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillProfessionalUpdateProposal();
 
     expect((await interestRequest).postDataJSON()).toEqual({
-      idOferta: 310,
       idProcesoSeleccionado: 210,
       idProducto: 40,
+      idsOferta: [310],
     });
 
     // Flujo reducido: sin Educación / Decisión académica / Experiencia ORT.
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Decisión académica', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Experiencia con ORT', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('group', { name: '¿Trabajás actualmente?' })).toHaveCount(0);
 
-    await inscription.fillWorkStatus();
+    await inscription.fillInscriptionOwnership(false);
     await inscription.fillIdentity();
     const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
     await inscription.acceptRegulation();
@@ -94,13 +95,42 @@ test.describe('Inscripción inicial', () => {
     expect(surveySaveRequests).toHaveLength(0);
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 310,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [310],
     });
 
-    await inscription.selectPayment('cuenta-personal');
-    await inscription.confirmPayment();
+    await expect(
+      page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
+    ).toBeVisible();
+  });
 
-    await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
+  test('actualización profesional corporativa espera el pago de la empresa @regression', async ({
+    page,
+  }) => {
+    await setup(page, 'empty');
+    const inscription = new InscripcionPage(page);
+
+    await inscription.goto();
+    await inscription.fillProfessionalUpdateProposal();
+    await inscription.fillInscriptionOwnership(true);
+    await inscription.fillIdentity();
+    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    await inscription.acceptRegulation('corporate');
+
+    expect((await preEnrollmentRequest).postDataJSON()).toEqual({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: true,
+      idsOfertasSeleccionadas: [310],
+    });
+    await expect(
+      page.getByText(
+        'Tu inscripción quedó pendiente del pago de la empresa. Se confirmará automáticamente cuando el pago se acredite.'
+      )
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ir al panel principal' })).toHaveAttribute(
+      'href',
+      '/inicio'
+    );
   });
 
   test('sin derecho a encuesta oculta expansibles de encuesta y no guarda EncuestaInicial @regression', async ({
@@ -125,7 +155,8 @@ test.describe('Inscripción inicial', () => {
     expect(surveySaveRequests).toHaveLength(0);
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');
@@ -165,7 +196,8 @@ test.describe('Inscripción inicial', () => {
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');

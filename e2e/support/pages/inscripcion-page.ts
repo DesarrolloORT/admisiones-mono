@@ -15,6 +15,7 @@ const paymentLabels: Record<MetodoPago, string> = {
 };
 
 const dynamicRadioGroupLabels: Record<string, string> = {
+  isCorporate: '¿A título de quién deseás realizar la inscripción?',
   situacionLaboral: '¿Trabajás actualmente?',
   reunionAsesoramiento: '¿Tuviste una reunión de asesoramiento?',
   visitoWeb: '¿Visitaste el sitio web de ORT?',
@@ -119,6 +120,16 @@ export class InscripcionPage {
     await expect(this.page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
   }
 
+  public async fillInscriptionOwnership(isCorporate: boolean): Promise<void> {
+    await this.chooseRadio(
+      'isCorporate',
+      isCorporate ? 'Inscripción corporativa' : 'Inscripción a título personal'
+    );
+    await this.continue();
+
+    await expect(this.page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
+  }
+
   public async fillIdentity(): Promise<void> {
     const fileInputs = this.page.locator('ort-file-uploader input[type="file"]');
     await expect(fileInputs).toHaveCount(3);
@@ -144,7 +155,7 @@ export class InscripcionPage {
     await this.setExpirationDate(expiration);
     await this.continue();
 
-    await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
+    await expect(this.regulationReaderButton()).toBeVisible();
   }
 
   public async continueWithPreloadedIdentity(): Promise<void> {
@@ -156,10 +167,10 @@ export class InscripcionPage {
     await this.page
       .getByRole('checkbox', { name: 'Verifico que la identidad es correcta' })
       .check();
-    await expect(this.page.getByRole('button', { name: 'Ver reglamento' })).toBeVisible();
+    await expect(this.regulationReaderButton()).toBeVisible();
   }
-  public async acceptRegulation(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Ver reglamento' }).click();
+  public async acceptRegulation(destination: 'payment' | 'corporate' = 'payment'): Promise<void> {
+    await this.regulationReaderButton().click();
     await expect(
       this.page.getByRole('heading', { name: 'Reglamento estudiantil', level: 1 })
     ).toBeVisible();
@@ -167,7 +178,9 @@ export class InscripcionPage {
     await this.continue();
 
     await expect(
-      this.page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
+      destination === 'corporate'
+        ? this.page.getByRole('heading', { name: 'Inscripción corporativa pendiente' })
+        : this.page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
     ).toBeVisible();
   }
 
@@ -238,7 +251,7 @@ export class InscripcionPage {
     await this.continueWithKeyboard();
 
     await this.expectMainFocus();
-    const regulationButton = this.page.getByRole('button', { name: 'Ver reglamento' });
+    const regulationButton = this.regulationReaderButton();
     await this.tabTo(regulationButton);
     await this.page.keyboard.press('Enter');
 
@@ -329,6 +342,12 @@ export class InscripcionPage {
 
   public paymentSubmitButton(): Locator {
     return this.page.locator('.inscription-payment-submit');
+  }
+
+  private regulationReaderButton(): Locator {
+    return this.page
+      .getByRole('button', { name: /^(Ver reglamento|reglamento estudiantil)$/i })
+      .last();
   }
 
   private async select(controlName: string, option: string): Promise<void> {

@@ -72,9 +72,9 @@ test.describe('Account to enrollment journey', () => {
     const productInterestRequest = waitForPost(page, '/Inscripciones/InteresProducto');
     await inscription.fillAcademicProposal();
     expect((await productInterestRequest).postDataJSON()).toEqual({
-      idOferta: 300,
       idProcesoSeleccionado: 200,
       idProducto: 20,
+      idsOferta: [300],
     });
 
     await inscription.fillEducation();
@@ -92,7 +92,8 @@ test.describe('Account to enrollment journey', () => {
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');
