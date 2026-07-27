@@ -272,6 +272,23 @@
   cursor: pointer;
 }
 
+.auth-recaptcha-notice {
+  margin: var(--ort-sys-spacing-24) 0 0;
+  color: var(--auth-caption);
+  font-size: var(--ort-sys-font-size-14);
+  line-height: var(--ort-sys-line-height-20);
+  text-align: center;
+
+  a {
+    color: var(--ort-sys-base-text-primary-color);
+    text-decoration: underline;
+  }
+}
+
+.grecaptcha-badge {
+  visibility: hidden;
+}
+
 .auth-divider {
   display: flex;
   gap: var(--ort-sys-spacing-12);
