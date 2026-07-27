@@ -134,6 +134,7 @@ export function createInscripcionForms() {
       mediosPublicidad: new FormControl<string[]>([], { nonNullable: true }),
     }),
     workForm: new FormGroup({
+      isCorporate: new FormControl<boolean | null>(null),
       situacionLaboral: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -256,6 +257,7 @@ export function createSectionConfig(
       icon: 'business_center',
       form: forms.workForm,
       errorFields: [
+        { controlName: 'isCorporate', fieldId: '', label: 'Titular de la inscripción' },
         { controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' },
         { controlName: 'tipoJornadaLaboral', fieldId: '', label: 'Tipo de jornada laboral' },
       ],
