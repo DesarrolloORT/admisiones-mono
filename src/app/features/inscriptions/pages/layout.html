@@ -54,9 +54,19 @@
         purpose="primary"
         size="xl"
         type="gradient" />
+
+      {{ survey.isProfessionalUpdate() }} @if (survey.isProfessionalUpdate() &&
+      survey.workForm.controls.isCorporate.value === true) {
+      <h1 id="in-process-title">Inscripción corporativa pendiente</h1>
+      <p>
+        Tu inscripción quedó pendiente del pago de la empresa. Se confirmará automáticamente cuando
+        el pago se acredite.
+      </p>
+      } @else {
       <h1 id="in-process-title">Inscripción en proceso</h1>
       <p>Estamos procesando tu inscripción.</p>
       <p>Nos comunicaremos contigo a la brevedad para continuar con el proceso.</p>
+      }
     </div>
     <footer class="inscription-footer">
       <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>

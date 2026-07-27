@@ -3,8 +3,10 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import { InscripcionPaymentFacade } from '../facades/inscription-payment';
+import { InscripcionSurveyFacade } from '../facades/inscription-survey';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { Layout } from './layout';
@@ -13,6 +15,7 @@ describe('Layout', () => {
   let fixture: ComponentFixture<Layout>;
   let process: InscripcionProcessStore;
   let payment: InscripcionPaymentFacade;
+  let survey: InscripcionSurveyFacade;
 
   beforeEach(() => {
     sessionStorage.clear();
@@ -138,6 +141,7 @@ describe('Layout', () => {
     fixture = TestBed.createComponent(Layout);
     process = fixture.debugElement.injector.get(InscripcionProcessStore);
     payment = fixture.debugElement.injector.get(InscripcionPaymentFacade);
+    survey = fixture.debugElement.injector.get(InscripcionSurveyFacade);
   });
 
   it('renders the academic proposal as the initial screen', async () => {
@@ -162,5 +166,19 @@ describe('Layout', () => {
     payment.outcome.set('inscription-en-proceso');
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Inscripción en proceso');
+  });
+
+  it('renders the corporate payment pending message for a fresh AP flow', async () => {
+    fixture.debugElement.injector.get(AcademicProposalSelection).setProposalType('3');
+    survey.workForm.controls.isCorporate.setValue(true);
+    payment.outcome.set('inscription-en-proceso');
+
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Inscripción corporativa pendiente');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Tu inscripción quedó pendiente del pago de la empresa. Se confirmará automáticamente cuando el pago se acredite.'
+    );
+    expect(fixture.nativeElement.querySelector('a[href="/inicio"]')).toBeTruthy();
   });
 });
