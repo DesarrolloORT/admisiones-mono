@@ -209,6 +209,8 @@ export function buildConfirmPreEnrollmentPayload(
 
   return {
     aceptoReglamento: forms.regulationForm.controls.aceptaReglamento.value,
+    esInscripcionCorporativa:
+      actualizacionProfesional && forms.workForm.controls.isCorporate.value === true,
     idOfertasSeleccionadas,
   };
 }

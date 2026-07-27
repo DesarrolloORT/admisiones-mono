@@ -320,20 +320,23 @@ describe('inscription flow mappers', () => {
 
     expect(buildConfirmPreEnrollmentPayload(forms)).toEqual({
       aceptoReglamento: true,
+      esInscripcionCorporativa: false,
       idOfertasSeleccionadas: [300],
     });
   });
 
-  it('builds the AP confirmation payload from the selected seminars', () => {
+  it.each([false, true])('builds the AP confirmation payload with corporate=%s', isCorporate => {
     const forms = createInscripcionForms();
     forms.regulationForm.controls.aceptaReglamento.setValue(true);
 
     expect(buildConfirmPreEnrollmentPayload(forms, true)).toBeNull();
 
     forms.academicForm.controls.seminarios.setValue(['300', '301']);
+    forms.workForm.controls.isCorporate.setValue(isCorporate);
 
     expect(buildConfirmPreEnrollmentPayload(forms, true)).toEqual({
       aceptoReglamento: true,
+      esInscripcionCorporativa: isCorporate,
       idOfertasSeleccionadas: [300, 301],
     });
   });
