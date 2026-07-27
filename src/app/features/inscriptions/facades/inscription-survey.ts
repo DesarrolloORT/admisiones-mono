@@ -114,7 +114,7 @@ export class InscripcionSurveyFacade {
         ? 'parcial'
         : 'primera-vez'
   );
-  private readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
+  public readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
   public readonly visibleSections = computed(() =>
     getSeccionesVisibles(this.scenario(), this.isProfessionalUpdate())
   );
@@ -170,11 +170,13 @@ export class InscripcionSurveyFacade {
     this.observeForms();
     this.observeIdentityConfirmation();
     this.deferStudentRegulationAcceptance();
-    // Si la sección activa deja de ser visible (p. ej. AP arranca 'fresh' con
-    // 'educacion'), se reubica en la primera visible. No-op para tipos 1/2.
+    let previousFirstVisibleSection = this.visibleSections()[0];
     effect(() => {
       const sections = this.visibleSections();
-      if (!sections.includes(this.activeSection())) this.activeSection.set(sections[0]);
+      if (!sections.includes(this.activeSection()) || sections[0] !== previousFirstVisibleSection) {
+        this.activeSection.set(sections[0]);
+      }
+      previousFirstVisibleSection = sections[0];
     });
     // El posicionamiento del flujo y la aplicación del estado inicial los hace
     // `InscripcionProcessFacade` (único inicializador) vía `applyInitialState`.
@@ -420,6 +422,10 @@ export class InscripcionSurveyFacade {
         next: response => {
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('completa');
+          if (confirmPayload.esInscripcionCorporativa) {
+            this.payment.outcome.set('inscription-en-proceso');
+            return;
+          }
           if (response.enEspera === true) {
             this.payment.outcome.set('inscription-en-proceso');
             return;
@@ -524,6 +530,7 @@ export class InscripcionSurveyFacade {
 
   private configureConditionalValidators(): void {
     merge(
+      this.formsStore.academicForm.controls.tipoPropuesta.valueChanges,
       this.formsStore.academicForm.controls.carrera.valueChanges,
       this.educationForm.controls.anioSecundaria.valueChanges,
       this.educationForm.controls.cursaSecundaria.valueChanges,
@@ -552,6 +559,7 @@ export class InscripcionSurveyFacade {
     const experience = this.ortExperienceForm.controls;
     const work = this.workForm.controls;
     const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
+    const professionalUpdate = this.isProfessionalUpdate();
 
     const anioBachilleratoRequired =
       currentlyInSchool && this.options.schoolYearOptions().length > 0;
@@ -603,9 +611,13 @@ export class InscripcionSurveyFacade {
       experience.recuerdaPublicidad.value === 'si' && this.options.advertisingOptions().length > 0
     );
 
+    this.setRequired(work.isCorporate, professionalUpdate);
+    this.setRequired(work.situacionLaboral, !professionalUpdate);
     this.setRequired(
       work.tipoJornadaLaboral,
-      work.situacionLaboral.value === 'trabaja' && this.options.workScheduleOptions().length > 0
+      !professionalUpdate &&
+        work.situacionLaboral.value === 'trabaja' &&
+        this.options.workScheduleOptions().length > 0
     );
   }
 

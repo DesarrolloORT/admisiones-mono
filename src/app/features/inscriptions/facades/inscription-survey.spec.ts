@@ -94,10 +94,34 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
-  it('reduces AP flows to work status, identity and regulation and repositions the section', () => {
-    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+  it('asks only for the inscription owner when AP has survey rights', () => {
+    const { survey, forms } = createFacade(
+      createSurveyResponse({ tieneDerechoEncuesta: true }),
+      {},
+      AP_CAREERS
+    );
 
     expect(survey.activeSection()).toBe('educacion');
+
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    TestBed.tick();
+
+    expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
+    expect(survey.activeSection()).toBe('situacion-laboral');
+    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+    expect(forms.workForm.controls.situacionLaboral.hasError('required')).toBe(false);
+    expect(forms.workForm.controls.tipoJornadaLaboral.hasError('required')).toBe(false);
+  });
+
+  it('asks for a corporate inscription before identity when AP has no survey rights', () => {
+    const { survey, forms } = createFacade(
+      createSurveyResponse({ tieneDerechoEncuesta: false }),
+      {},
+      AP_CAREERS
+    );
+
+    expect(survey.activeSection()).toBe('identidad');
 
     forms.academicForm.controls.tipoPropuesta.setValue('3');
     forms.academicForm.controls.carrera.setValue('30');
@@ -115,14 +139,17 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
-  it('confirms an AP pre-enrollment with the selected seminars and no survey POST', () => {
-    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+  it('confirms a personal AP pre-enrollment and advances to payment', () => {
+    const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
     forms.academicForm.controls.tipoPropuesta.setValue('3');
     forms.academicForm.controls.carrera.setValue('30');
     forms.academicForm.controls.seminarios.setValue(['300']);
+    process.flow.goTo('encuesta');
     TestBed.tick();
 
-    forms.workForm.controls.situacionLaboral.setValue('no-trabaja');
+    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+    expect(forms.workForm.controls.situacionLaboral.hasError('required')).toBe(false);
+    forms.workForm.controls.isCorporate.setValue(false);
     const frente = preloadFile('frente.png');
     const dorso = preloadFile('dorso.png');
     const selfie = preloadFile('selfie.png');
@@ -140,8 +167,41 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
+      esInscripcionCorporativa: false,
       idOfertasSeleccionadas: [300],
     });
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBeNull();
+  });
+
+  it('finishes a corporate AP pre-enrollment without opening payment', () => {
+    const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.seminarios.setValue(['300']);
+    forms.workForm.controls.isCorporate.setValue(true);
+    process.flow.goTo('encuesta');
+    TestBed.tick();
+
+    const identity = preloadFile('identidad.png');
+    applyIdentityPreload(survey, {
+      frente: identity,
+      dorso: identity,
+      selfie: identity,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    survey.continue();
+
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: true,
+      idOfertasSeleccionadas: [300],
+    });
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBe('inscription-en-proceso');
   });
 
   it('completes identity and advances when confirming a complete backend preload', () => {
@@ -207,6 +267,7 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
+      esInscripcionCorporativa: false,
       idOfertasSeleccionadas: [300],
     });
   });
@@ -360,6 +421,7 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).toHaveBeenCalledWith(selfie);
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
+      esInscripcionCorporativa: false,
       idOfertasSeleccionadas: [300],
     });
   });
