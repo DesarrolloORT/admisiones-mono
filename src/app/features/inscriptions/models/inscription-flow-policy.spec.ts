@@ -26,7 +26,10 @@ describe('inscription flow policy', () => {
       'identidad',
       'reglamento',
     ]);
-    // Intersección: sin derecho o con encuesta completa quedan identidad+reglamento.
-    expect(getSeccionesVisibles('encuesta-completa', true)).toEqual(['identidad', 'reglamento']);
+    expect(getSeccionesVisibles('encuesta-completa', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
   });
 });

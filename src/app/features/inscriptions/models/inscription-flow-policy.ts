@@ -15,8 +15,8 @@ export function getSeccionesVisibles(
   escenario: EscenarioInscripcion,
   actualizacionProfesional = false
 ): readonly SeccionEncuestaId[] {
+  if (actualizacionProfesional) return SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL;
+
   const base = escenario === 'encuesta-completa' ? SECCIONES_ENCUESTA_COMPLETA : SECCIONES_ENCUESTA;
-  return actualizacionProfesional
-    ? base.filter(seccion => SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL.includes(seccion))
-    : base;
+  return base;
 }
