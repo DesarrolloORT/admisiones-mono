@@ -219,6 +219,7 @@ export class InscripcionesEndpoint {
       .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
         body: {
           aceptoReglamento: payload.aceptoReglamento,
+          esInscripcionCorporativa: payload.esInscripcionCorporativa,
           idsOfertasSeleccionadas: payload.idOfertasSeleccionadas,
         },
         showLoader: true,

@@ -349,7 +349,11 @@ describe('InscripcionesEndpoint', () => {
         inscripciones: [{ comienzo: 'Marzo', turno: 'Matutino' }],
       })
     );
-    const payload = { aceptoReglamento: true, idOfertasSeleccionadas: [300] };
+    const payload = {
+      aceptoReglamento: true,
+      esInscripcionCorporativa: true,
+      idOfertasSeleccionadas: [300],
+    };
 
     await expect(firstValueFrom(endpoint.confirmPreEnrollment(payload))).resolves.toEqual({
       confirmada: true,
@@ -361,7 +365,11 @@ describe('InscripcionesEndpoint', () => {
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {
-      body: { aceptoReglamento: true, idsOfertasSeleccionadas: [300] },
+      body: {
+        aceptoReglamento: true,
+        esInscripcionCorporativa: true,
+        idsOfertasSeleccionadas: [300],
+      },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -505,7 +513,11 @@ describe('InscripcionesEndpoint', () => {
       () => endpoint.getDetail(20, 200),
       () => endpoint.saveInitialSurvey(createSurveyPayload()),
       () =>
-        endpoint.confirmPreEnrollment({ aceptoReglamento: true, idOfertasSeleccionadas: [300] }),
+        endpoint.confirmPreEnrollment({
+          aceptoReglamento: true,
+          esInscripcionCorporativa: false,
+          idOfertasSeleccionadas: [300],
+        }),
       () => endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 
