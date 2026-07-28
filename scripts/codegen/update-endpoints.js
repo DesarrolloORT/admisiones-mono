@@ -125,7 +125,6 @@ async function main() {
         }
       }
       console.warn('');
-      printLlmFixPrompt(staleImports);
     }
 
     if (hasProblems) {
@@ -180,41 +179,7 @@ async function main() {
       }
     }
     console.warn('');
-    printLlmFixPrompt(staleImports);
   }
-}
-
-function printLlmFixPrompt(staleImports) {
-  const lines = [];
-  for (const stale of staleImports) {
-    for (const ref of stale.missing) {
-      if (ref.suggestion) {
-        lines.push(`  - ${stale.file}: replace "${ref.name}" with "${ref.suggestion}"`);
-      } else {
-        lines.push(
-          `  - ${stale.file}: remove import and usage of "${ref.name}" (endpoint no longer exists in the API)`
-        );
-      }
-    }
-  }
-
-  console.log('─'.repeat(70));
-  console.log('Prompt para LLM (copia y pega en Copilot Chat para fix automatico):');
-  console.log('─'.repeat(70));
-  console.log(`
-Los siguientes imports en mi proyecto referencian endpoints generados que
-ya no existen en el Swagger actual. Por favor actualiza cada archivo:
-${lines.join('\n')}
-
-Para cada caso:
-1. Actualiza el import al nuevo nombre y path correcto dentro de "generated/".
-2. Actualiza todas las referencias en el archivo al nuevo endpoint.
-3. Si no hay sugerencia de reemplazo, elimina el import y el codigo que lo usa,
-   y deja un comentario TODO indicando que el endpoint fue removido del API.
-
-Confirma antes de aplicar los cambios.
-`);
-  console.log('─'.repeat(70));
 }
 
 function detectBreakingChanges(outputDir, generation) {

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
+import { hasGeneratedApiChanges, snapshotGeneratedApi } from './api-repair.js';
 import { DEFAULT_ENVIRONMENT_FILE, ROOT } from './codegen-utils.js';
 
 const { values: flags } = nodeParseArgs({
@@ -49,6 +50,8 @@ if (flags['spec-dir']) {
   contractsArgs.push('--contracts-path', flags['contracts-path']);
 }
 
+snapshotGeneratedApi();
+
 runNodeStage({
   label: 'Actualizando modelos OpenAPI',
   script: 'update-models.js',
@@ -83,6 +86,7 @@ runNodeStage({
   label: 'Validando contratos públicos de adapters',
   script: 'check-api-contracts.js',
   args: [],
+  repairable: true,
   failure: {
     what: 'Los adapters exponen DTOs generados o existen responses sin schema tipado.',
     where: 'features/*/endpoints y src/app/shared/api/generated/endpoints/',
@@ -98,7 +102,11 @@ if (flags['skip-build']) {
   console.log('\n✓ API actualizada y compatibilidad Angular validada.');
 }
 
-function runNodeStage({ label, script, args, failure }) {
+if (hasGeneratedApiChanges()) {
+  printRepairHint();
+}
+
+function runNodeStage({ label, script, args, failure, repairable = false }) {
   console.log(`\n==> ${label}`);
   const scriptPath = resolve(ROOT, 'scripts/codegen', script);
   const result = spawnSync(process.execPath, [scriptPath, ...args], {
@@ -113,6 +121,7 @@ function runNodeStage({ label, script, args, failure }) {
       where: failure.where,
       detail: result.error?.message || `el proceso termino con codigo ${result.status ?? 1}.`,
     });
+    if (repairable) printRepairHint();
     process.exit(result.status || 1);
   }
 }
@@ -141,6 +150,7 @@ function validateAngularCompilation() {
         result.error?.message ||
         `Angular termino con codigo ${result.status ?? 1}; npm start fallaria por la misma causa.`,
     });
+    printRepairHint();
     process.exit(result.status || 1);
   }
 }
@@ -151,4 +161,9 @@ function printStageFailure({ stage, what, where, detail }) {
   console.error(`  Que paso : ${what}`);
   console.error(`  Donde    : ${where}`);
   console.error(`  Detalle  : ${detail}`);
+}
+
+function printRepairHint() {
+  console.log('\nPara analizar el delta y reparar todos los consumidores afectados:');
+  console.log('  npm run fix-api');
 }
