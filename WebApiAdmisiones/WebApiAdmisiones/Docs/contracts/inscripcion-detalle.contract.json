@@ -19,7 +19,7 @@
   },
   "types": {
     "DtoCabeceraInscripcion": {
-      "desc": "Cabecera común a todas las ofertas de la selección. Producto y turno son iguales para todas; el comienzo puede diferir en nivel 3 y 4, por eso el comienzo va por oferta, no acá.",
+      "desc": "Cabecera común a todas las ofertas de la selección. Producto es igual para todas; el comienzo y el turno pueden diferir en nivel 3 y 4, por eso van por oferta, no acá.",
       "fields": {
         "idProducto": { "type": "long", "desc": "Id del producto/carrera." },
         "carrera": { "type": "string|null", "desc": "Nombre de la carrera (web, extenso o corto, el primero disponible)." },
@@ -32,7 +32,7 @@
         "idInscripcion": { "type": "long", "omitEmpty": true, "desc": "Id de la inscripción generada. Ausente en 'En proceso' (todavía no hay inscripción)." },
         "idOferta": { "type": "long", "desc": "Id de la oferta." },
         "comienzo": { "type": "string|null", "desc": "Nombre del comienzo de esta oferta (puede variar entre ofertas en nivel 3 y 4)." },
-        "turno": { "type": "string|null", "desc": "Nombre del turno de esta oferta (igual para todas)." },
+        "turno": { "type": "string|null", "desc": "Nombre del turno de esta oferta (puede variar entre ofertas en nivel 3 y 4)." },
         "descripcionOferta": { "type": "string|null", "omitEmpty": true, "desc": "Descripción de la oferta. Solo nivel 3 y 4 (sale de la vista de ofertas disponibles); ausente en nivel 1 y 2." }
       }
     },

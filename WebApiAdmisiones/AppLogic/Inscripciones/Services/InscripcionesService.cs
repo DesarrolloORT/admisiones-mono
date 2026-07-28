@@ -419,7 +419,7 @@ public class InscripcionesService(
 
     /// <summary>
     /// Recorre las ofertas seleccionadas, valida cada una y verifica que sean compatibles entre sí
-    /// (mismo producto y turno, y mismo comienzo para nivel 1 y 2). Devuelve los datos de confirmación
+    /// (mismo producto; mismo turno y comienzo solo para nivel 1 y 2). Devuelve los datos de confirmación
     /// consolidados de la selección, o el primer error encontrado.
     /// </summary>
     private static OperationResult<List<DatosConfirmacionOferta>> ValidarOfertasCompatibles(
@@ -443,7 +443,7 @@ public class InscripcionesService(
                 return OperationResult<List<DatosConfirmacionOferta>>.IsFailed(
                     "INS_CPI_17",
                     methodName,
-                    "Todas las ofertas seleccionadas deben pertenecer al mismo producto y turno (y al mismo comienzo para nivel 1 y 2).",
+                    "Todas las ofertas seleccionadas deben pertenecer al mismo producto (y al mismo turno y comienzo para nivel 1 y 2).",
                     400);
             }
 
@@ -455,12 +455,23 @@ public class InscripcionesService(
 
     private static bool EsOfertaCompatibleConSeleccion(DatosConfirmacionOferta seleccion, DatosConfirmacionOferta oferta)
     {
-        if (seleccion.IdProducto != oferta.IdProducto || seleccion.IdTurno != oferta.IdTurno)
+        if (seleccion.IdProducto != oferta.IdProducto)
+        {
+            return false;
+        }
+
+        if (RequiereMismoTurnoEntreOfertas(seleccion) && seleccion.IdTurno != oferta.IdTurno)
         {
             return false;
         }
 
         return !RequiereMismoComienzoEntreOfertas(seleccion) || seleccion.IdComienzo == oferta.IdComienzo;
+    }
+
+    /// <summary>Nivel 1 y 2 exigen que todas las ofertas compartan turno; nivel 3 y 4 no.</summary>
+    private static bool RequiereMismoTurnoEntreOfertas(DatosConfirmacionOferta datos)
+    {
+        return datos.Producto?.IdNivelProducto is not (3 or 4);
     }
 
     /// <summary>Nivel 1 y 2 exigen que todas las ofertas compartan comienzo; nivel 3 y 4 no.</summary>
