@@ -471,7 +471,6 @@ function initialSurveyCatalogs(): unknown {
       motivosEleccionOrt: [{ value: 1, label: 'Propuesta académica' }],
     },
     experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-    situacionLaboral: { tiposJornada: [] },
   };
 }
 

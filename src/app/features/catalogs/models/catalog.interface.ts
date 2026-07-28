@@ -123,9 +123,6 @@ export interface InitialSurveyCatalogs {
     valoraciones: CatalogItem[];
     publicidadesOrt: CatalogItem[];
   };
-  situacionLaboral: {
-    tiposJornada: CatalogItem[];
-  };
 }
 
 /** Banco disponible para el pago de la seña. */

@@ -82,9 +82,6 @@ describe('CatalogsEndpoint', () => {
           valoraciones: [{ value: 4, label: 'Muy bueno' }],
           publicidadesOrt: [{ value: 9, label: 'Redes sociales' }],
         },
-        situacionLaboral: {
-          tiposJornada: [{ value: 12, label: 'Tiempo completo' }],
-        },
       })
     );
 
@@ -113,9 +110,6 @@ describe('CatalogsEndpoint', () => {
         experienciaOrt: {
           valoraciones: [{ id: 4, label: 'Muy bueno' }],
           publicidadesOrt: [{ id: 9, label: 'Redes sociales' }],
-        },
-        situacionLaboral: {
-          tiposJornada: [{ id: 12, label: 'Tiempo completo' }],
         },
       });
     });

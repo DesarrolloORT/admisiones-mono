@@ -190,7 +190,6 @@ test.describe('Keyboard and form accessibility @a11y', () => {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
-    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
     await inscription.acceptRegulation();
 

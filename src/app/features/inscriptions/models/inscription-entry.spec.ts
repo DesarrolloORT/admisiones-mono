@@ -288,11 +288,11 @@ describe('deriveInitialInscripcionState', () => {
     [
       'retomar En proceso + detalle full + en-progreso',
       retomar(DETAIL.enProcesoFull),
-      RESOLVED.enProgreso('situacion-laboral'),
+      RESOLVED.enProgreso('experiencia-ort'),
       {
         step: 'encuesta',
         survey: 'prefilled',
-        activeSection: 'situacion-laboral',
+        activeSection: 'experiencia-ort',
         includeAcademic: true,
         resumeInProgress: true,
         payment: 'none',

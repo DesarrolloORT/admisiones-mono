@@ -115,9 +115,6 @@ export class CatalogsEndpoint {
           valoraciones: this.toCatalogItems(data?.experienciaOrt?.valoraciones),
           publicidadesOrt: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
         },
-        situacionLaboral: {
-          tiposJornada: this.toCatalogItems(data?.situacionLaboral?.tiposJornada),
-        },
       }))
     );
   }

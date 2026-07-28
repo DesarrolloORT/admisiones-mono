@@ -84,7 +84,6 @@ describe('Layout', () => {
                   motivosEleccionOrt: [],
                 },
                 experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-                situacionLaboral: { tiposJornada: [] },
               })
             ),
             getTurnos: vi.fn().mockReturnValue(

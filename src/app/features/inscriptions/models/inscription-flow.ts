@@ -96,8 +96,6 @@ export interface InscripcionInitialSurveyPayload {
   recuerdaPublicidadOrt: boolean | null;
   madreTutorEgresadoOrt: boolean | null;
   padreTutorEgresadoOrt: boolean | null;
-  trabajaActualmente: boolean | null;
-  tipoJornadaId: number | null;
   universidadConsideradaIds: number[] | null;
   universidadConsideradaOtros: string[] | null;
   universidadEducacionSuperiorIds: number[] | null;
@@ -243,7 +241,6 @@ export const SECCIONES_ENCUESTA: readonly SeccionEncuestaId[] = [
   'educacion',
   'decision-academica',
   'experiencia-ort',
-  'situacion-laboral',
   'identidad',
   'reglamento',
 ];

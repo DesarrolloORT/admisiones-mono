@@ -110,8 +110,6 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
     expect(survey.activeSection()).toBe('situacion-laboral');
     expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
-    expect(forms.workForm.controls.situacionLaboral.hasError('required')).toBe(false);
-    expect(forms.workForm.controls.tipoJornadaLaboral.hasError('required')).toBe(false);
   });
 
   it('asks for a corporate inscription before identity when AP has no survey rights', () => {
@@ -148,7 +146,6 @@ describe('InscripcionSurveyFacade', () => {
     TestBed.tick();
 
     expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
-    expect(forms.workForm.controls.situacionLaboral.hasError('required')).toBe(false);
     forms.workForm.controls.isCorporate.setValue(false);
     const frente = preloadFile('frente.png');
     const dorso = preloadFile('dorso.png');
@@ -347,23 +344,6 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).not.toHaveBeenCalled();
   });
 
-  it('does not save the survey when work becomes complete', () => {
-    const { survey } = createFacade({
-      tieneDerechoEncuesta: true,
-      encuesta: null,
-      universidadesConsideradas: [],
-      universidadesConsideradasOtros: [],
-      universidadesEducacionSuperior: [],
-      universidadesEducacionSuperiorOtros: [],
-      opcionesMotivosSeleccionados: [],
-      opcionesPublicidadSeleccionadas: [],
-    });
-    survey.activeSection.set('situacion-laboral');
-    survey.workForm.controls.situacionLaboral.setValue('no-trabaja');
-
-    expect(survey.getSectionState('situacion-laboral')).toBe('completa');
-    expect(saveInitialSurvey).not.toHaveBeenCalled();
-  });
   it('does not confirm when a previous visible section is invalid', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: false,
@@ -1026,7 +1006,6 @@ describe('InscripcionSurveyFacade', () => {
                   motivosEleccionOrt: [],
                 },
                 experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-                situacionLaboral: { tiposJornada: [] },
                 ...catalogOverrides,
               }),
           },

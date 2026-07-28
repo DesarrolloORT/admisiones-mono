@@ -182,8 +182,6 @@ export class InscripcionesEndpoint {
       recuerdaPublicidadOrt: payload.recuerdaPublicidadOrt,
       madreTutorEgresadoOrt: payload.madreTutorEgresadoOrt,
       padreTutorEgresadoOrt: payload.padreTutorEgresadoOrt,
-      trabajaActualmente: payload.trabajaActualmente,
-      tipoJornadaId: payload.tipoJornadaId,
       universidadConsideradaIds: payload.universidadConsideradaIds,
       universidadConsideradaOtros: payload.universidadConsideradaOtros,
       universidadEducacionSuperiorIds: payload.universidadEducacionSuperiorIds,
@@ -377,7 +375,6 @@ function toSurveySection(value: string | null | undefined): SeccionEncuestaId | 
     case 'educacion':
     case 'decision-academica':
     case 'experiencia-ort':
-    case 'situacion-laboral':
     case 'identidad':
     case 'reglamento':
       return value;

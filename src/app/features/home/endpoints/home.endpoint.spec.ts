@@ -94,7 +94,7 @@ describe('HomeEndpoint', () => {
     await expect(firstValueFrom(endpoint.reactivarInscripcion(100))).resolves.toBe(true);
 
     expect(api.request).toHaveBeenCalledWith(postInscripcionesReactivarEndpoint, {
-      body: { idInscripto: 100 },
+      body: { idInscripcion: 100 },
       showLoader: true,
     });
     expect(api.clearCache).toHaveBeenCalled();

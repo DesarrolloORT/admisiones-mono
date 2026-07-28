@@ -111,7 +111,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const education = forms.educationForm.controls;
   const decision = forms.academicDecisionForm.controls;
   const experience = forms.ortExperienceForm.controls;
-  const work = forms.workForm.controls;
   const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
   const recursedBaccalaureate = education.recursaAnioBachillerato.value === 'si';
   const nationalSchoolPlace = education.lugarSecundaria.value === SCHOOL_PLACE_NATIONAL;
@@ -121,7 +120,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const fatherHasCompleteUniversity = hasCompleteUniversityEducation(
     education.formacionPadre.value
   );
-  const works = work.situacionLaboral.value === 'trabaja';
   const informedOtherUniversities = decision.otrasUniversidades.value === 'si';
   const hasPreviousHigherEducation = education.estadoEducacionSuperior.value === '1';
   const remembersAdvertising = experience.recuerdaPublicidad.value === 'si';
@@ -173,8 +171,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
     padreTutorEgresadoOrt: fatherHasCompleteUniversity
       ? toNullableBoolean(education.tituloOrtPadre.value)
       : null,
-    trabajaActualmente: toWorkStatusFlag(work.situacionLaboral.value),
-    tipoJornadaId: works ? toNullableNumber(work.tipoJornadaLaboral.value) : null,
     universidadConsideradaIds: informedOtherUniversities
       ? toNumberArray(decision.universidadesInformadas.value)
       : null,
@@ -292,10 +288,6 @@ export function toYesNoValue(value: boolean | null): string {
 
 export function toNullableBoolean(value: string): boolean | null {
   return value === 'si' ? true : value === 'no' ? false : null;
-}
-
-export function toWorkStatusFlag(value: string): boolean | null {
-  return value ? value === 'trabaja' : null;
 }
 
 export function toNullableNumber(value: string): number | null {

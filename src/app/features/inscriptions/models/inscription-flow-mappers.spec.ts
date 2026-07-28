@@ -12,7 +12,6 @@ import {
   patchBackendSurveyForms,
   serializeDate,
   toNullableNumber,
-  toWorkStatusFlag,
 } from './inscription-flow-mappers';
 
 const emptySurveyResponse = {
@@ -100,11 +99,6 @@ describe('inscription flow mappers', () => {
       recuerdaPublicidad: 'si',
       mediosPublicidad: ['9'],
     });
-    forms.workForm.patchValue({
-      situacionLaboral: 'trabaja',
-      tipoJornadaLaboral: '3',
-    });
-
     const payload = buildInitialSurveyPayload(forms);
 
     expect(Object.keys(payload).sort()).toEqual(
@@ -132,8 +126,6 @@ describe('inscription flow mappers', () => {
         'recuerdaPublicidadOrt',
         'recursaAnioBachillerato',
         'seInformoEnOtrasUniversidades',
-        'tipoJornadaId',
-        'trabajaActualmente',
         'tuvoAsesoramientoOrt',
         'ubicacionUltimoAnioSecundariaId',
         'universidadConsideradaIds',
@@ -178,8 +170,6 @@ describe('inscription flow mappers', () => {
       valoracionInstalacionesOrtId: 5,
       recuerdaPublicidadOrt: true,
       publicidadOrtIds: [9],
-      trabajaActualmente: true,
-      tipoJornadaId: 3,
       motivoEleccionOrtIds: [2],
     });
   });
@@ -354,12 +344,6 @@ describe('inscription flow mappers', () => {
   it('serializes dates as yyyy-MM-dd and null as empty string', () => {
     expect(serializeDate(null)).toBe('');
     expect(serializeDate(new Date(2026, 0, 5))).toBe('2026-01-05');
-  });
-
-  it('maps the work status flag from the form value', () => {
-    expect(toWorkStatusFlag('')).toBeNull();
-    expect(toWorkStatusFlag('trabaja')).toBe(true);
-    expect(toWorkStatusFlag('no-trabaja')).toBe(false);
   });
 
   it('parses nullable numbers defensively', () => {

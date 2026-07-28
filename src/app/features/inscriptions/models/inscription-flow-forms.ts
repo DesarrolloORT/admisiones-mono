@@ -135,11 +135,6 @@ export function createInscripcionForms() {
     }),
     workForm: new FormGroup({
       isCorporate: new FormControl<boolean | null>(null),
-      situacionLaboral: new FormControl('', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
-      tipoJornadaLaboral: new FormControl('', { nonNullable: true }),
     }),
     identityForm: new FormGroup({
       vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
@@ -258,8 +253,6 @@ export function createSectionConfig(
       form: forms.workForm,
       errorFields: [
         { controlName: 'isCorporate', fieldId: '', label: 'Titular de la inscripción' },
-        { controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' },
-        { controlName: 'tipoJornadaLaboral', fieldId: '', label: 'Tipo de jornada laboral' },
       ],
     },
     identidad: {

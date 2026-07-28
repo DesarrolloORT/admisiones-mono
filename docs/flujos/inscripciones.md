@@ -142,7 +142,6 @@ Excepciones que si limpian valores:
 | Formacion de madre o padre es `5` o `6` | `tituloOrtMadre` o `tituloOrtPadre`     | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                         |
 | `otrasUniversidades = si`               | `universidadesInformadas`               | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                          |
 | Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
-| `situacionLaboral = trabaja`            | `tipoJornadaLaboral`                    | Requerido               | Conserva valor crudo                | `tipoJornadaId = null`                      |
 | Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
 | `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `idBancoSistarbanc`           |
 
@@ -218,10 +217,11 @@ preguntar en todos los casos si la inscripción es corporativa. Un clamp en
 `InscripcionSurveyFacade` reposiciona la sección activa si dejó de ser visible o
 cambió la primera sección aplicable.
 
-En `situacion-laboral`, AP reemplaza los campos laborales por la pregunta
-**¿A título de quién deseás realizar la inscripción?**. La selección es obligatoria
-y se representa como `isCorporate`: título personal es `false` y corporativa es
-`true`. Los tipos 1/2 conservan Situación laboral y envían `isCorporate = false`.
+La sección `situacion-laboral` contiene una sola pregunta,
+**¿A título de quién deseás realizar la inscripción?**, y solo se muestra en AP. La
+selección es obligatoria y se representa como `isCorporate`: título personal es
+`false` y corporativa es `true`. Los tipos 1/2 no ven la sección y envían
+`isCorporate = false`.
 
 **AP no envía `POST /Inscripciones/EncuestaInicial`** (ni al cerrar el paso 2 ni
 al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
@@ -309,14 +309,10 @@ disponible.
 
 ### Situacion laboral
 
-`situacionLaboral` con valor `trabaja` muestra `tipoJornadaLaboral`. El backend
-recibe `trabajaActualmente = true` y `tipoJornadaId = Number(tipoJornadaLaboral)`.
-Con `buscando` o `no-trabaja` no se muestra ningun hijo; el backend recibe
-`trabajaActualmente = false` y `tipoJornadaId = null`. El valor viejo de jornada
-queda crudo en el form pero se ignora.
-
-Completar Situacion laboral solo valida y marca el expansible. No dispara llamadas
-HTTP; la encuesta se guarda junto con el resto del cierre del paso 2.
+La encuesta inicial ya no tiene preguntas laborales: el backend dejó de publicar el
+catálogo `situacionLaboral` y los campos `trabajaActualmente` y `tipoJornadaId`. La
+sección `situacion-laboral` sobrevive solo en AP y únicamente pregunta la titularidad
+de la inscripción (`isCorporate`, ver [Paso 2 AP reducido](#paso-2-ap-reducido)).
 
 ### Identidad
 
@@ -379,8 +375,6 @@ envian `null` cuando no aplican.
 - `recuerdaPublicidadOrt`: `si -> true`, `no -> false`.
 - `madreTutorEgresadoOrt`: `tituloOrtMadre` (`si -> true`, `no -> false`), solo si `formacionMadre` es `5` o `6`.
 - `padreTutorEgresadoOrt`: `tituloOrtPadre` (`si -> true`, `no -> false`), solo si `formacionPadre` es `5` o `6`.
-- `trabajaActualmente`: `trabaja -> true`; `buscando` o `no-trabaja -> false`.
-- `tipoJornadaId`: `Number(tipoJornadaLaboral)` solo si `situacionLaboral = trabaja`.
 - `universidadConsideradaIds`: `universidadesInformadas.map(Number)` solo si `otrasUniversidades = si`; incluye `0` si selecciona `Otro`.
 - `universidadConsideradaOtros`: `[universidadInformadaOtro.trim()]` solo si `universidadConsideradaIds` incluye `0`; si no, `null`.
 - `universidadEducacionSuperiorIds`: `universidadesEducacionSuperior.map(Number)` solo si `estadoEducacionSuperior = 1`; incluye `0` si selecciona `Otro`.

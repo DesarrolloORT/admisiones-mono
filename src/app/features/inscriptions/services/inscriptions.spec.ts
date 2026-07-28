@@ -178,8 +178,6 @@ describe('Inscripciones', () => {
       recuerdaPublicidadOrt: null,
       madreTutorEgresadoOrt: null,
       padreTutorEgresadoOrt: null,
-      trabajaActualmente: null,
-      tipoJornadaId: null,
       universidadConsideradaIds: null,
       universidadConsideradaOtros: null,
       universidadEducacionSuperiorIds: null,

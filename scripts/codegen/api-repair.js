@@ -16,12 +16,10 @@ const AGENTS = {
   claude: {
     prompt:
       '/repair-api-update Repara quirurgicamente todos los consumidores afectados por la ultima actualizacion de API.',
-    manual: 'Abri Claude Code en este repo y ejecuta: /repair-api-update',
   },
   codex: {
     prompt:
       'Use $repair-api-update to surgically repair every consumer affected by the latest API update.',
-    manual: 'Abri Codex en este repo y ejecuta: $repair-api-update',
   },
 };
 
@@ -57,11 +55,12 @@ export function selectAgent(requestedAgent, answer = '') {
 }
 
 async function main() {
-  const { values } = nodeParseArgs({
+  const { positionals, values } = nodeParseArgs({
     options: {
       agent: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
+    allowPositionals: true,
   });
 
   if (values.help) {
@@ -75,7 +74,8 @@ async function main() {
   }
 
   let answer = '';
-  if (!values.agent && stdin.isTTY && stdout.isTTY) {
+  const requestedAgent = values.agent ?? positionals[0];
+  if (!requestedAgent && stdin.isTTY && stdout.isTTY) {
     const input = createInterface({ input: stdin, output: stdout });
     try {
       answer = await input.question('Agente [Claude/codex] (Claude): ');
@@ -85,29 +85,22 @@ async function main() {
   }
 
   try {
-    const agent = selectAgent(values.agent, answer);
-    if (!commandExists(agent)) {
-      console.error(`No se encontro ${agent} en PATH.\n${AGENTS[agent].manual}`);
-      process.exitCode = 1;
-      return;
-    }
+    const agent = selectAgent(requestedAgent, answer);
     const args = agent === 'codex' ? ['-C', ROOT, AGENTS[agent].prompt] : [AGENTS[agent].prompt];
     const result = spawnSync(agent, args, {
       cwd: ROOT,
       stdio: 'inherit',
       shell: process.platform === 'win32',
     });
+    if (result.error?.code === 'ENOENT') {
+      throw new Error(`No esta instalado ${agent}. Ejecuta npm install.`);
+    }
     if (result.error) throw result.error;
     process.exitCode = result.status ?? 1;
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;
   }
-}
-
-function commandExists(command) {
-  const locator = process.platform === 'win32' ? 'where.exe' : 'which';
-  return spawnSync(locator, [command], { stdio: 'ignore' }).status === 0;
 }
 
 const isMain = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;

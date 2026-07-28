@@ -545,8 +545,7 @@ export class InscripcionSurveyFacade {
       this.ortExperienceForm.controls.reunionAsesoramiento.valueChanges,
       this.ortExperienceForm.controls.visitoWeb.valueChanges,
       this.ortExperienceForm.controls.visitoSede.valueChanges,
-      this.ortExperienceForm.controls.recuerdaPublicidad.valueChanges,
-      this.workForm.controls.situacionLaboral.valueChanges
+      this.ortExperienceForm.controls.recuerdaPublicidad.valueChanges
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.updateConditionalValidators());
@@ -612,13 +611,6 @@ export class InscripcionSurveyFacade {
     );
 
     this.setRequired(work.isCorporate, professionalUpdate);
-    this.setRequired(work.situacionLaboral, !professionalUpdate);
-    this.setRequired(
-      work.tipoJornadaLaboral,
-      !professionalUpdate &&
-        work.situacionLaboral.value === 'trabaja' &&
-        this.options.workScheduleOptions().length > 0
-    );
   }
 
   private setRequired(

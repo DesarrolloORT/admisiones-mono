@@ -40,7 +40,6 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillEducation();
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
-    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
@@ -181,7 +180,6 @@ test.describe('Inscripción inicial', () => {
 
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
-    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
@@ -295,7 +293,6 @@ test.describe('Inscripción inicial', () => {
             educacion: {},
             decisionAcademica: {},
             experienciaOrt: {},
-            situacionLaboral: {},
           },
           identidad: { vencimientoDocumento: '' },
           reglamento: { aceptaReglamento: true },

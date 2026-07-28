@@ -80,7 +80,6 @@ test.describe('Account to enrollment journey', () => {
     await inscription.fillEducation();
     await inscription.fillAcademicDecision();
     await inscription.fillOrtExperience();
-    await inscription.fillWorkStatus();
     await inscription.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');

@@ -110,7 +110,6 @@ describe('Catalogs', () => {
         motivosEleccionOrt: [],
       },
       experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-      situacionLaboral: { tiposJornada: [] },
     };
     endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
 

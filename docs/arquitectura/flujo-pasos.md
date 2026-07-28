@@ -83,8 +83,7 @@ tiene su propio estado.
 
   `inscripcion-survey.ts` cierra el paso en una única cadena: guarda Documento y
   Foto en paralelo, guarda EncuestaInicial solo si ambos terminan correctamente y
-  finalmente confirma la preinscripción. Situación laboral no dispara llamadas
-  HTTP por sí sola.
+  finalmente confirma la preinscripción.
 
 > **Quién decide el avance:** la fachada de sección, no el template. El template
 > solo invoca `process.continue()` / `process.back()`.

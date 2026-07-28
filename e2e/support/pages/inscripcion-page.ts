@@ -16,7 +16,6 @@ const paymentLabels: Record<MetodoPago, string> = {
 
 const dynamicRadioGroupLabels: Record<string, string> = {
   isCorporate: '¿A título de quién deseás realizar la inscripción?',
-  situacionLaboral: '¿Trabajás actualmente?',
   reunionAsesoramiento: '¿Tuviste una reunión de asesoramiento?',
   visitoWeb: '¿Visitaste el sitio web de ORT?',
   visitoSede: '¿Visitaste las instalaciones de ORT?',
@@ -108,13 +107,6 @@ export class InscripcionPage {
     await this.chooseRadio('visitoWeb', 'No');
     await this.chooseRadio('visitoSede', 'No');
     await this.chooseRadio('recuerdaPublicidad', 'No recuerdo');
-    await this.continue();
-
-    await expect(this.radioGroup('situacionLaboral')).toBeVisible();
-  }
-
-  public async fillWorkStatus(): Promise<void> {
-    await this.chooseRadio('situacionLaboral', 'No trabajo actualmente');
     await this.continue();
 
     await expect(this.page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
@@ -235,10 +227,6 @@ export class InscripcionPage {
     await this.chooseRadioWithKeyboard('visitoWeb', 'No');
     await this.chooseRadioWithKeyboard('visitoSede', 'No');
     await this.chooseRadioWithKeyboard('recuerdaPublicidad', 'No recuerdo');
-    await this.continueWithKeyboard();
-
-    await this.expectMainFocus();
-    await this.chooseRadioWithKeyboard('situacionLaboral', 'No trabajo actualmente');
     await this.continueWithKeyboard();
 
     await this.expectMainFocus();

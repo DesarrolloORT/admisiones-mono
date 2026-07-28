@@ -7,7 +7,13 @@ describe('inscription flow model', () => {
     expect(scenarios).toEqual(['primera-vez', 'parcial', 'encuesta-completa']);
   });
 
-  it('includes work status in the full initial survey flow', () => {
-    expect(SECCIONES_ENCUESTA).toContain('situacion-laboral');
+  it('lists the initial survey sections without the work section', () => {
+    expect(SECCIONES_ENCUESTA).toEqual([
+      'educacion',
+      'decision-academica',
+      'experiencia-ort',
+      'identidad',
+      'reglamento',
+    ]);
   });
 });

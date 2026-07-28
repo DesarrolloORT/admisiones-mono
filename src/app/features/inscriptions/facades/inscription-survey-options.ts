@@ -67,7 +67,6 @@ export class InscripcionSurveyOptionsFacade {
   public readonly universityOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly higherEducationUniversityOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly advertisingOptions = signal<readonly OpcionInscripcion[]>([]);
-  public readonly workScheduleOptions = signal<readonly OpcionInscripcion[]>([]);
 
   public readonly catalogError = signal<string | null>(null);
   public readonly loadingInitialSurveyCatalogs = signal(false);
@@ -152,7 +151,6 @@ export class InscripcionSurveyOptionsFacade {
               motivosEleccionOrt: [],
             },
             experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-            situacionLaboral: { tiposJornada: [] },
           });
         },
       });
@@ -173,7 +171,6 @@ export class InscripcionSurveyOptionsFacade {
     this.universityOptions.set(toCatalogOptions(decision.universidades));
     this.higherEducationUniversityOptions.set(toCatalogOptions(education.universidades));
     this.advertisingOptions.set(toCatalogOptions(experience.publicidadesOrt));
-    this.workScheduleOptions.set(toCatalogOptions(catalogs.situacionLaboral.tiposJornada));
     this.baccalaureateYears.set(education.aniosBachillerato);
     if (experience.valoraciones.length > 0) {
       this.ratingLabels.set(

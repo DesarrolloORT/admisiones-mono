@@ -69,16 +69,6 @@ describe('InscripcionFormsStore', () => {
     expect(control.valid).toBe(true);
   });
 
-  it('requires the work situation', () => {
-    const control = store.workForm.controls.situacionLaboral;
-
-    expect(control.hasError('required')).toBe(true);
-
-    control.setValue('empleado');
-
-    expect(control.valid).toBe(true);
-  });
-
   it('requires the document expiration date', () => {
     const control = store.identityForm.controls.vencimientoDocumento;
 
