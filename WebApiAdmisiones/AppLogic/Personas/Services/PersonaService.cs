@@ -542,6 +542,7 @@ public class PersonaService(
             FechaReferencia = source.FechaReferencia,
             IdInscripto = source.IdInscripto,
             EstadoInscripcion = source.EstadoInscripcion,
+            DescripcionOferta = source.DescripcionOferta,
         };
     }
 }
