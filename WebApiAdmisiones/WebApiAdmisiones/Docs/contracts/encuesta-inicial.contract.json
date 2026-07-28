@@ -1,5 +1,5 @@
 ﻿{
-  "version": 9,
+  "version": 10,
   "request": "DtoGuardarEncuestaInicialRequest",
   "catalogSource": "Catalogos/EncuestaInicial",
   "sections": [
@@ -52,14 +52,6 @@
         "valoracionInstalacionesOrtId",
         "recuerdaPublicidadOrt",
         "publicidadOrtIds"
-      ]
-    },
-    {
-      "key": "situacionLaboral",
-      "label": "Situación laboral",
-      "fields": [
-        "trabajaActualmente",
-        "tipoJornadaId"
       ]
     }
   ],
@@ -458,30 +450,6 @@
       "requiredWhen": "recuerdaPublicidadOrt == true",
       "clearWhen": "recuerdaPublicidadOrt == false",
       "minItems": 1
-    },
-    "trabajaActualmente": {
-      "section": "situacionLaboral",
-      "type": "boolean",
-      "allowedOptions": [
-        {
-          "value": true,
-          "label": "Sí, trabajo"
-        },
-        {
-          "value": false,
-          "label": "No"
-        }
-      ],
-      "requiredForDefinitivo": true
-    },
-    "tipoJornadaId": {
-      "section": "situacionLaboral",
-      "type": "number",
-      "catalogPath": "situacionLaboral.tiposJornada",
-      "valueField": "value",
-      "labelField": "label",
-      "requiredWhen": "trabajaActualmente == true",
-      "clearWhen": "trabajaActualmente == false"
     }
   }
 }

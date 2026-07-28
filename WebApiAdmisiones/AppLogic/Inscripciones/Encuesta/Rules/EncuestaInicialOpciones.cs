@@ -66,12 +66,6 @@ public static class EncuestaInicialOpciones
         Combo(5, "5")
     ];
 
-    public static IReadOnlyList<DtoComboOption> TiposJornada { get; } =
-    [
-        Combo(1, "Tiempo completo"),
-        Combo(2, "Tiempo parcial")
-    ];
-
     public static bool Contiene(IReadOnlyList<DtoComboOption> opciones, long? valor)
         => !valor.HasValue || opciones.Any(o => o.Value == valor.Value);
 

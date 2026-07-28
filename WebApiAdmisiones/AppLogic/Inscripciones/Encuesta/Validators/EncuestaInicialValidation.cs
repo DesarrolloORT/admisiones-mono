@@ -10,7 +10,6 @@ internal static class EncuestaInicialValidation
     internal static DtoGuardarEncuestaInicialResponse ValidarCompletitudDesdeBase(
         IUnitOfWork uow,
         EncuestaIniAdmision encuesta,
-        Persona persona,
         long codigoPersona)
     {
         var pendientes = new PendingBuilder(encuesta.IdEncuestaIni);
@@ -19,7 +18,6 @@ internal static class EncuestaInicialValidation
         ValidarEducacion(uow, encuesta, pendientes);
         ValidarDecisionAcademica(uow, encuesta, codigoPersona, pendientes);
         ValidarExperienciaOrt(uow, encuesta, codigoPersona, pendientes);
-        ValidarSituacionLaboral(persona, pendientes);
 
         return pendientes.ToResponse();
     }
@@ -110,14 +108,6 @@ internal static class EncuestaInicialValidation
         pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(encuesta.PublicidadOrtEncuestaIni), section, "recuerdaPublicidadOrt");
         if (EncuestaInicialState.SNToBool(encuesta.PublicidadOrtEncuestaIni) == true)
             pendientes.AddSi((uow.PublicidadEleccionAdmisions?.GetByPersona(codigoPersona)?.Count ?? 0) == 0, section, "publicidadOrtIds");
-    }
-
-    private static void ValidarSituacionLaboral(Persona persona, PendingBuilder pendientes)
-    {
-        var section = EncuestaInicialState.SituacionLaboral;
-        pendientes.AddSi(!EncuestaInicialState.IsAnsweredSN(persona.TrabajaActualmente), section, "trabajaActualmente");
-        if (EncuestaInicialState.SNToBool(persona.TrabajaActualmente) == true)
-            pendientes.AddSi(!persona.TipoJornada.HasValue, section, "tipoJornadaId");
     }
 
     private sealed class PendingBuilder(long idEncuestaIni)

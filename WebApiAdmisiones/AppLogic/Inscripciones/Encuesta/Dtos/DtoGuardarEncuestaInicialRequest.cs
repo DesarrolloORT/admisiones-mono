@@ -33,8 +33,6 @@ public class DtoGuardarEncuestaInicialRequest
     public bool? RecuerdaPublicidadOrt { get; set; }
     public bool? MadreTutorEgresadoOrt { get; set; }
     public bool? PadreTutorEgresadoOrt { get; set; }
-    public bool? TrabajaActualmente { get; set; }
-    public long? TipoJornadaId { get; set; }
     public List<long>? UniversidadConsideradaIds { get; set; }
     public List<string>? UniversidadConsideradaOtros { get; set; }
     public List<long>? UniversidadEducacionSuperiorIds { get; set; }

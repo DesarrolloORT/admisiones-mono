@@ -63,12 +63,12 @@ public sealed class EncuestaInicialService(
                 "La persona no tiene encuesta inicial.",
                 200);
 
-        var pendientes = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuesta, persona, codigoPersona);
+        var pendientes = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuesta, codigoPersona);
         return OperationResult<DtoObtenerEncuestaInicialResponse>.Ok(
             new DtoObtenerEncuestaInicialResponse
             {
                 TieneDerechoEncuesta = true,
-                Encuesta = EncuestaInicialMapper.MapearLectura(uow, encuesta, persona, codigoPersona, pendientes)
+                Encuesta = EncuestaInicialMapper.MapearLectura(uow, encuesta, codigoPersona, pendientes)
             },
             nameof(ObtenerEncuestaInicial));
     }
@@ -140,7 +140,6 @@ public sealed class EncuestaInicialService(
             EncuestaInicialMapper.AplicarEducacion(uow, encuesta, request);
             EncuestaInicialMapper.AplicarDecisionAcademica(encuesta, request);
             EncuestaInicialMapper.AplicarExperienciaOrt(encuesta, request);
-            var actualizaPersona = EncuestaInicialMapper.AplicarSituacionLaboral(persona, request);
 
             if (esNueva)
                 uow.EncuestaIniAdmisions.Add(encuesta);
@@ -148,14 +147,11 @@ public sealed class EncuestaInicialService(
                 uow.EncuestaIniAdmisions.Update(encuesta);
 
             EncuestaInicialChildTablesService.AplicarListasHijas(uow, dbConnectionContext, codigoPersona, request);
-            if (actualizaPersona)
-                uow.Personas.Update(persona);
 
             uow.Save();
 
             var encuestaPersistida = uow.EncuestaIniAdmisions.GetByKey(encuesta.IdEncuestaIni) ?? encuesta;
-            var personaPersistida = uow.Personas.GetByKey(codigoPersona) ?? persona;
-            var response = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuestaPersistida, personaPersistida, codigoPersona);
+            var response = EncuestaInicialValidation.ValidarCompletitudDesdeBase(uow, encuestaPersistida, codigoPersona);
 
             encuesta.EstadoEncuestaIniAdmision = response.Estado;
             if (response.Estado == EncuestaInicialState.EstadoDefinitivo)

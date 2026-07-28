@@ -54,8 +54,6 @@ public static class EncuestaInicialCatalogValidation
             return OperationResult<bool>.IsFailed("INS_EI_11", methodName, "Con quien compartio la decision invalido.", 400);
         if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.NivelesDecision, request.NivelDecisionId))
             return OperationResult<bool>.IsFailed("INS_EI_15", methodName, "Nivel de decision invalido.", 400);
-        if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.TiposJornada, request.TipoJornadaId))
-            return OperationResult<bool>.IsFailed("INS_EI_48", methodName, "Tipo jornada invalido.", 400);
         if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.Valoraciones, request.ValoracionAsesoramientoOrtId))
             return OperationResult<bool>.IsFailed("INS_EI_16", methodName, "Valoracion de asesoramiento invalida.", 400);
         if (!EncuestaInicialOpciones.Contiene(EncuestaInicialOpciones.Valoraciones, request.ValoracionSitioWebOrtId))
@@ -165,9 +163,6 @@ public static class EncuestaInicialCatalogValidation
             return OperationResult<bool>.IsFailed("INS_EI_58", methodName, "Debe indicar valoracion del sitio web ORT.", 400);
         if (request.VisitoInstalacionesOrt == true && !request.ValoracionInstalacionesOrtId.HasValue)
             return OperationResult<bool>.IsFailed("INS_EI_59", methodName, "Debe indicar valoracion de instalaciones ORT.", 400);
-
-        if (request.TrabajaActualmente == true && !request.TipoJornadaId.HasValue)
-            return OperationResult<bool>.IsFailed("INS_EI_60", methodName, "Debe indicar tipo de jornada.", 400);
 
         if (EncuestaInicialState.EsInstruccionAlta(request.NivelFormacionPadreTutorId) && !request.PadreTutorEgresadoOrt.HasValue)
             return OperationResult<bool>.IsFailed("INS_EI_61", methodName, "Debe indicar si padre/tutor es egresado ORT.", 400);

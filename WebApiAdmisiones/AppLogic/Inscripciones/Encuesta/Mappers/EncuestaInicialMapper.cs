@@ -170,23 +170,9 @@ internal static class EncuestaInicialMapper
             encuesta.PublicidadOrtEncuestaIni = EncuestaInicialState.BoolToSN(request.RecuerdaPublicidadOrt.Value);
     }
 
-    internal static bool AplicarSituacionLaboral(Persona persona, DtoGuardarEncuestaInicialRequest request)
-    {
-        if (!request.TrabajaActualmente.HasValue)
-            return false;
-
-        persona.TrabajaActualmente = EncuestaInicialState.BoolToSNCorto(request.TrabajaActualmente.Value);
-        persona.TipoJornada = request.TrabajaActualmente.Value
-            ? request.TipoJornadaId.HasValue ? (byte)request.TipoJornadaId.Value : persona.TipoJornada
-            : null;
-
-        return true;
-    }
-
     internal static DtoEncuestaInicialLectura MapearLectura(
         IUnitOfWork uow,
         EncuestaIniAdmision encuesta,
-        Persona persona,
         long codigoPersona,
         DtoGuardarEncuestaInicialResponse pendientes)
     {
@@ -228,8 +214,6 @@ internal static class EncuestaInicialMapper
             RecuerdaPublicidadOrt = EncuestaInicialState.SNToBool(encuesta.PublicidadOrtEncuestaIni),
             MadreTutorEgresadoOrt = EncuestaInicialState.SNToBool(encuesta.InstruccionMadreOrtEncuestaIni),
             PadreTutorEgresadoOrt = EncuestaInicialState.SNToBool(encuesta.InstruccionPadreOrtEncuestaIni),
-            TrabajaActualmente = EncuestaInicialState.SNToBool(persona.TrabajaActualmente),
-            TipoJornadaId = persona.TipoJornada,
             UniversidadConsideradaIds = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList(),
             UniversidadConsideradaOtros = uow.EmpresaConsideradaAdmisions?.GetByPersona(codigoPersona)?.Where(e => !string.IsNullOrWhiteSpace(e.NombreOtraEmpresa)).Select(e => e.NombreOtraEmpresa!.Trim()).ToList(),
             UniversidadEducacionSuperiorIds = estadoEducacionSuperior == EncuestaInicialState.EstadoEducacionSuperiorPrevia.Uruguay ? educacionSuperior?.Where(e => e.CodigoEmpresa.HasValue).Select(e => e.CodigoEmpresa!.Value).ToList() : null,

@@ -125,7 +125,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(5, result.Data.DecisionAcademica.ApoyosDecision.Count);
             Assert.Equal(2, result.Data.DecisionAcademica.NivelesDecision.Count);
             Assert.Equal(5, result.Data.ExperienciaOrt.Valoraciones.Count);
-            Assert.Equal(2, result.Data.SituacionLaboral.TiposJornada.Count);
         }
 
         [Fact]

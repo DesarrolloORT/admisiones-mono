@@ -82,11 +82,6 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
                 PublicidadesOrt = uow.PublicidadOpcionesAdmisions.GetAll()
                     .Select(p => Combo(p.IdPublicidad, p.NombrePublicidad))
                     .ToList()
-            },
-            SituacionLaboral = new DtoEncuestaSituacionLaboralCatalogos
-            {
-                OpcionesSiNo = EncuestaInicialOpciones.OpcionesSiNo,
-                TiposJornada = EncuestaInicialOpciones.TiposJornada
             }
         };
 

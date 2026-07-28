@@ -36,7 +36,6 @@ internal static class EncuestaInicialState
     internal const string Educacion = "educacion";
     internal const string DecisionAcademica = "decisionAcademica";
     internal const string ExperienciaOrt = "experienciaOrt";
-    internal const string SituacionLaboral = "situacionLaboral";
 
     internal static string BoolToSN(bool value)
         => value ? Si : No;
@@ -52,10 +51,6 @@ internal static class EncuestaInicialState
 
         return null;
     }
-
-    /// <summary>Forma abreviada ("S"/"N") usada por Persona.TrabajaActualmente (columna Devart de 1 char).</summary>
-    internal static string BoolToSNCorto(bool value)
-        => value ? SiCorto : NoCorto;
 
     internal static bool IsAnsweredSN(string? value) => SNToBool(value).HasValue;
 

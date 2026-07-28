@@ -2,12 +2,11 @@
 
 ## 1. Objetivo
 
-La encuesta inicial de admisión permite recolectar información complementaria del postulante en cuatro secciones:
+La encuesta inicial de admisión permite recolectar información complementaria del postulante en tres secciones:
 
 - Educación
 - Decisión académica
 - Experiencia con ORT
-- Situación laboral
 
 La encuesta se crea inicialmente con estado `TEMPORAL` y pasa a estado `DEFINITIVO` cuando el backend valida que todos los datos obligatorios, incluyendo los condicionales, están completos.
 
@@ -21,7 +20,6 @@ Forman parte de la encuesta únicamente estas secciones:
 Educación
 Decisión académica
 Experiencia con ORT
-Situación laboral
 ```
 
 No forman parte de la encuesta inicial:
@@ -481,62 +479,7 @@ Si recuerdaPublicidadOrt = false:
 
 ---
 
-## 9. Sección: Situación laboral
-
-Esta sección releva si el postulante trabaja actualmente y, en caso afirmativo, el tipo de jornada.
-
-A diferencia del resto de la encuesta, estos datos se guardan en:
-
-```sql
-T_PERSONA
-```
-
-### 9.1 Campos
-
-| Campo frontend | Tipo | Obligatorio | Condición | Destino |
-|---|---|---|---|---|
-| `trabajaActualmente` | `boolean` | Sí | Siempre | `T_PERSONA.TRABAJA_ACTUALMENTE` |
-| `tipoJornadaId` | `number` | Condicional | Si trabaja actualmente | `T_PERSONA.TIPO_JORNADA` |
-
-### 9.2 Valores posibles
-
-#### `trabajaActualmente`
-
-En frontend:
-
-| Valor | Label |
-|---|---|
-| `true` | Sí, trabajo |
-| `false` | No |
-
-En base:
-
-| Valor | Significado |
-|---|---|
-| `S` | Sí |
-| `N` | No |
-
-#### `tipoJornadaId`
-
-| Valor | Label |
-|---:|---|
-| `1` | Tiempo completo |
-| `2` | Tiempo parcial |
-
-### 9.3 Reglas
-
-```text
-Si trabajaActualmente = true:
-    tipoJornadaId es obligatorio.
-
-Si trabajaActualmente = false:
-    tipoJornadaId no aplica.
-    El backend debe limpiar T_PERSONA.TIPO_JORNADA si había un valor previo.
-```
-
----
-
-## 10. Tablas hijas
+## 9. Tablas hijas
 
 La encuesta utiliza tablas hijas para campos de selección múltiple.
 
@@ -635,7 +578,7 @@ Para pasar a DEFINITIVO debe existir al menos un motivo.
 
 ---
 
-## 11. Reglas de limpieza de datos
+## 10. Reglas de limpieza de datos
 
 Cuando una respuesta condicional deja de aplicar, el backend debe limpiar los valores dependientes.
 
@@ -683,11 +626,6 @@ Si recuerdaPublicidadOrt = false:
 ```
 
 ```text
-Si trabajaActualmente = false:
-    limpiar tipoJornadaId.
-```
-
-```text
 Si nivelFormacionPadreTutorId no está en [5, 6]:
     INSTRUCCION_PADRE_ORT_ENCUESTA_INI queda NULL.
 
@@ -697,11 +635,11 @@ Si nivelFormacionMadreTutorId no está en [5, 6]:
 
 ---
 
-## 12. Regla de completitud para pasar a DEFINITIVO
+## 11. Regla de completitud para pasar a DEFINITIVO
 
 La encuesta pasa a `DEFINITIVO` cuando se cumplen todas las condiciones siguientes.
 
-### 12.1 Datos técnicos
+### 11.1 Datos técnicos
 
 ```text
 ID_PRODUCTO completo.
@@ -714,7 +652,7 @@ TIPO_INSCRIPCION = SOLO_ENCUESTA_INI.
 CLAVE_ENCUESTA_INI completa.
 ```
 
-### 12.2 Educación completa
+### 11.2 Educación completa
 
 ```text
 ULTIMOANIO_SECUNDARIA_ENCUESTA_INI completo.
@@ -760,7 +698,7 @@ Si INSTRUCCION_MADRE_ENCUESTA_INI no está en [5, 6]:
     INSTRUCCION_MADRE_ORT_ENCUESTA_INI puede quedar NULL.
 ```
 
-### 12.3 Decisión académica completa
+### 11.3 Decisión académica completa
 
 ```text
 DECISION_CARRERA_ENCUESTA_INI completo.
@@ -782,7 +720,7 @@ INFOR_OTRAS_LINEA1_INI
 INFOR_OTRAS_LINEA2_INI
 ```
 
-### 12.4 Experiencia con ORT completa
+### 11.4 Experiencia con ORT completa
 
 ```text
 ASESORAMIENTO_ORT_ENCUESTA_INI completo con S o N.
@@ -804,13 +742,4 @@ PUBLICIDAD_ORT_ENCUESTA_INI completo con S o N.
 
 Si PUBLICIDAD_ORT_ENCUESTA_INI = S:
     Debe existir al menos un registro en PUBLICIDAD_ELECCION_ADMISION.
-```
-
-### 12.5 Situación laboral completa
-
-```text
-T_PERSONA.TRABAJA_ACTUALMENTE completo con S o N.
-
-Si T_PERSONA.TRABAJA_ACTUALMENTE = S:
-    T_PERSONA.TIPO_JORNADA completo.
 ```

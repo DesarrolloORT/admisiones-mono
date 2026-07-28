@@ -1757,9 +1757,7 @@ namespace UnitTesting.AppLogic.Services
             {
                 CodigoPersona = 123,
                 TipoDocumento = "DE",
-                Documento = "123",
-                TrabajaActualmente = "S",
-                TipoJornada = 2
+                Documento = "123"
             });
 
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
@@ -1826,8 +1824,6 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal([55], encuesta.UniversidadConsideradaIds);
             Assert.Equal([7], encuesta.MotivoEleccionOrtIds);
             Assert.Equal([8], encuesta.PublicidadOrtIds);
-            Assert.True(encuesta.TrabajaActualmente);
-            Assert.Equal(2, encuesta.TipoJornadaId);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Never);
@@ -2117,69 +2113,6 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void GuardarEncuestaInicial_ParcialSgiConTrabajaActualmente_ActualizaPersonaNormalizado()
-        {
-            var persona = new Persona
-            {
-                CodigoPersona = 123,
-                TipoDocumento = "DE",
-                Documento = "123",
-                TipoPersona = "SGI"
-            };
-            var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
-
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-            _dbConnectionContextMock
-                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
-                .Returns(900);
-
-            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
-            {
-                TrabajaActualmente = true,
-                TipoJornadaId = 1
-            });
-
-            Assert.True(result.Success);
-            personaRepo.As<IRepository<Persona>>()
-                .Verify(r => r.Update(It.Is<Persona>(p => p.CodigoPersona == 123 && p.TrabajaActualmente == "S")), Times.Once);
-        }
-
-        [Fact]
-        public void GuardarEncuestaInicial_ParcialSgiConTipoJornadaSinTrabajaActualmente_NoTocaPersona()
-        {
-            var persona = new Persona
-            {
-                CodigoPersona = 123,
-                TipoDocumento = "DE",
-                Documento = "123",
-                TipoPersona = "SGI"
-            };
-            var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(persona);
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
-
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-            _dbConnectionContextMock
-                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
-                .Returns(901);
-
-            var result = _service.GuardarEncuestaInicial(123, new DtoGuardarEncuestaInicialRequest
-            {
-                TipoJornadaId = 2
-            });
-
-            Assert.True(result.Success);
-            personaRepo.As<IRepository<Persona>>()
-                .Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
-        }
-
-        [Fact]
         public void GuardarEncuestaInicial_MotivosVacio_ReemplazaBorrandoSeleccion()
         {
             SetupPersonaValida();
@@ -2261,43 +2194,6 @@ namespace UnitTesting.AppLogic.Services
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
                 It.IsAny<int>(),
                 It.IsAny<string>()), Times.Never);
-        }
-
-        [Fact]
-        public void GuardarEncuestaInicial_DefinitivaSinTrabajaActualmente_QuedaTemporal()
-        {
-            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
-
-            var personaRepo = new Mock<IPersonaRepository>();
-            personaRepo.Setup(r => r.GetByKey(123)).Returns(new Persona
-            {
-                CodigoPersona = 123,
-                TipoDocumento = "DE",
-                Documento = "123",
-                TipoPersona = "SGI"
-            });
-            _uowMock.Setup(u => u.Personas).Returns(personaRepo.Object);
-
-            EncuestaIniAdmision? encuestaAgregada = null;
-            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns((EncuestaIniAdmision)null);
-            encuestaRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 10, 30)).Returns((EncuestaIniAdmision)null);
-            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
-                .Callback<EncuestaIniAdmision>(e => encuestaAgregada = e);
-            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
-
-            var request = RequestEncuestaDefinitiva();
-            request.TrabajaActualmente = null;
-
-            var result = _service.GuardarEncuestaInicial(123, request);
-
-            Assert.True(result.Success);
-            Assert.NotNull(encuestaAgregada);
-            Assert.Equal("TEMPORAL", encuestaAgregada!.EstadoEncuestaIniAdmision);
-            Assert.Equal("TEMPORAL", result.Data!.Estado);
-            Assert.Contains("trabajaActualmente", result.Data.CamposPendientes);
-            bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
-            personaRepo.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
         [Fact]
@@ -2589,7 +2485,6 @@ namespace UnitTesting.AppLogic.Services
                 VisitoSitioWebOrt = false,
                 VisitoInstalacionesOrt = false,
                 RecuerdaPublicidadOrt = false,
-                TrabajaActualmente = false,
                 MotivoEleccionOrtIds = [1]
             };
         }

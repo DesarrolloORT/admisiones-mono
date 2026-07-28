@@ -53,16 +53,9 @@ public sealed class DtoEncuestaExperienciaOrtCatalogos
     public IReadOnlyList<DtoComboOption> PublicidadesOrt { get; init; } = [];
 }
 
-public sealed class DtoEncuestaSituacionLaboralCatalogos
-{
-    public IReadOnlyList<DtoComboOption> OpcionesSiNo { get; init; } = [];
-    public IReadOnlyList<DtoComboOption> TiposJornada { get; init; } = [];
-}
-
 public sealed class DtoEncuestaInicialCatalogosResponse
 {
     public DtoEncuestaEducacionCatalogos Educacion { get; init; } = new();
     public DtoEncuestaDecisionAcademicaCatalogos DecisionAcademica { get; init; } = new();
     public DtoEncuestaExperienciaOrtCatalogos ExperienciaOrt { get; init; } = new();
-    public DtoEncuestaSituacionLaboralCatalogos SituacionLaboral { get; init; } = new();
 }
