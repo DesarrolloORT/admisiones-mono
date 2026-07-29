@@ -232,6 +232,34 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_PersonaExtranjera_ReturnsFailed()
+        {
+            // Arrange
+            var uowMock = new Mock<IUnitOfWork>();
+            var personasRepoMock = new Mock<IPersonaRepository>();
+            var persona = new Persona
+            {
+                CodigoPersona = 12345,
+                Documento = "1234567-2",
+                TipoDocumento = "CI",
+                AlumnoExtranjeroPersona = "SI"
+            };
+            personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(persona);
+            uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+            _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+            // Act
+            var result = await _service.AutenticarUsuarioLDAPAsync("CI", "1234567-2", "validpass");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("LOGIN_LDAP_05", result.ErrorCode);
+            Assert.Equal("No se pudo iniciar sesión.", result.Message);
+            Assert.Equal(403, result.HttpCode);
+            _ldapMock.Verify(x => x.AutenticarUsuarioLDAPAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
         public async Task AutenticarUsuarioLDAPAsync_WhenLdapRejectsCredentials_ReturnsLdapFailure()
         {
             var uowMock = new Mock<IUnitOfWork>();

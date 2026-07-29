@@ -120,6 +120,16 @@ public class AuthService : IAuthService
                     default!);
             }
 
+            if (DocumentUtils.EsSi(persona.AlumnoExtranjeroPersona))
+            {
+                return OperationResult<DtoPersonaAuth>.IsFailed(
+                    "LOGIN_LDAP_05",
+                    nameof(AutenticarUsuarioLDAPAsync),
+                    "No se pudo iniciar sesión.",
+                    403,
+                    default!);
+            }
+
             // Delegar la autenticación LDAP al servicio de Core/Autenticacion
             var authResult = await _ldap.AutenticarUsuarioLDAPAsync(persona.CodigoPersona, pass);
 

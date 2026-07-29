@@ -1,4 +1,4 @@
-﻿using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Inscripciones.Encuesta.Dtos;
 using AppLogic.Inscripciones.Dtos;
 using AppLogic.ApiClients.Dtos;
 using AppLogic.ApiClients.Services;
@@ -401,11 +401,11 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(dtosBandeja);
             var bandejas = dtosBandeja!.ToList();
             Assert.Equal(2, bandejas.Count);
-            var inicio = Assert.Single(bandejas, b => b.IdEstadoProceso == 57156);
+            var inicio = Assert.Single(bandejas, b => b.IdEstadoProceso == 59643);
             Assert.Equal(48, inicio.IdGrupoResponsable);
             Assert.NotNull(inicio.FechaTomadoBandeja);
             Assert.Equal("SIGUIENTE", inicio.AccionMenu);
-            var solicitud = Assert.Single(bandejas, b => b.IdEstadoProceso == 57157);
+            var solicitud = Assert.Single(bandejas, b => b.IdEstadoProceso == 59644);
             Assert.Equal(48, solicitud.IdGrupoResponsable);
             Assert.Equal(DateTime.MinValue, solicitud.FechaTomadoBandeja);
             _bandejaServiceMock.Verify(
