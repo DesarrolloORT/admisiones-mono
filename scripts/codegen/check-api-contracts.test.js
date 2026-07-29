@@ -100,6 +100,39 @@ test('detects double assertions through unknown in adapters', () => {
   assert.equal(violations.length, 1);
   assert.match(violations[0].message, /as unknown as/);
 });
+
+test('detects stale request fields hidden behind adapter variables', () => {
+  const fixture = createFixture({
+    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+      interface ApiEndpoint<TRequest> { readonly __types?: { request: TRequest }; }
+      declare const api: {
+        request<TRequest>(
+          endpoint: ApiEndpoint<TRequest>,
+          options: { body?: TRequest }
+        ): void;
+      };
+      declare const endpoint: ApiEndpoint<{
+        idInscripcion?: number;
+        tipoPago?: string | null;
+      }>;
+      export class DemoEndpoint {
+        public save(): void {
+          const body = { idInscripto: 7, tipoPago: 'ABITAB' };
+          api.request(endpoint, { body });
+        }
+      }
+    `,
+  });
+
+  try {
+    const violations = checkApiContracts({ root: fixture, tsconfigPath: 'tsconfig.json' });
+    assert.equal(violations.length, 1);
+    assert.match(violations[0].message, /idInscripto.*request actual/);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
 function createFixture(files) {
   const root = mkdtempSync(join(tmpdir(), 'api-contracts-'));
   writeFixtureFile(

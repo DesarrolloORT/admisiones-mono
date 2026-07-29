@@ -88,7 +88,7 @@ runNodeStage({
   args: [],
   repairable: true,
   failure: {
-    what: 'Los adapters exponen DTOs generados o existen responses sin schema tipado.',
+    what: 'Los adapters exponen DTOs generados, envían bodies fuera del contrato o existen responses sin schema tipado.',
     where: 'features/*/endpoints y src/app/shared/api/generated/endpoints/',
   },
 });

@@ -15,13 +15,20 @@ export function checkApiContracts({
   const program = createProgram(root, tsconfigPath);
   const adapterViolations = findAdapterContractViolations(program, root);
   const bodyViolations = findAdapterBodyLaunderingViolations(program, root);
+  const bodyShapeViolations = findAdapterRequestBodyShapeViolations(program, root);
   const assertionViolations = findAdapterUnsafeAssertionViolations(program, root);
   const responseViolations = findUnknownResponseViolations(
     resolve(root, generatedEndpointsDir),
     root
   );
 
-  return [...adapterViolations, ...bodyViolations, ...assertionViolations, ...responseViolations];
+  return [
+    ...adapterViolations,
+    ...bodyViolations,
+    ...bodyShapeViolations,
+    ...assertionViolations,
+    ...responseViolations,
+  ];
 }
 
 export function findAdapterContractViolations(program, root) {
@@ -105,6 +112,48 @@ export function findAdapterBodyLaunderingViolations(program, root) {
   return violations;
 }
 
+export function findAdapterRequestBodyShapeViolations(program, root) {
+  const checker = program.getTypeChecker();
+  const violations = [];
+
+  for (const sourceFile of program.getSourceFiles()) {
+    const fileName = normalizePath(sourceFile.fileName);
+    if (!isEndpointAdapter(fileName, root)) continue;
+
+    const visit = node => {
+      const bodyProperty = getRequestBodyProperty(node);
+      const bodyInitializer = getBodyInitializer(bodyProperty);
+      if (bodyInitializer) {
+        const expectedType = getExpectedRequestBodyType(node, bodyInitializer, checker);
+        const actualType = checker.getTypeAtLocation(bodyInitializer);
+        if (expectedType && !isLooseType(expectedType) && !isLooseType(actualType)) {
+          const expectedProperties = new Set(
+            checker.getPropertiesOfType(expectedType).map(property => property.getName())
+          );
+          const unexpectedProperties = checker
+            .getPropertiesOfType(actualType)
+            .map(property => property.getName())
+            .filter(property => !expectedProperties.has(property));
+
+          if (unexpectedProperties.length) {
+            violations.push({
+              file: toProjectPath(sourceFile.fileName, root),
+              line: sourceFile.getLineAndCharacterOfPosition(bodyInitializer.getStart()).line + 1,
+              message: `El body contiene propiedades fuera del contrato generated (${unexpectedProperties.join(', ')}). Corregí el mapper o el passthrough contra el request actual.`,
+            });
+          }
+        }
+      }
+
+      ts.forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+  }
+
+  return violations;
+}
+
 export function findAdapterUnsafeAssertionViolations(program, root) {
   const violations = [];
 
@@ -152,8 +201,9 @@ export function findBodyLaunderingInSource(sourceText, fileName = 'adapter.endpo
 
   const visit = node => {
     const bodyProperty = getRequestBodyProperty(node);
-    if (bodyProperty?.initializer) {
-      for (const call of findCallExpressions(bodyProperty.initializer)) {
+    const bodyInitializer = getBodyInitializer(bodyProperty);
+    if (bodyInitializer) {
+      for (const call of findCallExpressions(bodyInitializer)) {
         violations.push({
           line: sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1,
           message:
@@ -173,19 +223,56 @@ function getRequestBodyProperty(node) {
   if (!ts.isCallExpression(node)) return null;
 
   const callee = node.expression;
-  if (!ts.isPropertyAccessExpression(callee) || callee.name.text !== 'request') return null;
+  if (
+    !ts.isPropertyAccessExpression(callee) ||
+    !['request', 'data', 'requestWithMessage'].includes(callee.name.text)
+  ) {
+    return null;
+  }
 
   const options = node.arguments[1];
   if (!options || !ts.isObjectLiteralExpression(options)) return null;
 
   return (
-    options.properties.find(
-      property =>
-        ts.isPropertyAssignment(property) &&
-        ts.isIdentifier(property.name) &&
-        property.name.text === 'body'
-    ) ?? null
+    options.properties.find(property => {
+      if (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) {
+        return ts.isIdentifier(property.name) && property.name.text === 'body';
+      }
+      return false;
+    }) ?? null
   );
+}
+
+function getBodyInitializer(bodyProperty) {
+  if (!bodyProperty) return null;
+  return ts.isPropertyAssignment(bodyProperty) ? bodyProperty.initializer : bodyProperty.name;
+}
+
+function getExpectedRequestBodyType(call, bodyProperty, checker) {
+  const endpoint = call.arguments[0];
+  if (endpoint) {
+    const endpointType = checker.getTypeAtLocation(endpoint);
+    const definition = checker.getTypeOfPropertyOfType(endpointType, '__types');
+    const definitionType = definition ? checker.getNonNullableType(definition) : null;
+    const requestType = definitionType
+      ? checker.getTypeOfPropertyOfType(definitionType, 'request')
+      : null;
+    if (requestType) return checker.getNonNullableType(requestType);
+  }
+
+  const signature = checker.getResolvedSignature(call);
+  const optionsParameter = signature?.getParameters()[1];
+  if (!optionsParameter) return null;
+
+  const optionsType = checker.getTypeOfSymbolAtLocation(optionsParameter, call);
+  const bodySymbol = checker.getPropertyOfType(optionsType, 'body');
+  if (!bodySymbol) return null;
+
+  return checker.getNonNullableType(checker.getTypeOfSymbolAtLocation(bodySymbol, bodyProperty));
+}
+
+function isLooseType(type) {
+  return Boolean(type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never));
 }
 
 function findCallExpressions(node) {
