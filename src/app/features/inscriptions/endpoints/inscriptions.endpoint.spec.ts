@@ -403,7 +403,7 @@ describe('InscripcionesEndpoint', () => {
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesPagarEndpoint, {
       body: {
-        idInscripto: 1072704,
+        idInscripcion: 1072704,
         tipoPago: 'SISTARBANC',
         idBancoSistarbanc: 'brou',
       },

@@ -26,6 +26,7 @@ export class AcademicProposalSelection {
   private readonly destroyRef = inject(DestroyRef);
   private readonly careersState = signal<readonly Career[]>([]);
   private readonly proposalTypeValue = signal('');
+  private readonly seminarsProgramId = signal<number | null>(null);
   private form: FormGroup<AcademicProposalForm> | null = null;
   private formSubscriptions = new Subscription();
 
@@ -53,6 +54,12 @@ export class AcademicProposalSelection {
   );
   public readonly seminarOptions = computed(() =>
     this.seminarsState().map(toAcademicSeminarOption)
+  );
+  /** AP: el programa manda. Sin `tieneSeminario` se elige una sola oferta. */
+  public readonly allowsMultipleSeminars = computed(
+    () =>
+      this.careersState().find(career => career.idProducto === this.seminarsProgramId())
+        ?.tieneSeminario === true
   );
   public readonly careersLoadingMessage = computed(() =>
     this.loadingCareers() ? this.terminology().careerLoadingMessage : ''
@@ -130,6 +137,7 @@ export class AcademicProposalSelection {
 
   /** Carga el catálogo de seminarios de un programa (también para precarga en retomar). */
   public loadSeminars(idPrograma: number): void {
+    this.seminarsProgramId.set(idPrograma);
     const idProceso = this.careersState().find(
       career => career.idProducto === idPrograma
     )?.idProceso;
@@ -238,6 +246,7 @@ export class AcademicProposalSelection {
         this.startOptions.set([]);
         this.shiftOptions.set([]);
         this.seminarsState.set([]);
+        this.seminarsProgramId.set(null);
         this.syncValidatorsForProposalType(form);
       })
     );
@@ -251,6 +260,7 @@ export class AcademicProposalSelection {
             this.startOptions.set([]);
             this.shiftOptions.set([]);
             this.seminarsState.set([]);
+            this.seminarsProgramId.set(null);
           }),
           switchMap(value => {
             const careerId = toNullableNumber(value);
@@ -297,6 +307,15 @@ export class AcademicProposalSelection {
           })
         )
         .subscribe(shifts => this.shiftOptions.set(shifts.map(toAcademicShiftOption)))
+    );
+
+    // Sin seminarios el select es simple y emite un string; el form siempre guarda string[].
+    this.formSubscriptions.add(
+      form.controls.seminarios.valueChanges.subscribe(value => {
+        const selected: unknown = value;
+        if (typeof selected === 'string')
+          form.controls.seminarios.setValue(selected ? [selected] : [], { emitEvent: false });
+      })
     );
   }
 

@@ -197,9 +197,14 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 
 - El selector de carrera se muestra como **Programa** (misma UI y validaciones;
   la terminología es data-driven en `ACADEMIC_PROPOSAL_TYPES.terminology`).
-- No hay selects de Comienzo ni Turno. Al elegir un programa aparece un
-  **multi-select de Seminarios** (oculto hasta entonces), cada uno con su fecha
-  de comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
+- No hay selects de Comienzo ni Turno. Al elegir un programa aparece el
+  **select de Seminarios** (oculto hasta entonces), cada uno con su fecha de
+  comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
+- El programa manda el modo de selección: `tieneSeminario === true` en
+  `GET /Catalogos/Carreras` habilita **multi-select**; cualquier otro valor deja
+  un **select simple** de una sola oferta
+  (`AcademicProposalSelection.allowsMultipleSeminars`). El control `seminarios`
+  guarda siempre `string[]`, así que el resto del flujo no cambia.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /Catalogos/Turnos`; el resultado llena el multiselect de seminarios.
 - Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.

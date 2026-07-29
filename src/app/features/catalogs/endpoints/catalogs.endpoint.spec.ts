@@ -50,6 +50,7 @@ describe('CatalogsEndpoint', () => {
           nombreProducto: 'Diseño',
           nombreNivelProducto: 'Carreras',
           nombreEscuela: 'Facultad de Diseño',
+          tieneSeminario: false,
         },
       ]);
     });

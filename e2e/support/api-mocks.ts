@@ -97,6 +97,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
                   idProducto: 40,
                   idProceso: 210,
                   nombreProducto: 'Programa de Asesoramiento Financiero',
+                  tieneSeminario: true,
                 },
               ],
             },

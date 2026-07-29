@@ -47,6 +47,8 @@ export interface Career {
   nombreProducto: string;
   nombreNivelProducto: string;
   nombreEscuela?: string;
+  /** AP: true habilita elegir varios seminarios; false deja una sola oferta. */
+  tieneSeminario?: boolean | null;
 }
 
 export interface Comienzo {
