@@ -293,11 +293,11 @@ describe('inscription flow mappers', () => {
         metodoPago: 'cuenta-bancaria',
         idBancoSistarbanc: '110',
       })
-    ).toEqual({ idInscripto: 7, tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
+    ).toEqual({ idInscripcion: 7, tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
 
     expect(
       buildPaymentPayload({ idInscripcion: 7, metodoPago: 'abitab', idBancoSistarbanc: '110' })
-    ).toEqual({ idInscripto: 7, tipoPago: 'ABITAB', idBancoSistarbanc: null });
+    ).toEqual({ idInscripcion: 7, tipoPago: 'ABITAB', idBancoSistarbanc: null });
   });
 
   it('does not build a confirmation payload without a selected shift', () => {
