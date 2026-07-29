@@ -29,6 +29,7 @@ describe('HomeEndpoint', () => {
         {
           idInscripto: 100,
           idProducto: 10,
+          idNivelProducto: 1,
           idProceso: 25,
           idComienzo: 20,
           idTurno: 30,
@@ -54,6 +55,34 @@ describe('HomeEndpoint', () => {
       },
     ]);
     expect(api.request).toHaveBeenCalledWith(getPersonaInscripcionesEndpoint);
+  });
+
+  it('should use descripcionOferta for level 3 and 4 while preserving level 2', async () => {
+    api.request.mockReturnValueOnce(
+      of([
+        {
+          idNivelProducto: 2,
+          nombreExtensoProducto: 'Analista Programador',
+          descripcionOferta: 'No debe mostrarse',
+        },
+        {
+          idNivelProducto: 3,
+          nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
+          descripcionOferta: 'Marco legal y tributario',
+        },
+        {
+          idNivelProducto: 4,
+          nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
+          descripcionOferta: 'Renta fija y renta variable',
+        },
+      ])
+    );
+
+    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toMatchObject([
+      { nombreProducto: 'Analista Programador' },
+      { nombreProducto: 'Marco legal y tributario' },
+      { nombreProducto: 'Renta fija y renta variable' },
+    ]);
   });
 
   it('should map Persona/Becas into dashboard cards', async () => {

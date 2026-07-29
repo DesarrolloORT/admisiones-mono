@@ -13,6 +13,10 @@ import type { DtoVdInscripcionesFresco1y2Devart } from 'src/app/shared/api/gener
 import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion } from '../models/mi-inscripcion';
 
+type InscripcionApiItem = DtoVdInscripcionesFresco1y2Devart & {
+  descripcionOferta?: string | null;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -47,13 +51,16 @@ export class HomeEndpoint {
   ): MiInscripcion[] {
     const items = Array.isArray(data) ? data : (data?.data ?? []);
 
-    return items.map(item => ({
+    return items.map((item: InscripcionApiItem) => ({
       idInscripto: item.idInscripto ?? 0,
       idProducto: item.idProducto ?? 0,
       idProceso: item.idProceso ?? 0,
       idComienzo: item.idComienzo ?? 0,
       idTurno: item.idTurno ?? 0,
-      nombreProducto: item.nombreExtensoProducto ?? '',
+      nombreProducto:
+        item.idNivelProducto === 3 || item.idNivelProducto === 4
+          ? (item.descripcionOferta ?? '')
+          : (item.nombreExtensoProducto ?? ''),
       nombreComienzo: item.nombreComienzo ?? '',
       nombreTurno: item.nombreTurno ?? '',
       estado: item.estadoInscripcion ?? '',
