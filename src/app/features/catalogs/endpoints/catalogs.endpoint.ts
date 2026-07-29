@@ -68,6 +68,7 @@ export class CatalogsEndpoint {
               nombreProducto: producto.nombreProducto ?? '',
               nombreNivelProducto: nivel.nombreNivelProducto ?? '',
               nombreEscuela: escuela.nombreEscuela ?? '',
+              tieneSeminario: producto.tieneSeminario ?? false,
             }))
           )
         ).flat()

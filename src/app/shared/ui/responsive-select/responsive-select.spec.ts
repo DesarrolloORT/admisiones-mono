@@ -125,6 +125,19 @@ describe('ResponsiveSelect', () => {
     expect(fixture.componentInstance.form.controls.option.touched).toBe(true);
   });
 
+  it('shows the first value of an array control in single mode', () => {
+    fixture.componentInstance.form.controls.option.setValue(['b']);
+    fixture.detectChanges();
+
+    expect(
+      (
+        fixture.nativeElement.querySelector(
+          '.responsive-select__mobile-value'
+        ) as HTMLElement | null
+      )?.textContent
+    ).toContain('B');
+  });
+
   it('toggles multiple values from the mobile drawer', () => {
     fixture.componentInstance.multiple = true;
     fixture.componentInstance.form.controls.option.setValue([]);

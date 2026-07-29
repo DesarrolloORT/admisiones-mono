@@ -73,11 +73,11 @@
         <app-responsive-select
           formControlName="seminarios"
           id="academic-proposal-seminars"
-          multiple
           [aria-label]="selection().terminology().startLabel"
           [disabled]="!selection().canSelectSeminars()"
           [errorText]="selection().terminology().startErrorText"
           [label]="selection().terminology().startLabel"
+          [multiple]="selection().allowsMultipleSeminars()"
           [options]="selection().seminarOptions()" />
         } } @else {
         <div class="academic-proposal-select__row">

@@ -70,6 +70,15 @@ describe('AcademicProposalSelect', () => {
                   idProceso: 210,
                   nombreProducto: 'Programa de Asesoramiento Financiero',
                   nombreNivelProducto: 'Actualización profesional',
+                  tieneSeminario: false,
+                },
+                {
+                  idProducto: 41,
+                  idNivelProducto: 4,
+                  idProceso: 211,
+                  nombreProducto: 'Programa de Finanzas Corporativas',
+                  nombreNivelProducto: 'Actualización profesional',
+                  tieneSeminario: true,
                 },
               ]),
             getComienzos: () => of([]),
@@ -179,6 +188,26 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
   });
 
+  it('only allows multiple seminars when the AP program has them', () => {
+    form.controls.tipoPropuesta.setValue('3');
+    form.controls.carrera.setValue('41');
+    fixture.detectChanges();
+
+    expect(seminarSelect(fixture).multiple()).toBe(true);
+
+    form.controls.carrera.setValue('40');
+    fixture.detectChanges();
+
+    const select = seminarSelect(fixture);
+    expect(select.multiple()).toBe(false);
+
+    (select as unknown as { openDrawer(): void }).openDrawer();
+    (select as unknown as { toggleOption(value: string): void }).toggleOption('300');
+    (select as unknown as { confirmDrawerValue(): void }).confirmDrawerValue();
+
+    expect(form.controls.seminarios.value).toEqual(['300']);
+  });
+
   it('shows required errors after controls are touched', () => {
     form.markAllAsTouched();
     form.updateValueAndValidity();
@@ -197,6 +226,15 @@ describe('AcademicProposalSelect', () => {
     expect(text).toContain('Seleccioná un turno');
   });
 });
+
+function seminarSelect(fixture: ComponentFixture<AcademicProposalSelect>): ResponsiveSelect {
+  const select = fixture.debugElement
+    .queryAll(By.directive(ResponsiveSelect))
+    .map(node => node.componentInstance as ResponsiveSelect)
+    .find(instance => instance.id() === 'academic-proposal-seminars');
+  if (!select) throw new Error('Seminar select not rendered.');
+  return select;
+}
 
 function fieldLabel(fixture: ComponentFixture<AcademicProposalSelect>, id: string): string {
   return (
