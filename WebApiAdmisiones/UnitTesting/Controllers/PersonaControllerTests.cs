@@ -1,7 +1,6 @@
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Becas.Dtos;
 using AppLogic.Personas.Dtos;
-using AppLogic.DevartDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -83,7 +82,7 @@ namespace UnitTesting.Controllers
         [Fact]
         public void ObtenerMisInscripciones_UsesAuthenticatedUserAndReturnsOk()
         {
-            var inscripciones = new List<DtoVdInscripcionesFresco1y2Devart>
+            var inscripciones = new List<DtoInscripcionesPorProductoProcesoResponse>
             {
                 new() { IdProducto = 10 }
             };
@@ -91,7 +90,7 @@ namespace UnitTesting.Controllers
             _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
             _personaServiceMock
                 .Setup(s => s.ObtenerMisInscripciones(123))
-                .Returns(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(
+                .Returns(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>.Ok(
                     inscripciones,
                     nameof(IPersonaService.ObtenerMisInscripciones)));
 

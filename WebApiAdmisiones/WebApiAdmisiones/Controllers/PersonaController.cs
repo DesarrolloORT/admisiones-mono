@@ -1,7 +1,6 @@
 using AppLogic.Autenticacion.Dtos;
 using AppLogic.Becas.Dtos;
 using AppLogic.Personas.Dtos;
-using AppLogic.DevartDTOs;
 using AppLogic.Personas.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -79,8 +78,8 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Datos obtenidos correctamente.</response>
         /// <response code="400">Solicitud inválida.</response>
         [HttpGet("Inscripciones")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>), 400)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>), 400)]
         public IActionResult ObtenerMisInscripciones()
         {
             var result = personaService.ObtenerMisInscripciones(_currentUser.GetUserId());

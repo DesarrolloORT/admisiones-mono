@@ -334,6 +334,7 @@ namespace UnitTesting.AppLogic.Services
                     {
                         CodigoPersona = 123,
                         IdProducto = 10,
+                        IdProceso = 1,
                         NombreExtensoProducto = "Carrera nivel 1",
                         IdNivelProducto = 1,
                         FechaReferencia = DateTime.Today,
@@ -349,6 +350,7 @@ namespace UnitTesting.AppLogic.Services
                     {
                         CodigoPersona = 123,
                         IdProducto = 30,
+                        IdProceso = 2,
                         NombreExtensoProducto = "Curso nivel 3",
                         IdNivelProducto = 3,
                         FechaReferencia = DateTime.Today,
@@ -359,10 +361,58 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.ObtenerMisInscripciones(123);
 
             Assert.True(result.Success);
-            var inscripciones = Assert.IsAssignableFrom<IEnumerable<global::AppLogic.DevartDTOs.DtoVdInscripcionesFresco1y2Devart>>(result.Data).ToList();
-            Assert.Equal(2, inscripciones.Count);
+            var grupos = Assert.IsAssignableFrom<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>(result.Data).ToList();
+            Assert.Equal(2, grupos.Count);
+            Assert.All(grupos, g => Assert.Single(g.Inscripciones));
             _vdInscripcionesFresco1y2RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
             _vdInscripcionesFresco3y4RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerMisInscripciones_AgrupaOfertasDelMismoProductoYProceso()
+        {
+            _vdInscripcionesFresco1y2RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco1y2>());
+
+            _vdInscripcionesFresco3y4RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    new()
+                    {
+                        CodigoPersona = 123,
+                        IdProducto = 30,
+                        IdProceso = 2,
+                        IdOferta = 1,
+                        NombreExtensoProducto = "Curso con seminarios",
+                        IdNivelProducto = 3,
+                        ProgConSeminariosProducto = "SI",
+                        FechaReferencia = DateTime.Today,
+                        VengoDe = "3y4"
+                    },
+                    new()
+                    {
+                        CodigoPersona = 123,
+                        IdProducto = 30,
+                        IdProceso = 2,
+                        IdOferta = 2,
+                        NombreExtensoProducto = "Curso con seminarios",
+                        IdNivelProducto = 3,
+                        ProgConSeminariosProducto = "SI",
+                        FechaReferencia = DateTime.Today,
+                        VengoDe = "3y4"
+                    }
+                });
+
+            var result = _service.ObtenerMisInscripciones(123);
+
+            Assert.True(result.Success);
+            var grupos = Assert.IsAssignableFrom<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>(result.Data).ToList();
+            var grupo = Assert.Single(grupos);
+            Assert.Equal(2, grupo.Inscripciones.Count);
+            Assert.Equal("SI", grupo.ProgConSeminariosProducto);
+            Assert.Equal(new long?[] { 1L, 2L }, grupo.Inscripciones.Select(i => i.IdOferta));
         }
 
         [Fact]

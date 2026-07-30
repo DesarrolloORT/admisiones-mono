@@ -4,7 +4,6 @@ using AppLogic.Personas.Rules;
 using AppLogic.Personas.Interfaces;
 using AppLogic.Personas.Dtos;
 using AppLogic.Personas.Validators;
-using AppLogic.DevartDTOs;
 using AppLogic.Common.Validation;
 using AppLogic.Helpers;
 using BusinessLogic.Entities;
@@ -118,21 +117,51 @@ public class PersonaService(
         return OperationResult<bool>.Ok(telValido, nameof(EsTelefonoValidoFront));
     }
 
-    public OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>> ObtenerMisInscripciones(long codigoPersona)
+    public OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>> ObtenerMisInscripciones(long codigoPersona)
     {
-
         using var uow = uowFactory.Create();
-        var dtos = uow.VdInscripcionesFresco1y2s
+
+        var inscripciones1y2 = uow.VdInscripcionesFresco1y2s
             .GetInscripcionesFrescoHabilitadas(codigoPersona)
-            .ToDtos();
+            .Select(ToInscripcionItem);
 
         var inscripciones3y4 = uow.VdInscripcionesFresco3y4s
             .GetInscripcionesFrescoHabilitadas(codigoPersona)
-            .Select(MapearInscripcionFresco3y4);
+            .Select(ToInscripcionItem);
 
-        dtos.AddRange(inscripciones3y4);
+        var response = inscripciones1y2.Concat(inscripciones3y4)
+            .GroupBy(x => new { x.IdProducto, x.IdProceso })
+            .OrderBy(g => g.Key.IdProducto)
+            .ThenBy(g => g.Key.IdProceso)
+            .Select(grupo =>
+            {
+                var filas = grupo.OrderBy(x => x.FechaInicioComienzo).ToList();
+                var cabecera = filas[0];
+                return new DtoInscripcionesPorProductoProcesoResponse
+                {
+                    IdProducto = cabecera.IdProducto,
+                    NombreExtensoProducto = cabecera.NombreExtensoProducto,
+                    IdProceso = cabecera.IdProceso,
+                    IdNivelProducto = cabecera.IdNivelProducto,
+                    EstadoInscripcion = cabecera.EstadoInscripcion,
+                    ProgConSeminariosProducto = cabecera.ProgConSeminariosProducto,
+                    Inscripciones = filas.Select(x => new DtoInscripcionItemResponse
+                    {
+                        IdInscripto = x.IdInscripto,
+                        IdOferta = x.IdOferta,
+                        DescripcionOferta = x.DescripcionOferta,
+                        IdTurno = x.IdTurno,
+                        IdComienzo = x.IdComienzo,
+                        FechaInicioComienzo = x.FechaInicioComienzo,
+                        NombreComienzo = x.NombreComienzo,
+                        NombreTurno = x.NombreTurno,
+                        FechaReferencia = x.FechaReferencia,
+                    }).ToList()
+                };
+            })
+            .ToList();
 
-        return OperationResult<IEnumerable<DtoVdInscripcionesFresco1y2Devart>>.Ok(dtos, nameof(ObtenerMisInscripciones));
+        return OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>.Ok(response, nameof(ObtenerMisInscripciones));
     }
 
     public async Task<OperationResult<object>> CambiarPasswordAsync(long codigoPersona, DtoCambiarPasswordRequest request)
@@ -526,23 +555,54 @@ public class PersonaService(
         };
     }
 
-    private static DtoVdInscripcionesFresco1y2Devart MapearInscripcionFresco3y4(VdInscripcionesFresco3y4 source)
-    {
-        return new DtoVdInscripcionesFresco1y2Devart
-        {
-            IdTurno = source.IdTurno,
-            IdProducto = source.IdProducto,
-            IdComienzo = source.IdComienzo,
-            FechaInicioComienzo = source.FechaInicioComienzo,
-            NombreExtensoProducto = source.NombreExtensoProducto,
-            IdNivelProducto = source.IdNivelProducto,
-            NombreComienzo = source.NombreComienzo,
-            NombreTurno = source.NombreTurno,
-            IdProceso = source.IdProceso,
-            FechaReferencia = source.FechaReferencia,
-            IdInscripto = source.IdInscripto,
-            EstadoInscripcion = source.EstadoInscripcion,
-            DescripcionOferta = source.DescripcionOferta,
-        };
-    }
+    private static InscripcionItem ToInscripcionItem(VdInscripcionesFresco1y2 source) => new(
+        source.IdProducto,
+        source.NombreExtensoProducto,
+        source.IdProceso,
+        source.IdNivelProducto,
+        source.EstadoInscripcion,
+        null,
+        source.IdInscripto,
+        source.IdTurno,
+        source.IdComienzo,
+        source.FechaInicioComienzo,
+        source.NombreComienzo,
+        source.NombreTurno,
+        source.FechaReferencia,
+        null,
+        null);
+
+    private static InscripcionItem ToInscripcionItem(VdInscripcionesFresco3y4 source) => new(
+        source.IdProducto,
+        source.NombreExtensoProducto,
+        source.IdProceso,
+        source.IdNivelProducto,
+        source.EstadoInscripcion,
+        source.ProgConSeminariosProducto,
+        source.IdInscripto,
+        source.IdTurno,
+        source.IdComienzo,
+        source.FechaInicioComienzo,
+        source.NombreComienzo,
+        source.NombreTurno,
+        source.FechaReferencia,
+        source.IdOferta,
+        source.DescripcionOferta);
+
+    private sealed record InscripcionItem(
+        decimal? IdProducto,
+        string? NombreExtensoProducto,
+        decimal? IdProceso,
+        long? IdNivelProducto,
+        string? EstadoInscripcion,
+        string? ProgConSeminariosProducto,
+        decimal? IdInscripto,
+        decimal? IdTurno,
+        decimal? IdComienzo,
+        DateTime? FechaInicioComienzo,
+        string? NombreComienzo,
+        string? NombreTurno,
+        DateTime? FechaReferencia,
+        long? IdOferta,
+        string? DescripcionOferta);
 }
