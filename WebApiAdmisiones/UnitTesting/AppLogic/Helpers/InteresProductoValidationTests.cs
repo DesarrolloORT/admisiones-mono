@@ -1,6 +1,8 @@
 using AppLogic.Inscripciones.Rules;
+using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;
+using System.Collections.Generic;
 using Xunit;
 
 namespace UnitTesting.AppLogic.Helpers
@@ -8,6 +10,7 @@ namespace UnitTesting.AppLogic.Helpers
     public class InteresProductoValidationTests
     {
         private const string Method = "RegistrarInteresProducto";
+        private static readonly List<long> IdsOferta = new() { 55 };
 
         [Fact]
         public void ValidarRegistroInteresProducto_PersonaInexistente_DevuelveNotFound()
@@ -17,7 +20,7 @@ namespace UnitTesting.AppLogic.Helpers
             personaRepo.Setup(r => r.ExistePersona(123)).Returns(false);
             uow.Setup(u => u.Personas).Returns(personaRepo.Object);
 
-            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_01", result.ErrorCode);
@@ -29,10 +32,11 @@ namespace UnitTesting.AppLogic.Helpers
         {
             var uow = CrearUowConPersonaValida();
             var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(false);
             uow.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_02", result.ErrorCode);
@@ -42,12 +46,12 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidarRegistroInteresProducto_ProcesoNoHabilitado_DevuelveBadRequest()
         {
-            var uow = CrearUowConProductoValido();
+            var uow = CrearUowConProductoValido(idNivelProducto: 1);
             var procesoRepo = new Mock<IProcesoRepository>();
             procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(false);
             uow.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
-            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_03", result.ErrorCode);
@@ -57,12 +61,12 @@ namespace UnitTesting.AppLogic.Helpers
         [Fact]
         public void ValidarRegistroInteresProducto_InscripcionPrevia_DevuelveConflict()
         {
-            var uow = CrearUowConProcesoHabilitado();
+            var uow = CrearUowConProcesoHabilitado(idNivelProducto: 1);
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(true);
             uow.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_04", result.ErrorCode);
@@ -77,10 +81,46 @@ namespace UnitTesting.AppLogic.Helpers
             workflowRepo.Setup(r => r.TieneInscripcionPendienteParaProducto(123, 10)).Returns(true);
             uow.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
 
-            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, Method);
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_IP_05", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+        }
+
+        [Fact]
+        public void ValidarRegistroInteresProducto_Nivel3y4OfertaNueva_PermiteAunqueOtraOfertaTengaInscripcion()
+        {
+            var uow = CrearUowConProcesoHabilitado(idNivelProducto: 3);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.TieneInteresRegistradoParaOferta(123, 20, 10, IdsOferta))
+                .Returns(false);
+            uow.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
+
+            Assert.True(result.Success);
+            uow.VerifyGet(u => u.Inscriptos, Times.Never);
+            uow.VerifyGet(u => u.InstanciaWorkflows, Times.Never);
+        }
+
+        [Fact]
+        public void ValidarRegistroInteresProducto_Nivel3y4OfertaYaRegistrada_DevuelveConflict()
+        {
+            var uow = CrearUowConProcesoHabilitado(idNivelProducto: 4);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo
+                .Setup(r => r.TieneInteresRegistradoParaOferta(123, 20, 10, IdsOferta))
+                .Returns(true);
+            uow.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var result = InteresProductoValidation.ValidarRegistroInteresProducto(uow.Object, 123, 10, 20, IdsOferta, Method);
+
+            Assert.False(result.Success);
+            Assert.Equal("GEN_IP_06", result.ErrorCode);
             Assert.Equal(409, result.HttpCode);
         }
 
@@ -93,18 +133,19 @@ namespace UnitTesting.AppLogic.Helpers
             return uow;
         }
 
-        private static Mock<IUnitOfWork> CrearUowConProductoValido()
+        private static Mock<IUnitOfWork> CrearUowConProductoValido(long idNivelProducto)
         {
             var uow = CrearUowConPersonaValida();
             var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = idNivelProducto });
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
             uow.Setup(u => u.Productos).Returns(productoRepo.Object);
             return uow;
         }
 
-        private static Mock<IUnitOfWork> CrearUowConProcesoHabilitado()
+        private static Mock<IUnitOfWork> CrearUowConProcesoHabilitado(long idNivelProducto)
         {
-            var uow = CrearUowConProductoValido();
+            var uow = CrearUowConProductoValido(idNivelProducto);
             var procesoRepo = new Mock<IProcesoRepository>();
             procesoRepo.Setup(r => r.TieneProcesoHabilitadoPorProducto(10, 20)).Returns(true);
             uow.Setup(u => u.Procesos).Returns(procesoRepo.Object);
@@ -113,7 +154,7 @@ namespace UnitTesting.AppLogic.Helpers
 
         private static Mock<IUnitOfWork> CrearUowConInscripcionPreviaNegativa()
         {
-            var uow = CrearUowConProcesoHabilitado();
+            var uow = CrearUowConProcesoHabilitado(idNivelProducto: 1);
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.TieneInscripcionPreviaAProducto(123, 10)).Returns(false);
             uow.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);

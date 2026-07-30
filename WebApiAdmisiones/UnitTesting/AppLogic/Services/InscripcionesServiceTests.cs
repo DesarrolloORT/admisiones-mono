@@ -1283,6 +1283,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1368,6 +1369,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1428,6 +1430,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1486,6 +1489,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1588,6 +1592,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1614,6 +1619,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 1 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();
@@ -1654,6 +1660,7 @@ namespace UnitTesting.AppLogic.Services
 
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.EsProductoValidoParaInteres(10)).Returns(true);
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto { IdProducto = 10, IdNivelProducto = 3 });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
             var procesoRepo = new Mock<IProcesoRepository>();

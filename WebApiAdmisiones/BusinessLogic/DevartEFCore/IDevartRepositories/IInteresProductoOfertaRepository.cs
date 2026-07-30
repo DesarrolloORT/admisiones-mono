@@ -14,5 +14,6 @@ namespace BusinessLogic.IDevartRepositories
         Proceso? GetProcesoPorInteresActivoOferta(long codigoPersona, long idProducto, long idOferta);
         ICollection<Oferta> GetOfertasSeleccionadas(long codigoPersona, long idProducto, long idProceso);
         Oferta? GetOfertaSeleccionada(long codigoPersona, long idProducto, long idProceso);
+        bool TieneInteresRegistradoParaOferta(long codigoPersona, long idProceso, long idProducto, IEnumerable<long> idsOferta);
     }
 }

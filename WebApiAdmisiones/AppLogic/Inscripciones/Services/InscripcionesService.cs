@@ -214,6 +214,7 @@ public class InscripcionesService(
             codigoPersona,
             request.IdProducto,
             request.IdProcesoSeleccionado,
+            request.IdsOferta,
             nameof(RegistrarInteresProducto));
 
         if (!validacion.Success)

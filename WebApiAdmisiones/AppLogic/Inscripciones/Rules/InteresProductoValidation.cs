@@ -24,6 +24,7 @@ public static class InteresProductoValidation
         long codigoPersona,
         long idProducto,
         long idProceso,
+        List<long> idsOferta,
         string method)
     {
         if (!uow.Personas.ExistePersona(codigoPersona))
@@ -31,7 +32,8 @@ public static class InteresProductoValidation
             return OperationResult<bool>.IsFailed("GEN_IP_01", method, "Persona no encontrada.", 404);
         }
 
-        if (!uow.Productos.EsProductoValidoParaInteres(idProducto))
+        var producto = uow.Productos.GetByKey(idProducto);
+        if (producto == null || !uow.Productos.EsProductoValidoParaInteres(idProducto))
         {
             return OperationResult<bool>.IsFailed("GEN_IP_02", method, "El producto indicado es inválido.", 400);
         }
@@ -39,6 +41,17 @@ public static class InteresProductoValidation
         if (!uow.Procesos.TieneProcesoHabilitadoPorProducto(idProducto, idProceso))
         {
             return OperationResult<bool>.IsFailed("GEN_IP_03", method, "Proceso no habilitado para el producto seleccionado.", 400);
+        }
+
+        // Nivel 3/4 con seminarios admite varias ofertas concurrentes por producto-proceso: el duplicado
+        if (producto.IdNivelProducto is 3 or 4)
+        {
+            if (uow.InteresProductoOfertas.TieneInteresRegistradoParaOferta(codigoPersona, idProceso, idProducto, idsOferta))
+            {
+                return OperationResult<bool>.IsFailed("GEN_IP_06", method, "Ya tiene interés registrado para la oferta indicada.", 409);
+            }
+
+            return OperationResult<bool>.Ok(true, method);
         }
 
         if (uow.Inscriptos.TieneInscripcionPreviaAProducto(codigoPersona, idProducto))
