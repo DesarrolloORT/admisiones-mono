@@ -2744,14 +2744,14 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
         }
 
-        private void SetupFresco(string? estado, decimal idProducto = 10m, decimal idProceso = 20m, decimal idInscripto = 0m, string? nombreExtensoProducto = null)
+        private void SetupFresco(string? estado, decimal idProducto = 10m, decimal idProceso = 20m, decimal idInscripto = 0m, string? nombreExtensoProducto = null, decimal? idOferta = null)
         {
             var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
             fresco1y2Repo
                 .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
                 .Returns(estado == null
                     ? new List<VdInscripcionesFresco1y2>()
-                    : new List<VdInscripcionesFresco1y2> { new() { IdProducto = idProducto, IdProceso = idProceso, IdInscripto = idInscripto, EstadoInscripcion = estado, NombreExtensoProducto = nombreExtensoProducto } });
+                    : new List<VdInscripcionesFresco1y2> { new() { IdProducto = idProducto, IdProceso = idProceso, IdInscripto = idInscripto, EstadoInscripcion = estado, NombreExtensoProducto = nombreExtensoProducto, IdOferta = idOferta } });
             _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
 
             var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
@@ -2810,7 +2810,8 @@ namespace UnitTesting.AppLogic.Services
             SetupFresco(
                 global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente,
                 idInscripto: 555m,
-                nombreExtensoProducto: "Analista programador");
+                nombreExtensoProducto: "Analista programador",
+                idOferta: 99m);
 
             var inscripto = new Inscripto
             {
@@ -2852,6 +2853,59 @@ namespace UnitTesting.AppLogic.Services
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos?idsInscripcion=555", request.RequestUri);
             inscriptoRepo.Verify(r => r.GetDetalleByKey(555, 123), Times.Once);
+        }
+
+        [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenPagoPendienteNivel1y2_UsaIdOfertaDeLaVistaFresco()
+        {
+            var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
+            fresco1y2Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco1y2>
+                {
+                    new()
+                    {
+                        IdProducto = 10, IdProceso = 20, IdInscripto = 555, IdOferta = 77,
+                        EstadoInscripcion = global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.PagoPendiente,
+                        NombreExtensoProducto = "Analista programador"
+                    }
+                });
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
+
+            var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
+            fresco3y4Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco3y4>());
+            _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(fresco3y4Repo.Object);
+
+            // IdOferta distinto del que trae la vista, para probar que gana el de la vista (99 no deberia aparecer).
+            var inscripto = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 99,
+                FechaVtoInscr = new DateTime(2026, 7, 1)
+            };
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
+                """
+                {
+                  "carritos": [],
+                  "estadoCuenta": { "saldoActual": 0 }
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.ObtenerDetalleInscripcion(123, 10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal(77, result.Data!.PagoPendiente!.Inscripciones[0].IdOferta);
         }
 
         [Fact]

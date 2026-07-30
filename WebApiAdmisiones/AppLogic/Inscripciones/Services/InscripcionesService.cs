@@ -129,9 +129,7 @@ public class InscripcionesService(
                 404);
         }
 
-        // Solo se necesita T_INSCRIPTO para la fecha de vencimiento de pago (no está en la vista fresco) y,
-        // en nivel 1 y 2, para completar el IdOferta (esa vista todavía no lo expone). Una sola consulta
-        // sobre la cabecera alcanza para ambos casos.
+        // Solo se necesita T_INSCRIPTO para la fecha de vencimiento de pago (no está en la vista fresco).
         var cabecera = uow.Inscriptos.GetDetalleByKey(filas[0].IdInscripto, codigoPersona);
         if (cabecera == null)
         {
@@ -140,10 +138,6 @@ public class InscripcionesService(
                 nameof(ObtenerDetalleInscripcion),
                 "No se encontró la inscripción para la persona.",
                 404);
-        }
-        if (filas[0].IdOferta == null)
-        {
-            filas[0] = filas[0] with { IdOferta = cabecera.IdOferta };
         }
 
         var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(filas.Select(f => f.IdInscripto));
@@ -170,7 +164,7 @@ public class InscripcionesService(
     }
 
     private static FilaInscripcionPago ToFilaInscripcionPago(VdInscripcionesFresco1y2 fila) => new(
-        (long)fila.IdInscripto, null, fila.NombreComienzo, fila.NombreTurno, null);
+        (long)fila.IdInscripto, (long?)fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, null);
 
     private static FilaInscripcionPago ToFilaInscripcionPago(VdInscripcionesFresco3y4 fila) => new(
         (long)fila.IdInscripto, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, fila.DescripcionOferta);

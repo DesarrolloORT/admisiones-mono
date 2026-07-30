@@ -569,7 +569,7 @@ public class PersonaService(
         source.NombreComienzo,
         source.NombreTurno,
         source.FechaReferencia,
-        null,
+        (long?)source.IdOferta,
         null);
 
     private static InscripcionItem ToInscripcionItem(VdInscripcionesFresco3y4 source) => new(
