@@ -63,8 +63,11 @@ namespace AppLogic.DevartDTOs
 
         public long? IdOferta { get; set; }
 
-        [StringLength(200)]
+        [StringLength(1000)]
         public string? DescripcionOferta { get; set; }
+
+        [StringLength(2)]
+        public string? ProgConSeminariosProducto { get; set; }
 
         #endregion
     }
