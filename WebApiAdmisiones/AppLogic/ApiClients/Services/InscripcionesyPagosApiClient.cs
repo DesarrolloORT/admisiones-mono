@@ -160,17 +160,19 @@ public class InscripcionesyPagosApiClient(HttpClient httpClient, ILogger<Inscrip
             "Error al obtener cursos a pagar");
     }
 
-    public async Task<OperationResult<CarritosInscripcionApiResponse>> ObtenerCarritosPorInscripcionAsync(long idInscripcion)
+    public async Task<OperationResult<CarritosInscripcionApiResponse>> ObtenerCarritosPorInscripcionAsync(IEnumerable<long> idsInscripcion)
     {
         return await SendAsync<CarritosInscripcionApiResponse>(
             () =>
             {
+                var idsQuery = string.Join("&", idsInscripcion.Select(id => $"idsInscripcion={id}"));
+
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.LogInformation("Consultando carritos de la inscripción: {IdInscripcion}", idInscripcion);
+                    _logger.LogInformation("Consultando carritos de las inscripciones: {IdsQuery}", idsQuery);
                 }
 
-                return _httpClient.GetAsync($"ORTSecure/Pagos/Carritos?idInscripcion={idInscripcion}");
+                return _httpClient.GetAsync($"ORTSecure/Pagos/Carritos?{idsQuery}");
             },
             "CARRITOS_INSCRIPCION_GET_01",
             nameof(ObtenerCarritosPorInscripcionAsync),

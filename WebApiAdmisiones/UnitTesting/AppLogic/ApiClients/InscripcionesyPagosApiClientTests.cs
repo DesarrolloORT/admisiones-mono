@@ -182,7 +182,7 @@ namespace UnitTesting.AppLogic.ApiClients
                 """));
             var client = CrearClient(handler);
 
-            var result = await client.ObtenerCarritosPorInscripcionAsync(55);
+            var result = await client.ObtenerCarritosPorInscripcionAsync([55]);
 
             Assert.True(result.Success);
             Assert.Equal(3210.50m, result.Data!.EstadoCuenta!.SaldoActual);
@@ -191,7 +191,27 @@ namespace UnitTesting.AppLogic.ApiClients
             Assert.Equal(1234.50m, carrito.PagoReserva);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Contains("Pagos/Carritos?idInscripcion=55", request.RequestUri);
+            Assert.Contains("Pagos/Carritos?idsInscripcion=55", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task ObtenerCarritosPorInscripcionAsync_WithVariasInscripciones_BuildsQueryConTodosLosIds()
+        {
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
+                {
+                  "carritos": [],
+                  "estadoCuenta": { "saldoActual": 0 }
+                }
+                """));
+            var client = CrearClient(handler);
+
+            var result = await client.ObtenerCarritosPorInscripcionAsync([55, 56]);
+
+            Assert.True(result.Success);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("idsInscripcion=55", request.RequestUri);
+            Assert.Contains("idsInscripcion=56", request.RequestUri);
         }
 
         [Fact]

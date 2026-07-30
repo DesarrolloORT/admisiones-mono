@@ -13,6 +13,6 @@ namespace BusinessLogic.IDevartRepositories
     {
         ICollection<VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona);
 
-        VdInscripcionesFresco3y4? GetInscripcionFrescoHabilitada(long codigoPersona, long idProducto, long idProceso);
+        ICollection<VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona, long idProducto, long idProceso);
     }
 }

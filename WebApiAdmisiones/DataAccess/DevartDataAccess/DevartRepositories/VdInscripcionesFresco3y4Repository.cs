@@ -37,7 +37,7 @@ namespace DataAccess.DevartRepositories
                 .ToList();
         }
 
-        public virtual BusinessLogic.Entities.VdInscripcionesFresco3y4? GetInscripcionFrescoHabilitada(long codigoPersona, long idProducto, long idProceso)
+        public virtual ICollection<BusinessLogic.Entities.VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona, long idProducto, long idProceso)
         {
             var parametros = Context.ParametrosAdmisiones
                 .Select(p => new
@@ -60,7 +60,7 @@ namespace DataAccess.DevartRepositories
                     && ((x.IdNivelProducto == 3 && x.FechaReferencia >= fechaLimiteNivel3)
                         || (x.IdNivelProducto == 4 && x.FechaReferencia >= fechaLimiteNivel4)
                         || (x.IdNivelProducto != 3 && x.IdNivelProducto != 4 && x.FechaReferencia >= fechaLimiteDefault)))
-                .FirstOrDefault();
+                .ToList();
         }
     }
 }

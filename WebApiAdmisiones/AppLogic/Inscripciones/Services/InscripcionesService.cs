@@ -46,15 +46,21 @@ public class InscripcionesService(
     {
         using var uow = _uowFactory.Create();
 
-        var inscripcionNivel1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
-        var estado = inscripcionNivel1y2?.EstadoInscripcion;
-        var idInscripto = (long?)inscripcionNivel1y2?.IdInscripto;
+        var filasNivel1y2 = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(codigoPersona, idProducto, idProceso)
+            .OrderBy(x => x.FechaInicioComienzo)
+            .ToList();
+        var estado = filasNivel1y2.Count > 0 ? filasNivel1y2[0].EstadoInscripcion : null;
+        var nombreExtensoProducto = filasNivel1y2.Count > 0 ? filasNivel1y2[0].NombreExtensoProducto : null;
+        var filas = filasNivel1y2.Select(ToFilaInscripcionPago).ToList();
 
         if (estado == null)
         {
-            var inscripcionNivel3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionFrescoHabilitada(codigoPersona, idProducto, idProceso);
-            estado = inscripcionNivel3y4?.EstadoInscripcion;
-            idInscripto = (long?)inscripcionNivel3y4?.IdInscripto;
+            var filasNivel3y4 = uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(codigoPersona, idProducto, idProceso)
+                .OrderBy(x => x.FechaInicioComienzo)
+                .ToList();
+            estado = filasNivel3y4.Count > 0 ? filasNivel3y4[0].EstadoInscripcion : null;
+            nombreExtensoProducto = filasNivel3y4.Count > 0 ? filasNivel3y4[0].NombreExtensoProducto : null;
+            filas = filasNivel3y4.Select(ToFilaInscripcionPago).ToList();
         }
 
         if (estado == null)
@@ -76,7 +82,7 @@ public class InscripcionesService(
                 break;
 
             case InscripcionesConstants.EstadoInscripcion.PagoPendiente:
-                var errorPagoPendiente = await ArmarPagoPendiente(uow, response, codigoPersona, idInscripto);
+                var errorPagoPendiente = await ArmarPagoPendiente(uow, response, codigoPersona, idProducto, nombreExtensoProducto, filas);
                 if (errorPagoPendiente != null)
                 {
                     return errorPagoPendiente;
@@ -84,6 +90,7 @@ public class InscripcionesService(
                 break;
 
             case InscripcionesConstants.EstadoInscripcion.Confirmada:
+                var idInscripto = filas.Count > 0 ? (long?)filas[0].IdInscripto : null;
                 var inscripto = idInscripto.HasValue
                     ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
                     : null;
@@ -105,17 +112,15 @@ public class InscripcionesService(
     }
 
     /// <summary>
-    /// Arma el detalle de una inscripción en estado "Pago pendiente". Si ya eligió método de pago
+    /// Arma el detalle de una o varias inscripciones (nivel 3 y 4 con seminarios puede traer más de una
+    /// oferta para el mismo producto/proceso) en estado "Pago pendiente". Si ya eligió método de pago
     /// (existe reserva mínima) devuelve el bloque compacto <see cref="DtoReservaMinima"/>; si no, el payload
     /// completo. Devuelve un resultado de error para cortar, o null si completó el response correctamente.
     /// </summary>
     private async Task<OperationResult<DtoDetalleInscripcionResponse>?> ArmarPagoPendiente(
-        IUnitOfWork uow, DtoDetalleInscripcionResponse response, long codigoPersona, long? idInscripto)
+        IUnitOfWork uow, DtoDetalleInscripcionResponse response, long codigoPersona, long idProducto, string? nombreExtensoProducto, List<FilaInscripcionPago> filas)
     {
-        var inscriptoPago = idInscripto.HasValue
-            ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
-            : null;
-        if (inscriptoPago == null)
+        if (filas.Count == 0)
         {
             return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                 "INS_DET_02",
@@ -124,11 +129,28 @@ public class InscripcionesService(
                 404);
         }
 
-        var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(inscriptoPago.IdInscripto);
+        // Solo se necesita T_INSCRIPTO para la fecha de vencimiento de pago (no está en la vista fresco) y,
+        // en nivel 1 y 2, para completar el IdOferta (esa vista todavía no lo expone). Una sola consulta
+        // sobre la cabecera alcanza para ambos casos.
+        var cabecera = uow.Inscriptos.GetDetalleByKey(filas[0].IdInscripto, codigoPersona);
+        if (cabecera == null)
+        {
+            return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
+                "INS_DET_02",
+                nameof(ObtenerDetalleInscripcion),
+                "No se encontró la inscripción para la persona.",
+                404);
+        }
+        if (filas[0].IdOferta == null)
+        {
+            filas[0] = filas[0] with { IdOferta = cabecera.IdOferta };
+        }
+
+        var carritos = await _inscripcionesyPagosApiClient.ObtenerCarritosPorInscripcionAsync(filas.Select(f => f.IdInscripto));
         if (!carritos.Success)
             return carritos.Failure().As<DtoDetalleInscripcionResponse>(nameof(ObtenerDetalleInscripcion));
 
-        var reservaMinima = uow.InscriptoSeniaMinima.GetByKey(inscriptoPago.IdInscripto);
+        var reservaMinima = uow.InscriptoSeniaMinima.GetByKey(filas[0].IdInscripto);
         if (reservaMinima != null)
         {
             var persona = uow.Personas.GetByKey(codigoPersona);
@@ -142,10 +164,16 @@ public class InscripcionesService(
         }
         else
         {
-            response.PagoPendiente = InscripcionesMapper.MapearPagoPendiente(inscriptoPago, carritos.Data);
+            response.PagoPendiente = InscripcionesMapper.MapearPagoPendiente(filas, idProducto, nombreExtensoProducto, cabecera.FechaVtoInscr, carritos.Data);
         }
         return null;
     }
+
+    private static FilaInscripcionPago ToFilaInscripcionPago(VdInscripcionesFresco1y2 fila) => new(
+        (long)fila.IdInscripto, null, fila.NombreComienzo, fila.NombreTurno, null);
+
+    private static FilaInscripcionPago ToFilaInscripcionPago(VdInscripcionesFresco3y4 fila) => new(
+        (long)fila.IdInscripto, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, fila.DescripcionOferta);
 
     private static DtoConfirmadaDetalle ConstruirDetalleConfirmada(IUnitOfWork uow, long codigoPersona, Inscripto inscripto)
     {

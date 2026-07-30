@@ -9,6 +9,18 @@ using Utilities;
 namespace AppLogic.Inscripciones.Mappers;
 
 /// <summary>
+/// Fila resuelta de la vista fresco (1y2 o 3y4) con los datos que necesita el detalle de "Pago pendiente" —
+/// evita depender de la navegación completa de <see cref="Inscripto"/> (Oferta→Supraoferta→Comienzo/Turno/Paquete/Producto),
+/// que la vista fresco ya trae resuelta en la misma fila.
+/// </summary>
+internal sealed record FilaInscripcionPago(
+    long IdInscripto,
+    long? IdOferta,
+    string? NombreComienzo,
+    string? NombreTurno,
+    string? DescripcionOferta);
+
+/// <summary>
 /// Traduce entidades y respuestas de la API interna a los DTOs de respuesta del módulo Inscripciones.
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -16,30 +28,31 @@ internal static class InscripcionesMapper
 {
     private sealed record CoordinadorMapeado(DtoCoordinador Coordinador, long? Codigo);
 
-    public static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(Inscripto inscripto, CarritosInscripcionApiResponse? carritos)
+    /// <summary>Detalle del estado "Pago pendiente": cabecera compartida + una entrada por cada inscripción (nivel 3 y 4 con seminarios puede traer más de una).</summary>
+    public static DtoConfirmarPreInscripcionResponse MapearPagoPendiente(
+        ICollection<FilaInscripcionPago> filas, long idProducto, string? nombreExtensoProducto, DateTime? fechaVencimientoPago, CarritosInscripcionApiResponse? carritos)
     {
         var pagoReserva = ConfirmarPreInscripcionRules.SumarPagoReserva(carritos?.Carritos);
-        var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
         return new DtoConfirmarPreInscripcionResponse
         {
             Confirmada = true,
             EstadoCuenta = MapearEstadoCuenta(carritos?.EstadoCuenta),
             Resumen = new DtoCabeceraInscripcion
             {
-                IdProducto = producto?.IdProducto ?? 0,
-                Carrera = NombreCarrera(producto),
-                FechaVencimientoPago = inscripto.FechaVtoInscr
+                IdProducto = idProducto,
+                Carrera = nombreExtensoProducto,
+                FechaVencimientoPago = fechaVencimientoPago
             },
-            Inscripciones =
-            [
-                new DtoInscripcionOferta
+            Inscripciones = filas
+                .Select(fila => new DtoInscripcionOferta
                 {
-                    IdInscripcion = inscripto.IdInscripto,
-                    IdOferta = inscripto.IdOferta ?? 0,
-                    Comienzo = inscripto.Oferta?.Supraoferta?.Comienzo?.NombreComienzo,
-                    Turno = inscripto.Oferta?.Turno?.NombreTurno
-                }
-            ],
+                    IdInscripcion = fila.IdInscripto,
+                    IdOferta = fila.IdOferta ?? 0,
+                    Comienzo = fila.NombreComienzo,
+                    Turno = fila.NombreTurno,
+                    DescripcionOferta = fila.DescripcionOferta
+                })
+                .ToList(),
             PagoReserva = pagoReserva
         };
     }
