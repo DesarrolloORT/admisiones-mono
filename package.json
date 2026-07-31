@@ -64,7 +64,7 @@
     "@angular/router": "^22.0.7",
     "@desarrolloort/components": "^4.2.0",
     "@desarrolloort/design-system": "^2.1.0",
-    "@desarrolloort/fdp-components": "^2.1.2",
+    "@desarrolloort/fdp-components": "^3.0.0",
     "@desarrolloort/ngx-utils": "^3.0.0",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "moment": "^2.30.1",
