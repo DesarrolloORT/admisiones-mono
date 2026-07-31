@@ -370,6 +370,12 @@ public class RegistroService(
                 DateTime.Now);
             uow.Personas.Add(persona);
             uow.Save();
+
+            // T_PERSONA.FECHA_CONF_DATOS_PERSONA tiene DEFAULT sysdate en Oracle: se completa sola en el INSERT
+            // aunque no la seteemos. Debe quedar vacía para forzar la confirmación de datos en Autoservicio.
+            persona.FechaConfDatosPersona = null;
+            uow.Save();
+
             uow.Commit();
             return OperationResult<Persona>.Ok(persona, nameof(CompletarNuevaPersonaAsync));
         }
