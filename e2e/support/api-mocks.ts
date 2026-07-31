@@ -6,7 +6,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 export interface MockApiOptions {
   initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
   identityPreload?: 'none' | 'complete';
-  inscriptionDetail?: 'pending-payment';
+  inscriptionDetail?: 'offers-missing' | 'pending-payment';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -285,20 +285,23 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
           estado: 'En proceso',
           detalle: {
             resumen: { idProducto: 40, carrera: 'Programa de Asesoramiento Financiero' },
-            intereses: [
-              {
-                idOferta: 310,
-                descripcionOferta: 'Marco legal y tributario',
-                comienzo: 'Marzo 2027',
-                turno: 'Matutino',
-              },
-              {
-                idOferta: 311,
-                descripcionOferta: 'Renta fija y renta variable',
-                comienzo: 'Marzo 2027',
-                turno: 'Nocturno',
-              },
-            ],
+            intereses:
+              options.inscriptionDetail === 'offers-missing'
+                ? []
+                : [
+                    {
+                      idOferta: 310,
+                      descripcionOferta: 'Marco legal y tributario',
+                      comienzo: 'Marzo 2027',
+                      turno: 'Matutino',
+                    },
+                    {
+                      idOferta: 311,
+                      descripcionOferta: 'Renta fija y renta variable',
+                      comienzo: 'Marzo 2027',
+                      turno: 'Nocturno',
+                    },
+                  ],
           },
         });
       }
@@ -306,15 +309,26 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, {
         estado: 'Pago pendiente',
         pagoPendiente: {
-          idInscripcion: 7001,
-          senia: 15500,
-          fechaVencimientoPago: '2027-03-04',
+          inscripciones: [
+            {
+              idInscripcion: 7001,
+              idOferta: 300,
+              comienzo: 'Marzo 2027',
+              turno: 'Matutino',
+            },
+          ],
+          pagoReserva: 15500,
           resumen: {
             idProducto: 20,
             carrera: 'Licenciatura en Diseño Gráfico',
-            comienzo: 'Marzo 2027',
-            turno: 'Matutino',
+            fechaVencimientoPago: '2027-03-04',
           },
+        },
+        reservaMinima: {
+          tipoPago: 'ABITAB',
+          cedula: '12345678',
+          codigoPersona: 7001,
+          pagoReserva: 15500,
         },
       });
     }

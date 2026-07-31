@@ -21,20 +21,18 @@ test.describe('Inscripción inicial', () => {
     const url = new URL((await detailRequest).url());
     expect(url.searchParams.get('idProducto')).toBe('20');
     expect(url.searchParams.get('idProceso')).toBe('200');
-    await expect(
-      page.getByRole('heading', { name: 'Inscripción pendiente de pago' })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
     await expect(page.getByText('$ 15.500')).toBeVisible();
     await expect(page.getByText(/04\/03\/2027/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
   });
 
   // Actualización profesional nunca postea EncuestaInicial: "Continuar inscripción"
-  // tiene que abrir el paso 2 igual, con el paso 1 precargado desde el Detalle.
+  // conserva las ofertas de la tarjeta aunque el Detalle no las repita.
   test('continúa una actualización profesional en proceso en el paso 2 @regression', async ({
     page,
   }) => {
-    await mockApi(page, { inscriptionDetail: 'pending-payment', initialSurvey: 'empty' });
+    await mockApi(page, { inscriptionDetail: 'offers-missing', initialSurvey: 'empty' });
     await addAuthenticatedSession(page);
     await page.goto('/inicio');
 
@@ -46,6 +44,8 @@ test.describe('Inscripción inicial', () => {
     await expect(
       page.getByRole('heading', { name: 'Información personal', exact: true })
     ).toBeVisible();
+    const resumeUrl = new URL(page.url());
+    expect(resumeUrl.searchParams.toString()).toBe('idProducto=40&idProceso=210');
     // Sin vuelta atrás al paso 1 y con el flujo reducido de AP.
     await expect(page.getByRole('button', { name: /Volver/ })).toHaveCount(0);
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
@@ -64,6 +64,18 @@ test.describe('Inscripción inicial', () => {
       idsOfertasSeleccionadas: [310, 311],
     });
     expect(interestRequests).toHaveLength(0);
+
+    await expect(page.getByText('Marco legal y tributario', { exact: true })).toBeVisible();
+    await expect(page.getByText('Renta fija y renta variable', { exact: true })).toBeVisible();
+
+    const paymentRequest = waitForPost(page, '/Inscripciones/Pagar');
+    await inscription.selectPayment('abitab');
+    await inscription.confirmPayment();
+    expect((await paymentRequest).postDataJSON()).toEqual({
+      idsInscripcion: [7010, 7011],
+      tipoPago: 'ABITAB',
+      idBancoSistarbanc: null,
+    });
   });
 
   // Con idProducto+idProceso válidos la inscripción existe: aunque el Detalle falle, el
