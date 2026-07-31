@@ -219,7 +219,7 @@ describe('Inscripciones', () => {
 
   it('delegates payment', () => {
     const payload = {
-      idInscripcion: 1072704,
+      idsInscripcion: [1072704],
       metodoPago: 'cuenta-bancaria' as const,
       idBancoSistarbanc: 'brou',
     };

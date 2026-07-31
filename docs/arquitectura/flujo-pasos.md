@@ -154,7 +154,12 @@ backend manda sobre los datos; la intención manda sobre presentación/navegaci�
 Dentro de la encuesta no hay guardados automáticos por completar expansibles. El
 guardado y la confirmación se ejecutan juntos al cerrar el paso.
 
-`back()` es el espejo: retrocede sub‑sección si la hay, si no `flow.previous()`.
+`back()` no es el espejo exacto de `continue()`: en inscripciones el flujo **solo
+avanza**, porque cada paso completado ya quedó registrado en el backend. `back()`
+retrocede sub‑sección (o cierra el lector) y nunca llama a `flow.previous()`;
+`canGoBack` es `false` fuera del paso 2, y el botón de volver se oculta cuando no hay
+nada hacia atrás. Un proceso que sí admita retroceder entre pasos puede seguir usando
+`flow.previous()`: el motor `ProcessFlow` lo soporta.
 
 ---
 

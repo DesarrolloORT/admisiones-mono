@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
 import {
   OrtButton,
   OrtExpandableStepperModule,
-  OrtExpandableStepperStep,
+  OrtExpandableStepperStepData,
   OrtIconModule,
 } from '@desarrolloort/components';
 import { map } from 'rxjs/operators';
@@ -59,7 +59,7 @@ export class ProcessLayout {
   public readonly stepperAriaLabel = input('Pasos del proceso');
   public readonly stepperExpanded = input(false);
   public readonly stepperSubtitle = input<string | undefined>(undefined);
-  public readonly steps = input<OrtExpandableStepperStep[]>([]);
+  public readonly steps = input<OrtExpandableStepperStepData[]>([]);
 
   public readonly back = output<void>();
   public readonly closeFlow = output<void>();

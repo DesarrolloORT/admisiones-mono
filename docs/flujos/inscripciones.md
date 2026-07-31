@@ -7,6 +7,7 @@ sourcePaths:
   - src/app/features/inscriptions/
   - src/app/features/catalogs/
   - src/app/features/home/pages/dashboard/
+  - src/app/features/home/components/
   - src/app/features/home/services/home.ts
   - src/app/features/home/endpoints/home.endpoint.ts
   - src/app/shared/process-flow/
@@ -84,23 +85,47 @@ matriz es su lectura de negocio.
   editable**, aunque exista una encuesta previa en progreso. La encuesta previa solo
   se reutiliza al llegar al Paso 2 (prellena respuestas), nunca precarga el Paso 1 ni
   reposiciona el flujo. `InteresProducto` se envía al continuar.
-- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel): para una
-  inscripción `En proceso` con encuesta y oferta completa, arranca en el Paso 2. Al
-  volver, el Paso 1 se precarga desde la encuesta y queda deshabilitado; continuar
-  vuelve al Paso 2 sin enviar `InteresProducto`.
+- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel): llegar con
+  esos params válidos **ya prueba que la inscripción existe**, así que el interés está
+  registrado y el **Paso 1 nunca se muestra**. El Paso 1 queda precargado y
+  deshabilitado (no se vuelve a enviar `InteresProducto`) y el flujo arranca en el Paso
+  2 o en la pantalla que corresponda al estado.
 
-  | Estado del detalle                      | Dónde arranca / qué muestra                |
-  | --------------------------------------- | ------------------------------------------ |
-  | En proceso + encuesta + oferta completa | Paso 2 en la sección activa de la encuesta |
-  | En proceso + sin encuesta               | Paso 1 editable                            |
-  | En proceso + sin derecho a encuesta     | Paso 1 editable                            |
-  | Pago pendiente / Pendiente sin seña     | Paso 3 (elegir medio de pago)              |
-  | Pago pendiente / Pendiente con seña     | Pantalla de referencias de pago (reserva)  |
-  | Confirmada                              | Pantalla de éxito terminal                 |
-  | A la espera / desconocido               | Pantalla "Inscripción en proceso"          |
+  | Estado del detalle                  | Dónde arranca / qué muestra                 |
+  | ----------------------------------- | ------------------------------------------- |
+  | En proceso (con o sin encuesta)     | Paso 2 (sección activa de la encuesta)      |
+  | `Detalle` caído / sin estado útil   | Paso 2 con la precarga mínima de los params |
+  | Pago pendiente / Pendiente sin seña | Paso 3 (elegir medio de pago)               |
+  | Pago pendiente / Pendiente con seña | Pantalla de referencias de pago (reserva)   |
+  | Confirmada                          | Pantalla de éxito terminal                  |
+  | A la espera / desconocido           | Pantalla "Inscripción en proceso"           |
 
-  Si `Detalle` falla, los params no son válidos o falta la oferta completa, la
-  excepción anterior no se aplica.
+  Los estados terminales pintan su pantalla por `payment` y dejan el flujo en el Paso 3:
+  así el Paso 1 no es el paso corriente en ninguna combinación. Solo params **inválidos**
+  (faltantes, no numéricos, ≤ 0) degradan a **nueva**, porque sin ellos no hay
+  inscripción que retomar.
+
+  **Precarga del Paso 1 al retomar.** Sale del `Detalle`, no de la encuesta: la
+  cabecera (`detalle.resumen`) aporta `idProducto` y `carrera`, y `detalle.intereses`
+  todas las ofertas elegidas (una por seminario en Actualización profesional). El
+  contrato del `Detalle` **no expone `idComienzo` ni `idTurno`** en ningún bloque, así
+  que el comienzo y el turno solo llegan como texto; por eso la precarga llena
+  `turno` y `seminarios` con los `idOferta` (el payload de `ConfirmarPreInscripcion`
+  lee uno u otro según el tipo de propuesta) y toma el comienzo del param `idProceso`
+  (el control `comienzo` guarda justamente un idProceso). Si el `Detalle` no llegó, el
+  producto sale del param `idProducto`: alcanza para abrir el Paso 2, aunque confirmar
+  la preinscripción va a fallar hasta que el `Detalle` responda con las ofertas. La
+  selección académica de una encuesta previa nunca se aplica al Paso 1 al retomar. Si el
+  catálogo de carreras falla y el nivel queda `null`, el tipo de propuesta se completa
+  después desde el nivel de la carrera (`AcademicProposalSelection`).
+
+- **El flujo solo avanza.** Pasar de paso es un hecho ya registrado en el backend
+  (Paso 1 ⇒ `InteresProducto`, Paso 2 ⇒ `ConfirmarPreInscripcion`), así que **no hay
+  vuelta atrás entre pasos**: no se vuelve del Paso 2 al 1 ni del Paso 3 al 2. Lo único
+  que retrocede es la navegación **dentro** del Paso 2 (secciones de la encuesta y
+  lector de reglamento), y el botón de volver solo aparece cuando hay algo hacia atrás.
+  Los pasos no están en la URL, así que la flecha del navegador no vuelve un paso: sale
+  del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`):
   reservado para el futuro botón de una inscripción **cancelada**. Reglas de negocio
@@ -193,6 +218,45 @@ Cuando el tipo de propuesta es `3` (Actualización profesional, productos con
 (`isProfessionalUpdateType` en `academic-proposal.ts`), sincronizada también en
 precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 
+### Dashboard "Mis carreras": contrato agrupado y tarjetas
+
+`GET /Persona/Inscripciones` devuelve una lista **agrupada por producto/proceso**:
+cada elemento trae `idProducto`, `nombreExtensoProducto`, `idProceso`,
+`idNivelProducto`, `estadoInscripcion`, `progConSeminariosProducto` (sin
+consumidor hoy) y un array `inscripciones[]` con las ofertas concretas
+(`idInscripto`, `idOferta`, `descripcionOferta`, `idTurno`, `idComienzo`,
+`fechaInicioComienzo`, `nombreComienzo`, `nombreTurno`, `fechaReferencia`).
+`HomeEndpoint.toMisInscripciones()` mapea cada grupo a uno o más
+`MiInscripcion`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
+(`src/app/features/catalogs/models/academic-proposal.ts`).
+
+- **Niveles 1 y 2:** sin cambios funcionales. Una tarjeta por inscripción (un
+  `MiInscripcion` por item de `inscripciones[]`), título = `nombreExtensoProducto`,
+  fila "Comienzo" y el CTA por `estadoInscripcion` vía `DashboardQuickActions`.
+- **Niveles 3 y 4 (Actualización profesional):** una tarjeta **por paquete** (un
+  `MiInscripcion` por grupo). El título sigue siendo `nombreExtensoProducto`; debajo
+  se muestra el conteo `inscripciones.length` como `"N seminarios elegidos"`
+  (singular: `"1 seminario elegido"`). Al hacer clic en esa fila se expande
+  in-situ el detalle de los seminarios elegidos (`descripcionOferta` +
+  `nombreComienzo` de cada item), como disclosure accesible en
+  `src/app/features/home/components/dashboard-card/`.
+
+> Reemplaza la regla anterior: antes la tarjeta de niveles 3/4 usaba
+> `descripcionOferta` del primer item como título. Ese comportamiento queda
+> superado por `nombreExtensoProducto` + conteo de seminarios.
+
+### Drift detectado (resuelto)
+
+El adapter (`HomeEndpoint.toMisInscripciones()`) mapeaba la forma plana vieja
+`DtoVdInscripcionesFresco1y2Devart` contra el contrato agrupado que el backend
+ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
+nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
+`idInscripto`, `idComienzo`, `idTurno`, `nombreComienzo`, `nombreTurno` y
+`descripcionOferta` habían pasado al item interno (`inscripciones[]`) y
+resolvían a `undefined` → `0`/`''`. Efecto observable: el botón "Reactivar
+inscripción" quedaba inerte (`reactivatesFlow` exige `idInscripto > 0`) y la
+fila "Comienzo" salía vacía. Resuelto por el mapeo agrupado descrito arriba.
+
 ### Paso 1 AP: Programa + Seminarios
 
 - El selector de carrera se muestra como **Programa** (misma UI y validaciones;
@@ -208,6 +272,9 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /Catalogos/Turnos`; el resultado llena el multiselect de seminarios.
 - Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.
+  `toAcademicSeminarOption` normaliza esa fecha a `dd/MM/yyyy`: el catálogo la manda como
+  ISO con hora fija (`2026-10-16T00:00:00`) y la opción muestra solo la fecha. Sin fecha
+  no se pinta la descripción.
 - Al continuar se llama `POST /Inscripciones/InteresProducto`. El contrato de
   feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
   primera oferta hasta que el backend acepte el array.
@@ -236,16 +303,55 @@ que la empresa acredite el pago.
 
 ### Retomar AP "En proceso"
 
+AP nunca postea `EncuestaInicial`, así que exigir una encuesta prefilled para
+arrancar en el paso 2 dejaba estas inscripciones en el paso 1 vacío. Hoy
+`deriveRetomar` nunca muestra el paso 1 (ver la matriz de retomar) y la precarga sale
+del Detalle: `detalle.resumen.idProducto` + todas las ofertas de `detalle.intereses`.
+Ojo con los productos que no están en `GET /Catalogos/Carreras` (o cuyo `Detalle`
+falla): el paso 2 se abre igual, pero el tipo de propuesta queda vacío hasta que el
+catálogo resuelva el nivel, así que las secciones visibles pueden arrancar como las del
+flujo tradicional.
+
 El resolver de entrada cruza el Detalle contra `GET /Catalogos/Carreras` para
-resolver `idNivelProducto` (si el catálogo falla queda `null` y se deriva como
-un retomar tradicional). Con nivel 3/4 y oferta completa, `deriveRetomar`
-arranca en el paso 2 **sin exigir encuesta prefilled** y produce un
-`academicPrefill` (programa + seminarios desde el Detalle) que
-`InscripcionProcessFacade` aplica después del slice de encuesta —así una
-encuesta por-persona vieja no pisa el paso 1— y bloquea el paso 1
-(`disableForResume`). El Detalle no informa si la inscripción es corporativa, por
-lo que al retomar un estado pendiente se mantiene la pantalla genérica
-"Inscripción en proceso".
+resolver `idNivelProducto`, que decide el tipo de propuesta del paso 1 y, con eso,
+las secciones visibles del paso 2. Si el catálogo falla queda `null`: el paso 2
+igual se abre y `AcademicProposalSelection` completa el tipo cuando el catálogo
+carga. `InscripcionProcessFacade` aplica el `academicPrefill` después del slice de
+encuesta y bloquea el paso 1 (`disableForResume`).
+
+El Detalle no informa si la inscripción es corporativa, por lo que al retomar un
+estado pendiente se mantiene la pantalla genérica "Inscripción en proceso".
+
+### Resumen de pago: Programa + Seminarios
+
+`GET /Inscripciones/Detalle`, `POST /Inscripciones/ConfirmarPreInscripcion` y su
+pagoPendiente ya devuelven un array `inscripciones[]` (`DtoInscripcionOferta`: `idInscripcion`,
+`idOferta`, `comienzo`, `turno`, `descripcionOferta`) junto al `resumen` plano
+(`DtoCabeceraInscripcion`: solo `idProducto`/`carrera`/`fechaVencimientoPago`, sin
+comienzo/turno propios). El adapter (`InscripcionesEndpoint.toSeminarios()`) mapea ese
+array completo a `InscripcionPreEnrollmentResponse.seminarios` (y a
+`InscripcionPendingPaymentDetail.seminarios` para "retomar"), además de seguir
+colapsando `inscripciones?.[0]` en los campos planos (`resumen`, `idInscripcion`) que
+usa el resto del flujo.
+
+`POST /Inscripciones/Pagar` recibe `idsInscripcion: number[]`, así que el pago cobra el
+paquete completo: `InscripcionPaymentFacade.paymentInscriptionIds()` junta los
+`seminarios[].idInscripcion` (una sola entrada en niveles 1 y 2) y deduplica contra el
+`idInscripcion` plano, que cubre el retomar desde un estado persistido sin `seminarios`.
+Si no queda ningún id positivo el pago no se envía y la pantalla muestra "No pudimos
+identificar la inscripción pendiente.".
+
+En la pantalla de pago (`inscription-confirmation-step`), el "Resumen de inscripción"
+usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
+
+- **Niveles 1 y 2:** las 3 filas de siempre (Carrera, Comienzo, Turno), sin cambios.
+- **Niveles 3 y 4 (AP):** una sola fila **Programa** (mismo ícono e ídem fallback de
+  `Carrera`) seguida de una sección **Seminarios** con una fila por elemento de
+  `seminarios[]` (nombre, comienzo, turno). Esta lista vive fuera de `summaryItems()`
+  para no romper `inscription-success-step.html`, que usa `summaryItems()[0]` como
+  título y `summaryItems().slice(1)` para el resto.
+- El diálogo "Confirmar inscripción" (mismo paso) todavía no muestra los seminarios:
+  para AP solo pinta la fila Programa. Pendiente de decisión de UX.
 
 ### Pendientes de backend
 
@@ -472,6 +578,18 @@ bloque `confirmada` (número de estudiante, coordinación y materias) cuando el
 backend confirma el pago en línea (p. ej. cuenta personal). Con eso la pantalla de
 éxito pinta el detalle sin un `getDetail` adicional; ese `getDetail` queda solo
 como fallback si la respuesta no trae `confirmada`.
+
+`DtoConfirmadaDetalle` es una **cabecera compartida** (`codigoPersona`, `idProducto`,
+`carrera`, `coordinadorAcademico`, `coordinadorCursos`) más un array
+`inscripciones[]` (`DtoInscripcionConfirmada`), con una entrada por cada oferta
+confirmada y su propio `comienzo`/`turno`/`materiasPrimerSemestre`: en niveles 3 y 4
+vienen varias, una por seminario. Ya no existe el bloque plano `confirmada.resumen`
+ni un `confirmada.materiasPrimerSemestre` único. El adapter arma
+`InscripcionConfirmedDetail.resumen` con la cabecera más el comienzo/turno de
+`inscripciones[0]` (mismo colapso que usa `pagoPendiente`) y expone el array completo
+en `InscripcionConfirmedDetail.inscripciones`;
+`InscripcionPaymentFacade.subjects()` lista las materias de **todos** los seminarios
+sin repetir las compartidas.
 
 ## Estados frontend
 
