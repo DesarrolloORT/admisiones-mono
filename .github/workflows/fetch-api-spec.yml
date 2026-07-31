@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.22.3'
 
       - name: Download Swagger and form contracts
         run: node scripts/codegen/fetch-api-spec.js --origin "$env:API_ORIGIN" --output api-spec
