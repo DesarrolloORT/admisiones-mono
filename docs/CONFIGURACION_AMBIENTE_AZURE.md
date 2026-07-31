@@ -135,8 +135,12 @@ El cache vive bajo `tmp/`, que también está ignorado por Git.
 
 ## CSP y `web.config`
 
-La CSP del ambiente debe estar en Azure dentro del JSON, como `CSP_POLICY` o `cspPolicy`.
-El script falla si no existe, porque `src/web.config` se genera desde ese valor y Angular lo copia al root del build por la entrada `assets` de `angular.json`.
+La CSP del ambiente debe estar en Azure dentro del JSON, como `CSP_POLICY_TEMPLATE`.
+El script falla si no existe. `CSP_POLICY_TEMPLATE` acepta los placeholders `{{API_URL}}` y
+`{{FDP_API_URL}}`, que `@desarrolloort/azure-env-sync` reemplaza por los valores reales del
+ambiente antes de generar `CSP_POLICY`; si queda algun placeholder sin resolver, tambien falla.
+`src/web.config` se genera desde ese `CSP_POLICY` ya resuelto y Angular lo copia al root del
+build por la entrada `assets` de `angular.json`.
 
 El `web.config` generado agrega estos headers:
 
@@ -152,19 +156,19 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 Tambien mantiene los MIME types de `.json` y `.webmanifest`, y la regla de rewrite que manda rutas Angular no fisicas a `/index.html`.
 
-Ejemplo minimo:
+Ejemplo minimo. Notar que `API_URL` y `FDP_API_URL` no se declaran aca: el propio paquete los
+resuelve desde `frontend:<proyecto>:api_base` y `frontend:fdp:api_base` y los inyecta en el
+template.
 
 ```json
 {
-  "API_URL": "https://apiadmisionesdesa.ort.edu.uy",
-  "FDP_API_URL": "https://fdp.example",
   "RECAPTCHA_KEY": "site-key-publica",
   "RECAPTCHA_NONCE": "admisiones-recaptcha-2026",
-  "CSP_POLICY": "default-src 'self'; script-src 'self' 'nonce-admisiones-recaptcha-2026' 'strict-dynamic' https://www.google.com https://www.gstatic.com; connect-src 'self' https://apiadmisionesdesa.ort.edu.uy https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
+  "CSP_POLICY_TEMPLATE": "default-src 'self'; script-src 'self' 'nonce-admisiones-recaptcha-2026' 'strict-dynamic' https://www.google.com https://www.gstatic.com; connect-src 'self' {{API_URL}} https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com {{FDP_API_URL}}; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
 }
 ```
 
-`RECAPTCHA_KEY` es la site key publica usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend. Si `RECAPTCHA_KEY` tiene valor, `CSP_POLICY` debe permitir los origenes de Google indicados en el ejemplo; si el ambiente no usa captcha, no hace falta permitirlos ni definir `RECAPTCHA_NONCE`.
+`RECAPTCHA_KEY` es la site key publica usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend. Si `RECAPTCHA_KEY` tiene valor, `CSP_POLICY_TEMPLATE` debe permitir los origenes de Google indicados en el ejemplo; si el ambiente no usa captcha, no hace falta permitirlos ni definir `RECAPTCHA_NONCE`.
 
 `RECAPTCHA_NONCE` debe coincidir exactamente con el nonce incluido en `script-src` (`'nonce-<valor>'`). Angular lo pasa al `<script>` que carga `api.js` de Google (via `RECAPTCHA_LOADER_OPTIONS.onBeforeLoad`), y Google propaga ese mismo nonce a los scripts inline que agrega despues. Como el sitio se sirve como archivos estaticos desde IIS (sin render por request), no es posible generar un nonce distinto por response; por eso se usa un valor fijo por ambiente combinado con `'strict-dynamic'` en vez de los hashes `sha256-...` que se usaban antes. Los hashes se rompen sin aviso cuando Google cambia el contenido del script inline; el nonce fijo + `strict-dynamic` no depende de ese contenido.
 
