@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
+import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
 import { HomeService } from '../../services/home';
 import { DashboardQuickActions } from './dashboard-quick-actions';
 
@@ -9,6 +10,7 @@ describe('DashboardQuickActions', () => {
   let homeService: { reactivarInscripcion: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    sessionStorage.clear();
     homeService = { reactivarInscripcion: vi.fn().mockReturnValue(of(true)) };
 
     TestBed.configureTestingModule({
@@ -28,6 +30,39 @@ describe('DashboardQuickActions', () => {
       expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
     }
   );
+
+  it('keeps every selected offer and enrollment id in sessionStorage when continuing', async () => {
+    const fixture = createComponent('En proceso', [310, 311], [7010, 7011]);
+
+    await fixture.whenStable();
+
+    const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+    prepareNavigation(fixture);
+
+    expect(TestBed.inject(InscriptionResumeContextStore).read(20, 200)).toEqual({
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+    expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
+  });
+
+  it('clears the transient context when opening a detail action', async () => {
+    const store = TestBed.inject(InscriptionResumeContextStore);
+    store.save({
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [300],
+      idInscripciones: [100],
+    });
+    const fixture = createComponent('Confirmada');
+
+    await fixture.whenStable();
+    prepareNavigation(fixture);
+
+    expect(store.read(20, 200)).toBeNull();
+  });
 
   it('keeps waiting enrollments informational', async () => {
     const fixture = createComponent('A la espera');
@@ -56,6 +91,12 @@ describe('DashboardQuickActions', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
       queryParams: { idProducto: 20, idProceso: 200 },
     });
+    expect(TestBed.inject(InscriptionResumeContextStore).read(20, 200)).toEqual({
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [300],
+      idInscripciones: [100],
+    });
   });
 
   it('keeps Dada de baja inert without an idInscripto', async () => {
@@ -69,12 +110,22 @@ describe('DashboardQuickActions', () => {
     expect(homeService.reactivarInscripcion).not.toHaveBeenCalled();
   });
 
-  function createComponent(status: string): ComponentFixture<DashboardQuickActions> {
+  function createComponent(
+    status: string,
+    idOfertas: readonly number[] = [300],
+    idInscripciones: readonly number[] = [100]
+  ): ComponentFixture<DashboardQuickActions> {
     const fixture = TestBed.createComponent(DashboardQuickActions);
     fixture.componentRef.setInput('status', status);
     fixture.componentRef.setInput('careerName', 'Sistemas');
     fixture.componentRef.setInput('idProducto', 20);
     fixture.componentRef.setInput('idProceso', 200);
+    fixture.componentRef.setInput('idInscripciones', idInscripciones);
+    fixture.componentRef.setInput('idOfertas', idOfertas);
     return fixture;
+  }
+
+  function prepareNavigation(fixture: ComponentFixture<DashboardQuickActions>): void {
+    (fixture.componentInstance as unknown as { prepareNavigation: () => void }).prepareNavigation();
   }
 });
