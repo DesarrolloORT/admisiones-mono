@@ -95,7 +95,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY`/`cspPolicy` del ambiente.
+   Usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY_TEMPLATE` del ambiente (con placeholders `{{API_URL}}` y `{{FDP_API_URL}}`).
 
 ## Ejecutar la aplicacion en un servidor local
 

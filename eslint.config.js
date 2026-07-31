@@ -1,5 +1,5 @@
-import angular from 'angular-eslint';
 import js from '@eslint/js';
+import angular from 'angular-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
@@ -32,7 +32,11 @@ export default tseslint.config(
   },
   {
     files: ['**/*.ts'],
-    extends: [js.configs.recommended, ...tseslint.configs.recommended, ...angular.configs.tsRecommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...angular.configs.tsRecommended,
+    ],
     processor: angular.processInlineTemplates,
   },
   {
@@ -188,5 +192,5 @@ export default tseslint.config(
       '@angular-eslint/template/no-duplicate-attributes': 'error',
     },
   },
-  eslintConfigPrettier,
+  eslintConfigPrettier
 );
