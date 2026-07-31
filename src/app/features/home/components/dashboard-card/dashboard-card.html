@@ -32,7 +32,9 @@
     <app-dashboard-quick-actions
       [cardType]="variant()"
       [careerName]="title()"
+      [idInscripciones]="idsInscripcion()"
       [idInscripto]="inscripcion()?.idInscripto ?? null"
+      [idOfertas]="inscripcion()?.idOfertas ?? []"
       [idProceso]="inscripcion()?.idProceso ?? null"
       [idProducto]="inscripcion()?.idProducto ?? null"
       [status]="estado()" />

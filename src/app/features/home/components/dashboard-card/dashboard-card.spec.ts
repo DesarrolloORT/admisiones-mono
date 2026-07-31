@@ -13,6 +13,7 @@ describe('DashboardCard', () => {
     const fixture = TestBed.createComponent(DashboardCard);
     fixture.componentRef.setInput('inscripcion', {
       idInscripto: 100,
+      idOfertas: [300],
       idProducto: 20,
       idProceso: 200,
       idComienzo: 2,
@@ -66,11 +67,15 @@ describe('DashboardCard', () => {
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Analista Programador');
     expect(text).not.toContain('Comienzo');
+    expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
+      '/inscripciones?idProducto=20&idProceso=200'
+    );
   });
 
   function buildInscripcion(overrides: Partial<MiInscripcion>): MiInscripcion {
     return {
       idInscripto: 100,
+      idOfertas: [300],
       idProducto: 20,
       idProceso: 200,
       idComienzo: 2,
