@@ -54,6 +54,11 @@ export function selectAgent(requestedAgent, answer = '') {
   throw new Error('El agente debe ser "claude" o "codex".');
 }
 
+export function getAgentArgs(agent) {
+  const prompt = AGENTS[agent].prompt;
+  return agent === 'codex' ? ['exec', '-C', ROOT, prompt] : [prompt];
+}
+
 async function main() {
   const { positionals, values } = nodeParseArgs({
     options: {
@@ -86,8 +91,7 @@ async function main() {
 
   try {
     const agent = selectAgent(requestedAgent, answer);
-    const args = agent === 'codex' ? ['-C', ROOT, AGENTS[agent].prompt] : [AGENTS[agent].prompt];
-    const result = spawnSync(agent, args, {
+    const result = spawnSync(agent, getAgentArgs(agent), {
       cwd: ROOT,
       stdio: 'inherit',
       shell: process.platform === 'win32',

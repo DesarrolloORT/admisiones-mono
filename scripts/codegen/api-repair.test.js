@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { hasGeneratedApiChanges, selectAgent, snapshotGeneratedApi } from './api-repair.js';
+import {
+  getAgentArgs,
+  hasGeneratedApiChanges,
+  selectAgent,
+  snapshotGeneratedApi,
+} from './api-repair.js';
 
 test('preserva el contrato previo y detecta cambios', () => {
   const root = mkdtempSync(join(tmpdir(), 'api-repair-'));
@@ -27,5 +32,6 @@ test('preserva el contrato previo y detecta cambios', () => {
 test('usa Claude por defecto y permite Codex', () => {
   assert.equal(selectAgent(undefined), 'claude');
   assert.equal(selectAgent('codex'), 'codex');
+  assert.deepEqual(getAgentArgs('codex').slice(0, 2), ['exec', '-C']);
   assert.throws(() => selectAgent('otro'), /claude.*codex/i);
 });

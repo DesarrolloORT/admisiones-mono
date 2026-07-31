@@ -29,6 +29,57 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
   });
 
+  // Actualización profesional nunca postea EncuestaInicial: "Continuar inscripción"
+  // tiene que abrir el paso 2 igual, con el paso 1 precargado desde el Detalle.
+  test('continúa una actualización profesional en proceso en el paso 2 @regression', async ({
+    page,
+  }) => {
+    await mockApi(page, { inscriptionDetail: 'pending-payment', initialSurvey: 'empty' });
+    await addAuthenticatedSession(page);
+    await page.goto('/inicio');
+
+    await page
+      .getByRole('link', { name: /Continuar inscripción/ })
+      .first()
+      .click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Información personal', exact: true })
+    ).toBeVisible();
+    // Sin vuelta atrás al paso 1 y con el flujo reducido de AP.
+    await expect(page.getByRole('button', { name: /Volver/ })).toHaveCount(0);
+    await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
+
+    // Confirma con TODAS las ofertas de interés, sin volver a registrar el interés.
+    const interestRequests = collectPostRequests(page, '/Inscripciones/InteresProducto');
+    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const inscription = new InscripcionPage(page);
+    await inscription.fillInscriptionOwnership(false);
+    await inscription.fillIdentity();
+    await inscription.acceptRegulation();
+
+    expect((await preEnrollmentRequest).postDataJSON()).toEqual({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: false,
+      idsOfertasSeleccionadas: [310, 311],
+    });
+    expect(interestRequests).toHaveLength(0);
+  });
+
+  // Con idProducto+idProceso válidos la inscripción existe: aunque el Detalle falle, el
+  // paso 1 no puede volver a aparecer.
+  test('retoma en el paso 2 aunque el Detalle falle @regression', async ({ page }) => {
+    await setup(page, 'empty');
+
+    await page.goto('/inscripciones?idProducto=2184&idProceso=122');
+
+    await expect(
+      page.getByRole('heading', { name: 'Información personal', exact: true })
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Propuesta académica' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Volver/ })).toHaveCount(0);
+  });
+
   test('completa encuesta nueva, confirma preinscripción y confirma el pago @smoke @regression', async ({
     page,
   }) => {

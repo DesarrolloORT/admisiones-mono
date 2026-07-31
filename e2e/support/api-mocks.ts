@@ -203,13 +203,56 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
           ? [
               {
                 idProducto: 20,
-                idProceso: 200,
-                idComienzo: 2,
-                idTurno: 3,
                 nombreExtensoProducto: 'Licenciatura en Diseño Gráfico',
-                nombreComienzo: 'Marzo 2027',
-                nombreTurno: 'Matutino',
+                idProceso: 200,
+                idNivelProducto: 1,
                 estadoInscripcion: 'Pago pendiente',
+                progConSeminariosProducto: 'N',
+                inscripciones: [
+                  {
+                    idInscripto: 7001,
+                    idOferta: 300,
+                    descripcionOferta: 'Licenciatura en Diseño Gráfico',
+                    idTurno: 3,
+                    idComienzo: 2,
+                    fechaInicioComienzo: '2027-03-01',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Matutino',
+                    fechaReferencia: '2027-03-01',
+                  },
+                ],
+              },
+              {
+                idProducto: 40,
+                nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
+                idProceso: 210,
+                idNivelProducto: 3,
+                estadoInscripcion: 'En proceso',
+                progConSeminariosProducto: 'S',
+                inscripciones: [
+                  {
+                    idInscripto: 7010,
+                    idOferta: 310,
+                    descripcionOferta: 'Marco legal y tributario',
+                    idTurno: 11,
+                    idComienzo: 21,
+                    fechaInicioComienzo: '2027-03-10',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Matutino',
+                    fechaReferencia: '2027-03-10',
+                  },
+                  {
+                    idInscripto: 7011,
+                    idOferta: 311,
+                    descripcionOferta: 'Renta fija y renta variable',
+                    idTurno: 12,
+                    idComienzo: 22,
+                    fechaInicioComienzo: '2027-04-10',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Nocturno',
+                    fechaReferencia: '2027-04-10',
+                  },
+                ],
               },
             ]
           : []
@@ -229,6 +272,37 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (path === '/Inscripciones/Detalle' && request.method() === 'GET') {
+      // Producto que el mock no conoce: el Detalle falla, como pasa con productos fuera
+      // del catálogo. Retomar tiene que aguantar igual (nunca paso 1).
+      if (!['20', '40'].includes(url.searchParams.get('idProducto') ?? '')) {
+        return fulfillApiError(route, 'No se encontró la inscripción.');
+      }
+
+      // Actualización profesional en proceso: la cabecera no trae idComienzo/idTurno y
+      // las ofertas elegidas llegan en `detalle.intereses` (una por seminario).
+      if (url.searchParams.get('idProducto') === '40') {
+        return fulfillOperation(route, {
+          estado: 'En proceso',
+          detalle: {
+            resumen: { idProducto: 40, carrera: 'Programa de Asesoramiento Financiero' },
+            intereses: [
+              {
+                idOferta: 310,
+                descripcionOferta: 'Marco legal y tributario',
+                comienzo: 'Marzo 2027',
+                turno: 'Matutino',
+              },
+              {
+                idOferta: 311,
+                descripcionOferta: 'Renta fija y renta variable',
+                comienzo: 'Marzo 2027',
+                turno: 'Nocturno',
+              },
+            ],
+          },
+        });
+      }
+
       return fulfillOperation(route, {
         estado: 'Pago pendiente',
         pagoPendiente: {
@@ -238,9 +312,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
           resumen: {
             idProducto: 20,
             carrera: 'Licenciatura en Diseño Gráfico',
-            idComienzo: 2,
             comienzo: 'Marzo 2027',
-            idTurno: 3,
             turno: 'Matutino',
           },
         },
