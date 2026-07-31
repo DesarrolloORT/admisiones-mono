@@ -56,8 +56,8 @@ namespace WebApiAdmisiones.Security.Cache
         public OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
             => inner.ObtenerEncuestaInicial();
 
-        public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona)
-            => inner.ObtenerCarreras(codigoPersona);
+        public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona, PropuestaAcademica propuestaAcademica)
+            => inner.ObtenerCarreras(codigoPersona, propuestaAcademica);
 
         public OperationResult<IEnumerable<DtoComienzoResponse>> ObtenerComienzos(long idCarrera)
             => inner.ObtenerComienzos(idCarrera);

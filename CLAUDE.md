@@ -33,3 +33,7 @@ api-admisiones/
     ├── DataAccess/                    # DevartDataAccess/, GenericRepository/, Services/
     └── UnitTesting/                   # xUnit + Moq (Controllers/, Services/, Security/...)
 ```
+
+## Loadtest
+
+`loadtest/get-endpoints.k6.js` mide el tiempo de respuesta de todos los `[HttpGet]` de `WebApiAdmisiones/Controllers/`. Al agregar, eliminar o cambiar la ruta/params de un `[HttpGet]`, actualiza en el mismo cambio: la lista `ENDPOINT_LABELS` (declara el Trend, obligatorio en k6 antes de usarlo) y la lista `endpoints` dentro de `measureGets` (params dinámicos van en `setup()`, no hardcodeados).

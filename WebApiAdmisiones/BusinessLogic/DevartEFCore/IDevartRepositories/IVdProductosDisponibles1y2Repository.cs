@@ -11,6 +11,6 @@ namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IVdProductosDisponibles1y2Repository
     {
-        ICollection<VdProductosDisponibles1y2> GetProductosDisponibles(long codigoPersona);
+        ICollection<VdProductosDisponibles1y2> GetProductosDisponibles(long codigoPersona, long idNivelProducto);
     }
 }

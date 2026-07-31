@@ -18,7 +18,7 @@ namespace DataAccess.DevartRepositories
         /// VD_PRODUCTOS_DISPONIBLES_1Y2, excluyendo los que ya tiene marcados como interés fresco
         /// o en los que ya está inscripto.
         /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.VdProductosDisponibles1y2> GetProductosDisponibles(long codigoPersona)
+        public virtual ICollection<BusinessLogic.Entities.VdProductosDisponibles1y2> GetProductosDisponibles(long codigoPersona, long idNivelProducto)
         {
             var ctx = Context;
 
@@ -41,7 +41,8 @@ namespace DataAccess.DevartRepositories
 
             return objectSet
                 .Where(v => !productosInteresFresco.Contains(v.IdProducto)
-                    && !productosInscripto.Contains(v.IdProducto))
+                    && !productosInscripto.Contains(v.IdProducto)
+                    && v.IdNivelProducto == idNivelProducto)
                 .OrderBy(v => v.OrdenListadoEscuela)
                 .ThenBy(v => v.OrdenListadoNivelProducto)
                 .ToList();

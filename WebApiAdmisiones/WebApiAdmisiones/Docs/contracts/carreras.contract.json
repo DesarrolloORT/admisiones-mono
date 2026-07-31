@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "description": "Contrato del catalogo de carreras para el paso 'Propuesta academica' del registro de admision.",
+  "conventions": {
+    "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio esta en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla."
+  },
+  "endpoints": {
+    "obtenerCarreras": {
+      "method": "GET",
+      "route": "Catalogos/Carreras",
+      "query": {
+        "propuestaAcademica": {
+          "type": "enum",
+          "required": true,
+          "desc": "Opcion elegida en la pantalla 'Propuesta academica'. Acepta el nombre o el numero del enum.",
+          "allowedOptions": [
+            { "value": 1, "name": "CarreraUniversitaria", "label": "Carrera universitaria" },
+            { "value": 2, "name": "Tecnicatura", "label": "Tecnicatura" },
+            { "value": 3, "name": "ActualizacionProfesional", "label": "Actualizacion profesional" }
+          ]
+        }
+      },
+      "dataDto": "IEnumerable<DtoCarrerasPorNivelResponse>",
+      "data": {
+        "idNivelProducto": { "type": "long", "desc": "Nivel de producto real de la BD (1, 2, 3 o 4)." },
+        "nombreNivelProducto": { "type": "string|null" },
+        "escuelas": { "type": "DtoCarrerasPorEscuelaResponse[]" }
+      },
+      "frontHint": "Para 'ActualizacionProfesional' la respuesta puede traer DOS entradas en el array (nivel 3 y nivel 4 reales de la BD) - el front debe iterar todo el array y mostrarlas juntas bajo esa misma opcion de UI, nunca asumir una sola entrada. Para 'CarreraUniversitaria'/'Tecnicatura' siempre viene a lo sumo una entrada.",
+      "mainErrors": ["Ninguno propio: falta o valor invalido de 'propuestaAcademica' devuelve 400 automatico del model binding de ASP.NET Core, antes de llegar al controller/service."]
+    }
+  }
+}

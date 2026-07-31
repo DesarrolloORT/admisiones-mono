@@ -61,15 +61,16 @@ namespace WebApiAdmisiones.Controllers
         /// <remarks>
         /// Endpoint para poblar la seleccion inicial de carrera/producto. Devuelve identificadores y nombres necesarios para que el front luego consulte comienzos.
         /// </remarks>
+        /// <param name="propuestaAcademica">Opción elegida: CarreraUniversitaria, Tecnicatura o ActualizacionProfesional.</param>
         /// <returns>Carreras vigentes disponibles para admision.</returns>
         /// <response code="200">Catalogo obtenido correctamente.</response>
-        /// <response code="400">Solicitud invalida.</response>
+        /// <response code="400">No se informó la propuesta académica o el valor no es válido.</response>
         [HttpGet("Carreras")]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>), 200)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>), 400)]
-        public IActionResult ObtenerCarreras()
+        public IActionResult ObtenerCarreras([FromQuery] PropuestaAcademica propuestaAcademica)
         {
-            var result = catalogosService.ObtenerCarreras(_currentUser.GetUserId());
+            var result = catalogosService.ObtenerCarreras(_currentUser.GetUserId(), propuestaAcademica);
             return ValidateResponse(result);
         }
 

@@ -20,11 +20,12 @@ public interface ICatalogosService
     OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
 
     /// <summary>
-    /// Obtiene las carreras vigentes disponibles para la persona, agrupadas por nivel y escuela.
+    /// Obtiene las carreras vigentes disponibles para la persona, para la propuesta académica indicada.
     /// </summary>
     /// <param name="codigoPersona">Código de la persona para la que se filtran las carreras disponibles.</param>
+    /// <param name="propuestaAcademica">Opción elegida en el paso "Propuesta académica" (carrera universitaria, tecnicatura o actualización profesional).</param>
     /// <returns>Carreras vigentes agrupadas por nivel de producto y escuela.</returns>
-    OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona);
+    OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona, PropuestaAcademica propuestaAcademica);
 
     /// <summary>
     /// Obtiene los comienzos habilitados para una carrera.

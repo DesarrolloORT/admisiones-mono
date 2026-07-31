@@ -99,17 +99,31 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
         return Task.FromResult(ObtenerPaisesEstadosCiudades());
     }
 
-    public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona)
+    public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona, PropuestaAcademica propuestaAcademica)
     {
+        if (!Enum.IsDefined(propuestaAcademica))
+        {
+            return OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.IsFailed(
+                "CAT_CARRERAS_01",
+                nameof(ObtenerCarreras),
+                "Propuesta académica no válida.",
+                400,
+                default);
+        }
+
         using var uow = _uowFactory.Create();
 
-        var nivel12 = uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona)
-            .Select(ToCarreraCatalogoItem);
+        var items = propuestaAcademica switch
+        {
+            PropuestaAcademica.CarreraUniversitaria =>
+                uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona, idNivelProducto: 1).Select(ToCarreraCatalogoItem),
+            PropuestaAcademica.Tecnicatura =>
+                uow.VdProductosDisponibles1y2s.GetProductosDisponibles(codigoPersona, idNivelProducto: 2).Select(ToCarreraCatalogoItem),
+            _ =>
+                uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(ToCarreraCatalogoItem)
+        };
 
-        var nivel34 = uow.VdOfertasDisponibles3y4s.GetProductosDisponibles()
-            .Select(ToCarreraCatalogoItem);
-
-        var response = nivel12.Concat(nivel34)
+        var response = items
             .GroupBy(x => new { x.IdNivelProducto, x.NombreNivelProducto })
             .OrderBy(g => g.Key.IdNivelProducto)
             .Select(nivel => new DtoCarrerasPorNivelResponse

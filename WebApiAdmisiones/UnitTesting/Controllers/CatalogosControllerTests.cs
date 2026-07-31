@@ -153,7 +153,7 @@ namespace UnitTesting.Controllers
         {
             var controller = CreateController();
 
-            _serviceMock.Setup(s => s.ObtenerCarreras(It.IsAny<long>()))
+            _serviceMock.Setup(s => s.ObtenerCarreras(It.IsAny<long>(), It.IsAny<PropuestaAcademica>()))
                 .Returns(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.Ok(
                     [
                         new DtoCarrerasPorNivelResponse
@@ -173,7 +173,7 @@ namespace UnitTesting.Controllers
                     ],
                     nameof(ICatalogosService.ObtenerCarreras)));
 
-            var response = controller.ObtenerCarreras();
+            var response = controller.ObtenerCarreras(PropuestaAcademica.CarreraUniversitaria);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);

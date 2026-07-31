@@ -187,16 +187,16 @@ namespace UnitTesting.Security.Cache
         public void ObtenerCarreras_DelegatesToInnerService()
         {
             _innerMock
-                .Setup(s => s.ObtenerCarreras(123))
+                .Setup(s => s.ObtenerCarreras(123, PropuestaAcademica.CarreraUniversitaria))
                 .Returns(OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.Ok(
                     [],
                     nameof(ICatalogosService.ObtenerCarreras)));
             var decorator = CrearDecorator(24);
 
-            var result = decorator.ObtenerCarreras(123);
+            var result = decorator.ObtenerCarreras(123, PropuestaAcademica.CarreraUniversitaria);
 
             Assert.True(result.Success);
-            _innerMock.Verify(s => s.ObtenerCarreras(123), Times.Once);
+            _innerMock.Verify(s => s.ObtenerCarreras(123, PropuestaAcademica.CarreraUniversitaria), Times.Once);
         }
 
         [Fact]

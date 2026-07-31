@@ -231,22 +231,11 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerCarreras_ReturnsProductsGroupedByLevelAndSchool()
+        public void ObtenerCarreras_Nivel1o2_FiltraPorNivelYNoConsultaVista3y4()
         {
             var repo = new Mock<IVdProductosDisponibles1y2Repository>();
-            repo.Setup(r => r.GetProductosDisponibles(99)).Returns(
+            repo.Setup(r => r.GetProductosDisponibles(99, 1)).Returns(
             [
-                new VdProductosDisponibles1y2
-                {
-                    IdProducto = 10,
-                    NombreWebProducto = "ATI",
-                    IdNivelProducto = 2,
-                    NombreNivelProducto = "Carrera",
-                    IdEscuela = 8,
-                    NombreExtensoEscuela = "Facultad de Ingenieria",
-                    OrdenListadoEscuela = 2,
-                    OrdenListadoNivelProducto = 2
-                },
                 new VdProductosDisponibles1y2
                 {
                     IdProducto = 11,
@@ -261,6 +250,30 @@ namespace UnitTesting.AppLogic.Services
             ]);
             _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
 
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.ObtenerCarreras(99, PropuestaAcademica.CarreraUniversitaria);
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
+
+            var nivel = Assert.Single(result.Data!);
+            Assert.Equal(1, nivel.IdNivelProducto);
+            Assert.Equal("Tecnico", nivel.NombreNivelProducto);
+            var escuela = Assert.Single(nivel.Escuelas);
+            Assert.Equal(7, escuela.IdEscuela);
+            Assert.Equal("Facultad de Comunicacion", escuela.NombreEscuela);
+            var producto = Assert.Single(escuela.Productos);
+            Assert.Equal(11, producto.IdProducto);
+            Assert.Equal("Comunicacion", producto.NombreProducto);
+
+            vistaRepo.Verify(r => r.GetProductosDisponibles(), Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel3o4_DevuelveAmbosNivelesCombinados()
+        {
             var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
             vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
             [
@@ -281,37 +294,28 @@ namespace UnitTesting.AppLogic.Services
                     NombreNivelProducto = "Postgrado",
                     IdEscuela = 7,
                     NombreExtensoEscuela = "Facultad de Administracion"
+                },
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 60,
+                    NombreWebProducto = "Curso corto",
+                    IdNivelProducto = 4,
+                    NombreNivelProducto = "Actualizacion",
+                    IdEscuela = 9,
+                    NombreExtensoEscuela = "Facultad de Negocios"
                 }
             ]);
             _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
 
-            var result = _service.ObtenerCarreras(99);
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
+
+            var result = _service.ObtenerCarreras(99, PropuestaAcademica.ActualizacionProfesional);
 
             Assert.True(result.Success);
-            Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
-
             var niveles = result.Data!.ToList();
             Assert.Collection(
                 niveles,
-                nivel =>
-                {
-                    Assert.Equal(1, nivel.IdNivelProducto);
-                    Assert.Equal("Tecnico", nivel.NombreNivelProducto);
-                    var escuela = Assert.Single(nivel.Escuelas);
-                    Assert.Equal(7, escuela.IdEscuela);
-                    Assert.Equal("Facultad de Comunicacion", escuela.NombreEscuela);
-                    var producto = Assert.Single(escuela.Productos);
-                    Assert.Equal(11, producto.IdProducto);
-                    Assert.Equal("Comunicacion", producto.NombreProducto);
-                },
-                nivel =>
-                {
-                    Assert.Equal(2, nivel.IdNivelProducto);
-                    var escuela = Assert.Single(nivel.Escuelas);
-                    Assert.Equal(8, escuela.IdEscuela);
-                    var producto = Assert.Single(escuela.Productos);
-                    Assert.Equal(10, producto.IdProducto);
-                },
                 nivel =>
                 {
                     Assert.Equal(3, nivel.IdNivelProducto);
@@ -320,7 +324,25 @@ namespace UnitTesting.AppLogic.Services
                     var producto = Assert.Single(escuela.Productos);
                     Assert.Equal(50, producto.IdProducto);
                     Assert.Equal("MBA", producto.NombreProducto);
+                },
+                nivel =>
+                {
+                    Assert.Equal(4, nivel.IdNivelProducto);
+                    var escuela = Assert.Single(nivel.Escuelas);
+                    var producto = Assert.Single(escuela.Productos);
+                    Assert.Equal(60, producto.IdProducto);
                 });
+
+            repo.Verify(r => r.GetProductosDisponibles(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_PropuestaAcademicaInvalida_DevuelveBadRequest()
+        {
+            var result = _service.ObtenerCarreras(99, (PropuestaAcademica)99);
+
+            Assert.False(result.Success);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]
