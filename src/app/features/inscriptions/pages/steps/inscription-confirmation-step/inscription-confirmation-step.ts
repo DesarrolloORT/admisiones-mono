@@ -21,11 +21,13 @@ import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
 import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 
 import { InscripcionPaymentFacade } from '../../../facades/inscription-payment';
+import { InscripcionSeminariosSummary } from './sections/inscription-seminarios-summary/inscription-seminarios-summary';
 
 @Component({
   selector: 'app-inscription-confirmation-step',
   imports: [
     ErrorAlert,
+    InscripcionSeminariosSummary,
     OrtButtonModule,
     OrtCardModule,
     OrtDialog,

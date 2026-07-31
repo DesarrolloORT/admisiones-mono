@@ -12,6 +12,7 @@ describe('MiInscripcion', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Pago pendiente',
+      seminarios: [],
     };
 
     expect(inscription.idProceso).toBe(200);

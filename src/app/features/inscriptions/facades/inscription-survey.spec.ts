@@ -871,12 +871,13 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.getSectionState('reglamento')).toBe('completa');
   });
 
-  it('closes the reader on back and leaves the step only from the first section', () => {
+  it('closes the reader on back, retreats sections and never leaves the step', () => {
     const { survey, process } = createFacade(createSurveyResponse());
     process.flow.goTo('encuesta');
     survey.activeSection.set('decision-academica');
     survey.openRegulationReader();
 
+    expect(survey.canGoBack()).toBe(true);
     survey.back();
 
     expect(survey.readerOpen()).toBe(false);
@@ -888,9 +889,12 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.activeSection()).toBe('educacion');
     expect(process.flow.currentStep()).toBe('encuesta');
 
+    // Primera sección visible: no hay a dónde volver, el paso 1 queda inalcanzable.
+    expect(survey.canGoBack()).toBe(false);
     survey.back();
 
-    expect(process.flow.currentStep()).toBe('propuesta');
+    expect(survey.activeSection()).toBe('educacion');
+    expect(process.flow.currentStep()).toBe('encuesta');
   });
 
   it('starts an empty survey when the backend has no survey yet', () => {
@@ -947,13 +951,14 @@ describe('InscripcionSurveyFacade', () => {
     };
   }
 
-  // Detalle mínimo "En proceso" sin bloque `detalle`: retomar-con-detalle mantiene
-  // el comportamiento histórico (encuesta prellena el paso 1 editable y posiciona en
-  // el paso 2). El posicionamiento del flujo y la selección de slice los deriva la
-  // función pura (testeada en inscription-entry.spec); acá solo se aplican.
+  // Detalle mínimo "En proceso" sin bloque `detalle` ni ofertas de interés: no hay
+  // precarga posible, así que la encuesta prellena el paso 1 y el flujo arranca en el
+  // paso 2. El posicionamiento del flujo y la selección de slice los deriva la función
+  // pura (testeada en inscription-entry.spec); acá solo se aplican.
   const RESUME_DETAIL: InscripcionDetail = {
     estado: 'En proceso',
     detalle: null,
+    intereses: [],
     pagoPendiente: null,
     seniaMinima: null,
     confirmada: null,
@@ -1038,7 +1043,13 @@ describe('InscripcionSurveyFacade', () => {
         loadFailed: options.loadFailed ?? false,
       };
       const state = deriveInitialInscripcionState({
-        entry: { intent: 'retomar', detail: RESUME_DETAIL, idNivelProducto: null },
+        entry: {
+          intent: 'retomar',
+          detail: RESUME_DETAIL,
+          idProducto: 20,
+          idProceso: 200,
+          idNivelProducto: null,
+        },
         survey: resolved,
       });
       survey.applyInitialState(state.survey);

@@ -23,6 +23,7 @@ import type {
 import { parseResultadoForzado } from '../models/inscription-flow-policy';
 import {
   buildReservationInstructions,
+  buildSeminariosSummary,
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
@@ -75,11 +76,16 @@ export class InscripcionPaymentFacade {
       toCoordinatorContact('Coordinador(a) de Cursos:', detail?.coordinadorCursos),
     ].filter((contact): contact is ContactoCoordinador => contact !== null);
   });
-  private readonly subjects = computed<readonly string[]>(() =>
-    (this.confirmedDetail()?.materiasPrimerSemestre ?? [])
-      .map(materia => materia.nombre?.trim())
-      .filter((nombre): nombre is string => !!nombre)
-  );
+  // En Actualización profesional cada seminario confirmado trae sus propias materias:
+  // se listan todas juntas, sin repetir las que comparten varios seminarios.
+  private readonly subjects = computed<readonly string[]>(() => [
+    ...new Set(
+      (this.confirmedDetail()?.inscripciones ?? [])
+        .flatMap(inscripcion => inscripcion.materiasPrimerSemestre)
+        .map(materia => materia.nombre?.trim())
+        .filter((nombre): nombre is string => !!nombre)
+    ),
+  ]);
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
@@ -118,6 +124,9 @@ export class InscripcionPaymentFacade {
         }
       : null;
   });
+  public readonly isProfessionalUpdate = computed(() =>
+    this.proposal.selection.isProfessionalUpdate()
+  );
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
@@ -127,7 +136,11 @@ export class InscripcionPaymentFacade {
       careerOptions: this.proposal.careerOptions(),
       startOptions: this.proposal.startOptions(),
       turnoOptions: this.proposal.turnoOptions(),
+      isProfessionalUpdate: this.isProfessionalUpdate(),
     })
+  );
+  public readonly seminariosResumen = computed(() =>
+    this.isProfessionalUpdate() ? buildSeminariosSummary(this.process.preEnrollmentResponse()) : []
   );
   public readonly paymentDeadline = computed(() =>
     formatPaymentDeadline(this.process.preEnrollmentResponse()?.fechaVencimientoPago)
@@ -205,9 +218,9 @@ export class InscripcionPaymentFacade {
   public confirm(): void {
     if (this.view() === 'processing') return;
     const method = this.paymentForm.controls.metodoPago.value;
-    const idInscripcion = this.process.preEnrollmentResponse()?.idInscripcion;
+    const idsInscripcion = this.paymentInscriptionIds();
     if (!method) return;
-    if (!isPositiveInteger(idInscripcion)) {
+    if (idsInscripcion.length === 0) {
       this.paymentApiError.set('No pudimos identificar la inscripción pendiente.');
       this.view.set('editing');
       return;
@@ -218,7 +231,7 @@ export class InscripcionPaymentFacade {
     this.view.set('processing');
     this.inscriptions
       .pay({
-        idInscripcion,
+        idsInscripcion,
         metodoPago: method,
         idBancoSistarbanc:
           method === 'cuenta-bancaria' ? this.paymentForm.controls.banco.value : null,
@@ -239,6 +252,15 @@ export class InscripcionPaymentFacade {
 
   public toggleSubjects(): void {
     this.showAllSubjects.update(showAll => !showAll);
+  }
+
+  // Pagar cobra el paquete completo: en AP van todos los seminarios y en niveles 1 y 2
+  // el array trae la única inscripción. El `idInscripcion` plano cubre el retomar desde
+  // un estado persistido que todavía no traía `seminarios`.
+  private paymentInscriptionIds(): number[] {
+    const response = this.process.preEnrollmentResponse();
+    const ids = (response?.seminarios ?? []).map(seminario => seminario.idInscripcion);
+    return [...new Set([...ids, response?.idInscripcion].filter(isPositiveInteger))];
   }
 
   private resolvePaymentResponse(method: MetodoPago, response: InscripcionPaymentResponse): void {

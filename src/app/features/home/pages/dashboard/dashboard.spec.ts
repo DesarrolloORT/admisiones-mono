@@ -40,6 +40,7 @@ describe('Dashboard', () => {
         nombreComienzo: 'Marzo 2027',
         nombreTurno: 'Noche',
         estado: 'Confirmada',
+        seminarios: [],
       },
     ]);
     fixture.componentRef.setInput('becas', [

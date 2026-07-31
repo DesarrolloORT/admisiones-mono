@@ -37,6 +37,8 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail,
+      idProducto: 20,
+      idProceso: 200,
       idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
@@ -59,6 +61,8 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail,
+      idProducto: 21,
+      idProceso: 200,
       idNivelProducto: 3,
     });
   });
@@ -71,6 +75,8 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail,
+      idProducto: 21,
+      idProceso: 200,
       idNivelProducto: null,
     });
   });
@@ -81,7 +87,13 @@ describe('inscriptionDetailResolver', () => {
 
     await expect(
       resolve({ idProducto: '20', idProceso: '200', modo: 'reactivar' })
-    ).resolves.toEqual({ intent: 'reactivar', detail, idNivelProducto: null });
+    ).resolves.toEqual({
+      intent: 'reactivar',
+      detail,
+      idProducto: 20,
+      idProceso: 200,
+      idNivelProducto: null,
+    });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
   });
 
@@ -99,7 +111,33 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail: null,
+      idProducto: 20,
+      idProceso: 200,
       idNivelProducto: null,
+    });
+  });
+
+  // Con el Detalle caído los params siguen alcanzando para el nivel del producto, así
+  // que el paso 2 arranca con el tipo de propuesta correcto.
+  it('resolves the product level from the URL param when the detail fails', async () => {
+    getDetail.mockReturnValue(throwError(() => new Error('failed')));
+    getCareers.mockReturnValue(
+      of([
+        {
+          idProducto: 21,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+      ])
+    );
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail: null,
+      idProducto: 21,
+      idProceso: 200,
+      idNivelProducto: 3,
     });
   });
 
@@ -164,11 +202,10 @@ describe('inscriptionDetailResolver', () => {
               idOferta: 300,
               idProducto,
               carrera: 'Programa de Asesoramiento Financiero',
-              idComienzo: 200,
               comienzo: 'Abril 2026',
-              idTurno: 10,
               turno: 'Noche',
             },
+      intereses: [],
       pagoPendiente: null,
       seniaMinima: null,
       confirmada: null,

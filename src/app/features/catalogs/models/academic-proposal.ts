@@ -159,6 +159,18 @@ export function toAcademicSeminarOption(seminario: Seminario): AcademicProposalO
   return {
     value: seminario.idOferta.toString(),
     label: seminario.nombre,
-    description: seminario.fechaComienzo ?? undefined,
+    description: formatSeminarStartDate(seminario.fechaComienzo),
   };
+}
+
+// `fechaReferencia` llega como fecha ISO con hora fija en 00:00:00 (`2026-10-16T00:00:00`)
+// o ya en dd/MM/yyyy. La opción muestra solo la fecha, sin la hora.
+function formatSeminarStartDate(value: string | null): string | undefined {
+  if (!value) return undefined;
+
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!isoDate) return value;
+
+  const [, year, month, day] = isoDate;
+  return `${day}/${month}/${year}`;
 }

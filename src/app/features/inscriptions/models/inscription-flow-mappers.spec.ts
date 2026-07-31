@@ -289,15 +289,19 @@ describe('inscription flow mappers', () => {
   it('includes the bank only for the bank account payment method', () => {
     expect(
       buildPaymentPayload({
-        idInscripcion: 7,
+        idsInscripcion: [7],
         metodoPago: 'cuenta-bancaria',
         idBancoSistarbanc: '110',
       })
-    ).toEqual({ idInscripcion: 7, tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
+    ).toEqual({ idsInscripcion: [7], tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
 
     expect(
-      buildPaymentPayload({ idInscripcion: 7, metodoPago: 'abitab', idBancoSistarbanc: '110' })
-    ).toEqual({ idInscripcion: 7, tipoPago: 'ABITAB', idBancoSistarbanc: null });
+      buildPaymentPayload({
+        idsInscripcion: [7, 8],
+        metodoPago: 'abitab',
+        idBancoSistarbanc: '110',
+      })
+    ).toEqual({ idsInscripcion: [7, 8], tipoPago: 'ABITAB', idBancoSistarbanc: null });
   });
 
   it('does not build a confirmation payload without a selected shift', () => {

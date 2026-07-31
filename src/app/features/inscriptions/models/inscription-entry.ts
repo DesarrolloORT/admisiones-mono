@@ -1,7 +1,4 @@
-import {
-  getAcademicProposalTypeByLevel,
-  isProfessionalUpdateLevel,
-} from '../../catalogs/models/academic-proposal';
+import { getAcademicProposalTypeByLevel } from '../../catalogs/models/academic-proposal';
 import {
   detailToPreEnrollment,
   type InscripcionConfirmedDetail,
@@ -47,15 +44,35 @@ export const EMPTY_INITIAL_SURVEY_RESPONSE: InscripcionInitialSurveyResponse = {
  * que "empezar de cero" precargara el paso 1.
  *
  * - `nueva`: el usuario empieza una inscripción. Paso 1 SIEMPRE virgen y editable.
- * - `retomar`: continúa una inscripción existente (llega con idProducto+idProceso).
- *   `detail === null` ⇒ el Detalle falló y se degrada a comportamiento `nueva`.
+ * - `retomar`: continúa una inscripción existente. Llegar con idProducto+idProceso
+ *   válidos YA significa que la inscripción existe, así que el paso 1 nunca se muestra,
+ *   ni siquiera con `detail === null` (Detalle caído): la precarga degrada a los params
+ *   de la URL y el flujo arranca igual en el paso 2.
  * - `reactivar`: reservado para el futuro botón "Reactivar" de una inscripción
  *   cancelada. Reglas de negocio TBD (ver `deriveInitialInscripcionState`).
  */
 export type InscripcionEntryResolved =
   | { intent: 'nueva' }
-  | { intent: 'retomar'; detail: InscripcionDetail | null; idNivelProducto: number | null }
-  | { intent: 'reactivar'; detail: InscripcionDetail | null; idNivelProducto: number | null };
+  | {
+      intent: 'retomar';
+      detail: InscripcionDetail | null;
+      idProducto: number;
+      idProceso: number;
+      idNivelProducto: number | null;
+    }
+  | {
+      intent: 'reactivar';
+      detail: InscripcionDetail | null;
+      idProducto: number;
+      idProceso: number;
+      idNivelProducto: number | null;
+    };
+
+/** Entrada con inscripción existente: la URL trae idProducto+idProceso válidos. */
+export type InscripcionResumeEntry = Extract<
+  InscripcionEntryResolved,
+  { intent: 'retomar' | 'reactivar' }
+>;
 
 export type InscripcionEntryIntent = InscripcionEntryResolved['intent'];
 
@@ -85,10 +102,22 @@ export type InscripcionPaymentInit =
   | { kind: 'confirmada'; detail: InscripcionConfirmedDetail | null }
   | { kind: 'en-proceso' };
 
-/** Precarga del paso 1 al retomar una inscripción AP (sin encuesta que la provea). */
+/**
+ * Precarga del paso 1 al retomar. La fuente es el Detalle, no la encuesta: AP nunca
+ * postea `EncuestaInicial` y el resto puede no tenerla. Si el Detalle no llegó, el
+ * producto y el comienzo salen de los params de la URL.
+ *
+ * `turno` y `seminarios` se llenan SIEMPRE los dos con las mismas ofertas:
+ * `buildConfirmPreEnrollmentPayload` lee `seminarios` cuando el tipo es Actualización
+ * profesional y `turno` en el resto, y el tipo puede quedar vacío si el catálogo de
+ * carreras falló. Llenando ambos, confirmar la preinscripción funciona igual.
+ */
 export interface InscripcionAcademicPrefill {
   tipoPropuesta: string;
   carrera: string;
+  /** El control `comienzo` guarda un idProceso, que es el param de la URL. */
+  comienzo: string;
+  turno: string;
   seminarios: string[];
 }
 
@@ -121,7 +150,7 @@ export function deriveInitialInscripcionState(
       // `detail` queda disponible en el contexto para esa derivación futura.
       return deriveNueva(ctx);
     case 'retomar':
-      return deriveRetomar(ctx, ctx.entry.detail, ctx.entry.idNivelProducto);
+      return deriveRetomar(ctx, ctx.entry);
   }
 }
 
@@ -136,33 +165,30 @@ function deriveNueva(ctx: InscripcionEntryContext): InscripcionInitialState {
   };
 }
 
+/**
+ * Retomar NUNCA muestra el paso 1. Llegar con idProducto+idProceso válidos ya significa
+ * que la inscripción existe: el interés está registrado y el paso 1 queda precargado
+ * (desde el Detalle, o desde los params de la URL si el Detalle no llegó) y bloqueado.
+ * El paso solo distingue en qué pantalla del proceso cae la inscripción; los estados
+ * terminales pintan su pantalla por `payment` y quedan en el paso 3 para que el paso 1
+ * no sea el paso corriente en ningún caso.
+ */
 function deriveRetomar(
   ctx: InscripcionEntryContext,
-  detail: InscripcionDetail | null,
-  idNivelProducto: number | null
+  entry: InscripcionResumeEntry
 ): InscripcionInitialState {
-  // Detalle falló (params inválidos o error de red) ⇒ degradar a nueva.
-  if (!detail) return deriveNueva(ctx);
-
-  const survey = deriveSurvey(ctx, true);
-  const product = detail.detalle;
-  const productComplete =
-    product !== null &&
-    product.idProducto !== null &&
-    product.idComienzo !== null &&
-    product.idOferta !== null;
-  // AP retoma sin encuesta: la precarga del paso 1 sale del Detalle. Con nivel
-  // desconocido (catálogo caído) se degrada al comportamiento actual.
-  const professionalUpdate = isProfessionalUpdateLevel(idNivelProducto);
+  const detail = entry.detail;
   const base = {
-    survey,
-    resumeInProgress:
-      detail.estado === 'En proceso' &&
-      productComplete &&
-      (professionalUpdate || survey.kind === 'prefilled'),
-    preEnrollment: detailToPreEnrollment(detail),
-    academicPrefill: null,
+    // Con precarga del Detalle/URL, la selección académica de una encuesta previa no
+    // debe pisar el paso 1 ni sobreescribir el turno con su carga asíncrona de catálogos.
+    survey: deriveSurvey(ctx, false),
+    resumeInProgress: true,
+    preEnrollment: detail ? detailToPreEnrollment(detail) : null,
+    academicPrefill: buildAcademicPrefill(entry),
   } satisfies Partial<InscripcionInitialState>;
+
+  // Detalle caído o inconsistente: seguimos en el paso 2 con lo que aporta la URL.
+  if (!detail) return { ...base, step: 'encuesta', payment: { kind: 'none' } };
 
   switch (detail.estado) {
     case 'Pago pendiente':
@@ -170,7 +196,7 @@ function deriveRetomar(
       return detail.seniaMinima
         ? {
             ...base,
-            step: 'propuesta',
+            step: 'pago',
             payment: {
               kind: 'reserva',
               method: fromApiPaymentMethod(detail.seniaMinima.metodoPago),
@@ -182,36 +208,40 @@ function deriveRetomar(
           }
         : { ...base, step: 'pago', payment: { kind: 'awaiting-method' } };
     case 'Confirmada':
-      return {
-        ...base,
-        step: 'propuesta',
-        payment: { kind: 'confirmada', detail: detail.confirmada },
-      };
+      return { ...base, step: 'pago', payment: { kind: 'confirmada', detail: detail.confirmada } };
     case 'En proceso':
-      if (professionalUpdate && productComplete) {
-        return {
-          ...base,
-          step: 'encuesta',
-          payment: { kind: 'none' },
-          academicPrefill: {
-            tipoPropuesta: getAcademicProposalTypeByLevel(idNivelProducto as number)?.value ?? '',
-            carrera: String(product.idProducto),
-            // Hoy el Detalle trae una sola oferta; será un array cuando el
-            // backend soporte múltiples seminarios por inscripción.
-            seminarios: [String(product.idOferta)],
-          },
-        };
-      }
-      return {
-        ...base,
-        step: survey.kind === 'prefilled' ? 'encuesta' : 'propuesta',
-        payment: { kind: 'none' },
-      };
+      return { ...base, step: 'encuesta', payment: { kind: 'none' } };
     default:
       // 'A la espera', 'Cancelada', null y cualquier estado desconocido: pantalla
       // terminal informativa. ('Cancelada' quedará reservada para `reactivar`.)
-      return { ...base, step: 'propuesta', payment: { kind: 'en-proceso' } };
+      return { ...base, step: 'pago', payment: { kind: 'en-proceso' } };
   }
+}
+
+/**
+ * Precarga del paso 1 al retomar. Siempre devuelve algo: producto y comienzo salen del
+ * Detalle y, si no llegó, de los params de la URL (que son la prueba de que la
+ * inscripción existe). Las ofertas solo puede darlas el Detalle; sin ellas el paso 2
+ * igual se abre, pero confirmar la preinscripción va a fallar hasta que el Detalle
+ * responda. Con `idNivelProducto` desconocido (catálogo caído) el tipo queda vacío y
+ * `AcademicProposalSelection` lo completa desde el nivel de la carrera al cargar.
+ */
+function buildAcademicPrefill(entry: InscripcionResumeEntry): InscripcionAcademicPrefill {
+  const idProducto = entry.detail?.detalle?.idProducto ?? entry.idProducto;
+  const idOfertas = (entry.detail?.intereses ?? [])
+    .map(oferta => oferta.idOferta)
+    .filter((idOferta): idOferta is number => idOferta !== null);
+
+  return {
+    tipoPropuesta:
+      entry.idNivelProducto === null
+        ? ''
+        : (getAcademicProposalTypeByLevel(entry.idNivelProducto)?.value ?? ''),
+    carrera: String(idProducto),
+    comienzo: String(entry.idProceso),
+    turno: idOfertas.length > 0 ? String(idOfertas[0]) : '',
+    seminarios: idOfertas.map(String),
+  };
 }
 
 function deriveSurvey(

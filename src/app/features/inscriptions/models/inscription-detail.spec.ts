@@ -5,12 +5,14 @@ describe('detailToPreEnrollment', () => {
     const detail: InscripcionDetail = {
       estado: 'Pago pendiente',
       detalle: null,
+      intereses: [],
       pagoPendiente: {
         idInscripcion: 1072704,
         senia: 3339,
         saldoCuenta: 70000,
         fechaVencimientoPago: '2026-06-26T16:29:20',
         resumen: summary(),
+        seminarios: [seminario()],
       },
       seniaMinima: null,
       confirmada: null,
@@ -23,6 +25,7 @@ describe('detailToPreEnrollment', () => {
       seniaInscripcion: 3339,
       saldoCuenta: 70000,
       resumen: { carrera: 'Arquitectura', comienzo: 'Marzo-abril 2027', turno: 'Matutino' },
+      seminarios: [seminario()],
     });
   });
 
@@ -30,6 +33,7 @@ describe('detailToPreEnrollment', () => {
     const detail: InscripcionDetail = {
       estado: 'Pago pendiente',
       detalle: null,
+      intereses: [],
       pagoPendiente: null,
       seniaMinima: { metodoPago: 'ABITAB', cedula: '12345678', codigoPersona: 555, senia: 3339 },
       confirmada: null,
@@ -42,6 +46,7 @@ describe('detailToPreEnrollment', () => {
       seniaInscripcion: 3339,
       saldoCuenta: null,
       resumen: null,
+      seminarios: [],
     });
   });
 
@@ -49,6 +54,7 @@ describe('detailToPreEnrollment', () => {
     const detail: InscripcionDetail = {
       estado: 'Confirmada',
       detalle: null,
+      intereses: [],
       pagoPendiente: null,
       seniaMinima: null,
       confirmada: {
@@ -56,7 +62,7 @@ describe('detailToPreEnrollment', () => {
         resumen: summary(),
         coordinadorAcademico: null,
         coordinadorCursos: null,
-        materiasPrimerSemestre: [],
+        inscripciones: [],
       },
     };
 
@@ -67,6 +73,7 @@ describe('detailToPreEnrollment', () => {
       seniaInscripcion: null,
       saldoCuenta: null,
       resumen: { carrera: 'Arquitectura', comienzo: 'Marzo-abril 2027', turno: 'Matutino' },
+      seminarios: [],
     });
   });
 
@@ -74,12 +81,14 @@ describe('detailToPreEnrollment', () => {
     const detail: InscripcionDetail = {
       estado: 'Pago pendiente',
       detalle: null,
+      intereses: [],
       pagoPendiente: {
         idInscripcion: 1072704,
         senia: 1000,
         saldoCuenta: 500,
         fechaVencimientoPago: '2026-06-26T16:29:20',
         resumen: summary(),
+        seminarios: [],
       },
       seniaMinima: null,
       confirmada: {
@@ -87,7 +96,7 @@ describe('detailToPreEnrollment', () => {
         resumen: { ...summary(), carrera: 'Diseño', comienzo: 'Agosto 2027', turno: 'Nocturno' },
         coordinadorAcademico: null,
         coordinadorCursos: null,
-        materiasPrimerSemestre: [],
+        inscripciones: [],
       },
     };
 
@@ -98,6 +107,7 @@ describe('detailToPreEnrollment', () => {
       seniaInscripcion: 1000,
       saldoCuenta: 500,
       resumen: { carrera: 'Arquitectura', comienzo: 'Marzo-abril 2027', turno: 'Matutino' },
+      seminarios: [],
     });
   });
 
@@ -105,12 +115,14 @@ describe('detailToPreEnrollment', () => {
     const detail: InscripcionDetail = {
       estado: 'Pago pendiente',
       detalle: null,
+      intereses: [],
       pagoPendiente: {
         idInscripcion: 1072704,
         senia: 3339,
         saldoCuenta: null,
         fechaVencimientoPago: '2026-06-26T16:29:20',
         resumen: null,
+        seminarios: [],
       },
       seniaMinima: null,
       confirmada: null,
@@ -123,6 +135,7 @@ describe('detailToPreEnrollment', () => {
       seniaInscripcion: 3339,
       saldoCuenta: null,
       resumen: null,
+      seminarios: [],
     });
   });
 
@@ -130,12 +143,14 @@ describe('detailToPreEnrollment', () => {
     const withDeposit = (senia: number | null): InscripcionDetail => ({
       estado: 'Pago pendiente',
       detalle: null,
+      intereses: [],
       pagoPendiente: {
         idInscripcion: 1072704,
         senia,
         saldoCuenta: null,
         fechaVencimientoPago: null,
         resumen: null,
+        seminarios: [],
       },
       seniaMinima: { metodoPago: 'ABITAB', cedula: '12345678', codigoPersona: 555, senia: 3339 },
       confirmada: null,
@@ -150,6 +165,7 @@ describe('detailToPreEnrollment', () => {
       detailToPreEnrollment({
         estado: 'En proceso',
         detalle: summary(),
+        intereses: [],
         pagoPendiente: null,
         seniaMinima: null,
         confirmada: null,
@@ -162,9 +178,17 @@ describe('detailToPreEnrollment', () => {
       idOferta: 58563,
       idProducto: 719,
       carrera: 'Arquitectura',
-      idComienzo: 1398,
       comienzo: 'Marzo-abril 2027',
-      idTurno: 1,
+      turno: 'Matutino',
+    };
+  }
+
+  function seminario() {
+    return {
+      idInscripcion: 1072704,
+      idOferta: 58563,
+      nombre: 'Seminario de Arquitectura',
+      comienzo: 'Marzo-abril 2027',
       turno: 'Matutino',
     };
   }

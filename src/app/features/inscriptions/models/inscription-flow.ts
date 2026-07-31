@@ -140,6 +140,16 @@ export interface InscripcionStudentRegulationAcceptance {
   fechaAceptacion: string | null;
 }
 
+// Una oferta (seminario) de un paquete de Actualización profesional. `idInscripcion`
+// alimenta el array `idsInscripcion` que espera `Pagar`.
+export interface InscripcionOfertaResumen {
+  idInscripcion: number | null;
+  idOferta: number | null;
+  nombre: string | null;
+  comienzo: string | null;
+  turno: string | null;
+}
+
 export interface InscripcionPreEnrollmentResponse {
   idInscripcion?: number | null;
   confirmada: boolean;
@@ -152,10 +162,11 @@ export interface InscripcionPreEnrollmentResponse {
     comienzo: string | null;
     turno: string | null;
   } | null;
+  seminarios?: InscripcionOfertaResumen[];
 }
 
 export interface InscripcionPaymentPayload {
-  idInscripcion: number;
+  idsInscripcion: number[];
   metodoPago: MetodoPago;
   idBancoSistarbanc: string | null;
 }
@@ -210,6 +221,14 @@ export interface ItemResumenInscripcion {
   icon: string;
   label: string;
   value: string;
+}
+
+// Fila de seminario ya formateada para el template (Actualización profesional).
+export interface ItemSeminarioResumen {
+  idInscripcion: number | null;
+  nombre: string;
+  comienzo: string;
+  turno: string;
 }
 
 export interface ContactoCoordinador {

@@ -47,6 +47,13 @@ describe('DashboardCareersSection', () => {
     expect(fixture.nativeElement.querySelectorAll('.swiper-slide')).toHaveLength(2);
   });
 
+  it('should not throw and show a carousel for groups sharing the same idProducto with different idProceso', async () => {
+    fixture = createComponent([createEnrollment(1, 100), createEnrollment(1, 200)]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('.swiper-slide')).toHaveLength(2);
+  });
+
   function createComponent(
     inscripciones: MiInscripcion[]
   ): ComponentFixture<DashboardCareersSection> {
@@ -56,17 +63,18 @@ describe('DashboardCareersSection', () => {
     return componentFixture;
   }
 
-  function createEnrollment(idProducto: number): MiInscripcion {
+  function createEnrollment(idProducto: number, idProceso = 4): MiInscripcion {
     return {
       idInscripto: idProducto,
       idProducto,
-      idProceso: 4,
+      idProceso,
       idComienzo: 2,
       idTurno: 3,
       nombreProducto: `Carrera ${idProducto}`,
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      seminarios: [],
     };
   }
 });

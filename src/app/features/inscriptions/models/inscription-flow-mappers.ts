@@ -213,7 +213,7 @@ export function buildConfirmPreEnrollmentPayload(
 
 export function buildPaymentPayload(payload: InscripcionPaymentPayload) {
   return {
-    idInscripcion: payload.idInscripcion,
+    idsInscripcion: payload.idsInscripcion,
     tipoPago: toApiPaymentMethod(payload.metodoPago),
     idBancoSistarbanc: payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
   };

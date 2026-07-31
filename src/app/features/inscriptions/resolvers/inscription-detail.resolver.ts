@@ -7,17 +7,17 @@ import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
 import { Inscripciones } from '../services/inscriptions';
 
-// Resuelve la INTENCIÓN de entrada al flujo a partir de la URL, no del estado del backend. Una inscripción "nueva" no lleva params; "retomar" llega con idProducto+idProceso desde el panel; "reactivar" agrega `modo=reactivar`. Para retomar/reactivar se carga el detalle; si falla o los params no son válidos se degrada a "nueva". El nivel del producto (del catálogo de carreras) decide si aplica el flujo de Actualización profesional; si el catálogo falla queda `null` y se deriva como hasta ahora.
+// Resuelve la INTENCIÓN de entrada al flujo a partir de la URL, no del estado del backend. Una inscripción "nueva" no lleva params; "retomar" llega con idProducto+idProceso desde el panel; "reactivar" agrega `modo=reactivar`. Los params se propagan resueltos: son la prueba de que la inscripción existe, así que si el Detalle falla el flujo igual retoma en el paso 2 con esa precarga mínima (solo params inválidos degradan a "nueva"). El nivel del producto (del catálogo de carreras) decide si aplica el flujo de Actualización profesional; si el catálogo falla queda `null`.
 export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = route => {
   const intent = resolveEntryIntent(route.queryParamMap);
   if (intent === 'nueva') return of({ intent });
 
-  const idProducto = toPositiveInteger(route.queryParamMap.get('idProducto'));
-  const idProceso = toPositiveInteger(route.queryParamMap.get('idProceso'));
+  const idProducto = toPositiveInteger(route.queryParamMap.get('idProducto')) as number;
+  const idProceso = toPositiveInteger(route.queryParamMap.get('idProceso')) as number;
 
   return forkJoin({
     detail: inject(Inscripciones)
-      .getDetail(idProducto as number, idProceso as number)
+      .getDetail(idProducto, idProceso)
       .pipe(catchError(() => of(null))),
     careers: inject(Catalogs)
       .getCareers()
@@ -26,8 +26,11 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
     map(({ detail, careers }) => ({
       intent,
       detail,
+      idProducto,
+      idProceso,
+      // El Detalle es la fuente preferida del producto; con el Detalle caído, el param.
       idNivelProducto:
-        careers.find(career => career.idProducto === detail?.detalle?.idProducto)
+        careers.find(career => career.idProducto === (detail?.detalle?.idProducto ?? idProducto))
           ?.idNivelProducto ?? null,
     }))
   );

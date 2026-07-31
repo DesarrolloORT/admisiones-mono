@@ -4,6 +4,7 @@ import type {
 } from './inscription-flow';
 import {
   buildReservationInstructions,
+  buildSeminariosSummary,
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
@@ -38,11 +39,72 @@ describe('inscription flow view', () => {
       careerOptions: [],
       startOptions: [],
       turnoOptions: [],
+      isProfessionalUpdate: false,
     });
 
+    expect(items.map(item => item.label)).toEqual(['Carrera', 'Comienzo', 'Turno']);
     expect(items.map(item => item.value)).toEqual(['Sistemas', 'Agosto', 'Nocturno']);
     expect(formatPaymentDeadline('2027-03-04')).toBe('04/03/2027');
     expect(formatInscriptionAmount(15500)).toBe('$ 15.500');
+  });
+
+  it('collapses the summary to a single Programa row for Actualización profesional', () => {
+    const items = buildSummaryItems({
+      response: {
+        confirmada: true,
+        fechaVencimientoPago: '2027-03-04',
+        seniaInscripcion: 15500,
+        saldoCuenta: 70000,
+        resumen: { carrera: 'Actualización en IA', comienzo: null, turno: null },
+      },
+      selectedCareer: '',
+      selectedStart: '',
+      selectedTurno: '',
+      careerOptions: [],
+      startOptions: [],
+      turnoOptions: [],
+      isProfessionalUpdate: true,
+    });
+
+    expect(items).toEqual([{ icon: 'school', label: 'Programa', value: 'Actualización en IA' }]);
+  });
+
+  it('builds one seminario row per inscripción, falling back for missing data', () => {
+    const seminarios = buildSeminariosSummary({
+      confirmada: true,
+      fechaVencimientoPago: null,
+      seniaInscripcion: null,
+      saldoCuenta: null,
+      resumen: null,
+      seminarios: [
+        {
+          idInscripcion: 1,
+          idOferta: 10,
+          nombre: 'Seminario A',
+          comienzo: 'Marzo',
+          turno: 'Noche',
+        },
+        { idInscripcion: 2, idOferta: 11, nombre: null, comienzo: null, turno: null },
+      ],
+    });
+
+    expect(seminarios).toEqual([
+      { idInscripcion: 1, nombre: 'Seminario A', comienzo: 'Marzo', turno: 'Noche' },
+      { idInscripcion: 2, nombre: 'No informado', comienzo: 'No informado', turno: 'No informado' },
+    ]);
+  });
+
+  it('returns no seminario rows when the response has none', () => {
+    expect(buildSeminariosSummary(null)).toEqual([]);
+    expect(
+      buildSeminariosSummary({
+        confirmada: true,
+        fechaVencimientoPago: null,
+        seniaInscripcion: null,
+        saldoCuenta: null,
+        resumen: null,
+      })
+    ).toEqual([]);
   });
 
   it('does not invent missing or invalid payment data', () => {

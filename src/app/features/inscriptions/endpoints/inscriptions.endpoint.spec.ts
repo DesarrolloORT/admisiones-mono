@@ -47,9 +47,12 @@ describe('InscripcionesEndpoint', () => {
         estado: 'Confirmada',
         confirmada: {
           codigoPersona: 397654,
-          resumen: { idProducto: 20, carrera: 'Sistemas' },
+          idProducto: 20,
+          carrera: 'Sistemas',
           coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
-          materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Programación' }, {}],
+          inscripciones: [
+            { materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Programación' }, {}] },
+          ],
         },
       })
     );
@@ -57,6 +60,7 @@ describe('InscripcionesEndpoint', () => {
     await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual({
       estado: 'Confirmada',
       detalle: null,
+      intereses: [],
       pagoPendiente: null,
       seniaMinima: null,
       confirmada: {
@@ -65,16 +69,22 @@ describe('InscripcionesEndpoint', () => {
           idOferta: null,
           idProducto: 20,
           carrera: 'Sistemas',
-          idComienzo: null,
           comienzo: null,
-          idTurno: null,
           turno: null,
         },
         coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
         coordinadorCursos: null,
-        materiasPrimerSemestre: [
-          { idMateria: 1, nombre: 'Programación' },
-          { idMateria: null, nombre: null },
+        inscripciones: [
+          {
+            idInscripcion: null,
+            idOferta: null,
+            comienzo: null,
+            turno: null,
+            materiasPrimerSemestre: [
+              { idMateria: 1, nombre: 'Programación' },
+              { idMateria: null, nombre: null },
+            ],
+          },
         ],
       },
     });
@@ -83,6 +93,42 @@ describe('InscripcionesEndpoint', () => {
       cache: false,
       showLoader: true,
     });
+  });
+
+  it('maps every interest offering of an in-progress detail', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'En proceso',
+        detalle: {
+          resumen: { idProducto: 40, carrera: 'Asesoramiento financiero' },
+          intereses: [
+            { idOferta: 310, descripcionOferta: 'Marco legal', comienzo: 'Abril', turno: 'Noche' },
+            { idOferta: 311, descripcionOferta: 'Renta fija' },
+          ],
+        },
+      })
+    );
+
+    const detail = await firstValueFrom(endpoint.getDetail(40, 210));
+
+    // El resumen toma la primera oferta; `intereses` conserva todas (una por seminario).
+    expect(detail.detalle).toEqual({
+      idOferta: 310,
+      idProducto: 40,
+      carrera: 'Asesoramiento financiero',
+      comienzo: 'Abril',
+      turno: 'Noche',
+    });
+    expect(detail.intereses).toEqual([
+      {
+        idInscripcion: null,
+        idOferta: 310,
+        nombre: 'Marco legal',
+        comienzo: 'Abril',
+        turno: 'Noche',
+      },
+      { idInscripcion: null, idOferta: 311, nombre: 'Renta fija', comienzo: null, turno: null },
+    ]);
   });
 
   it('maps the course coordinator alongside the academic coordinator', async () => {
@@ -139,7 +185,7 @@ describe('InscripcionesEndpoint', () => {
       of({
         estado: 'Pago pendiente',
         pagoPendiente: {
-          ofertas: [{ idInscripcion: 1072704, fechaVencimientoPago: '2026-06-26T16:29:20' }],
+          inscripciones: [{ idInscripcion: 1072704, fechaVencimientoPago: '2026-06-26T16:29:20' }],
           pagoReserva: 3339,
           estadoCuenta: { saldoActual: 70000 },
           resumen: { carrera: 'Arquitectura' },
@@ -152,6 +198,58 @@ describe('InscripcionesEndpoint', () => {
         pagoPendiente: expect.objectContaining({
           senia: 3339,
           saldoCuenta: 70000,
+        }),
+      })
+    );
+  });
+
+  it('maps the Actualización profesional seminarios array from a pending payment detail', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        estado: 'Pago pendiente',
+        pagoPendiente: {
+          inscripciones: [
+            {
+              idInscripcion: 1072704,
+              idOferta: 58563,
+              comienzo: 'Marzo',
+              turno: 'Matutino',
+              descripcionOferta: 'Seminario de Liderazgo',
+            },
+            {
+              idInscripcion: 1072705,
+              idOferta: 58564,
+              comienzo: 'Abril',
+              turno: 'Nocturno',
+              descripcionOferta: 'Seminario de Finanzas',
+            },
+          ],
+          pagoReserva: 3339,
+          estadoCuenta: { saldoActual: 70000 },
+          resumen: { carrera: 'Actualización profesional' },
+        },
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.getDetail(719, 1398))).resolves.toEqual(
+      expect.objectContaining({
+        pagoPendiente: expect.objectContaining({
+          seminarios: [
+            {
+              idInscripcion: 1072704,
+              idOferta: 58563,
+              nombre: 'Seminario de Liderazgo',
+              comienzo: 'Marzo',
+              turno: 'Matutino',
+            },
+            {
+              idInscripcion: 1072705,
+              idOferta: 58564,
+              nombre: 'Seminario de Finanzas',
+              comienzo: 'Abril',
+              turno: 'Nocturno',
+            },
+          ],
         }),
       })
     );
@@ -361,6 +459,9 @@ describe('InscripcionesEndpoint', () => {
       seniaInscripcion: 0,
       saldoCuenta: 70000,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
+      seminarios: [
+        { idInscripcion: null, idOferta: null, nombre: null, comienzo: 'Marzo', turno: 'Matutino' },
+      ],
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {
       body: {
@@ -371,6 +472,56 @@ describe('InscripcionesEndpoint', () => {
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
+  it('maps the Actualización profesional seminarios array from confirmarPreInscripcion', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        confirmada: false,
+        resumen: { carrera: 'Actualización profesional' },
+        inscripciones: [
+          {
+            idInscripcion: 1072704,
+            idOferta: 58563,
+            comienzo: 'Marzo',
+            turno: 'Matutino',
+            descripcionOferta: 'Seminario de Liderazgo',
+          },
+          {
+            idInscripcion: 1072705,
+            idOferta: 58564,
+            comienzo: 'Abril',
+            turno: 'Nocturno',
+            descripcionOferta: 'Seminario de Finanzas',
+          },
+        ],
+      })
+    );
+
+    const response = await firstValueFrom(
+      endpoint.confirmPreEnrollment({
+        aceptoReglamento: true,
+        esInscripcionCorporativa: false,
+        idOfertasSeleccionadas: [58563, 58564],
+      })
+    );
+
+    expect(response.seminarios).toEqual([
+      {
+        idInscripcion: 1072704,
+        idOferta: 58563,
+        nombre: 'Seminario de Liderazgo',
+        comienzo: 'Marzo',
+        turno: 'Matutino',
+      },
+      {
+        idInscripcion: 1072705,
+        idOferta: 58564,
+        nombre: 'Seminario de Finanzas',
+        comienzo: 'Abril',
+        turno: 'Nocturno',
+      },
+    ]);
   });
 
   it('maps bank account payment to Sistarbanc payload', async () => {
@@ -386,7 +537,7 @@ describe('InscripcionesEndpoint', () => {
     await expect(
       firstValueFrom(
         endpoint.pay({
-          idInscripcion: 1072704,
+          idsInscripcion: [1072704, 1072705],
           metodoPago: 'cuenta-bancaria',
           idBancoSistarbanc: 'brou',
         })
@@ -403,7 +554,7 @@ describe('InscripcionesEndpoint', () => {
     });
     expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesPagarEndpoint, {
       body: {
-        idInscripcion: 1072704,
+        idsInscripcion: [1072704, 1072705],
         tipoPago: 'SISTARBANC',
         idBancoSistarbanc: 'brou',
       },
@@ -418,34 +569,51 @@ describe('InscripcionesEndpoint', () => {
         urlPago: null,
         parametrosEncriptados: null,
         mensajes: [],
+        // La confirmada trae producto/carrera en la cabecera y comienzo/turno/materias
+        // en cada inscripción confirmada.
         confirmada: {
           codigoPersona: 34692671,
-          resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Matutino' },
+          idProducto: 20,
+          carrera: 'Sistemas',
           coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
           coordinadorCursos: null,
-          materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+          inscripciones: [
+            {
+              idInscripcion: 1072704,
+              idOferta: 300,
+              comienzo: 'Marzo',
+              turno: 'Matutino',
+              materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+            },
+          ],
         },
       })
     );
 
     const response = await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
     );
 
     expect(response.confirmada).toEqual({
       numeroEstudiante: 34692671,
       resumen: {
-        idOferta: null,
-        idProducto: null,
+        idOferta: 300,
+        idProducto: 20,
         carrera: 'Sistemas',
-        idComienzo: null,
         comienzo: 'Marzo',
-        idTurno: null,
         turno: 'Matutino',
       },
       coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
       coordinadorCursos: null,
-      materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+      inscripciones: [
+        {
+          idInscripcion: 1072704,
+          idOferta: 300,
+          comienzo: 'Marzo',
+          turno: 'Matutino',
+          materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+        },
+      ],
     });
   });
 
@@ -453,19 +621,19 @@ describe('InscripcionesEndpoint', () => {
     apiMock.request.mockReturnValue(of({}));
 
     await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'cuenta-personal', idBancoSistarbanc: null })
     );
     await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'abitab', idBancoSistarbanc: null })
     );
     await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'paganza', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'paganza', idBancoSistarbanc: null })
     );
     await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'banred', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'banred', idBancoSistarbanc: null })
     );
     await firstValueFrom(
-      endpoint.pay({ idInscripcion: 1, metodoPago: 'geopay', idBancoSistarbanc: null })
+      endpoint.pay({ idsInscripcion: [1], metodoPago: 'geopay', idBancoSistarbanc: null })
     );
 
     expect(apiMock.request).toHaveBeenNthCalledWith(
@@ -516,7 +684,7 @@ describe('InscripcionesEndpoint', () => {
           esInscripcionCorporativa: false,
           idOfertasSeleccionadas: [300],
         }),
-      () => endpoint.pay({ idInscripcion: 1, metodoPago: 'abitab', idBancoSistarbanc: null }),
+      () => endpoint.pay({ idsInscripcion: [1], metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 
     for (const operation of operations) {
@@ -580,6 +748,7 @@ describe('InscripcionesEndpoint', () => {
     await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual({
       estado: null,
       detalle: null,
+      intereses: [],
       pagoPendiente: null,
       seniaMinima: null,
       confirmada: null,

@@ -1,0 +1,14 @@
+@if (seminarios().length > 0) {
+<h4 id="seminarios-title">Seminarios</h4>
+<dl aria-labelledby="seminarios-title" class="inscription-summary-list">
+  @for (seminario of seminarios(); track seminario.idInscripcion ?? $index) {
+  <div class="inscription-summary-list__item">
+    <dt>
+      <ort-icon aria-hidden="true">event</ort-icon>
+      <span>{{ seminario.nombre }}</span>
+    </dt>
+    <dd>{{ seminario.comienzo }} · {{ seminario.turno }}</dd>
+  </div>
+  }
+</dl>
+}

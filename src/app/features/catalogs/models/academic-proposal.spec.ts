@@ -66,4 +66,26 @@ describe('academic proposal options', () => {
       })
     ).toEqual({ value: '300', label: 'Marco legal y tributario', description: '19/05/2026' });
   });
+
+  it('shows only the date when the catalog sends an ISO date with time', () => {
+    expect(
+      toAcademicSeminarOption({
+        idOferta: 300,
+        idProceso: 200,
+        nombre: 'Taller de equipos y liderazgo',
+        fechaComienzo: '2026-10-16T00:00:00',
+      }).description
+    ).toBe('16/10/2026');
+  });
+
+  it('omits the description when the seminar has no start date', () => {
+    expect(
+      toAcademicSeminarOption({
+        idOferta: 300,
+        idProceso: 200,
+        nombre: 'Renta fija',
+        fechaComienzo: null,
+      }).description
+    ).toBeUndefined();
+  });
 });

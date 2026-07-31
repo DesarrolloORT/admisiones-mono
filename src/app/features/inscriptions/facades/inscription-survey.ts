@@ -118,6 +118,11 @@ export class InscripcionSurveyFacade {
   public readonly visibleSections = computed(() =>
     getSeccionesVisibles(this.scenario(), this.isProfessionalUpdate())
   );
+  // Único predicado de "hay algo hacia atrás" del paso 2: lo consumen el botón del
+  // footer y el `canGoBack` del ProcessFacade (chevron del header).
+  public readonly canGoBack = computed(
+    () => this.readerOpen() || this.visibleSections().indexOf(this.activeSection()) > 0
+  );
   public readonly sectionItems = computed(() =>
     this.visibleSections().map(section => ({
       id: section,
@@ -259,6 +264,8 @@ export class InscripcionSurveyFacade {
     this.finishSurveyStep();
   }
 
+  // Retroceder dentro del paso 2: nunca sale del paso. En la primera sección visible no
+  // hay a dónde volver (el flujo no permite regresar al paso 1).
   public back(): void {
     if (this.readerOpen()) {
       this.readerOpen.set(false);
@@ -267,11 +274,7 @@ export class InscripcionSurveyFacade {
 
     const sections = this.visibleSections();
     const currentIndex = sections.indexOf(this.activeSection());
-    if (currentIndex > 0) {
-      this.activeSection.set(sections[currentIndex - 1]);
-      return;
-    }
-    this.process.flow.previous();
+    if (currentIndex > 0) this.activeSection.set(sections[currentIndex - 1]);
   }
 
   public openSection(section: SeccionEncuestaId): void {

@@ -3,6 +3,7 @@ import type {
   InstruccionReserva,
   ItemInstruccionReserva,
   ItemResumenInscripcion,
+  ItemSeminarioResumen,
 } from './inscription-flow';
 import {
   InscripcionPreEnrollmentResponse,
@@ -19,15 +20,18 @@ export function buildSummaryItems(context: {
   careerOptions: readonly OpcionInscripcion[];
   startOptions: readonly OpcionInscripcion[];
   turnoOptions: readonly OpcionInscripcion[];
+  isProfessionalUpdate: boolean;
 }): ItemResumenInscripcion[] {
+  const carreraValue =
+    context.response?.resumen?.carrera ??
+    getOptionLabel(context.careerOptions, context.selectedCareer, 'Sin seleccionar');
+
+  if (context.isProfessionalUpdate) {
+    return [{ icon: 'school', label: 'Programa', value: carreraValue }];
+  }
+
   return [
-    {
-      icon: 'school',
-      label: 'Carrera',
-      value:
-        context.response?.resumen?.carrera ??
-        getOptionLabel(context.careerOptions, context.selectedCareer, 'Sin seleccionar'),
-    },
+    { icon: 'school', label: 'Carrera', value: carreraValue },
     {
       icon: 'calendar_today',
       label: 'Comienzo',
@@ -43,6 +47,19 @@ export function buildSummaryItems(context: {
         getOptionLabel(context.turnoOptions, context.selectedTurno, 'Sin seleccionar'),
     },
   ];
+}
+
+// Actualización profesional: una fila por seminario, fuera de summaryItems para no
+// romper el `.slice(1)` que usa la pantalla de éxito.
+export function buildSeminariosSummary(
+  response: InscripcionPreEnrollmentResponse | null
+): ItemSeminarioResumen[] {
+  return (response?.seminarios ?? []).map(seminario => ({
+    idInscripcion: seminario.idInscripcion,
+    nombre: seminario.nombre ?? 'No informado',
+    comienzo: seminario.comienzo ?? 'No informado',
+    turno: seminario.turno ?? 'No informado',
+  }));
 }
 
 export function formatInscriptionAmount(value: number | null | undefined): string {

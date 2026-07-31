@@ -34,16 +34,11 @@ export class InscripcionProcessFacade {
     const step = this.stepItems()[this.process.flow.currentIndex()];
     return `Paso ${this.stepNumber()} de ${this.stepItems().length} - ${step.title}`;
   });
-  public readonly backLabel = computed(() => {
-    if (this.currentStep() === 'pago') return 'Volver al paso 2';
-    if (this.currentStep() !== 'encuesta') return 'Volver al paso anterior';
-    if (this.survey.readerOpen()) return 'Volver a Reglamento estudiantil';
-
-    const sections = this.survey.visibleSections();
-    return sections.indexOf(this.survey.activeSection()) > 0
-      ? 'Volver a la sección anterior'
-      : 'Volver al paso 1';
-  });
+  // Solo se retrocede DENTRO del paso 2 (ver `canGoBack`), así que no hay etiquetas
+  // "volver al paso N".
+  public readonly backLabel = computed(() =>
+    this.survey.readerOpen() ? 'Volver a Reglamento estudiantil' : 'Volver a la sección anterior'
+  );
   public readonly exitConfirmationOpen = signal(false);
   public readonly surveySaveError = signal<string | null>(null);
   public readonly savingSurvey = signal(false);
@@ -58,15 +53,13 @@ export class InscripcionProcessFacade {
       !this.payment.outcome() &&
       this.payment.view() !== 'processing'
   );
+  // El flujo solo avanza: avanzar de paso es un hecho de negocio ya registrado en el
+  // backend (paso 1 ⇒ InteresProducto, paso 2 ⇒ ConfirmarPreInscripcion), así que
+  // nunca se vuelve a un paso anterior. Lo único que retrocede son las sub-secciones
+  // del paso 2 y el lector de reglamento.
   public readonly canGoBack = computed(() => {
     if (this.payment.outcome() || this.payment.view() === 'processing') return false;
-    if (this.currentStep() === 'propuesta') return false;
-    if (this.currentStep() === 'pago') return this.payment.view() === 'editing';
-    if (this.survey.readerOpen()) return true;
-    return (
-      this.survey.visibleSections().indexOf(this.survey.activeSection()) > 0 ||
-      this.process.flow.canGoBack()
-    );
+    return this.currentStep() === 'encuesta' && this.survey.canGoBack();
   });
 
   private entryContext: InscripcionEntryContext;
@@ -94,12 +87,7 @@ export class InscripcionProcessFacade {
   }
 
   public back(): void {
-    if (!this.canGoBack()) return;
-    if (this.currentStep() === 'encuesta') {
-      this.survey.back();
-      return;
-    }
-    if (this.currentStep() === 'pago') this.process.flow.previous();
+    if (this.canGoBack()) this.survey.back();
   }
 
   public requestExit(): void {
@@ -176,10 +164,14 @@ export class InscripcionProcessFacade {
     const controls = this.proposal.academicForm.controls;
     controls.tipoPropuesta.setValue(prefill.tipoPropuesta, { emitEvent: false });
     controls.carrera.setValue(prefill.carrera, { emitEvent: false });
+    controls.comienzo.setValue(prefill.comienzo, { emitEvent: false });
+    controls.turno.setValue(prefill.turno, { emitEvent: false });
     controls.seminarios.setValue([...prefill.seminarios], { emitEvent: false });
     this.proposal.setProposalType(prefill.tipoPropuesta);
     const idPrograma = Number(prefill.carrera);
-    if (Number.isFinite(idPrograma)) this.proposal.selection.loadSeminars(idPrograma);
+    if (Number.isFinite(idPrograma) && this.proposal.selection.isProfessionalUpdate()) {
+      this.proposal.selection.loadSeminars(idPrograma);
+    }
   }
 
   private applyPaymentInit(payment: InscripcionPaymentInit): void {

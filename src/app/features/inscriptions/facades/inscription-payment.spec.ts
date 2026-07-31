@@ -30,9 +30,29 @@ const CONFIRMED_DETAIL = {
   resumen: null,
   coordinadorAcademico: { nombre: 'Laura Pérez', email: 'laura.perez@ort.edu.uy' },
   coordinadorCursos: { nombre: 'Diego Cursos', email: 'diego.cursos@ort.edu.uy' },
-  materiasPrimerSemestre: [
-    { idMateria: 1, nombre: 'Programación I' },
-    { idMateria: 2, nombre: null },
+  inscripciones: [
+    {
+      idInscripcion: 1072704,
+      idOferta: 300,
+      comienzo: 'Marzo',
+      turno: 'Matutino',
+      materiasPrimerSemestre: [
+        { idMateria: 1, nombre: 'Programación I' },
+        { idMateria: 2, nombre: null },
+      ],
+    },
+    // Segundo seminario confirmado (Actualización profesional): sus materias también
+    // se listan y la que comparte con el primero no se repite.
+    {
+      idInscripcion: 1072705,
+      idOferta: 301,
+      comienzo: 'Marzo',
+      turno: 'Nocturno',
+      materiasPrimerSemestre: [
+        { idMateria: 1, nombre: 'Programación I' },
+        { idMateria: 3, nombre: 'Bases de datos' },
+      ],
+    },
   ],
 };
 
@@ -113,7 +133,7 @@ describe('InscripcionPaymentFacade', () => {
     facade.confirm();
 
     expect(inscriptions.pay).toHaveBeenCalledWith({
-      idInscripcion: 1072704,
+      idsInscripcion: [1072704],
       metodoPago: 'abitab',
       idBancoSistarbanc: null,
     });
@@ -198,7 +218,7 @@ describe('InscripcionPaymentFacade', () => {
       facade.confirm();
 
       expect(inscriptions.pay).toHaveBeenCalledWith({
-        idInscripcion: 1072704,
+        idsInscripcion: [1072704],
         metodoPago: method,
         idBancoSistarbanc: method === 'cuenta-bancaria' ? 'brou' : null,
       });
@@ -266,7 +286,7 @@ describe('InscripcionPaymentFacade', () => {
         email: 'diego.cursos@ort.edu.uy',
       },
     ]);
-    expect(facade.visibleSubjects()).toEqual(['Programación I']);
+    expect(facade.visibleSubjects()).toEqual(['Programación I', 'Bases de datos']);
   });
 
   it('uses the confirmed detail from the pay response without re-fetching', () => {
@@ -530,6 +550,87 @@ describe('InscripcionPaymentFacade', () => {
     facade.confirm();
 
     expect(facade.outcome()).toBe('inscription-confirmada');
+  });
+
+  it('shows the 3 flat rows and no seminarios for a regular (non-AP) inscription', () => {
+    expect(facade.isProfessionalUpdate()).toBe(false);
+    expect(facade.summaryItems().map(item => item.label)).toEqual(['Carrera', 'Comienzo', 'Turno']);
+    expect(facade.seminariosResumen()).toEqual([]);
+  });
+
+  it('collapses the summary to Programa and lists seminarios for Actualización profesional', () => {
+    const selection = TestBed.inject(AcademicProposalSelection);
+    selection.setProposalType('3');
+    process.preEnrollmentResponse.set({
+      idInscripcion: 1072704,
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 15500,
+      saldoCuenta: 70000,
+      resumen: { carrera: 'Actualización en IA', comienzo: null, turno: null },
+      seminarios: [
+        {
+          idInscripcion: 1,
+          idOferta: 10,
+          nombre: 'Seminario A',
+          comienzo: 'Marzo',
+          turno: 'Noche',
+        },
+        {
+          idInscripcion: 2,
+          idOferta: 11,
+          nombre: 'Seminario B',
+          comienzo: 'Abril',
+          turno: 'Mañana',
+        },
+      ],
+    });
+
+    expect(facade.isProfessionalUpdate()).toBe(true);
+    expect(facade.summaryItems()).toEqual([
+      { icon: 'school', label: 'Programa', value: 'Actualización en IA' },
+    ]);
+    expect(facade.seminariosResumen()).toEqual([
+      { idInscripcion: 1, nombre: 'Seminario A', comienzo: 'Marzo', turno: 'Noche' },
+      { idInscripcion: 2, nombre: 'Seminario B', comienzo: 'Abril', turno: 'Mañana' },
+    ]);
+  });
+
+  it('charges every seminario of an Actualización profesional package', () => {
+    process.preEnrollmentResponse.set({
+      idInscripcion: 1072704,
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 15500,
+      saldoCuenta: 70000,
+      resumen: null,
+      seminarios: [
+        {
+          idInscripcion: 1072704,
+          idOferta: 10,
+          nombre: 'Seminario A',
+          comienzo: null,
+          turno: null,
+        },
+        {
+          idInscripcion: 1072705,
+          idOferta: 11,
+          nombre: 'Seminario B',
+          comienzo: null,
+          turno: null,
+        },
+      ],
+    });
+    facade.paymentForm.controls.metodoPago.setValue('abitab');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(inscriptions.pay).toHaveBeenCalledWith({
+      idsInscripcion: [1072704, 1072705],
+      metodoPago: 'abitab',
+      idBancoSistarbanc: null,
+    });
   });
 
   it('rejects the payment when the pending inscription id is missing', () => {

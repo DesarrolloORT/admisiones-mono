@@ -22,7 +22,8 @@
   } @else {
   <div class="swiper">
     <div class="swiper-wrapper">
-      @for (inscripcion of inscripciones(); track inscripcion.idProducto) {
+      @for (inscripcion of inscripciones(); track inscripcion.idProducto + '-' +
+      inscripcion.idProceso) {
       <div class="swiper-slide">
         <app-dashboard-card [inscripcion]="inscripcion" />
       </div>

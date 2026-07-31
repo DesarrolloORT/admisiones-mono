@@ -27,16 +27,20 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idInscripto: 100,
           idProducto: 10,
           idNivelProducto: 1,
           idProceso: 25,
-          idComienzo: 20,
-          idTurno: 30,
           nombreExtensoProducto: 'Analista Programador',
-          nombreComienzo: 'Marzo 2027',
-          nombreTurno: 'Noche',
           estadoInscripcion: 'Confirmada',
+          inscripciones: [
+            {
+              idInscripto: 100,
+              idComienzo: 20,
+              idTurno: 30,
+              nombreComienzo: 'Marzo 2027',
+              nombreTurno: 'Noche',
+            },
+          ],
         },
       ])
     );
@@ -52,37 +56,128 @@ describe('HomeEndpoint', () => {
         nombreComienzo: 'Marzo 2027',
         nombreTurno: 'Noche',
         estado: 'Confirmada',
+        seminarios: [],
       },
     ]);
     expect(api.request).toHaveBeenCalledWith(getPersonaInscripcionesEndpoint);
   });
 
-  it('should use descripcionOferta for level 3 and 4 while preserving level 2', async () => {
+  it('should group levels 3 and 4 into a single card with seminarios', async () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idNivelProducto: 2,
-          nombreExtensoProducto: 'Analista Programador',
-          descripcionOferta: 'No debe mostrarse',
-        },
-        {
+          idProducto: 15,
           idNivelProducto: 3,
+          idProceso: 26,
           nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
-          descripcionOferta: 'Marco legal y tributario',
-        },
-        {
-          idNivelProducto: 4,
-          nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
-          descripcionOferta: 'Renta fija y renta variable',
+          estadoInscripcion: 'Confirmada',
+          inscripciones: [
+            {
+              idInscripto: 200,
+              idOferta: 1,
+              descripcionOferta: 'Marco legal y tributario',
+              idComienzo: 21,
+              idTurno: 31,
+              nombreComienzo: 'Abril 2027',
+              nombreTurno: 'Tarde',
+            },
+            {
+              idInscripto: 201,
+              idOferta: 2,
+              descripcionOferta: 'Renta fija y renta variable',
+              idComienzo: 22,
+              idTurno: 32,
+              nombreComienzo: 'Mayo 2027',
+              nombreTurno: 'Noche',
+            },
+          ],
         },
       ])
     );
 
-    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toMatchObject([
-      { nombreProducto: 'Analista Programador' },
-      { nombreProducto: 'Marco legal y tributario' },
-      { nombreProducto: 'Renta fija y renta variable' },
+    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
+      {
+        idInscripto: 200,
+        idProducto: 15,
+        idProceso: 26,
+        idComienzo: 21,
+        idTurno: 31,
+        nombreProducto: 'Programa de Asesoramiento Financiero',
+        nombreComienzo: 'Abril 2027',
+        nombreTurno: 'Tarde',
+        estado: 'Confirmada',
+        seminarios: [
+          {
+            idInscripto: 200,
+            idOferta: 1,
+            descripcionOferta: 'Marco legal y tributario',
+            idComienzo: 21,
+            idTurno: 31,
+            nombreComienzo: 'Abril 2027',
+            nombreTurno: 'Tarde',
+          },
+          {
+            idInscripto: 201,
+            idOferta: 2,
+            descripcionOferta: 'Renta fija y renta variable',
+            idComienzo: 22,
+            idTurno: 32,
+            nombreComienzo: 'Mayo 2027',
+            nombreTurno: 'Noche',
+          },
+        ],
+      },
     ]);
+  });
+
+  it('should keep one card per item for levels 1 and 2 with multiple inscripciones', async () => {
+    api.request.mockReturnValueOnce(
+      of([
+        {
+          idProducto: 10,
+          idNivelProducto: 2,
+          idProceso: 25,
+          nombreExtensoProducto: 'Analista Programador',
+          estadoInscripcion: 'Confirmada',
+          inscripciones: [
+            { idInscripto: 100, idComienzo: 20, idTurno: 30, nombreComienzo: 'Marzo 2027' },
+            { idInscripto: 101, idComienzo: 21, idTurno: 31, nombreComienzo: 'Abril 2027' },
+          ],
+        },
+      ])
+    );
+
+    const result = await firstValueFrom(endpoint.getMisInscripciones());
+
+    expect(result).toHaveLength(2);
+    expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
+  });
+
+  it('should not explode when inscripciones is null or empty', async () => {
+    api.request.mockReturnValueOnce(
+      of([
+        {
+          idProducto: 10,
+          idNivelProducto: 1,
+          idProceso: 25,
+          nombreExtensoProducto: 'Analista Programador',
+          estadoInscripcion: 'Confirmada',
+          inscripciones: null,
+        },
+        {
+          idProducto: 11,
+          idNivelProducto: 3,
+          idProceso: 27,
+          nombreExtensoProducto: 'Programa vacío',
+          estadoInscripcion: 'Pendiente',
+          inscripciones: [],
+        },
+      ])
+    );
+
+    const result = await firstValueFrom(endpoint.getMisInscripciones());
+
+    expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
   });
 
   it('should map Persona/Becas into dashboard cards', async () => {

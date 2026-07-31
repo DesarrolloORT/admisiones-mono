@@ -233,9 +233,11 @@
     }
 
     <footer class="inscription-footer">
+      @if (facade.canGoBack()) {
       <button class="back-button" ort-secondary-button type="button" (click)="facade.back()">
-        Volver al paso anterior
+        Volver a la sección anterior
       </button>
+      }
       <button ort-primary-button type="submit" [disabled]="facade.finalizingPreEnrollment()">
         {{ facade.finalizingPreEnrollment() ? 'Confirmando…' : 'Continuar' }}
       </button>

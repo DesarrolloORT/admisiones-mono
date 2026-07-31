@@ -54,6 +54,7 @@ describe('Home', () => {
           nombreComienzo: 'Marzo 2027',
           nombreTurno: 'Noche',
           estado: 'Confirmada',
+          seminarios: [],
         },
       ],
       becas: [],
