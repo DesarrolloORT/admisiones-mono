@@ -16,6 +16,7 @@ import type {
   ContactoCoordinador,
   InscripcionPaymentResponse,
   InscripcionReservationData,
+  ItemSeminarioResumen,
   MetodoPago,
   OpcionInscripcion,
   ResultadoPago,
@@ -36,6 +37,7 @@ import {
   STUDENT_SERVICE_LINKS,
 } from '../models/inscription-static-data';
 import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -46,6 +48,7 @@ export class InscripcionPaymentFacade {
   private readonly destroyRef = inject(DestroyRef);
   private readonly catalogs = inject(Catalogs);
   private readonly inscriptions = inject(Inscripciones);
+  private readonly resumeContext = inject(InscriptionResumeContextStore);
   private readonly externalPaymentSubmitter = inject(ExternalPaymentSubmitter);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
@@ -140,7 +143,7 @@ export class InscripcionPaymentFacade {
     })
   );
   public readonly seminariosResumen = computed(() =>
-    this.isProfessionalUpdate() ? buildSeminariosSummary(this.process.preEnrollmentResponse()) : []
+    this.isProfessionalUpdate() ? this.buildProfessionalUpdateSummary() : []
   );
   public readonly paymentDeadline = computed(() =>
     formatPaymentDeadline(this.process.preEnrollmentResponse()?.fechaVencimientoPago)
@@ -254,13 +257,39 @@ export class InscripcionPaymentFacade {
     this.showAllSubjects.update(showAll => !showAll);
   }
 
-  // Pagar cobra el paquete completo: en AP van todos los seminarios y en niveles 1 y 2
-  // el array trae la única inscripción. El `idInscripcion` plano cubre el retomar desde
-  // un estado persistido que todavía no traía `seminarios`.
+  // La respuesta del backend manda. Al retomar, sessionStorage conserva los ids de la
+  // tarjeta como fallback si ConfirmarPreInscripcion no devuelve `inscripciones`.
   private paymentInscriptionIds(): number[] {
     const response = this.process.preEnrollmentResponse();
-    const ids = (response?.seminarios ?? []).map(seminario => seminario.idInscripcion);
-    return [...new Set([...ids, response?.idInscripcion].filter(isPositiveInteger))];
+    const responseIds = [
+      ...(response?.seminarios ?? []).map(seminario => seminario.idInscripcion),
+      response?.idInscripcion,
+    ].filter(isPositiveInteger);
+    if (responseIds.length) return [...new Set(responseIds)];
+
+    const idProducto = toPositiveInteger(this.route.snapshot.queryParamMap.get('idProducto'));
+    const idProceso = toPositiveInteger(this.route.snapshot.queryParamMap.get('idProceso'));
+    if (!idProducto || !idProceso) return [];
+
+    return this.resumeContext.read(idProducto, idProceso)?.idInscripciones ?? [];
+  }
+
+  private buildProfessionalUpdateSummary(): ItemSeminarioResumen[] {
+    const responseSummary = buildSeminariosSummary(this.process.preEnrollmentResponse());
+    if (responseSummary.length) return responseSummary;
+
+    const selectedOffers = new Set(
+      this.proposal.academicForm.controls.seminarios.value.map(Number).filter(isPositiveInteger)
+    );
+    return this.proposal.selection
+      .seminars()
+      .filter(seminario => selectedOffers.has(seminario.idOferta))
+      .map(seminario => ({
+        idInscripcion: null,
+        nombre: seminario.nombre,
+        comienzo: formatPaymentDeadline(seminario.fechaComienzo),
+        turno: 'No informado',
+      }));
   }
 
   private resolvePaymentResponse(method: MetodoPago, response: InscripcionPaymentResponse): void {

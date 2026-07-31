@@ -32,6 +32,7 @@ describe('Dashboard', () => {
     fixture.componentRef.setInput('inscripciones', [
       {
         idInscripto: 100,
+        idOfertas: [300],
         idProducto: 1,
         idProceso: 4,
         idComienzo: 2,

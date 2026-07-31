@@ -445,7 +445,14 @@ function retomar(
   detail: InscripcionDetail,
   idNivelProducto: number | null = null
 ): InscripcionEntryResolved {
-  return { intent: 'retomar', detail, idProducto: 20, idProceso: 200, idNivelProducto };
+  return {
+    intent: 'retomar',
+    detail,
+    idProducto: 20,
+    idProceso: 200,
+    idOfertas: [],
+    idNivelProducto,
+  };
 }
 
 function interes(idOferta: number): InscripcionOfertaResumen {

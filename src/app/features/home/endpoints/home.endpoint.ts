@@ -63,6 +63,7 @@ export class HomeEndpoint {
       return [
         {
           idInscripto: primero?.idInscripto ?? 0,
+          idOfertas: [...new Set(items.map(item => item.idOferta).filter(isPositiveInteger))],
           idProducto: group.idProducto ?? 0,
           idProceso: group.idProceso ?? 0,
           idComienzo: primero?.idComienzo ?? 0,
@@ -88,6 +89,7 @@ export class HomeEndpoint {
       return [
         {
           idInscripto: 0,
+          idOfertas: [],
           idProducto: group.idProducto ?? 0,
           idProceso: group.idProceso ?? 0,
           idComienzo: 0,
@@ -103,6 +105,7 @@ export class HomeEndpoint {
 
     return items.map(item => ({
       idInscripto: item.idInscripto ?? 0,
+      idOfertas: isPositiveInteger(item.idOferta) ? [item.idOferta] : [],
       idProducto: group.idProducto ?? 0,
       idProceso: group.idProceso ?? 0,
       idComienzo: item.idComienzo ?? 0,
@@ -155,4 +158,8 @@ export class HomeEndpoint {
 
     return `${formatted.charAt(0).toUpperCase()}${formatted.slice(1)}`;
   }
+}
+
+function isPositiveInteger(value: number | null | undefined): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }

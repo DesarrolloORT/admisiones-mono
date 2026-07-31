@@ -85,9 +85,11 @@ matriz es su lectura de negocio.
   editable**, aunque exista una encuesta previa en progreso. La encuesta previa solo
   se reutiliza al llegar al Paso 2 (prellena respuestas), nunca precarga el Paso 1 ni
   reposiciona el flujo. `InteresProducto` se envía al continuar.
-- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel): llegar con
-  esos params válidos **ya prueba que la inscripción existe**, así que el interés está
-  registrado y el **Paso 1 nunca se muestra**. El Paso 1 queda precargado y
+- **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel):
+  llegar con producto y proceso válidos **ya prueba que la inscripción existe**, así
+  que el interés está registrado y el **Paso 1 nunca se muestra**. Al hacer clic en
+  "Continuar inscripción", la tarjeta guarda sus `idOferta` e `idInscripcion` en
+  `sessionStorage`; la URL conserva únicamente producto y proceso. El Paso 1 queda precargado y
   deshabilitado (no se vuelve a enviar `InteresProducto`) y el flujo arranca en el Paso
   2 o en la pantalla que corresponda al estado.
 
@@ -105,19 +107,28 @@ matriz es su lectura de negocio.
   (faltantes, no numéricos, ≤ 0) degradan a **nueva**, porque sin ellos no hay
   inscripción que retomar.
 
-  **Precarga del Paso 1 al retomar.** Sale del `Detalle`, no de la encuesta: la
-  cabecera (`detalle.resumen`) aporta `idProducto` y `carrera`, y `detalle.intereses`
-  todas las ofertas elegidas (una por seminario en Actualización profesional). El
+  **Precarga del Paso 1 al retomar.** Producto y proceso salen de la URL/Detalle; las
+  ofertas salen del contexto guardado por la tarjeta en `sessionStorage`. Un enlace de
+  Detalle que incluya `idOferta` explícitos mantiene precedencia; si ninguna de esas
+  fuentes existe, `detalle.intereses` aporta el fallback
+  (una oferta por seminario en Actualización profesional). El
   contrato del `Detalle` **no expone `idComienzo` ni `idTurno`** en ningún bloque, así
   que el comienzo y el turno solo llegan como texto; por eso la precarga llena
   `turno` y `seminarios` con los `idOferta` (el payload de `ConfirmarPreInscripcion`
   lee uno u otro según el tipo de propuesta) y toma el comienzo del param `idProceso`
-  (el control `comienzo` guarda justamente un idProceso). Si el `Detalle` no llegó, el
-  producto sale del param `idProducto`: alcanza para abrir el Paso 2, aunque confirmar
-  la preinscripción va a fallar hasta que el `Detalle` responda con las ofertas. La
+  (el control `comienzo` guarda justamente un idProceso). Si el `Detalle` no llegó,
+  los params conservan producto, proceso y ofertas, por lo que el Paso 2 puede confirmar
+  igualmente. La
   selección académica de una encuesta previa nunca se aplica al Paso 1 al retomar. Si el
   catálogo de carreras falla y el nivel queda `null`, el tipo de propuesta se completa
   después desde el nivel de la carrera (`AcademicProposalSelection`).
+
+  **Pago y resumen al retomar AP.** La respuesta de
+  `ConfirmarPreInscripcion.inscripciones` es la fuente principal de los IDs a cobrar y
+  de las filas del resumen. Si esa respuesta no trae el bloque, `Pagar` usa como
+  fallback los `idInscripcion` guardados en sesión, y el resumen usa los seminarios
+  seleccionados del catálogo. El contexto se valida contra producto/proceso y conserva
+  solo enteros positivos sin duplicados; el backend mantiene la validación final de pertenencia.
 
 - **El flujo solo avanza.** Pasar de paso es un hecho ya registrado en el backend
   (Paso 1 ⇒ `InteresProducto`, Paso 2 ⇒ `ConfirmarPreInscripcion`), así que **no hay
@@ -305,8 +316,10 @@ que la empresa acredite el pago.
 
 AP nunca postea `EncuestaInicial`, así que exigir una encuesta prefilled para
 arrancar en el paso 2 dejaba estas inscripciones en el paso 1 vacío. Hoy
-`deriveRetomar` nunca muestra el paso 1 (ver la matriz de retomar) y la precarga sale
-del Detalle: `detalle.resumen.idProducto` + todas las ofertas de `detalle.intereses`.
+`deriveRetomar` nunca muestra el paso 1 (ver la matriz de retomar) y la tarjeta
+guarda todas sus ofertas en `sessionStorage` antes de navegar. `detalle.intereses`
+queda como fallback para entradas sin ese contexto; los params `idOferta` se leen solo
+por compatibilidad con enlaces generados anteriormente.
 Ojo con los productos que no están en `GET /Catalogos/Carreras` (o cuyo `Detalle`
 falla): el paso 2 se abre igual, pero el tipo de propuesta queda vacío hasta que el
 catálogo resuelva el nivel, así que las secciones visibles pueden arrancar como las del
@@ -335,11 +348,11 @@ colapsando `inscripciones?.[0]` en los campos planos (`resumen`, `idInscripcion`
 usa el resto del flujo.
 
 `POST /Inscripciones/Pagar` recibe `idsInscripcion: number[]`, así que el pago cobra el
-paquete completo: `InscripcionPaymentFacade.paymentInscriptionIds()` junta los
-`seminarios[].idInscripcion` (una sola entrada en niveles 1 y 2) y deduplica contra el
-`idInscripcion` plano, que cubre el retomar desde un estado persistido sin `seminarios`.
-Si no queda ningún id positivo el pago no se envía y la pantalla muestra "No pudimos
-identificar la inscripción pendiente.".
+paquete completo: `InscripcionPaymentFacade.paymentInscriptionIds()` prioriza los
+`seminarios[].idInscripcion` y el `idInscripcion` plano de la respuesta. Si ambos faltan
+al retomar, usa los `idInscripcion` positivos y deduplicados guardados por la tarjeta
+en `sessionStorage`. Si tampoco quedan IDs válidos, el pago no se envía y la pantalla
+muestra "No pudimos identificar la inscripción pendiente.".
 
 En la pantalla de pago (`inscription-confirmation-step`), el "Resumen de inscripción"
 usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
@@ -347,9 +360,10 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
 - **Niveles 1 y 2:** las 3 filas de siempre (Carrera, Comienzo, Turno), sin cambios.
 - **Niveles 3 y 4 (AP):** una sola fila **Programa** (mismo ícono e ídem fallback de
   `Carrera`) seguida de una sección **Seminarios** con una fila por elemento de
-  `seminarios[]` (nombre, comienzo, turno). Esta lista vive fuera de `summaryItems()`
-  para no romper `inscription-success-step.html`, que usa `summaryItems()[0]` como
-  título y `summaryItems().slice(1)` para el resto.
+  `seminarios[]` (nombre, comienzo, turno). Si la confirmación omite ese array, se usan
+  como fallback las ofertas seleccionadas del catálogo de seminarios. Esta lista vive
+  fuera de `summaryItems()` para no romper `inscription-success-step.html`, que usa
+  `summaryItems()[0]` como título y `summaryItems().slice(1)` para el resto.
 - El diálogo "Confirmar inscripción" (mismo paso) todavía no muestra los seminarios:
   para AP solo pinta la fila Programa. Pendiente de decisión de UX.
 

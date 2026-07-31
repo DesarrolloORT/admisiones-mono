@@ -66,6 +66,7 @@ describe('DashboardCareersSection', () => {
   function createEnrollment(idProducto: number, idProceso = 4): MiInscripcion {
     return {
       idInscripto: idProducto,
+      idOfertas: [idProducto],
       idProducto,
       idProceso,
       idComienzo: 2,

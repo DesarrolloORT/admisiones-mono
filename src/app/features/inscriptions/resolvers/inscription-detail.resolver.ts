@@ -5,15 +5,20 @@ import { catchError, map } from 'rxjs/operators';
 
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 
-// Resuelve la INTENCIÓN de entrada al flujo a partir de la URL, no del estado del backend. Una inscripción "nueva" no lleva params; "retomar" llega con idProducto+idProceso desde el panel; "reactivar" agrega `modo=reactivar`. Los params se propagan resueltos: son la prueba de que la inscripción existe, así que si el Detalle falla el flujo igual retoma en el paso 2 con esa precarga mínima (solo params inválidos degradan a "nueva"). El nivel del producto (del catálogo de carreras) decide si aplica el flujo de Actualización profesional; si el catálogo falla queda `null`.
+// Producto+proceso identifican la inscripción en la URL. Al continuar desde el panel,
+// las ofertas viajan en sessionStorage; los idOferta de URL quedan como compatibilidad.
 export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = route => {
   const intent = resolveEntryIntent(route.queryParamMap);
   if (intent === 'nueva') return of({ intent });
 
   const idProducto = toPositiveInteger(route.queryParamMap.get('idProducto')) as number;
   const idProceso = toPositiveInteger(route.queryParamMap.get('idProceso')) as number;
+  const urlOffers = toPositiveIntegers(route.queryParamMap.getAll('idOferta'));
+  const storedOffers = inject(InscriptionResumeContextStore).read(idProducto, idProceso)?.idOfertas;
+  const idOfertas = urlOffers.length ? urlOffers : (storedOffers ?? []);
 
   return forkJoin({
     detail: inject(Inscripciones)
@@ -28,6 +33,7 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
       detail,
       idProducto,
       idProceso,
+      idOfertas,
       // El Detalle es la fuente preferida del producto; con el Detalle caído, el param.
       idNivelProducto:
         careers.find(career => career.idProducto === (detail?.detalle?.idProducto ?? idProducto))
@@ -49,4 +55,14 @@ function toPositiveInteger(value: string | null): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function toPositiveIntegers(values: string[]): number[] {
+  return [
+    ...new Set(
+      values
+        .map(value => toPositiveInteger(value))
+        .filter((value): value is number => value !== null)
+    ),
+  ];
 }

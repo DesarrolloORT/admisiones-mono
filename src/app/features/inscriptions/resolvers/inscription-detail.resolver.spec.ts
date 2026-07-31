@@ -11,6 +11,7 @@ import { vi } from 'vitest';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionDetail } from '../models/inscription-detail';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 import { inscriptionDetailResolver, resolveEntryIntent } from './inscription-detail.resolver';
 
@@ -19,6 +20,7 @@ describe('inscriptionDetailResolver', () => {
   let getCareers: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    sessionStorage.clear();
     getDetail = vi.fn();
     getCareers = vi.fn().mockReturnValue(of([]));
     TestBed.configureTestingModule({
@@ -39,6 +41,7 @@ describe('inscriptionDetailResolver', () => {
       detail,
       idProducto: 20,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
@@ -63,6 +66,7 @@ describe('inscriptionDetailResolver', () => {
       detail,
       idProducto: 21,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: 3,
     });
   });
@@ -77,6 +81,7 @@ describe('inscriptionDetailResolver', () => {
       detail,
       idProducto: 21,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: null,
     });
   });
@@ -92,6 +97,7 @@ describe('inscriptionDetailResolver', () => {
       detail,
       idProducto: 20,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
@@ -113,6 +119,7 @@ describe('inscriptionDetailResolver', () => {
       detail: null,
       idProducto: 20,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: null,
     });
   });
@@ -137,8 +144,55 @@ describe('inscriptionDetailResolver', () => {
       detail: null,
       idProducto: 21,
       idProceso: 200,
+      idOfertas: [],
       idNivelProducto: 3,
     });
+  });
+
+  it('keeps unique positive offer ids from the resume URL', async () => {
+    const detail = createDetail('En proceso', 40);
+    getDetail.mockReturnValue(of(detail));
+
+    await expect(
+      resolve({
+        idProducto: '40',
+        idProceso: '210',
+        idOferta: ['310', '311', '310', '0', 'invalid'],
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        intent: 'retomar',
+        idOfertas: [310, 311],
+      })
+    );
+  });
+
+  it('prefers the offers saved when continuing from the dashboard', async () => {
+    getDetail.mockReturnValue(of(createDetail('En proceso', 40)));
+    TestBed.inject(InscriptionResumeContextStore).save({
+      idProducto: 40,
+      idProceso: 210,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+
+    await expect(resolve({ idProducto: '40', idProceso: '210' })).resolves.toEqual(
+      expect.objectContaining({ idOfertas: [310, 311] })
+    );
+  });
+
+  it('keeps an explicit detail URL authoritative over a previous session', async () => {
+    getDetail.mockReturnValue(of(createDetail('En proceso', 40)));
+    TestBed.inject(InscriptionResumeContextStore).save({
+      idProducto: 40,
+      idProceso: 210,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+
+    await expect(
+      resolve({ idProducto: '40', idProceso: '210', idOferta: ['320'] })
+    ).resolves.toEqual(expect.objectContaining({ idOfertas: [320] }));
   });
 
   it('resolves "nueva" when a parameter is not numeric', async () => {
@@ -183,7 +237,9 @@ describe('inscriptionDetailResolver', () => {
     });
   });
 
-  function resolve(queryParams: Record<string, string>): Promise<InscripcionEntryResolved> {
+  function resolve(
+    queryParams: Record<string, string | string[]>
+  ): Promise<InscripcionEntryResolved> {
     const route = new ActivatedRouteSnapshot();
     Object.defineProperty(route, 'queryParamMap', { value: convertToParamMap(queryParams) });
     const result = TestBed.runInInjectionContext(() =>

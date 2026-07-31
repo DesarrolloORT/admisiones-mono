@@ -12,6 +12,7 @@ export interface MiInscripcionSeminario {
 
 export interface MiInscripcion {
   idInscripto: number;
+  idOfertas: number[];
   idProducto: number;
   idProceso: number;
   idComienzo: number;

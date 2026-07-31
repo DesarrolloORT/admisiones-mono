@@ -55,4 +55,13 @@ export class DashboardCard {
   protected readonly esPaquete = computed(
     () => this.variant() === 'careers' && (this.inscripcion()?.seminarios?.length ?? 0) > 0
   );
+  protected readonly idsInscripcion = computed(() => {
+    const inscripcion = this.inscripcion();
+    if (!inscripcion) return [];
+
+    const ids = inscripcion.seminarios.length
+      ? inscripcion.seminarios.map(seminario => seminario.idInscripto)
+      : [inscripcion.idInscripto];
+    return [...new Set(ids.filter(id => Number.isSafeInteger(id) && id > 0))];
+  });
 }

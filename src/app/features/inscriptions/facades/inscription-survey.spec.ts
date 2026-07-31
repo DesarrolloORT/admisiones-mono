@@ -1048,6 +1048,7 @@ describe('InscripcionSurveyFacade', () => {
           detail: RESUME_DETAIL,
           idProducto: 20,
           idProceso: 200,
+          idOfertas: [],
           idNivelProducto: null,
         },
         survey: resolved,

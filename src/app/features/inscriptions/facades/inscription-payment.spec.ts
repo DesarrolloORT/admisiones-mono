@@ -8,6 +8,7 @@ import { Catalogs } from '../../catalogs/services/catalogs';
 import { FALLBACK_BANK_OPTIONS } from '../models/inscription-bank-logo';
 import type { InscripcionPaymentResponse, MetodoPago } from '../models/inscription-flow';
 import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -85,7 +86,7 @@ describe('InscripcionPaymentFacade', () => {
 
   function configureFacade(
     options: {
-      queryParams?: Record<string, string>;
+      queryParams?: Record<string, string | readonly string[]>;
       bancos?: Observable<readonly { id: number; label: string; code: string }[]>;
     } = {}
   ): void {
@@ -594,6 +595,65 @@ describe('InscripcionPaymentFacade', () => {
       { idInscripcion: 1, nombre: 'Seminario A', comienzo: 'Marzo', turno: 'Noche' },
       { idInscripcion: 2, nombre: 'Seminario B', comienzo: 'Abril', turno: 'Mañana' },
     ]);
+  });
+
+  it('uses the selected seminar catalog when confirmation omits the offer detail', () => {
+    const selection = TestBed.inject(AcademicProposalSelection);
+    const proposal = TestBed.inject(InscripcionProposalFacade);
+    selection.setProposalType('3');
+    vi.spyOn(selection, 'seminars').mockReturnValue([
+      {
+        idOferta: 10,
+        idProceso: 210,
+        nombre: 'Seminario A',
+        fechaComienzo: '2027-03-04T00:00:00',
+      },
+      { idOferta: 11, idProceso: 210, nombre: 'Seminario B', fechaComienzo: null },
+    ]);
+    proposal.academicForm.controls.seminarios.setValue(['10', '11']);
+    process.preEnrollmentResponse.update(response => ({ ...response!, seminarios: [] }));
+
+    expect(facade.seminariosResumen()).toEqual([
+      {
+        idInscripcion: null,
+        nombre: 'Seminario A',
+        comienzo: '04/03/2027',
+        turno: 'No informado',
+      },
+      {
+        idInscripcion: null,
+        nombre: 'Seminario B',
+        comienzo: 'No informado',
+        turno: 'No informado',
+      },
+    ]);
+  });
+
+  it('uses enrollment ids from the resume session when confirmation omits them', () => {
+    configureFacade({
+      queryParams: { idProducto: '40', idProceso: '210' },
+    });
+    TestBed.inject(InscriptionResumeContextStore).save({
+      idProducto: 40,
+      idProceso: 210,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+    process.preEnrollmentResponse.update(response => ({
+      ...response!,
+      idInscripcion: null,
+      seminarios: [],
+    }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(inscriptions.pay).toHaveBeenCalledWith({
+      idsInscripcion: [7010, 7011],
+      metodoPago: 'cuenta-personal',
+      idBancoSistarbanc: null,
+    });
   });
 
   it('charges every seminario of an Actualización profesional package', () => {

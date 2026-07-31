@@ -35,6 +35,7 @@ describe('HomeEndpoint', () => {
           inscripciones: [
             {
               idInscripto: 100,
+              idOferta: 300,
               idComienzo: 20,
               idTurno: 30,
               nombreComienzo: 'Marzo 2027',
@@ -48,6 +49,7 @@ describe('HomeEndpoint', () => {
     await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
       {
         idInscripto: 100,
+        idOfertas: [300],
         idProducto: 10,
         idProceso: 25,
         idComienzo: 20,
@@ -98,6 +100,7 @@ describe('HomeEndpoint', () => {
     await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
       {
         idInscripto: 200,
+        idOfertas: [1, 2],
         idProducto: 15,
         idProceso: 26,
         idComienzo: 21,
@@ -140,8 +143,20 @@ describe('HomeEndpoint', () => {
           nombreExtensoProducto: 'Analista Programador',
           estadoInscripcion: 'Confirmada',
           inscripciones: [
-            { idInscripto: 100, idComienzo: 20, idTurno: 30, nombreComienzo: 'Marzo 2027' },
-            { idInscripto: 101, idComienzo: 21, idTurno: 31, nombreComienzo: 'Abril 2027' },
+            {
+              idInscripto: 100,
+              idOferta: 300,
+              idComienzo: 20,
+              idTurno: 30,
+              nombreComienzo: 'Marzo 2027',
+            },
+            {
+              idInscripto: 101,
+              idOferta: 301,
+              idComienzo: 21,
+              idTurno: 31,
+              nombreComienzo: 'Abril 2027',
+            },
           ],
         },
       ])
@@ -151,6 +166,29 @@ describe('HomeEndpoint', () => {
 
     expect(result).toHaveLength(2);
     expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
+    expect(result.map(inscripcion => inscripcion.idOfertas)).toEqual([[300], [301]]);
+  });
+
+  it('keeps only unique positive offer ids in an AP package', async () => {
+    api.request.mockReturnValueOnce(
+      of([
+        {
+          idProducto: 15,
+          idNivelProducto: 4,
+          idProceso: 26,
+          inscripciones: [
+            { idOferta: 310 },
+            { idOferta: 310 },
+            { idOferta: 0 },
+            { idOferta: null },
+          ],
+        },
+      ])
+    );
+
+    const result = await firstValueFrom(endpoint.getMisInscripciones());
+
+    expect(result[0]?.idOfertas).toEqual([310]);
   });
 
   it('should not explode when inscripciones is null or empty', async () => {
