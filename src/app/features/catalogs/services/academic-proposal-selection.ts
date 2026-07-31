@@ -230,6 +230,9 @@ export class AcademicProposalSelection {
               this.syncValidatorsForProposalType(form);
             }
           }
+          if (selectedCareer && this.isProfessionalUpdateCareer(selectedCareer.idProducto)) {
+            this.loadSeminars(selectedCareer.idProducto);
+          }
         },
         error: () => {
           this.catalogError.set('No se pudieron cargar las carreras.');

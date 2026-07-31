@@ -132,6 +132,23 @@ describe('AcademicProposalSelection', () => {
     expect(selection.canSelectSeminars()).toBe(true);
   });
 
+  it('loads seminars when an AP program was prefilled before catalogs arrived', () => {
+    const resumedForm = createForm();
+    resumedForm.setValue({
+      tipoPropuesta: '3',
+      carrera: '30',
+      comienzo: '200',
+      turno: '300',
+      seminarios: ['300', '301'],
+    });
+    getSeminarios.mockClear();
+
+    selection.connect(resumedForm);
+
+    expect(getSeminarios).toHaveBeenCalledWith(30, 200);
+    expect(selection.seminarOptions()).toHaveLength(2);
+  });
+
   it('clears the selected seminars when the program changes', () => {
     form.controls.tipoPropuesta.setValue('3');
     form.controls.carrera.setValue('30');
