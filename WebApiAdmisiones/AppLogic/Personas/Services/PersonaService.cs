@@ -94,7 +94,7 @@ public class PersonaService(
         persona.Telefono1 = DocumentUtils.NormalizarOpcional(request.Telefono1);
         persona.Email = DocumentUtils.NormalizarOpcional(request.Mail);
 
-        PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+        PersonaValidation.AuditarPersona(persona, codigoPersona, uow);
         uow.Personas.Update(persona);
         uow.Save();
 
@@ -302,7 +302,7 @@ public class PersonaService(
             uow.Imagens.Update(imagenExistente);
         }
 
-        PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+        PersonaValidation.AuditarPersona(persona, codigoPersona, uow);
         uow.Save();
         return OperationResult<bool>.Ok(true, nameof(SubirFotoPersona));
     }
@@ -365,7 +365,7 @@ public class PersonaService(
         }
 
         persona.FechaVtoDocumentoPersona = fecha;
-        PersonaValidation.AuditarPersona(persona, codigoPersona, uow, false);
+        PersonaValidation.AuditarPersona(persona, codigoPersona, uow);
         uow.Save();
         return OperationResult<bool>.Ok(true, nameof(SubirDocumentoPersona));
     }

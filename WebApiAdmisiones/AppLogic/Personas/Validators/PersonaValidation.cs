@@ -9,19 +9,12 @@ namespace AppLogic.Personas.Validators;
 /// </summary>
 public static class PersonaValidation
 {
-    public static void AuditarPersona(Persona persona, long codigoPersona, IUnitOfWork uow, bool esConfirmacion)
+    public static void AuditarPersona(Persona persona, long codigoPersona, IUnitOfWork uow)
     {
         persona.UsuarioModifFdp = codigoPersona.ToString();
         persona.UsuarioUltimaActualizacion = uow.ObtenerDbUserId();
         persona.FechaUltimaActualizacion = DateTime.Now;
         persona.HoraUltimaActualizacion = DateTime.Now.ToString("HH:mm:ss");
-        if (esConfirmacion)
-        {
-            // Confirma los datos personales
-            persona.FechaConfDatosPersona = DateTime.Now;
-            persona.HoraConfDatosPersona = DateTime.Now.ToString("HH:mm:ss");
-            persona.UsuarioConfDatosPersona = uow.ObtenerDbUserId();
-        }
     }
 
     public static OperationResult<bool> ValidarDatosObligatoriosPersona(Persona persona, string callingMethod)
