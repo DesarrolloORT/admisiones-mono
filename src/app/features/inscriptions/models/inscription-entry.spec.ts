@@ -108,16 +108,32 @@ function detail(values: Partial<InscripcionDetail> = {}): InscripcionDetail {
 // catálogo caído o producto fuera del catálogo.
 function retomar(
   detail: InscripcionDetail | null,
-  idNivelProducto: number | null = null
+  idNivelProducto: number | null = null,
+  idOfertas: number[] = []
 ): InscripcionEntryResolved {
-  return { intent: 'retomar', detail, idProducto: 2184, idProceso: 122, idNivelProducto };
+  return {
+    intent: 'retomar',
+    detail,
+    idProducto: 2184,
+    idProceso: 122,
+    idOfertas,
+    idNivelProducto,
+  };
 }
 
 function reactivar(
   detail: InscripcionDetail | null,
-  idNivelProducto: number | null = null
+  idNivelProducto: number | null = null,
+  idOfertas: number[] = []
 ): InscripcionEntryResolved {
-  return { intent: 'reactivar', detail, idProducto: 2184, idProceso: 122, idNivelProducto };
+  return {
+    intent: 'reactivar',
+    detail,
+    idProducto: 2184,
+    idProceso: 122,
+    idOfertas,
+    idNivelProducto,
+  };
 }
 
 const DETAIL = {
@@ -744,6 +760,32 @@ describe('deriveInitialInscripcionState', () => {
       turno: '310',
       seminarios: ['310', '311'],
     });
+  });
+
+  it('prefers every offer carried by the dashboard when the detail has no interests', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoSinIntereses, 4, [310, 311]),
+      survey: RESOLVED.fresh,
+    });
+
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '3',
+      carrera: '20',
+      comienzo: '122',
+      turno: '310',
+      seminarios: ['310', '311'],
+    });
+  });
+
+  it('prefers the dashboard offers over stale detail interests', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, 4, [310, 311]),
+      survey: RESOLVED.fresh,
+    });
+
+    expect(state.academicPrefill).toEqual(
+      expect.objectContaining({ turno: '310', seminarios: ['310', '311'] })
+    );
   });
 
   it('prefills the academic step for a non-AP resume too', () => {

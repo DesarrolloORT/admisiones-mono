@@ -58,6 +58,7 @@ export type InscripcionEntryResolved =
       detail: InscripcionDetail | null;
       idProducto: number;
       idProceso: number;
+      idOfertas: number[];
       idNivelProducto: number | null;
     }
   | {
@@ -65,6 +66,7 @@ export type InscripcionEntryResolved =
       detail: InscripcionDetail | null;
       idProducto: number;
       idProceso: number;
+      idOfertas: number[];
       idNivelProducto: number | null;
     };
 
@@ -103,9 +105,9 @@ export type InscripcionPaymentInit =
   | { kind: 'en-proceso' };
 
 /**
- * Precarga del paso 1 al retomar. La fuente es el Detalle, no la encuesta: AP nunca
- * postea `EncuestaInicial` y el resto puede no tenerla. Si el Detalle no llegó, el
- * producto y el comienzo salen de los params de la URL.
+ * Precarga del paso 1 al retomar. La tarjeta transporta las ofertas en la URL y el
+ * Detalle queda como fallback para enlaces anteriores; la encuesta nunca es fuente del
+ * paso 1. Si el Detalle no llegó, producto y comienzo también salen de la URL.
  *
  * `turno` y `seminarios` se llenan SIEMPRE los dos con las mismas ofertas:
  * `buildConfirmPreEnrollmentPayload` lee `seminarios` cuando el tipo es Actualización
@@ -219,18 +221,17 @@ function deriveRetomar(
 }
 
 /**
- * Precarga del paso 1 al retomar. Siempre devuelve algo: producto y comienzo salen del
- * Detalle y, si no llegó, de los params de la URL (que son la prueba de que la
- * inscripción existe). Las ofertas solo puede darlas el Detalle; sin ellas el paso 2
- * igual se abre, pero confirmar la preinscripción va a fallar hasta que el Detalle
- * responda. Con `idNivelProducto` desconocido (catálogo caído) el tipo queda vacío y
- * `AcademicProposalSelection` lo completa desde el nivel de la carrera al cargar.
+ * Precarga del paso 1 al retomar. Producto y comienzo prefieren el Detalle; las ofertas
+ * prefieren la URL de la tarjeta y usan `Detalle.intereses` como fallback para enlaces
+ * anteriores. Con `idNivelProducto` desconocido (catálogo caído) el tipo queda vacío
+ * y `AcademicProposalSelection` lo completa desde el nivel de la carrera al cargar.
  */
 function buildAcademicPrefill(entry: InscripcionResumeEntry): InscripcionAcademicPrefill {
   const idProducto = entry.detail?.detalle?.idProducto ?? entry.idProducto;
-  const idOfertas = (entry.detail?.intereses ?? [])
+  const detailOfferIds = (entry.detail?.intereses ?? [])
     .map(oferta => oferta.idOferta)
     .filter((idOferta): idOferta is number => idOferta !== null);
+  const idOfertas = entry.idOfertas.length > 0 ? entry.idOfertas : detailOfferIds;
 
   return {
     tipoPropuesta:
