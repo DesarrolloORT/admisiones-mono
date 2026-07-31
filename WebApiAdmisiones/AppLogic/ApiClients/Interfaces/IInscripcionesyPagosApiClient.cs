@@ -48,13 +48,13 @@ public interface IInscripcionesyPagosApiClient
     /// <summary>Obtiene los carritos de seña de una o varias inscripciones (nivel 3 y 4 con seminarios puede traer más de una) en una sola llamada.</summary>
     Task<OperationResult<CarritosInscripcionApiResponse>> ObtenerCarritosPorInscripcionAsync(IEnumerable<long> idsInscripcion);
 
-    /// <summary>Procesa el pago de los carritos de seña de una inscripción contra la API legacy.</summary>
+    /// <summary>Procesa el pago de los carritos de seña de una o varias inscripciones (nivel 3 y 4 con seminarios puede traer más de una) contra la API legacy.</summary>
     Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCarritosPorInscripcionAsync(
-        long idInscripcion,
+        IEnumerable<long> idsInscripcion,
         string tipoPago = "PAGO_CUENTA_CORRIENTE");
 
     Task<OperationResult<string>> ObtenerUrlCrearFacturaPorInscripcionAsync(
-        long idInscripcion,
+        IEnumerable<long> idsInscripcion,
         string tipoPago,
         string banco = "");
 }

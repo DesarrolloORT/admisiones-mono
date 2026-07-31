@@ -179,24 +179,26 @@ public class InscripcionesyPagosApiClient(HttpClient httpClient, ILogger<Inscrip
             "Error al obtener carritos de la inscripción");
     }
 
-    /// <summary>Procesa el pago de los carritos de seña de una inscripción contra la API legacy.</summary>
+    /// <summary>Procesa el pago de los carritos de seña de una o varias inscripciones (nivel 3 y 4 con seminarios puede traer más de una) contra la API legacy.</summary>
     public async Task<OperationResult<List<DtoMensajePagoCarrito>>> PagarCarritosPorInscripcionAsync(
-        long idInscripcion,
+        IEnumerable<long> idsInscripcion,
         string tipoPago = "PAGO_CUENTA_CORRIENTE")
     {
         return await SendAsync<List<DtoMensajePagoCarrito>>(
             () =>
             {
+                var idsQuery = string.Join("&", idsInscripcion.Select(id => $"idsInscripcion={id}"));
+
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                    "Procesando pago de carritos de la inscripción {IdInscripcion} con tipo de pago: {TipoPago}",
-                    idInscripcion,
+                    "Procesando pago de carritos de las inscripciones: {IdsQuery} con tipo de pago: {TipoPago}",
+                    idsQuery,
                     tipoPago
                     );
                 }
 
-                var url = $"ORTSecure/Pagos/Carritos/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}&idInscripcion={idInscripcion}";
+                var url = $"ORTSecure/Pagos/Carritos/Pagar?tipoPago={Uri.EscapeDataString(tipoPago)}&{idsQuery}";
                 return _httpClient.PostAsync(url, null);
             },
             "PAGAR_CARRITOS_01",
@@ -204,24 +206,25 @@ public class InscripcionesyPagosApiClient(HttpClient httpClient, ILogger<Inscrip
             "La API rechazó el pago");
     }
 
-
     public async Task<OperationResult<string>> ObtenerUrlCrearFacturaPorInscripcionAsync(
-        long idInscripcion,
+        IEnumerable<long> idsInscripcion,
         string tipoPago,
         string banco = "")
     {
         return await SendAsync<string>(
             () =>
             {
+                var idsQuery = string.Join("&", idsInscripcion.Select(id => $"idsInscripcion={id}"));
+
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
-                        "Obteniendo URL de factura de la inscripción {IdInscripcion} con tipo de pago: {TipoPago}",
-                        idInscripcion,
+                        "Obteniendo URL de factura de las inscripciones: {IdsQuery} con tipo de pago: {TipoPago}",
+                        idsQuery,
                         tipoPago);
                 }
 
-                var url = $"ORTSecure/Pagos/Carritos/UrlCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}&idInscripcion={idInscripcion}&banco={Uri.EscapeDataString(banco)}";
+                var url = $"ORTSecure/Pagos/Carritos/UrlCrearFactura?tipoPago={Uri.EscapeDataString(tipoPago)}&banco={Uri.EscapeDataString(banco)}&{idsQuery}";
                 return _httpClient.PostAsync(url, null);
             },
             "URL_CREAR_FACTURA_01",

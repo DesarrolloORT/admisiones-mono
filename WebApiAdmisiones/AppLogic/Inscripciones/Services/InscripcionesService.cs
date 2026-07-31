@@ -550,12 +550,13 @@ public class InscripcionesService(
         {
             case InscripcionesConstants.TipoPago.CuentaPersonal:
             {
-                var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdInscripcion = request.IdInscripcion });
+                var result = await PagarCuentaPersonal(codigoPersona, new DtoPagarCuentaPersonalRequest { IdsInscripcion = request.IdsInscripcion });
                 if (!result.Success)
                     return result.Failure().As<DtoPagarResponse>(methodName);
 
                 using var uow = _uowFactory.Create();
-                var inscripto = uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona);
+                var idInscripcion = request.IdsInscripcion.Count > 0 ? request.IdsInscripcion[0] : 0;
+                var inscripto = uow.Inscriptos.GetDetalleByKey(idInscripcion, codigoPersona);
                 var detalle = inscripto != null ? ConstruirDetalleConfirmada(uow, codigoPersona, inscripto) : null;
                 return OperationResult<DtoPagarResponse>.Ok(
                     new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.PagoConfirmado, Mensajes = result.Data ?? new(), Confirmada = detalle },
@@ -565,7 +566,7 @@ public class InscripcionesService(
             case InscripcionesConstants.TipoPago.Abitab:
             case InscripcionesConstants.TipoPago.Paganza:
             {
-                var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdInscripcion = request.IdInscripcion, TipoPago = tipoPago });
+                var result = GuardarMetodoPago(codigoPersona, new DtoGuardarMetodoPagoRequest { IdsInscripcion = request.IdsInscripcion, TipoPago = tipoPago });
                 return result.Success
                     ? OperationResult<DtoPagarResponse>.Ok(new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.MetodoGuardado }, methodName)
                     : result.Failure().As<DtoPagarResponse>(methodName);
@@ -577,7 +578,7 @@ public class InscripcionesService(
             {
                 var result = await ObtenerUrlFactura(codigoPersona, new DtoObtenerUrlFacturaRequest
                 {
-                    IdInscripcion = request.IdInscripcion,
+                    IdsInscripcion = request.IdsInscripcion,
                     TipoPago = tipoPago,
                     IdBancoSistarbanc = request.IdBancoSistarbanc
                 });
@@ -600,7 +601,7 @@ public class InscripcionesService(
     {
         const string methodName = nameof(ObtenerUrlFactura);
 
-        var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_UF_00", "INS_UF_01", methodName);
+        var validacion = ValidarRequestInscripcion(request, x => x.IdsInscripcion, "INS_UF_00", "INS_UF_01", methodName);
         if (!validacion.Success)
             return validacion.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
 
@@ -619,13 +620,13 @@ public class InscripcionesService(
 
         using (var uow = _uowFactory.Create())
         {
-            var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_UF_04", methodName);
+            var pertenencia = ValidarPertenenciaInscripciones(uow, request.IdsInscripcion, codigoPersona, "INS_UF_04", methodName);
             if (!pertenencia.Success)
                 return pertenencia.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
         }
 
         var banco = tipoPagoNormalizado == InscripcionesConstants.TipoPago.Sistarbanc ? idBancoSistarbanc! : string.Empty;
-        var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdInscripcion, tipoPagoNormalizado, banco);
+        var urlResult = await _inscripcionesyPagosApiClient.ObtenerUrlCrearFacturaPorInscripcionAsync(request.IdsInscripcion, tipoPagoNormalizado, banco);
         if (!urlResult.Success)
             return urlResult.Failure().As<DtoObtenerUrlFacturaResponse>(methodName);
 
@@ -654,18 +655,18 @@ public class InscripcionesService(
     {
         const string methodName = nameof(PagarCuentaPersonal);
 
-        var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_PC_00", "INS_PC_01", methodName);
+        var validacion = ValidarRequestInscripcion(request, x => x.IdsInscripcion, "INS_PC_00", "INS_PC_01", methodName);
         if (!validacion.Success)
             return validacion.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
 
         using (var uow = _uowFactory.Create())
         {
-            var pertenencia = ValidarPertenenciaInscripto(uow, request.IdInscripcion, codigoPersona, "INS_PC_02", methodName);
+            var pertenencia = ValidarPertenenciaInscripciones(uow, request.IdsInscripcion, codigoPersona, "INS_PC_02", methodName);
             if (!pertenencia.Success)
                 return pertenencia.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
         }
 
-        var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdInscripcion);
+        var pagoResult = await _inscripcionesyPagosApiClient.PagarCarritosPorInscripcionAsync(request.IdsInscripcion);
         return pagoResult.Success
             ? OperationResult<List<DtoMensajePagoCarrito>>.Ok(pagoResult.Data, methodName)
             : pagoResult.Failure().As<List<DtoMensajePagoCarrito>>(methodName);
@@ -675,7 +676,7 @@ public class InscripcionesService(
     {
         const string methodName = nameof(GuardarMetodoPago);
 
-        var validacion = ValidarRequestInscripcion(request, x => x.IdInscripcion, "INS_MP_00", "INS_MP_01", methodName);
+        var validacion = ValidarRequestInscripcion(request, x => x.IdsInscripcion, "INS_MP_00", "INS_MP_01", methodName);
         if (!validacion.Success)
             return validacion.Failure().As<bool>(methodName);
 
@@ -687,51 +688,67 @@ public class InscripcionesService(
 
         using var uow = _uowFactory.Create();
 
-        if (uow.Inscriptos.GetDetalleByKey(request.IdInscripcion, codigoPersona) == null)
+        uow.BeginTransaction();
+        try
         {
-            return OperationResult<bool>.IsFailed("INS_MP_03", methodName, "No se encontro la inscripcion para la persona.", 404);
-        }
+            foreach (var idInscripcion in request.IdsInscripcion)
+            {
+                if (uow.Inscriptos.GetDetalleByKey(idInscripcion, codigoPersona) == null)
+                {
+                    uow.Rollback();
+                    return OperationResult<bool>.IsFailed("INS_MP_03", methodName, "No se encontro la inscripcion para la persona.", 404);
+                }
 
-        if (uow.InscriptoSeniaMinima.GetByKey(request.IdInscripcion) != null)
-        {
-            return OperationResult<bool>.IsFailed("INS_MP_04", methodName, "La reserva minima ya fue registrada para la inscripcion.", 409);
-        }
+                if (uow.InscriptoSeniaMinima.GetByKey(idInscripcion) != null)
+                {
+                    uow.Rollback();
+                    return OperationResult<bool>.IsFailed("INS_MP_04", methodName, "La reserva minima ya fue registrada para la inscripcion.", 409);
+                }
 
-        uow.InscriptoSeniaMinima.Add(new InscriptoSeniaMinimum
+                uow.InscriptoSeniaMinima.Add(new InscriptoSeniaMinimum
+                {
+                    IdInscripto = idInscripcion,
+                    MetodoPagoSeniaMinima = tipoPagoNormalizado
+                });
+            }
+
+            uow.Save();
+            uow.Commit();
+        }
+        catch
         {
-            IdInscripto = request.IdInscripcion,
-            MetodoPagoSeniaMinima = tipoPagoNormalizado
-        });
-        uow.Save();
+            uow.Rollback();
+            throw;
+        }
 
         return OperationResult<bool>.Ok(true, methodName);
     }
 
-    private static OperationResult<long> ValidarRequestInscripcion<TRequest>(
+    private static OperationResult<List<long>> ValidarRequestInscripcion<TRequest>(
         TRequest request,
-        Func<TRequest, long> obtenerIdInscripcion,
+        Func<TRequest, List<long>> obtenerIdsInscripcion,
         string codigoRequestInvalido,
         string codigoIdInvalido,
         string methodName)
         where TRequest : class
     {
         if (request == null)
-            return OperationResult<long>.IsFailed(codigoRequestInvalido, methodName, "Request invalido.", 400);
+            return OperationResult<List<long>>.IsFailed(codigoRequestInvalido, methodName, "Request invalido.", 400);
 
-        var idInscripcion = obtenerIdInscripcion(request);
-        return idInscripcion > 0
-            ? OperationResult<long>.Ok(idInscripcion, methodName)
-            : OperationResult<long>.IsFailed(codigoIdInvalido, methodName, "IdInscripcion invalido.", 400);
+        var idsInscripcion = obtenerIdsInscripcion(request);
+        return idsInscripcion is { Count: > 0 } && idsInscripcion.All(id => id > 0)
+            ? OperationResult<List<long>>.Ok(idsInscripcion, methodName)
+            : OperationResult<List<long>>.IsFailed(codigoIdInvalido, methodName, "IdsInscripcion invalido.", 400);
     }
 
-    private static OperationResult<bool> ValidarPertenenciaInscripto(
+    private static OperationResult<bool> ValidarPertenenciaInscripciones(
         IUnitOfWork uow,
-        long idInscripto,
+        IEnumerable<long> idsInscripcion,
         long codigoPersona,
         string codigoError,
         string methodName)
     {
-        return uow.Inscriptos.GetDetalleByKey(idInscripto, codigoPersona) != null
+        return idsInscripcion.All(idInscripto => uow.Inscriptos.GetDetalleByKey(idInscripto, codigoPersona) != null)
             ? OperationResult<bool>.Ok(true, methodName)
             : OperationResult<bool>.IsFailed(codigoError, methodName, "No se encontro la inscripcion para la persona.", 404);
     }

@@ -3159,7 +3159,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "SISTARBANC",
                 IdBancoSistarbanc = "001"
             });
@@ -3168,7 +3168,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("https://pagos.test/factura", result.Data!.UrlPago);
             Assert.Null(result.Data.ParametrosEncriptados);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC&idInscripcion=555&banco=001", request.RequestUri);
+            Assert.Contains("UrlCrearFactura?tipoPago=SISTARBANC&banco=001&idsInscripcion=555", request.RequestUri);
             Assert.Equal(string.Empty, request.Body);
         }
 
@@ -3187,7 +3187,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "BANRED"
             });
 
@@ -3201,7 +3201,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "SISTARBANC"
             });
 
@@ -3221,7 +3221,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "BANRED"
             });
 
@@ -3244,7 +3244,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "BANRED"
             });
 
@@ -3305,7 +3305,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
@@ -3316,7 +3316,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
             Assert.Single(result.Data.Confirmada.MateriasPrimerSemestre);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idsInscripcion=555", request.RequestUri);
         }
 
         [Fact]
@@ -3338,7 +3338,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, """[{ "clave": "123|10|1|7|555", "valor": "ok" }]"""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal("PAGO_CONFIRMADO", result.Data!.Resultado);
@@ -3361,7 +3361,7 @@ namespace UnitTesting.AppLogic.Services
                 .Callback<InscriptoSeniaMinimum>(x => agregado = x);
             _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = " abitab " });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = " abitab " });
 
             Assert.True(result.Success);
             Assert.Equal("METODO_GUARDADO", result.Data!.Resultado);
@@ -3382,20 +3382,20 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.OK, "\"https://pagos.test/factura\""));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "BANRED" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "BANRED" });
 
             Assert.True(result.Success);
             Assert.Equal("URL_GENERADA", result.Data!.Resultado);
             Assert.Equal("https://pagos.test/factura", result.Data.UrlPago);
             Assert.Null(result.Data.ParametrosEncriptados);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("UrlCrearFactura?tipoPago=BANRED&idInscripcion=555&banco=", request.RequestUri);
+            Assert.Contains("UrlCrearFactura?tipoPago=BANRED&banco=&idsInscripcion=555", request.RequestUri);
         }
 
         [Fact]
         public async Task Pagar_WithInvalidTipoPago_ReturnsBadRequest()
         {
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "OTRO" });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "OTRO" });
 
             Assert.False(result.Success);
             Assert.Equal("INS_PAG_01", result.ErrorCode);
@@ -3423,13 +3423,13 @@ namespace UnitTesting.AppLogic.Services
                 """));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
             Assert.Equal(2, result.Data!.Mensajes.Count);
             Assert.Equal("123|10|1|7|555", result.Data.Mensajes[0].Clave);
             var request = Assert.Single(handler.Requests);
-            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idInscripcion=555", request.RequestUri);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idsInscripcion=555", request.RequestUri);
             Assert.Equal(string.Empty, request.Body);
         }
 
@@ -3442,7 +3442,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("INS_PC_02", result.ErrorCode);
@@ -3461,7 +3461,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.BadRequest, "No hay carritos para la inscripcion."));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -3481,7 +3481,7 @@ namespace UnitTesting.AppLogic.Services
                 JsonResponse(HttpStatusCode.BadRequest, "saldo insuficiente"));
             var service = CrearServiceConApi(handler);
 
-            var result = await service.Pagar(123, new DtoPagarRequest { IdInscripcion = 555, TipoPago = "CUENTA_PERSONAL" });
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.False(result.Success);
             Assert.Equal("PAGAR_CARRITOS_01", result.ErrorCode);
@@ -3490,30 +3490,85 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task Pagar_WithAbitab_AddsAndSaves()
+        public async Task Pagar_WithCuentaPersonal_MultiplesOfertas_PagaTodoJunto()
         {
-            InscriptoSeniaMinimum? agregado = null;
             var inscriptoRepo = new Mock<IInscriptoRepository>();
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123 });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
-            seniaRepo.Setup(r => r.GetByKey(555)).Returns((InscriptoSeniaMinimum)null);
-            seniaRepo.Setup(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()))
-                .Callback<InscriptoSeniaMinimum>(x => agregado = x);
-            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
 
-            var result = await _service.Pagar(123, new DtoPagarRequest
-            {
-                IdInscripcion = 555,
-                TipoPago = "ABITAB"
-            });
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>());
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>());
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK,
+                """
+                [
+                  { "clave": "123|10|1|7|555", "valor": "ok" },
+                  { "clave": "123|10|1|8|556", "valor": "ok" }
+                ]
+                """));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555, 556], TipoPago = "CUENTA_PERSONAL" });
 
             Assert.True(result.Success);
-            Assert.Equal("METODO_GUARDADO", result.Data!.Resultado);
-            Assert.NotNull(agregado);
-            Assert.Equal(555, agregado!.IdInscripto);
-            Assert.Equal("ABITAB", agregado.MetodoPagoSeniaMinima);
+            Assert.Equal(2, result.Data!.Mensajes.Count);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", request.RequestUri);
+            Assert.Contains("idsInscripcion=555", request.RequestUri);
+            Assert.Contains("idsInscripcion=556", request.RequestUri);
+        }
+
+        [Fact]
+        public async Task Pagar_WithAbitab_MultiplesOfertas_GuardaTodasLasReservas()
+        {
+            var agregados = new List<InscriptoSeniaMinimum>();
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(It.IsAny<long>())).Returns((InscriptoSeniaMinimum)null);
+            seniaRepo.Setup(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()))
+                .Callback<InscriptoSeniaMinimum>(x => agregados.Add(x));
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [555, 556], TipoPago = "ABITAB" });
+
+            Assert.True(result.Success);
+            Assert.Equal(2, agregados.Count);
+            Assert.Contains(agregados, a => a.IdInscripto == 555);
+            Assert.Contains(agregados, a => a.IdInscripto == 556);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public async Task Pagar_WithAbitab_MultiplesOfertas_UnaNoPerteneceALaPersona_NoGuardaNinguna()
+        {
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns((Inscripto)null);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(It.IsAny<long>())).Returns((InscriptoSeniaMinimum)null);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var result = await _service.Pagar(123, new DtoPagarRequest { IdsInscripcion = [556, 555], TipoPago = "ABITAB" });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_MP_03", result.ErrorCode);
+            _uowMock.Verify(u => u.Rollback(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Never);
+            _uowMock.Verify(u => u.Save(), Times.Never);
+            seniaRepo.Verify(r => r.Add(It.IsAny<InscriptoSeniaMinimum>()), Times.Never);
         }
 
         [Fact]
@@ -3531,7 +3586,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = " paganza "
             });
 
@@ -3544,7 +3599,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "TARJETA"
             });
 
@@ -3563,7 +3618,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "ABITAB"
             });
 
@@ -3585,7 +3640,7 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Pagar(123, new DtoPagarRequest
             {
-                IdInscripcion = 555,
+                IdsInscripcion = [555],
                 TipoPago = "PAGANZA"
             });
 

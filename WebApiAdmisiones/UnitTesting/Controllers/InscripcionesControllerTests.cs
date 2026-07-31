@@ -90,7 +90,7 @@ namespace UnitTesting.Controllers
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
-            var request = new DtoPagarRequest { IdInscripcion = 555, TipoPago = "BANRED" };
+            var request = new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "BANRED" };
 
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
             serviceMock

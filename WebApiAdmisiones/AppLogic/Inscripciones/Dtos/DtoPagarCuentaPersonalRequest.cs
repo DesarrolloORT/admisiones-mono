@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+
 namespace AppLogic.Inscripciones.Dtos;
 
 public class DtoPagarCuentaPersonalRequest
 {
-    public long IdInscripcion { get; set; }
+    public List<long> IdsInscripcion { get; set; } = new();
 }
