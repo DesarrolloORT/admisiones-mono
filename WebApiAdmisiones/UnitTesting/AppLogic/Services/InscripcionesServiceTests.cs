@@ -3065,13 +3065,14 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Confirmada", result.Data!.Estado);
             Assert.NotNull(result.Data.Confirmada);
             Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
-            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
+            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Carrera);
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
             Assert.Equal("maria.rodriguez@ort.edu.uy", result.Data.Confirmada.CoordinadorAcademico.Email);
             Assert.Equal("Juan PÃ©rez", result.Data.Confirmada.CoordinadorCursos!.Nombre);
             Assert.Equal("juan.perez@ort.edu.uy", result.Data.Confirmada.CoordinadorCursos.Email);
-            Assert.Equal(2, result.Data.Confirmada.MateriasPrimerSemestre.Count);
-            Assert.Contains(result.Data.Confirmada.MateriasPrimerSemestre, m => m.Nombre == "Arte y estÃ©tica I");
+            Assert.Single(result.Data.Confirmada.Inscripciones);
+            Assert.Equal(2, result.Data.Confirmada.Inscripciones[0].MateriasPrimerSemestre.Count);
+            Assert.Contains(result.Data.Confirmada.Inscripciones[0].MateriasPrimerSemestre, m => m.Nombre == "Arte y estÃ©tica I");
         }
 
         [Fact]
@@ -3130,6 +3131,107 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data!.Confirmada!.CoordinadorAcademico!.Nombre);
             Assert.Null(result.Data.Confirmada.CoordinadorCursos);
+        }
+
+        [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenConfirmadaConSeminarios_MuestraTodasLasOfertas()
+        {
+            var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
+            fresco1y2Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco1y2>());
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
+
+            var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
+            fresco3y4Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123, 10, 20))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    new()
+                    {
+                        IdProducto = 10, IdProceso = 20, IdInscripto = 555, IdOferta = 57018,
+                        EstadoInscripcion = global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada,
+                        ProgConSeminariosProducto = "SI",
+                        DescripcionOferta = "Seminario de introduccion"
+                    },
+                    new()
+                    {
+                        IdProducto = 10, IdProceso = 20, IdInscripto = 556, IdOferta = 57019,
+                        EstadoInscripcion = global::AppLogic.Inscripciones.Constants.InscripcionesConstants.EstadoInscripcion.Confirmada,
+                        ProgConSeminariosProducto = "SI",
+                        DescripcionOferta = "Seminario avanzado"
+                    }
+                });
+            _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(fresco3y4Repo.Object);
+
+            var producto = new Producto { IdProducto = 10, NombreWebProducto = "Certificado en Gerencia" };
+            var inscripto555 = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 57018,
+                Oferta = new Oferta
+                {
+                    IdOferta = 57018,
+                    Turno = new Turno { IdTurno = 1, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 1501, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete { Producto = producto }
+                    }
+                }
+            };
+            var inscripto556 = new Inscripto
+            {
+                IdInscripto = 556,
+                CodigoPersona = 123,
+                IdOferta = 57019,
+                Oferta = new Oferta
+                {
+                    IdOferta = 57019,
+                    Turno = new Turno { IdTurno = 3, NombreTurno = "Nocturno" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 1497, NombreComienzo = "Setiembre 2026" },
+                        Paquete = new Paquete { Producto = producto }
+                    }
+                }
+            };
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto555);
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns(inscripto556);
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
+            coordinadoresRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCoordinadore>());
+            _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
+
+            var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Decisiones financieras para ejecutivos" }
+            });
+            creditosRepo.Setup(r => r.GetByInscripto(556)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 556, IdMateria = 2, DescripcionMateria = "Liderazgo de equipos" }
+            });
+            _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
+
+            var result = await _service.ObtenerDetalleInscripcion(123, 10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal("Confirmada", result.Data!.Estado);
+            Assert.NotNull(result.Data.Confirmada);
+            Assert.Equal("Certificado en Gerencia", result.Data.Confirmada!.Carrera);
+            Assert.Equal(2, result.Data.Confirmada.Inscripciones.Count);
+            var oferta555 = result.Data.Confirmada.Inscripciones.Single(o => o.IdInscripcion == 555);
+            Assert.Equal(57018, oferta555.IdOferta);
+            Assert.Equal("Marzo 2026", oferta555.Comienzo);
+            Assert.Equal("Decisiones financieras para ejecutivos", Assert.Single(oferta555.MateriasPrimerSemestre).Nombre);
+            var oferta556 = result.Data.Confirmada.Inscripciones.Single(o => o.IdInscripcion == 556);
+            Assert.Equal(57019, oferta556.IdOferta);
+            Assert.Equal("Setiembre 2026", oferta556.Comienzo);
+            Assert.Equal("Liderazgo de equipos", Assert.Single(oferta556.MateriasPrimerSemestre).Nombre);
         }
 
         [Fact]
@@ -3312,9 +3414,10 @@ namespace UnitTesting.AppLogic.Services
             Assert.Single(result.Data.Mensajes);
             Assert.NotNull(result.Data.Confirmada);
             Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
-            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Resumen.Carrera);
+            Assert.Equal("Licenciatura en DiseÃ±o GrÃ¡fico", result.Data.Confirmada.Carrera);
             Assert.Equal("MarÃ­a RodrÃ­guez", result.Data.Confirmada.CoordinadorAcademico!.Nombre);
-            Assert.Single(result.Data.Confirmada.MateriasPrimerSemestre);
+            Assert.Single(result.Data.Confirmada.Inscripciones);
+            Assert.Single(result.Data.Confirmada.Inscripciones[0].MateriasPrimerSemestre);
             var request = Assert.Single(handler.Requests);
             Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE&idsInscripcion=555", request.RequestUri);
         }
@@ -3345,7 +3448,8 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(result.Data.Confirmada);
             Assert.Equal(123, result.Data.Confirmada!.CodigoPersona);
             Assert.Null(result.Data.Confirmada.CoordinadorAcademico);
-            Assert.Empty(result.Data.Confirmada.MateriasPrimerSemestre);
+            Assert.Single(result.Data.Confirmada.Inscripciones);
+            Assert.Empty(result.Data.Confirmada.Inscripciones[0].MateriasPrimerSemestre);
         }
 
         [Fact]
@@ -3492,9 +3596,44 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task Pagar_WithCuentaPersonal_MultiplesOfertas_PagaTodoJunto()
         {
+            var producto = new Producto { IdProducto = 10, NombreWebProducto = "Certificado en Gerencia" };
+            var inscripto555 = new Inscripto
+            {
+                IdInscripto = 555,
+                CodigoPersona = 123,
+                IdOferta = 57018,
+                Oferta = new Oferta
+                {
+                    IdOferta = 57018,
+                    IdTurno = 1,
+                    Turno = new Turno { IdTurno = 1, NombreTurno = "Matutino" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 1501, NombreComienzo = "Marzo 2026" },
+                        Paquete = new Paquete { Producto = producto }
+                    }
+                }
+            };
+            var inscripto556 = new Inscripto
+            {
+                IdInscripto = 556,
+                CodigoPersona = 123,
+                IdOferta = 57019,
+                Oferta = new Oferta
+                {
+                    IdOferta = 57019,
+                    IdTurno = 3,
+                    Turno = new Turno { IdTurno = 3, NombreTurno = "Nocturno" },
+                    Supraoferta = new Supraoferta
+                    {
+                        Comienzo = new Comienzo { IdComienzo = 1497, NombreComienzo = "Setiembre 2026" },
+                        Paquete = new Paquete { Producto = producto }
+                    }
+                }
+            };
             var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123 });
-            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123 });
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns(inscripto555);
+            inscriptoRepo.Setup(r => r.GetDetalleByKey(556, 123)).Returns(inscripto556);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
             var coordinadoresRepo = new Mock<IVdInscriptoCoordinadoreRepository>();
@@ -3502,7 +3641,14 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.VdInscriptoCoordinadores).Returns(coordinadoresRepo.Object);
 
             var creditosRepo = new Mock<IVdInscriptoCreditoAlumnoRepository>();
-            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>());
+            creditosRepo.Setup(r => r.GetByInscripto(555)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 555, IdMateria = 1, DescripcionMateria = "Decisiones financieras para ejecutivos" }
+            });
+            creditosRepo.Setup(r => r.GetByInscripto(556)).Returns(new List<VdInscriptoCreditoAlumno>
+            {
+                new() { IdInscripto = 556, IdMateria = 2, DescripcionMateria = "Liderazgo de equipos" }
+            });
             _uowMock.Setup(u => u.VdInscriptoCreditoAlumnos).Returns(creditosRepo.Object);
 
             var handler = new StubHttpMessageHandler(_ =>
@@ -3523,6 +3669,18 @@ namespace UnitTesting.AppLogic.Services
             Assert.Contains("Pagos/Carritos/Pagar?tipoPago=PAGO_CUENTA_CORRIENTE", request.RequestUri);
             Assert.Contains("idsInscripcion=555", request.RequestUri);
             Assert.Contains("idsInscripcion=556", request.RequestUri);
+
+            Assert.NotNull(result.Data.Confirmada);
+            Assert.Equal("Certificado en Gerencia", result.Data.Confirmada!.Carrera);
+            Assert.Equal(2, result.Data.Confirmada.Inscripciones.Count);
+            var oferta555 = result.Data.Confirmada.Inscripciones.Single(o => o.IdInscripcion == 555);
+            Assert.Equal(57018, oferta555.IdOferta);
+            Assert.Equal("Marzo 2026", oferta555.Comienzo);
+            Assert.Equal("Decisiones financieras para ejecutivos", Assert.Single(oferta555.MateriasPrimerSemestre).Nombre);
+            var oferta556 = result.Data.Confirmada.Inscripciones.Single(o => o.IdInscripcion == 556);
+            Assert.Equal(57019, oferta556.IdOferta);
+            Assert.Equal("Setiembre 2026", oferta556.Comienzo);
+            Assert.Equal("Liderazgo de equipos", Assert.Single(oferta556.MateriasPrimerSemestre).Nombre);
         }
 
         [Fact]

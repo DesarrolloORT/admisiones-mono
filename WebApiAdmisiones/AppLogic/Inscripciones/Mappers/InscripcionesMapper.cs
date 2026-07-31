@@ -59,9 +59,8 @@ internal static class InscripcionesMapper
 
     public static DtoConfirmadaDetalle MapearConfirmada(
         long codigoPersona,
-        Inscripto inscripto,
-        ICollection<VdInscriptoCoordinadore> coordinadores,
-        ICollection<VdInscriptoCreditoAlumno> materias)
+        IReadOnlyList<(Inscripto Inscripto, ICollection<VdInscriptoCreditoAlumno> Materias)> ofertas,
+        ICollection<VdInscriptoCoordinadore> coordinadores)
     {
         var coordinadorAcademico = MapearCoordinadorAcademico(coordinadores);
         var coordinadorCursos = MapearCoordinadorCursos(coordinadores);
@@ -70,12 +69,32 @@ internal static class InscripcionesMapper
             coordinadorCursos = null;
         }
 
+        var producto = ofertas[0].Inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
+
         return new DtoConfirmadaDetalle
         {
             CodigoPersona = codigoPersona,
-            Resumen = MapearResumenDesdeInscripto(inscripto),
+            IdProducto = producto?.IdProducto ?? 0,
+            Carrera = NombreCarrera(producto),
             CoordinadorAcademico = coordinadorAcademico?.Coordinador,
             CoordinadorCursos = coordinadorCursos?.Coordinador,
+            Inscripciones = ofertas
+                .Select(o => MapearInscripcionConfirmada(o.Inscripto, o.Materias))
+                .ToList()
+        };
+    }
+
+    private static DtoInscripcionConfirmada MapearInscripcionConfirmada(Inscripto inscripto, ICollection<VdInscriptoCreditoAlumno> materias)
+    {
+        var comienzo = inscripto.Oferta?.Supraoferta?.Comienzo;
+        return new DtoInscripcionConfirmada
+        {
+            IdInscripcion = inscripto.IdInscripto,
+            IdOferta = inscripto.IdOferta ?? 0,
+            IdComienzo = comienzo?.IdComienzo ?? 0,
+            Comienzo = comienzo?.NombreComienzo,
+            IdTurno = inscripto.Oferta?.IdTurno ?? 0,
+            Turno = inscripto.Oferta?.Turno?.NombreTurno,
             MateriasPrimerSemestre = materias
                 .Where(m => m.IdMateria.HasValue)
                 .GroupBy(m => m.IdMateria!.Value)
@@ -122,22 +141,6 @@ internal static class InscripcionesMapper
                     Turno = o.Turno?.NombreTurno
                 })
                 .ToList()
-        };
-    }
-
-    public static DtoResumenInscripcion MapearResumenDesdeInscripto(Inscripto inscripto)
-    {
-        var producto = inscripto.Oferta?.Supraoferta?.Paquete?.Producto;
-        var comienzo = inscripto.Oferta?.Supraoferta?.Comienzo;
-        return new DtoResumenInscripcion
-        {
-            IdOferta = inscripto.IdOferta ?? 0,
-            IdProducto = producto?.IdProducto ?? 0,
-            Carrera = NombreCarrera(producto),
-            IdComienzo = comienzo?.IdComienzo ?? 0,
-            Comienzo = comienzo?.NombreComienzo,
-            IdTurno = inscripto.Oferta?.IdTurno ?? 0,
-            Turno = inscripto.Oferta?.Turno?.NombreTurno
         };
     }
 

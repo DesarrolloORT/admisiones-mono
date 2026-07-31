@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Contrato de respuesta de las pantallas de inscripción: confirmar preinscripción, reactivar y detalle de 'Mis carreras'. Documenta la forma del JSON que recibe el front para que sepa qué renderizar en cada estado.",
   "conventions": {
     "propertyNaming": "camelCase",
@@ -50,16 +50,16 @@
         "pagoReserva": { "type": "decimal", "desc": "Total de reserva a pagar." }
       }
     },
-    "DtoResumenInscripcion": {
-      "desc": "Resumen de UNA inscripción confirmada (solo estado 'Confirmada'). Distinto de la cabecera: acá sí trae ids de oferta/comienzo/turno porque es una única inscripción.",
+    "DtoInscripcionConfirmada": {
+      "desc": "Una entrada por cada oferta confirmada y pagada (nivel 3 y 4 con seminarios puede traer varias, cada una con su propio comienzo/turno/materias).",
       "fields": {
+        "idInscripcion": { "type": "long" },
         "idOferta": { "type": "long" },
-        "idProducto": { "type": "long" },
-        "carrera": { "type": "string|null" },
         "idComienzo": { "type": "long" },
         "comienzo": { "type": "string|null" },
         "idTurno": { "type": "long" },
-        "turno": { "type": "string|null" }
+        "turno": { "type": "string|null" },
+        "materiasPrimerSemestre": { "type": "DtoMateria[]" }
       }
     },
     "DtoCoordinador": {
@@ -146,10 +146,11 @@
             "dto": "DtoConfirmadaDetalle",
             "fields": {
               "codigoPersona": "long",
-              "resumen": "DtoResumenInscripcion (una única inscripción, con ids de oferta/comienzo/turno).",
-              "coordinadorAcademico": "DtoCoordinador|null",
-              "coordinadorCursos": "DtoCoordinador|null",
-              "materiasPrimerSemestre": "DtoMateria[]"
+              "idProducto": "long (cabecera, compartido por todas las ofertas confirmadas).",
+              "carrera": "string|null (cabecera, compartido).",
+              "coordinadorAcademico": "DtoCoordinador|null (cabecera, compartido).",
+              "coordinadorCursos": "DtoCoordinador|null (cabecera, compartido).",
+              "inscripciones": "DtoInscripcionConfirmada[] — una por cada oferta confirmada (nivel 3 y 4 con seminarios puede traer varias, cada una con su propio comienzo/turno/materias)."
             }
           }
         }

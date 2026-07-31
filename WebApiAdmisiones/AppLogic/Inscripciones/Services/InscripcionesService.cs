@@ -90,11 +90,8 @@ public class InscripcionesService(
                 break;
 
             case InscripcionesConstants.EstadoInscripcion.Confirmada:
-                var idInscripto = filas.Count > 0 ? (long?)filas[0].IdInscripto : null;
-                var inscripto = idInscripto.HasValue
-                    ? uow.Inscriptos.GetDetalleByKey(idInscripto.Value, codigoPersona)
-                    : null;
-                if (inscripto == null)
+                var confirmadaDetalle = ConstruirDetalleConfirmada(uow, codigoPersona, filas.Select(f => f.IdInscripto));
+                if (confirmadaDetalle == null)
                 {
                     return OperationResult<DtoDetalleInscripcionResponse>.IsFailed(
                         "INS_DET_02",
@@ -102,7 +99,7 @@ public class InscripcionesService(
                         "No se encontró la inscripción confirmada para la persona.",
                         404);
                 }
-                response.Confirmada = ConstruirDetalleConfirmada(uow, codigoPersona, inscripto);
+                response.Confirmada = confirmadaDetalle;
                 break;
 
             // "A la espera" y estados desconocidos: se devuelve solo el estado, sin detalle.
@@ -169,11 +166,23 @@ public class InscripcionesService(
     private static FilaInscripcionPago ToFilaInscripcionPago(VdInscripcionesFresco3y4 fila) => new(
         (long)fila.IdInscripto, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, fila.DescripcionOferta);
 
-    private static DtoConfirmadaDetalle ConstruirDetalleConfirmada(IUnitOfWork uow, long codigoPersona, Inscripto inscripto)
+    private static DtoConfirmadaDetalle? ConstruirDetalleConfirmada(IUnitOfWork uow, long codigoPersona, IEnumerable<long> idsInscripcion)
     {
-        var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(inscripto.IdInscripto);
-        var materias = uow.VdInscriptoCreditoAlumnos.GetByInscripto(inscripto.IdInscripto);
-        return InscripcionesMapper.MapearConfirmada(codigoPersona, inscripto, coordinadores, materias);
+        var ofertas = new List<(Inscripto Inscripto, ICollection<VdInscriptoCreditoAlumno> Materias)>();
+        foreach (var id in idsInscripcion)
+        {
+            var inscripto = uow.Inscriptos.GetDetalleByKey(id, codigoPersona);
+            if (inscripto == null)
+                continue;
+
+            ofertas.Add((inscripto, uow.VdInscriptoCreditoAlumnos.GetByInscripto(id)));
+        }
+
+        if (ofertas.Count == 0)
+            return null;
+
+        var coordinadores = uow.VdInscriptoCoordinadores.GetByInscripto(ofertas[0].Inscripto.IdInscripto);
+        return InscripcionesMapper.MapearConfirmada(codigoPersona, ofertas, coordinadores);
     }
 
     public OperationResult<DtoAceptacionReglamentoEstudiantilResponse> ObtenerAceptacionReglamentoEstudiantil(long codigoPersona)
@@ -555,9 +564,7 @@ public class InscripcionesService(
                     return result.Failure().As<DtoPagarResponse>(methodName);
 
                 using var uow = _uowFactory.Create();
-                var idInscripcion = request.IdsInscripcion.Count > 0 ? request.IdsInscripcion[0] : 0;
-                var inscripto = uow.Inscriptos.GetDetalleByKey(idInscripcion, codigoPersona);
-                var detalle = inscripto != null ? ConstruirDetalleConfirmada(uow, codigoPersona, inscripto) : null;
+                var detalle = ConstruirDetalleConfirmada(uow, codigoPersona, request.IdsInscripcion);
                 return OperationResult<DtoPagarResponse>.Ok(
                     new DtoPagarResponse { Resultado = InscripcionesConstants.ResultadoPago.PagoConfirmado, Mensajes = result.Data ?? new(), Confirmada = detalle },
                     methodName);

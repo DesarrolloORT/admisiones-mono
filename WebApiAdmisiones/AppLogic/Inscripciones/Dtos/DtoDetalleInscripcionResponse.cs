@@ -46,25 +46,26 @@ public class DtoDetalleEnProceso
     public List<DtoInscripcionOferta> Intereses { get; set; } = new();
 }
 
+/// <summary>Cabecera compartida (producto/carrera/coordinadores, iguales para todas las ofertas del mismo pago) + una entrada por cada oferta confirmada (nivel 3 y 4 con seminarios puede traer más de una).</summary>
 public class DtoConfirmadaDetalle
 {
     public long CodigoPersona { get; set; }
-    public DtoResumenInscripcion Resumen { get; set; } = new();
-    public DtoCoordinador? CoordinadorAcademico { get; set; }
-    public DtoCoordinador? CoordinadorCursos { get; set; }
-    public List<DtoMateria> MateriasPrimerSemestre { get; set; } = new();
-}
-
-/// <summary>Resumen de una única inscripción confirmada (pantalla "Mis carreras" en estado Confirmada).</summary>
-public class DtoResumenInscripcion
-{
-    public long IdOferta { get; set; }
     public long IdProducto { get; set; }
     public string? Carrera { get; set; }
+    public DtoCoordinador? CoordinadorAcademico { get; set; }
+    public DtoCoordinador? CoordinadorCursos { get; set; }
+    public List<DtoInscripcionConfirmada> Inscripciones { get; set; } = new();
+}
+
+public class DtoInscripcionConfirmada
+{
+    public long IdInscripcion { get; set; }
+    public long IdOferta { get; set; }
     public long IdComienzo { get; set; }
     public string? Comienzo { get; set; }
     public long IdTurno { get; set; }
     public string? Turno { get; set; }
+    public List<DtoMateria> MateriasPrimerSemestre { get; set; } = new();
 }
 
 public class DtoCoordinador

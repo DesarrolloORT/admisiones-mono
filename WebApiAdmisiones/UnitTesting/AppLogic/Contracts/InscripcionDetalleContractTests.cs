@@ -17,7 +17,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void Contract_IsValidJson()
         {
-            Assert.Equal(1, Contract["version"]!.GetValue<int>());
+            Assert.Equal(2, Contract["version"]!.GetValue<int>());
             Assert.NotNull(Contract["types"]);
             Assert.NotNull(Contract["endpoints"]);
         }
@@ -27,7 +27,7 @@ namespace UnitTesting.AppLogic.Contracts
         [InlineData("DtoInscripcionOferta", typeof(DtoInscripcionOferta))]
         [InlineData("DtoEstadoCuenta", typeof(DtoEstadoCuenta))]
         [InlineData("DtoReservaMinima", typeof(DtoReservaMinima))]
-        [InlineData("DtoResumenInscripcion", typeof(DtoResumenInscripcion))]
+        [InlineData("DtoInscripcionConfirmada", typeof(DtoInscripcionConfirmada))]
         [InlineData("DtoCoordinador", typeof(DtoCoordinador))]
         [InlineData("DtoMateria", typeof(DtoMateria))]
         public void Contract_TypeFieldsMatchDto(string typeName, Type dtoType)
