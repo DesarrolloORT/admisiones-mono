@@ -255,7 +255,9 @@ export class InscripcionPage {
 
     await this.expectMainFocus();
     await expect(
-      this.page.getByRole('checkbox', { name: 'Acepto el reglamento estudiantil.' })
+      this.page.getByRole('checkbox', {
+        name: 'He leído y acepto el reglamento estudiantil de la universidad.',
+      })
     ).toBeChecked();
     await this.continueWithKeyboard();
 
@@ -396,7 +398,7 @@ export class InscripcionPage {
     await this.page.keyboard.press('Home');
     for (let index = 0; index < 30; index += 1) {
       if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
-        await this.page.keyboard.press('Tab');
+        await combobox.press('Enter');
         await expect(combobox).toContainText(option);
         return;
       }

@@ -26,7 +26,7 @@ describe('CatalogsEndpoint', () => {
   });
 
   it('should map careers from API data', () => {
-    apiMock.request.mockReturnValueOnce(
+    apiMock.request.mockReturnValue(
       of([
         {
           idNivelProducto: 1,
@@ -38,11 +38,6 @@ describe('CatalogsEndpoint', () => {
             },
           ],
         },
-      ])
-    );
-    apiMock.request.mockReturnValueOnce(of([]));
-    apiMock.request.mockReturnValueOnce(
-      of([
         {
           idNivelProducto: 3,
           nombreNivelProducto: 'Actualización profesional',
@@ -61,7 +56,7 @@ describe('CatalogsEndpoint', () => {
       ])
     );
 
-    endpoint.getCareers().subscribe(result => {
+    endpoint.getCareers(3).subscribe(result => {
       expect(result).toEqual([
         {
           idProducto: 20,
@@ -84,11 +79,9 @@ describe('CatalogsEndpoint', () => {
       ]);
     });
 
-    expect(apiMock.request.mock.calls.map(([, options]) => options.queryParams)).toEqual([
-      { propuestaAcademica: 1 },
-      { propuestaAcademica: 2 },
-      { propuestaAcademica: 3 },
-    ]);
+    expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
+      queryParams: { propuestaAcademica: 3 },
+    });
   });
 
   it('should map initial survey catalogs from API data', () => {

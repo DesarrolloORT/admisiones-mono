@@ -3,6 +3,7 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
+import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
   Bank,
   Career,
@@ -40,8 +41,8 @@ export class Catalogs {
     return this.endpoint.getCountryLocations();
   }
 
-  public getCareers(): Observable<Career[]> {
-    return this.endpoint.getCareers();
+  public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
+    return this.endpoint.getCareers(propuestaAcademica);
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {

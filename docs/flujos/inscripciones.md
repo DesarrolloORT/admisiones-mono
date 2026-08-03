@@ -541,6 +541,9 @@ el check de completada.
 
 El paso llama a `POST /Inscripciones/Pagar`. El adapter traduce los métodos propios de la UI al contrato backend y la fachada decide si termina confirmado, reservado o pendiente en una pasarela externa.
 
+`GET /Catalogos/Bancos` se difiere hasta entrar al paso de pago editable; no se
+consulta al abrir Inscripciones ni para reservas o inscripciones ya confirmadas.
+
 ## Pago: detalle operativo
 
 ## Contrato del paso
@@ -652,9 +655,11 @@ pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 
 ## Catalogos usados
 
-- Carreras: `GET /Catalogos/Carreras?propuestaAcademica=<1|2|3>`. El front consulta
-  las tres propuestas y aplana `productos` para niveles 1/2 y los grupos
-  `seminarios[].productos` para niveles 3/4, conservando `tieneSeminario` del grupo.
+- Carreras: el ingreso nuevo espera la elección de tipo y hace una sola llamada a
+  `GET /Catalogos/Carreras?propuestaAcademica=<1|2|3>` con el valor elegido. Aplana
+  `productos` para niveles 1/2 y `seminarios[].productos` para niveles 3/4,
+  conservando `tieneSeminario` del grupo. Al retomar, mientras Detalle no informe
+  el nivel del producto, el resolver consulta los tres tipos para reconstruirlo.
 - Comienzos: `GET /Catalogos/Comienzos?idCarrera=<idProducto>`
 - Turnos: `GET /Catalogos/Turnos?idCarrera=<idProducto>&idProceso=<idProceso>`
 - Encuesta inicial: `GET /Catalogos/EncuestaInicial`

@@ -60,6 +60,7 @@ const CONFIRMED_DETAIL = {
 describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
   let process: InscripcionProcessStore;
+  let getBancos: ReturnType<typeof vi.fn>;
   let inscriptions: { pay: ReturnType<typeof vi.fn>; getDetail: ReturnType<typeof vi.fn> };
   let externalPaymentSubmitter: { submit: ReturnType<typeof vi.fn> };
 
@@ -90,6 +91,9 @@ describe('InscripcionPaymentFacade', () => {
       bancos?: Observable<readonly { id: number; label: string; code: string }[]>;
     } = {}
   ): void {
+    getBancos = vi
+      .fn()
+      .mockReturnValue(options.bancos ?? of([{ id: 1, label: 'BROU', code: 'brou' }]));
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
@@ -108,7 +112,7 @@ describe('InscripcionPaymentFacade', () => {
             getCareers: () => of([]),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
-            getBancos: () => options.bancos ?? of([{ id: 1, label: 'BROU', code: 'brou' }]),
+            getBancos,
           },
         },
         { provide: Inscripciones, useValue: inscriptions },
@@ -257,7 +261,14 @@ describe('InscripcionPaymentFacade', () => {
     );
   });
 
-  it('loads bank options with their Sistarbanc code and logos', () => {
+  it('loads bank options only after entering the payment step', () => {
+    expect(getBancos).not.toHaveBeenCalled();
+    expect(facade.bankOptions()).toEqual([]);
+
+    process.flow.goTo('pago');
+    TestBed.tick();
+
+    expect(getBancos).toHaveBeenCalledOnce();
     expect(facade.bankOptions()).toEqual([
       { value: 'brou', label: 'BROU', icon: 'assets/banks/brou.svg' },
     ]);
@@ -517,6 +528,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('falls back to the static bank options when the catalog fails', () => {
     configureFacade({ bancos: throwError(() => new Error('catalog down')) });
+    process.flow.goTo('pago');
+    TestBed.tick();
 
     expect(facade.bankOptions()).toEqual(FALLBACK_BANK_OPTIONS);
     expect(facade.loadingBanks()).toBe(false);

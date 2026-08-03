@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
@@ -16,8 +16,8 @@ import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/model
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
-import { PropuestaAcademica } from 'src/app/shared/api/generated/models/propuestaAcademica';
 
+import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
   BaccalaureateOption,
   BaccalaureateYearGroup,
@@ -57,16 +57,11 @@ export class CatalogsEndpoint {
       .pipe(map(data => this.fromData(data, item => this.toLocationCountry(item))));
   }
 
-  public getCareers(): Observable<Career[]> {
-    return forkJoin(
-      Object.values(PropuestaAcademica).map(propuestaAcademica =>
-        this.api.request(getCatalogosCarrerasEndpoint, {
-          queryParams: { propuestaAcademica },
-        })
-      )
-    ).pipe(
-      map(responses =>
-        responses.flatMap(data =>
+  public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
+    return this.api
+      .request(getCatalogosCarrerasEndpoint, { queryParams: { propuestaAcademica } })
+      .pipe(
+        map(data =>
           this.fromData(data, nivel =>
             (nivel.escuelas ?? []).flatMap(escuela => {
               const groups = escuela.seminarios?.length
@@ -87,8 +82,7 @@ export class CatalogsEndpoint {
             })
           ).flat()
         )
-      )
-    );
+      );
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {

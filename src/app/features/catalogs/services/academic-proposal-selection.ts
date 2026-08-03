@@ -10,8 +10,8 @@ import {
   getAcademicCareerOptions,
   getAcademicProposalLevelIds,
   getAcademicProposalTerminology,
-  getAcademicProposalTypeByLevel,
-  getAvailableAcademicProposalTypes,
+  getAcademicProposalTypeId,
+  getAcademicProposalTypes,
   isProfessionalUpdateLevel,
   isProfessionalUpdateType,
   toAcademicSeminarOption,
@@ -29,6 +29,7 @@ export class AcademicProposalSelection {
   private readonly seminarsProgramId = signal<number | null>(null);
   private form: FormGroup<AcademicProposalForm> | null = null;
   private formSubscriptions = new Subscription();
+  private careersSubscription = new Subscription();
 
   public readonly startOptions = signal<readonly AcademicProposalOption[]>([]);
   public readonly shiftOptions = signal<readonly AcademicProposalOption[]>([]);
@@ -40,9 +41,7 @@ export class AcademicProposalSelection {
   private readonly seminarsState = signal<readonly Seminario[]>([]);
   public readonly loadingSeminars = signal(false);
 
-  public readonly proposalOptions = computed(() =>
-    getAvailableAcademicProposalTypes(this.careersState())
-  );
+  public readonly proposalOptions = computed(() => getAcademicProposalTypes());
   public readonly isProfessionalUpdate = computed(() =>
     isProfessionalUpdateType(this.proposalTypeValue())
   );
@@ -85,7 +84,10 @@ export class AcademicProposalSelection {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.formSubscriptions.unsubscribe());
+    this.destroyRef.onDestroy(() => {
+      this.formSubscriptions.unsubscribe();
+      this.careersSubscription.unsubscribe();
+    });
   }
 
   public connect(form: FormGroup<AcademicProposalForm>): void {
@@ -97,7 +99,7 @@ export class AcademicProposalSelection {
     this.proposalTypeValue.set(form.controls.tipoPropuesta.value);
     this.syncValidatorsForProposalType(form);
     this.subscribeToForm(form);
-    this.loadCareers(form);
+    this.loadCareers(form, form.controls.tipoPropuesta.value);
   }
 
   public careers(): readonly Career[] {
@@ -106,7 +108,9 @@ export class AcademicProposalSelection {
 
   public setProposalType(value: string): void {
     this.proposalTypeValue.set(value);
-    if (this.form) this.syncValidatorsForProposalType(this.form);
+    if (!this.form) return;
+    this.syncValidatorsForProposalType(this.form);
+    this.loadCareers(this.form, value);
   }
 
   public canSelectCareer(): boolean {
@@ -202,11 +206,20 @@ export class AcademicProposalSelection {
       });
   }
 
-  private loadCareers(form: FormGroup<AcademicProposalForm>): void {
-    this.loadingCareers.set(true);
+  private loadCareers(form: FormGroup<AcademicProposalForm>, proposalType: string): void {
+    this.careersSubscription.unsubscribe();
+    const proposalTypeId = getAcademicProposalTypeId(proposalType);
     this.catalogError.set(null);
-    this.catalogs
-      .getCareers()
+    if (proposalTypeId === null) {
+      this.careersState.set([]);
+      this.loadingCareers.set(false);
+      this.initialized.set(true);
+      return;
+    }
+
+    this.loadingCareers.set(true);
+    this.careersSubscription = this.catalogs
+      .getCareers(proposalTypeId)
       .pipe(
         finalize(() => {
           this.loadingCareers.set(false);
@@ -220,16 +233,6 @@ export class AcademicProposalSelection {
           const selectedCareer = careers.find(
             career => career.idProducto.toString() === form.controls.carrera.value
           );
-          if (selectedCareer && !form.controls.tipoPropuesta.value) {
-            const proposalType = getAcademicProposalTypeByLevel(
-              selectedCareer.idNivelProducto
-            )?.value;
-            if (proposalType) {
-              form.controls.tipoPropuesta.setValue(proposalType, { emitEvent: false });
-              this.proposalTypeValue.set(proposalType);
-              this.syncValidatorsForProposalType(form);
-            }
-          }
           if (selectedCareer && this.isProfessionalUpdateCareer(selectedCareer.idProducto)) {
             this.loadSeminars(selectedCareer.idProducto);
           }
@@ -251,6 +254,8 @@ export class AcademicProposalSelection {
         this.seminarsState.set([]);
         this.seminarsProgramId.set(null);
         this.syncValidatorsForProposalType(form);
+        this.careersState.set([]);
+        this.loadCareers(form, value);
       })
     );
 

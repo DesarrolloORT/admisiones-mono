@@ -3,6 +3,7 @@ import { ParamMap, ResolveFn } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
+import { ACADEMIC_PROPOSAL_TYPE_IDS } from '../../catalogs/models/academic-proposal';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
 import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
@@ -19,14 +20,18 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
   const urlOffers = toPositiveIntegers(route.queryParamMap.getAll('idOferta'));
   const storedOffers = inject(InscriptionResumeContextStore).read(idProducto, idProceso)?.idOfertas;
   const idOfertas = urlOffers.length ? urlOffers : (storedOffers ?? []);
+  const catalogs = inject(Catalogs);
 
   return forkJoin({
     detail: inject(Inscripciones)
       .getDetail(idProducto, idProceso)
       .pipe(catchError(() => of(null))),
-    careers: inject(Catalogs)
-      .getCareers()
-      .pipe(catchError(() => of([]))),
+    careers: forkJoin(
+      ACADEMIC_PROPOSAL_TYPE_IDS.map(proposalType => catalogs.getCareers(proposalType))
+    ).pipe(
+      map(groups => groups.flat()),
+      catchError(() => of([]))
+    ),
   }).pipe(
     map(({ detail, careers }) => ({
       intent,

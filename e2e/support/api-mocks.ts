@@ -75,35 +75,48 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, countryLocations());
     }
     if (path === '/Catalogos/Carreras') {
-      return fulfillOperation(route, [
-        {
-          idNivelProducto: 1,
-          nombreNivelProducto: 'Carrera universitaria',
-          escuelas: [
-            {
-              nombreEscuela: 'Facultad de Diseño',
-              productos: [{ idProducto: 20, nombreProducto: 'Licenciatura en Diseño Gráfico' }],
-            },
-          ],
-        },
-        {
-          idNivelProducto: 3,
-          nombreNivelProducto: 'Actualización profesional',
-          escuelas: [
-            {
-              nombreEscuela: 'Facultad de Administración',
-              productos: [
-                {
-                  idProducto: 40,
-                  idProceso: 210,
-                  nombreProducto: 'Programa de Asesoramiento Financiero',
-                  tieneSeminario: true,
-                },
-              ],
-            },
-          ],
-        },
-      ]);
+      if (url.searchParams.get('propuestaAcademica') === '1') {
+        return fulfillOperation(route, [
+          {
+            idNivelProducto: 1,
+            nombreNivelProducto: 'Carrera universitaria',
+            escuelas: [
+              {
+                nombreEscuela: 'Facultad de Diseño',
+                productos: [{ idProducto: 20, nombreProducto: 'Licenciatura en Diseño Gráfico' }],
+              },
+            ],
+          },
+        ]);
+      }
+
+      if (url.searchParams.get('propuestaAcademica') === '3') {
+        return fulfillOperation(route, [
+          {
+            idNivelProducto: 3,
+            nombreNivelProducto: 'Actualización profesional',
+            escuelas: [
+              {
+                nombreEscuela: 'Facultad de Administración',
+                seminarios: [
+                  {
+                    tieneSeminario: true,
+                    productos: [
+                      {
+                        idProducto: 40,
+                        idProceso: 210,
+                        nombreProducto: 'Programa de Asesoramiento Financiero',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      }
+
+      return fulfillOperation(route, []);
     }
 
     if (path === '/Catalogos/Comienzos') {
@@ -348,17 +361,20 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     if (path === '/Inscripciones/ConfirmarPreInscripcion') {
       return fulfillOperation(route, {
         confirmada: true,
-        idInscripcion: 7001,
-        senia: 15500,
+        pagoReserva: 15500,
         estadoCuenta: { saldoActual: 20000 },
-        fechaVencimientoPago: '2027-03-04',
+        inscripciones: [
+          {
+            idInscripcion: 7001,
+            idOferta: 300,
+            comienzo: 'Marzo 2027',
+            turno: 'Matutino',
+          },
+        ],
         resumen: {
           idProducto: 20,
           carrera: 'Licenciatura en Diseño Gráfico',
-          idComienzo: 200,
-          comienzo: 'Marzo 2027',
-          idTurno: 10,
-          turno: 'Matutino',
+          fechaVencimientoPago: '2027-03-04',
         },
       });
     }

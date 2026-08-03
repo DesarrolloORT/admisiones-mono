@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -92,6 +92,7 @@ export class InscripcionPaymentFacade {
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
+  private banksRequested = false;
 
   private readonly submitted = signal(false);
   private readonly paymentApiError = signal<string | null>(null);
@@ -167,11 +168,21 @@ export class InscripcionPaymentFacade {
   );
 
   constructor() {
-    this.loadBanks();
+    effect(() => {
+      if (
+        this.process.flow.currentStep() === 'pago' &&
+        this.view() === 'editing' &&
+        this.outcome() === null
+      ) {
+        this.loadBanks();
+      }
+    });
     this.configureBankValidator();
   }
 
   private loadBanks(): void {
+    if (this.banksRequested) return;
+    this.banksRequested = true;
     this.loadingBanks.set(true);
     this.catalogs
       .getBancos()

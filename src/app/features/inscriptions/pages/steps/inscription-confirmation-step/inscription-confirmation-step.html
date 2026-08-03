@@ -142,8 +142,8 @@
         <dd>{{ item.value }}</dd>
       </div>
       }
-      <p>Seña de inscripción: {{ facade.inscriptionAmount() }}</p>
     </dl>
+    <p>Seña de inscripción: {{ facade.inscriptionAmount() }}</p>
     <ng-container ortDialogFooter>
       <button ort-secondary-button type="button" (click)="closeConfirmationDialog()">Volver</button>
       <button ort-primary-button type="button" (click)="facade.confirm()">Confirmar</button>

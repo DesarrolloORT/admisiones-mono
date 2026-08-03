@@ -8,6 +8,7 @@ import { AcademicProposalSelection } from './academic-proposal-selection';
 import { Catalogs } from './catalogs';
 
 describe('AcademicProposalSelection', () => {
+  const getCareers = vi.fn();
   const getComienzos = vi.fn();
   const getTurnos = vi.fn();
   const getSeminarios = vi.fn();
@@ -15,6 +16,30 @@ describe('AcademicProposalSelection', () => {
   let selection: AcademicProposalSelection;
 
   beforeEach(() => {
+    getCareers.mockReset().mockReturnValue(
+      of([
+        {
+          idProducto: 10,
+          idNivelProducto: 1,
+          nombreProducto: 'Ingeniería',
+          nombreNivelProducto: 'Carrera universitaria',
+        },
+        {
+          idProducto: 20,
+          idNivelProducto: 2,
+          nombreProducto: 'Analista Programador',
+          nombreNivelProducto: 'Tecnicatura',
+          nombreEscuela: 'Facultad de Ingeniería',
+        },
+        {
+          idProceso: 200,
+          idProducto: 30,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+      ])
+    );
     getComienzos.mockReset().mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto' }]));
     getTurnos.mockReset().mockReturnValue(
       of([
@@ -38,29 +63,7 @@ describe('AcademicProposalSelection', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () =>
-              of([
-                {
-                  idProducto: 10,
-                  idNivelProducto: 1,
-                  nombreProducto: 'Ingeniería',
-                  nombreNivelProducto: 'Carrera universitaria',
-                },
-                {
-                  idProducto: 20,
-                  idNivelProducto: 2,
-                  nombreProducto: 'Analista Programador',
-                  nombreNivelProducto: 'Tecnicatura',
-                  nombreEscuela: 'Facultad de Ingeniería',
-                },
-                {
-                  idProceso: 200,
-                  idProducto: 30,
-                  idNivelProducto: 3,
-                  nombreProducto: 'Programa de Asesoramiento Financiero',
-                  nombreNivelProducto: 'Actualización profesional',
-                },
-              ]),
+            getCareers,
             getComienzos,
             getTurnos,
             getSeminarios,
@@ -74,7 +77,11 @@ describe('AcademicProposalSelection', () => {
   });
 
   it('loads options following the proposal, career and start cascade', () => {
+    expect(selection.proposalOptions().map(option => option.value)).toEqual(['1', '2', '3']);
+    expect(getCareers).not.toHaveBeenCalled();
+
     form.controls.tipoPropuesta.setValue('2');
+    expect(getCareers).toHaveBeenCalledWith(2);
     expect(selection.careerOptions()).toEqual([
       { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);

@@ -1,7 +1,7 @@
 import {
   getAcademicCareerOptions,
   getAcademicProposalTerminology,
-  getAvailableAcademicProposalTypes,
+  getAcademicProposalTypes,
   isProfessionalUpdateLevel,
   isProfessionalUpdateType,
   toAcademicSeminarOption,
@@ -24,11 +24,8 @@ describe('academic proposal options', () => {
     },
   ];
 
-  it('offers only proposal types present in the careers catalog', () => {
-    expect(getAvailableAcademicProposalTypes(careers).map(option => option.value)).toEqual([
-      '1',
-      '2',
-    ]);
+  it('offers every proposal type before loading careers', () => {
+    expect(getAcademicProposalTypes().map(option => option.value)).toEqual(['1', '2', '3']);
   });
 
   it('filters careers by proposal type', () => {

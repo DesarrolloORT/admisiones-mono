@@ -11,6 +11,7 @@ export async function selectOrtOption(
   await trigger.focus();
   await page.keyboard.press('Enter');
 
+  await expect(trigger).toHaveAttribute('aria-controls', /.+/);
   const listboxId = await trigger.getAttribute('aria-controls');
   if (!listboxId) throw new Error('El select no expuso el listbox activo.');
 

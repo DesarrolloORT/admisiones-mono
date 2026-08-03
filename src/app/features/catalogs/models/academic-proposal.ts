@@ -19,6 +19,9 @@ export interface AcademicProposalOption {
   description?: string;
 }
 
+export const ACADEMIC_PROPOSAL_TYPE_IDS = [1, 2, 3] as const;
+export type AcademicProposalTypeId = (typeof ACADEMIC_PROPOSAL_TYPE_IDS)[number];
+
 /**
  * Textos del selector académico según el tipo de propuesta. Actualización
  * profesional habla de "Programa" y "Seminario"; el resto conserva la
@@ -49,12 +52,14 @@ const DEFAULT_TERMINOLOGY: AcademicProposalTerminology = {
 };
 
 interface AcademicProposalType extends AcademicProposalOption {
+  id: AcademicProposalTypeId;
   levelIds: readonly number[];
   terminology?: Partial<AcademicProposalTerminology>;
 }
 
 const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
   {
+    id: 1,
     value: '1',
     label: 'Carrera universitaria',
     icon: 'school',
@@ -62,6 +67,7 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
     levelIds: [1],
   },
   {
+    id: 2,
     value: '2',
     label: 'Tecnicatura',
     icon: 'list_alt',
@@ -69,6 +75,7 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
     levelIds: [2],
   },
   {
+    id: 3,
     value: '3',
     label: 'Actualización profesional',
     icon: 'how_to_reg',
@@ -107,14 +114,17 @@ export function getAcademicProposalTerminology(value: string): AcademicProposalT
   return overrides ? { ...DEFAULT_TERMINOLOGY, ...overrides } : DEFAULT_TERMINOLOGY;
 }
 
-export function getAvailableAcademicProposalTypes(
-  careers: readonly Career[]
-): readonly AcademicProposalOption[] {
-  const availableLevelIds = new Set(careers.map(career => career.idNivelProducto));
+export function getAcademicProposalTypes(): readonly AcademicProposalOption[] {
+  return ACADEMIC_PROPOSAL_TYPES.map(({ value, label, icon, hint }) => ({
+    value,
+    label,
+    icon,
+    hint,
+  }));
+}
 
-  return ACADEMIC_PROPOSAL_TYPES.filter(option =>
-    option.levelIds.some(levelId => availableLevelIds.has(levelId))
-  ).map(({ value, label, icon, hint }) => ({ value, label, icon, hint }));
+export function getAcademicProposalTypeId(value: string): AcademicProposalTypeId | null {
+  return ACADEMIC_PROPOSAL_TYPES.find(option => option.value === value)?.id ?? null;
 }
 
 export function getAcademicCareerOptions(

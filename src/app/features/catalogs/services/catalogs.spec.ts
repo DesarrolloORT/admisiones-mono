@@ -75,11 +75,11 @@ describe('Catalogs', () => {
     ];
     endpointMock.getCareers.mockReturnValue(of(result));
 
-    service.getCareers().subscribe(data => {
+    service.getCareers(2).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getCareers).toHaveBeenCalledOnce();
+    expect(endpointMock.getCareers).toHaveBeenCalledWith(2);
   });
 
   it('should delegate getComienzos to the endpoint', () => {
