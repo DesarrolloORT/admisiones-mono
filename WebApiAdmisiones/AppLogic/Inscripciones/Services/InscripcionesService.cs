@@ -287,16 +287,10 @@ public class InscripcionesService(
 
             if (resultado.Data != null)
             {
-                var resultadoTivenos = _tivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio(
+                _tivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio(
                     uow,
                     resultado.Data,
-                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
-                    nameof(RegistrarInteresProducto));
-                if (!resultadoTivenos.Success)
-                {
-                    uow.Rollback();
-                    return resultadoTivenos.Failure().As<bool>(nameof(RegistrarInteresProducto));
-                }
+                    _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS));
             }
 
             uow.Commit();

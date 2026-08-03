@@ -1,26 +1,22 @@
 using AppLogic.Tivenos.Dtos;
 using BusinessLogic.IDevartRepositories;
-using Utilities;
 
 namespace AppLogic.Tivenos.Interfaces;
 
 public interface ITivenosEnvioService
 {
-    OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
+    bool EncolarAltaInteresXSeleccionEnSitio(
         IUnitOfWork uow,
         DtoTivenosAltaInteresRequest request,
-        int idTivenos,
-        string methodName);
+        int idTivenos);
 
-    OperationResult<bool> EncolarAltaDatosBachillerato(
+    bool EncolarAltaDatosBachillerato(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,
-        int idTivenos,
-        string methodName);
+        int idTivenos);
 
-    OperationResult<bool> EncolarModificacionDatosBachillerato(
+    bool EncolarModificacionDatosBachillerato(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,
-        int idTivenos,
-        string methodName);
+        int idTivenos);
 }

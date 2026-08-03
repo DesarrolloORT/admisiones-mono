@@ -2,7 +2,6 @@ using AppLogic.Tivenos.Dtos;
 using AppLogic.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
-using Utilities;
 
 namespace AppLogic.Tivenos.Services;
 
@@ -11,11 +10,10 @@ public class TivenosEnvioService : ITivenosEnvioService
     private const string OrigenAdmisiones = "ADMISIONES";
     private const string StatusNuevo = "Nuevo";
 
-    public OperationResult<bool> EncolarAltaInteresXSeleccionEnSitio(
+    public bool EncolarAltaInteresXSeleccionEnSitio(
         IUnitOfWork uow,
         DtoTivenosAltaInteresRequest request,
-        int idTivenos,
-        string methodName)
+        int idTivenos)
     {
         ArgumentNullException.ThrowIfNull(uow);
         ArgumentNullException.ThrowIfNull(request);
@@ -25,14 +23,13 @@ public class TivenosEnvioService : ITivenosEnvioService
 
         uow.EnvioParaTivenos.Add(envio);
 
-        return OperationResult<bool>.Ok(true, methodName);
+        return true;
     }
 
-    public OperationResult<bool> EncolarAltaDatosBachillerato(
+    public bool EncolarAltaDatosBachillerato(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,
-        int idTivenos,
-        string methodName)
+        int idTivenos)
     {
         ArgumentNullException.ThrowIfNull(uow);
         ArgumentNullException.ThrowIfNull(request);
@@ -46,14 +43,13 @@ public class TivenosEnvioService : ITivenosEnvioService
 
         uow.EnvioParaTivenos.Add(envio);
 
-        return OperationResult<bool>.Ok(true, methodName);
+        return true;
     }
 
-    public OperationResult<bool> EncolarModificacionDatosBachillerato(
+    public bool EncolarModificacionDatosBachillerato(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,
-        int idTivenos,
-        string methodName)
+        int idTivenos)
     {
         ArgumentNullException.ThrowIfNull(uow);
         ArgumentNullException.ThrowIfNull(request);
@@ -67,7 +63,7 @@ public class TivenosEnvioService : ITivenosEnvioService
 
         uow.EnvioParaTivenos.Add(envio);
 
-        return OperationResult<bool>.Ok(true, methodName);
+        return true;
     }
 
     private static EnvioParaTiveno CrearEnvioAltaInteres(DtoTivenosAltaInteresRequest request)

@@ -66,23 +66,20 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
                     It.IsAny<IUnitOfWork>(),
                     It.IsAny<DtoTivenosAltaInteresRequest>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>()))
-                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaInteresXSeleccionEnSitio)));
+                    It.IsAny<int>()))
+                .Returns(true);
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarAltaDatosBachillerato(
                     It.IsAny<IUnitOfWork>(),
                     It.IsAny<DtoTivenosBachilleratoRequest>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>()))
-                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarAltaDatosBachillerato)));
+                    It.IsAny<int>()))
+                .Returns(true);
             _tivenosEnvioServiceMock
                 .Setup(s => s.EncolarModificacionDatosBachillerato(
                     It.IsAny<IUnitOfWork>(),
                     It.IsAny<DtoTivenosBachilleratoRequest>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>()))
-                .Returns(global::Utilities.OperationResult<bool>.Ok(true, nameof(ITivenosEnvioService.EncolarModificacionDatosBachillerato)));
+                    It.IsAny<int>()))
+                .Returns(true);
             var apiClient = new InscripcionesyPagosApiClient(
                 new HttpClient { BaseAddress = new Uri("https://internal.test/") },
                 NullLogger<InscripcionesyPagosApiClient>.Instance);
@@ -1353,8 +1350,7 @@ namespace UnitTesting.AppLogic.Services
                     r.Operacion.TipoProcesoLlamador == "Alta" &&
                     r.Operacion.Disparador == "AltaInteresProducto" &&
                     r.Operacion.OrigenLlamador == null),
-                It.IsAny<int>(),
-                nameof(InscripcionesService.RegistrarInteresProducto)), Times.Once);
+                It.IsAny<int>()), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
@@ -1410,8 +1406,7 @@ namespace UnitTesting.AppLogic.Services
                 .Setup(s => s.EncolarAltaInteresXSeleccionEnSitio(
                     It.IsAny<IUnitOfWork>(),
                     It.IsAny<DtoTivenosAltaInteresRequest>(),
-                    It.IsAny<int>(),
-                    It.IsAny<string>()))
+                    It.IsAny<int>()))
                 .Throws(new InvalidOperationException("No se pudo encolar Tivenos."));
 
             Assert.Throws<InvalidOperationException>(() =>
@@ -1579,8 +1574,7 @@ namespace UnitTesting.AppLogic.Services
                     r.Operacion.TipoProcesoLlamador == "Modificar" &&
                     r.Operacion.Disparador == "ActualizarInteres" &&
                     r.Operacion.OrigenLlamador == null),
-                It.IsAny<int>(),
-                nameof(InscripcionesService.RegistrarInteresProducto)), Times.Once);
+                It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -2168,13 +2162,11 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -2194,13 +2186,11 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 _uowMock.Object,
                 It.Is<DtoTivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1304),
-                777,
-                nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
+                777), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -2264,13 +2254,11 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 _uowMock.Object,
                 It.Is<DtoTivenosBachilleratoRequest>(r => r.CodigoPersona == 123 && r.CodigoOrientacion == 1300),
-                777,
-                nameof(InscripcionesService.GuardarEncuestaInicial)), Times.Once);
+                777), Times.Once);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -2294,13 +2282,11 @@ namespace UnitTesting.AppLogic.Services
             _tivenosEnvioServiceMock.Verify(s => s.EncolarAltaDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
             _tivenosEnvioServiceMock.Verify(s => s.EncolarModificacionDatosBachillerato(
                 It.IsAny<IUnitOfWork>(),
                 It.IsAny<DtoTivenosBachilleratoRequest>(),
-                It.IsAny<int>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<int>()), Times.Never);
         }
 
         private void SetupOfertaConfirmacion(

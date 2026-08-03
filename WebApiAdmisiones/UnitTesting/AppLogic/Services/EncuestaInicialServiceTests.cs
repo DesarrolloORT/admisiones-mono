@@ -103,7 +103,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Verify(u => u.Commit(), Times.Once);
             // Encuesta incompleta: no debe finalizar como definitiva ni encolar bachillerato.
             _tivenosEnvioServiceMock.Verify(
-                s => s.EncolarAltaDatosBachillerato(It.IsAny<IUnitOfWork>(), It.IsAny<DtoTivenosBachilleratoRequest>(), It.IsAny<int>(), It.IsAny<string>()),
+                s => s.EncolarAltaDatosBachillerato(It.IsAny<IUnitOfWork>(), It.IsAny<DtoTivenosBachilleratoRequest>(), It.IsAny<int>()),
                 Times.Never);
         }
 

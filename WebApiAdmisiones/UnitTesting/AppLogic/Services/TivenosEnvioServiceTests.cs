@@ -25,11 +25,9 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.AltaInteresProducto()),
-                777,
-                "Test");
+                777);
 
-            Assert.True(result.Success);
-            Assert.True(result.Data);
+            Assert.True(result);
             _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
                 e.IdEnvioParaTivenos == 777 &&
                 e.Origen == "ADMISIONES" &&
@@ -52,8 +50,7 @@ namespace UnitTesting.AppLogic.Services
             _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.ModificarActualizarInteres()),
-                777,
-                "Test");
+                777);
 
             _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
                 e.TipoProcesoLlamador == "Modificar" &&
@@ -67,8 +64,7 @@ namespace UnitTesting.AppLogic.Services
             _service.EncolarAltaInteresXSeleccionEnSitio(
                 _uowMock.Object,
                 RequestBase(TivenosAltaInteresOperacion.AltaActualizarInteres()),
-                777,
-                "Test");
+                777);
 
             _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
                 e.TipoProcesoLlamador == "Alta" &&
@@ -86,11 +82,9 @@ namespace UnitTesting.AppLogic.Services
                     CodigoPersona = 123,
                     CodigoOrientacion = 1304
                 },
-                888,
-                "Test");
+                888);
 
-            Assert.True(result.Success);
-            Assert.True(result.Data);
+            Assert.True(result);
             _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
                 e.IdEnvioParaTivenos == 888 &&
                 e.Origen == "ADMISIONES" &&
@@ -113,11 +107,9 @@ namespace UnitTesting.AppLogic.Services
                     CodigoPersona = 123,
                     CodigoOrientacion = null
                 },
-                889,
-                "Test");
+                889);
 
-            Assert.True(result.Success);
-            Assert.True(result.Data);
+            Assert.True(result);
             _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
                 e.IdEnvioParaTivenos == 889 &&
                 e.Origen == "ADMISIONES" &&

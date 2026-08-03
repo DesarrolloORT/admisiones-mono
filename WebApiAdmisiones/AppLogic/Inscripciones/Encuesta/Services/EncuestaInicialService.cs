@@ -312,15 +312,15 @@ public sealed class EncuestaInicialService(
                 ActualizacionBachillerPer = fechaActual
             });
 
-            return tivenosEnvioService.EncolarAltaDatosBachillerato(
+            tivenosEnvioService.EncolarAltaDatosBachillerato(
                 uow,
                 new DtoTivenosBachilleratoRequest
                 {
                     CodigoPersona = codigoPersona,
                     CodigoOrientacion = datosBachillerato.CodigoOrientacion
                 },
-                dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
-                methodName);
+                dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS));
+            return OperationResult<bool>.Ok(true, methodName);
         }
 
         if (!CambioBachillerato(existente, datosBachillerato))
@@ -332,15 +332,15 @@ public sealed class EncuestaInicialService(
         existente.ActualizacionBachillerPer = fechaActual;
         uow.BachilleratoPersonas.Update(existente);
 
-        return tivenosEnvioService.EncolarModificacionDatosBachillerato(
+        tivenosEnvioService.EncolarModificacionDatosBachillerato(
             uow,
             new DtoTivenosBachilleratoRequest
             {
                 CodigoPersona = codigoPersona,
                 CodigoOrientacion = datosBachillerato.CodigoOrientacion
             },
-            dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS),
-            methodName);
+            dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS));
+        return OperationResult<bool>.Ok(true, methodName);
     }
 
     private static OperationResult<DatosBachilleratoPersona> ObtenerDatosBachilleratoDefinitivo(
