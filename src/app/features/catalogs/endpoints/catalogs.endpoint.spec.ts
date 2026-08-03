@@ -26,7 +26,7 @@ describe('CatalogsEndpoint', () => {
   });
 
   it('should map careers from API data', () => {
-    apiMock.request.mockReturnValue(
+    apiMock.request.mockReturnValueOnce(
       of([
         {
           idNivelProducto: 1,
@@ -35,6 +35,26 @@ describe('CatalogsEndpoint', () => {
             {
               nombreEscuela: 'Facultad de Diseño',
               productos: [{ idProducto: 20, idProceso: 10, nombreProducto: 'Diseño' }],
+            },
+          ],
+        },
+      ])
+    );
+    apiMock.request.mockReturnValueOnce(of([]));
+    apiMock.request.mockReturnValueOnce(
+      of([
+        {
+          idNivelProducto: 3,
+          nombreNivelProducto: 'Actualización profesional',
+          escuelas: [
+            {
+              nombreEscuela: 'Escuela de Tecnología',
+              seminarios: [
+                {
+                  tieneSeminario: true,
+                  productos: [{ idProducto: 30, idProceso: 11, nombreProducto: 'Ciberseguridad' }],
+                },
+              ],
             },
           ],
         },
@@ -52,8 +72,23 @@ describe('CatalogsEndpoint', () => {
           nombreEscuela: 'Facultad de Diseño',
           tieneSeminario: false,
         },
+        {
+          idProducto: 30,
+          idProceso: 11,
+          idNivelProducto: 3,
+          nombreProducto: 'Ciberseguridad',
+          nombreNivelProducto: 'Actualización profesional',
+          nombreEscuela: 'Escuela de Tecnología',
+          tieneSeminario: true,
+        },
       ]);
     });
+
+    expect(apiMock.request.mock.calls.map(([, options]) => options.queryParams)).toEqual([
+      { propuestaAcademica: 1 },
+      { propuestaAcademica: 2 },
+      { propuestaAcademica: 3 },
+    ]);
   });
 
   it('should map initial survey catalogs from API data', () => {

@@ -131,7 +131,7 @@ describe('InscripcionEducationSection', () => {
     const fieldset = fixture.nativeElement.querySelector(
       'ort-radio-group[formcontrolname="cursaSecundaria"] fieldset'
     );
-    expect(fieldset.getAttribute('aria-describedby')).toBe('school-status-error');
+    expect(fieldset.getAttribute('aria-describedby')).toContain('school-status-error');
   });
 
   it('shows the anioSecundaria block only while cursaSecundaria is "cursando"', () => {

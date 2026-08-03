@@ -652,7 +652,9 @@ pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 
 ## Catalogos usados
 
-- Carreras: `GET /Catalogos/Carreras`
+- Carreras: `GET /Catalogos/Carreras?propuestaAcademica=<1|2|3>`. El front consulta
+  las tres propuestas y aplana `productos` para niveles 1/2 y los grupos
+  `seminarios[].productos` para niveles 3/4, conservando `tieneSeminario` del grupo.
 - Comienzos: `GET /Catalogos/Comienzos?idCarrera=<idProducto>`
 - Turnos: `GET /Catalogos/Turnos?idCarrera=<idProducto>&idProceso=<idProceso>`
 - Encuesta inicial: `GET /Catalogos/EncuestaInicial`

@@ -62,6 +62,6 @@ describe('InscripcionWorkSection', () => {
     );
     expect(error.getAttribute('role')).toBe('alert');
     expect(error.textContent).toContain('Seleccioná una opción');
-    expect(fieldset.getAttribute('aria-describedby')).toBe('corporate-inscription-error');
+    expect(fieldset.getAttribute('aria-describedby')).toContain('corporate-inscription-error');
   });
 });

@@ -32,6 +32,11 @@ test('preserva el contrato previo y detecta cambios', () => {
 test('usa Claude por defecto y permite Codex', () => {
   assert.equal(selectAgent(undefined), 'claude');
   assert.equal(selectAgent('codex'), 'codex');
-  assert.deepEqual(getAgentArgs('codex').slice(0, 2), ['exec', '-C']);
+  assert.deepEqual(getAgentArgs('codex').slice(0, 4), [
+    'exec',
+    '--sandbox',
+    'workspace-write',
+    '-C',
+  ]);
   assert.throws(() => selectAgent('otro'), /claude.*codex/i);
 });

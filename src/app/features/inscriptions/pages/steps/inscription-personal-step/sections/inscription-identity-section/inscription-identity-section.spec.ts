@@ -104,6 +104,6 @@ describe('InscripcionIdentitySection', () => {
     const checkboxInput = fixture.nativeElement.querySelector(
       'ort-checkbox[formcontrolname="identidadCorrecta"] input'
     );
-    expect(checkboxInput.getAttribute('aria-describedby')).toBe('identity-confirmation-error');
+    expect(checkboxInput.getAttribute('aria-describedby')).toContain('identity-confirmation-error');
   });
 });

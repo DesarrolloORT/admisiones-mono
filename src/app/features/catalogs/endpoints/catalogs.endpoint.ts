@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
@@ -16,6 +16,7 @@ import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/model
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
+import { PropuestaAcademica } from 'src/app/shared/api/generated/models/propuestaAcademica';
 
 import {
   BaccalaureateOption,
@@ -57,21 +58,35 @@ export class CatalogsEndpoint {
   }
 
   public getCareers(): Observable<Career[]> {
-    return this.api.request(getCatalogosCarrerasEndpoint).pipe(
-      map(data =>
-        this.fromData(data, nivel =>
-          (nivel.escuelas ?? []).flatMap(escuela =>
-            (escuela.productos ?? []).map(producto => ({
-              idProducto: producto.idProducto ?? 0,
-              idProceso: producto.idProceso ?? null,
-              idNivelProducto: nivel.idNivelProducto ?? 0,
-              nombreProducto: producto.nombreProducto ?? '',
-              nombreNivelProducto: nivel.nombreNivelProducto ?? '',
-              nombreEscuela: escuela.nombreEscuela ?? '',
-              tieneSeminario: producto.tieneSeminario ?? false,
-            }))
-          )
-        ).flat()
+    return forkJoin(
+      Object.values(PropuestaAcademica).map(propuestaAcademica =>
+        this.api.request(getCatalogosCarrerasEndpoint, {
+          queryParams: { propuestaAcademica },
+        })
+      )
+    ).pipe(
+      map(responses =>
+        responses.flatMap(data =>
+          this.fromData(data, nivel =>
+            (nivel.escuelas ?? []).flatMap(escuela => {
+              const groups = escuela.seminarios?.length
+                ? escuela.seminarios
+                : [{ tieneSeminario: false, productos: escuela.productos }];
+
+              return groups.flatMap(group =>
+                (group.productos ?? []).map(producto => ({
+                  idProducto: producto.idProducto ?? 0,
+                  idProceso: producto.idProceso ?? null,
+                  idNivelProducto: nivel.idNivelProducto ?? 0,
+                  nombreProducto: producto.nombreProducto ?? '',
+                  nombreNivelProducto: nivel.nombreNivelProducto ?? '',
+                  nombreEscuela: escuela.nombreEscuela ?? '',
+                  tieneSeminario: group.tieneSeminario ?? false,
+                }))
+              );
+            })
+          ).flat()
+        )
       )
     );
   }

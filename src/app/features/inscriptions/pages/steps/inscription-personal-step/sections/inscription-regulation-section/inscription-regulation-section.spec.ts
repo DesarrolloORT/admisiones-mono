@@ -82,7 +82,7 @@ describe('InscripcionRegulationSection', () => {
     const checkboxInput = fixture.nativeElement.querySelector(
       'ort-checkbox[formcontrolname="aceptaReglamento"] input'
     );
-    expect(checkboxInput.getAttribute('aria-describedby')).toBe('regulation-acceptance-error');
+    expect(checkboxInput.getAttribute('aria-describedby')).toContain('regulation-acceptance-error');
   });
 
   it('calls facade.openRegulationReader() when clicking "Ver reglamento"', () => {

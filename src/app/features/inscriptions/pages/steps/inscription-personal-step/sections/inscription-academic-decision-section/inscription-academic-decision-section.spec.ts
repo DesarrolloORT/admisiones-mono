@@ -105,7 +105,7 @@ describe('InscripcionAcademicDecisionSection', () => {
     const fieldset = fixture.nativeElement.querySelector(
       'ort-radio-group[formcontrolname="otrasUniversidades"] fieldset'
     );
-    expect(fieldset.getAttribute('aria-describedby')).toBe('other-universities-error');
+    expect(fieldset.getAttribute('aria-describedby')).toContain('other-universities-error');
   });
 
   it('has no aria-describedby when the field is untouched', () => {

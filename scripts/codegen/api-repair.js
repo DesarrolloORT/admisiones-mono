@@ -19,7 +19,7 @@ const AGENTS = {
   },
   codex: {
     prompt:
-      'Use $repair-api-update to surgically repair every consumer affected by the latest API update.',
+      'Use $repair-api-update. Repara todos los consumidores afectados, edita los archivos necesarios y no termines hasta ejecutar las verificaciones requeridas. Si el snapshot no muestra diferencias, repara igualmente los errores actuales de compilacion contra los contratos generados.',
   },
 };
 
@@ -56,7 +56,9 @@ export function selectAgent(requestedAgent, answer = '') {
 
 export function getAgentArgs(agent) {
   const prompt = AGENTS[agent].prompt;
-  return agent === 'codex' ? ['exec', '-C', ROOT, prompt] : [prompt];
+  return agent === 'codex'
+    ? ['exec', '--sandbox', 'workspace-write', '-C', ROOT, prompt]
+    : [prompt];
 }
 
 async function main() {
@@ -94,7 +96,6 @@ async function main() {
     const result = spawnSync(agent, getAgentArgs(agent), {
       cwd: ROOT,
       stdio: 'inherit',
-      shell: process.platform === 'win32',
     });
     if (result.error?.code === 'ENOENT') {
       throw new Error(`No esta instalado ${agent}. Ejecuta npm install.`);
