@@ -186,6 +186,27 @@ export class ResponsiveSelect implements ControlValueAccessor {
     this.commitValue(value);
   }
 
+  protected onDesktopKeydown(event: KeyboardEvent): void {
+    if (!['Enter', ' ', 'Tab'].includes(event.key)) return;
+
+    const select = event.target as HTMLElement | null;
+    if (select?.getAttribute('aria-expanded') !== 'true') return;
+
+    const activeId = select.getAttribute('aria-activedescendant');
+    const listboxId = select.getAttribute('aria-controls');
+    const listbox = listboxId ? document.getElementById(listboxId) : null;
+    const activeText =
+      listbox?.querySelector('.ort-option-active')?.textContent ??
+      (activeId ? listbox?.querySelector(`#${activeId}`)?.textContent : '') ??
+      '';
+    const activeValue =
+      this.allOptions().find(option => activeText.includes(option.label))?.value ??
+      (activeText.includes(this.placeholder()) ? '' : null);
+    if (this.multiple() || activeValue === null || activeValue === undefined) return;
+
+    setTimeout(() => this.commitMissingKeyboardSelection(select, activeValue));
+  }
+
   protected onDesktopOpenedChange(open: boolean): void {
     if (!open) this.onTouched();
   }
@@ -283,6 +304,15 @@ export class ResponsiveSelect implements ControlValueAccessor {
     this.value.set(normalizedValue);
     this.onChange(normalizedValue);
     this.onTouched();
+  }
+
+  private commitMissingKeyboardSelection(select: HTMLElement, activeValue: string): void {
+    if (this.value() === activeValue) return;
+
+    this.commitValue(activeValue);
+    select.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    );
   }
 
   private normalizeValue(value: unknown): ResponsiveSelectValue {

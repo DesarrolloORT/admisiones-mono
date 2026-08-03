@@ -222,9 +222,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await inscription.completeInitialEnrollmentWithKeyboard();
 
     // El título de procesamiento expone role="status", por lo que no es un heading.
-    await expect(
-      page.getByRole('status').filter({ hasText: 'Estamos procesando el pago' })
-    ).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Procesando tu pago' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 });

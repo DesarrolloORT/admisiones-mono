@@ -390,16 +390,29 @@ export class InscripcionPage {
     await this.tabTo(combobox);
     await this.page.keyboard.press('Enter');
 
-    const targetOption = this.page.getByRole('option', { name: option });
-    await expect(targetOption).toBeVisible();
-    const targetId = await targetOption.getAttribute('id');
-    expect(targetId).toBeTruthy();
+    await expect(combobox).toHaveAttribute('aria-controls', /.+/);
+    const listboxId = await combobox.getAttribute('aria-controls');
+    if (!listboxId) throw new Error('El select no expuso el listbox activo.');
 
+    const listbox = this.page.locator(`#${listboxId}`);
+    const targetOption = listbox.getByRole('option', { name: option });
+    await expect(targetOption).toBeVisible();
+
+    await targetOption.evaluate(
+      () =>
+        new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    );
     await this.page.keyboard.press('Home');
     for (let index = 0; index < 30; index += 1) {
-      if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
-        await targetOption.press('Enter');
+      const activeOption = listbox.locator('ort-option.ort-option-active');
+      if ((await activeOption.textContent())?.includes(option)) {
+        await this.page.keyboard.press('Enter');
         await expect(combobox).toContainText(option);
+        if ((await combobox.getAttribute('aria-expanded')) === 'true') {
+          await this.page.keyboard.press('Escape');
+        }
+        await expect(combobox).toHaveAttribute('aria-expanded', 'false');
+        await expect(combobox).toBeFocused();
         return;
       }
 

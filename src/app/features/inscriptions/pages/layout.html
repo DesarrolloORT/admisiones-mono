@@ -124,7 +124,8 @@
   <p class="inscription-dialog-error" role="alert">{{ process.surveySaveError() }}</p>
   }
   <ng-container ortDialogFooter>
-    <button ort-secondary-button type="button" (click)="process.cancelExit()">
+    <!-- eslint-disable-next-line @angular-eslint/template/no-autofocus -- El diálogo exige un destino de foco inicial explícito. -->
+    <button autofocus ort-secondary-button type="button" (click)="process.cancelExit()">
       Continuar aquí
     </button>
     <button

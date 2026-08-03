@@ -96,6 +96,36 @@ describe('ResponsiveSelect', () => {
     expect(fixture.nativeElement.querySelector('.responsive-select__mobile')).toBeNull();
   });
 
+  it('commits the active desktop option when the library misses a keyboard selection', async () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 900,
+    });
+    fixture.detectChanges();
+    const trigger = fixture.nativeElement.querySelector('ort-select') as HTMLElement;
+    const listbox = document.createElement('ort-menu');
+    listbox.id = 'active-listbox';
+    const option = document.createElement('ort-option');
+    option.id = 'active-option';
+    option.textContent = 'B';
+    listbox.append(option);
+    document.body.append(listbox);
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-controls', listbox.id);
+    trigger.setAttribute('aria-activedescendant', option.id);
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    );
+    await new Promise(resolve => setTimeout(resolve));
+    listbox.remove();
+
+    expect(fixture.componentInstance.form.controls.option.value).toBe('b');
+  });
+
   it('hides drawer search when there are fewer than 6 options', () => {
     fixture.detectChanges();
 
