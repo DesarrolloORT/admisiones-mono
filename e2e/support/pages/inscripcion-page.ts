@@ -398,7 +398,7 @@ export class InscripcionPage {
     await this.page.keyboard.press('Home');
     for (let index = 0; index < 30; index += 1) {
       if ((await combobox.getAttribute('aria-activedescendant')) === targetId) {
-        await combobox.press('Enter');
+        await targetOption.press('Enter');
         await expect(combobox).toContainText(option);
         return;
       }
