@@ -16,6 +16,20 @@ public class DtoCarrerasPorEscuelaResponse
 {
     public long IdEscuela { get; set; }
     public string? NombreEscuela { get; set; }
+
+    /// <summary>Nivel 1/2 (Carrera universitaria/Tecnicatura): productos directos, sin concepto de seminario.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<DtoCarreraResponse>? Productos { get; set; }
+
+    /// <summary>Nivel 3/4 (Actualizacion profesional): productos agrupados por si tienen seminario o no.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<DtoCarrerasPorSeminarioResponse>? Seminarios { get; set; }
+}
+
+[ExcludeFromCodeCoverage]
+public class DtoCarrerasPorSeminarioResponse
+{
+    public bool TieneSeminario { get; set; }
     public List<DtoCarreraResponse> Productos { get; set; } = [];
 }
 
@@ -26,8 +40,6 @@ public class DtoCarreraResponse
     public string? NombreProducto { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? IdProceso { get; set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? TieneSeminario { get; set; }
 }
 
 [ExcludeFromCodeCoverage]

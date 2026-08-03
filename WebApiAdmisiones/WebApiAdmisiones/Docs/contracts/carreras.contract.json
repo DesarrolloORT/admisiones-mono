@@ -1,8 +1,33 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Contrato del catalogo de carreras para el paso 'Propuesta academica' del registro de admision.",
   "conventions": {
     "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio esta en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla."
+  },
+  "types": {
+    "DtoCarrerasPorEscuelaResponse": {
+      "desc": "La forma depende de 'propuestaAcademica': para CarreraUniversitaria/Tecnicatura viene 'productos' (sin 'seminarios'); para ActualizacionProfesional viene 'seminarios' (sin 'productos'). El campo ausente no aparece en el JSON (omitEmpty).",
+      "fields": {
+        "idEscuela": { "type": "long" },
+        "nombreEscuela": { "type": "string|null" },
+        "productos": { "type": "DtoCarreraResponse[]", "omitEmpty": true, "desc": "Solo CarreraUniversitaria/Tecnicatura: productos directos de la escuela, sin concepto de seminario." },
+        "seminarios": { "type": "DtoCarrerasPorSeminarioResponse[]", "omitEmpty": true, "desc": "Solo ActualizacionProfesional: como maximo 2 entradas (tieneSeminario true y/o false)." }
+      }
+    },
+    "DtoCarrerasPorSeminarioResponse": {
+      "desc": "Un grupo de productos de la escuela que comparten el mismo valor de tieneSeminario. Solo aparece para ActualizacionProfesional.",
+      "fields": {
+        "tieneSeminario": { "type": "boolean" },
+        "productos": { "type": "DtoCarreraResponse[]" }
+      }
+    },
+    "DtoCarreraResponse": {
+      "fields": {
+        "idProducto": { "type": "long" },
+        "nombreProducto": { "type": "string|null" },
+        "idProceso": { "type": "long|null", "omitEmpty": true, "desc": "Solo poblado para nivel 3/4." }
+      }
+    }
   },
   "endpoints": {
     "obtenerCarreras": {
@@ -26,7 +51,7 @@
         "nombreNivelProducto": { "type": "string|null" },
         "escuelas": { "type": "DtoCarrerasPorEscuelaResponse[]" }
       },
-      "frontHint": "Para 'ActualizacionProfesional' la respuesta puede traer DOS entradas en el array (nivel 3 y nivel 4 reales de la BD) - el front debe iterar todo el array y mostrarlas juntas bajo esa misma opcion de UI, nunca asumir una sola entrada. Para 'CarreraUniversitaria'/'Tecnicatura' siempre viene a lo sumo una entrada.",
+      "frontHint": "Para 'ActualizacionProfesional' la respuesta puede traer DOS entradas en el array externo (nivel 3 y nivel 4 reales de la BD) - el front debe iterar todo el array y mostrarlas juntas bajo esa misma opcion de UI, nunca asumir una sola entrada. Para 'CarreraUniversitaria'/'Tecnicatura' siempre viene a lo sumo una entrada. Ademas, dentro de cada escuela, la forma cambia segun 'propuestaAcademica': ver DtoCarrerasPorEscuelaResponse en 'types'.",
       "mainErrors": ["Ninguno propio: falta o valor invalido de 'propuestaAcademica' devuelve 400 automatico del model binding de ASP.NET Core, antes de llegar al controller/service."]
     }
   }

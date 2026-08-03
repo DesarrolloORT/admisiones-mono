@@ -14,7 +14,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void CarrerasContract_IsValidJson()
         {
-            Assert.Equal(1, Contract["version"]!.GetValue<int>());
+            Assert.Equal(2, Contract["version"]!.GetValue<int>());
             Assert.Equal("GET", Endpoint["method"]!.GetValue<string>());
             Assert.Equal("Catalogos/Carreras", Endpoint["route"]!.GetValue<string>());
         }
@@ -48,6 +48,22 @@ namespace UnitTesting.AppLogic.Contracts
                 .ToList();
 
             Assert.Equal(dtoProperties, dataFields);
+        }
+
+        [Theory]
+        [InlineData("DtoCarrerasPorEscuelaResponse", typeof(DtoCarrerasPorEscuelaResponse))]
+        [InlineData("DtoCarrerasPorSeminarioResponse", typeof(DtoCarrerasPorSeminarioResponse))]
+        [InlineData("DtoCarreraResponse", typeof(DtoCarreraResponse))]
+        public void CarrerasContract_TypeFieldsMatchDto(string typeName, Type dtoType)
+        {
+            var typeFields = Contract["types"]![typeName]!["fields"]!.AsObject().Select(f => f.Key).Order().ToList();
+            var dtoProperties = dtoType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(p => JsonNamingPolicy.CamelCase.ConvertName(p.Name))
+                .Order()
+                .ToList();
+
+            Assert.Equal(dtoProperties, typeFields);
         }
 
         private static string ContractPath()

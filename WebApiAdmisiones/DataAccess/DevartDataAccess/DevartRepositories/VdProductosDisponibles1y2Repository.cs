@@ -22,27 +22,22 @@ namespace DataAccess.DevartRepositories
         {
             var ctx = Context;
 
-            // Productos con interés (grado alto 4 o inscripto 5) en procesos marcados para web/habilitados,
-            // que además figuran en VD_FRESCO_PRODUCTO_ADMISIONES para la persona.
-            var productosInteresFresco =
-                (from ip in ctx.InteresProductos
-                 join i in ctx.Interes on ip.IdInteres equals i.IdInteres
-                 join p in ctx.Procesos on i.IdProceso equals p.IdProceso
-                 where i.CodigoPersona == codigoPersona
-                     && (ip.IdGradoInteres == 5m || ip.IdGradoInteres == 4m)
-                     && p.HabilitadoInteresSitio == "SI"
-                 select ip.IdProducto).ToList();
-
-            // Productos en los que la persona ya está inscripta (sin baja).
-            var productosInscripto =
-                (from ins in ctx.Inscriptos
-                 where ins.CodigoPersona == codigoPersona && ins.BajaInscr == null && ins.IdProductoReal != null
-                 select ins.IdProductoReal.Value).ToList();
-
             return objectSet
-                .Where(v => !productosInteresFresco.Contains(v.IdProducto)
-                    && !productosInscripto.Contains(v.IdProducto)
-                    && v.IdNivelProducto == idNivelProducto)
+                .Where(v => v.IdNivelProducto == idNivelProducto
+                    // Productos con interés (grado alto 4 o inscripto 5) en procesos marcados para web/habilitados,
+                    // que además figuran en VD_FRESCO_PRODUCTO_ADMISIONES para la persona.
+                    && !(from ip in ctx.InteresProductos
+                         join i in ctx.Interes on ip.IdInteres equals i.IdInteres
+                         join p in ctx.Procesos on i.IdProceso equals p.IdProceso
+                         where i.CodigoPersona == codigoPersona
+                             && (ip.IdGradoInteres == 5m || ip.IdGradoInteres == 4m)
+                             && p.HabilitadoInteresSitio == "SI"
+                             && ip.IdProducto == v.IdProducto
+                         select ip.IdProducto).Any()
+                    // Productos en los que la persona ya está inscripta (sin baja).
+                    && !ctx.Inscriptos.Any(ins => ins.CodigoPersona == codigoPersona
+                        && ins.BajaInscr == null
+                        && ins.IdProductoReal == v.IdProducto))
                 .OrderBy(v => v.OrdenListadoEscuela)
                 .ThenBy(v => v.OrdenListadoNivelProducto)
                 .ToList();

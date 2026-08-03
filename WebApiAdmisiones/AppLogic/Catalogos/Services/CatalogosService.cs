@@ -123,6 +123,8 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
                 uow.VdOfertasDisponibles3y4s.GetProductosDisponibles().Select(ToCarreraCatalogoItem)
         };
 
+        var esActualizacionProfesional = propuestaAcademica == PropuestaAcademica.ActualizacionProfesional;
+
         var response = items
             .GroupBy(x => new { x.IdNivelProducto, x.NombreNivelProducto })
             .OrderBy(g => g.Key.IdNivelProducto)
@@ -134,30 +136,47 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
                     .GroupBy(x => new { x.IdEscuela, x.NombreEscuela })
                     .OrderBy(g => g.Min(x => x.OrdenEscuela ?? long.MaxValue))
                     .ThenBy(g => g.Key.NombreEscuela)
-                    .Select(escuela => new DtoCarrerasPorEscuelaResponse
-                    {
-                        IdEscuela = escuela.Key.IdEscuela,
-                        NombreEscuela = escuela.Key.NombreEscuela,
-                        Productos = escuela
-                            .GroupBy(x => x.IdProducto)
-                            .Select(g => g.First())
-                            .OrderBy(x => x.OrdenProducto ?? long.MaxValue)
-                            .ThenBy(x => x.NombreProducto)
-                            .Select(x => new DtoCarreraResponse
-                            {
-                                IdProducto = x.IdProducto,
-                                NombreProducto = x.NombreProducto,
-                                IdProceso = x.IdProceso,
-                                TieneSeminario = x.TieneSeminario
-                            })
-                            .ToList()
-                    })
+                    .Select(escuela => esActualizacionProfesional
+                        ? new DtoCarrerasPorEscuelaResponse
+                        {
+                            IdEscuela = escuela.Key.IdEscuela,
+                            NombreEscuela = escuela.Key.NombreEscuela,
+                            Seminarios = escuela
+                                // TieneSeminario siempre es bool concreto para nivel 3/4 (ver ToCarreraCatalogoItem(VdOfertasDisponibles3y4)).
+                                .GroupBy(x => x.TieneSeminario!.Value)
+                                .OrderBy(g => g.Key)
+                                .Select(seminario => new DtoCarrerasPorSeminarioResponse
+                                {
+                                    TieneSeminario = seminario.Key,
+                                    Productos = MapProductos(seminario)
+                                })
+                                .ToList()
+                        }
+                        : new DtoCarrerasPorEscuelaResponse
+                        {
+                            IdEscuela = escuela.Key.IdEscuela,
+                            NombreEscuela = escuela.Key.NombreEscuela,
+                            Productos = MapProductos(escuela)
+                        })
                     .ToList()
             })
             .ToList();
 
         return OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>>.Ok(response, nameof(ObtenerCarreras));
     }
+
+    private static List<DtoCarreraResponse> MapProductos(IEnumerable<CarreraCatalogoItem> items) => items
+        .GroupBy(x => x.IdProducto)
+        .Select(g => g.First())
+        .OrderBy(x => x.OrdenProducto ?? long.MaxValue)
+        .ThenBy(x => x.NombreProducto)
+        .Select(x => new DtoCarreraResponse
+        {
+            IdProducto = x.IdProducto,
+            NombreProducto = x.NombreProducto,
+            IdProceso = x.IdProceso
+        })
+        .ToList();
 
     private static CarreraCatalogoItem ToCarreraCatalogoItem(VdProductosDisponibles1y2 producto) => new(
         producto.IdProducto,

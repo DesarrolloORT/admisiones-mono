@@ -264,9 +264,10 @@ namespace UnitTesting.AppLogic.Services
             var escuela = Assert.Single(nivel.Escuelas);
             Assert.Equal(7, escuela.IdEscuela);
             Assert.Equal("Facultad de Comunicacion", escuela.NombreEscuela);
-            var producto = Assert.Single(escuela.Productos);
+            var producto = Assert.Single(escuela.Productos!);
             Assert.Equal(11, producto.IdProducto);
             Assert.Equal("Comunicacion", producto.NombreProducto);
+            Assert.Null(escuela.Seminarios);
 
             vistaRepo.Verify(r => r.GetProductosDisponibles(), Times.Never);
         }
@@ -297,6 +298,16 @@ namespace UnitTesting.AppLogic.Services
                 },
                 new VdOfertasDisponibles3y4
                 {
+                    IdProducto = 51,
+                    NombreWebProducto = "MBA con seminario",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion",
+                    ConSeminarios = "SI"
+                },
+                new VdOfertasDisponibles3y4
+                {
                     IdProducto = 60,
                     NombreWebProducto = "Curso corto",
                     IdNivelProducto = 4,
@@ -321,15 +332,30 @@ namespace UnitTesting.AppLogic.Services
                     Assert.Equal(3, nivel.IdNivelProducto);
                     var escuela = Assert.Single(nivel.Escuelas);
                     Assert.Equal("Facultad de Administracion", escuela.NombreEscuela);
-                    var producto = Assert.Single(escuela.Productos);
-                    Assert.Equal(50, producto.IdProducto);
-                    Assert.Equal("MBA", producto.NombreProducto);
+                    Assert.Null(escuela.Productos);
+                    Assert.Collection(
+                        escuela.Seminarios!,
+                        sinSeminario =>
+                        {
+                            Assert.False(sinSeminario.TieneSeminario);
+                            var producto = Assert.Single(sinSeminario.Productos);
+                            Assert.Equal(50, producto.IdProducto);
+                            Assert.Equal("MBA", producto.NombreProducto);
+                        },
+                        conSeminario =>
+                        {
+                            Assert.True(conSeminario.TieneSeminario);
+                            var producto = Assert.Single(conSeminario.Productos);
+                            Assert.Equal(51, producto.IdProducto);
+                        });
                 },
                 nivel =>
                 {
                     Assert.Equal(4, nivel.IdNivelProducto);
                     var escuela = Assert.Single(nivel.Escuelas);
-                    var producto = Assert.Single(escuela.Productos);
+                    var sinSeminario = Assert.Single(escuela.Seminarios!);
+                    Assert.False(sinSeminario.TieneSeminario);
+                    var producto = Assert.Single(sinSeminario.Productos);
                     Assert.Equal(60, producto.IdProducto);
                 });
 
