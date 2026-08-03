@@ -110,12 +110,12 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerEncuestaInicial_ReturnsAllStaticCatalogs()
+        public async Task ObtenerEncuestaInicial_ReturnsAllStaticCatalogs()
         {
-            var result = _service.ObtenerEncuestaInicial();
+            var result = await _service.ObtenerEncuestaInicialAsync();
 
             Assert.True(result.Success);
-            Assert.Equal(nameof(CatalogosService.ObtenerEncuestaInicial), result.Method);
+            Assert.Equal("ObtenerEncuestaInicial", result.Method);
             Assert.NotNull(result.Data);
             Assert.Equal(2, result.Data.Educacion.OpcionesSiNo.Count);
             Assert.Equal(2, result.Data.Educacion.UbicacionesUltimoAnioSecundaria.Count);
@@ -128,9 +128,9 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerEncuestaInicial_UsesEmsLabelsForSecondaryDecisionOptions()
+        public async Task ObtenerEncuestaInicial_UsesEmsLabelsForSecondaryDecisionOptions()
         {
-            var result = _service.ObtenerEncuestaInicial();
+            var result = await _service.ObtenerEncuestaInicialAsync();
 
             var decisionCarrera = result.Data!.DecisionAcademica.AniosEducacionMediaSuperior.ToList();
             Assert.Collection(
@@ -158,7 +158,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public void ObtenerEncuestaInicial_IncludesDynamicCatalogsBySection()
+        public async Task ObtenerEncuestaInicial_IncludesDynamicCatalogsBySection()
         {
             var anioRepo = new Mock<IAnioBachillerRepository>();
             anioRepo.Setup(r => r.GetAllWithRelated()).Returns(
@@ -189,7 +189,7 @@ namespace UnitTesting.AppLogic.Services
             ]);
             _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
 
-            var result = _service.ObtenerEncuestaInicial();
+            var result = await _service.ObtenerEncuestaInicialAsync();
 
             var anio = Assert.Single(result.Data!.Educacion.AniosBachillerato);
             Assert.Equal(12, anio.Value);

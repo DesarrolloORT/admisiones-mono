@@ -17,7 +17,7 @@ public interface ICatalogosService
     /// Obtiene todos los combos estáticos necesarios para la encuesta inicial de admisión.
     /// </summary>
     /// <returns>Catálogos de la encuesta inicial agrupados por sección.</returns>
-    OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial();
+    Task<OperationResult<DtoEncuestaInicialCatalogosResponse>> ObtenerEncuestaInicialAsync();
 
     /// <summary>
     /// Obtiene las carreras vigentes disponibles para la persona, para la propuesta académica indicada.
@@ -47,7 +47,7 @@ public interface ICatalogosService
     /// Obtiene los bancos habilitados para pagos.
     /// </summary>
     /// <returns>Bancos disponibles.</returns>
-    OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos();
+    Task<OperationResult<IEnumerable<DtoBancoDevart>>> ObtenerBancosAsync();
 
     /// <summary>
     /// Obtiene las instituciones educativas de un país y estado dados.

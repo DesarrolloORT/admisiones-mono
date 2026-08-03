@@ -81,14 +81,14 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public void ObtenerEncuestaInicial_ReturnsOk()
+        public async Task ObtenerEncuestaInicial_ReturnsOk()
         {
             var serviceMock = new Mock<ICatalogosService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<CatalogosController>>();
             var controller = new CatalogosController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            serviceMock.Setup(s => s.ObtenerEncuestaInicial())
-                .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
+            serviceMock.Setup(s => s.ObtenerEncuestaInicialAsync())
+                .ReturnsAsync(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
                     new DtoEncuestaInicialCatalogosResponse
                     {
                         DecisionAcademica = new DtoEncuestaDecisionAcademicaCatalogos
@@ -99,9 +99,9 @@ namespace UnitTesting.Controllers
                             ]
                         }
                     },
-                    nameof(ICatalogosService.ObtenerEncuestaInicial)));
+                    nameof(ICatalogosService.ObtenerEncuestaInicialAsync)));
 
-            var response = controller.ObtenerEncuestaInicial();
+            var response = await controller.ObtenerEncuestaInicial();
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);

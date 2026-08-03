@@ -49,9 +49,9 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Catalogos obtenidos correctamente.</response>
         [HttpGet("EncuestaInicial")]
         [ProducesResponseType(typeof(OperationResult<DtoEncuestaInicialCatalogosResponse>), 200)]
-        public IActionResult ObtenerEncuestaInicial()
+        public async Task<IActionResult> ObtenerEncuestaInicial()
         {
-            var result = catalogosService.ObtenerEncuestaInicial();
+            var result = await catalogosService.ObtenerEncuestaInicialAsync();
             return ValidateResponse(result);
         }
 
@@ -126,9 +126,9 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBancoDevart>>), 400)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBancoDevart>>), 500)]
         [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBancoDevart>>), 502)]
-        public IActionResult ObtenerBancos()
+        public async Task<IActionResult> ObtenerBancos()
         {
-            var result = catalogosService.ObtenerBancos();
+            var result = await catalogosService.ObtenerBancosAsync();
             return ValidateResponse(result);
         }
 

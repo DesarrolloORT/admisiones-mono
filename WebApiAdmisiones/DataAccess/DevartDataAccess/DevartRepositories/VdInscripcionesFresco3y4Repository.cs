@@ -15,16 +15,10 @@ namespace DataAccess.DevartRepositories
     {
         public virtual ICollection<BusinessLogic.Entities.VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona)
         {
-            var parametros = Context.ParametrosAdmisiones
-                .Select(p => new
-                {
-                    DiasExtraPermiteInscr3 = p.DiasExtraPermiteInscr3 ?? 0,
-                    DiasExtraPermiteInscr4 = p.DiasExtraPermiteInscr4 ?? 0
-                })
-                .FirstOrDefault();
+            var parametros = ParametrosAdmisionesCache.Get(Context);
 
-            var diasExtra3 = (double)(parametros?.DiasExtraPermiteInscr3 ?? 0);
-            var diasExtra4 = (double)(parametros?.DiasExtraPermiteInscr4 ?? 0);
+            var diasExtra3 = (double)parametros.DiasExtra3;
+            var diasExtra4 = (double)parametros.DiasExtra4;
             var fechaLimiteNivel3 = DateTime.Today.AddDays(-diasExtra3);
             var fechaLimiteNivel4 = DateTime.Today.AddDays(-diasExtra4);
             var fechaLimiteDefault = DateTime.Today;
@@ -39,16 +33,10 @@ namespace DataAccess.DevartRepositories
 
         public virtual ICollection<BusinessLogic.Entities.VdInscripcionesFresco3y4> GetInscripcionesFrescoHabilitadas(long codigoPersona, long idProducto, long idProceso)
         {
-            var parametros = Context.ParametrosAdmisiones
-                .Select(p => new
-                {
-                    DiasExtraPermiteInscr3 = p.DiasExtraPermiteInscr3 ?? 0,
-                    DiasExtraPermiteInscr4 = p.DiasExtraPermiteInscr4 ?? 0
-                })
-                .FirstOrDefault();
+            var parametros = ParametrosAdmisionesCache.Get(Context);
 
-            var diasExtra3 = (double)(parametros?.DiasExtraPermiteInscr3 ?? 0);
-            var diasExtra4 = (double)(parametros?.DiasExtraPermiteInscr4 ?? 0);
+            var diasExtra3 = (double)parametros.DiasExtra3;
+            var diasExtra4 = (double)parametros.DiasExtra4;
             var fechaLimiteNivel3 = DateTime.Today.AddDays(-diasExtra3);
             var fechaLimiteNivel4 = DateTime.Today.AddDays(-diasExtra4);
             var fechaLimiteDefault = DateTime.Today;

@@ -7,9 +7,10 @@ using Utilities;
 namespace WebApiAdmisiones.Security.Cache
 {
     /// <summary>
-    /// Decorator de <see cref="ICatalogosService"/> que agrega cache distribuido (Redis) solo para
-    /// <see cref="ObtenerPaisesEstadosCiudadesAsync"/>. El resto de los métodos delega directo al
-    /// service real, sin cache. Movido desde CatalogosController para que el controller no conozca
+    /// Decorator de <see cref="ICatalogosService"/> que agrega cache distribuido (Redis) para los
+    /// catálogos que no dependen de la persona ni cambian por acción del usuario: países/estados/
+    /// ciudades, bancos y los combos de la encuesta inicial. El resto de los métodos delega directo
+    /// al service real, sin cache. Movido desde CatalogosController para que el controller no conozca
     /// la key, el TTL ni el fallback de cache.
     /// </summary>
     /// <remarks>
@@ -24,15 +25,19 @@ namespace WebApiAdmisiones.Security.Cache
         IConfiguration configuration)
         : ICatalogosService
     {
-        private const string CacheKey = "catalogos:paises-estados-ciudades";
-        private const string OriginMethod = "ObtenerPaisesEstadosCiudades";
+        private const string PaisesCacheKey = "catalogos:paises-estados-ciudades";
+        private const string PaisesOriginMethod = "ObtenerPaisesEstadosCiudades";
+        private const string EncuestaInicialCacheKey = "catalogos:encuesta-inicial";
+        private const string EncuestaInicialOriginMethod = "ObtenerEncuestaInicial";
+        private const string BancosCacheKey = "catalogos:bancos";
+        private const string BancosOriginMethod = "ObtenerBancos";
 
         public async Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
         {
             var ttlHours = configuration.GetValue<int?>("Cache:CatalogosTTLHours") ?? 24;
 
             var cachedData = await cache.GetOrSetAsync(
-                CacheKey,
+                PaisesCacheKey,
                 async () =>
                 {
                     // Factory: delegar la consulta al service real
@@ -50,11 +55,29 @@ namespace WebApiAdmisiones.Security.Cache
             }
 
             // Envolver la data en un OperationResult para el caller (controller)
-            return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(cachedData, OriginMethod);
+            return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(cachedData, PaisesOriginMethod);
         }
 
-        public OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
-            => inner.ObtenerEncuestaInicial();
+        public async Task<OperationResult<DtoEncuestaInicialCatalogosResponse>> ObtenerEncuestaInicialAsync()
+        {
+            var ttlHours = configuration.GetValue<int?>("Cache:CatalogosTTLHours") ?? 24;
+
+            var cachedData = await cache.GetOrSetAsync(
+                EncuestaInicialCacheKey,
+                async () =>
+                {
+                    var serviceResult = await inner.ObtenerEncuestaInicialAsync();
+                    return serviceResult.Success ? serviceResult.Data : null;
+                },
+                TimeSpan.FromHours(ttlHours));
+
+            if (cachedData == null)
+            {
+                return await inner.ObtenerEncuestaInicialAsync();
+            }
+
+            return OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(cachedData, EncuestaInicialOriginMethod);
+        }
 
         public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona, PropuestaAcademica propuestaAcademica)
             => inner.ObtenerCarreras(codigoPersona, propuestaAcademica);
@@ -65,8 +88,26 @@ namespace WebApiAdmisiones.Security.Cache
         public Task<OperationResult<List<OfertaInscripcionDto>>> ObtenerTurnos(long idCarrera, long idProceso)
             => inner.ObtenerTurnos(idCarrera, idProceso);
 
-        public OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos()
-            => inner.ObtenerBancos();
+        public async Task<OperationResult<IEnumerable<DtoBancoDevart>>> ObtenerBancosAsync()
+        {
+            var ttlHours = configuration.GetValue<int?>("Cache:CatalogosTTLHours") ?? 24;
+
+            var cachedData = await cache.GetOrSetAsync(
+                BancosCacheKey,
+                async () =>
+                {
+                    var serviceResult = await inner.ObtenerBancosAsync();
+                    return serviceResult.Success ? serviceResult.Data : null;
+                },
+                TimeSpan.FromHours(ttlHours));
+
+            if (cachedData == null)
+            {
+                return await inner.ObtenerBancosAsync();
+            }
+
+            return OperationResult<IEnumerable<DtoBancoDevart>>.Ok(cachedData, BancosOriginMethod);
+        }
 
         public OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado)
             => inner.ObtenerInstituciones(codigoPais, codigoEstado);

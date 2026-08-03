@@ -13,6 +13,8 @@ namespace UnitTesting.Security.Cache
     public class CatalogosCacheDecoratorTests
     {
         private const string CacheKey = "catalogos:paises-estados-ciudades";
+        private const string EncuestaInicialCacheKey = "catalogos:encuesta-inicial";
+        private const string BancosCacheKey = "catalogos:bancos";
 
         private readonly Mock<ICatalogosService> _innerMock = new();
         private readonly Mock<IRedisCacheService> _cacheMock = new();
@@ -27,6 +29,12 @@ namespace UnitTesting.Security.Cache
 
         private static List<DtoPaisEstadoCiudadResponse> CrearData()
             => [new DtoPaisEstadoCiudadResponse { CodigoPais = 1, Nombre = "Uruguay" }];
+
+        private static DtoEncuestaInicialCatalogosResponse CrearEncuestaInicialData()
+            => new();
+
+        private static List<DtoBancoDevart> CrearBancosData()
+            => [new DtoBancoDevart { IdBanco = 1, NombreBanco = "BROU", CodigoBanco = 1 }];
 
         private CatalogosCacheDecorator CrearDecorator(int? ttlHours = null)
             => new(_innerMock.Object, _cacheMock.Object, CrearConfiguracion(ttlHours));
@@ -168,19 +176,95 @@ namespace UnitTesting.Security.Cache
         }
 
         [Fact]
-        public void ObtenerEncuestaInicial_DelegatesToInnerService()
+        public async Task ObtenerEncuestaInicialAsync_CacheHit_ReturnsCachedDataWithoutCallingInner()
         {
-            _innerMock
-                .Setup(s => s.ObtenerEncuestaInicial())
-                .Returns(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
-                    new DtoEncuestaInicialCatalogosResponse(),
-                    nameof(ICatalogosService.ObtenerEncuestaInicial)));
+            var expectedData = CrearEncuestaInicialData();
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    EncuestaInicialCacheKey,
+                    It.IsAny<Func<Task<DtoEncuestaInicialCatalogosResponse?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .ReturnsAsync(expectedData);
             var decorator = CrearDecorator(24);
 
-            var result = decorator.ObtenerEncuestaInicial();
+            var result = await decorator.ObtenerEncuestaInicialAsync();
 
             Assert.True(result.Success);
-            _innerMock.Verify(s => s.ObtenerEncuestaInicial(), Times.Once);
+            Assert.Same(expectedData, result.Data);
+            Assert.Equal("ObtenerEncuestaInicial", result.Method);
+            _innerMock.Verify(s => s.ObtenerEncuestaInicialAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task ObtenerEncuestaInicialAsync_CacheMissWithServiceSuccess_CallsInnerOnceViaFactory()
+        {
+            var expectedData = CrearEncuestaInicialData();
+            _innerMock
+                .Setup(s => s.ObtenerEncuestaInicialAsync())
+                .ReturnsAsync(OperationResult<DtoEncuestaInicialCatalogosResponse>.Ok(
+                    expectedData,
+                    "ObtenerEncuestaInicial"));
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    EncuestaInicialCacheKey,
+                    It.IsAny<Func<Task<DtoEncuestaInicialCatalogosResponse?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Returns<string, Func<Task<DtoEncuestaInicialCatalogosResponse?>>, TimeSpan>(
+                    (_, factory, _) => factory());
+            var decorator = CrearDecorator(24);
+
+            var result = await decorator.ObtenerEncuestaInicialAsync();
+
+            Assert.True(result.Success);
+            Assert.Same(expectedData, result.Data);
+            _innerMock.Verify(s => s.ObtenerEncuestaInicialAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ObtenerEncuestaInicialAsync_CacheMissWithServiceFailure_FallsBackToInnerAgain()
+        {
+            var fallbackResult = OperationResult<DtoEncuestaInicialCatalogosResponse>.IsFailed(
+                "CAT_01",
+                "ObtenerEncuestaInicial",
+                "Error de catálogo.",
+                400,
+                default!);
+            _innerMock
+                .Setup(s => s.ObtenerEncuestaInicialAsync())
+                .ReturnsAsync(fallbackResult);
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    EncuestaInicialCacheKey,
+                    It.IsAny<Func<Task<DtoEncuestaInicialCatalogosResponse?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Returns<string, Func<Task<DtoEncuestaInicialCatalogosResponse?>>, TimeSpan>(
+                    (_, factory, _) => factory());
+            var decorator = CrearDecorator(24);
+
+            var result = await decorator.ObtenerEncuestaInicialAsync();
+
+            Assert.False(result.Success);
+            Assert.Equal("CAT_01", result.ErrorCode);
+            _innerMock.Verify(s => s.ObtenerEncuestaInicialAsync(), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task ObtenerEncuestaInicialAsync_UsesExpectedCacheKey()
+        {
+            string? capturedKey = null;
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Func<Task<DtoEncuestaInicialCatalogosResponse?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Callback<string, Func<Task<DtoEncuestaInicialCatalogosResponse?>>, TimeSpan>(
+                    (key, _, _) => capturedKey = key)
+                .ReturnsAsync(CrearEncuestaInicialData());
+            var decorator = CrearDecorator(24);
+
+            await decorator.ObtenerEncuestaInicialAsync();
+
+            Assert.Equal(EncuestaInicialCacheKey, capturedKey);
         }
 
         [Fact]
@@ -232,19 +316,95 @@ namespace UnitTesting.Security.Cache
         }
 
         [Fact]
-        public void ObtenerBancos_DelegatesToInnerService()
+        public async Task ObtenerBancosAsync_CacheHit_ReturnsCachedDataWithoutCallingInner()
         {
-            _innerMock
-                .Setup(s => s.ObtenerBancos())
-                .Returns(OperationResult<IEnumerable<DtoBancoDevart>>.Ok(
-                    [],
-                    nameof(ICatalogosService.ObtenerBancos)));
+            var expectedData = CrearBancosData();
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    BancosCacheKey,
+                    It.IsAny<Func<Task<IEnumerable<DtoBancoDevart>?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .ReturnsAsync(expectedData);
             var decorator = CrearDecorator(24);
 
-            var result = decorator.ObtenerBancos();
+            var result = await decorator.ObtenerBancosAsync();
 
             Assert.True(result.Success);
-            _innerMock.Verify(s => s.ObtenerBancos(), Times.Once);
+            Assert.Same(expectedData, result.Data);
+            Assert.Equal("ObtenerBancos", result.Method);
+            _innerMock.Verify(s => s.ObtenerBancosAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task ObtenerBancosAsync_CacheMissWithServiceSuccess_CallsInnerOnceViaFactory()
+        {
+            var expectedData = CrearBancosData();
+            _innerMock
+                .Setup(s => s.ObtenerBancosAsync())
+                .ReturnsAsync(OperationResult<IEnumerable<DtoBancoDevart>>.Ok(
+                    expectedData,
+                    "ObtenerBancos"));
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    BancosCacheKey,
+                    It.IsAny<Func<Task<IEnumerable<DtoBancoDevart>?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Returns<string, Func<Task<IEnumerable<DtoBancoDevart>?>>, TimeSpan>(
+                    (_, factory, _) => factory());
+            var decorator = CrearDecorator(24);
+
+            var result = await decorator.ObtenerBancosAsync();
+
+            Assert.True(result.Success);
+            Assert.Equal(expectedData, result.Data);
+            _innerMock.Verify(s => s.ObtenerBancosAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ObtenerBancosAsync_CacheMissWithServiceFailure_FallsBackToInnerAgain()
+        {
+            var fallbackResult = OperationResult<IEnumerable<DtoBancoDevart>>.IsFailed(
+                "CAT_02",
+                "ObtenerBancos",
+                "Error de catálogo.",
+                400,
+                default!);
+            _innerMock
+                .Setup(s => s.ObtenerBancosAsync())
+                .ReturnsAsync(fallbackResult);
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    BancosCacheKey,
+                    It.IsAny<Func<Task<IEnumerable<DtoBancoDevart>?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Returns<string, Func<Task<IEnumerable<DtoBancoDevart>?>>, TimeSpan>(
+                    (_, factory, _) => factory());
+            var decorator = CrearDecorator(24);
+
+            var result = await decorator.ObtenerBancosAsync();
+
+            Assert.False(result.Success);
+            Assert.Equal("CAT_02", result.ErrorCode);
+            _innerMock.Verify(s => s.ObtenerBancosAsync(), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task ObtenerBancosAsync_UsesExpectedCacheKey()
+        {
+            string? capturedKey = null;
+            _cacheMock
+                .Setup(c => c.GetOrSetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Func<Task<IEnumerable<DtoBancoDevart>?>>>(),
+                    It.IsAny<TimeSpan>()))
+                .Callback<string, Func<Task<IEnumerable<DtoBancoDevart>?>>, TimeSpan>(
+                    (key, _, _) => capturedKey = key)
+                .ReturnsAsync(CrearBancosData());
+            var decorator = CrearDecorator(24);
+
+            await decorator.ObtenerBancosAsync();
+
+            Assert.Equal(BancosCacheKey, capturedKey);
         }
 
         [Fact]

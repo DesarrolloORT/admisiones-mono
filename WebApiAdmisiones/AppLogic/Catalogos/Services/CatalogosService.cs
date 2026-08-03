@@ -26,7 +26,7 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
         return OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>.Ok(response, nameof(ObtenerPaisesEstadosCiudades));
     }
 
-    public OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
+    private OperationResult<DtoEncuestaInicialCatalogosResponse> ObtenerEncuestaInicial()
     {
         using var uow = _uowFactory.Create();
 
@@ -97,6 +97,11 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
     public Task<OperationResult<IEnumerable<DtoPaisEstadoCiudadResponse>>> ObtenerPaisesEstadosCiudadesAsync()
     {
         return Task.FromResult(ObtenerPaisesEstadosCiudades());
+    }
+
+    public Task<OperationResult<DtoEncuestaInicialCatalogosResponse>> ObtenerEncuestaInicialAsync()
+    {
+        return Task.FromResult(ObtenerEncuestaInicial());
     }
 
     public OperationResult<IEnumerable<DtoCarrerasPorNivelResponse>> ObtenerCarreras(long codigoPersona, PropuestaAcademica propuestaAcademica)
@@ -302,11 +307,16 @@ public class CatalogosService(IUnitOfWorkFactory uowFactory, IInscripcionesyPago
         return OperationResult<List<OfertaInscripcionDto>>.Ok(resultadoOfertas.Data, nameof(ObtenerTurnos));
     }
 
-    public OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos()
+    private OperationResult<IEnumerable<DtoBancoDevart>> ObtenerBancos()
     {
         using var uow = _uowFactory.Create();
         var entidades = uow.Bancos.GetAllHabilitados();
         return OperationResult<IEnumerable<DtoBancoDevart>>.Ok(entidades.ToDtos(), nameof(ObtenerBancos));
+    }
+
+    public Task<OperationResult<IEnumerable<DtoBancoDevart>>> ObtenerBancosAsync()
+    {
+        return Task.FromResult(ObtenerBancos());
     }
 
     public OperationResult<IEnumerable<DtoEmpresaDevart>> ObtenerInstituciones(long codigoPais, long codigoEstado)

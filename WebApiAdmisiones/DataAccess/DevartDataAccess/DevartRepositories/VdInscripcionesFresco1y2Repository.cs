@@ -15,10 +15,7 @@ namespace DataAccess.DevartRepositories
     {
         public virtual ICollection<BusinessLogic.Entities.VdInscripcionesFresco1y2> GetInscripcionesFrescoHabilitadas(long codigoPersona)
         {
-            var diasExtra = (double)(Context.ParametrosAdmisiones
-                .Select(p => p.DiasExtraPermiteInscr1y2 ?? 0)
-                .FirstOrDefault());
-
+            var diasExtra = (double)ParametrosAdmisionesCache.Get(Context).DiasExtra1y2;
             var fechaLimite = DateTime.Today.AddDays(-diasExtra);
 
             return objectSet
@@ -29,10 +26,7 @@ namespace DataAccess.DevartRepositories
 
         public virtual ICollection<BusinessLogic.Entities.VdInscripcionesFresco1y2> GetInscripcionesFrescoHabilitadas(long codigoPersona, long idProducto, long idProceso)
         {
-            var diasExtra = (double)(Context.ParametrosAdmisiones
-                .Select(p => p.DiasExtraPermiteInscr1y2 ?? 0)
-                .FirstOrDefault());
-
+            var diasExtra = (double)ParametrosAdmisionesCache.Get(Context).DiasExtra1y2;
             var fechaLimite = DateTime.Today.AddDays(-diasExtra);
 
             return objectSet
