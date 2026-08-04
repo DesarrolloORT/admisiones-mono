@@ -20,6 +20,15 @@ import { InscripcionSurveyFacade } from './inscription-survey';
 import { InscripcionSurveyIdentityFacade } from './inscription-survey-identity';
 import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
+const AP_CAREERS = [
+  {
+    idProducto: 30,
+    idNivelProducto: 3,
+    nombreProducto: 'Programa de Asesoramiento Financiero',
+    nombreNivelProducto: 'Actualización profesional',
+  },
+];
+
 describe('InscripcionSurveyFacade', () => {
   const saveInitialSurvey = vi.fn();
   const confirmPreEnrollment = vi.fn();
@@ -85,6 +94,113 @@ describe('InscripcionSurveyFacade', () => {
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
+  it('asks only for the inscription owner when AP has survey rights', () => {
+    const { survey, forms } = createFacade(
+      createSurveyResponse({ tieneDerechoEncuesta: true }),
+      {},
+      AP_CAREERS
+    );
+
+    expect(survey.activeSection()).toBe('educacion');
+
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    TestBed.tick();
+
+    expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
+    expect(survey.activeSection()).toBe('situacion-laboral');
+    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+  });
+
+  it('asks for a corporate inscription before identity when AP has no survey rights', () => {
+    const { survey, forms } = createFacade(
+      createSurveyResponse({ tieneDerechoEncuesta: false }),
+      {},
+      AP_CAREERS
+    );
+
+    expect(survey.activeSection()).toBe('identidad');
+
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    TestBed.tick();
+
+    expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
+    expect(survey.activeSection()).toBe('situacion-laboral');
+  });
+
+  it('does not persist the initial survey for AP even with survey rights', async () => {
+    const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  it('confirms a personal AP pre-enrollment and advances to payment', () => {
+    const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.seminarios.setValue(['300']);
+    process.flow.goTo('encuesta');
+    TestBed.tick();
+
+    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+    forms.workForm.controls.isCorporate.setValue(false);
+    const frente = preloadFile('frente.png');
+    const dorso = preloadFile('dorso.png');
+    const selfie = preloadFile('selfie.png');
+    applyIdentityPreload(survey, {
+      frente,
+      dorso,
+      selfie,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    survey.continue();
+
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: false,
+      idOfertasSeleccionadas: [300],
+    });
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBeNull();
+  });
+
+  it('finishes a corporate AP pre-enrollment without opening payment', () => {
+    const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
+    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.seminarios.setValue(['300']);
+    forms.workForm.controls.isCorporate.setValue(true);
+    process.flow.goTo('encuesta');
+    TestBed.tick();
+
+    const identity = preloadFile('identidad.png');
+    applyIdentityPreload(survey, {
+      frente: identity,
+      dorso: identity,
+      selfie: identity,
+      fechaVencimiento: '2030-02-04',
+    });
+    survey.identityForm.controls.identidadCorrecta.setValue(true);
+    survey.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    survey.continue();
+
+    expect(confirmPreEnrollment).toHaveBeenCalledWith({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: true,
+      idOfertasSeleccionadas: [300],
+    });
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBe('inscription-en-proceso');
+  });
+
   it('completes identity and advances when confirming a complete backend preload', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: false,
@@ -148,7 +264,8 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idOfertasSeleccionadas: [300],
     });
   });
 
@@ -227,23 +344,6 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).not.toHaveBeenCalled();
   });
 
-  it('does not save the survey when work becomes complete', () => {
-    const { survey } = createFacade({
-      tieneDerechoEncuesta: true,
-      encuesta: null,
-      universidadesConsideradas: [],
-      universidadesConsideradasOtros: [],
-      universidadesEducacionSuperior: [],
-      universidadesEducacionSuperiorOtros: [],
-      opcionesMotivosSeleccionados: [],
-      opcionesPublicidadSeleccionadas: [],
-    });
-    survey.activeSection.set('situacion-laboral');
-    survey.workForm.controls.situacionLaboral.setValue('no-trabaja');
-
-    expect(survey.getSectionState('situacion-laboral')).toBe('completa');
-    expect(saveInitialSurvey).not.toHaveBeenCalled();
-  });
   it('does not confirm when a previous visible section is invalid', () => {
     const { survey } = createFacade({
       tieneDerechoEncuesta: false,
@@ -301,7 +401,8 @@ describe('InscripcionSurveyFacade', () => {
     expect(uploadIdentityPhoto).toHaveBeenCalledWith(selfie);
     expect(confirmPreEnrollment).toHaveBeenCalledWith({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idOfertasSeleccionadas: [300],
     });
   });
 
@@ -612,6 +713,7 @@ describe('InscripcionSurveyFacade', () => {
       ]
     );
 
+    forms.academicForm.controls.tipoPropuesta.setValue('1');
     forms.academicForm.controls.carrera.setValue('100');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
@@ -658,6 +760,7 @@ describe('InscripcionSurveyFacade', () => {
       ]
     );
 
+    forms.academicForm.controls.tipoPropuesta.setValue('2');
     forms.academicForm.controls.carrera.setValue('200');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
@@ -770,12 +873,13 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.getSectionState('reglamento')).toBe('completa');
   });
 
-  it('closes the reader on back and leaves the step only from the first section', () => {
+  it('closes the reader on back, retreats sections and never leaves the step', () => {
     const { survey, process } = createFacade(createSurveyResponse());
     process.flow.goTo('encuesta');
     survey.activeSection.set('decision-academica');
     survey.openRegulationReader();
 
+    expect(survey.canGoBack()).toBe(true);
     survey.back();
 
     expect(survey.readerOpen()).toBe(false);
@@ -787,9 +891,12 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.activeSection()).toBe('educacion');
     expect(process.flow.currentStep()).toBe('encuesta');
 
+    // Primera sección visible: no hay a dónde volver, el paso 1 queda inalcanzable.
+    expect(survey.canGoBack()).toBe(false);
     survey.back();
 
-    expect(process.flow.currentStep()).toBe('propuesta');
+    expect(survey.activeSection()).toBe('educacion');
+    expect(process.flow.currentStep()).toBe('encuesta');
   });
 
   it('starts an empty survey when the backend has no survey yet', () => {
@@ -846,13 +953,14 @@ describe('InscripcionSurveyFacade', () => {
     };
   }
 
-  // Detalle mínimo "En proceso" sin bloque `detalle`: retomar-con-detalle mantiene
-  // el comportamiento histórico (encuesta prellena el paso 1 editable y posiciona en
-  // el paso 2). El posicionamiento del flujo y la selección de slice los deriva la
-  // función pura (testeada en inscription-entry.spec); acá solo se aplican.
+  // Detalle mínimo "En proceso" sin bloque `detalle` ni ofertas de interés: no hay
+  // precarga posible, así que la encuesta prellena el paso 1 y el flujo arranca en el
+  // paso 2. El posicionamiento del flujo y la selección de slice los deriva la función
+  // pura (testeada en inscription-entry.spec); acá solo se aplican.
   const RESUME_DETAIL: InscripcionDetail = {
     estado: 'En proceso',
     detalle: null,
+    intereses: [],
     pagoPendiente: null,
     seniaMinima: null,
     confirmada: null,
@@ -884,6 +992,8 @@ describe('InscripcionSurveyFacade', () => {
             getCareers: () => of(careers),
             getComienzos: () => of([]),
             getTurnos: () => of([]),
+            getSeminarios: () =>
+              of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }]),
             getCountryLocations: () => of([]),
             getInstituciones: () => of([]),
             getInitialSurveyCatalogs: () =>
@@ -903,7 +1013,6 @@ describe('InscripcionSurveyFacade', () => {
                   motivosEleccionOrt: [],
                 },
                 experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-                situacionLaboral: { tiposJornada: [] },
                 ...catalogOverrides,
               }),
           },
@@ -936,7 +1045,14 @@ describe('InscripcionSurveyFacade', () => {
         loadFailed: options.loadFailed ?? false,
       };
       const state = deriveInitialInscripcionState({
-        entry: { intent: 'retomar', detail: RESUME_DETAIL },
+        entry: {
+          intent: 'retomar',
+          detail: RESUME_DETAIL,
+          idProducto: 20,
+          idProceso: 200,
+          idOfertas: [],
+          idNivelProducto: null,
+        },
         survey: resolved,
       });
       survey.applyInitialState(state.survey);

@@ -13,5 +13,13 @@
     "esModuleInterop": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*.spec.ts", "tests/**/*.spec.ts", "src/**/*.d.ts", "setup-vitest.ts"]
+  "include": ["src/**/*.spec.ts", "tests/**/*.spec.ts", "src/**/*.d.ts", "setup-vitest.ts"],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

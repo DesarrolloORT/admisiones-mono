@@ -13,10 +13,12 @@ import {
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
 import type { DtoAnioBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoAnioBachilleratoCatalogo';
 import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoBachilleratoCatalogo';
+import type { DtoCarrerasPorNivelResponse } from 'src/app/shared/api/generated/models/dtoCarrerasPorNivelResponse';
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
 
+import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
   BaccalaureateOption,
   BaccalaureateYearGroup,
@@ -39,9 +41,6 @@ import {
 export class CatalogsEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  // TODO: getCatalogosTiposDocumentosEndpoint fue removido del API.
-  // Reimplementar getDocumentTypes() cuando haya un endpoint de reemplazo.
-
   public getCountries(): Observable<Country[]> {
     return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
       map(data =>
@@ -59,22 +58,10 @@ export class CatalogsEndpoint {
       .pipe(map(data => this.fromData(data, item => this.toLocationCountry(item))));
   }
 
-  public getCareers(): Observable<Career[]> {
-    return this.api.request(getCatalogosCarrerasEndpoint).pipe(
-      map(data =>
-        this.fromData(data, nivel =>
-          (nivel.escuelas ?? []).flatMap(escuela =>
-            (escuela.productos ?? []).map(producto => ({
-              idProducto: producto.idProducto ?? 0,
-              idNivelProducto: nivel.idNivelProducto ?? 0,
-              nombreProducto: producto.nombreProducto ?? '',
-              nombreNivelProducto: nivel.nombreNivelProducto ?? '',
-              nombreEscuela: escuela.nombreEscuela ?? '',
-            }))
-          )
-        ).flat()
-      )
-    );
+  public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
+    return this.api
+      .request(getCatalogosCarrerasEndpoint, { queryParams: { propuestaAcademica } })
+      .pipe(map(data => this.fromData(data, nivel => this.toCareers(nivel)).flat()));
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
@@ -116,9 +103,6 @@ export class CatalogsEndpoint {
         experienciaOrt: {
           valoraciones: this.toCatalogItems(data?.experienciaOrt?.valoraciones),
           publicidadesOrt: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
-        },
-        situacionLaboral: {
-          tiposJornada: this.toCatalogItems(data?.situacionLaboral?.tiposJornada),
         },
       }))
     );
@@ -164,6 +148,8 @@ export class CatalogsEndpoint {
             idTurno: item.turno?.idTurno ?? 0,
             nombreTurno: item.turno?.nombreTurno ?? '',
             horarioReferencia: item.horarioReferencia ?? '',
+            descripcionOferta: item.descripcionOferta ?? '',
+            fechaReferencia: item.fechaReferencia ?? null,
           }))
         )
       );
@@ -171,6 +157,26 @@ export class CatalogsEndpoint {
 
   public clearCache(): void {
     this.api.clearCache();
+  }
+
+  private toCareers(nivel: DtoCarrerasPorNivelResponse): Career[] {
+    return (nivel.escuelas ?? []).flatMap(escuela => {
+      const groups = escuela.seminarios?.length
+        ? escuela.seminarios
+        : [{ tieneSeminario: false, productos: escuela.productos }];
+
+      return groups.flatMap(group =>
+        (group.productos ?? []).map(producto => ({
+          idProducto: producto.idProducto ?? 0,
+          idProceso: producto.idProceso ?? null,
+          idNivelProducto: nivel.idNivelProducto ?? 0,
+          nombreProducto: producto.nombreProducto ?? '',
+          nombreNivelProducto: nivel.nombreNivelProducto ?? '',
+          nombreEscuela: escuela.nombreEscuela ?? '',
+          tieneSeminario: group.tieneSeminario ?? false,
+        }))
+      );
+    });
   }
 
   private toLocationCountry(item: DtoPaisEstadoCiudadResponse): LocationCountry {

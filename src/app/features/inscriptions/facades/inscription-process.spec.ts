@@ -1,5 +1,6 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -10,7 +11,10 @@ import {
   type InscripcionEntryResolved,
   type InscripcionInitialSurveyResolved,
 } from '../models/inscription-entry';
-import type { InscripcionInitialSurvey } from '../models/inscription-flow';
+import type {
+  InscripcionInitialSurvey,
+  InscripcionOfertaResumen,
+} from '../models/inscription-flow';
 import { InscripcionProcessStore } from '../store/inscription-process';
 import { InscripcionPaymentFacade } from './inscription-payment';
 import { InscripcionProcessFacade } from './inscription-process';
@@ -63,6 +67,7 @@ describe('InscripcionProcessFacade', () => {
       seniaInscripcion: 15500,
       saldoCuenta: 1200,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+      seminarios: [],
     });
   });
 
@@ -78,6 +83,7 @@ describe('InscripcionProcessFacade', () => {
       seniaInscripcion: null,
       saldoCuenta: null,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+      seminarios: [],
     });
     expect(payment.outcome()).toBe('inscription-confirmada');
     expect(payment.confirmedDetail()).toEqual(createConfirmedDetail().confirmada);
@@ -88,7 +94,8 @@ describe('InscripcionProcessFacade', () => {
 
     TestBed.tick();
 
-    expect(process.flow.currentStep()).not.toBe('pago');
+    // La pantalla de reserva se pinta por `outcome`; el paso queda en el 3 (nunca en el 1).
+    expect(process.flow.currentStep()).toBe('pago');
     expect(payment.outcome()).toBe('reserva');
     expect(payment.selectedPaymentMethod()).toBe('abitab');
     expect(payment.reservationData()).toEqual({ cedula: '12345678', codigoPersona: 555 });
@@ -100,6 +107,7 @@ describe('InscripcionProcessFacade', () => {
       retomar({
         estado: 'A la espera',
         detalle: null,
+        intereses: [],
         pagoPendiente: null,
         seniaMinima: null,
         confirmada: null,
@@ -130,15 +138,14 @@ describe('InscripcionProcessFacade', () => {
       idOferta: 300,
       idProducto: 20,
       carrera: 'Sistemas',
-      idComienzo: 200,
       comienzo: 'Marzo 2027',
-      idTurno: 10,
       turno: 'Noche',
     };
     const { process, proposal, survey } = createFacade(
       retomar({
         estado: 'En proceso',
         detalle,
+        intereses: [interes(300)],
         pagoPendiente: null,
         seniaMinima: null,
         confirmada: null,
@@ -148,19 +155,57 @@ describe('InscripcionProcessFacade', () => {
 
     TestBed.tick();
 
+    // Con precarga desde el Detalle, la selección académica de la encuesta no se aplica.
     expect(survey.applyInitialState).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: 'prefilled', includeAcademicSelection: true })
+      expect.objectContaining({ kind: 'prefilled', includeAcademicSelection: false })
     );
     expect(proposal.disableForResume).toHaveBeenCalledOnce();
     expect(process.flow.currentStep()).toBe('encuesta');
   });
 
-  it('does not disable the proposal outside an in-progress resume', () => {
-    const { proposal } = createFacade(retomar(createPendingPaymentDetail()), FRESH);
+  it('prefills and locks step 1 from the detail when resuming an AP inscription', () => {
+    const detalle = {
+      idOferta: 310,
+      idProducto: 21,
+      carrera: 'Programa de Asesoramiento Financiero',
+      comienzo: 'Abril 2026',
+      turno: 'Noche',
+    };
+    const { process, proposal } = createFacade(
+      retomar(
+        {
+          estado: 'En proceso',
+          detalle,
+          intereses: [interes(310), interes(311)],
+          pagoPendiente: null,
+          seniaMinima: null,
+          confirmada: null,
+        },
+        3
+      ),
+      FRESH
+    );
 
     TestBed.tick();
 
-    expect(proposal.disableForResume).not.toHaveBeenCalled();
+    expect(proposal.academicForm.controls.tipoPropuesta.value).toBe('3');
+    expect(proposal.academicForm.controls.carrera.value).toBe('21');
+    expect(proposal.academicForm.controls.turno.value).toBe('310');
+    expect(proposal.academicForm.controls.seminarios.value).toEqual(['310', '311']);
+    expect(proposal.setProposalType).toHaveBeenCalledWith('3');
+    expect(proposal.selection.loadSeminars).toHaveBeenCalledWith(21);
+    expect(proposal.disableForResume).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).toBe('encuesta');
+  });
+
+  // Retomar siempre bloquea el paso 1, en cualquier estado: la inscripción ya existe.
+  it('locks step 1 on any resume, whatever the state of the inscription', () => {
+    const { proposal, process } = createFacade(retomar(createPendingPaymentDetail()), FRESH);
+
+    TestBed.tick();
+
+    expect(proposal.disableForResume).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).not.toBe('propuesta');
   });
 
   it('positions the flow step last, after applying proposal and survey slices', () => {
@@ -168,15 +213,14 @@ describe('InscripcionProcessFacade', () => {
       idOferta: 300,
       idProducto: 20,
       carrera: 'Sistemas',
-      idComienzo: 200,
       comienzo: 'Marzo 2027',
-      idTurno: 10,
       turno: 'Noche',
     };
     const { process, proposal, survey } = createFacade(
       retomar({
         estado: 'En proceso',
         detalle,
+        intereses: [interes(300)],
         pagoPendiente: null,
         seniaMinima: null,
         confirmada: null,
@@ -311,25 +355,42 @@ describe('InscripcionProcessFacade', () => {
     expect(payment.requestConfirmation).toHaveBeenCalledOnce();
   });
 
-  it('routes back through the survey or the flow depending on the step', () => {
+  // El flujo solo avanza: no se vuelve del paso 2 al 1 ni del 3 al 2.
+  it('only allows going back inside step 2 and never changes the step', () => {
     const { facade, process, survey } = createFacade(NUEVA, FRESH);
 
+    expect(facade.canGoBack()).toBe(false);
     facade.back();
     expect(survey.back).not.toHaveBeenCalled();
     expect(process.flow.currentStep()).toBe('propuesta');
 
+    // Paso 2, primera sección visible: nada hacia atrás.
     process.flow.goTo('encuesta');
+    expect(facade.canGoBack()).toBe(false);
+    facade.back();
+    expect(survey.back).not.toHaveBeenCalled();
+
+    // Paso 2, sección posterior: retrocede DENTRO del paso.
+    survey.activeSection.set('identidad');
+    expect(facade.canGoBack()).toBe(true);
     facade.back();
     expect(survey.back).toHaveBeenCalledOnce();
     expect(process.flow.currentStep()).toBe('encuesta');
 
-    process.flow.goTo('pago');
+    // Lector de reglamento abierto en la primera sección: también retrocede.
+    survey.activeSection.set('educacion');
+    survey.readerOpen.set(true);
     expect(facade.canGoBack()).toBe(true);
+
+    // Paso 3: nunca se vuelve al paso 2.
+    survey.readerOpen.set(false);
+    process.flow.goTo('pago');
+    expect(facade.canGoBack()).toBe(false);
     facade.back();
-    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(process.flow.currentStep()).toBe('pago');
   });
 
-  it('blocks back while the payment is processing', () => {
+  it('blocks back while the payment is processing or being edited', () => {
     const { facade, process, payment } = createFacade(NUEVA, FRESH);
     process.flow.goTo('pago');
     payment.view.set('processing');
@@ -338,27 +399,26 @@ describe('InscripcionProcessFacade', () => {
 
     expect(facade.canGoBack()).toBe(false);
     expect(process.flow.currentStep()).toBe('pago');
+
+    payment.view.set('editing');
+    expect(facade.canGoBack()).toBe(false);
   });
 
   it('describes the current step and back label per state', () => {
     const { facade, process, survey } = createFacade(NUEVA, FRESH);
 
     expect(facade.stepLabel()).toBe('Paso 1 de 3 - Propuesta académica');
-    expect(facade.backLabel()).toBe('Volver al paso anterior');
 
     process.flow.goTo('encuesta');
     expect(facade.stepLabel()).toBe('Paso 2 de 3 - Información personal');
-    expect(facade.backLabel()).toBe('Volver al paso 1');
-
-    survey.activeSection.set('identidad');
     expect(facade.backLabel()).toBe('Volver a la sección anterior');
 
     survey.readerOpen.set(true);
     expect(facade.backLabel()).toBe('Volver a Reglamento estudiantil');
 
+    survey.readerOpen.set(false);
     process.flow.goTo('pago');
     expect(facade.stepLabel()).toBe('Paso 3 de 3 - Confirmación');
-    expect(facade.backLabel()).toBe('Volver al paso 2');
   });
 
   it('hides the stepper while reading the regulation, on terminal outcomes and while processing', () => {
@@ -381,8 +441,22 @@ describe('InscripcionProcessFacade', () => {
   });
 });
 
-function retomar(detail: InscripcionDetail): InscripcionEntryResolved {
-  return { intent: 'retomar', detail };
+function retomar(
+  detail: InscripcionDetail,
+  idNivelProducto: number | null = null
+): InscripcionEntryResolved {
+  return {
+    intent: 'retomar',
+    detail,
+    idProducto: 20,
+    idProceso: 200,
+    idOfertas: [],
+    idNivelProducto,
+  };
+}
+
+function interes(idOferta: number): InscripcionOfertaResumen {
+  return { idInscripcion: null, idOferta, nombre: 'Oferta', comienzo: null, turno: null };
 }
 
 function inProgressSurvey(
@@ -414,15 +488,32 @@ function createFacade(
   const proposal = {
     initialized: signal(initialized),
     catalogError: signal<string | null>(null),
+    academicForm: new FormGroup({
+      tipoPropuesta: new FormControl('', { nonNullable: true }),
+      carrera: new FormControl('', { nonNullable: true }),
+      comienzo: new FormControl('', { nonNullable: true }),
+      turno: new FormControl('', { nonNullable: true }),
+      seminarios: new FormControl<string[]>([], { nonNullable: true }),
+    }),
+    setProposalType: vi.fn(),
+    selection: {
+      loadSeminars: vi.fn(),
+      // Refleja al servicio real: el tipo de propuesta del form manda.
+      isProfessionalUpdate: () => proposal.academicForm.controls.tipoPropuesta.value === '3',
+    },
     continue: vi.fn(),
     disableForResume: vi.fn(),
   };
+  const activeSection = signal('educacion');
+  const readerOpen = signal(false);
+  const visibleSections = signal(['educacion', 'identidad', 'reglamento']);
   const survey = {
     initialized: signal(initialized),
-    activeSection: signal('educacion'),
-    readerOpen: signal(false),
+    activeSection,
+    readerOpen,
     scenario: signal('primera-vez'),
-    visibleSections: signal(['educacion', 'identidad', 'reglamento']),
+    visibleSections,
+    canGoBack: computed(() => readerOpen() || visibleSections().indexOf(activeSection()) > 0),
     catalogError: signal<string | null>(null),
     loadingSurveyState: signal(false),
     surveyLoadError: signal<string | null>(null),
@@ -500,6 +591,7 @@ function createPendingPaymentDetail(): InscripcionDetail {
   return {
     estado: 'Pago pendiente',
     detalle: null,
+    intereses: [],
     pagoPendiente: {
       idInscripcion: 1072704,
       senia: 15500,
@@ -509,11 +601,10 @@ function createPendingPaymentDetail(): InscripcionDetail {
         idOferta: 300,
         idProducto: 20,
         carrera: 'Sistemas',
-        idComienzo: 200,
         comienzo: 'Marzo 2027',
-        idTurno: 10,
         turno: 'Noche',
       },
+      seminarios: [],
     },
     seniaMinima: null,
     confirmada: null,
@@ -524,6 +615,7 @@ function createConfirmedDetail(): InscripcionDetail {
   return {
     estado: 'Confirmada',
     detalle: null,
+    intereses: [],
     pagoPendiente: null,
     seniaMinima: null,
     confirmada: {
@@ -532,14 +624,12 @@ function createConfirmedDetail(): InscripcionDetail {
         idOferta: 300,
         idProducto: 20,
         carrera: 'Sistemas',
-        idComienzo: 200,
         comienzo: 'Marzo 2027',
-        idTurno: 10,
         turno: 'Noche',
       },
       coordinadorAcademico: null,
       coordinadorCursos: null,
-      materiasPrimerSemestre: [],
+      inscripciones: [],
     },
   };
 }
@@ -548,6 +638,7 @@ function createSeniaMinimaDetail(): InscripcionDetail {
   return {
     estado: 'Pago pendiente',
     detalle: null,
+    intereses: [],
     pagoPendiente: null,
     seniaMinima: { metodoPago: 'ABITAB', cedula: '12345678', codigoPersona: 555, senia: 3339 },
     confirmada: null,

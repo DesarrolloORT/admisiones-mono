@@ -9,13 +9,13 @@
       [formGroup]="form()">
       <ort-radio-group
         formControlName="tipoPropuesta"
-        indicatorPosition="right"
         legend="Propuesta académica"
         name="proposal"
         orientation="vertical"
         [aria-describedby]="proposalTypeErrorId()"
         [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
         [divider]="true"
+        [indicatorPosition]="isMobile() ? 'right' : 'left'"
         [required]="true">
         @for (option of selection().proposalOptions(); track option.value) {
         <ort-radio-card-button
@@ -48,34 +48,47 @@
 
       <div class="academic-proposal-select__fields">
         <output class="academic-proposal-select__loading" [hidden]="!selection().loadingCareers()">
-          <ort-spinner aria-label="Cargando carreras" size="sm" />
+          <ort-spinner size="sm" [attr.aria-label]="selection().terminology().careerLoadingLabel" />
           <span>{{ selection().careersLoadingMessage() }}</span>
         </output>
 
         <app-responsive-select
-          aria-label="Carrera"
-          errorText="Seleccioná una carrera"
           formControlName="carrera"
           id="academic-proposal-career"
-          label="Carrera"
+          [aria-label]="selection().terminology().careerLabel"
           [disabled]="!selection().canSelectCareer()"
+          [errorText]="selection().terminology().careerErrorText"
+          [label]="selection().terminology().careerLabel"
           [optionGroups]="careerOptionGroups()"
           [searchable]="true" />
 
-        <output class="academic-proposal-select__loading" [hidden]="!selection().loadingStarts()">
-          <ort-spinner aria-label="Cargando comienzos" size="sm" />
+        <output
+          class="academic-proposal-select__loading"
+          [hidden]="!selection().loadingStarts() && !selection().loadingSeminars()">
+          <ort-spinner size="sm" [attr.aria-label]="selection().terminology().startLoadingLabel" />
           <span>{{ selection().startsLoadingMessage() }}</span>
         </output>
 
+        @if (selection().isProfessionalUpdate()) { @if (hasProgramSelected()) {
+        <app-responsive-select
+          formControlName="seminarios"
+          id="academic-proposal-seminars"
+          [aria-label]="selection().terminology().startLabel"
+          [disabled]="!selection().canSelectSeminars()"
+          [errorText]="selection().terminology().startErrorText"
+          [label]="selection().terminology().startLabel"
+          [multiple]="selection().allowsMultipleSeminars()"
+          [options]="selection().seminarOptions()" />
+        } } @else {
         <div class="academic-proposal-select__row">
           <div class="academic-proposal-select__field-stack">
             <app-responsive-select
-              aria-label="Comienzo"
-              errorText="Seleccioná un comienzo"
               formControlName="comienzo"
               id="academic-proposal-start"
-              label="Comienzo"
+              [aria-label]="selection().terminology().startLabel"
               [disabled]="!selection().canSelectStart()"
+              [errorText]="selection().terminology().startErrorText"
+              [label]="selection().terminology().startLabel"
               [options]="selection().startOptions()"
               [searchable]="true" />
 
@@ -97,6 +110,7 @@
             [options]="selection().shiftOptions()"
             [searchable]="true" />
         </div>
+        }
       </div>
     </div>
   </ort-card-content>

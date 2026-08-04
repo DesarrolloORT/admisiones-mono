@@ -6,12 +6,30 @@ describe('inscription flow policy', () => {
     expect(parseResultadoForzado('en-proceso')).toBe('en-proceso');
   });
 
-  it('keeps the work-status section in first-time and partial surveys', () => {
-    expect(getSeccionesVisibles('primera-vez')).toContain('situacion-laboral');
-    expect(getSeccionesVisibles('parcial')).toContain('situacion-laboral');
+  it('does not show the work section outside professional update flows', () => {
+    expect(getSeccionesVisibles('primera-vez')).not.toContain('situacion-laboral');
+    expect(getSeccionesVisibles('parcial')).not.toContain('situacion-laboral');
   });
 
   it('limits a completed survey to identity and regulation', () => {
     expect(getSeccionesVisibles('encuesta-completa')).toEqual(['identidad', 'reglamento']);
+  });
+
+  it('reduces professional update flows to work status, identity and regulation', () => {
+    expect(getSeccionesVisibles('primera-vez', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
+    expect(getSeccionesVisibles('parcial', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
+    expect(getSeccionesVisibles('encuesta-completa', true)).toEqual([
+      'situacion-laboral',
+      'identidad',
+      'reglamento',
+    ]);
   });
 });

@@ -38,6 +38,7 @@ Si el contrato generado queda con `response: unknown`, nombres ambiguos o shapes
 Cada documento funcional debe incluir, como minimo:
 
 - frontmatter de Docusaurus (`slug`, `title`, `description`);
+- `businessId` estable y `sourcePaths` para los flujos canonicos;
 - `Tipo`: `explanation`, `how-to`, `reference` o `standards`;
 - diagrama Mermaid para flujos con mas de un paso;
 - tabla de acciones visibles: UI, service/facade, adapter, API y backend;
@@ -78,6 +79,9 @@ El backend aporta:
 slug: /flujos/<feature>
 title: <Feature>
 description: <Que explica el documento>
+businessId: admisiones.<feature>
+sourcePaths:
+  - src/app/features/<feature>/
 ---
 
 # <Feature>

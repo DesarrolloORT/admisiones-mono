@@ -18,13 +18,13 @@ jobs:
     runs-on: blacksmith-8vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
 
       - name: Authenticate to GitHub Packages
         run: |
@@ -37,60 +37,47 @@ jobs:
       - name: Audit dependencies for high/critical vulnerabilities
         run: npm audit --audit-level=high
 
+  fetch_api_spec:
+    name: Fetch API spec (internal network)
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (startsWith(github.event.pull_request.head.ref, 'feature/') ||
+      startsWith(github.event.pull_request.head.ref, 'fix/') ||
+      startsWith(github.event.pull_request.head.ref, 'release/') ||
+      startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
+      startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    uses: ./.github/workflows/fetch-api-spec.yml
+    with:
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
+  prepare_api:
+    name: Prepare API contracts
+    needs: fetch_api_spec
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: preprod
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
   CI:
     name: CI Checks (unplanned features/hotfixes or release PRs)
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    needs: prepare_api
     if: >
       startsWith(github.event.pull_request.head.ref, 'feature/') ||
       startsWith(github.event.pull_request.head.ref, 'fix/') ||
       startsWith(github.event.pull_request.head.ref, 'release/') ||
       startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
       startsWith(github.event.pull_request.head.ref, 'hotfix/')
-    environment: preprod
-    env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          cache: 'npm'
-
-      - name: Authenticate to GitHub Packages
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
-
-      - name: Run linters and formatters
-        run: npm run lint:check
-
-      - name: Run Tests
-        run: npm run test:ci
-
-      - name: Build
-        run: npm run build:staging
-
-      - name: Run accessibility tests
-        run: npm run test:a11y
-
-      - name: Run E2E smoke tests
-        run: npm run test:e2e:smoke
+    uses: ./.github/workflows/ci-checks.yml
+    with:
+      environment: preprod
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
 
   version_matches:
     name: Check version matches
@@ -101,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check version match
         env:

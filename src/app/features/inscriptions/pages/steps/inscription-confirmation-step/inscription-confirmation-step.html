@@ -26,6 +26,7 @@
             </div>
             }
           </dl>
+          <app-inscription-seminarios-summary [seminarios]="facade.seminariosResumen()" />
         </ort-card-content>
       </ort-card>
 
@@ -120,11 +121,12 @@
     </div>
 
     <button #paymentSubmit class="inscription-payment-submit" ort-primary-button type="submit">
-      Continuar
+      Pagar
     </button>
   </form>
 
   <ort-dialog
+    align="start"
     caption="Revisá la propuesta y el medio de pago antes de continuar."
     closeButtonAriaLabel="Volver al pago"
     title="Confirmar inscripción"
@@ -133,15 +135,15 @@
     <dl class="inscription-summary-list">
       @for (item of facade.summaryItems(); track item.label) {
       <div class="inscription-summary-list__item">
-        <dt>{{ item.label }}</dt>
+        <dt>
+          <ort-icon aria-hidden="true">{{ item.icon }}</ort-icon>
+          <span>{{ item.label }}</span>
+        </dt>
         <dd>{{ item.value }}</dd>
       </div>
       }
     </dl>
-    <p>
-      Seña de inscripción:
-      <strong>{{ facade.inscriptionAmount() }}</strong>
-    </p>
+    <p>Seña de inscripción: {{ facade.inscriptionAmount() }}</p>
     <ng-container ortDialogFooter>
       <button ort-secondary-button type="button" (click)="closeConfirmationDialog()">Volver</button>
       <button ort-primary-button type="button" (click)="facade.confirm()">Confirmar</button>

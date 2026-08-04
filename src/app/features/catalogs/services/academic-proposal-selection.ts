@@ -1,6 +1,6 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { FormGroup } from '@angular/forms';
+import { type FormGroup, Validators } from '@angular/forms';
 import { of, Subscription } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
@@ -9,12 +9,16 @@ import {
   type AcademicProposalOption,
   getAcademicCareerOptions,
   getAcademicProposalLevelIds,
-  getAcademicProposalTypeByLevel,
-  getAvailableAcademicProposalTypes,
+  getAcademicProposalTerminology,
+  getAcademicProposalTypeId,
+  getAcademicProposalTypes,
+  isProfessionalUpdateLevel,
+  isProfessionalUpdateType,
+  toAcademicSeminarOption,
   toAcademicShiftOption,
   toAcademicStartOption,
 } from '../models/academic-proposal';
-import type { Career, Comienzo, Turno } from '../models/catalog.interface';
+import type { Career, Comienzo, Seminario, Turno } from '../models/catalog.interface';
 import { Catalogs } from './catalogs';
 
 export class AcademicProposalSelection {
@@ -22,8 +26,10 @@ export class AcademicProposalSelection {
   private readonly destroyRef = inject(DestroyRef);
   private readonly careersState = signal<readonly Career[]>([]);
   private readonly proposalTypeValue = signal('');
+  private readonly seminarsProgramId = signal<number | null>(null);
   private form: FormGroup<AcademicProposalForm> | null = null;
   private formSubscriptions = new Subscription();
+  private careersSubscription = new Subscription();
 
   public readonly startOptions = signal<readonly AcademicProposalOption[]>([]);
   public readonly shiftOptions = signal<readonly AcademicProposalOption[]>([]);
@@ -32,24 +38,40 @@ export class AcademicProposalSelection {
   public readonly loadingStarts = signal(false);
   public readonly loadingShifts = signal(false);
   public readonly initialized = signal(false);
+  private readonly seminarsState = signal<readonly Seminario[]>([]);
+  public readonly loadingSeminars = signal(false);
 
-  public readonly proposalOptions = computed(() =>
-    getAvailableAcademicProposalTypes(this.careersState())
+  public readonly proposalOptions = computed(() => getAcademicProposalTypes());
+  public readonly isProfessionalUpdate = computed(() =>
+    isProfessionalUpdateType(this.proposalTypeValue())
+  );
+  public readonly terminology = computed(() =>
+    getAcademicProposalTerminology(this.proposalTypeValue())
   );
   public readonly careerOptions = computed(() =>
     getAcademicCareerOptions(this.careersState(), this.proposalTypeValue())
   );
+  public readonly seminarOptions = computed(() =>
+    this.seminarsState().map(toAcademicSeminarOption)
+  );
+  /** AP: el programa manda. Sin `tieneSeminario` se elige una sola oferta. */
+  public readonly allowsMultipleSeminars = computed(
+    () =>
+      this.careersState().find(career => career.idProducto === this.seminarsProgramId())
+        ?.tieneSeminario === true
+  );
   public readonly careersLoadingMessage = computed(() =>
-    this.loadingCareers() ? 'Estamos cargando las carreras.' : ''
+    this.loadingCareers() ? this.terminology().careerLoadingMessage : ''
   );
   public readonly startsLoadingMessage = computed(() => {
-    if (!this.loadingStarts()) return '';
+    if (!this.loadingStarts() && !this.loadingSeminars()) return '';
+    const terminology = this.terminology();
     const career = getOptionLabel(
       this.careerOptions(),
       this.form?.controls.carrera.value ?? '',
-      'la carrera seleccionada'
+      terminology.careerFallbackLabel
     );
-    return `Estamos cargando los comienzos para "${career}".`;
+    return `Estamos cargando ${terminology.startNoun} para "${career}".`;
   });
   public readonly shiftsLoadingMessage = computed(() => {
     if (!this.loadingShifts()) return '';
@@ -62,7 +84,10 @@ export class AcademicProposalSelection {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.formSubscriptions.unsubscribe());
+    this.destroyRef.onDestroy(() => {
+      this.formSubscriptions.unsubscribe();
+      this.careersSubscription.unsubscribe();
+    });
   }
 
   public connect(form: FormGroup<AcademicProposalForm>): void {
@@ -72,8 +97,9 @@ export class AcademicProposalSelection {
     this.formSubscriptions = new Subscription();
     this.form = form;
     this.proposalTypeValue.set(form.controls.tipoPropuesta.value);
+    this.syncValidatorsForProposalType(form);
     this.subscribeToForm(form);
-    this.loadCareers(form);
+    this.loadCareers(form, form.controls.tipoPropuesta.value);
   }
 
   public careers(): readonly Career[] {
@@ -82,6 +108,9 @@ export class AcademicProposalSelection {
 
   public setProposalType(value: string): void {
     this.proposalTypeValue.set(value);
+    if (!this.form) return;
+    this.syncValidatorsForProposalType(this.form);
+    this.loadCareers(this.form, value);
   }
 
   public canSelectCareer(): boolean {
@@ -96,6 +125,40 @@ export class AcademicProposalSelection {
     return (
       !!this.form?.controls.carrera.value && !this.loadingStarts() && this.startOptions().length > 0
     );
+  }
+
+  public seminars(): readonly Seminario[] {
+    return this.seminarsState();
+  }
+
+  public canSelectSeminars(): boolean {
+    return (
+      !!this.form?.controls.carrera.value &&
+      !this.loadingSeminars() &&
+      this.seminarOptions().length > 0
+    );
+  }
+
+  /** Carga el catálogo de seminarios de un programa (también para precarga en retomar). */
+  public loadSeminars(idPrograma: number): void {
+    this.seminarsProgramId.set(idPrograma);
+    const idProceso = this.careersState().find(
+      career => career.idProducto === idPrograma
+    )?.idProceso;
+    if (typeof idProceso !== 'number' || !Number.isSafeInteger(idProceso) || idProceso <= 0) {
+      this.seminarsState.set([]);
+      return;
+    }
+
+    this.loadingSeminars.set(true);
+    this.catalogs
+      .getSeminarios(idPrograma, idProceso)
+      .pipe(
+        catchError(() => of<Seminario[]>([])),
+        finalize(() => this.loadingSeminars.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(seminars => this.seminarsState.set(seminars));
   }
 
   public canSelectShift(): boolean {
@@ -113,6 +176,11 @@ export class AcademicProposalSelection {
   ): void {
     const form = this.requireForm();
     if (careerId === null) return;
+
+    if (this.isProfessionalUpdateCareer(careerId)) {
+      this.loadSeminars(careerId);
+      return;
+    }
 
     this.catalogs
       .getComienzos(careerId)
@@ -138,11 +206,20 @@ export class AcademicProposalSelection {
       });
   }
 
-  private loadCareers(form: FormGroup<AcademicProposalForm>): void {
-    this.loadingCareers.set(true);
+  private loadCareers(form: FormGroup<AcademicProposalForm>, proposalType: string): void {
+    this.careersSubscription.unsubscribe();
+    const proposalTypeId = getAcademicProposalTypeId(proposalType);
     this.catalogError.set(null);
-    this.catalogs
-      .getCareers()
+    if (proposalTypeId === null) {
+      this.careersState.set([]);
+      this.loadingCareers.set(false);
+      this.initialized.set(true);
+      return;
+    }
+
+    this.loadingCareers.set(true);
+    this.careersSubscription = this.catalogs
+      .getCareers(proposalTypeId)
       .pipe(
         finalize(() => {
           this.loadingCareers.set(false);
@@ -156,14 +233,8 @@ export class AcademicProposalSelection {
           const selectedCareer = careers.find(
             career => career.idProducto.toString() === form.controls.carrera.value
           );
-          if (selectedCareer && !form.controls.tipoPropuesta.value) {
-            const proposalType = getAcademicProposalTypeByLevel(
-              selectedCareer.idNivelProducto
-            )?.value;
-            if (proposalType) {
-              form.controls.tipoPropuesta.setValue(proposalType, { emitEvent: false });
-              this.proposalTypeValue.set(proposalType);
-            }
+          if (selectedCareer && this.isProfessionalUpdateCareer(selectedCareer.idProducto)) {
+            this.loadSeminars(selectedCareer.idProducto);
           }
         },
         error: () => {
@@ -180,6 +251,11 @@ export class AcademicProposalSelection {
         form.controls.carrera.setValue('');
         this.startOptions.set([]);
         this.shiftOptions.set([]);
+        this.seminarsState.set([]);
+        this.seminarsProgramId.set(null);
+        this.syncValidatorsForProposalType(form);
+        this.careersState.set([]);
+        this.loadCareers(form, value);
       })
     );
 
@@ -188,13 +264,21 @@ export class AcademicProposalSelection {
         .pipe(
           tap(() => {
             form.controls.comienzo.setValue('');
+            form.controls.seminarios.setValue([]);
             this.startOptions.set([]);
             this.shiftOptions.set([]);
+            this.seminarsState.set([]);
+            this.seminarsProgramId.set(null);
           }),
           switchMap(value => {
             const careerId = toNullableNumber(value);
             if (careerId === null) {
               this.loadingStarts.set(false);
+              return of<Comienzo[]>([]);
+            }
+
+            if (this.isProfessionalUpdateCareer(careerId)) {
+              this.loadSeminars(careerId);
               return of<Comienzo[]>([]);
             }
 
@@ -232,6 +316,35 @@ export class AcademicProposalSelection {
         )
         .subscribe(shifts => this.shiftOptions.set(shifts.map(toAcademicShiftOption)))
     );
+
+    // Sin seminarios el select es simple y emite un string; el form siempre guarda string[].
+    this.formSubscriptions.add(
+      form.controls.seminarios.valueChanges.subscribe(value => {
+        const selected: unknown = value;
+        if (typeof selected === 'string')
+          form.controls.seminarios.setValue(selected ? [selected] : [], { emitEvent: false });
+      })
+    );
+  }
+
+  // AP no usa comienzo/turno (los seminarios traen la oferta); el resto conserva
+  // la validación actual. Se sincroniza al conectar y al cambiar el tipo.
+  private syncValidatorsForProposalType(form: FormGroup<AcademicProposalForm>): void {
+    const professionalUpdate = isProfessionalUpdateType(form.controls.tipoPropuesta.value);
+    form.controls.comienzo.setValidators(professionalUpdate ? null : Validators.required);
+    form.controls.turno.setValidators(professionalUpdate ? null : Validators.required);
+    form.controls.seminarios.setValidators(professionalUpdate ? Validators.required : null);
+    form.controls.comienzo.updateValueAndValidity({ emitEvent: false });
+    form.controls.turno.updateValueAndValidity({ emitEvent: false });
+    form.controls.seminarios.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // El nivel del producto manda: un producto AP nunca debe disparar getComienzos,
+  // aunque el tipo de propuesta del form quede desincronizado (p. ej. re-aplicación
+  // de una encuesta previa de otro flujo).
+  private isProfessionalUpdateCareer(careerId: number): boolean {
+    const career = this.careersState().find(item => item.idProducto === careerId);
+    return career ? isProfessionalUpdateLevel(career.idNivelProducto) : this.isProfessionalUpdate();
   }
 
   private requireForm(): FormGroup<AcademicProposalForm> {

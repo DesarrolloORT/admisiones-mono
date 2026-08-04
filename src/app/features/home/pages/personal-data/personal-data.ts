@@ -228,7 +228,7 @@ export class PersonalData implements OnInit {
   }
 
   protected cancel(): void {
-    void this.router.navigateByUrl('/inicio');
+    this.router.navigateByUrl('/inicio');
   }
 
   private loadData(): void {

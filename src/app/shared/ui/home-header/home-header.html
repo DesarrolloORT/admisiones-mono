@@ -51,8 +51,9 @@
   </div>
 </header>
 
+<!-- Binding en vez de atributo estático: el atributo quedaría en el host sin rol (axe aria-prohibited-attr). -->
 <ort-drawer
-  aria-label="Menú de usuario"
+  [aria-label]="'Menú de usuario'"
   [open]="profileMenuOpen() && isMobile()"
   [showTracker]="true"
   (closed)="onDrawerClosed($event)"

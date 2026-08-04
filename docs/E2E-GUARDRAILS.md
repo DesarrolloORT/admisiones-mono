@@ -53,9 +53,9 @@ puntuales, usar `npx playwright test` con los flags de Playwright.
 
 ## Nightly
 
-El workflow [`.github/workflows/e2e-nightly.yml`](../.github/workflows/e2e-nightly.yml)
-corre los lunes a las 04:00 de Montevideo, y tambien puede dispararse
-manualmente contra preprod si existe `vars.E2E_BASE_URL`.
+No hay un workflow nightly versionado actualmente. Los casos `@nightly` solo
+deben ejecutarse manualmente contra preprod cuando `E2E_BASE_URL` y las
+credenciales de prueba esten configuradas.
 
 Configuracion requerida en el ambiente `preprod`:
 

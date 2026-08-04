@@ -42,10 +42,13 @@ export interface LocationCountry {
 
 export interface Career {
   idProducto: number;
+  idProceso?: number | null;
   idNivelProducto: number;
   nombreProducto: string;
   nombreNivelProducto: string;
   nombreEscuela?: string;
+  /** AP: true habilita elegir varios seminarios; false deja una sola oferta. */
+  tieneSeminario?: boolean | null;
 }
 
 export interface Comienzo {
@@ -58,6 +61,15 @@ export interface Turno {
   idTurno: number;
   nombreTurno: string;
   horarioReferencia: string;
+  descripcionOferta: string;
+  fechaReferencia: string | null;
+}
+
+export interface Seminario {
+  idOferta: number;
+  idProceso: number;
+  nombre: string;
+  fechaComienzo: string | null;
 }
 
 export type ReasonForChoice = CatalogItem;
@@ -112,9 +124,6 @@ export interface InitialSurveyCatalogs {
   experienciaOrt: {
     valoraciones: CatalogItem[];
     publicidadesOrt: CatalogItem[];
-  };
-  situacionLaboral: {
-    tiposJornada: CatalogItem[];
   };
 }
 

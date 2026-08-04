@@ -15,9 +15,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import {
   OrtButton,
-  OrtButtonBaseDirective,
   OrtExpandableStepperModule,
-  OrtExpandableStepperStep,
+  OrtExpandableStepperStepData,
   OrtIconModule,
 } from '@desarrolloort/components';
 import { map } from 'rxjs/operators';
@@ -38,7 +37,6 @@ type ProcessLayoutViewport = 'compact' | 'wide-mobile' | 'tablet' | 'desktop';
     OrtExpandableStepperModule,
     OrtIconModule,
     RouterLink,
-    OrtButtonBaseDirective,
     OrtButton,
   ],
   templateUrl: './process-layout.html',
@@ -61,7 +59,7 @@ export class ProcessLayout {
   public readonly stepperAriaLabel = input('Pasos del proceso');
   public readonly stepperExpanded = input(false);
   public readonly stepperSubtitle = input<string | undefined>(undefined);
-  public readonly steps = input<OrtExpandableStepperStep[]>([]);
+  public readonly steps = input<OrtExpandableStepperStepData[]>([]);
 
   public readonly back = output<void>();
   public readonly closeFlow = output<void>();

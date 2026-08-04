@@ -178,8 +178,6 @@ describe('Inscripciones', () => {
       recuerdaPublicidadOrt: null,
       madreTutorEgresadoOrt: null,
       padreTutorEgresadoOrt: null,
-      trabajaActualmente: null,
-      tipoJornadaId: null,
       universidadConsideradaIds: null,
       universidadConsideradaOtros: null,
       universidadEducacionSuperiorIds: null,
@@ -208,7 +206,11 @@ describe('Inscripciones', () => {
   });
 
   it('delegates pre-enrollment confirmation', () => {
-    const payload = { aceptoReglamento: true, idOfertaSeleccionada: 300 };
+    const payload = {
+      aceptoReglamento: true,
+      esInscripcionCorporativa: false,
+      idOfertasSeleccionadas: [300],
+    };
 
     service.confirmPreEnrollment(payload).subscribe();
 
@@ -217,7 +219,7 @@ describe('Inscripciones', () => {
 
   it('delegates payment', () => {
     const payload = {
-      idInscripcion: 1072704,
+      idsInscripcion: [1072704],
       metodoPago: 'cuenta-bancaria' as const,
       idBancoSistarbanc: 'brou',
     };

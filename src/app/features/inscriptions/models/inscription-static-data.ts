@@ -1,6 +1,6 @@
 import type { MetodoPago, OpcionInscripcion, StudentServiceLink } from './inscription-flow';
 
-export const SANTANDER_ACCOUNT_URL = 'https://www.santander.com.uy/personas/cuentas/cuenta-soy';
+export const SANTANDER_ACCOUNT_URL = 'https://misolicitud.santander.com.uy/vb/?productType=OBD';
 
 export type PaymentOption = OpcionInscripcion & {
   value: MetodoPago;
@@ -45,5 +45,9 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
 export const STUDENT_SERVICE_LINKS: readonly StudentServiceLink[] = [
   { label: 'Biblioteca', icon: 'local_library', url: 'https://bibliotecas.ort.edu.uy/' },
   { label: 'Deportes', icon: 'sports_soccer', url: 'https://www.ort.edu.uy/deportes' },
-  { label: 'Mentorías', icon: 'groups', url: 'https://www.ort.edu.uy/' },
+  {
+    label: 'Mentorías',
+    icon: 'groups',
+    url: 'https://www.ort.edu.uy/estudiantes/programa-de-mentorias',
+  },
 ];

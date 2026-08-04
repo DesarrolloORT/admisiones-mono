@@ -1,14 +1,27 @@
 name: Deploy to Development Environment
 
+# Deploy manual: se dispara desde Actions -> Run workflow sobre la rama deseada.
 on:
-  push:
-    branches:
-      - v*.*.*/main
   workflow_dispatch:
 
 jobs:
+  fetch_api_spec:
+    name: Fetch API spec (internal network)
+    uses: ./.github/workflows/fetch-api-spec.yml
+    secrets: inherit
+
+  prepare_api:
+    name: Prepare API contracts
+    needs: fetch_api_spec
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: ubuntu-latest
+    secrets: inherit
+
   build:
     name: Build
+    needs: prepare_api
     runs-on: ubuntu-latest
     environment: desarrollo
     env:
@@ -17,12 +30,12 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.22.3'
 
       - name: Authenticate to GitHub Packages
         run: |
@@ -30,13 +43,19 @@ jobs:
           echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+
       - name: Build
-        run: npm run build:dev
+        run: npx ng build --configuration development
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v7
@@ -46,7 +65,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: development-server #TODO: set to self-hosted runner
+    runs-on: funcionarios-desa
     environment: desarrollo
     needs: build
     steps:
@@ -56,7 +75,15 @@ jobs:
           name: build-artifact
 
       - name: Delete existing files from site directory
-        run: Remove-Item -Recurse -Force '${{vars.DEV_SERVER_SITE_PATH}}\*'
+        run: |
+          $sitePath = '${{ vars.DEV_SERVER_SITE_PATH }}'
+          if ([string]::IsNullOrWhiteSpace($sitePath)) {
+            throw "vars.DEV_SERVER_SITE_PATH no esta configurada para el environment 'desarrollo'; se aborta para evitar borrar la raiz del disco."
+          }
+          if (-not (Test-Path -LiteralPath $sitePath)) {
+            throw "El path '$sitePath' no existe en este runner; se aborta el borrado."
+          }
+          Remove-Item -Recurse -Force (Join-Path $sitePath '*')
 
       - name: Copy Build files into site directory
         run: Copy-Item -Path .\* -Destination '${{vars.DEV_SERVER_SITE_PATH}}' -Recurse

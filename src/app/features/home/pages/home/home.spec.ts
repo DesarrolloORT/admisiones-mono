@@ -45,6 +45,8 @@ describe('Home', () => {
     fixture = createComponent({
       inscripciones: [
         {
+          idInscripto: 100,
+          idOfertas: [300],
           idProducto: 1,
           idProceso: 4,
           idComienzo: 2,
@@ -53,6 +55,7 @@ describe('Home', () => {
           nombreComienzo: 'Marzo 2027',
           nombreTurno: 'Noche',
           estado: 'Confirmada',
+          seminarios: [],
         },
       ],
       becas: [],

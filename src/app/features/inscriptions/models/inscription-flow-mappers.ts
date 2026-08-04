@@ -111,7 +111,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const education = forms.educationForm.controls;
   const decision = forms.academicDecisionForm.controls;
   const experience = forms.ortExperienceForm.controls;
-  const work = forms.workForm.controls;
   const currentlyInSchool = education.cursaSecundaria.value === 'cursando';
   const recursedBaccalaureate = education.recursaAnioBachillerato.value === 'si';
   const nationalSchoolPlace = education.lugarSecundaria.value === SCHOOL_PLACE_NATIONAL;
@@ -121,7 +120,6 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const fatherHasCompleteUniversity = hasCompleteUniversityEducation(
     education.formacionPadre.value
   );
-  const works = work.situacionLaboral.value === 'trabaja';
   const informedOtherUniversities = decision.otrasUniversidades.value === 'si';
   const hasPreviousHigherEducation = education.estadoEducacionSuperior.value === '1';
   const remembersAdvertising = experience.recuerdaPublicidad.value === 'si';
@@ -173,22 +171,22 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
     padreTutorEgresadoOrt: fatherHasCompleteUniversity
       ? toNullableBoolean(education.tituloOrtPadre.value)
       : null,
-    trabajaActualmente: toWorkStatusFlag(work.situacionLaboral.value),
-    tipoJornadaId: works ? toNullableNumber(work.tipoJornadaLaboral.value) : null,
     universidadConsideradaIds: informedOtherUniversities
       ? toNumberArray(decision.universidadesInformadas.value)
       : null,
-    universidadConsideradaOtros:
-      informedOtherUniversities && hasOtherOption(decision.universidadesInformadas.value)
-        ? toSingleTextArray(decision.universidadInformadaOtro.value)
-        : null,
+    universidadConsideradaOtros: toOtherOptionTextArray(
+      informedOtherUniversities,
+      decision.universidadesInformadas.value,
+      decision.universidadInformadaOtro.value
+    ),
     universidadEducacionSuperiorIds: hasPreviousHigherEducation
       ? toNumberArray(education.universidadesEducacionSuperior.value)
       : null,
-    universidadEducacionSuperiorOtros:
-      hasPreviousHigherEducation && hasOtherOption(education.universidadesEducacionSuperior.value)
-        ? toSingleTextArray(education.universidadEducacionSuperiorOtro.value)
-        : null,
+    universidadEducacionSuperiorOtros: toOtherOptionTextArray(
+      hasPreviousHigherEducation,
+      education.universidadesEducacionSuperior.value,
+      education.universidadEducacionSuperiorOtro.value
+    ),
     publicidadOrtIds: remembersAdvertising
       ? toNumberArray(experience.mediosPublicidad.value)
       : null,
@@ -196,19 +194,28 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   };
 }
 
-export function buildConfirmPreEnrollmentPayload(forms: InscripcionForms) {
-  const idOfertaSeleccionada = toNullableNumber(forms.academicForm.controls.turno.value);
-  if (idOfertaSeleccionada === null) return null;
+export function buildConfirmPreEnrollmentPayload(
+  forms: InscripcionForms,
+  actualizacionProfesional = false
+) {
+  const idOfertasSeleccionadas = actualizacionProfesional
+    ? (toNumberArray(forms.academicForm.controls.seminarios.value) ?? [])
+    : [toNullableNumber(forms.academicForm.controls.turno.value)].filter(
+        (oferta): oferta is number => oferta !== null
+      );
+  if (idOfertasSeleccionadas.length === 0) return null;
 
   return {
     aceptoReglamento: forms.regulationForm.controls.aceptaReglamento.value,
-    idOfertaSeleccionada,
+    esInscripcionCorporativa:
+      actualizacionProfesional && forms.workForm.controls.isCorporate.value === true,
+    idOfertasSeleccionadas,
   };
 }
 
 export function buildPaymentPayload(payload: InscripcionPaymentPayload) {
   return {
-    idInscripto: payload.idInscripcion,
+    idsInscripcion: payload.idsInscripcion,
     tipoPago: toApiPaymentMethod(payload.metodoPago),
     idBancoSistarbanc: payload.metodoPago === 'cuenta-bancaria' ? payload.idBancoSistarbanc : null,
   };
@@ -285,10 +292,6 @@ export function toNullableBoolean(value: string): boolean | null {
   return value === 'si' ? true : value === 'no' ? false : null;
 }
 
-export function toWorkStatusFlag(value: string): boolean | null {
-  return value ? value === 'trabaja' : null;
-}
-
 export function toNullableNumber(value: string): number | null {
   if (!value) return null;
   const parsed = Number(value);
@@ -326,6 +329,14 @@ function toFirstText(values: readonly string[]): string {
 function toSingleTextArray(value: string): string[] | null {
   const trimmed = value.trim();
   return trimmed ? [trimmed] : null;
+}
+
+function toOtherOptionTextArray(
+  enabled: boolean,
+  selectedValues: readonly string[],
+  otherValue: string
+): string[] | null {
+  return enabled && hasOtherOption(selectedValues) ? toSingleTextArray(otherValue) : null;
 }
 
 function hasOtherOption(values: readonly string[]): boolean {

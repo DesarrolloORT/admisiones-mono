@@ -34,23 +34,53 @@ describe('CatalogsEndpoint', () => {
           escuelas: [
             {
               nombreEscuela: 'Facultad de Diseño',
-              productos: [{ idProducto: 20, nombreProducto: 'Diseño' }],
+              productos: [{ idProducto: 20, idProceso: 10, nombreProducto: 'Diseño' }],
+            },
+          ],
+        },
+        {
+          idNivelProducto: 3,
+          nombreNivelProducto: 'Actualización profesional',
+          escuelas: [
+            {
+              nombreEscuela: 'Escuela de Tecnología',
+              seminarios: [
+                {
+                  tieneSeminario: true,
+                  productos: [{ idProducto: 30, idProceso: 11, nombreProducto: 'Ciberseguridad' }],
+                },
+              ],
             },
           ],
         },
       ])
     );
 
-    endpoint.getCareers().subscribe(result => {
+    endpoint.getCareers(3).subscribe(result => {
       expect(result).toEqual([
         {
           idProducto: 20,
+          idProceso: 10,
           idNivelProducto: 1,
           nombreProducto: 'Diseño',
           nombreNivelProducto: 'Carreras',
           nombreEscuela: 'Facultad de Diseño',
+          tieneSeminario: false,
+        },
+        {
+          idProducto: 30,
+          idProceso: 11,
+          idNivelProducto: 3,
+          nombreProducto: 'Ciberseguridad',
+          nombreNivelProducto: 'Actualización profesional',
+          nombreEscuela: 'Escuela de Tecnología',
+          tieneSeminario: true,
         },
       ]);
+    });
+
+    expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
+      queryParams: { propuestaAcademica: 3 },
     });
   });
 
@@ -81,9 +111,6 @@ describe('CatalogsEndpoint', () => {
           valoraciones: [{ value: 4, label: 'Muy bueno' }],
           publicidadesOrt: [{ value: 9, label: 'Redes sociales' }],
         },
-        situacionLaboral: {
-          tiposJornada: [{ value: 12, label: 'Tiempo completo' }],
-        },
       })
     );
 
@@ -112,9 +139,6 @@ describe('CatalogsEndpoint', () => {
         experienciaOrt: {
           valoraciones: [{ id: 4, label: 'Muy bueno' }],
           publicidadesOrt: [{ id: 9, label: 'Redes sociales' }],
-        },
-        situacionLaboral: {
-          tiposJornada: [{ id: 12, label: 'Tiempo completo' }],
         },
       });
     });
@@ -154,6 +178,8 @@ describe('CatalogsEndpoint', () => {
             nombreTurno: 'Nocturno',
           },
           horarioReferencia: '19:00 a 23:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
         },
       ])
     );
@@ -165,6 +191,8 @@ describe('CatalogsEndpoint', () => {
           idTurno: 2,
           nombreTurno: 'Nocturno',
           horarioReferencia: '19:00 a 23:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
         },
       ]);
     });

@@ -890,11 +890,20 @@
     </ort-card-content>
   </ort-card>
 
-  @if (!facade.hasAcceptedStudentRegulation()) {
   <footer class="inscription-footer">
-    <button ort-primary-button type="button" (click)="facade.acceptRegulation()">
+    @if (!facade.hasAcceptedStudentRegulation()) {
+    <button
+      class="inscription-regulation-footer__accept"
+      ort-primary-button
+      type="button"
+      (click)="facade.acceptRegulation()">
+      <ort-icon name="check" size="sm" />
       Aceptar reglamento
     </button>
+    }
+    <button ort-secondary-button type="button">
+      <ort-icon name="file_download" size="sm" />
+      Descargar reglamento (PDF)
+    </button>
   </footer>
-  }
 </article>

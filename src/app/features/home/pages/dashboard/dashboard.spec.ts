@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -12,6 +13,7 @@ describe('Dashboard', () => {
     TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
+        provideRouter([]),
         {
           provide: AuthSessionService,
           useValue: {
@@ -29,6 +31,8 @@ describe('Dashboard', () => {
     fixture = TestBed.createComponent(Dashboard);
     fixture.componentRef.setInput('inscripciones', [
       {
+        idInscripto: 100,
+        idOfertas: [300],
         idProducto: 1,
         idProceso: 4,
         idComienzo: 2,
@@ -37,6 +41,7 @@ describe('Dashboard', () => {
         nombreComienzo: 'Marzo 2027',
         nombreTurno: 'Noche',
         estado: 'Confirmada',
+        seminarios: [],
       },
     ]);
     fixture.componentRef.setInput('becas', [

@@ -12,8 +12,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  fetch_api_spec:
+    name: Fetch API spec (internal network)
+    uses: ./.github/workflows/fetch-api-spec.yml
+    secrets: inherit
+
+  prepare_api:
+    name: Prepare API contracts
+    needs: fetch_api_spec
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+    secrets: inherit
+
   coverage:
     name: Generate coverage results
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -21,23 +36,13 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.22.3'
           cache: 'npm'
-
-      - name: Cache node modules
-        uses: actions/cache@v5
-        with:
-          path: |
-            node_modules
-            ~/.cache/vitest
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Authenticate to GitHub Packages
         run: |
@@ -50,11 +55,14 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env:sync -- --env desa
 
-      - name: Generate API contracts
-        run: npm run update-api
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
 
       - name: Generate coverage
-        run: npm run test:sonar
+        run: npm run test:ci
 
       - name: Upload coverage files
         uses: actions/upload-artifact@v7
@@ -64,27 +72,8 @@ jobs:
 
   sonar-scan:
     name: SonarQube Scan
-    runs-on: sonar-runner
     needs: coverage
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Download coverage files
-        uses: actions/download-artifact@v8
-        with:
-          name: coverage
-          path: coverage
-
-      - name: SonarQube Scan
-        shell: cmd
-        run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File C:\sonar-scanner\run.ps1 ^
-            -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
-            -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
-            -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
-            -D "sonar.branch.name=${{ github.ref_name }}" ^
-            -D "sonar.qualitygate.wait=true" ^
-            -D "sonar.qualitygate.timeout=300"
+    uses: ./.github/workflows/sonar-scan.yml
+    with:
+      branch: ${{ github.ref_name }}
+    secrets: inherit

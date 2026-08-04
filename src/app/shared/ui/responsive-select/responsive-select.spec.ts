@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -10,6 +10,7 @@ import { ResponsiveSelect, type ResponsiveSelectOption } from './responsive-sele
 @Component({
   selector: 'app-responsive-select-host',
   imports: [ReactiveFormsModule, ResponsiveSelect],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <form [formGroup]="form">
       <app-responsive-select
@@ -95,6 +96,36 @@ describe('ResponsiveSelect', () => {
     expect(fixture.nativeElement.querySelector('.responsive-select__mobile')).toBeNull();
   });
 
+  it('commits the active desktop option when the library misses a keyboard selection', async () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 900,
+    });
+    fixture.detectChanges();
+    const trigger = fixture.nativeElement.querySelector('ort-select') as HTMLElement;
+    const listbox = document.createElement('ort-menu');
+    listbox.id = 'active-listbox';
+    const option = document.createElement('ort-option');
+    option.id = 'active-option';
+    option.textContent = 'B';
+    listbox.append(option);
+    document.body.append(listbox);
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-controls', listbox.id);
+    trigger.setAttribute('aria-activedescendant', option.id);
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    );
+    await new Promise(resolve => setTimeout(resolve));
+    listbox.remove();
+
+    expect(fixture.componentInstance.form.controls.option.value).toBe('b');
+  });
+
   it('hides drawer search when there are fewer than 6 options', () => {
     fixture.detectChanges();
 
@@ -122,6 +153,19 @@ describe('ResponsiveSelect', () => {
 
     expect(fixture.componentInstance.form.controls.option.value).toBe('b');
     expect(fixture.componentInstance.form.controls.option.touched).toBe(true);
+  });
+
+  it('shows the first value of an array control in single mode', () => {
+    fixture.componentInstance.form.controls.option.setValue(['b']);
+    fixture.detectChanges();
+
+    expect(
+      (
+        fixture.nativeElement.querySelector(
+          '.responsive-select__mobile-value'
+        ) as HTMLElement | null
+      )?.textContent
+    ).toContain('B');
   });
 
   it('toggles multiple values from the mobile drawer', () => {

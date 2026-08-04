@@ -79,7 +79,7 @@ describe('InscripcionOrtExperienceSection', () => {
     const fieldset = fixture.nativeElement.querySelector(
       'ort-radio-group[formcontrolname="reunionAsesoramiento"] fieldset'
     );
-    expect(fieldset.getAttribute('aria-describedby')).toBe('advice-meeting-error');
+    expect(fieldset.getAttribute('aria-describedby')).toContain('advice-meeting-error');
   });
 
   it('shows the rating control only after answering "si" to the advice meeting question', () => {

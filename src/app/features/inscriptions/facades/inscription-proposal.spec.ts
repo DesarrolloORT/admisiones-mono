@@ -33,6 +33,13 @@ describe('InscripcionProposalFacade', () => {
                   nombreProducto: 'Ingeniería en Sistemas',
                   nombreNivelProducto: 'Carrera universitaria',
                 },
+                {
+                  idProducto: 21,
+                  idNivelProducto: 3,
+                  idProceso: 200,
+                  nombreProducto: 'Programa de Asesoramiento Financiero',
+                  nombreNivelProducto: 'Actualización profesional',
+                },
               ]),
             getComienzos: () => of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }]),
             getTurnos: () =>
@@ -43,6 +50,11 @@ describe('InscripcionProposalFacade', () => {
                   nombreTurno: 'Nocturno',
                   horarioReferencia: '19:00 a 23:00',
                 },
+              ]),
+            getSeminarios: () =>
+              of([
+                { idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null },
+                { idOferta: 301, idProceso: 200, nombre: 'Renta fija', fechaComienzo: null },
               ]),
           },
         },
@@ -59,11 +71,42 @@ describe('InscripcionProposalFacade', () => {
     facade.continue();
 
     expect(registerProductInterest).toHaveBeenCalledWith({
-      idOferta: 300,
+      idOfertas: [300],
       idProcesoSeleccionado: 200,
       idProducto: 20,
     });
     expect(process.flow.currentStep()).toBe('encuesta');
+  });
+
+  it('registers all selected seminars for a professional update proposal', () => {
+    facade.academicForm.controls.tipoPropuesta.setValue('3');
+    facade.academicForm.controls.carrera.setValue('21');
+    facade.academicForm.controls.seminarios.setValue(['300', '301']);
+
+    facade.continue();
+
+    expect(registerProductInterest).toHaveBeenCalledWith({
+      idOfertas: [300, 301],
+      idProcesoSeleccionado: 200,
+      idProducto: 21,
+    });
+    expect(process.flow.currentStep()).toBe('encuesta');
+  });
+
+  it('requires at least one seminar with AP terminology in the error summary', () => {
+    facade.academicForm.controls.tipoPropuesta.setValue('3');
+    facade.academicForm.controls.carrera.setValue('21');
+
+    facade.continue();
+
+    expect(registerProductInterest).not.toHaveBeenCalled();
+    expect(process.flow.currentStep()).toBe('propuesta');
+    expect(
+      facade
+        .academicErrors()
+        .map(error => error.message)
+        .join(' ')
+    ).toContain('Seminario');
   });
 
   it('stays on the proposal when registration fails', () => {

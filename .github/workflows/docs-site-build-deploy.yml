@@ -4,17 +4,45 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'docs/**'
-      - 'docs-site/**'
-      - '.docs/project.json'
-      - '.github/workflows/docs-site-build-deploy.yml'
-  push:
-    branches:
       - 'v*.*.*/main'
     paths:
       - 'docs/**'
       - 'docs-site/**'
+      - 'src/app/features/**/*.md'
+      - 'src/app/features/auth/**'
+      - 'src/app/features/home/**'
+      - 'src/app/features/inscriptions/**'
+      - 'src/app/core/guards/**'
+      - 'src/app/core/interceptors/**'
+      - 'src/app/shared/process-flow/**'
+      - 'scripts/docs/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'README.md'
+      - 'package.json'
+      - '.docs/project.json'
+      - '.github/workflows/docs-site-build-deploy.yml'
+  push:
+    branches:
+      - main
+      - 'v*.*.*/main'
+    paths:
+      - 'docs/**'
+      - 'docs-site/**'
+      - 'src/app/features/**/*.md'
+      - 'src/app/features/auth/**'
+      - 'src/app/features/home/**'
+      - 'src/app/features/inscriptions/**'
+      - 'src/app/core/guards/**'
+      - 'src/app/core/interceptors/**'
+      - 'src/app/shared/process-flow/**'
+      - 'scripts/docs/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'README.md'
+      - 'package.json'
       - '.docs/project.json'
       - '.github/workflows/docs-site-build-deploy.yml'
   workflow_dispatch:
@@ -23,26 +51,45 @@ permissions:
   contents: read
 
 concurrency:
-  group: admisiones-docs-${{ github.ref }}
+  group: frontend-docs-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     name: Build documentation
     runs-on: ubuntu-latest
+    env:
+      DOCS_SITE_ORIGIN: ${{ vars.DOCS_SITE_ORIGIN }}
+      DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL }}
+      DOCS_SOURCE_BRANCH: ${{ vars.DOCS_SOURCE_BRANCH }}
+      DOCS_SYSTEM_SLUG: ${{ vars.DOCS_SYSTEM_SLUG }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.22.3'
           cache: npm
           cache-dependency-path: docs-site/package-lock.json
 
+      - name: Validate knowledge structure
+        run: node scripts/docs/check-knowledge.js
+
+      - name: Test knowledge checker
+        run: node --test scripts/docs/check-knowledge.test.js
+
+      - name: Validate documentation impact
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/docs/check-knowledge.js --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
       - name: Install dependencies
-        run: npm ci --prefix docs-site --ignore-scripts
+        run: npm ci --prefix docs-site
 
       - name: Build documentation
         run: npm run build --prefix docs-site
@@ -50,12 +97,16 @@ jobs:
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v7
         with:
-          name: admisiones-docs-site
+          name: docs-${{ vars.DOCS_SYSTEM_SLUG || 'admisiones' }}-${{ github.sha }}
           path: docs-site/build
+          if-no-files-found: error
+          retention-days: 7
 
   deploy:
     name: Deploy documentation
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: >
+      github.event_name != 'pull_request' &&
+      github.ref_name == vars.DOCS_PUBLISH_BRANCH
     needs: build
     runs-on: development-server
     environment: desarrollo
@@ -63,26 +114,91 @@ jobs:
       - name: Download documentation artifact
         uses: actions/download-artifact@v8
         with:
-          name: admisiones-docs-site
+          name: docs-${{ vars.DOCS_SYSTEM_SLUG || 'admisiones' }}-${{ github.sha }}
           path: docs-site-build
 
-      - name: Publish to IIS site directory
+      - name: Publish documentation safely
         shell: pwsh
+        env:
+          DOCS_SERVER_ROOT: ${{ vars.DOCS_SERVER_ROOT }}
+          DOCS_SYSTEM_SLUG: ${{ vars.DOCS_SYSTEM_SLUG }}
+          DOCS_SITE_ORIGIN: ${{ vars.DOCS_SITE_ORIGIN }}
+          DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL }}
         run: |
-          $target = '${{ vars.DOCS_ADMISIONES_SITE_PATH }}'
-          if ([string]::IsNullOrWhiteSpace($target)) {
-            Write-Host 'DOCS_ADMISIONES_SITE_PATH is not configured. Skipping IIS publish.'
-            return
+          $rootInput = $env:DOCS_SERVER_ROOT
+          $slug = $env:DOCS_SYSTEM_SLUG
+          $origin = $env:DOCS_SITE_ORIGIN
+          $baseUrl = $env:DOCS_BASE_URL
+
+          if ([string]::IsNullOrWhiteSpace($rootInput)) { throw 'DOCS_SERVER_ROOT is required.' }
+          if ($slug -notmatch '^[a-z0-9-]+$') { throw 'DOCS_SYSTEM_SLUG contains invalid characters.' }
+          if ([string]::IsNullOrWhiteSpace($origin)) { throw 'DOCS_SITE_ORIGIN is required.' }
+          if ($baseUrl -notmatch '^/.+/$') { throw 'DOCS_BASE_URL must start and end with "/".' }
+
+          $root = [System.IO.Path]::GetFullPath($rootInput)
+          if (-not (Test-Path -LiteralPath $root -PathType Container)) {
+            throw "DOCS_SERVER_ROOT does not exist: $root"
           }
 
-          $resolvedTarget = [System.IO.Path]::GetFullPath($target)
-          $root = [System.IO.Path]::GetPathRoot($resolvedTarget)
-          if ($resolvedTarget.TrimEnd('\') -eq $root.TrimEnd('\')) {
-            throw 'DOCS_ADMISIONES_SITE_PATH cannot be a filesystem root.'
+          $target = [System.IO.Path]::GetFullPath((Join-Path $root $slug))
+          $rootWithSeparator = $root.TrimEnd('\') + '\'
+          if (-not $target.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Target directory is outside DOCS_SERVER_ROOT.'
           }
-          if (-not (Test-Path -LiteralPath $resolvedTarget -PathType Container)) {
-            throw "Documentation site directory does not exist: $resolvedTarget"
+          if ($target.TrimEnd('\') -eq $root.TrimEnd('\')) {
+            throw 'Target directory cannot be DOCS_SERVER_ROOT.'
           }
 
-          Get-ChildItem -LiteralPath $resolvedTarget -Force | Remove-Item -Recurse -Force
-          Copy-Item -Path (Join-Path '${{ github.workspace }}' 'docs-site-build/*') -Destination $resolvedTarget -Recurse -Force
+          $staging = "$target.__staging"
+          $backup = "$target.__backup"
+          $artifact = Join-Path $env:GITHUB_WORKSPACE 'docs-site-build'
+          $requiredFiles = @('index.html', 'deployment.json', 'web.config')
+          foreach ($file in $requiredFiles) {
+            if (-not (Test-Path -LiteralPath (Join-Path $artifact $file) -PathType Leaf)) {
+              throw "Artifact is missing required file: $file"
+            }
+          }
+
+          $targetMoved = $false
+          $targetReplaced = $false
+          try {
+            if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
+            New-Item -ItemType Directory -Path $staging -Force | Out-Null
+            Copy-Item -Path (Join-Path $artifact '*') -Destination $staging -Recurse -Force
+            foreach ($file in $requiredFiles) {
+              if (-not (Test-Path -LiteralPath (Join-Path $staging $file) -PathType Leaf)) {
+                throw "Staging directory is missing required file: $file"
+              }
+            }
+
+            if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Recurse -Force }
+            if (Test-Path -LiteralPath $target) {
+              Move-Item -LiteralPath $target -Destination $backup
+              $targetMoved = $true
+            }
+            Move-Item -LiteralPath $staging -Destination $target
+            $targetReplaced = $true
+            foreach ($file in $requiredFiles) {
+              if (-not (Test-Path -LiteralPath (Join-Path $target $file) -PathType Leaf)) {
+                throw "Published directory is missing required file: $file"
+              }
+            }
+          } catch {
+            $publishError = $_
+            if ($targetReplaced -and (Test-Path -LiteralPath $target)) {
+              Remove-Item -LiteralPath $target -Recurse -Force
+            }
+            if ($targetMoved -and (Test-Path -LiteralPath $backup)) {
+              Move-Item -LiteralPath $backup -Destination $target
+            }
+            throw $publishError
+          } finally {
+            if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
+          }
+
+          if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Recurse -Force }
+          try {
+            Invoke-WebRequest -Uri "$($origin.TrimEnd('/'))$baseUrl`deployment.json" -UseBasicParsing | Out-Null
+          } catch {
+            Write-Warning "HTTP verification skipped: $($_.Exception.Message)"
+          }

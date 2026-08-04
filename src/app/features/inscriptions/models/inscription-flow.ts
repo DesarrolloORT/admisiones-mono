@@ -15,20 +15,10 @@ export type SeccionEncuestaId =
 export type EstadoSeccionEncuesta = 'pendiente' | 'activa' | 'completa';
 
 export type MetodoPago =
-  | 'cuenta-bancaria'
-  | 'cuenta-personal'
-  | 'banred'
-  | 'geopay'
-  | 'abitab'
-  | 'paganza';
+  'cuenta-bancaria' | 'cuenta-personal' | 'banred' | 'geopay' | 'abitab' | 'paganza';
 
 export type MetodoPagoApi =
-  | 'CUENTA_PERSONAL'
-  | 'ABITAB'
-  | 'PAGANZA'
-  | 'BANRED'
-  | 'GEOPAY'
-  | 'SISTARBANC';
+  'CUENTA_PERSONAL' | 'ABITAB' | 'PAGANZA' | 'BANRED' | 'GEOPAY' | 'SISTARBANC';
 
 export type ResultadoPago = 'confirmada' | 'reservada' | 'en-proceso';
 
@@ -106,8 +96,6 @@ export interface InscripcionInitialSurveyPayload {
   recuerdaPublicidadOrt: boolean | null;
   madreTutorEgresadoOrt: boolean | null;
   padreTutorEgresadoOrt: boolean | null;
-  trabajaActualmente: boolean | null;
-  tipoJornadaId: number | null;
   universidadConsideradaIds: number[] | null;
   universidadConsideradaOtros: string[] | null;
   universidadEducacionSuperiorIds: number[] | null;
@@ -118,7 +106,13 @@ export interface InscripcionInitialSurveyPayload {
 
 export interface InscripcionConfirmPreEnrollmentPayload {
   aceptoReglamento: boolean;
-  idOfertaSeleccionada: number;
+  esInscripcionCorporativa: boolean;
+  /**
+   * Ofertas confirmadas. Los tipos 1/2 envían una sola; Actualización profesional
+   * envía una por seminario cuando el backend habilite el array (hoy el adapter
+   * manda la primera).
+   */
+  idOfertasSeleccionadas: number[];
 }
 
 export interface InscripcionIdentityUploadFile {
@@ -136,7 +130,7 @@ export interface InscripcionIdentityPhotoUploadPayload {
   archivoAdjunto: InscripcionIdentityUploadFile;
 }
 export interface InscripcionProductInterestPayload {
-  idOferta: number;
+  idOfertas: number[];
   idProcesoSeleccionado: number;
   idProducto: number;
 }
@@ -144,6 +138,16 @@ export interface InscripcionProductInterestPayload {
 export interface InscripcionStudentRegulationAcceptance {
   aceptoReglamentoEstudiantil: boolean;
   fechaAceptacion: string | null;
+}
+
+// Una oferta (seminario) de un paquete de Actualización profesional. `idInscripcion`
+// alimenta el array `idsInscripcion` que espera `Pagar`.
+export interface InscripcionOfertaResumen {
+  idInscripcion: number | null;
+  idOferta: number | null;
+  nombre: string | null;
+  comienzo: string | null;
+  turno: string | null;
 }
 
 export interface InscripcionPreEnrollmentResponse {
@@ -158,10 +162,11 @@ export interface InscripcionPreEnrollmentResponse {
     comienzo: string | null;
     turno: string | null;
   } | null;
+  seminarios?: InscripcionOfertaResumen[];
 }
 
 export interface InscripcionPaymentPayload {
-  idInscripcion: number;
+  idsInscripcion: number[];
   metodoPago: MetodoPago;
   idBancoSistarbanc: string | null;
 }
@@ -218,6 +223,14 @@ export interface ItemResumenInscripcion {
   value: string;
 }
 
+// Fila de seminario ya formateada para el template (Actualización profesional).
+export interface ItemSeminarioResumen {
+  idInscripcion: number | null;
+  nombre: string;
+  comienzo: string;
+  turno: string;
+}
+
 export interface ContactoCoordinador {
   role: string;
   name: string;
@@ -247,12 +260,17 @@ export const SECCIONES_ENCUESTA: readonly SeccionEncuestaId[] = [
   'educacion',
   'decision-academica',
   'experiencia-ort',
-  'situacion-laboral',
   'identidad',
   'reglamento',
 ];
 
 export const SECCIONES_ENCUESTA_COMPLETA: readonly SeccionEncuestaId[] = [
+  'identidad',
+  'reglamento',
+];
+
+export const SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL: readonly SeccionEncuestaId[] = [
+  'situacion-laboral',
   'identidad',
   'reglamento',
 ];

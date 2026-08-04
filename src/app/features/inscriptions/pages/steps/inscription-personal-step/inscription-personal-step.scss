@@ -25,3 +25,33 @@
   font-size: var(--ort-sys-body-sm-text-size);
   line-height: var(--ort-sys-body-sm-line-height);
 }
+
+ort-accordion-description {
+  color: var(--ort-sys-base-text-error-color);
+}
+
+.inscription-accordion__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ort-sys-spacing-2);
+}
+
+.back-button {
+  display: none;
+}
+
+.inscription-accordion__state-icon-wrapper {
+  position: relative;
+}
+
+.inscription-accordion__state-badge {
+  position: absolute;
+  top: calc(-1 * var(--ort-sys-spacing-6));
+  right: calc(-1 * var(--ort-sys-spacing-6));
+}
+
+@media (width >= 52.5rem) {
+  .back-button {
+    display: block;
+  }
+}

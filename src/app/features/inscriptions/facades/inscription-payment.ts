@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -16,6 +16,7 @@ import type {
   ContactoCoordinador,
   InscripcionPaymentResponse,
   InscripcionReservationData,
+  ItemSeminarioResumen,
   MetodoPago,
   OpcionInscripcion,
   ResultadoPago,
@@ -23,6 +24,7 @@ import type {
 import { parseResultadoForzado } from '../models/inscription-flow-policy';
 import {
   buildReservationInstructions,
+  buildSeminariosSummary,
   buildSummaryItems,
   formatInscriptionAmount,
   formatPaymentDeadline,
@@ -35,6 +37,7 @@ import {
   STUDENT_SERVICE_LINKS,
 } from '../models/inscription-static-data';
 import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 import { InscripcionFormsStore } from '../store/inscription-forms';
 import { InscripcionProcessStore } from '../store/inscription-process';
@@ -45,6 +48,7 @@ export class InscripcionPaymentFacade {
   private readonly destroyRef = inject(DestroyRef);
   private readonly catalogs = inject(Catalogs);
   private readonly inscriptions = inject(Inscripciones);
+  private readonly resumeContext = inject(InscriptionResumeContextStore);
   private readonly externalPaymentSubmitter = inject(ExternalPaymentSubmitter);
   private readonly formsStore = inject(InscripcionFormsStore);
   private readonly process = inject(InscripcionProcessStore);
@@ -75,14 +79,20 @@ export class InscripcionPaymentFacade {
       toCoordinatorContact('Coordinador(a) de Cursos:', detail?.coordinadorCursos),
     ].filter((contact): contact is ContactoCoordinador => contact !== null);
   });
-  private readonly subjects = computed<readonly string[]>(() =>
-    (this.confirmedDetail()?.materiasPrimerSemestre ?? [])
-      .map(materia => materia.nombre?.trim())
-      .filter((nombre): nombre is string => !!nombre)
-  );
+  // En Actualización profesional cada seminario confirmado trae sus propias materias:
+  // se listan todas juntas, sin repetir las que comparten varios seminarios.
+  private readonly subjects = computed<readonly string[]>(() => [
+    ...new Set(
+      (this.confirmedDetail()?.inscripciones ?? [])
+        .flatMap(inscripcion => inscripcion.materiasPrimerSemestre)
+        .map(materia => materia.nombre?.trim())
+        .filter((nombre): nombre is string => !!nombre)
+    ),
+  ]);
 
   public readonly bankOptions = signal<readonly OpcionInscripcion[]>([]);
   public readonly loadingBanks = signal(false);
+  private banksRequested = false;
 
   private readonly submitted = signal(false);
   private readonly paymentApiError = signal<string | null>(null);
@@ -118,6 +128,9 @@ export class InscripcionPaymentFacade {
         }
       : null;
   });
+  public readonly isProfessionalUpdate = computed(() =>
+    this.proposal.selection.isProfessionalUpdate()
+  );
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
@@ -127,7 +140,11 @@ export class InscripcionPaymentFacade {
       careerOptions: this.proposal.careerOptions(),
       startOptions: this.proposal.startOptions(),
       turnoOptions: this.proposal.turnoOptions(),
+      isProfessionalUpdate: this.isProfessionalUpdate(),
     })
+  );
+  public readonly seminariosResumen = computed(() =>
+    this.isProfessionalUpdate() ? this.buildProfessionalUpdateSummary() : []
   );
   public readonly paymentDeadline = computed(() =>
     formatPaymentDeadline(this.process.preEnrollmentResponse()?.fechaVencimientoPago)
@@ -151,11 +168,21 @@ export class InscripcionPaymentFacade {
   );
 
   constructor() {
-    this.loadBanks();
+    effect(() => {
+      if (
+        this.process.flow.currentStep() === 'pago' &&
+        this.view() === 'editing' &&
+        this.outcome() === null
+      ) {
+        this.loadBanks();
+      }
+    });
     this.configureBankValidator();
   }
 
   private loadBanks(): void {
+    if (this.banksRequested) return;
+    this.banksRequested = true;
     this.loadingBanks.set(true);
     this.catalogs
       .getBancos()
@@ -205,9 +232,9 @@ export class InscripcionPaymentFacade {
   public confirm(): void {
     if (this.view() === 'processing') return;
     const method = this.paymentForm.controls.metodoPago.value;
-    const idInscripcion = this.process.preEnrollmentResponse()?.idInscripcion;
+    const idsInscripcion = this.paymentInscriptionIds();
     if (!method) return;
-    if (!isPositiveInteger(idInscripcion)) {
+    if (idsInscripcion.length === 0) {
       this.paymentApiError.set('No pudimos identificar la inscripción pendiente.');
       this.view.set('editing');
       return;
@@ -218,7 +245,7 @@ export class InscripcionPaymentFacade {
     this.view.set('processing');
     this.inscriptions
       .pay({
-        idInscripcion,
+        idsInscripcion,
         metodoPago: method,
         idBancoSistarbanc:
           method === 'cuenta-bancaria' ? this.paymentForm.controls.banco.value : null,
@@ -239,6 +266,41 @@ export class InscripcionPaymentFacade {
 
   public toggleSubjects(): void {
     this.showAllSubjects.update(showAll => !showAll);
+  }
+
+  // La respuesta del backend manda. Al retomar, sessionStorage conserva los ids de la
+  // tarjeta como fallback si ConfirmarPreInscripcion no devuelve `inscripciones`.
+  private paymentInscriptionIds(): number[] {
+    const response = this.process.preEnrollmentResponse();
+    const responseIds = [
+      ...(response?.seminarios ?? []).map(seminario => seminario.idInscripcion),
+      response?.idInscripcion,
+    ].filter(isPositiveInteger);
+    if (responseIds.length) return [...new Set(responseIds)];
+
+    const idProducto = toPositiveInteger(this.route.snapshot.queryParamMap.get('idProducto'));
+    const idProceso = toPositiveInteger(this.route.snapshot.queryParamMap.get('idProceso'));
+    if (!idProducto || !idProceso) return [];
+
+    return this.resumeContext.read(idProducto, idProceso)?.idInscripciones ?? [];
+  }
+
+  private buildProfessionalUpdateSummary(): ItemSeminarioResumen[] {
+    const responseSummary = buildSeminariosSummary(this.process.preEnrollmentResponse());
+    if (responseSummary.length) return responseSummary;
+
+    const selectedOffers = new Set(
+      this.proposal.academicForm.controls.seminarios.value.map(Number).filter(isPositiveInteger)
+    );
+    return this.proposal.selection
+      .seminars()
+      .filter(seminario => selectedOffers.has(seminario.idOferta))
+      .map(seminario => ({
+        idInscripcion: null,
+        nombre: seminario.nombre,
+        comienzo: formatPaymentDeadline(seminario.fechaComienzo),
+        turno: 'No informado',
+      }));
   }
 
   private resolvePaymentResponse(method: MetodoPago, response: InscripcionPaymentResponse): void {

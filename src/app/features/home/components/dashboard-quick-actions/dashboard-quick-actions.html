@@ -4,7 +4,8 @@
   ort-primary-button
   routerLink="/inscripciones"
   [attr.aria-label]="ariaLabel()"
-  [queryParams]="resumeQueryParams()">
+  [queryParams]="resumeQueryParams()"
+  (click)="prepareNavigation()">
   @if (action().icon) {
   <ort-icon aria-hidden="true">{{ action().icon }}</ort-icon>
   } {{ action().label }}
@@ -21,9 +22,19 @@
   ort-secondary-button
   routerLink="/inscripciones"
   [attr.aria-label]="ariaLabel()"
-  [queryParams]="resumeQueryParams()">
+  [queryParams]="resumeQueryParams()"
+  (click)="prepareNavigation()">
   {{ action().label }}
 </a>
+} @else if (reactivatesFlow()) {
+<button
+  class="quick-actions__btn"
+  ort-secondary-button
+  type="button"
+  [attr.aria-label]="ariaLabel()"
+  (click)="reactivate()">
+  {{ action().label }}
+</button>
 } @else {
 <button
   class="quick-actions__btn"

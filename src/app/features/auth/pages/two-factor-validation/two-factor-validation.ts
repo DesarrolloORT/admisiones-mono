@@ -55,7 +55,7 @@ export class TwoFactorValidationPage {
       .subscribe({
         next: () => {
           this.snackbar.success('Código validado correctamente.');
-          void this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
+          this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
           const message = getApiErrorMessage(
@@ -107,7 +107,7 @@ export class TwoFactorValidationPage {
     const context = this.authSession.takePendingTwoFactorContext();
 
     if (!context) {
-      void this.router.navigateByUrl('/iniciar-sesion');
+      this.router.navigateByUrl('/iniciar-sesion');
       return;
     }
 

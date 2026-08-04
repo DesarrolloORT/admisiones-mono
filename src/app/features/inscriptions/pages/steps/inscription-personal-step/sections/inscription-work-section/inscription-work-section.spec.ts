@@ -6,8 +6,7 @@ import { InscripcionWorkSection } from './inscription-work-section';
 
 function createWorkForm() {
   return new FormGroup({
-    situacionLaboral: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    tipoJornadaLaboral: new FormControl('', { nonNullable: true }),
+    isCorporate: new FormControl<boolean | null>(null, Validators.required),
   });
 }
 
@@ -20,12 +19,7 @@ describe('InscripcionWorkSection', () => {
   beforeEach(() => {
     workForm = createWorkForm();
 
-    const facade = {
-      workForm,
-      options: {
-        workScheduleOptions: () => [{ value: '1', label: 'Tiempo completo' }],
-      },
-    };
+    const facade = { workForm };
 
     TestBed.configureTestingModule({
       imports: [InscripcionWorkSection],
@@ -39,55 +33,35 @@ describe('InscripcionWorkSection', () => {
     fixture.detectChanges();
   }
 
-  it('renders the work status control with its legend', () => {
+  it('renders only the corporate inscription control', () => {
     createFixture();
 
-    const legends = Array.from(fixture.nativeElement.querySelectorAll('ort-radio-group')).map(
-      element => (element as Element).getAttribute('legend')
+    const groups = fixture.nativeElement.querySelectorAll('ort-radio-group');
+    const group = fixture.nativeElement.querySelector(
+      'ort-radio-group[formcontrolname="isCorporate"]'
     );
+    const radios = group.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
 
-    expect(legends).toContain('¿Trabajás actualmente?');
+    expect(groups).toHaveLength(1);
+    expect(group.getAttribute('legend')).toBe('¿A título de quién deseás realizar la inscripción?');
+    radios[0].click();
+    expect(workForm.controls.isCorporate.value).toBe(false);
+    radios[1].click();
+    expect(workForm.controls.isCorporate.value).toBe(true);
   });
 
-  it('shows the required error for situacionLaboral when touched and invalid', () => {
+  it('shows the required error for isCorporate when touched and invalid', () => {
     createFixture();
 
-    workForm.controls.situacionLaboral.markAsTouched();
+    workForm.controls.isCorporate.markAsTouched();
     fixture.detectChanges();
 
-    const error = fixture.nativeElement.querySelector('#work-status-error');
-    expect(error).toBeTruthy();
+    const error = fixture.nativeElement.querySelector('#corporate-inscription-error');
+    const fieldset = fixture.nativeElement.querySelector(
+      'ort-radio-group[formcontrolname="isCorporate"] fieldset'
+    );
     expect(error.getAttribute('role')).toBe('alert');
     expect(error.textContent).toContain('Seleccioná una opción');
-
-    const fieldset = fixture.nativeElement.querySelector(
-      'ort-radio-group[formcontrolname="situacionLaboral"] fieldset'
-    );
-    expect(fieldset.getAttribute('aria-describedby')).toBe('work-status-error');
-  });
-
-  it('shows the work schedule control only when currently working', () => {
-    createFixture();
-
-    expect(fixture.nativeElement.querySelector('[name="tipoJornadaLaboral"]')).toBeFalsy();
-
-    workForm.controls.situacionLaboral.setValue('trabaja');
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('[name="tipoJornadaLaboral"]')).toBeTruthy();
-  });
-
-  it('shows the required error for tipoJornadaLaboral when touched and invalid', () => {
-    createFixture();
-
-    workForm.controls.situacionLaboral.setValue('trabaja');
-    workForm.controls.tipoJornadaLaboral.setValidators(Validators.required);
-    workForm.controls.tipoJornadaLaboral.updateValueAndValidity();
-    workForm.controls.tipoJornadaLaboral.markAsTouched();
-    fixture.detectChanges();
-
-    const error = fixture.nativeElement.querySelector('#work-schedule-error');
-    expect(error).toBeTruthy();
-    expect(error.textContent).toContain('Seleccioná una opción');
+    expect(fieldset.getAttribute('aria-describedby')).toContain('corporate-inscription-error');
   });
 });

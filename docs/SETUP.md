@@ -8,7 +8,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
 ## Entorno de referencia
 
-- Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json).
+- Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.devcontainer/devcontainer.json).
 - `npm` para instalar dependencias y ejecutar scripts.
 - Java si se va a usar `npm run update-api`.
 - Docker Desktop y la extension Dev Containers de VS Code si se quiere trabajar dentro del contenedor.
@@ -25,7 +25,7 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
    `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 
-   Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](../.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
+   Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
 3. Actualizar contratos generados si el backend Swagger ya esta disponible:
 
@@ -93,7 +93,7 @@ npm run sonar:local
 
 ## Dev Container
 
-La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json) con:
+La plantilla incluye [`.devcontainer/devcontainer.json`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.devcontainer/devcontainer.json) con:
 
 - imagen base `mcr.microsoft.com/vscode/devcontainers/typescript-node:22`;
 - Angular CLI 20;
@@ -102,7 +102,5 @@ La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcon
 
 ## Referencias relacionadas
 
-- [README.md](../README.md)
+- [README.md](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/README.md)
 - [docs/WORKFLOW.md](./WORKFLOW.md)
-- [docs/EXTENSIONS.md](./EXTENSIONS.md)
-- [docs/codegen/update-endpoints.md](./codegen/update-endpoints.md)

@@ -196,7 +196,7 @@ export class SetPassword {
       this.isSubmittingState.set(false);
       return;
     }
-    void this.router.navigateByUrl(url).finally(() => this.isSubmittingState.set(false));
+    this.router.navigateByUrl(url).finally(() => this.isSubmittingState.set(false));
   }
 
   private activateToken(): void {

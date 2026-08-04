@@ -32,7 +32,6 @@ describe('InscripcionSurveyOptionsFacade', () => {
     getInitialSurveyCatalogs.mockReturnValue(
       of({
         ...emptyCatalogs(),
-        situacionLaboral: { tiposJornada: [{ id: 1, label: 'Jornada completa' }] },
         experienciaOrt: {
           valoraciones: [{ id: '1', label: 'Malo' }],
           publicidadesOrt: [{ id: 7, label: 'Redes' }],
@@ -42,7 +41,6 @@ describe('InscripcionSurveyOptionsFacade', () => {
 
     const options = createFacade();
 
-    expect(options.workScheduleOptions()).toEqual([{ value: '1', label: 'Jornada completa' }]);
     expect(options.advertisingOptions()).toEqual([{ value: '7', label: 'Redes' }]);
     expect(options.ratingLabels()[1]).toBe('1 estrella: Malo');
     expect(options.initialized()).toBe(true);
@@ -58,7 +56,7 @@ describe('InscripcionSurveyOptionsFacade', () => {
     const options = createFacade();
 
     expect(options.catalogError()).toBe('No se pudieron cargar los catálogos de encuesta inicial.');
-    expect(options.workScheduleOptions()).toEqual([]);
+    expect(options.advertisingOptions()).toEqual([]);
     expect(options.initialized()).toBe(true);
     expect(onInitialCatalogsApplied).not.toHaveBeenCalled();
   });
@@ -158,7 +156,6 @@ describe('InscripcionSurveyOptionsFacade', () => {
         motivosEleccionOrt: [],
       },
       experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
-      situacionLaboral: { tiposJornada: [] },
     };
   }
 });

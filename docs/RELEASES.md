@@ -8,4 +8,4 @@ confirmado.
 ## Referencias actuales
 
 - [Workflow](./WORKFLOW.md)
-- [CHANGELOG](../CHANGELOG.md)
+- [CHANGELOG](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/CHANGELOG.md)

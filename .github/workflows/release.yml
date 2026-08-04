@@ -5,8 +5,24 @@ on:
     types: [published]
 
 jobs:
+  fetch_api_spec:
+    name: Fetch API spec (internal network)
+    uses: ./.github/workflows/fetch-api-spec.yml
+    secrets: inherit
+
+  prepare_api:
+    name: Prepare API contracts
+    needs: fetch_api_spec
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: prod
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+      env-sync-refresh: true
+    secrets: inherit
+
   build:
     name: Build
+    needs: prepare_api
     runs-on: blacksmith-8vcpu-ubuntu-2404
     environment: prod
     env:
@@ -15,12 +31,12 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22.22.3'
 
       - name: Authenticate to GitHub Packages
         run: |
@@ -28,13 +44,19 @@ jobs:
           echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env desa
+        run: npm run env:sync -- --env desa --refresh
+
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
 
       - name: Build
-        run: npm run build
+        run: npx ng build --configuration production
 
       - name: Archive build
         run: |

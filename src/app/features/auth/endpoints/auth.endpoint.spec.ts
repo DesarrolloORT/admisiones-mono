@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -22,7 +22,10 @@ describe('AuthEndpoint', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClient(
+          withXhr(),
+          withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+        ),
         provideHttpClientTesting(),
         ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
       ],
@@ -479,7 +482,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('recoverPassword', () => {
-    it('should POST to /Auth/RecuperarContraseña with captcha and return void', () => {
+    it('should POST to /Auth/RecuperarPassword with captcha and return void', () => {
       const payload = {
         tipoDocumento: 'CI',
         documento: '12345678',
@@ -491,7 +494,7 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => decodeURIComponent(r.url).includes('/Auth/RecuperarContraseña') && r.method === 'POST'
+        r => r.url.includes('/Auth/RecuperarPassword') && r.method === 'POST'
       );
 
       expect(req.request.body).toEqual(payload);

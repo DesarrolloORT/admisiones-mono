@@ -1,6 +1,18 @@
-export type InscripcionEstado = 'Confirmada' | 'Pendiente' | 'Cancelada' | string;
+export type InscripcionEstado = 'Confirmada' | 'Pendiente' | 'Dada de baja' | string;
+
+export interface MiInscripcionSeminario {
+  idInscripto: number;
+  idOferta: number;
+  descripcionOferta: string;
+  idComienzo: number;
+  idTurno: number;
+  nombreComienzo: string;
+  nombreTurno: string;
+}
 
 export interface MiInscripcion {
+  idInscripto: number;
+  idOfertas: number[];
   idProducto: number;
   idProceso: number;
   idComienzo: number;
@@ -9,4 +21,5 @@ export interface MiInscripcion {
   nombreComienzo: string;
   nombreTurno: string;
   estado: InscripcionEstado;
+  seminarios: MiInscripcionSeminario[];
 }

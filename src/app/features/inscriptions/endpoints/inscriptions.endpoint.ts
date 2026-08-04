@@ -19,6 +19,7 @@ import {
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 import type { DtoConfirmadaDetalle } from 'src/app/shared/api/generated/models/dtoConfirmadaDetalle';
 import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
+import type { DtoInscripcionOferta } from 'src/app/shared/api/generated/models/dtoInscripcionOferta';
 
 import type {
   InscripcionConfirmedDetail,
@@ -34,6 +35,7 @@ import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyPayload,
   InscripcionInitialSurveyResponse,
+  InscripcionOfertaResumen,
   InscripcionPaymentPayload,
   InscripcionPaymentResponse,
   InscripcionPreEnrollmentResponse,
@@ -59,22 +61,27 @@ export class InscripcionesEndpoint {
       .pipe(
         map(response => ({
           estado: response.estado ?? null,
-          detalle: this.toSummary(response.detalle),
+          detalle: this.toSummary(response.detalle?.resumen, response.detalle?.intereses?.[0]),
+          intereses: this.toSeminarios(response.detalle?.intereses),
           pagoPendiente: response.pagoPendiente
             ? {
-                idInscripcion: response.pagoPendiente.idInscripcion ?? null,
-                senia: response.pagoPendiente.senia ?? null,
+                idInscripcion: response.pagoPendiente.inscripciones?.[0]?.idInscripcion ?? null,
+                senia: response.pagoPendiente.pagoReserva ?? null,
                 saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
-                fechaVencimientoPago: response.pagoPendiente.fechaVencimientoPago ?? null,
-                resumen: this.toSummary(response.pagoPendiente.resumen),
+                fechaVencimientoPago: response.pagoPendiente.resumen?.fechaVencimientoPago ?? null,
+                resumen: this.toSummary(
+                  response.pagoPendiente.resumen,
+                  response.pagoPendiente.inscripciones?.[0]
+                ),
+                seminarios: this.toSeminarios(response.pagoPendiente.inscripciones),
               }
             : null,
-          seniaMinima: response.seniaMinima
+          seniaMinima: response.reservaMinima
             ? {
-                metodoPago: response.seniaMinima.metodoPago ?? null,
-                cedula: response.seniaMinima.cedula ?? null,
-                codigoPersona: response.seniaMinima.codigoPersona ?? null,
-                senia: response.seniaMinima.senia ?? null,
+                metodoPago: response.reservaMinima.tipoPago ?? null,
+                cedula: response.reservaMinima.cedula ?? null,
+                codigoPersona: response.reservaMinima.codigoPersona ?? null,
+                senia: response.reservaMinima.pagoReserva ?? null,
               }
             : null,
           confirmada: this.toConfirmedDetail(response.confirmada),
@@ -179,8 +186,6 @@ export class InscripcionesEndpoint {
       recuerdaPublicidadOrt: payload.recuerdaPublicidadOrt,
       madreTutorEgresadoOrt: payload.madreTutorEgresadoOrt,
       padreTutorEgresadoOrt: payload.padreTutorEgresadoOrt,
-      trabajaActualmente: payload.trabajaActualmente,
-      tipoJornadaId: payload.tipoJornadaId,
       universidadConsideradaIds: payload.universidadConsideradaIds,
       universidadConsideradaOtros: payload.universidadConsideradaOtros,
       universidadEducacionSuperiorIds: payload.universidadEducacionSuperiorIds,
@@ -216,7 +221,8 @@ export class InscripcionesEndpoint {
       .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
         body: {
           aceptoReglamento: payload.aceptoReglamento,
-          idOfertaSeleccionada: payload.idOfertaSeleccionada,
+          esInscripcionCorporativa: payload.esInscripcionCorporativa,
+          idsOfertasSeleccionadas: payload.idOfertasSeleccionadas,
         },
         showLoader: true,
       })
@@ -224,17 +230,18 @@ export class InscripcionesEndpoint {
         map(response => ({
           confirmada: response.confirmada === true,
           enEspera: 'enEspera' in response && response.enEspera === true,
-          idInscripcion: response.idInscripcion ?? null,
-          fechaVencimientoPago: response.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.senia ?? null,
+          idInscripcion: response.inscripciones?.[0]?.idInscripcion ?? null,
+          fechaVencimientoPago: response.resumen?.fechaVencimientoPago ?? null,
+          seniaInscripcion: response.pagoReserva ?? null,
           saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
           resumen: response.resumen
             ? {
                 carrera: response.resumen.carrera ?? null,
-                comienzo: response.resumen.comienzo ?? null,
-                turno: response.resumen.turno ?? null,
+                comienzo: response.inscripciones?.[0]?.comienzo ?? null,
+                turno: response.inscripciones?.[0]?.turno ?? null,
               }
             : null,
+          seminarios: this.toSeminarios(response.inscripciones),
         })),
         tap(() => this.api.clearCache())
       );
@@ -245,7 +252,6 @@ export class InscripcionesEndpoint {
     return this.api
       .request(postInscripcionesPagarEndpoint, {
         body,
-        showLoader: true,
       })
       .pipe(
         map(response => ({
@@ -270,7 +276,7 @@ export class InscripcionesEndpoint {
     return this.api
       .request(postInscripcionesInteresProductoEndpoint, {
         body: {
-          idOferta: payload.idOferta,
+          idsOferta: payload.idOfertas,
           idProcesoSeleccionado: payload.idProcesoSeleccionado,
           idProducto: payload.idProducto,
         },
@@ -320,25 +326,38 @@ export class InscripcionesEndpoint {
           idOferta?: number;
           idProducto?: number;
           carrera?: string | null;
-          idComienzo?: number;
           comienzo?: string | null;
-          idTurno?: number;
           turno?: string | null;
         }
       | null
-      | undefined
+      | undefined,
+    oferta?: { idOferta?: number; comienzo?: string | null; turno?: string | null } | null
   ): InscripcionSummary | null {
     return summary
       ? {
-          idOferta: summary.idOferta ?? null,
+          idOferta: oferta?.idOferta ?? summary.idOferta ?? null,
           idProducto: summary.idProducto ?? null,
           carrera: summary.carrera ?? null,
-          idComienzo: summary.idComienzo ?? null,
-          comienzo: summary.comienzo ?? null,
-          idTurno: summary.idTurno ?? null,
-          turno: summary.turno ?? null,
+          comienzo: oferta?.comienzo ?? summary.comienzo ?? null,
+          turno: oferta?.turno ?? summary.turno ?? null,
         }
       : null;
+  }
+
+  // Una fila por oferta elegida (en Actualización profesional, un seminario por fila).
+  // Sirve para los dos bloques: en `pagoPendiente.inscripciones` el idInscripcion es lo
+  // que después se cobra en bloque vía Pagar.idsInscripcion, y en `detalle.intereses`
+  // los idOferta son los que reconfirma la preinscripción al retomar.
+  private toSeminarios(
+    ofertas: Array<DtoInscripcionOferta> | null | undefined
+  ): InscripcionOfertaResumen[] {
+    return (ofertas ?? []).map(oferta => ({
+      idInscripcion: oferta.idInscripcion ?? null,
+      idOferta: oferta.idOferta ?? null,
+      nombre: oferta.descripcionOferta ?? null,
+      comienzo: oferta.comienzo ?? null,
+      turno: oferta.turno ?? null,
+    }));
   }
 
   private toCoordinador(
@@ -349,22 +368,30 @@ export class InscripcionesEndpoint {
       : null;
   }
 
+  // La confirmada ya no trae un bloque `resumen`: producto y carrera están en la
+  // cabecera y comienzo/turno/materias en cada inscripción confirmada.
   private toConfirmedDetail(
     confirmada: DtoConfirmadaDetalle | null | undefined
   ): InscripcionConfirmedDetail | null {
-    return confirmada
-      ? {
-          numeroEstudiante: confirmada.numeroEstudiante ?? null,
-          resumen: this.toSummary(confirmada.resumen),
-          coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
-          coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),
-          materiasPrimerSemestre:
-            confirmada.materiasPrimerSemestre?.map(materia => ({
-              idMateria: materia.idMateria ?? null,
-              nombre: materia.nombre ?? null,
-            })) ?? [],
-        }
-      : null;
+    if (!confirmada) return null;
+
+    const inscripciones = confirmada.inscripciones ?? [];
+    return {
+      numeroEstudiante: confirmada.codigoPersona ?? null,
+      resumen: this.toSummary(confirmada, inscripciones[0]),
+      coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
+      coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),
+      inscripciones: inscripciones.map(inscripcion => ({
+        idInscripcion: inscripcion.idInscripcion ?? null,
+        idOferta: inscripcion.idOferta ?? null,
+        comienzo: inscripcion.comienzo ?? null,
+        turno: inscripcion.turno ?? null,
+        materiasPrimerSemestre: (inscripcion.materiasPrimerSemestre ?? []).map(materia => ({
+          idMateria: materia.idMateria ?? null,
+          nombre: materia.nombre ?? null,
+        })),
+      })),
+    };
   }
 }
 
@@ -373,7 +400,6 @@ function toSurveySection(value: string | null | undefined): SeccionEncuestaId | 
     case 'educacion':
     case 'decision-academica':
     case 'experiencia-ort':
-    case 'situacion-laboral':
     case 'identidad':
     case 'reglamento':
       return value;

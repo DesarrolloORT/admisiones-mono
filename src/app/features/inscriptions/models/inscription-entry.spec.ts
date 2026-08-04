@@ -9,6 +9,7 @@ import {
 import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
+  InscripcionOfertaResumen,
 } from './inscription-flow';
 
 // --- Fixtures ---------------------------------------------------------------
@@ -82,16 +83,19 @@ const FULL_SUMMARY: InscripcionSummary = {
   idOferta: 300,
   idProducto: 20,
   carrera: 'Sistemas',
-  idComienzo: 200,
   comienzo: 'Marzo 2027',
-  idTurno: 10,
   turno: 'Noche',
 };
+
+function interes(idOferta: number | null): InscripcionOfertaResumen {
+  return { idInscripcion: null, idOferta, nombre: 'Oferta', comienzo: null, turno: null };
+}
 
 function detail(values: Partial<InscripcionDetail> = {}): InscripcionDetail {
   return {
     estado: 'En proceso',
     detalle: null,
+    intereses: [],
     pagoPendiente: null,
     seniaMinima: null,
     confirmada: null,
@@ -99,12 +103,58 @@ function detail(values: Partial<InscripcionDetail> = {}): InscripcionDetail {
   };
 }
 
+// Los params de la URL (idProducto+idProceso) siempre están: son lo que define la
+// intención de retomar. El nivel del producto llega resuelto por el resolver; `null` =
+// catálogo caído o producto fuera del catálogo.
+function retomar(
+  detail: InscripcionDetail | null,
+  idNivelProducto: number | null = null,
+  idOfertas: number[] = []
+): InscripcionEntryResolved {
+  return {
+    intent: 'retomar',
+    detail,
+    idProducto: 2184,
+    idProceso: 122,
+    idOfertas,
+    idNivelProducto,
+  };
+}
+
+function reactivar(
+  detail: InscripcionDetail | null,
+  idNivelProducto: number | null = null,
+  idOfertas: number[] = []
+): InscripcionEntryResolved {
+  return {
+    intent: 'reactivar',
+    detail,
+    idProducto: 2184,
+    idProceso: 122,
+    idOfertas,
+    idNivelProducto,
+  };
+}
+
 const DETAIL = {
-  enProcesoFull: detail({ estado: 'En proceso', detalle: FULL_SUMMARY }),
-  enProcesoNoDetalle: detail({ estado: 'En proceso', detalle: null }),
+  enProcesoFull: detail({
+    estado: 'En proceso',
+    detalle: FULL_SUMMARY,
+    intereses: [interes(300)],
+  }),
+  // AP con varios seminarios elegidos: la precarga debe conservar todas las ofertas.
+  enProcesoMultiOferta: detail({
+    estado: 'En proceso',
+    detalle: FULL_SUMMARY,
+    intereses: [interes(310), interes(311), interes(null)],
+  }),
+  // Sin ofertas de interés no hay con qué reconfirmar: no hay precarga posible.
+  enProcesoSinIntereses: detail({ estado: 'En proceso', detalle: FULL_SUMMARY, intereses: [] }),
+  enProcesoNoDetalle: detail({ estado: 'En proceso', detalle: null, intereses: [interes(300)] }),
   enProcesoDetalleSinProducto: detail({
     estado: 'En proceso',
     detalle: { ...FULL_SUMMARY, idProducto: null },
+    intereses: [interes(300)],
   }),
   pagoPendienteSinSenia: detail({
     estado: 'Pago pendiente',
@@ -114,6 +164,7 @@ const DETAIL = {
       saldoCuenta: 1200,
       fechaVencimientoPago: '2027-03-04',
       resumen: FULL_SUMMARY,
+      seminarios: [],
     },
   }),
   pagoPendienteConSenia: detail({
@@ -128,6 +179,7 @@ const DETAIL = {
       saldoCuenta: 1200,
       fechaVencimientoPago: '2027-03-04',
       resumen: FULL_SUMMARY,
+      seminarios: [],
     },
   }),
   pendienteConSenia: detail({
@@ -141,7 +193,7 @@ const DETAIL = {
       resumen: FULL_SUMMARY,
       coordinadorAcademico: null,
       coordinadorCursos: null,
-      materiasPrimerSemestre: [],
+      inscripciones: [],
     },
   }),
   aLaEspera: detail({ estado: 'A la espera', detalle: null }),
@@ -253,248 +305,372 @@ describe('deriveInitialInscripcionState', () => {
       },
     ],
 
-    // Intención RETOMAR degradada (Detalle falló) ⇒ se comporta como nueva.
+    // Intención RETOMAR: el paso 1 NUNCA aparece, ni con el Detalle caído. La precarga
+    // degrada a los params de la URL, así que la selección académica de la encuesta
+    // nunca pisa el paso 1 (`includeAcademic: false`) y el paso 1 queda bloqueado
+    // (`resumeInProgress: true`) en todos los casos.
     [
       'retomar sin detalle (Detalle falló) + en-progreso',
-      { intent: 'retomar', detail: null },
+      retomar(null),
       RESOLVED.enProgreso('decision-academica'),
       {
-        step: 'propuesta',
+        step: 'encuesta',
         survey: 'prefilled',
         activeSection: 'decision-academica',
         includeAcademic: false,
-        resumeInProgress: false,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar sin detalle (Detalle falló) + fresh',
+      retomar(null),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
 
-    // Intención RETOMAR con detalle: comportamiento "continuar" preservado.
+    // 'En proceso' ⇒ paso 2 para cualquier nivel y con o sin encuesta previa.
     [
       'retomar En proceso + detalle full + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
-      RESOLVED.enProgreso('situacion-laboral'),
+      retomar(DETAIL.enProcesoFull),
+      RESOLVED.enProgreso('experiencia-ort'),
       {
         step: 'encuesta',
         survey: 'prefilled',
-        activeSection: 'situacion-laboral',
-        includeAcademic: true,
+        activeSection: 'experiencia-ort',
+        includeAcademic: false,
         resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
       'retomar En proceso + detalle full + fresh',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.fresh,
       {
-        step: 'propuesta',
+        step: 'encuesta',
         survey: 'fresh',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
-      // La excepción solo aplica cuando existe una encuesta para precargar el Paso 1.
       'retomar En proceso + detalle full + sin derecho',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.sinDerecho,
       {
-        step: 'propuesta',
+        step: 'encuesta',
         survey: 'identity-only',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
-      // Sin encuesta para precargar, el Paso 1 sigue editable.
       'retomar En proceso + detalle sin producto + sin derecho',
-      { intent: 'retomar', detail: DETAIL.enProcesoDetalleSinProducto },
+      retomar(DETAIL.enProcesoDetalleSinProducto),
       RESOLVED.sinDerecho,
       {
-        step: 'propuesta',
+        step: 'encuesta',
         survey: 'identity-only',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
       'retomar En proceso + detalle full + completa',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.completa,
       {
         step: 'encuesta',
         survey: 'prefilled',
         activeSection: 'identidad',
-        includeAcademic: true,
+        includeAcademic: false,
         resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
       'retomar En proceso + detalle full + loadFailed',
-      { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      retomar(DETAIL.enProcesoFull),
       RESOLVED.loadFailed,
       {
-        step: 'propuesta',
+        step: 'encuesta',
         survey: 'load-failed',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
 
-    // Una oferta incompleta no activa la excepción de reanudación.
+    // Sin ofertas en el Detalle igual va al paso 2 (confirmar fallará hasta que el
+    // Detalle responda, pero el paso 1 no vuelve a aparecer).
     [
       'retomar En proceso + detalle sin producto + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoDetalleSinProducto },
+      retomar(DETAIL.enProcesoDetalleSinProducto),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'encuesta',
         survey: 'prefilled',
         activeSection: 'educacion',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
     [
       'retomar En proceso + sin detalle (bloque null) + en-progreso',
-      { intent: 'retomar', detail: DETAIL.enProcesoNoDetalle },
+      retomar(DETAIL.enProcesoNoDetalle),
       RESOLVED.enProgreso('decision-academica'),
       {
         step: 'encuesta',
         survey: 'prefilled',
         activeSection: 'decision-academica',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar En proceso + sin ofertas de interés + en-progreso',
+      retomar(DETAIL.enProcesoSinIntereses),
+      RESOLVED.enProgreso('educacion'),
+      {
+        step: 'encuesta',
+        survey: 'prefilled',
+        activeSection: 'educacion',
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
 
-    // Estados de pago / terminales.
+    // Actualización profesional (nivel 3/4): mismo comportamiento que el resto. Es el
+    // caso que estaba roto: AP nunca postea EncuestaInicial, así que sin encuesta
+    // terminaba en el paso 1 vacío.
+    [
+      'retomar AP (nivel 3) En proceso + fresh',
+      retomar(DETAIL.enProcesoMultiOferta, 3),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP (nivel 4) En proceso + sin derecho',
+      retomar(DETAIL.enProcesoFull, 4),
+      RESOLVED.sinDerecho,
+      {
+        step: 'encuesta',
+        survey: 'identity-only',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP En proceso + encuesta por-persona en-progreso',
+      retomar(DETAIL.enProcesoFull, 3),
+      RESOLVED.enProgreso('educacion'),
+      {
+        step: 'encuesta',
+        survey: 'prefilled',
+        activeSection: 'educacion',
+        includeAcademic: false,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP En proceso + detalle sin producto + fresh',
+      retomar(DETAIL.enProcesoDetalleSinProducto, 3),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar nivel 1 En proceso + fresh',
+      retomar(DETAIL.enProcesoFull, 1),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      // Catálogo caído ⇒ nivel null: igual va al paso 2; el tipo de propuesta lo
+      // completa después AcademicProposalSelection desde el nivel de la carrera.
+      'retomar con nivel null (catálogo caído) + fresh',
+      retomar(DETAIL.enProcesoFull, null),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'none',
+      },
+    ],
+    [
+      'retomar AP Pago pendiente sin seña',
+      retomar(DETAIL.pagoPendienteSinSenia, 3),
+      RESOLVED.fresh,
+      {
+        step: 'pago',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'awaiting-method',
+      },
+    ],
+
+    // Estados de pago / terminales: la pantalla la decide `payment` y el paso queda en
+    // el 3 para que el paso 1 nunca sea el paso corriente al retomar.
     [
       'retomar Pago pendiente sin seña',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteSinSenia },
+      retomar(DETAIL.pagoPendienteSinSenia),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'pago',
         survey: 'prefilled',
         activeSection: 'educacion',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'awaiting-method',
       },
     ],
     [
       'retomar Pago pendiente con seña',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      retomar(DETAIL.pagoPendienteConSenia),
       RESOLVED.enProgreso('educacion'),
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'prefilled',
         activeSection: 'educacion',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'reserva',
       },
     ],
     [
       'retomar Pendiente sin seña',
-      { intent: 'retomar', detail: DETAIL.pendienteSinSenia },
+      retomar(DETAIL.pendienteSinSenia),
       RESOLVED.fresh,
       {
         step: 'pago',
         survey: 'fresh',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'awaiting-method',
       },
     ],
     [
       'retomar Pendiente con seña',
-      { intent: 'retomar', detail: DETAIL.pendienteConSenia },
+      retomar(DETAIL.pendienteConSenia),
       RESOLVED.fresh,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'fresh',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'reserva',
       },
     ],
-    // Confirmada no trae bloque `detalle` (usa `confirmada.resumen`); includeAcademic
-    // queda `true` pero es inocuo: el outcome terminal oculta paso 1/2.
     [
       'retomar Confirmada',
-      { intent: 'retomar', detail: DETAIL.confirmada },
+      retomar(DETAIL.confirmada),
       RESOLVED.completa,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'prefilled',
         activeSection: 'identidad',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'confirmada',
       },
     ],
     [
       'retomar Confirmada + loadFailed (error+retry gana en template)',
-      { intent: 'retomar', detail: DETAIL.confirmada },
+      retomar(DETAIL.confirmada),
       RESOLVED.loadFailed,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'load-failed',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'confirmada',
       },
     ],
     [
       'retomar A la espera',
-      { intent: 'retomar', detail: DETAIL.aLaEspera },
+      retomar(DETAIL.aLaEspera),
       RESOLVED.enProgreso('educacion'),
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'prefilled',
         activeSection: 'educacion',
-        includeAcademic: true,
-        resumeInProgress: false,
+        includeAcademic: false,
+        resumeInProgress: true,
         payment: 'en-proceso',
       },
     ],
     [
       'retomar estado desconocido/null',
-      { intent: 'retomar', detail: DETAIL.desconocido },
+      retomar(DETAIL.desconocido),
       RESOLVED.fresh,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'fresh',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'en-proceso',
       },
     ],
     [
       'retomar Pago pendiente con seña + sin derecho',
-      { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      retomar(DETAIL.pagoPendienteConSenia),
       RESOLVED.sinDerecho,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'identity-only',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
         payment: 'reserva',
       },
     ],
@@ -502,7 +678,7 @@ describe('deriveInitialInscripcionState', () => {
     // Intención REACTIVAR (provisional = nueva) hasta que negocio defina reglas.
     [
       'reactivar Cancelada + detalle full (provisional = nueva)',
-      { intent: 'reactivar', detail: DETAIL.cancelada },
+      reactivar(DETAIL.cancelada),
       RESOLVED.enProgreso('educacion'),
       {
         step: 'propuesta',
@@ -515,7 +691,7 @@ describe('deriveInitialInscripcionState', () => {
     ],
     [
       'reactivar sin detalle (Detalle falló)',
-      { intent: 'reactivar', detail: null },
+      reactivar(null),
       RESOLVED.fresh,
       {
         step: 'propuesta',
@@ -536,7 +712,7 @@ describe('deriveInitialInscripcionState', () => {
 
   it('reconstructs preEnrollment (monto/vencimiento/resumen) for pending payment', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.pagoPendienteSinSenia },
+      entry: retomar(DETAIL.pagoPendienteSinSenia),
       survey: RESOLVED.fresh,
     });
     expect(state.preEnrollment).toEqual({
@@ -546,12 +722,13 @@ describe('deriveInitialInscripcionState', () => {
       seniaInscripcion: 15500,
       saldoCuenta: 1200,
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+      seminarios: [],
     });
   });
 
   it('maps the chosen deposit method for a reserva outcome', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.pagoPendienteConSenia },
+      entry: retomar(DETAIL.pagoPendienteConSenia),
       survey: RESOLVED.fresh,
     });
     expect(state.payment).toEqual({
@@ -563,15 +740,137 @@ describe('deriveInitialInscripcionState', () => {
 
   it('carries the confirmed detail for a confirmada outcome', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.confirmada },
+      entry: retomar(DETAIL.confirmada),
       survey: RESOLVED.completa,
     });
     expect(state.payment).toEqual({ kind: 'confirmada', detail: DETAIL.confirmada.confirmada });
   });
 
+  it('builds the academic prefill from every interest offering when resuming an AP', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoMultiOferta, 3),
+      survey: RESOLVED.fresh,
+    });
+    // `turno` y `seminarios` se llenan los dos: el payload de confirmación lee uno u
+    // otro según el tipo de propuesta.
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '3',
+      carrera: '20',
+      comienzo: '122',
+      turno: '310',
+      seminarios: ['310', '311'],
+    });
+  });
+
+  it('prefers every offer carried by the dashboard when the detail has no interests', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoSinIntereses, 4, [310, 311]),
+      survey: RESOLVED.fresh,
+    });
+
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '3',
+      carrera: '20',
+      comienzo: '122',
+      turno: '310',
+      seminarios: ['310', '311'],
+    });
+  });
+
+  it('prefers the dashboard offers over stale detail interests', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, 4, [310, 311]),
+      survey: RESOLVED.fresh,
+    });
+
+    expect(state.academicPrefill).toEqual(
+      expect.objectContaining({ turno: '310', seminarios: ['310', '311'] })
+    );
+  });
+
+  it('prefills the academic step for a non-AP resume too', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, 1),
+      survey: RESOLVED.enProgreso('educacion'),
+    });
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '1',
+      carrera: '20',
+      comienzo: '122',
+      turno: '300',
+      seminarios: ['300'],
+    });
+  });
+
+  it('leaves the proposal type empty when the career catalog failed', () => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(DETAIL.enProcesoFull, null),
+      survey: RESOLVED.fresh,
+    });
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '',
+      carrera: '20',
+      comienzo: '122',
+      turno: '300',
+      seminarios: ['300'],
+    });
+  });
+
+  // Sin Detalle (o sin su bloque de producto) la precarga degrada a los params de la
+  // URL: son la prueba de que la inscripción existe.
+  it.each([
+    ['sin Detalle', null],
+    ['con Detalle sin bloque de producto', DETAIL.enProcesoNoDetalle],
+  ])('prefills the academic step from the URL params %s', (_name, detail) => {
+    const state = deriveInitialInscripcionState({
+      entry: retomar(detail),
+      survey: RESOLVED.fresh,
+    });
+    expect(state.academicPrefill).toEqual({
+      tipoPropuesta: '',
+      carrera: '2184',
+      comienzo: '122',
+      turno: detail ? '300' : '',
+      seminarios: detail ? ['300'] : [],
+    });
+  });
+
+  it('never prefills nor locks step 1 on a new inscription', () => {
+    const nueva = deriveInitialInscripcionState({
+      entry: { intent: 'nueva' },
+      survey: RESOLVED.fresh,
+    });
+    expect(nueva.academicPrefill).toBeNull();
+    expect(nueva.resumeInProgress).toBe(false);
+    expect(nueva.step).toBe('propuesta');
+  });
+
+  // Invariante duro: con idProducto+idProceso en la URL la inscripción existe, así que
+  // ninguna combinación de estado/encuesta puede aterrizar en el paso 1.
+  it('never lands on step 1 when resuming, whatever the detail and survey are', () => {
+    const details = [null, ...Object.values(DETAIL)];
+    const surveys = Object.values(RESOLVED).map(resolved =>
+      typeof resolved === 'function' ? resolved('educacion') : resolved
+    );
+
+    for (const detail of details) {
+      for (const survey of surveys) {
+        for (const idNivelProducto of [null, 1, 3]) {
+          const state = deriveInitialInscripcionState({
+            entry: retomar(detail, idNivelProducto),
+            survey,
+          });
+          expect(state.step).not.toBe('propuesta');
+          expect(state.resumeInProgress).toBe(true);
+          expect(state.academicPrefill).not.toBeNull();
+        }
+      }
+    }
+  });
+
   it('computes completed sections up to the active one', () => {
     const state = deriveInitialInscripcionState({
-      entry: { intent: 'retomar', detail: DETAIL.enProcesoFull },
+      entry: retomar(DETAIL.enProcesoFull),
       survey: RESOLVED.enProgreso('experiencia-ort'),
     });
     expect(state.survey.kind === 'prefilled' && state.survey.completedSections).toEqual([

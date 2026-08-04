@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -17,7 +17,10 @@ describe('AccountEndpoint', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClient(
+          withXhr(),
+          withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+        ),
         provideHttpClientTesting(),
         ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
       ],
@@ -311,7 +314,7 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBeUndefined());
 
     const req = httpController.expectOne(
-      r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'
+      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
     );
 
     expect(req.request.body).toEqual({
@@ -338,7 +341,7 @@ describe('AccountEndpoint', () => {
       });
 
     const req = httpController.expectOne(
-      r => decodeURI(r.url).includes('/Persona/CambiarContraseña') && r.method === 'POST'
+      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
     );
     req.flush(null, { status: 400, statusText: 'Bad Request' });
 

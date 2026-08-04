@@ -1,12 +1,13 @@
 import type { FormControl } from '@angular/forms';
 
-import type { Career, Comienzo, Turno } from './catalog.interface';
+import type { Career, Comienzo, Seminario, Turno } from './catalog.interface';
 
 export interface AcademicProposalForm {
   tipoPropuesta: FormControl<string>;
   carrera: FormControl<string>;
   comienzo: FormControl<string>;
   turno: FormControl<string>;
+  seminarios: FormControl<string[]>;
 }
 
 export interface AcademicProposalOption {
@@ -15,14 +16,50 @@ export interface AcademicProposalOption {
   school?: string;
   icon?: string;
   hint?: string;
+  description?: string;
 }
 
+export const ACADEMIC_PROPOSAL_TYPE_IDS = [1, 2, 3] as const;
+export type AcademicProposalTypeId = (typeof ACADEMIC_PROPOSAL_TYPE_IDS)[number];
+
+/**
+ * Textos del selector académico según el tipo de propuesta. Actualización
+ * profesional habla de "Programa" y "Seminario"; el resto conserva la
+ * terminología de carreras.
+ */
+export interface AcademicProposalTerminology {
+  careerLabel: string;
+  careerErrorText: string;
+  careerLoadingLabel: string;
+  careerLoadingMessage: string;
+  careerFallbackLabel: string;
+  startLabel: string;
+  startErrorText: string;
+  startLoadingLabel: string;
+  startNoun: string;
+}
+
+const DEFAULT_TERMINOLOGY: AcademicProposalTerminology = {
+  careerLabel: 'Carrera',
+  careerErrorText: 'Seleccioná una carrera',
+  careerLoadingLabel: 'Cargando carreras',
+  careerLoadingMessage: 'Estamos cargando las carreras.',
+  careerFallbackLabel: 'la carrera seleccionada',
+  startLabel: 'Comienzo',
+  startErrorText: 'Seleccioná un comienzo',
+  startLoadingLabel: 'Cargando comienzos',
+  startNoun: 'los comienzos',
+};
+
 interface AcademicProposalType extends AcademicProposalOption {
+  id: AcademicProposalTypeId;
   levelIds: readonly number[];
+  terminology?: Partial<AcademicProposalTerminology>;
 }
 
 const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
   {
+    id: 1,
     value: '1',
     label: 'Carrera universitaria',
     icon: 'school',
@@ -30,6 +67,7 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
     levelIds: [1],
   },
   {
+    id: 2,
     value: '2',
     label: 'Tecnicatura',
     icon: 'list_alt',
@@ -37,22 +75,56 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
     levelIds: [2],
   },
   {
+    id: 3,
     value: '3',
     label: 'Actualización profesional',
     icon: 'how_to_reg',
     hint: 'Cursos cortos para actualizar habilidades',
     levelIds: [3, 4],
+    terminology: {
+      careerLabel: 'Programa',
+      careerErrorText: 'Seleccioná un programa',
+      careerLoadingLabel: 'Cargando programas',
+      careerLoadingMessage: 'Estamos cargando los programas.',
+      careerFallbackLabel: 'el programa seleccionado',
+      startLabel: 'Seminario',
+      startErrorText: 'Seleccioná al menos un seminario',
+      startLoadingLabel: 'Cargando seminarios',
+      startNoun: 'los seminarios',
+    },
   },
 ];
 
-export function getAvailableAcademicProposalTypes(
-  careers: readonly Career[]
-): readonly AcademicProposalOption[] {
-  const availableLevelIds = new Set(careers.map(career => career.idNivelProducto));
+const ACTUALIZACION_PROFESIONAL_TYPE = '3';
 
-  return ACADEMIC_PROPOSAL_TYPES.filter(option =>
-    option.levelIds.some(levelId => availableLevelIds.has(levelId))
-  ).map(({ value, label, icon, hint }) => ({ value, label, icon, hint }));
+export function isProfessionalUpdateType(value: string): boolean {
+  return value === ACTUALIZACION_PROFESIONAL_TYPE;
+}
+
+export function isProfessionalUpdateLevel(levelId: number | null | undefined): boolean {
+  return (
+    levelId !== null &&
+    levelId !== undefined &&
+    getAcademicProposalLevelIds(ACTUALIZACION_PROFESIONAL_TYPE).includes(levelId)
+  );
+}
+
+export function getAcademicProposalTerminology(value: string): AcademicProposalTerminology {
+  const overrides = ACADEMIC_PROPOSAL_TYPES.find(option => option.value === value)?.terminology;
+  return overrides ? { ...DEFAULT_TERMINOLOGY, ...overrides } : DEFAULT_TERMINOLOGY;
+}
+
+export function getAcademicProposalTypes(): readonly AcademicProposalOption[] {
+  return ACADEMIC_PROPOSAL_TYPES.map(({ value, label, icon, hint }) => ({
+    value,
+    label,
+    icon,
+    hint,
+  }));
+}
+
+export function getAcademicProposalTypeId(value: string): AcademicProposalTypeId | null {
+  return ACADEMIC_PROPOSAL_TYPES.find(option => option.value === value)?.id ?? null;
 }
 
 export function getAcademicCareerOptions(
@@ -91,4 +163,24 @@ export function toAcademicShiftOption(turno: Turno): AcademicProposalOption {
       ? `${turno.nombreTurno} (${turno.horarioReferencia})`
       : turno.nombreTurno,
   };
+}
+
+export function toAcademicSeminarOption(seminario: Seminario): AcademicProposalOption {
+  return {
+    value: seminario.idOferta.toString(),
+    label: seminario.nombre,
+    description: formatSeminarStartDate(seminario.fechaComienzo),
+  };
+}
+
+// `fechaReferencia` llega como fecha ISO con hora fija en 00:00:00 (`2026-10-16T00:00:00`)
+// o ya en dd/MM/yyyy. La opción muestra solo la fecha, sin la hora.
+function formatSeminarStartDate(value: string | null): string | undefined {
+  if (!value) return undefined;
+
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!isoDate) return value;
+
+  const [, year, month, day] = isoDate;
+  return `${day}/${month}/${year}`;
 }

@@ -8,18 +8,27 @@ import {
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionDetail } from '../models/inscription-detail';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
+import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 import { inscriptionDetailResolver, resolveEntryIntent } from './inscription-detail.resolver';
 
 describe('inscriptionDetailResolver', () => {
   let getDetail: ReturnType<typeof vi.fn>;
+  let getCareers: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    sessionStorage.clear();
     getDetail = vi.fn();
+    getCareers = vi.fn().mockReturnValue(of([]));
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Inscripciones, useValue: { getDetail } }],
+      providers: [
+        provideRouter([]),
+        { provide: Inscripciones, useValue: { getDetail } },
+        { provide: Catalogs, useValue: { getCareers } },
+      ],
     });
   });
 
@@ -30,8 +39,51 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail,
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
+  });
+
+  it('resolves the product level from the careers catalog', async () => {
+    const detail = createDetail('En proceso', 21);
+    getDetail.mockReturnValue(of(detail));
+    getCareers.mockReturnValue(
+      of([
+        {
+          idProducto: 21,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+      ])
+    );
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail,
+      idProducto: 21,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: 3,
+    });
+  });
+
+  it('keeps a null level when the careers catalog fails', async () => {
+    const detail = createDetail('En proceso', 21);
+    getDetail.mockReturnValue(of(detail));
+    getCareers.mockReturnValue(throwError(() => new Error('failed')));
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail,
+      idProducto: 21,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: null,
+    });
   });
 
   it('resolves the "reactivar" intent when modo=reactivar is present', async () => {
@@ -40,7 +92,14 @@ describe('inscriptionDetailResolver', () => {
 
     await expect(
       resolve({ idProducto: '20', idProceso: '200', modo: 'reactivar' })
-    ).resolves.toEqual({ intent: 'reactivar', detail });
+    ).resolves.toEqual({
+      intent: 'reactivar',
+      detail,
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: null,
+    });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
   });
 
@@ -58,7 +117,82 @@ describe('inscriptionDetailResolver', () => {
     await expect(resolve({ idProducto: '20', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
       detail: null,
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: null,
     });
+  });
+
+  // Con el Detalle caído los params siguen alcanzando para el nivel del producto, así
+  // que el paso 2 arranca con el tipo de propuesta correcto.
+  it('resolves the product level from the URL param when the detail fails', async () => {
+    getDetail.mockReturnValue(throwError(() => new Error('failed')));
+    getCareers.mockReturnValue(
+      of([
+        {
+          idProducto: 21,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+        },
+      ])
+    );
+
+    await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
+      intent: 'retomar',
+      detail: null,
+      idProducto: 21,
+      idProceso: 200,
+      idOfertas: [],
+      idNivelProducto: 3,
+    });
+  });
+
+  it('keeps unique positive offer ids from the resume URL', async () => {
+    const detail = createDetail('En proceso', 40);
+    getDetail.mockReturnValue(of(detail));
+
+    await expect(
+      resolve({
+        idProducto: '40',
+        idProceso: '210',
+        idOferta: ['310', '311', '310', '0', 'invalid'],
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        intent: 'retomar',
+        idOfertas: [310, 311],
+      })
+    );
+  });
+
+  it('prefers the offers saved when continuing from the dashboard', async () => {
+    getDetail.mockReturnValue(of(createDetail('En proceso', 40)));
+    TestBed.inject(InscriptionResumeContextStore).save({
+      idProducto: 40,
+      idProceso: 210,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+
+    await expect(resolve({ idProducto: '40', idProceso: '210' })).resolves.toEqual(
+      expect.objectContaining({ idOfertas: [310, 311] })
+    );
+  });
+
+  it('keeps an explicit detail URL authoritative over a previous session', async () => {
+    getDetail.mockReturnValue(of(createDetail('En proceso', 40)));
+    TestBed.inject(InscriptionResumeContextStore).save({
+      idProducto: 40,
+      idProceso: 210,
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
+    });
+
+    await expect(
+      resolve({ idProducto: '40', idProceso: '210', idOferta: ['320'] })
+    ).resolves.toEqual(expect.objectContaining({ idOfertas: [320] }));
   });
 
   it('resolves "nueva" when a parameter is not numeric', async () => {
@@ -103,7 +237,9 @@ describe('inscriptionDetailResolver', () => {
     });
   });
 
-  function resolve(queryParams: Record<string, string>): Promise<InscripcionEntryResolved> {
+  function resolve(
+    queryParams: Record<string, string | string[]>
+  ): Promise<InscripcionEntryResolved> {
     const route = new ActivatedRouteSnapshot();
     Object.defineProperty(route, 'queryParamMap', { value: convertToParamMap(queryParams) });
     const result = TestBed.runInInjectionContext(() =>
@@ -112,7 +248,23 @@ describe('inscriptionDetailResolver', () => {
     return firstValueFrom(result as Observable<InscripcionEntryResolved>);
   }
 
-  function createDetail(estado: string): InscripcionDetail {
-    return { estado, detalle: null, pagoPendiente: null, seniaMinima: null, confirmada: null };
+  function createDetail(estado: string, idProducto: number | null = null): InscripcionDetail {
+    return {
+      estado,
+      detalle:
+        idProducto === null
+          ? null
+          : {
+              idOferta: 300,
+              idProducto,
+              carrera: 'Programa de Asesoramiento Financiero',
+              comienzo: 'Abril 2026',
+              turno: 'Noche',
+            },
+      intereses: [],
+      pagoPendiente: null,
+      seniaMinima: null,
+      confirmada: null,
+    };
   }
 });

@@ -50,6 +50,11 @@ export class AcademicProposalSelect implements OnInit {
     this.selection().connect(this.form());
   }
 
+  // El selector de Actualización profesional (AP) permanece oculto hasta elegir un programa.
+  protected hasProgramSelected(): boolean {
+    return !!this.form().controls.carrera.value;
+  }
+
   protected proposalTypeErrorId(): string | null {
     const control = this.form().controls.tipoPropuesta;
     return control.touched && control.hasError('required') ? 'academic-proposal-type-error' : null;

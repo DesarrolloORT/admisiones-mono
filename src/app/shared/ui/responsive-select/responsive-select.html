@@ -15,6 +15,7 @@
     [placeholder]="placeholder()"
     [required]="isRequired()"
     [valueModel]="value()"
+    (keydown)="onDesktopKeydown($event)"
     (openedChange)="onDesktopOpenedChange($event)"
     (valueModelChange)="onDesktopValueChange($event)">
     @if (!multiple()) {
@@ -28,6 +29,11 @@
           <ort-icon aria-hidden="true" type="svg" [svgContent]="getBankSvg(option.label)" />
           <span>{{ option.label }}</span>
         </span>
+        } @else if (option.description) {
+        <span class="responsive-select__option-stacked">
+          <span>{{ option.label }}</span>
+          <span class="responsive-select__option-description">{{ option.description }}</span>
+        </span>
         } @else { {{ option.label }} }
       </ort-option>
       }
@@ -38,6 +44,11 @@
       <span class="responsive-select__option-with-icon">
         <ort-icon aria-hidden="true" type="svg" [svgContent]="getBankSvg(option.label)" />
         <span>{{ option.label }}</span>
+      </span>
+      } @else if (option.description) {
+      <span class="responsive-select__option-stacked">
+        <span>{{ option.label }}</span>
+        <span class="responsive-select__option-description">{{ option.description }}</span>
       </span>
       } @else { {{ option.label }} }
     </ort-option>
@@ -122,8 +133,14 @@
           class="responsive-select__drawer-icon"
           type="svg"
           [svgContent]="getBankSvg(option.label)" />
-        }
+        } @if (option.description) {
+        <span class="responsive-select__option-stacked">
+          <span>{{ option.label }}</span>
+          <span class="responsive-select__option-description">{{ option.description }}</span>
+        </span>
+        } @else {
         <span>{{ option.label }}</span>
+        }
         <span aria-hidden="true" class="responsive-select__drawer-radio"></span>
       </button>
       } } @empty {

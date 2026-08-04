@@ -1,13 +1,26 @@
 import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
+const siteOrigin = process.env.DOCS_SITE_ORIGIN || 'http://localhost';
+const baseUrl = process.env.DOCS_BASE_URL || '/docs/admisiones/';
+const sourceBranch = process.env.DOCS_SOURCE_BRANCH || 'v1.0.0/main';
+const parsedOrigin = new URL(siteOrigin);
+
+if (!['http:', 'https:'].includes(parsedOrigin.protocol) || parsedOrigin.pathname !== '/') {
+  throw new Error('DOCS_SITE_ORIGIN must be an HTTP(S) origin without a path.');
+}
+
+if (!baseUrl.startsWith('/') || !baseUrl.endsWith('/')) {
+  throw new Error('DOCS_BASE_URL must start and end with "/".');
+}
+
 const config: Config = {
   title: 'Admisiones',
   tagline: 'Documentacion tecnica y funcional de Admisiones',
-  url: 'https://ort-docs.ort.edu.uy',
-  baseUrl: '/admisiones/',
+  url: parsedOrigin.origin,
+  baseUrl,
   trailingSlash: true,
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
   favicon: 'img/favicon.svg',
   headTags: [
     {
@@ -25,7 +38,7 @@ const config: Config = {
   markdown: {
     mermaid: true,
     hooks: {
-      onBrokenMarkdownLinks: 'warn',
+      onBrokenMarkdownLinks: 'throw',
     },
   },
   presets: [
@@ -36,7 +49,7 @@ const config: Config = {
           path: '../docs',
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/DesarrolloORT/admisiones/edit/main/docs/',
+          editUrl: `https://github.com/DesarrolloORT/admisiones/edit/${encodeURIComponent(sourceBranch)}/docs/`,
         },
         blog: false,
         sitemap: false,

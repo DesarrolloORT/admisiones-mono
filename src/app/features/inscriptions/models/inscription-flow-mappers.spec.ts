@@ -12,7 +12,6 @@ import {
   patchBackendSurveyForms,
   serializeDate,
   toNullableNumber,
-  toWorkStatusFlag,
 } from './inscription-flow-mappers';
 
 const emptySurveyResponse = {
@@ -100,11 +99,6 @@ describe('inscription flow mappers', () => {
       recuerdaPublicidad: 'si',
       mediosPublicidad: ['9'],
     });
-    forms.workForm.patchValue({
-      situacionLaboral: 'trabaja',
-      tipoJornadaLaboral: '3',
-    });
-
     const payload = buildInitialSurveyPayload(forms);
 
     expect(Object.keys(payload).sort()).toEqual(
@@ -132,8 +126,6 @@ describe('inscription flow mappers', () => {
         'recuerdaPublicidadOrt',
         'recursaAnioBachillerato',
         'seInformoEnOtrasUniversidades',
-        'tipoJornadaId',
-        'trabajaActualmente',
         'tuvoAsesoramientoOrt',
         'ubicacionUltimoAnioSecundariaId',
         'universidadConsideradaIds',
@@ -178,8 +170,6 @@ describe('inscription flow mappers', () => {
       valoracionInstalacionesOrtId: 5,
       recuerdaPublicidadOrt: true,
       publicidadOrtIds: [9],
-      trabajaActualmente: true,
-      tipoJornadaId: 3,
       motivoEleccionOrtIds: [2],
     });
   });
@@ -299,15 +289,19 @@ describe('inscription flow mappers', () => {
   it('includes the bank only for the bank account payment method', () => {
     expect(
       buildPaymentPayload({
-        idInscripcion: 7,
+        idsInscripcion: [7],
         metodoPago: 'cuenta-bancaria',
         idBancoSistarbanc: '110',
       })
-    ).toEqual({ idInscripto: 7, tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
+    ).toEqual({ idsInscripcion: [7], tipoPago: 'SISTARBANC', idBancoSistarbanc: '110' });
 
     expect(
-      buildPaymentPayload({ idInscripcion: 7, metodoPago: 'abitab', idBancoSistarbanc: '110' })
-    ).toEqual({ idInscripto: 7, tipoPago: 'ABITAB', idBancoSistarbanc: null });
+      buildPaymentPayload({
+        idsInscripcion: [7, 8],
+        metodoPago: 'abitab',
+        idBancoSistarbanc: '110',
+      })
+    ).toEqual({ idsInscripcion: [7, 8], tipoPago: 'ABITAB', idBancoSistarbanc: null });
   });
 
   it('does not build a confirmation payload without a selected shift', () => {
@@ -320,7 +314,24 @@ describe('inscription flow mappers', () => {
 
     expect(buildConfirmPreEnrollmentPayload(forms)).toEqual({
       aceptoReglamento: true,
-      idOfertaSeleccionada: 300,
+      esInscripcionCorporativa: false,
+      idOfertasSeleccionadas: [300],
+    });
+  });
+
+  it.each([false, true])('builds the AP confirmation payload with corporate=%s', isCorporate => {
+    const forms = createInscripcionForms();
+    forms.regulationForm.controls.aceptaReglamento.setValue(true);
+
+    expect(buildConfirmPreEnrollmentPayload(forms, true)).toBeNull();
+
+    forms.academicForm.controls.seminarios.setValue(['300', '301']);
+    forms.workForm.controls.isCorporate.setValue(isCorporate);
+
+    expect(buildConfirmPreEnrollmentPayload(forms, true)).toEqual({
+      aceptoReglamento: true,
+      esInscripcionCorporativa: isCorporate,
+      idOfertasSeleccionadas: [300, 301],
     });
   });
 
@@ -337,12 +348,6 @@ describe('inscription flow mappers', () => {
   it('serializes dates as yyyy-MM-dd and null as empty string', () => {
     expect(serializeDate(null)).toBe('');
     expect(serializeDate(new Date(2026, 0, 5))).toBe('2026-01-05');
-  });
-
-  it('maps the work status flag from the form value', () => {
-    expect(toWorkStatusFlag('')).toBeNull();
-    expect(toWorkStatusFlag('trabaja')).toBe(true);
-    expect(toWorkStatusFlag('no-trabaja')).toBe(false);
   });
 
   it('parses nullable numbers defensively', () => {

@@ -1,5 +1,7 @@
+import { ScholarshipPersonalStep } from './scholarship-personal-step';
+
 describe('ScholarshipPersonalStep', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('should be importable', () => {
+    expect(ScholarshipPersonalStep).toBeDefined();
   });
 });

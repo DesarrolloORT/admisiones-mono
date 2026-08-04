@@ -1,7 +1,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
-import { dirname, relative, resolve } from 'node:path';
+import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -85,6 +85,46 @@ export function replaceGeneratedDirectory(source, target) {
   }
 
   rmSync(source, { recursive: true, force: true });
+}
+
+export function readJsonFile(filePath) {
+  return JSON.parse(readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, ''));
+}
+
+export function normalizeContractsIndex(value) {
+  if (!Array.isArray(value)) {
+    throw new Error('/contracts must return an array.');
+  }
+
+  return value.map((item, index) => {
+    if (!item || typeof item !== 'object') {
+      throw new Error(`/contracts item ${index} must be an object.`);
+    }
+
+    const name = item.name;
+    const url = item.url;
+    if (typeof name !== 'string' || !/^[A-Za-z0-9._-]+\.json$/.test(name)) {
+      throw new Error(`/contracts item ${index} has an unsafe name.`);
+    }
+    if (basename(name) !== name) {
+      throw new Error(`/contracts item ${index} name must not contain a path.`);
+    }
+    if (typeof url !== 'string' || !url.startsWith('/contracts/') || url.includes('..')) {
+      throw new Error(`/contracts item ${index} has an unsafe url.`);
+    }
+
+    return { name, url };
+  });
+}
+
+export function normalizeContractDocument(value) {
+  if (typeof value === 'string') {
+    return JSON.parse(value.replace(/^\uFEFF/, ''));
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Contract document must be a JSON object.');
+  }
+  return value;
 }
 
 export function downloadJson(url, redirectCount = 0) {

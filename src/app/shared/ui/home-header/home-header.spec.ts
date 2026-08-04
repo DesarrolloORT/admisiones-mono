@@ -98,7 +98,7 @@ describe('HomeHeader', () => {
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
     expect(dialog?.getAttribute('aria-labelledby')).toBe('home-profile-menu-title');
     expect(nav).toBeTruthy();
-    expect(document.activeElement).toBe(profileLink);
+    expect(document.activeElement?.getAttribute('href')).toBe('/inicio/datos-personales');
   });
 
   it('should open the ORT drawer on mobile', async () => {

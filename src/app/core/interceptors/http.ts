@@ -107,6 +107,12 @@ function getSharedRefreshRequest(authSession: AuthSessionService): Observable<vo
   return activeRefreshRequest$;
 }
 
+function clearSessionOnUnauthorized(error: unknown, authSession: AuthSessionService): void {
+  if (error instanceof HttpErrorResponse && error.status === 401) {
+    authSession.clearSession();
+  }
+}
+
 export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
   const authSession = inject(AuthSessionService);
 
@@ -119,12 +125,7 @@ export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
       return getSharedRefreshRequest(authSession).pipe(
         switchMap(() =>
           next(request).pipe(
-            catchError(retryError => {
-              if (retryError instanceof HttpErrorResponse && retryError.status === 401) {
-                authSession.clearSession();
-              }
-              return throwError(() => retryError);
-            })
+            tap({ error: retryError => clearSessionOnUnauthorized(retryError, authSession) })
           )
         )
       );

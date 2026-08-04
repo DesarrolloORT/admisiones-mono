@@ -54,6 +54,8 @@ export function createInscripcionForms() {
       carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
       comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
       turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      // Solo aplica a Actualización profesional
+      seminarios: new FormControl<string[]>([], { nonNullable: true }),
     }),
     educationForm: new FormGroup({
       cursaSecundaria: new FormControl('', {
@@ -132,11 +134,7 @@ export function createInscripcionForms() {
       mediosPublicidad: new FormControl<string[]>([], { nonNullable: true }),
     }),
     workForm: new FormGroup({
-      situacionLaboral: new FormControl('', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
-      tipoJornadaLaboral: new FormControl('', { nonNullable: true }),
+      isCorporate: new FormControl<boolean | null>(null),
     }),
     identityForm: new FormGroup({
       vencimientoDocumento: new FormControl<Date | null>(null, Validators.required),
@@ -254,8 +252,7 @@ export function createSectionConfig(
       icon: 'business_center',
       form: forms.workForm,
       errorFields: [
-        { controlName: 'situacionLaboral', fieldId: '', label: 'Situación laboral' },
-        { controlName: 'tipoJornadaLaboral', fieldId: '', label: 'Tipo de jornada laboral' },
+        { controlName: 'isCorporate', fieldId: '', label: 'Titular de la inscripción' },
       ],
     },
     identidad: {

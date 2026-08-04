@@ -22,7 +22,7 @@ export class EmailConfirmation {
   protected readonly confirmation = this.getConfirmation();
 
   protected continue(): void {
-    void this.router.navigateByUrl(this.confirmation.actionRoute);
+    this.router.navigateByUrl(this.confirmation.actionRoute);
   }
 
   private getConfirmation(): EmailConfirmationData {

@@ -6,6 +6,7 @@ import { parseArgs as nodeParseArgs } from 'node:util';
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  readJsonFile,
   replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
@@ -34,6 +35,7 @@ const { values: flags } = nodeParseArgs({
   options: {
     env: { type: 'string', default: DEFAULTS.env },
     'swagger-path': { type: 'string', default: DEFAULTS.swaggerPath },
+    'swagger-file': { type: 'string' },
     output: { type: 'string', short: 'o', default: DEFAULTS.output },
     models: { type: 'string', default: DEFAULTS.models },
     check: { type: 'boolean', default: false },
@@ -51,6 +53,8 @@ Usage: node scripts/codegen/update-endpoints.js [options]
 Options:
   --env <file>            Environment file inside src/environments/ (default: ${DEFAULTS.env})
   --swagger-path <path>   Swagger doc path appended to the API origin (default: ${DEFAULTS.swaggerPath})
+  --swagger-file <file>   Local swagger.json (snapshot de fetch-api-spec.js);
+                          evita el acceso de red al backend
   -o, --output <dir>      Output directory for generated endpoints (default: ${DEFAULTS.output})
   --models <dir>          Directory with generated API models (default: ${DEFAULTS.models})
   --check                 Dry-run: report breaking changes without writing files
@@ -60,16 +64,27 @@ Options:
 }
 
 async function main() {
-  const swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
   const outputAbs = resolve(ROOT, flags.output);
   const outputRel = toProjectPath(flags.output);
 
-  console.log(`  env       : src/environments/${flags.env}`);
-  console.log(`  origin    : ${swaggerSource.origin}`);
-  console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
-  console.log(`  output    : ${outputRel}/\n`);
+  let swagger;
+  if (flags['swagger-file']) {
+    const swaggerFile = resolve(ROOT, flags['swagger-file']);
 
-  const swagger = await downloadJson(swaggerSource.swaggerUrl);
+    console.log(`  swagger   : ${toProjectPath(swaggerFile)} (snapshot local)`);
+    console.log(`  output    : ${outputRel}/\n`);
+
+    swagger = readJsonFile(swaggerFile);
+  } else {
+    const swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
+
+    console.log(`  env       : src/environments/${flags.env}`);
+    console.log(`  origin    : ${swaggerSource.origin}`);
+    console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
+    console.log(`  output    : ${outputRel}/\n`);
+
+    swagger = await downloadJson(swaggerSource.swaggerUrl);
+  }
   const generation = generateEndpointFiles(swagger, {
     outputDir: flags.output,
     modelsDir: flags.models,
@@ -110,7 +125,6 @@ async function main() {
         }
       }
       console.warn('');
-      printLlmFixPrompt(staleImports);
     }
 
     if (hasProblems) {
@@ -165,48 +179,7 @@ async function main() {
       }
     }
     console.warn('');
-    printLlmFixPrompt(staleImports);
   }
-}
-
-if (isMain) {
-  main().catch(error => {
-    console.error(`✗ ${error.message}`);
-    process.exit(1);
-  });
-}
-
-function printLlmFixPrompt(staleImports) {
-  const lines = [];
-  for (const stale of staleImports) {
-    for (const ref of stale.missing) {
-      if (ref.suggestion) {
-        lines.push(`  - ${stale.file}: replace "${ref.name}" with "${ref.suggestion}"`);
-      } else {
-        lines.push(
-          `  - ${stale.file}: remove import and usage of "${ref.name}" (endpoint no longer exists in the API)`
-        );
-      }
-    }
-  }
-
-  console.log('─'.repeat(70));
-  console.log('Prompt para LLM (copia y pega en Copilot Chat para fix automatico):');
-  console.log('─'.repeat(70));
-  console.log(`
-Los siguientes imports en mi proyecto referencian endpoints generados que
-ya no existen en el Swagger actual. Por favor actualiza cada archivo:
-${lines.join('\n')}
-
-Para cada caso:
-1. Actualiza el import al nuevo nombre y path correcto dentro de "generated/".
-2. Actualiza todas las referencias en el archivo al nuevo endpoint.
-3. Si no hay sugerencia de reemplazo, elimina el import y el codigo que lo usa,
-   y deja un comentario TODO indicando que el endpoint fue removido del API.
-
-Confirma antes de aplicar los cambios.
-`);
-  console.log('─'.repeat(70));
 }
 
 function detectBreakingChanges(outputDir, generation) {
@@ -1415,3 +1388,12 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
+
+// Se ejecuta al final del archivo: en modo --swagger-file main() corre de forma
+// sincrona y necesita que todas las constantes del modulo esten inicializadas.
+if (isMain) {
+  main().catch(error => {
+    console.error(`✗ ${error.message}`);
+    process.exit(1);
+  });
+}

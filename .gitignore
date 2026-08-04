@@ -6,6 +6,9 @@
 # Generated API layer (local-only, regenerate with: npm run update-api)
 src/app/shared/api/generated/
 
+# API spec snapshot (local-only, regenerate with: node scripts/codegen/fetch-api-spec.js)
+.api-spec/
+
 # Compiled output
 /dist
 /tmp
@@ -17,6 +20,7 @@ src/app/shared/api/generated/
 /docs-site/node_modules
 /docs-site/build
 /docs-site/.docusaurus
+/docs-site/static/deployment.json
 npm-debug.log
 yarn-error.log
 
