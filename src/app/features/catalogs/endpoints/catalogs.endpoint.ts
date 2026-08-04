@@ -13,6 +13,7 @@ import {
 } from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
 import type { DtoAnioBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoAnioBachilleratoCatalogo';
 import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoBachilleratoCatalogo';
+import type { DtoCarrerasPorNivelResponse } from 'src/app/shared/api/generated/models/dtoCarrerasPorNivelResponse';
 import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
 import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
 import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
@@ -60,29 +61,7 @@ export class CatalogsEndpoint {
   public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
     return this.api
       .request(getCatalogosCarrerasEndpoint, { queryParams: { propuestaAcademica } })
-      .pipe(
-        map(data =>
-          this.fromData(data, nivel =>
-            (nivel.escuelas ?? []).flatMap(escuela => {
-              const groups = escuela.seminarios?.length
-                ? escuela.seminarios
-                : [{ tieneSeminario: false, productos: escuela.productos }];
-
-              return groups.flatMap(group =>
-                (group.productos ?? []).map(producto => ({
-                  idProducto: producto.idProducto ?? 0,
-                  idProceso: producto.idProceso ?? null,
-                  idNivelProducto: nivel.idNivelProducto ?? 0,
-                  nombreProducto: producto.nombreProducto ?? '',
-                  nombreNivelProducto: nivel.nombreNivelProducto ?? '',
-                  nombreEscuela: escuela.nombreEscuela ?? '',
-                  tieneSeminario: group.tieneSeminario ?? false,
-                }))
-              );
-            })
-          ).flat()
-        )
-      );
+      .pipe(map(data => this.fromData(data, nivel => this.toCareers(nivel)).flat()));
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
@@ -178,6 +157,26 @@ export class CatalogsEndpoint {
 
   public clearCache(): void {
     this.api.clearCache();
+  }
+
+  private toCareers(nivel: DtoCarrerasPorNivelResponse): Career[] {
+    return (nivel.escuelas ?? []).flatMap(escuela => {
+      const groups = escuela.seminarios?.length
+        ? escuela.seminarios
+        : [{ tieneSeminario: false, productos: escuela.productos }];
+
+      return groups.flatMap(group =>
+        (group.productos ?? []).map(producto => ({
+          idProducto: producto.idProducto ?? 0,
+          idProceso: producto.idProceso ?? null,
+          idNivelProducto: nivel.idNivelProducto ?? 0,
+          nombreProducto: producto.nombreProducto ?? '',
+          nombreNivelProducto: nivel.nombreNivelProducto ?? '',
+          nombreEscuela: escuela.nombreEscuela ?? '',
+          tieneSeminario: group.tieneSeminario ?? false,
+        }))
+      );
+    });
   }
 
   private toLocationCountry(item: DtoPaisEstadoCiudadResponse): LocationCountry {
