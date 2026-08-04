@@ -174,17 +174,19 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
     universidadConsideradaIds: informedOtherUniversities
       ? toNumberArray(decision.universidadesInformadas.value)
       : null,
-    universidadConsideradaOtros:
-      informedOtherUniversities && hasOtherOption(decision.universidadesInformadas.value)
-        ? toSingleTextArray(decision.universidadInformadaOtro.value)
-        : null,
+    universidadConsideradaOtros: toOtherOptionTextArray(
+      informedOtherUniversities,
+      decision.universidadesInformadas.value,
+      decision.universidadInformadaOtro.value
+    ),
     universidadEducacionSuperiorIds: hasPreviousHigherEducation
       ? toNumberArray(education.universidadesEducacionSuperior.value)
       : null,
-    universidadEducacionSuperiorOtros:
-      hasPreviousHigherEducation && hasOtherOption(education.universidadesEducacionSuperior.value)
-        ? toSingleTextArray(education.universidadEducacionSuperiorOtro.value)
-        : null,
+    universidadEducacionSuperiorOtros: toOtherOptionTextArray(
+      hasPreviousHigherEducation,
+      education.universidadesEducacionSuperior.value,
+      education.universidadEducacionSuperiorOtro.value
+    ),
     publicidadOrtIds: remembersAdvertising
       ? toNumberArray(experience.mediosPublicidad.value)
       : null,
@@ -327,6 +329,14 @@ function toFirstText(values: readonly string[]): string {
 function toSingleTextArray(value: string): string[] | null {
   const trimmed = value.trim();
   return trimmed ? [trimmed] : null;
+}
+
+function toOtherOptionTextArray(
+  enabled: boolean,
+  selectedValues: readonly string[],
+  otherValue: string
+): string[] | null {
+  return enabled && hasOtherOption(selectedValues) ? toSingleTextArray(otherValue) : null;
 }
 
 function hasOtherOption(values: readonly string[]): boolean {
