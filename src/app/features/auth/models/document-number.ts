@@ -13,7 +13,7 @@ export function isCedulaDocumentType(documentType: string): boolean {
 export function cleanDocumentNumber(documentType: string, documentNumber: string): string {
   const trimmed = documentNumber.trim();
 
-  return isCedulaDocumentType(documentType) ? trimmed.replace(/\D/g, '') : trimmed;
+  return isCedulaDocumentType(documentType) ? trimmed.replaceAll(/\D/g, '') : trimmed;
 }
 
 export function formatDocumentForBackend(documentType: string, documentNumber: string): string {

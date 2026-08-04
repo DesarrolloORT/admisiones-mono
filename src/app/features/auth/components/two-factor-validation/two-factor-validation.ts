@@ -51,7 +51,7 @@ export class TwoFactorValidation {
 
   protected handleInput(index: number, event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    const digit = inputEl.value.replace(/\D/g, '').slice(-1);
+    const digit = inputEl.value.replaceAll(/\D/g, '').slice(-1);
 
     this.form.at(index).setValue(digit);
     inputEl.value = digit;
@@ -88,7 +88,7 @@ export class TwoFactorValidation {
 
   protected handlePaste(event: ClipboardEvent): void {
     const text = event.clipboardData?.getData('text') ?? '';
-    const digits = text.replace(/\D/g, '').slice(0, CODE_LENGTH);
+    const digits = text.replaceAll(/\D/g, '').slice(0, CODE_LENGTH);
 
     if (!digits) {
       return;

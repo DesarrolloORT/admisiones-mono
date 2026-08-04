@@ -129,7 +129,7 @@ export class RegisterFlowFacade {
       }
 
       if (flow === 'user-exists' || flow === 'application-exists') {
-        this.showGoToLoginSnackbar(result.message);
+        this.showGoToLoginSnackbar(result.message ?? undefined);
         return;
       }
 
@@ -315,8 +315,7 @@ export class RegisterFlowFacade {
     this.snackbar.error(message);
   }
 
-  private showGoToLoginSnackbar(backendMessage: string | null): void {
-    const message = backendMessage ?? 'Ya existe un registro con este documento.';
+  private showGoToLoginSnackbar(message = 'Ya existe un registro con este documento.'): void {
     this.snackbar.show({
       message,
       variant: 'warning',

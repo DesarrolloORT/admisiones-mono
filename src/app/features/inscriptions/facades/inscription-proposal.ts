@@ -134,15 +134,13 @@ export class InscripcionProposalFacade {
       const selected = this.academicForm.controls.seminarios.value
         .map(value => seminars.find(seminar => seminar.idOferta.toString() === value))
         .filter(seminar => seminar !== undefined);
-      if (selected.length !== 0) {
-        return {
-          idOfertas: selected.map(seminar => seminar!.idOferta),
-          idProcesoSeleccionado: selected[0]!.idProceso,
-          idProducto,
-        };
-      } else {
-        return null;
-      }
+      if (selected.length === 0) return null;
+
+      return {
+        idOfertas: selected.map(seminar => seminar!.idOferta),
+        idProcesoSeleccionado: selected[0]!.idProceso,
+        idProducto,
+      };
     }
 
     const idProcesoSeleccionado = toNullableNumber(this.academicForm.controls.comienzo.value);
