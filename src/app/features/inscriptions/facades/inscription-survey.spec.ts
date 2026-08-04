@@ -713,6 +713,7 @@ describe('InscripcionSurveyFacade', () => {
       ]
     );
 
+    forms.academicForm.controls.tipoPropuesta.setValue('1');
     forms.academicForm.controls.carrera.setValue('100');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
@@ -759,6 +760,7 @@ describe('InscripcionSurveyFacade', () => {
       ]
     );
 
+    forms.academicForm.controls.tipoPropuesta.setValue('2');
     forms.academicForm.controls.carrera.setValue('200');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
