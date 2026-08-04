@@ -206,8 +206,7 @@ export class TelemetryService {
 
     const capture = (): void => {
       const navigation = performance.getEntriesByType('navigation')[0] as
-        | PerformanceNavigationTiming
-        | undefined;
+        PerformanceNavigationTiming | undefined;
 
       if (!navigation) {
         return;
@@ -425,7 +424,7 @@ export class TelemetryService {
   }
 
   private headerValue(value: string): string {
-    return value.replace(/[\r\n]/g, ' ').slice(0, HEADER_VALUE_LIMIT);
+    return value.replaceAll(/[\r\n]/g, ' ').slice(0, HEADER_VALUE_LIMIT);
   }
 
   private errorName(error: unknown): string {
