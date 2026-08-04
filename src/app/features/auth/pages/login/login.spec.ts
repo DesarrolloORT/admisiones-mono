@@ -3,7 +3,6 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthSessionService } from '../../services/auth-session';
 import { Login } from './login';
 
@@ -14,8 +13,6 @@ describe('Login', () => {
     login: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
-  let navigateSpy: ReturnType<typeof vi.spyOn>;
-  let snackbarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     authMock = {
@@ -23,28 +20,19 @@ describe('Login', () => {
         of({
           kind: 'authenticated',
           session: {
-            token: 'token-123',
             documentType: 'CI',
             documentNumber: '12345678',
             primerNombre: 'Ana',
-            expiresAt: null,
           },
         })
       ),
     };
-    snackbarMock = { error: vi.fn() };
-
     TestBed.configureTestingModule({
       imports: [Login],
-      providers: [
-        provideRouter([]),
-        { provide: AuthSessionService, useValue: authMock },
-        { provide: SnackbarHandler, useValue: snackbarMock },
-      ],
+      providers: [provideRouter([]), { provide: AuthSessionService, useValue: authMock }],
     });
 
     navigateByUrlSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -95,7 +83,7 @@ describe('Login', () => {
     expect(authMock.login).not.toHaveBeenCalled();
   });
 
-  it('should show auth errors in snackbar', () => {
+  it('should show auth errors inline', () => {
     authMock.login.mockReturnValue(
       throwError(() => ({
         status: 401,
@@ -113,10 +101,12 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(snackbarMock.error).toHaveBeenCalledWith('Credenciales inválidas.');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Credenciales inválidas.');
   });
 
-  it('should navigate to email confirmation with state when 2FA is required', () => {
+  it('should navigate to email confirmation without putting identity in router state', () => {
     authMock.login.mockReturnValue(
       of({
         kind: 'twoFactorRequired',
@@ -133,15 +123,7 @@ describe('Login', () => {
 
     component['submit']();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/confirmacion-correo/verificar-codigo'], {
-      state: {
-        email: 'c******a@gmail.******',
-        sessionId: 'ab4df653422a4c19be2867c08355fa27',
-        documentType: 'CI',
-        documentNumber: '11111111',
-      },
-    });
-    expect(navigateByUrlSpy).not.toHaveBeenCalled();
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/verificar-codigo');
     expect(component['form'].controls.password.value).toBe('');
   });
 });

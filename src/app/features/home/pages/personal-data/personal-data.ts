@@ -2,14 +2,20 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  CUSTOM_ELEMENTS_SCHEMA,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AsyncValidatorFn,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
-import type { PhoneInputValue } from '@desarrolloort/components';
 import {
   findCountryByIso2,
   getIso2Codes,
@@ -17,12 +23,13 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtPhoneInputValue,
   ortPhoneValidator,
   OrtSelectModule,
   OrtSkeletonModule,
 } from '@desarrolloort/components';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
@@ -35,7 +42,8 @@ import {
 } from 'src/app/shared/forms/matching-fields.validator';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
-import { AccountService, PersonalDataRecord } from '../../../auth/services/account';
+import type { PersonalDataRecord, PhoneValidationPayload } from '../../../auth/services/account';
+import { AccountService } from '../../../auth/services/account';
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
 
 interface PersonalDataForm {
@@ -51,7 +59,7 @@ interface PersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<PhoneInputValue | null>;
+  phone: FormControl<OrtPhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }
@@ -67,6 +75,7 @@ interface PersonalDataForm {
     OrtSkeletonModule,
     ReactiveFormsModule,
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './personal-data.html',
   styleUrl: './personal-data.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -91,8 +100,10 @@ export class PersonalData implements OnInit {
       stateCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       cityCode: new FormControl('', { nonNullable: true }),
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      phone: new FormControl<PhoneInputValue | null>(null, {
+      phone: new FormControl<OrtPhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
+        asyncValidators: [this.phoneValidator()],
+        updateOn: 'blur',
       }),
       email: new FormControl('', {
         nonNullable: true,
@@ -119,6 +130,7 @@ export class PersonalData implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
+  protected readonly identityRestricted = signal(false);
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
@@ -191,13 +203,13 @@ export class PersonalData implements OnInit {
 
     this.account
       .updatePersonalData({
-        countryCode: this.toNullableNumber(value.countryCode),
-        stateCode: this.toNullableNumber(value.stateCode),
-        cityCode: this.toNullableNumber(value.cityCode),
-        address: value.address,
-        phone: this.toBackendPhone(value.phone),
-        email: value.email,
-        emailVerification: value.emailConfirmation,
+        countryCode: this.toOptionalNumber(value.countryCode),
+        stateCode: this.toOptionalNumber(value.stateCode),
+        cityCode: this.toOptionalNumber(value.cityCode),
+        address: value.address.trim(),
+        phone: this.toBackendPhone(value.phone).trim(),
+        email: value.email.trim(),
+        emailVerification: value.emailConfirmation.trim(),
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
@@ -216,7 +228,7 @@ export class PersonalData implements OnInit {
   }
 
   protected cancel(): void {
-    void this.router.navigateByUrl('/inicio');
+    this.router.navigateByUrl('/inicio');
   }
 
   private loadData(): void {
@@ -239,6 +251,7 @@ export class PersonalData implements OnInit {
   }
 
   private patchForm(data: PersonalDataRecord): void {
+    this.identityRestricted.set(data.identityRestricted);
     this.selectedCountryCode.set(data.countryCode);
     this.selectedStateCode.set(data.stateCode);
 
@@ -272,7 +285,11 @@ export class PersonalData implements OnInit {
     return value ? Number(value) : null;
   }
 
-  private toPhoneInputValue(value: string): PhoneInputValue | null {
+  private toOptionalNumber(value: string): number | undefined {
+    return value ? Number(value) : undefined;
+  }
+
+  private toPhoneInputValue(value: string): OrtPhoneInputValue | null {
     const trimmed = value.trim();
 
     if (!trimmed) {
@@ -293,7 +310,7 @@ export class PersonalData implements OnInit {
     return { iso2: 'UY', number, numberE164: `+598${number}` };
   }
 
-  private toBackendPhone(value: PhoneInputValue | null): string {
+  private toBackendPhone(value: OrtPhoneInputValue | null): string {
     if (!value) {
       return '';
     }
@@ -303,6 +320,37 @@ export class PersonalData implements OnInit {
     }
 
     return (value.numberE164 || value.number).trim();
+  }
+
+  private phoneValidator(): AsyncValidatorFn {
+    return control => {
+      const value = control.value as OrtPhoneInputValue | null;
+      if (!value?.number.trim()) {
+        return of(null);
+      }
+
+      return this.account.validatePhone(this.toPhoneValidationPayload(value)).pipe(
+        map(isValid => (isValid ? null : { phone: true })),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  private toPhoneValidationPayload(value: OrtPhoneInputValue): PhoneValidationPayload {
+    const iso2 = value.iso2 || null;
+    const country = this.findPhoneCountryByIso2(iso2);
+
+    return {
+      iso2,
+      countryPrefix: country?.prefix ?? null,
+      number: value.number.trim(),
+      numberE164: value.numberE164?.trim() || null,
+    };
+  }
+
+  private findPhoneCountryByIso2(iso2: string | null) {
+    const code = getIso2Codes().find(item => item === iso2);
+    return code ? findCountryByIso2(code) : undefined;
   }
 
   private findPhoneCountryByPrefix(digits: string) {

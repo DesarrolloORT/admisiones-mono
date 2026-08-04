@@ -23,6 +23,8 @@
         inputmode="numeric"
         maxlength="1"
         type="text"
+        [attr.aria-describedby]="error() ? 'tfv-error' : null"
+        [attr.aria-invalid]="error() ? true : null"
         [attr.aria-label]="'Dígito ' + ($index + 1) + ' de 6'"
         [formControl]="form.controls[$index]"
         (input)="handleInput($index, $event)"
@@ -32,7 +34,7 @@
     </fieldset>
 
     @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
+    <p class="error" id="tfv-error" role="alert">{{ error() }}</p>
     }
 
     <footer class="footer">
@@ -49,11 +51,7 @@
         Debería llegarte el código máximo en un minuto.
         <br />
         ¿No lo recibiste?
-        <button
-          class="resend-link"
-          type="button"
-          [disabled]="!canResend() || isSubmitting()"
-          (click)="onResend()">
+        <button class="resend-link" type="button" [disabled]="isSubmitting()" (click)="onResend()">
           Enviar un nuevo código.
         </button>
       </p>

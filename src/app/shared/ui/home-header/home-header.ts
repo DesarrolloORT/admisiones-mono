@@ -39,10 +39,10 @@ export class HomeHeader {
   );
 
   @ViewChild('profileButton')
-  private profileButton?: ElementRef<HTMLButtonElement>;
+  private readonly profileButton?: ElementRef<HTMLButtonElement>;
 
   @ViewChild('firstProfileMenuItem')
-  private firstProfileMenuItem?: ElementRef<HTMLAnchorElement>;
+  private readonly firstProfileMenuItem?: ElementRef<HTMLAnchorElement>;
 
   protected toggleProfileMenu(): void {
     if (this.profileMenuOpen()) {

@@ -32,7 +32,7 @@ la app deberia consumir:
 }
 ```
 
-En esta app, `ApiHttpClient` activa `unwrapOperationResultContext()` por defecto para sus requests. Por eso los adapters de feature reciben directamente `data`.
+En esta app, `ApiHttpClient` activa `unwrapOperationResultContext()` por defecto para sus requests. Por eso los adapters de feature reciben directamente `data` con tipo de dominio tecnico ya unwrappeado: `api.data` para un item, `api.list` para arrays, `requestWithMessage` solo cuando se necesita `message`, y `void` para comandos sin data util.
 
 ## Camino de error
 
@@ -80,7 +80,15 @@ Motivo:
 - mantiene el unwrap automatico para el camino normal de API de la app;
 - concentra la decision en una sola capa.
 
+`ApiHttpClient` tambien aplica `suppressGlobalErrorContext()` por defecto. La regla de la app es que los errores HTTP via `ApiHttpClient` se reemiten normalizados para que la pantalla o facade decida como mostrarlos, sin disparar automaticamente un snackbar global.
+
+Si una request necesita comportamiento especifico, debe pasar su propio `HttpContext`. Ejemplo: login usa `CUSTOM_ERROR_MESSAGES` para traducir `401`, `423` y otros estados propios del flujo.
+
+`AppApiErrorNotifier` ignora `401` y `404` para el snackbar global. El `401` se maneja por el flujo de sesion/login y el `404` queda como caso esperado para pantallas que consultan recursos opcionales.
+
 Los endpoints de feature no deberian crear errores propios para HTTP. Errores como `AuthRequestError`, `CatalogRequestError` o `DocumentRecognitionRequestError` duplican responsabilidad de la libreria y no deberian volver.
+
+Los archivos en `src/app/shared/api/generated/endpoints/**` son autogenerados. No se editan para agregar reglas de manejo de errores. El script de generacion solo debe describir contratos de API (`method`, `path`, tipos y `requiresAuth`). Las decisiones de UI, notificacion o contexto HTTP viven en `ApiHttpClient`, facades o pantallas.
 
 Las pantallas pueden leer errores asi:
 
@@ -92,21 +100,28 @@ if (isNormalizedApiError(error)) {
 
 Eso no duplica el snackbar global porque no vuelve a llamar al handler de la libreria; solo usa el error ya normalizado que reemitio el interceptor.
 
+## Alert vs snackbar
+
+Seguimos la norma de `ngx-utils`:
+
+- `Alert`: mensaje persistente dentro del layout. Usar cuando el usuario debe leer el error antes de continuar, por ejemplo login invalido, validacion de formulario, datos faltantes o estados bloqueantes de un flujo.
+- `Snackbar`: mensaje breve en overlay. Usar solo para feedback temporal de una accion o evento no bloqueante, por ejemplo guardado exitoso o elemento eliminado.
+
+En esta app, el snackbar compartido se muestra centrado abajo tanto en mobile como desktop. No debe usarse para errores que pertenecen a un formulario o pantalla concreta.
+
+El login muestra errores con `app-error-alert` inline. Si otro flujo necesita el mismo comportamiento, debe reutilizar `ErrorAlert` o el patron de estado local de error, no llamar manualmente a `SnackbarHandler.error(...)`.
+
 ## Ajustes que todavia conviene evaluar
 
-1. Tipado de clientes generados
-
-Idealmente el tipo del cliente deberia reflejar que `OperationResult<T>` emite `T` en el camino feliz. Hoy esta app lo resuelve en `ApiHttpClient`, pero podria vivir en una abstraccion compartida si otras apps repiten el mismo patron.
-
-2. `isOperationResult` y `httpCode`
+1. `isOperationResult` y `httpCode`
 
 Los modelos generados marcan `httpCode` como opcional. Si el backend puede omitirlo en respuestas exitosas, conviene que la libreria detecte `OperationResult` por `success` + `data`, no solo por `httpCode`.
 
-3. Politicas por `errorCode`
+2. Politicas por `errorCode`
 
 Hoy la politica principal es por status. Para reglas funcionales podria ser util poder decidir por `errorCode`, por ejemplo `USER_EXISTS`, `CAPTCHA_INVALID`, `DOCUMENT_REQUIRES_REVIEW`.
 
-4. Helpers para UI inline
+3. Helpers para UI inline
 
 `normalize(...)` ya permite leer el error sin efectos. Podria ser util exponer helpers pequenos para patrones repetidos:
 

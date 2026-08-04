@@ -6,4 +6,3 @@ describe('register step view models', () => {
     expect(REGISTER_STEP_VIEW_MODELS.personal.stepLabel).toBeNull();
   });
 });
-

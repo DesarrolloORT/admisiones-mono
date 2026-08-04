@@ -1,10 +1,13 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
 import {
   DEFAULT_ENVIRONMENT_FILE,
   downloadJson,
+  readJsonFile,
+  replaceGeneratedDirectory,
   resolveSwaggerSource,
   ROOT,
   toProjectPath,
@@ -24,7 +27,7 @@ const MAX_INLINE_SCHEMA_DEPTH = 4;
 const GENERATED_HEADER = `// -----------------------------------------------------------------------------
 // AUTO-GENERATED FILE.
 // Do not edit manually.
-// Run: npm run update-endpoints
+// Run: npm run update-api
 // -----------------------------------------------------------------------------
 `;
 
@@ -32,6 +35,7 @@ const { values: flags } = nodeParseArgs({
   options: {
     env: { type: 'string', default: DEFAULTS.env },
     'swagger-path': { type: 'string', default: DEFAULTS.swaggerPath },
+    'swagger-file': { type: 'string' },
     output: { type: 'string', short: 'o', default: DEFAULTS.output },
     models: { type: 'string', default: DEFAULTS.models },
     check: { type: 'boolean', default: false },
@@ -40,13 +44,17 @@ const { values: flags } = nodeParseArgs({
   strict: false,
 });
 
-if (flags.help) {
+const isMain = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+
+if (isMain && flags.help) {
   console.log(`
 Usage: node scripts/codegen/update-endpoints.js [options]
 
 Options:
   --env <file>            Environment file inside src/environments/ (default: ${DEFAULTS.env})
   --swagger-path <path>   Swagger doc path appended to the API origin (default: ${DEFAULTS.swaggerPath})
+  --swagger-file <file>   Local swagger.json (snapshot de fetch-api-spec.js);
+                          evita el acceso de red al backend
   -o, --output <dir>      Output directory for generated endpoints (default: ${DEFAULTS.output})
   --models <dir>          Directory with generated API models (default: ${DEFAULTS.models})
   --check                 Dry-run: report breaking changes without writing files
@@ -56,16 +64,27 @@ Options:
 }
 
 async function main() {
-  const swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
   const outputAbs = resolve(ROOT, flags.output);
   const outputRel = toProjectPath(flags.output);
 
-  console.log(`  env       : src/environments/${flags.env}`);
-  console.log(`  origin    : ${swaggerSource.origin}`);
-  console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
-  console.log(`  output    : ${outputRel}/\n`);
+  let swagger;
+  if (flags['swagger-file']) {
+    const swaggerFile = resolve(ROOT, flags['swagger-file']);
 
-  const swagger = await downloadJson(swaggerSource.swaggerUrl);
+    console.log(`  swagger   : ${toProjectPath(swaggerFile)} (snapshot local)`);
+    console.log(`  output    : ${outputRel}/\n`);
+
+    swagger = readJsonFile(swaggerFile);
+  } else {
+    const swaggerSource = resolveSwaggerSource(flags.env, flags['swagger-path']);
+
+    console.log(`  env       : src/environments/${flags.env}`);
+    console.log(`  origin    : ${swaggerSource.origin}`);
+    console.log(`  swagger   : ${swaggerSource.swaggerUrl}`);
+    console.log(`  output    : ${outputRel}/\n`);
+
+    swagger = await downloadJson(swaggerSource.swaggerUrl);
+  }
   const generation = generateEndpointFiles(swagger, {
     outputDir: flags.output,
     modelsDir: flags.models,
@@ -106,7 +125,6 @@ async function main() {
         }
       }
       console.warn('');
-      printLlmFixPrompt(staleImports);
     }
 
     if (hasProblems) {
@@ -129,14 +147,15 @@ async function main() {
     process.exit(0);
   }
 
-  if (existsSync(outputAbs)) {
-    rmSync(outputAbs, { recursive: true, force: true });
-  }
-  mkdirSync(outputAbs, { recursive: true });
+  const tempOutputAbs = resolve(ROOT, `${flags.output}.tmp-${process.pid}`);
+  rmSync(tempOutputAbs, { recursive: true, force: true });
+  mkdirSync(tempOutputAbs, { recursive: true });
 
   for (const file of generation.files) {
-    writeFileSync(resolve(outputAbs, file.name), await formatTypeScript(file.content), 'utf-8');
+    writeFileSync(resolve(tempOutputAbs, file.name), await formatTypeScript(file.content), 'utf-8');
   }
+
+  replaceGeneratedDirectory(tempOutputAbs, outputAbs);
 
   if (generation.warnings.length > 0) {
     console.warn('\nWarnings:');
@@ -160,46 +179,7 @@ async function main() {
       }
     }
     console.warn('');
-    printLlmFixPrompt(staleImports);
   }
-}
-
-main().catch(error => {
-  console.error(`✗ ${error.message}`);
-  process.exit(1);
-});
-
-function printLlmFixPrompt(staleImports) {
-  const lines = [];
-  for (const stale of staleImports) {
-    for (const ref of stale.missing) {
-      if (ref.suggestion) {
-        lines.push(`  - ${stale.file}: replace "${ref.name}" with "${ref.suggestion}"`);
-      } else {
-        lines.push(
-          `  - ${stale.file}: remove import and usage of "${ref.name}" (endpoint no longer exists in the API)`
-        );
-      }
-    }
-  }
-
-  console.log('─'.repeat(70));
-  console.log('Prompt para LLM (copia y pega en Copilot Chat para fix automatico):');
-  console.log('─'.repeat(70));
-  console.log(`
-Los siguientes imports en mi proyecto referencian endpoints generados que
-ya no existen en el Swagger actual. Por favor actualiza cada archivo:
-${lines.join('\n')}
-
-Para cada caso:
-1. Actualiza el import al nuevo nombre y path correcto dentro de "generated/".
-2. Actualiza todas las referencias en el archivo al nuevo endpoint.
-3. Si no hay sugerencia de reemplazo, elimina el import y el codigo que lo usa,
-   y deja un comentario TODO indicando que el endpoint fue removido del API.
-
-Confirma antes de aplicar los cambios.
-`);
-  console.log('─'.repeat(70));
 }
 
 function detectBreakingChanges(outputDir, generation) {
@@ -431,7 +411,7 @@ async function formatTypeScript(content) {
   }
 }
 
-function generateEndpointFiles(swagger, options) {
+export function generateEndpointFiles(swagger, options) {
   if (
     !swagger ||
     typeof swagger !== 'object' ||
@@ -488,10 +468,6 @@ function generateEndpointFiles(swagger, options) {
 
       if (endpoint.payloadType) {
         group.payloadTypes.push(endpoint.payloadType);
-      }
-
-      if (endpoint.responseExportType) {
-        group.responseTypes.push(endpoint.responseExportType);
       }
     }
   }
@@ -576,12 +552,6 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
 `;
 
   const payloadType = createPayloadType(operation, method, constantName, tagName, context.swagger);
-  const responseExportType = createExportedResponseType(
-    operation,
-    constantName,
-    tagName,
-    context.swagger
-  );
 
   return {
     code,
@@ -590,7 +560,6 @@ function createEndpoint(path, method, operation, pathLevelParameters, context) {
     imports,
     tagName,
     payloadType,
-    responseExportType,
   };
 }
 
@@ -607,7 +576,6 @@ function getOrCreateGroup(groups, fileName, tagName) {
     typeImports: new Map(),
     endpoints: [],
     payloadTypes: [],
-    responseTypes: [],
   };
   groups.set(fileName, group);
   return group;
@@ -628,15 +596,10 @@ function renderEndpointFile(group) {
       ? `\n// ---------------------------------------------------------------------------\n// Payload types (auto-generated, adapter-safe — no direct backend DTO exposure)\n// ---------------------------------------------------------------------------\n\n${group.payloadTypes.join('\n')}`
       : '';
 
-  const responseSection =
-    group.responseTypes.length > 0
-      ? `\n// ---------------------------------------------------------------------------\n// Response types (auto-generated, adapter-safe — no direct backend DTO exposure)\n// ---------------------------------------------------------------------------\n\n${group.responseTypes.join('\n')}`
-      : '';
-
   return `${GENERATED_HEADER}
 ${imports.join('\n')}
 
-${group.endpoints.join('\n')}${payloadSection}${responseSection}`;
+${group.endpoints.join('\n')}${payloadSection}`;
 }
 
 function renderIndexFile(fileNames) {
@@ -707,37 +670,41 @@ function createResponseType(operation, context, indentSpaces) {
     return 'unknown';
   }
 
-  const responseCode = selectMainResponseCode(responses);
-  if (!responseCode) {
+  const responseCodes = selectSuccessResponseCodes(responses);
+  if (responseCodes.length === 0) {
     context.warnings.push(`No 2xx response documented for ${context.source}.`);
     return 'unknown';
   }
 
+  const responseTypes = responseCodes.map(responseCode =>
+    createResponseTypeForCode(responseCode, responses[responseCode], context, indentSpaces)
+  );
+  const uniqueResponseTypes = [...new Set(responseTypes)];
+
+  return uniqueResponseTypes.join(' | ');
+}
+
+function createResponseTypeForCode(responseCode, rawResponse, context, indentSpaces) {
   if (responseCode === '204') {
     return 'void';
   }
 
-  const response = resolveMaybeRef(context.swagger, responses[responseCode]);
+  const response = resolveMaybeRef(context.swagger, rawResponse);
   const contentItem = pickContentItem(response?.content);
   if (!contentItem?.schema) {
-    context.warnings.push(`Response schema could not be resolved for ${context.source}.`);
+    context.warnings.push(
+      `Response schema could not be resolved for ${context.source} (${responseCode}).`
+    );
     return 'unknown';
   }
 
   return schemaToType(contentItem.schema, context, indentSpaces);
 }
 
-function selectMainResponseCode(responses) {
-  const preferred = ['200', '201', '204'];
-  for (const code of preferred) {
-    if (responses[code]) {
-      return code;
-    }
-  }
-
+function selectSuccessResponseCodes(responses) {
   return Object.keys(responses)
     .filter(code => /^2\d\d$/.test(code))
-    .sort()[0];
+    .sort((a, b) => Number(a) - Number(b));
 }
 
 function pickContentItem(content) {
@@ -982,123 +949,6 @@ function derivePayloadName(constantName, tagName) {
 
   const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
   return `${name}Payload`;
-}
-
-function createExportedResponseType(operation, constantName, tagName, swagger) {
-  const responses = operation.responses;
-  if (!responses || typeof responses !== 'object') {
-    return null;
-  }
-
-  const responseCode = selectMainResponseCode(responses);
-  if (!responseCode || responseCode === '204') {
-    return null;
-  }
-
-  const response = resolveMaybeRef(swagger, responses[responseCode]);
-  const contentItem = pickContentItem(response?.content);
-  if (!contentItem?.schema) {
-    return null;
-  }
-
-  const schema = contentItem.schema.$ref
-    ? resolveRef(swagger, contentItem.schema.$ref)
-    : contentItem.schema;
-
-  if (!schema || (!schema.properties && !schema.allOf)) {
-    return null;
-  }
-
-  const responseName = deriveResponseName(constantName, tagName);
-  const body = schemaToInlineInterface(schema, swagger, 2);
-
-  let output = `/** Auto-generated response for \`${constantName}\`. */\nexport interface ${responseName} ${body}\n`;
-
-  // If response has a `data` array property, also emit a named Item type
-  const merged = mergeSchemaAllOf(schema, swagger);
-  const dataProperty = merged.properties?.data;
-  if (dataProperty) {
-    const dataPropSchema = dataProperty.$ref
-      ? resolveRef(swagger, dataProperty.$ref)
-      : dataProperty;
-    const dataType = getSchemaType(dataPropSchema);
-
-    if (dataType === 'array' && dataPropSchema.items) {
-      const itemSchema = dataPropSchema.items.$ref
-        ? resolveRef(swagger, dataPropSchema.items.$ref)
-        : dataPropSchema.items;
-
-      if (itemSchema && (itemSchema.properties || itemSchema.allOf)) {
-        const itemName = responseName.replace(/Response$/, 'Item');
-        const itemBody = schemaToInlineInterface(itemSchema, swagger, 2);
-        output += `\n/** Data item of \`${responseName}\`. */\nexport interface ${itemName} ${itemBody}\n`;
-
-        // Emit nested array sub-items (one level deep)
-        const itemMerged = mergeSchemaAllOf(itemSchema, swagger);
-        if (itemMerged.properties) {
-          for (const [propName, propSchema] of Object.entries(itemMerged.properties)) {
-            const resolved = propSchema.$ref ? resolveRef(swagger, propSchema.$ref) : propSchema;
-            if (getSchemaType(resolved) === 'array' && resolved.items) {
-              const subItemSchema = resolved.items.$ref
-                ? resolveRef(swagger, resolved.items.$ref)
-                : resolved.items;
-              if (subItemSchema && (subItemSchema.properties || subItemSchema.allOf)) {
-                const subItemName = `${itemName}${propName.charAt(0).toUpperCase()}${propName.slice(1)}`;
-                const subItemBody = schemaToInlineInterface(subItemSchema, swagger, 2);
-                output += `\n/** Nested \`${propName}\` item within \`${itemName}\`. */\nexport interface ${subItemName} ${subItemBody}\n`;
-
-                // One more nesting level for deeply nested arrays (e.g. estado → ciudad)
-                const subMerged = mergeSchemaAllOf(subItemSchema, swagger);
-                if (subMerged.properties) {
-                  for (const [subPropName, subPropSchema] of Object.entries(subMerged.properties)) {
-                    const subResolved = subPropSchema.$ref
-                      ? resolveRef(swagger, subPropSchema.$ref)
-                      : subPropSchema;
-                    if (getSchemaType(subResolved) === 'array' && subResolved.items) {
-                      const deepSchema = subResolved.items.$ref
-                        ? resolveRef(swagger, subResolved.items.$ref)
-                        : subResolved.items;
-                      if (deepSchema && (deepSchema.properties || deepSchema.allOf)) {
-                        const deepName = `${subItemName}${subPropName.charAt(0).toUpperCase()}${subPropName.slice(1)}`;
-                        const deepBody = schemaToInlineInterface(deepSchema, swagger, 2);
-                        output += `\n/** Nested \`${subPropName}\` item within \`${subItemName}\`. */\nexport interface ${deepName} ${deepBody}\n`;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return output;
-}
-
-function deriveResponseName(constantName, tagName) {
-  const methodMatch = constantName.match(/^(get|post|put|patch|delete)/);
-  const method = methodMatch ? methodMatch[1] : '';
-  const base = constantName.replace(/Endpoint$/, '').replace(/^(get|post|put|patch|delete)/, '');
-
-  const tagPrefix = tagName.charAt(0).toUpperCase() + tagName.slice(1).toLowerCase();
-  const normalizedBase = base.charAt(0).toUpperCase() + base.slice(1);
-
-  const withoutTag =
-    normalizedBase.startsWith(tagPrefix) && normalizedBase.length > tagPrefix.length
-      ? normalizedBase.slice(tagPrefix.length)
-      : normalizedBase;
-
-  const name = withoutTag.charAt(0).toUpperCase() + withoutTag.slice(1);
-
-  // Prefix with capitalized method for non-GET to avoid collisions when
-  // multiple HTTP methods share the same path (e.g. GET vs PUT /DatosPersona).
-  if (method && method !== 'get') {
-    const methodPrefix = method.charAt(0).toUpperCase() + method.slice(1);
-    return `${methodPrefix}${name}Response`;
-  }
-  return `${name}Response`;
 }
 
 function schemaToInlineInterface(schema, swagger, indentSpaces, visited = new Set(), depth = 0) {
@@ -1538,3 +1388,12 @@ const RESERVED_WORDS = new Set([
   'with',
   'yield',
 ]);
+
+// Se ejecuta al final del archivo: en modo --swagger-file main() corre de forma
+// sincrona y necesita que todas las constantes del modulo esten inicializadas.
+if (isMain) {
+  main().catch(error => {
+    console.error(`✗ ${error.message}`);
+    process.exit(1);
+  });
+}

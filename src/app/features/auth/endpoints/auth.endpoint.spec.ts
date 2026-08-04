@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -12,6 +12,7 @@ import {
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import { ApiHttpClient, SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
+import type { DocumentRecognitionData } from '../models/document-recognition.interface';
 import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
 
 describe('AuthEndpoint', () => {
@@ -21,7 +22,10 @@ describe('AuthEndpoint', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClient(
+          withXhr(),
+          withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+        ),
         provideHttpClientTesting(),
         ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
       ],
@@ -194,6 +198,26 @@ describe('AuthEndpoint', () => {
       });
     });
 
+    it('should error when document evaluation returns a null data payload', () => {
+      let caught: unknown;
+
+      endpoint.evaluateDocument({ tipoDocumento: 'CI', documento: '12345' }).subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Registro/EvaluarDocumento') && r.method === 'POST'
+      );
+
+      req.flush({ success: true, httpCode: 200, data: null });
+
+      // Current behavior: the adapter maps `data.flowId` without guarding against
+      // a null data payload, so the observable errors with a TypeError.
+      expect(caught).toBeInstanceOf(TypeError);
+    });
+
     it('should POST to /Registro/ConfirmarNuevaPersona and return success', () => {
       const payload = {
         tipoDocumento: 'CI',
@@ -327,7 +351,7 @@ describe('AuthEndpoint', () => {
       };
 
       endpoint.recognizeDocument(payload).subscribe(response => {
-        expect(response.requiereRevision).toBe(false);
+        expect(response.campos?.primerNombre).toBe('Ana');
       });
 
       const req = httpController.expectOne(
@@ -338,7 +362,101 @@ describe('AuthEndpoint', () => {
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(CAPTCHA_ACTION)).toBe('AnalizarAdjunto');
 
-      req.flush({ success: true, httpCode: 200, data: { requiereRevision: false } });
+      req.flush({ success: true, httpCode: 200, data: { campos: { primerNombre: 'Ana' } } });
+    });
+
+    it('should map only the feature fields and drop extra DTO fields', () => {
+      let result: DocumentRecognitionData | undefined;
+
+      endpoint
+        .recognizeDocument({
+          tipoMime: 'application/pdf',
+          archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
+        })
+        .subscribe(response => {
+          result = response;
+        });
+
+      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: {
+          campos: {
+            tipoDocumento: 'CI',
+            numeroDocumento: '12345678',
+            primerNombre: 'Ana',
+            segundoNombre: 'María',
+            primerApellido: 'Silva',
+            segundoApellido: 'Pereira',
+            fechaNacimiento: '2000-01-01T00:00:00',
+            lugarNacimiento: 'Montevideo / URY',
+            departamento: 'MONTEVIDEO',
+            sexo: 'F',
+            fechaVencimiento: '2030-01-01T00:00:00',
+            nacionalidad: 'URUGUAYA',
+          },
+        },
+      });
+
+      expect(result?.campos).toEqual({
+        tipoDocumento: 'CI',
+        numeroDocumento: '12345678',
+        primerNombre: 'Ana',
+        segundoNombre: 'María',
+        primerApellido: 'Silva',
+        segundoApellido: 'Pereira',
+        fechaNacimiento: '2000-01-01T00:00:00',
+        lugarNacimiento: 'Montevideo / URY',
+        sexo: 'F',
+      });
+      expect(result?.campos).not.toHaveProperty('departamento');
+      expect(result?.campos).not.toHaveProperty('fechaVencimiento');
+      expect(result?.campos).not.toHaveProperty('nacionalidad');
+    });
+
+    it('should map missing recognized fields to null', () => {
+      endpoint
+        .recognizeDocument({
+          tipoMime: 'application/pdf',
+          archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
+        })
+        .subscribe(response => {
+          expect(response.campos).toEqual({
+            tipoDocumento: 'CI',
+            numeroDocumento: null,
+            primerNombre: null,
+            segundoNombre: null,
+            primerApellido: null,
+            segundoApellido: null,
+            fechaNacimiento: null,
+            lugarNacimiento: null,
+            sexo: null,
+          });
+        });
+
+      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+      req.flush({ success: true, httpCode: 200, data: { campos: { tipoDocumento: 'CI' } } });
+    });
+
+    it('should return undefined campos when the response has no recognized fields', () => {
+      let result: { campos?: unknown } | undefined;
+
+      endpoint
+        .recognizeDocument({
+          tipoMime: 'image/png',
+          archivoAdjunto: { nombreArchivo: 'img.png', archivo: 'abc' },
+        })
+        .subscribe(response => {
+          result = response;
+        });
+
+      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+      req.flush({ success: true, httpCode: 200, data: {} });
+
+      expect(result).toBeDefined();
+      expect(result?.campos).toBeUndefined();
     });
 
     it('should propagate normalized API failures', () => {
@@ -364,7 +482,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('recoverPassword', () => {
-    it('should POST to /Auth/RecuperarContraseña with captcha and return void', () => {
+    it('should POST to /Auth/RecuperarPassword with captcha and return void', () => {
       const payload = {
         tipoDocumento: 'CI',
         documento: '12345678',
@@ -376,7 +494,7 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => decodeURIComponent(r.url).includes('/Auth/RecuperarContraseña') && r.method === 'POST'
+        r => r.url.includes('/Auth/RecuperarPassword') && r.method === 'POST'
       );
 
       expect(req.request.body).toEqual(payload);
@@ -431,6 +549,59 @@ describe('AuthEndpoint', () => {
     });
   });
 
+  describe('verifyTwoFactorCode', () => {
+    it('should POST to /Auth/VerificarCodigo2FA and map persona data', () => {
+      endpoint
+        .verifyTwoFactorCode({ sessionId: 'session-123', codigo: '123456' })
+        .subscribe(result => {
+          expect(result).toEqual({ documento: '12345678', primerNombre: 'Ana' });
+        });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/Auth/VerificarCodigo2FA') && r.method === 'POST'
+      );
+
+      expect(req.request.body).toEqual({ sessionId: 'session-123', codigo: '123456' });
+      expect(req.request.withCredentials).toBe(true);
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerificarCodigo2FA');
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+      });
+    });
+
+    it('should return empty fields when the response has no persona', () => {
+      endpoint
+        .verifyTwoFactorCode({ sessionId: 'session-123', codigo: '123456' })
+        .subscribe(result => {
+          expect(result).toEqual({ documento: '', primerNombre: '' });
+        });
+
+      const req = httpController.expectOne(r => r.url.includes('/Auth/VerificarCodigo2FA'));
+      req.flush({ success: true, httpCode: 200, data: {} });
+    });
+
+    it('should propagate normalized API failures for invalid codes', () => {
+      let caught: unknown;
+
+      endpoint.verifyTwoFactorCode({ sessionId: 'session-123', codigo: '000000' }).subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+      const req = httpController.expectOne(r => r.url.includes('/Auth/VerificarCodigo2FA'));
+      req.flush(null, { status: 401, statusText: 'Unauthorized' });
+
+      expect(isNormalizedApiError(caught)).toBe(true);
+      if (isNormalizedApiError(caught)) {
+        expect(caught.status).toBe(401);
+      }
+    });
+  });
+
   describe('resendTwoFactorCode', () => {
     it('should POST to /Auth/ReenviarCodigo2FA and return the refreshed session', () => {
       endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe(result => {
@@ -458,6 +629,41 @@ describe('AuthEndpoint', () => {
           message: 'Código reenviado.',
         },
       });
+    });
+
+    it('should keep the requested sessionId when the response omits it', () => {
+      endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe(result => {
+        expect(result).toEqual({
+          sessionId: 'session-123',
+          maskedEmail: 'a***@example.com',
+          message: 'Código reenviado.',
+        });
+      });
+
+      const req = httpController.expectOne(r => r.url.includes('/Auth/ReenviarCodigo2FA'));
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: { maskedEmail: 'a***@example.com', message: 'Código reenviado.' },
+      });
+    });
+
+    it('should propagate normalized API failures', () => {
+      let caught: unknown;
+
+      endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+      const req = httpController.expectOne(r => r.url.includes('/Auth/ReenviarCodigo2FA'));
+      req.flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+      expect(isNormalizedApiError(caught)).toBe(true);
+      if (isNormalizedApiError(caught)) {
+        expect(caught.status).toBe(500);
+      }
     });
   });
 });

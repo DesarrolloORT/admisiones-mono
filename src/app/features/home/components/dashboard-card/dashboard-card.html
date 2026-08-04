@@ -1,4 +1,4 @@
-<article class="dashboard-card" [attr.aria-labelledby]="'dashboard-card-title'">
+<article class="dashboard-card" [attr.aria-labelledby]="titleId">
   <ort-icon aria-hidden="true" class="dashboard-card__icon" size="lg">{{ icon() }}</ort-icon>
 
   @if (showChip()) {
@@ -7,14 +7,14 @@
   </div>
   }
 
-  <h3 class="dashboard-card__title" id="dashboard-card-title">{{ title() }}</h3>
+  <h3 class="dashboard-card__title" [id]="titleId">{{ title() }}</h3>
 
   <div class="dashboard-card__meta">
-    @if (variant() === 'careers') {
+    @if (variant() === 'careers') { @if (!esPaquete()) {
     <app-dashboard-card-summary
       variant="careers"
       [startDate]="inscripcion()?.nombreComienzo ?? ''" />
-    } @else {
+    } } @else {
     <app-dashboard-card-summary
       variant="scholarships"
       [applicationDeadline]="beca()?.cierrePostulacion ?? ''"
@@ -32,6 +32,11 @@
     <app-dashboard-quick-actions
       [cardType]="variant()"
       [careerName]="title()"
+      [idInscripciones]="idsInscripcion()"
+      [idInscripto]="inscripcion()?.idInscripto ?? null"
+      [idOfertas]="inscripcion()?.idOfertas ?? []"
+      [idProceso]="inscripcion()?.idProceso ?? null"
+      [idProducto]="inscripcion()?.idProducto ?? null"
       [status]="estado()" />
   </div>
   }

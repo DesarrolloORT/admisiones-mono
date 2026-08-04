@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideRouter, RouterLink } from '@angular/router';
 
 import { MiInscripcion } from '../../models/mi-inscripcion';
 import { DashboardCareersSection } from './dashboard-careers-section';
@@ -9,6 +11,7 @@ describe('DashboardCareersSection', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [DashboardCareersSection],
+      providers: [provideRouter([])],
     });
   });
 
@@ -28,8 +31,24 @@ describe('DashboardCareersSection', () => {
     expect(fixture.nativeElement.querySelector('.swiper')).toBeNull();
   });
 
+  it('should navigate to inscriptions from the add career button', async () => {
+    fixture = createComponent([createEnrollment(1)]);
+    await fixture.whenStable();
+
+    const button = fixture.debugElement.query(By.css('.section-header__add'));
+
+    expect(button.injector.get(RouterLink).urlTree?.toString()).toBe('/inscripciones');
+  });
+
   it('should show a carousel for multiple enrollments', async () => {
     fixture = createComponent([createEnrollment(1), createEnrollment(2)]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('.swiper-slide')).toHaveLength(2);
+  });
+
+  it('should not throw and show a carousel for groups sharing the same idProducto with different idProceso', async () => {
+    fixture = createComponent([createEnrollment(1, 100), createEnrollment(1, 200)]);
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelectorAll('.swiper-slide')).toHaveLength(2);
@@ -44,15 +63,19 @@ describe('DashboardCareersSection', () => {
     return componentFixture;
   }
 
-  function createEnrollment(idProducto: number): MiInscripcion {
+  function createEnrollment(idProducto: number, idProceso = 4): MiInscripcion {
     return {
+      idInscripto: idProducto,
+      idOfertas: [idProducto],
       idProducto,
+      idProceso,
       idComienzo: 2,
       idTurno: 3,
       nombreProducto: `Carrera ${idProducto}`,
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      seminarios: [],
     };
   }
 });

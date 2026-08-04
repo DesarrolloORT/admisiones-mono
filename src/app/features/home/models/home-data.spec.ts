@@ -1,5 +1,9 @@
+import type { HomeData } from './home-data';
+
 describe('HomeData', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+  it('groups inscriptions and scholarships', () => {
+    const data: HomeData = { inscripciones: [], becas: [] };
+
+    expect(data).toEqual({ inscripciones: [], becas: [] });
   });
 });

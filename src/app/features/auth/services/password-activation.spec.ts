@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
@@ -10,12 +10,14 @@ describe('PasswordActivationService', () => {
   let endpointMock: {
     activatePasswordLink: ReturnType<typeof vi.fn>;
     completePassword: ReturnType<typeof vi.fn>;
+    recoverPassword: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
       activatePasswordLink: vi.fn().mockReturnValue(of(undefined)),
       completePassword: vi.fn().mockReturnValue(of(undefined)),
+      recoverPassword: vi.fn().mockReturnValue(of(undefined)),
     };
 
     TestBed.configureTestingModule({
@@ -41,5 +43,40 @@ describe('PasswordActivationService', () => {
     expect(endpointMock.completePassword).toHaveBeenCalledWith({
       passwordNueva: 'NuevaPassword1!',
     });
+  });
+
+  it('should initiate password recovery through the endpoint adapter', () => {
+    let completed = false;
+
+    service
+      .recoverPassword({ tipoDocumento: 'CI', documento: '1234567-8', primerApellido: 'Silva' })
+      .subscribe({
+        complete: () => {
+          completed = true;
+        },
+      });
+
+    expect(endpointMock.recoverPassword).toHaveBeenCalledWith({
+      tipoDocumento: 'CI',
+      documento: '1234567-8',
+      primerApellido: 'Silva',
+    });
+    expect(completed).toBe(true);
+  });
+
+  it('should propagate password recovery failures', () => {
+    const failure = new Error('recovery failed');
+    endpointMock.recoverPassword.mockReturnValue(throwError(() => failure));
+    let caught: unknown;
+
+    service
+      .recoverPassword({ tipoDocumento: 'CI', documento: '1234567-8', primerApellido: 'Silva' })
+      .subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+    expect(caught).toBe(failure);
   });
 });

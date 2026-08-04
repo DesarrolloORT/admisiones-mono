@@ -4,7 +4,8 @@ import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getPersonaDatosPersonaEndpoint,
-  postPersonaCambiarContrasenaEndpoint,
+  postPersonaCambiarPasswordEndpoint,
+  postPersonaValidarTelefonoEndpoint,
   putPersonaDatosPersonaEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 
@@ -24,12 +25,13 @@ export interface AccountPersonalData {
   phone: string;
   email: string;
   emailVerification: string;
+  identityRestricted: boolean;
 }
 
 export interface UpdateAccountPersonalDataPayload {
-  countryCode: number | null;
-  stateCode: number | null;
-  cityCode: number | null;
+  countryCode?: number;
+  stateCode?: number;
+  cityCode?: number;
   address: string;
   phone: string;
   email: string;
@@ -39,6 +41,13 @@ export interface UpdateAccountPersonalDataPayload {
 export interface AccountChangePasswordPayload {
   currentPassword: string;
   password: string;
+}
+
+export interface AccountPhoneValidationPayload {
+  iso2: string | null;
+  countryPrefix: number | null;
+  number: string;
+  numberE164: string | null;
 }
 
 @Injectable({
@@ -65,6 +74,7 @@ export class AccountEndpoint {
         phone: data.telefono1 ?? '',
         email: data.mail ?? '',
         emailVerification: data.verificacionMail ?? data.mail ?? '',
+        identityRestricted: data.identidadRestringida ?? false,
       }))
     );
   }
@@ -73,28 +83,40 @@ export class AccountEndpoint {
     return this.api
       .request(putPersonaDatosPersonaEndpoint, {
         body: {
-          codigoPais: this.toOptionalNumber(payload.countryCode),
-          codigoEstado: this.toOptionalNumber(payload.stateCode),
-          codigoCiudad: this.toOptionalNumber(payload.cityCode),
-          direccion: payload.address.trim(),
-          telefono1: payload.phone.trim(),
-          mail: payload.email.trim(),
-          verificacionMail: payload.emailVerification.trim(),
+          codigoPais: payload.countryCode,
+          codigoEstado: payload.stateCode,
+          codigoCiudad: payload.cityCode,
+          direccion: payload.address,
+          telefono1: payload.phone,
+          mail: payload.email,
+          verificacionMail: payload.emailVerification,
         },
       })
       .pipe(map(result => result === true));
   }
 
-  public changePassword(payload: AccountChangePasswordPayload): Observable<unknown> {
-    return this.api.request(postPersonaCambiarContrasenaEndpoint, {
-      body: {
-        passwordActual: payload.currentPassword,
-        passwordNueva: payload.password,
-      },
-    });
+  public changePassword(payload: AccountChangePasswordPayload): Observable<void> {
+    return this.api
+      .request(postPersonaCambiarPasswordEndpoint, {
+        body: {
+          passwordActual: payload.currentPassword,
+          passwordNueva: payload.password,
+        },
+      })
+      .pipe(map(() => undefined));
   }
 
-  private toOptionalNumber(value: number | null): number | undefined {
-    return value ?? undefined;
+  public validatePhone(payload: AccountPhoneValidationPayload): Observable<boolean> {
+    return this.api
+      .request(postPersonaValidarTelefonoEndpoint, {
+        queryParams: { telefono1: true },
+        body: {
+          telefonoE164: payload.numberE164,
+          iso2: payload.iso2,
+          caracteristicaPais: payload.countryPrefix ?? undefined,
+          telefonoSimple: payload.number,
+        },
+      })
+      .pipe(map(result => result === true));
   }
 }

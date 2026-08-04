@@ -9,6 +9,8 @@ import { DashboardQuickActions } from '../dashboard-quick-actions/dashboard-quic
 
 type CardVariant = 'careers' | 'scholarships';
 
+let nextId = 0;
+
 @Component({
   selector: 'app-dashboard-card',
   imports: [OrtIconModule, DashboardCareerStatusChip, DashboardQuickActions, DashboardCardSummary],
@@ -17,9 +19,13 @@ type CardVariant = 'careers' | 'scholarships';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardCard {
+  private readonly uid = ++nextId;
+
   readonly variant = input<CardVariant>('careers');
   readonly inscripcion = input<MiInscripcion | null>(null);
   readonly beca = input<MiBeca | null>(null);
+
+  protected readonly titleId = `dashboard-card-title-${this.uid}`;
 
   protected readonly icon = computed(() =>
     this.variant() === 'scholarships' ? 'workspace_premium' : 'school'
@@ -44,5 +50,18 @@ export class DashboardCard {
   protected readonly showActions = computed(() => {
     if (this.variant() === 'careers') return true;
     return this.estado() !== 'Aceptada';
+  });
+
+  protected readonly esPaquete = computed(
+    () => this.variant() === 'careers' && (this.inscripcion()?.seminarios?.length ?? 0) > 0
+  );
+  protected readonly idsInscripcion = computed(() => {
+    const inscripcion = this.inscripcion();
+    if (!inscripcion) return [];
+
+    const ids = inscripcion.seminarios.length
+      ? inscripcion.seminarios.map(seminario => seminario.idInscripto)
+      : [inscripcion.idInscripto];
+    return [...new Set(ids.filter(id => Number.isSafeInteger(id) && id > 0))];
   });
 }

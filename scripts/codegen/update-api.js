@@ -1,13 +1,17 @@
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { parseArgs as nodeParseArgs } from 'node:util';
 
+import { hasGeneratedApiChanges, snapshotGeneratedApi } from './api-repair.js';
 import { DEFAULT_ENVIRONMENT_FILE, ROOT } from './codegen-utils.js';
 
 const { values: flags } = nodeParseArgs({
   options: {
     env: { type: 'string', default: DEFAULT_ENVIRONMENT_FILE },
     'swagger-path': { type: 'string' },
+    'contracts-path': { type: 'string' },
+    'spec-dir': { type: 'string' },
+    'skip-build': { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -18,19 +22,35 @@ Usage: node scripts/codegen/update-api.js [options]
 
 Options:
   --env <file>            Environment file inside src/environments/ (default: ${DEFAULT_ENVIRONMENT_FILE})
-  --swagger-path <path>   Swagger doc path appended to the API origin
+  --swagger-path <path>     Swagger doc path appended to the API origin
+  --contracts-path <path>   Contracts index path appended to the API origin
+  --spec-dir <dir>          Snapshot local creado por fetch-api-spec.js; genera todo
+                            desde archivos sin acceso de red al backend
+  --skip-build              Omite la compilacion Angular de validacion (util en CI,
+                            donde un job posterior ya compila el proyecto)
   -h, --help              Show this help
 
-The command updates models and endpoints, then compiles the Angular serving
+The command updates models, endpoints and form contracts, then compiles the Angular serving
 configuration to report API incompatibilities before npm start.
 `);
   process.exit(0);
 }
 
 const sharedArgs = ['--env', flags.env];
-if (flags['swagger-path']) {
+if (flags['spec-dir']) {
+  sharedArgs.push('--swagger-file', join(flags['spec-dir'], 'swagger.json'));
+} else if (flags['swagger-path']) {
   sharedArgs.push('--swagger-path', flags['swagger-path']);
 }
+
+const contractsArgs = ['--env', flags.env];
+if (flags['spec-dir']) {
+  contractsArgs.push('--contracts-dir', join(flags['spec-dir'], 'contracts'));
+} else if (flags['contracts-path']) {
+  contractsArgs.push('--contracts-path', flags['contracts-path']);
+}
+
+snapshotGeneratedApi();
 
 runNodeStage({
   label: 'Actualizando modelos OpenAPI',
@@ -52,11 +72,41 @@ runNodeStage({
   },
 });
 
-validateAngularCompilation();
+runNodeStage({
+  label: 'Actualizando contratos de formulario',
+  script: 'update-contracts.js',
+  args: contractsArgs,
+  failure: {
+    what: 'No se pudieron regenerar los contratos de formulario desde /contracts.',
+    where: 'scripts/codegen/update-contracts.js y src/app/shared/api/generated/contracts/',
+  },
+});
 
-console.log('\n✓ API actualizada y compatibilidad Angular validada.');
+runNodeStage({
+  label: 'Validando contratos públicos de adapters',
+  script: 'check-api-contracts.js',
+  args: [],
+  repairable: true,
+  failure: {
+    what: 'Los adapters exponen DTOs generados, envían bodies fuera del contrato o existen responses sin schema tipado.',
+    where: 'features/*/endpoints y src/app/shared/api/generated/endpoints/',
+  },
+});
 
-function runNodeStage({ label, script, args, failure }) {
+if (flags['skip-build']) {
+  console.log('\n==> Compilacion Angular de validacion omitida (--skip-build).');
+  console.log('\n✓ API actualizada; la compatibilidad Angular se valida en el build posterior.');
+} else {
+  validateAngularCompilation();
+
+  console.log('\n✓ API actualizada y compatibilidad Angular validada.');
+}
+
+if (hasGeneratedApiChanges()) {
+  printRepairHint();
+}
+
+function runNodeStage({ label, script, args, failure, repairable = false }) {
   console.log(`\n==> ${label}`);
   const scriptPath = resolve(ROOT, 'scripts/codegen', script);
   const result = spawnSync(process.execPath, [scriptPath, ...args], {
@@ -71,6 +121,7 @@ function runNodeStage({ label, script, args, failure }) {
       where: failure.where,
       detail: result.error?.message || `el proceso termino con codigo ${result.status ?? 1}.`,
     });
+    if (repairable) printRepairHint();
     process.exit(result.status || 1);
   }
 }
@@ -99,6 +150,7 @@ function validateAngularCompilation() {
         result.error?.message ||
         `Angular termino con codigo ${result.status ?? 1}; npm start fallaria por la misma causa.`,
     });
+    printRepairHint();
     process.exit(result.status || 1);
   }
 }
@@ -109,4 +161,9 @@ function printStageFailure({ stage, what, where, detail }) {
   console.error(`  Que paso : ${what}`);
   console.error(`  Donde    : ${where}`);
   console.error(`  Detalle  : ${detail}`);
+}
+
+function printRepairHint() {
+  console.log('\nPara analizar el delta y reparar todos los consumidores afectados:');
+  console.log('  npm run fix-api');
 }

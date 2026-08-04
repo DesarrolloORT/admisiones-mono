@@ -26,7 +26,7 @@ export class SnackbarHandler {
   private readonly fontsReady = this.document.fonts?.ready ?? Promise.resolve();
 
   public show(config: SnackbarConfig): void {
-    void this.fontsReady.then(() => this.showImmediate(config));
+    this.fontsReady.then(() => this.showImmediate(config));
   }
 
   private showImmediate(config: SnackbarConfig): void {
@@ -41,7 +41,7 @@ export class SnackbarHandler {
       message: config.message,
       supportingText,
       variant,
-      verticalPosition: 'top',
+      verticalPosition: 'bottom',
     });
 
     this.currentRef = ref;

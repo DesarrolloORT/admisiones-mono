@@ -1,0 +1,197 @@
+.inscription-payment-layout,
+.inscription-payment-summary,
+.inscription-payment-main,
+.inscription-payment-method {
+  display: grid;
+}
+
+.inscription-payment-layout,
+.inscription-payment-main {
+  gap: var(--ort-sys-spacing-24);
+}
+
+.inscription-payment-summary {
+  gap: var(--ort-sys-spacing-24);
+  align-content: start;
+  order: 1;
+}
+
+.inscription-payment-main {
+  order: 2;
+}
+
+.inscription-payment-submit {
+  order: 3;
+  width: 100%;
+}
+
+.inscription-payment-method {
+  gap: var(--ort-sys-spacing-8);
+}
+
+.inscription-payment-method h2 {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-weight: 700;
+  font-size: var(--ort-sys-heading-level5-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level5-line-height);
+}
+
+.inscription-payment-method p,
+.inscription-payment p {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+.inscription-payment-option__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ort-sys-spacing-4);
+  align-items: center;
+}
+
+.inscription-payment-option__label {
+  display: inline-flex;
+}
+
+.inscription-payment-option__badge {
+  display: block;
+  object-fit: contain;
+  width: 2.5rem;
+  height: 1.5rem;
+}
+
+.inscription-payment-card {
+  border-color: var(--ort-sys-alert-border-color-information);
+  background: var(--ort-sys-alert-background-information);
+}
+
+.inscription-payment {
+  display: grid;
+  gap: var(--ort-sys-spacing-4);
+  justify-items: center;
+  text-align: center;
+}
+
+.inscription-payment strong {
+  color: var(--ort-sys-alert-title-color-information);
+  font-size: var(--ort-sys-heading-level3-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level3-line-height);
+}
+
+.inscription-payment h2 {
+  color: var(--ort-sys-alert-title-color-information);
+}
+
+.inscription-payment-deadline {
+  margin: 0;
+  padding-top: var(--ort-sys-spacing-12);
+  border-top: 1px solid var(--ort-sys-alert-border-color-information);
+  color: var(--ort-sys-base-text-color-body);
+  font-weight: 600;
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+  text-align: center;
+}
+
+.inscription-payment-deadline strong {
+  color: inherit;
+}
+
+.inscription-dialog-amount {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+  text-align: center;
+}
+
+.inscription-dialog-amount strong {
+  color: var(--ort-sys-alert-title-color-information);
+  font-size: var(--ort-sys-heading-level3-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level3-line-height);
+}
+
+.inscription-summary-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  margin-top: var(--ort-sys-spacing-12);
+}
+
+.inscription-summary-list__item,
+.inscription-summary-list__item dt {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0 var(--ort-sys-list-gap);
+}
+
+.inscription-summary-list__item dt {
+  grid-column: 1 / -1;
+}
+
+.inscription-summary-list__item dt ort-icon {
+  grid-row: span 2;
+  color: var(--ort-sys-base-icon-color);
+  font-size: 1.5rem;
+}
+
+.inscription-summary-list__item dt span {
+  grid-column: 2;
+  color: var(--ort-sys-list-overline-color);
+  font-size: var(--ort-sys-list-overline-font-size);
+  line-height: var(--ort-sys-list-overline-line-height);
+}
+
+.inscription-summary-list__item dd {
+  grid-column: 2;
+  margin: 0;
+  color: var(--ort-sys-list-title-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-list-title-font-size);
+  line-height: var(--ort-sys-list-title-line-height);
+}
+
+.inscription-summary-list p {
+  margin-top: var(--ort-sys-spacing-4);
+  color: var(--ort-sys-color-primary-500);
+  font-weight: 600;
+  font-size: var(--ort-sys-list-title-font-size);
+  line-height: var(--ort-sys-list-title-line-height);
+  text-align: center;
+}
+@media (width >= 52.5rem) {
+  .inscription-screen {
+    max-width: none;
+  }
+
+  .inscription-payment-layout {
+    grid-template-areas:
+      'main summary'
+      'main submit';
+    grid-template-columns: minmax(0, 40.8125rem) minmax(19rem, 19.375rem);
+    gap: var(--ort-sys-spacing-36);
+    align-content: start;
+    width: min(100%, 62.4375rem);
+  }
+
+  .inscription-payment-main {
+    grid-area: main;
+    order: initial;
+  }
+
+  .inscription-payment-summary {
+    grid-area: summary;
+    order: initial;
+  }
+
+  .inscription-payment-submit {
+    grid-area: submit;
+    align-self: end;
+    order: initial;
+  }
+}

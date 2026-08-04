@@ -1,10 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import {
+  compressImageIfNeeded,
+  MAX_IMAGE_SIZE_BYTES,
+  resolveImageMimeType,
+} from 'src/app/shared/files/image-upload';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import type {
+  DocumentRecognitionData,
   DocumentRecognitionRequest,
-  DocumentRecognitionResponse,
 } from '../models/document-recognition.interface';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 
@@ -12,59 +17,40 @@ import { DocumentRecognitionFileError } from '../models/document-recognition-err
   providedIn: 'root',
 })
 export class DocumentRecognition {
-  public static readonly MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
-  private static readonly MIME_PATTERN = /^[\w.+-]+\/[\w.+-]+$/;
-  private static readonly MIME_BY_EXTENSION: Record<string, string> = {
-    pdf: 'application/pdf',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    tif: 'image/tiff',
-    tiff: 'image/tiff',
-    bmp: 'image/bmp',
-    webp: 'image/webp',
-    heic: 'image/heic',
-  };
+  public readonly maxFileSizeBytes = MAX_IMAGE_SIZE_BYTES;
 
   private readonly endpoint = inject(AuthEndpoint);
 
-  public readonly maxFileSizeBytes = DocumentRecognition.MAX_FILE_SIZE_BYTES;
-
   public recognizeDocument(
     payload: DocumentRecognitionRequest
-  ): Observable<DocumentRecognitionResponse> {
+  ): Observable<DocumentRecognitionData> {
     return this.endpoint.recognizeDocument(payload);
   }
 
   public async createRequestFromFile(file: File): Promise<DocumentRecognitionRequest> {
-    if (file.size > DocumentRecognition.MAX_FILE_SIZE_BYTES) {
-      throw new DocumentRecognitionFileError('maxFileSize');
-    }
-
-    const tipoMime = this.inferMimeType(file);
+    const tipoMime = resolveImageMimeType(file);
     if (!tipoMime) {
       throw new DocumentRecognitionFileError('invalidMimeType');
     }
 
-    const archivo = await this.readFileAsBase64(file);
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      throw new DocumentRecognitionFileError('maxFileSize');
+    }
+
+    const preparedFile = await compressImageIfNeeded(file, tipoMime);
+    if (preparedFile.size > MAX_IMAGE_SIZE_BYTES) {
+      throw new DocumentRecognitionFileError('maxFileSize');
+    }
+
+    const archivo = await this.readFileAsBase64(preparedFile);
 
     return {
-      tipoMime,
+      tipoMime: preparedFile.type || tipoMime,
       archivoAdjunto: {
-        nombreArchivo: file.name,
+        nombreArchivo: preparedFile.name,
         archivo,
       },
     };
-  }
-
-  private inferMimeType(file: File): string | null {
-    if (file.type && DocumentRecognition.MIME_PATTERN.test(file.type)) {
-      return file.type;
-    }
-
-    const extension = this.getFileExtension(file.name);
-    return extension ? (DocumentRecognition.MIME_BY_EXTENSION[extension] ?? null) : null;
   }
 
   private readFileAsBase64(file: File): Promise<string> {
@@ -93,14 +79,5 @@ export class DocumentRecognition {
 
       reader.readAsDataURL(file);
     });
-  }
-
-  private getFileExtension(fileName: string): string | null {
-    const dotIndex = fileName.lastIndexOf('.');
-    if (dotIndex === -1 || dotIndex === fileName.length - 1) {
-      return null;
-    }
-
-    return fileName.slice(dotIndex + 1).toLowerCase();
   }
 }

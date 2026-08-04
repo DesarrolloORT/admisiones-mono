@@ -1,0 +1,47 @@
+<div class="inscription-accordion__content" [formGroup]="facade.regulationForm">
+  @if (facade.hasAcceptedStudentRegulation()) {
+  <p>
+    En la fecha {{ facade.submittedAcceptanceDate() | date: 'dd/MM/yyyy' }} como parte del proceso
+    de inscripción a la universidad, Asociación Uruguaya ORT ha recibido de tu parte el
+    reconocimiento y aceptación del Reglamento Estudiantil de Universidad ORT Uruguay.
+  </p>
+
+  <button ort-tonal-button type="button" (click)="facade.openRegulationReader()">
+    Ver reglamento
+  </button>
+
+  } @else {
+  <p class="mb-1">
+    Te recomendamos leer el Reglamento Estudiantil. En él se detallan los derechos,
+    responsabilidades y condiciones que rigen tu vida académica en la universidad.
+  </p>
+  <button
+    class="regulation-button"
+    ort-tonal-button
+    type="button"
+    (click)="facade.openRegulationReader()">
+    Ver reglamento
+  </button>
+  <ort-checkbox
+    formControlName="aceptaReglamento"
+    [aria-describedby]="
+      facade.regulationForm.controls.aceptaReglamento.touched &&
+      facade.regulationForm.controls.aceptaReglamento.hasError('required')
+        ? 'regulation-acceptance-error'
+        : null
+    ">
+    <p>
+      He leído y acepto el
+      <button class="regulation-link" type="button" (click)="facade.openRegulationReader()">
+        reglamento estudiantil
+      </button>
+      de la universidad.
+    </p>
+  </ort-checkbox>
+  @if (facade.regulationForm.controls.aceptaReglamento.touched &&
+  facade.regulationForm.controls.aceptaReglamento.hasError('required')) {
+  <p class="inscription-field-error" id="regulation-acceptance-error" role="alert">
+    Aceptá el reglamento estudiantil para continuar
+  </p>
+  } }
+</div>

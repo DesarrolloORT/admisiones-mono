@@ -1,9 +1,10 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import {
   operationResultInterceptor,
   ortApiErrorInterceptor,
+  SUPPRESS_GLOBAL_ERROR,
   provideOrtApiErrorHandling,
 } from '@desarrolloort/ngx-utils';
 import { environment } from 'src/environments/environment';
@@ -19,7 +20,10 @@ describe('ApiHttpClient', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])),
+        provideHttpClient(
+          withXhr(),
+          withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+        ),
         provideHttpClientTesting(),
         ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
       ],
@@ -68,6 +72,26 @@ describe('ApiHttpClient', () => {
     expect(request.request.headers.get('X-Flow-Id')).toBe('flow-123');
     expect(request.request.headers.has('X-Skip-Empty')).toBe(false);
 
+    request.flush({ ok: true });
+  });
+
+  it('should suppress global API errors by default', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: { ok: boolean };
+    }>({
+      operationId: 'ObtenerPersona',
+      method: 'GET',
+      path: '/persona',
+    });
+
+    api.request(endpoint).subscribe();
+
+    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+
+    expect(request.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
     request.flush({ ok: true });
   });
 
@@ -143,12 +167,36 @@ describe('ApiHttpClient', () => {
     request.flush([]);
   });
 
+  it('should request binary GET responses as blobs', () => {
+    const endpoint = defineEndpoint<{
+      pathParams: never;
+      queryParams: never;
+      request: never;
+      response: Blob;
+    }>({
+      operationId: 'ObtenerFoto',
+      method: 'GET',
+      path: '/persona/foto',
+    });
+    const response = new Blob(['photo'], { type: 'image/png' });
+
+    api.request(endpoint, { cache: false, responseType: 'blob' }).subscribe(blob => {
+      expect(blob.size).toBe(response.size);
+      expect(blob.type).toBe('image/png');
+    });
+
+    const request = httpController.expectOne(
+      new URL('/persona/foto', environment.API_URL).toString()
+    );
+    expect(request.request.responseType).toBe('blob');
+    request.flush(response);
+  });
   it('should cache GET endpoints without params by default', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: string[] };
+      response: { success?: boolean; httpCode?: number; data: string[] };
     }>({
       operationId: 'ListarPaises',
       method: 'GET',
@@ -202,7 +250,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: string[] };
+      response: { success?: boolean; httpCode?: number; data: string[] };
     }>({
       operationId: 'ListarPaises',
       method: 'GET',
@@ -230,7 +278,12 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { nombre: string }; message?: string | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: { nombre: string; aceptado: boolean; fechaAceptacion: string | null };
+        message?: string | null;
+      };
     }>({
       operationId: 'ObtenerPersona',
       method: 'GET',
@@ -238,11 +291,20 @@ describe('ApiHttpClient', () => {
     });
 
     api.data(endpoint).subscribe(data => {
-      expect(data).toEqual({ nombre: 'Ana' });
+      expect(data).toEqual({
+        nombre: 'Ana',
+        aceptado: true,
+        fechaAceptacion: '2026-06-01',
+      });
     });
 
     const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
-    request.flush({ success: true, httpCode: 200, data: { nombre: 'Ana' }, message: null });
+    request.flush({
+      success: true,
+      httpCode: 200,
+      data: { nombre: 'Ana', aceptado: true, fechaAceptacion: '2026-06-01' },
+      message: null,
+    });
   });
 
   it('should return operation result data and message when requested explicitly', () => {
@@ -250,7 +312,12 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { nombre: string }; message?: string | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: { nombre: string };
+        message?: string | null;
+      };
     }>({
       operationId: 'EvaluarDocumento',
       method: 'POST',
@@ -280,7 +347,13 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: null; errorCode?: string | null; message?: string | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: null;
+        errorCode?: string | null;
+        message?: string | null;
+      };
     }>({
       operationId: 'CrearPersona',
       method: 'POST',
@@ -315,7 +388,11 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: Array<{ id: number; nombre: string }> | null };
+      response: {
+        success?: boolean;
+        httpCode?: number;
+        data: Array<{ id: number; nombre: string }> | null;
+      };
     }>({
       operationId: 'ListarPersonas',
       method: 'GET',
@@ -337,7 +414,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: { id: number; nombre: string } };
+      response: { success?: boolean; httpCode?: number; data: { id: number; nombre: string } };
     }>({
       operationId: 'ObtenerPersona',
       method: 'GET',
@@ -357,7 +434,7 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { data: Array<{ id: number }> | null };
+      response: { success?: boolean; httpCode?: number; data: Array<{ id: number }> | null };
     }>({
       operationId: 'ListarPersonas',
       method: 'GET',

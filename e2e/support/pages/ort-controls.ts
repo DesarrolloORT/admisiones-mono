@@ -5,23 +5,30 @@ export async function selectOrtOption(
   trigger: Locator,
   optionName: string | RegExp
 ): Promise<void> {
-  await trigger.click();
+  await trigger.evaluate((element: HTMLElement) =>
+    element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  );
+  await trigger.focus();
+  await page.keyboard.press('Enter');
 
-  const optionByRole = page.getByRole('option', { name: optionName });
+  await expect(trigger).toHaveAttribute('aria-controls', /.+/);
+  const listboxId = await trigger.getAttribute('aria-controls');
+  if (!listboxId) throw new Error('El select no expuso el listbox activo.');
 
-  if ((await optionByRole.count()) > 0) {
-    await optionByRole.first().click();
-    return;
-  }
-
-  const optionByText = page.locator('ort-option').filter({ hasText: optionName }).last();
+  const optionByText = page.locator(`#${listboxId}`).locator('ort-option').filter({
+    hasText: optionName,
+  });
 
   await expect(optionByText).toBeVisible();
-  await optionByText.click();
+  await optionByText.first().evaluate((element: HTMLElement) => element.click());
+  await page.keyboard.press('Escape');
 }
 
 export async function clickRadioByName(page: Page, name: string | RegExp): Promise<void> {
-  const radioCard = page.locator('ort-radio-button').filter({ hasText: name }).first();
+  const radioCard = page
+    .locator('ort-radio-button, ort-radio-card-button')
+    .filter({ hasText: name })
+    .first();
 
   if ((await radioCard.count()) > 0) {
     await radioCard.click();
@@ -31,7 +38,7 @@ export async function clickRadioByName(page: Page, name: string | RegExp): Promi
   const radio = page.getByRole('radio', { name });
 
   if ((await radio.count()) > 0) {
-    await radio.first().check({ force: true });
+    await radio.first().evaluate((element: HTMLInputElement) => element.click());
     return;
   }
 

@@ -17,7 +17,13 @@
 
     "color-hex-alpha": "never",
     "color-named": "never",
-    "color-no-hex": null,
+    "color-no-hex": true,
+    "declaration-property-value-disallowed-list": {
+      "/.*/": ["/(?:rgb|rgba|hsl|hsla)\\(/"],
+      "/^(?:gap|column-gap|row-gap|margin|margin-(?:block|inline)(?:-(?:start|end))?|margin-(?:top|right|bottom|left)|padding|padding-(?:block|inline)(?:-(?:start|end))?|padding-(?:top|right|bottom|left))$/": [
+        "/(?:^|\\s)-?(?:\\d*\\.)?\\d+(?:px|rem|em)(?:\\s|$)/"
+      ]
+    },
 
     "declaration-property-unit-allowed-list": {
       "font-size": ["rem", "em"],

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- placeholder test scaffold */
-import { OrtPasswordErrorKey } from 'password-validation';
+import { ORT_PASSWORD_REQUIREMENTS } from './password-validation';
 
-describe('OrtPasswordErrorKey', () => {
-  it('should have tests', () => {
-    throw new Error('Test suite not implemented.');
+describe('ORT_PASSWORD_REQUIREMENTS', () => {
+  it('lists the password rules shown to the user', () => {
+    expect(ORT_PASSWORD_REQUIREMENTS.map(requirement => requirement.errorKey)).toContain('minChar');
   });
 });

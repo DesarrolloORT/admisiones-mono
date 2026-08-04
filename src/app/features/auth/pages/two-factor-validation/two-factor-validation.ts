@@ -1,19 +1,12 @@
-import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
+import { getApiErrorMessage } from '../../models/api-error-message';
 import { AuthSessionService } from '../../services/auth-session';
-
-interface TwoFactorRouterState {
-  email?: unknown;
-  sessionId?: unknown;
-  documentType?: unknown;
-  documentNumber?: unknown;
-}
 
 @Component({
   selector: 'app-two-factor-validation-page',
@@ -24,14 +17,13 @@ interface TwoFactorRouterState {
 })
 export class TwoFactorValidationPage {
   private readonly authSession = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
-  private readonly document = inject(DOCUMENT);
 
   protected readonly email = signal<string>('');
   protected readonly isSubmitting = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly canResend = signal<boolean>(true);
 
   private readonly sessionId = signal<string>('');
   private readonly documentType = signal<string>('');
@@ -59,15 +51,17 @@ export class TwoFactorValidationPage {
         documentType: this.documentType(),
         documentNumber: this.documentNumber(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.snackbar.success('Código validado correctamente.');
-          void this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
+          this.router.navigateByUrl('/inicio').finally(() => this.isSubmitting.set(false));
         },
         error: error => {
-          const message = isNormalizedApiError(error)
-            ? error.message
-            : 'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.';
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos validar el código. Verificá los dígitos e intentá nuevamente.'
+          );
           this.isSubmitting.set(false);
           this.snackbar.error(message);
         },
@@ -84,56 +78,42 @@ export class TwoFactorValidationPage {
     this.error.set(null);
     this.isSubmitting.set(true);
 
-    this.authSession.resendTwoFactorCode(sessionId).subscribe({
-      next: result => {
-        this.sessionId.set(result.sessionId);
+    this.authSession
+      .resendTwoFactorCode(sessionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.sessionId.set(result.sessionId);
 
-        if (result.maskedEmail) {
-          this.email.set(result.maskedEmail);
-        }
+          if (result.maskedEmail) {
+            this.email.set(result.maskedEmail);
+          }
 
-        void this.router
-          .navigateByUrl('/confirmacion-correo/verificar-codigo', {
-            state: {
-              email: this.email(),
-              sessionId: this.sessionId(),
-              documentType: this.documentType(),
-              documentNumber: this.documentNumber(),
-            },
-          })
-          .finally(() => this.isSubmitting.set(false));
-      },
-      error: error => {
-        const message = isNormalizedApiError(error)
-          ? error.message
-          : 'No pudimos reenviar el código. Intentá nuevamente.';
-        this.isSubmitting.set(false);
-        this.snackbar.error(message);
-      },
-    });
+          this.snackbar.success('Código reenviado.');
+          this.isSubmitting.set(false);
+        },
+        error: error => {
+          const message = getApiErrorMessage(
+            error,
+            'No pudimos reenviar el código. Intentá nuevamente.'
+          );
+          this.isSubmitting.set(false);
+          this.snackbar.error(message);
+        },
+      });
   }
 
   private restoreStateFromNavigation(): void {
-    const navigation = this.router.getCurrentNavigation();
-    const navigationState = navigation?.extras.state as TwoFactorRouterState | undefined;
-    const historyState = this.document.defaultView?.history.state as
-      | TwoFactorRouterState
-      | undefined;
-    const state = navigationState ?? historyState ?? {};
+    const context = this.authSession.takePendingTwoFactorContext();
 
-    const email = typeof state.email === 'string' ? state.email : '';
-    const sessionId = typeof state.sessionId === 'string' ? state.sessionId : '';
-    const documentType = typeof state.documentType === 'string' ? state.documentType : '';
-    const documentNumber = typeof state.documentNumber === 'string' ? state.documentNumber : '';
-
-    if (!sessionId) {
-      void this.router.navigateByUrl('/iniciar-sesion');
+    if (!context) {
+      this.router.navigateByUrl('/iniciar-sesion');
       return;
     }
 
-    this.email.set(email);
-    this.sessionId.set(sessionId);
-    this.documentType.set(documentType);
-    this.documentNumber.set(documentNumber);
+    this.email.set(context.email);
+    this.sessionId.set(context.sessionId);
+    this.documentType.set(context.documentType);
+    this.documentNumber.set(context.documentNumber);
   }
 }

@@ -9,7 +9,7 @@ import {
   postAuthCompletarPasswordEndpoint,
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
-  postAuthRecuperarContrasenaEndpoint,
+  postAuthRecuperarPasswordEndpoint,
   postAuthReenviarCodigo2FaEndpoint,
   postAuthRefreshTokenEndpoint,
   postAuthVerificarCodigo2FaEndpoint,
@@ -208,18 +208,12 @@ export class AuthEndpoint {
       })
       .pipe(
         map(response => {
-          const twoFactor = response as unknown as {
-            sessionId?: string;
-            maskedEmail?: string;
-            message?: string;
-          };
-
-          if (typeof twoFactor.sessionId === 'string' && twoFactor.sessionId.length > 0) {
+          if ('sessionId' in response) {
             return {
               kind: 'twoFactorRequired',
-              sessionId: twoFactor.sessionId,
-              maskedEmail: twoFactor.maskedEmail ?? '',
-              message: twoFactor.message ?? '',
+              sessionId: response.sessionId ?? '',
+              maskedEmail: response.maskedEmail ?? '',
+              message: response.message ?? '',
             } satisfies LoginResult;
           }
 
@@ -335,11 +329,29 @@ export class AuthEndpoint {
   public recognizeDocument(
     payload: DocumentRecognitionRequest
   ): Observable<DocumentRecognitionData> {
-    return this.api.request(postRegistroAnalizarAdjuntoEndpoint, {
-      body: payload,
-      withCredentials: true,
-      captchaAction: 'AnalizarAdjunto',
-    });
+    return this.api
+      .request(postRegistroAnalizarAdjuntoEndpoint, {
+        body: payload,
+        withCredentials: true,
+        captchaAction: 'AnalizarAdjunto',
+      })
+      .pipe(
+        map(response => ({
+          campos: response?.campos
+            ? {
+                tipoDocumento: response.campos.tipoDocumento ?? null,
+                numeroDocumento: response.campos.numeroDocumento ?? null,
+                primerNombre: response.campos.primerNombre ?? null,
+                segundoNombre: response.campos.segundoNombre ?? null,
+                primerApellido: response.campos.primerApellido ?? null,
+                segundoApellido: response.campos.segundoApellido ?? null,
+                fechaNacimiento: response.campos.fechaNacimiento ?? null,
+                lugarNacimiento: response.campos.lugarNacimiento ?? null,
+                sexo: response.campos.sexo ?? null,
+              }
+            : undefined,
+        }))
+      );
   }
 
   /**
@@ -370,7 +382,7 @@ export class AuthEndpoint {
    */
   public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
     return this.api
-      .request(postAuthRecuperarContrasenaEndpoint, {
+      .request(postAuthRecuperarPasswordEndpoint, {
         body: payload,
         withCredentials: true,
         captchaAction: 'RecuperarPassword',

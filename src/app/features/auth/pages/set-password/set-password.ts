@@ -1,6 +1,13 @@
-import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { DOCUMENT, Location } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -10,6 +17,7 @@ import {
   OrtInputModule,
 } from '@desarrolloort/components';
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
+import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
   focusFieldById,
@@ -22,8 +30,9 @@ import {
   ORT_PASSWORD_ERROR_MESSAGES,
   ORT_PASSWORD_VALIDATORS,
 } from '../../../../shared/forms/password-validation';
+import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { AuthForm } from '../../components/auth-form/auth-form';
+import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { AuthSessionService } from '../../services/auth-session';
 import { PasswordActivationService } from '../../services/password-activation';
 
@@ -49,6 +58,8 @@ interface SetPasswordForm {
 })
 export class SetPassword {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly location = inject(Location);
   private readonly passwordActivation = inject(PasswordActivationService);
   private readonly authSession = inject(AuthSessionService);
   private readonly route = inject(ActivatedRoute);
@@ -109,29 +120,11 @@ export class SetPassword {
   private readonly tokenErrorState = signal<string | null>(null);
   protected readonly tokenError = this.tokenErrorState.asReadonly();
 
-  protected readonly passwordVisible = signal(false);
-  protected readonly confirmPasswordVisible = signal(false);
+  protected readonly passwordVisibility = createPasswordVisibility();
+  protected readonly confirmPasswordVisibility = createPasswordVisibility(
+    'confirmación de contraseña'
+  );
 
-  protected readonly passwordInputType = computed(() =>
-    this.passwordVisible() ? 'text' : 'password'
-  );
-  protected readonly passwordIcon = computed(() =>
-    this.passwordVisible() ? 'visibility_off' : 'visibility'
-  );
-  protected readonly passwordToggleLabel = computed(() =>
-    this.passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'
-  );
-  protected readonly confirmPasswordInputType = computed(() =>
-    this.confirmPasswordVisible() ? 'text' : 'password'
-  );
-  protected readonly confirmPasswordIcon = computed(() =>
-    this.confirmPasswordVisible() ? 'visibility_off' : 'visibility'
-  );
-  protected readonly confirmPasswordToggleLabel = computed(() =>
-    this.confirmPasswordVisible()
-      ? 'Ocultar confirmación de contraseña'
-      : 'Mostrar confirmación de contraseña'
-  );
   private readonly password = toSignal(this.form.controls.password.valueChanges, {
     initialValue: this.form.controls.password.value,
   });
@@ -154,14 +147,6 @@ export class SetPassword {
     this.activateToken();
   }
 
-  protected togglePasswordVisibility(): void {
-    this.passwordVisible.update(v => !v);
-  }
-
-  protected toggleConfirmPasswordVisibility(): void {
-    this.confirmPasswordVisible.update(v => !v);
-  }
-
   protected submit(): void {
     this.submitted.set(true);
     this.form.markAllAsTouched();
@@ -173,29 +158,45 @@ export class SetPassword {
 
     this.isSubmittingState.set(true);
 
-    this.passwordActivation.completePassword(this.form.controls.password.value).subscribe({
-      next: () => {
-        const message = this.isRecovery
-          ? 'Contraseña actualizada correctamente.'
-          : 'Cuenta activada correctamente.';
-        this.snackbar.success(message);
-        this.authSession.hydrateAuthenticatedSession().subscribe({
-          next: () => {
-            void this.router
-              .navigateByUrl('/inicio')
-              .finally(() => this.isSubmittingState.set(false));
-          },
-          error: () => {
-            this.isSubmittingState.set(false);
-            this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
-          },
-        });
-      },
-      error: () => {
-        this.isSubmittingState.set(false);
-        this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
-      },
-    });
+    this.passwordActivation
+      .completePassword(this.form.controls.password.value)
+      .pipe(
+        switchMap(() => {
+          this.snackbar.success(
+            this.isRecovery
+              ? 'Contraseña actualizada correctamente.'
+              : 'Cuenta activada correctamente.'
+          );
+          return this.isRecovery ? of('/iniciar-sesion') : this.hydrateSessionAndGoHome();
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: url => this.navigateAfterSubmit(url),
+        error: () => {
+          this.isSubmittingState.set(false);
+          this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
+        },
+      });
+  }
+
+  /** Emite la URL destino, o `null` si la sesión no pudo hidratarse (queda en la página). */
+  private hydrateSessionAndGoHome() {
+    return this.authSession.hydrateAuthenticatedSession().pipe(
+      map(() => '/inicio'),
+      catchError(() => {
+        this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
+        return of(null);
+      })
+    );
+  }
+
+  private navigateAfterSubmit(url: string | null): void {
+    if (!url) {
+      this.isSubmittingState.set(false);
+      return;
+    }
+    this.router.navigateByUrl(url).finally(() => this.isSubmittingState.set(false));
   }
 
   private activateToken(): void {
@@ -205,9 +206,17 @@ export class SetPassword {
       return;
     }
 
-    this.passwordActivation.activateLink(token).subscribe({
-      error: () =>
-        this.tokenErrorState.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
-    });
+    this.location.replaceState(
+      this.router.url.split('?')[0] || '/crear-password',
+      this.isRecovery ? 'flow=recovery' : ''
+    );
+
+    this.passwordActivation
+      .activateLink(token)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () =>
+          this.tokenErrorState.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
+      });
   }
 }

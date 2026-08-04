@@ -9,7 +9,7 @@
 .email-confirmation-page {
   display: flex;
   flex-direction: column;
-  width: min(100%, 26.25rem);
+
   min-height: 100dvh;
   margin: 0 auto;
   background: var(--ort-sys-base-surface-background-page-default);
@@ -23,37 +23,11 @@
   color: var(--ort-sys-base-text-on-color-header);
 }
 
-.email-confirmation-statusbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 2.9375rem;
-  padding: 0.875rem var(--ort-sys-spacing-16) 0;
-  font-weight: var(--ort-sys-font-weight-semibold);
-  font-size: var(--ort-sys-font-size-16);
-  line-height: var(--ort-sys-line-height-20);
-}
-
-.email-confirmation-statusbar__icons {
-  display: flex;
-  gap: 0.3125rem;
-  align-items: center;
-
-  span {
-    display: block;
-    width: 1.125rem;
-    height: 0.625rem;
-    border: 1px solid currentColor;
-    border-radius: var(--ort-sys-border-radius-2, 2px);
-  }
-}
-
 .email-confirmation-header__content {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 4rem;
-  padding: var(--ort-sys-spacing-8) var(--ort-sys-spacing-16);
+  padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) var(--ort-sys-spacing-16);
 }
 
 .email-confirmation-brand {
@@ -66,9 +40,11 @@
 }
 
 .email-confirmation-brand__logo {
+  display: block;
   object-fit: contain;
-  width: 3.3125rem;
-  height: 2.25rem;
+  width: 3.5rem;
+  height: auto;
+  aspect-ratio: 67 / 30;
 }
 
 .email-confirmation-brand__divider {
@@ -93,7 +69,7 @@
   flex: 1 1 auto;
   flex-direction: column;
   justify-content: space-between;
-  min-height: calc(100dvh - 6.9375rem);
+  min-height: calc(100dvh - 7rem);
   padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
 }
 
@@ -112,9 +88,9 @@
   align-items: center;
   width: 3.5rem;
   height: 3.5rem;
-  border: 1px solid var(--ort-sys-base-border-success-color, #abefc6);
+  border: var(--ort-sys-border-width-1) solid var(--ort-sys-base-border-success-color);
   border-radius: var(--ort-sys-border-radius-round);
-  background: var(--ort-sys-base-surface-success-subtle-background, #ecfdf3);
+  background: var(--ort-sys-base-surface-subtle-success-background);
 }
 
 .email-confirmation__icon-inner {
@@ -124,8 +100,8 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--ort-sys-border-radius-round);
-  background: var(--ort-sys-base-icon-success-color, #079455);
-  color: var(--ort-sys-color-white, #fff);
+  background: var(--ort-sys-base-icon-success-color);
+  color: var(--ort-sys-color-white);
 }
 
 .email-confirmation__icon-inner ort-icon {
@@ -176,7 +152,9 @@
 
 @media (width >=30rem) and (width < 52.5rem) {
   .email-confirmation-page {
-    box-shadow: 0 0.75rem 2rem rgb(13 13 28 / 14%);
+    box-shadow: var(--ort-sys-elevation-lg-x) var(--ort-sys-elevation-lg-y)
+      var(--ort-sys-elevation-lg-blur) var(--ort-sys-elevation-lg-spread)
+      var(--ort-sys-elevation-lg-color);
   }
 }
 
@@ -186,19 +164,18 @@
     margin: 0;
   }
 
-  .email-confirmation-statusbar {
-    display: none;
+  .email-confirmation__title {
+    font-size: var(--ort-sys-font-size-24);
   }
 
   .email-confirmation-header__content {
     justify-content: flex-start;
-    height: 4.5rem;
-    padding-inline: var(--ort-sys-spacing-32, 2rem);
+    padding: var(--ort-sys-spacing-8) var(--ort-sys-spacing-32, 2rem);
   }
 
   .email-confirmation {
     align-items: center;
-    min-height: calc(100dvh - 4.5rem);
+    min-height: calc(100dvh - 4rem);
     padding: var(--ort-sys-spacing-64) var(--ort-sys-spacing-24);
   }
 

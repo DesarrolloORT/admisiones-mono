@@ -32,6 +32,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.svg",
+                "input": "node_modules/@desarrolloort/fdp-components/assets",
+                "output": "assets/"
               }
             ],
             "styles": [
@@ -50,9 +55,6 @@
               "subresourceIntegrity": true,
               "outputHashing": "all",
               "progress": true,
-              "security": {
-                "autoCsp": true
-              },
               "extractLicenses": true,
               "budgets": [
                 {
@@ -73,7 +75,7 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
-              "aot": false,
+              "aot": true,
               "progress": true
             },
             "serving": {

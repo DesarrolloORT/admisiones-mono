@@ -3,19 +3,19 @@ import { ResolveFn, Routes } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { HomeEndpoint } from './endpoints/home.endpoint';
 import { HomeLayout } from './layouts/home-layout/home-layout';
 import { HomeData } from './models/home-data';
 import { ChangePassword } from './pages/change-password/change-password';
 import { Home } from './pages/home/home';
 import { PersonalData } from './pages/personal-data/personal-data';
+import { HomeService } from './services/home';
 
 export const homeResolver: ResolveFn<HomeData | null> = () => {
-  const endpoint = inject(HomeEndpoint);
+  const homeService = inject(HomeService);
 
   return forkJoin({
-    inscripciones: endpoint.getMisInscripciones(),
-    becas: endpoint.getMisBecas(),
+    inscripciones: homeService.getMisInscripciones(),
+    becas: homeService.getMisBecas(),
   }).pipe(catchError(() => of(null)));
 };
 

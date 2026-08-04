@@ -1,8 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { CacheService } from '@desarrolloort/ngx-utils';
 import { of, throwError } from 'rxjs';
-import { storageKeys } from 'src/app/core/storage/keys';
 import { vi } from 'vitest';
 
 import { AuthEndpoint } from '../endpoints/auth.endpoint';
@@ -17,9 +15,9 @@ describe('AuthSessionService', () => {
     clearCache: ReturnType<typeof vi.fn>;
     refreshToken: ReturnType<typeof vi.fn>;
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
+    verifyTwoFactorCode: ReturnType<typeof vi.fn>;
   };
   let routerMock: { navigateByUrl: ReturnType<typeof vi.fn> };
-  let cacheMock: { clear: ReturnType<typeof vi.fn> };
   let accountMock: { getPersonalData: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
@@ -39,9 +37,11 @@ describe('AuthSessionService', () => {
           message: 'Código reenviado.',
         })
       ),
+      verifyTwoFactorCode: vi
+        .fn()
+        .mockReturnValue(of({ documento: '12345678', primerNombre: 'Ana' })),
     };
     routerMock = { navigateByUrl: vi.fn() };
-    cacheMock = { clear: vi.fn() };
     accountMock = {
       getPersonalData: vi.fn().mockReturnValue(
         of({
@@ -70,7 +70,6 @@ describe('AuthSessionService', () => {
         { provide: AuthEndpoint, useValue: endpointMock },
         { provide: AccountService, useValue: accountMock },
         { provide: Router, useValue: routerMock },
-        { provide: CacheService, useValue: cacheMock },
       ],
     });
 
@@ -104,8 +103,7 @@ describe('AuthSessionService', () => {
       documento: '1234567-8',
       password: 'secret',
     });
-    expect(window.localStorage.getItem(storageKeys.token)).toBeNull();
-    expect(window.localStorage.getItem(storageKeys.session)).toContain('12345678');
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
   });
 
   it('should propagate twoFactorRequired outcome without storing a session', () => {
@@ -123,13 +121,104 @@ describe('AuthSessionService', () => {
       .subscribe(outcome => {
         expect(outcome.kind).toBe('twoFactorRequired');
         if (outcome.kind === 'twoFactorRequired') {
-          expect(outcome.sessionId).toBe('abc');
-          expect(outcome.maskedEmail).toBe('c***a@gmail.***');
+          expect(service.takePendingTwoFactorContext()).toEqual({
+            documentNumber: '12345678',
+            documentType: 'CI',
+            email: 'c***a@gmail.***',
+            sessionId: 'abc',
+          });
         }
       });
 
     expect(service.isAuthenticated()).toBe(false);
-    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
+  });
+
+  it('should complete two-factor verification and persist the session in memory', () => {
+    let emitted: { documentType: string; documentNumber: string; primerNombre: string } | undefined;
+
+    service
+      .completeTwoFactor({
+        sessionId: 'session-123',
+        code: '123456',
+        documentType: 'CI',
+        documentNumber: '12345678',
+      })
+      .subscribe(session => {
+        emitted = session;
+      });
+
+    expect(endpointMock.verifyTwoFactorCode).toHaveBeenCalledWith({
+      sessionId: 'session-123',
+      codigo: '123456',
+    });
+    expect(emitted).toEqual({
+      documentType: 'CI',
+      documentNumber: '12345678',
+      primerNombre: 'Ana',
+    });
+    expect(service.session()).toEqual(emitted);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
+  });
+
+  it('should fall back to the payload document when 2FA verification returns none', () => {
+    endpointMock.verifyTwoFactorCode.mockReturnValue(of({ documento: '', primerNombre: 'Ana' }));
+
+    service
+      .completeTwoFactor({
+        sessionId: 'session-123',
+        code: '123456',
+        documentType: 'CI',
+        documentNumber: '12345678',
+      })
+      .subscribe(session => {
+        expect(session.documentNumber).toBe('12345678');
+      });
+
+    expect(service.session()?.documentNumber).toBe('12345678');
+  });
+
+  it('should not store a session when 2FA verification fails', () => {
+    endpointMock.verifyTwoFactorCode.mockReturnValue(throwError(() => new Error('invalid code')));
+    let caught: unknown;
+
+    service
+      .completeTwoFactor({
+        sessionId: 'session-123',
+        code: '000000',
+        documentType: 'CI',
+        documentNumber: '12345678',
+      })
+      .subscribe({
+        error: error => {
+          caught = error;
+        },
+      });
+
+    expect(caught).toBeInstanceOf(Error);
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('should consume the pending two-factor context only once', () => {
+    endpointMock.login.mockReturnValue(
+      of({
+        kind: 'twoFactorRequired',
+        sessionId: 'abc',
+        maskedEmail: 'c***a@gmail.***',
+        message: 'envio',
+      })
+    );
+
+    service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
+
+    expect(service.takePendingTwoFactorContext()).toEqual({
+      documentNumber: '12345678',
+      documentType: 'CI',
+      email: 'c***a@gmail.***',
+      sessionId: 'abc',
+    });
+    expect(service.takePendingTwoFactorContext()).toBeNull();
   });
 
   it('should delegate resending the two-factor code', () => {
@@ -142,7 +231,7 @@ describe('AuthSessionService', () => {
     });
   });
 
-  it('should hydrate and persist an authenticated cookie session from personal data', () => {
+  it('should hydrate an authenticated cookie session in memory', () => {
     service.hydrateAuthenticatedSession().subscribe(session => {
       expect(session.documentNumber).toBe('12345678');
       expect(session.primerNombre).toBe('Ana');
@@ -150,7 +239,7 @@ describe('AuthSessionService', () => {
 
     expect(accountMock.getPersonalData).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(true);
-    expect(window.localStorage.getItem(storageKeys.session)).toContain('12345678');
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
   });
 
   it('should validate an authenticated cookie session through personal data', () => {
@@ -171,8 +260,8 @@ describe('AuthSessionService', () => {
     });
 
     expect(service.isAuthenticated()).toBe(false);
-    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
-    expect(cacheMock.clear).toHaveBeenCalled();
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
+    expect(endpointMock.clearCache).toHaveBeenCalled();
   });
 
   it('should delegate access token refresh without changing local session', () => {
@@ -185,22 +274,12 @@ describe('AuthSessionService', () => {
 
   it('should clear session locally after logout', () => {
     service.login({ documentType: 'CI', documentNumber: '12345678', password: 'x' }).subscribe();
-    window.sessionStorage.setItem(
-      `${storageKeys.inscriptionDraft}:12345678:primera-vez`,
-      '{"draft":true}'
-    );
-    window.sessionStorage.setItem('telemetry-run-id', 'keep');
 
     service.logout();
 
     expect(endpointMock.logout).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(false);
-    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
-    expect(
-      window.sessionStorage.getItem(`${storageKeys.inscriptionDraft}:12345678:primera-vez`)
-    ).toBeNull();
-    expect(window.sessionStorage.getItem('telemetry-run-id')).toBe('keep');
-    expect(cacheMock.clear).toHaveBeenCalled();
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
     expect(endpointMock.clearCache).toHaveBeenCalled();
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
@@ -212,7 +291,7 @@ describe('AuthSessionService', () => {
     service.logout();
 
     expect(service.isAuthenticated()).toBe(false);
-    expect(window.localStorage.getItem(storageKeys.session)).toBeNull();
+    expect(window.localStorage.getItem('auth-session')).toBeNull();
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 });

@@ -16,6 +16,7 @@ Migracion de `admisiones_legacy` hacia una aplicacion Angular moderna, con nueva
 - [Admisiones](#admisiones)
   - [Indice](#indice)
   - [Objetivo del proyecto](#objetivo-del-proyecto)
+  - [Documentacion ORT Docs Hub](#documentacion-ort-docs-hub)
   - [Requisitos](#requisitos)
   - [Inicio rapido](#inicio-rapido)
   - [Configuracion de desarrollo local](#configuracion-de-desarrollo-local)
@@ -44,11 +45,18 @@ El alcance incluye:
 - Redisenio completo de interfaz y experiencia de usuario.
 - Estandarizacion de arquitectura, testing y CI/CD sobre esta nueva base.
 
+## Documentacion ORT Docs Hub
+
+- Metadata para el Hub: [.docs/project.json](.docs/project.json)
+- Sitio documental publicado: URL prevista https://ort-docs.ort.edu.uy/admisiones/
+- Mapa central de conocimiento: [docs/index.md](docs/index.md)
+- Flujos canonicos: [login](docs/flujos/login.md), [registro](docs/flujos/registro.md) e [inscripciones](docs/flujos/inscripciones.md)
+
 ## Requisitos
 
 | Herramienta | Version minima | Notas                                |
 | ----------- | -------------- | ------------------------------------ |
-| Node.js     | 20.x           | Recomendado usar LTS                 |
+| Node.js     | 22.x           | Recomendado usar LTS                 |
 | npm         | 10.x           | Incluido con Node.js                 |
 | Angular CLI | 21.x           | Solo para desarrollo local           |
 | Docker      | Opcional       | Requerido para entorno en contenedor |
@@ -57,7 +65,7 @@ El alcance incluye:
 
 1. Clonar el repositorio.
 2. Instalar dependencias con `npm install`.
-3. Crear ambientes a partir de los templates en `src/environments/`.
+3. `npm run start` genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration; la primera vez abre el navegador para iniciar sesion con la cuenta ORT (la sesion queda persistida, no se necesita Azure CLI).
 4. Ejecutar `npm run start`.
 
 Si necesitas el flujo completo con autenticacion de packages y detalle de ambientes, seguir la seccion de configuracion de desarrollo local.
@@ -87,7 +95,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Ejecutar `envs login` (una sola vez) y luego usar `npm run start` o `npm run start:dev` para generar automaticamente `environment.generated.ts`.
+   Usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY_TEMPLATE` del ambiente (con placeholders `{{API_URL}}` y `{{FDP_API_URL}}`).
 
 ## Ejecutar la aplicacion en un servidor local
 
@@ -105,7 +113,6 @@ Documentacion relacionada:
 - [docs/BEST-PRACTICES.md](docs/BEST-PRACTICES.md)
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
 - [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md)
-- [docs/codegen/update-endpoints.md](docs/codegen/update-endpoints.md)
 
 > [!IMPORTANT]
 > Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.
@@ -146,8 +153,7 @@ backend, ejecutar `npm run update-api` para regenerar modelos en
 ignorados por Git.
 
 `ApiHttpClient` resuelve las URLs, consume los endpoints generados y cachea por
-defecto los `GET` sin parámetros. Los services consumen adapters de feature; si
-necesitas ver los endpoints reales locales, ejecuta `npm run api:endpoints`.
+defecto los `GET` sin parámetros. Los services consumen adapters de feature; los endpoints generados se actualizan con `npm run update-api`.
 
 Se recomienda utilizar `@angular/cli` para generar nuevos componentes, servicios y directivas.
 
@@ -166,37 +172,48 @@ de validacion, criterios manuales y gaps de ORT Components estan documentados en
 Estos son algunos de los scripts disponibles para el proyecto:
 
 - `start`: inicia el servidor local de desarrollo.
-- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
 - `start:o`: inicia el servidor local y abre el navegador.
+- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
 - `build`: compila la aplicacion para produccion.
-- `build:staging`: compila la aplicacion para preproduccion.
 - `build:dev`: compila la aplicacion para desarrollo.
-- `copy-web-config`: copia configuracion de IIS para builds `dev` y `staging`.
+- `build:staging`: compila la aplicacion para preproduccion (mismas keys inyectadas por CI).
+- `build:prod`: compila la aplicacion para produccion con refresh de env.
 - `lint`: revisa y corrige el estilo del codigo.
-- `lint:check`: valida formato y estilo sin modificar archivos.
+- `lint:check`: valida formato, disables justificados, estilo y contratos sin modificar archivos.
+- `check-disable-comments`: valida que `eslint-disable` y `stylelint-disable` indiquen regla concreta y motivo.
 - `test`: ejecuta las pruebas unitarias.
+- `test:watch`: ejecuta pruebas en modo observacion.
 - `test:ci`: ejecuta las pruebas unitarias para CI.
+- `test:coverage`: ejecuta pruebas con reporte de cobertura.
+- `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
 - `test:a11y`: ejecuta Playwright + axe en desktop y mobile.
 - `test:e2e:smoke`: ejecuta los E2E rapidos y bloqueantes para PR.
 - `test:e2e:regression`: ejecuta manualmente flujos completos antes de releases,
   hotfixes delicados o cambios en registro/login/datos personales.
 - `test:e2e:ui`: abre Playwright UI para elegir y observar cualquier E2E.
 - `test:e2e:report`: abre el reporte HTML de la ultima corrida Playwright.
-- `test:coverage`: ejecuta pruebas con reporte de cobertura.
-- `test:watch`: ejecuta pruebas en modo observacion.
-- `test:sonar`: ejecuta pruebas con cobertura para analisis de calidad.
 - `ci`: ejecuta validaciones principales de CI (`lint:check`, `test:ci`, `build`, `test:a11y`, `test:e2e:smoke`).
+- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, `check-missing-tests`, tests, build dev).
+- `check-missing-tests`: verifica que cada fuente tenga su spec asociado.
+- `generate-tests`: genera specs faltantes a partir de las fuentes sin cobertura.
+- `sonar:local`: ejecuta coverage y SonarQube local si estan configurados `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y `sonar-scanner`.
+- `sonar:gate-local`: quality gate local (lint, cobertura con umbral y duplicacion) sin servidor ni token.
+- `update-api`: regenera contratos de API desde el swagger.
+- `check-api-contracts`: valida que los adapters no filtren tipos generados.
+- `env:sync`: sincroniza variables de entorno desde Azure App Configuration.
+- `env:refresh`: fuerza refresco del cache de variables de entorno.
+- `env:offline`: usa el cache local sin conectar a Azure.
+- `env:cache:clear`: limpia el cache local de variables de entorno.
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.
 - `update-endpoints`: actualiza constantes tipadas de endpoints desde Swagger.
 - `update-api`: actualiza modelos y endpoints, y valida que Angular siga compilando.
-- `check-endpoints`: regenera contratos de endpoints y falla si quedan diferencias en Git.
+- `check-api-contracts`: valida que adapters no filtren `generated`, `unknown`, `any` ni casts inseguros.
 
 ## Pre-commit hook
 
-Al realizar un commit, el hook de pre-commit valida formato y estilo con
-`lint-staged`, y revisa tests faltantes solo para archivos fuente staged.
+Al realizar un commit, el hook de pre-commit revisa tests faltantes para archivos fuente staged y despues ejecuta `lint-staged`. Si falla, muestra el bloque responsable: tests faltantes o ESLint/Prettier/Stylelint.
 
 ## Generacion de archivos de testing
 

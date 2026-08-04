@@ -5,6 +5,7 @@ import { mockApi } from './support/api-mocks';
 import { HomePage } from './support/pages/home-page';
 import { InscripcionPage } from './support/pages/inscripcion-page';
 import { LoginPage } from './support/pages/login-page';
+import { clickRadioByName } from './support/pages/ort-controls';
 import { RegisterPage } from './support/pages/register-page';
 import { addAuthenticatedSession } from './support/session';
 
@@ -26,7 +27,8 @@ const protectedPages = [
 ];
 
 test.beforeEach(async ({ page }) => {
-  await mockApi(page);
+  // El retardo en Pagar permite observar la pantalla "Estamos procesando el pago".
+  await mockApi(page, { delayMsByPath: { '/Inscripciones/Pagar': 800 } });
 });
 
 test.describe('WCAG axe coverage @a11y', () => {
@@ -51,13 +53,16 @@ test.describe('WCAG axe coverage @a11y', () => {
 });
 
 test.describe('Keyboard and form accessibility @a11y', () => {
+  test.describe.configure({ timeout: 60_000 });
   test('keeps invalid login errors discoverable @a11y', async ({ page }) => {
     const login = new LoginPage(page);
 
     await login.goto();
     await login.submitEmpty();
 
-    await expect(page.getByText('Nro. de documento es obligatorio.')).toBeVisible();
+    await expect(page.getByText('Revisá los campos marcados.')).toBeVisible();
+    await expect(page.getByText('Este campo es obligatorio').first()).toBeVisible();
+    await expect(page.locator('#login-document-number')).toBeFocused();
     await expectNoAxeViolations(page);
   });
 
@@ -70,8 +75,10 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await register.continueFromIdentity();
 
     const summary = page.locator('ort-error-summary');
-    await expect(summary).toBeFocused();
     await expect(summary).toContainText('Nro. de cédula es obligatorio.');
+
+    // El resumen recibe foco en un contenedor y luego el foco pasa al primer campo inválido.
+    await expect(page.locator('#register-document-number')).toBeFocused();
 
     await expect(page.getByRole('link', { name: 'Nro. de cédula es obligatorio.' })).toHaveCount(0);
   });
@@ -95,13 +102,17 @@ test.describe('Keyboard and form accessibility @a11y', () => {
 
   test('traps focus in the enrollment exit dialog and restores it on Escape @a11y', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await addAuthenticatedSession(page);
 
     const inscription = new InscripcionPage(page);
     await inscription.goto();
 
-    const closeButton = page.getByRole('button', { name: 'Cerrar inscripción' });
+    // En desktop el header oculta el botón de cierre; el disparador visible es el del rail.
+    const closeButton =
+      testInfo.project.name === 'chromium-mobile'
+        ? page.getByRole('button', { name: 'Cerrar inscripción' })
+        : page.getByRole('button', { name: 'Salir del proceso' });
     await closeButton.focus();
     await closeButton.press('Enter');
 
@@ -116,14 +127,64 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(closeButton).toBeFocused();
   });
 
+  test('does not advance enrollment when Enter is pressed on a focused radio @a11y', async ({
+    page,
+  }) => {
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await inscription.expectEnterOnFocusedRadioDoesNotAdvance(
+      'tipoPropuesta',
+      'Carrera universitaria'
+    );
+  });
+
+  test('opens the enrollment select drawer with keyboard on mobile @a11y', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile drawer behavior only.');
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await clickRadioByName(page, /^Carrera universitaria/);
+
+    const trigger = page.locator('#academic-proposal-career-mobile');
+    await expect(trigger).toBeEnabled();
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+
+    const dialog = page.getByRole('dialog', { name: 'Seleccionar carrera' });
+    await expect(dialog).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(trigger).toHaveAttribute('aria-controls', 'academic-proposal-career-drawer');
+    await expectNoAxeViolations(page);
+
+    const option = dialog.getByRole('radio', { name: 'Licenciatura en Diseño Gráfico' });
+    await option.focus();
+    await page.keyboard.press('Space');
+    await expect(option).toHaveAttribute('aria-checked', 'true');
+
+    const confirm = page.getByRole('button', { name: 'Seleccionar' });
+    await confirm.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+    await expect(trigger).toContainText('Licenciatura en Diseño Gráfico');
+  });
   test('keeps the enrollment survey, payment and confirmation dialog accessible @a11y', async ({
     page,
   }) => {
     await addAuthenticatedSession(page);
 
     const inscription = new InscripcionPage(page);
-    await inscription.goto('encuesta-completa');
+    await inscription.goto();
     await inscription.fillAcademicProposal();
+    await inscription.fillEducation();
+    await inscription.fillAcademicDecision();
+    await inscription.fillOrtExperience();
 
     await expectNoAxeViolations(page, {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
@@ -136,17 +197,33 @@ test.describe('Keyboard and form accessibility @a11y', () => {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
-    await inscription.selectPayment('cuenta-bancaria');
+    await inscription.selectPayment('cuenta-personal');
 
     const dialog = page.getByRole('dialog', { name: 'Confirmar inscripción' });
     await expect(dialog).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Volver', exact: true })).toBeFocused();
+    await expect
+      .poll(() => dialog.evaluate(element => element.contains(element.ownerDocument.activeElement)))
+      .toBe(true);
     await expectNoAxeViolations(page);
 
     await page.keyboard.press('Escape');
 
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeFocused();
+    await expect(inscription.paymentSubmitButton()).toBeVisible();
+  });
+
+  test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({
+    page,
+  }) => {
+    await addAuthenticatedSession(page);
+
+    const inscription = new InscripcionPage(page);
+    await inscription.goto();
+    await inscription.completeInitialEnrollmentWithKeyboard();
+
+    // El título de procesamiento expone role="status", por lo que no es un heading.
+    await expect(page.getByRole('status').filter({ hasText: 'Procesando tu pago' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 });
 

@@ -3,16 +3,8 @@ export interface EmailConfirmationData {
   actionRoute: string;
   description: string;
   icon: string;
-  requiresTwoFactorState?: boolean;
   secondaryDescription?: string;
   title: string;
-}
-
-export interface TwoFactorConfirmationState {
-  documentNumber: string;
-  documentType: string;
-  email: string;
-  sessionId: string;
 }
 
 export const EMAIL_CONFIRMATION_SPAM_HINT =
@@ -42,7 +34,6 @@ export const TWO_FACTOR_EMAIL_CONFIRMATION: EmailConfirmationData = {
   actionRoute: '/verificar-codigo',
   description: 'Te enviamos un código de verificación a tu correo electrónico.',
   icon: 'mark_email_read',
-  requiresTwoFactorState: true,
   secondaryDescription: EMAIL_CONFIRMATION_SPAM_HINT,
   title: 'Código enviado',
 };
@@ -61,22 +52,4 @@ export function isEmailConfirmationData(value: unknown): value is EmailConfirmat
     typeof data.icon === 'string' &&
     typeof data.title === 'string'
   );
-}
-
-export function toTwoFactorConfirmationState(value: unknown): TwoFactorConfirmationState | null {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const state = value as Partial<TwoFactorConfirmationState>;
-  if (typeof state.sessionId !== 'string' || !state.sessionId) {
-    return null;
-  }
-
-  return {
-    documentNumber: typeof state.documentNumber === 'string' ? state.documentNumber : '',
-    documentType: typeof state.documentType === 'string' ? state.documentType : '',
-    email: typeof state.email === 'string' ? state.email : '',
-    sessionId: state.sessionId,
-  };
 }

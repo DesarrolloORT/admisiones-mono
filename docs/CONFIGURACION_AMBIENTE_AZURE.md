@@ -1,348 +1,203 @@
-# Configuración de ambiente frontend con Azure App Configuration
+# Levantar el frontend con Azure y cambiar de ambiente
 
-Este proyecto obtiene su configuración de ambiente desde **Azure App Configuration**.  
-Azure queda como fuente única de verdad y el repositorio no guarda valores reales de ambiente.
+Este proyecto obtiene la configuración frontend desde Azure App Configuration mediante
+`@desarrolloort/azure-env-sync`. Azure es la fuente de verdad; el repo no guarda valores
+reales ni lógica propia de sincronización.
 
-El flujo es:
+## Requisitos
+
+- Node.js 20 y npm instalados.
+- Cuenta ORT con permiso de lectura sobre Azure App Configuration
+
+La convención compartida lee `frontend:<proyecto>:environment` con el label del ambiente. El
+valor es el JSON final para Angular; no hay presets ni transformaciones por aplicación.
+
+Rol mínimo:
+
+```text
+App Configuration Data Reader
+```
+
+## Paso a paso para levantar el frontend
+
+1. Instalar las dependencias del proyecto:
+
+   ```powershell
+   npm install
+   ```
+
+   Si GitHub Packages rechaza la instalación, ejecutar `npm login --registry=https://npm.pkg.github.com` con un token que tenga acceso de lectura al paquete y repetir `npm install`.
+
+2. Iniciar sesión con la cuenta ORT: la primera vez que corra el sync se abre el navegador para autenticarse con Entra ID. La sesión queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`), por lo que los siguientes usos son silenciosos. Para cerrar la sesión local: `npm run env:cache:clear`. Si no se puede abrir el navegador, agregar `--device-code` al comando de sync.
+
+3. Levantar el frontend en `desa`:
+
+   ```powershell
+   npm start
+   ```
+
+4. Abrir [http://localhost:4200/](http://localhost:4200/).
+
+`npm start` sincroniza el label `desa`, genera `src/environments/generated-environment.ts`, actualiza `src/web.config` con la CSP del ambiente y ejecuta `ng serve`.
+
+El archivo generado no debe editarse manualmente.
+
+## Cambiar de ambiente
+
+Cada label existente en Azure es un ambiente válido. Se selecciona con
+`npm run env:sync -- --env <ambiente>` sin agregar configuración local.
+
+## Flujo interno
 
 ```text
 npm start
   → npm run env:desa
-  → lee Azure App Configuration
+  → usa cache local si tiene menos de 60 minutos
+  → si no hay cache fresco, lee Azure App Configuration una vez
   → genera src/environments/generated-environment.ts
+  → actualiza src/web.config con la CSP del ambiente
   → ejecuta ng serve
 ```
 
-El archivo `generated-environment.ts` es generado automáticamente y no debe editarse manualmente.
+## Guardrails
 
----
-
-## 1. Requisitos previos
-
-El desarrollador necesita:
-
-- Acceso al repositorio.
-- Node.js y npm instalados.
-- Azure CLI instalada.
-- Permiso de lectura sobre el recurso Azure App Configuration.
-
-El recurso usado por este proyecto es:
+Defaults del paquete compartido:
 
 ```text
-App Configuration: AppConfigurationDesarrolloIA
-Endpoint: https://appconfigurationdesarrolloia.azconfig.io
-Key: frontend:admisiones:environment
-Label desa: desa
+Cache local: tmp/env/azure-environment-cache.json
+TTL: 60 minutos
+Máximo local por día: 50 lecturas Azure
+Máximo cache stale de fallback: 24 horas
 ```
 
----
+Autenticación, cache, límites y lectura de Azure pertenecen a
+`@desarrolloort/azure-env-sync`; este repo solo indica proyecto y ambiente.
 
-## 2. Instalar Azure CLI
+## Scripts
 
-En Windows, abrir **PowerShell como administrador** y ejecutar:
+```text
+npm start                # sync cacheado de desa + ng serve
+npm run start:o          # sync cacheado de desa + ng serve -o
+npm run build:dev        # sync cacheado de desa + build development
+npm run build            # refresh de desa + build production
+npm run env:sync -- --env desa
+npm run env:refresh -- --env desa
+npm run env:offline -- --env desa
+npm run env:cache:clear
+```
+
+## Forzar o evitar Azure
+
+Para pedir explícitamente lo último:
 
 ```powershell
-winget install --exact --id Microsoft.AzureCLI
+npm run env:refresh -- --env desa
 ```
 
-Luego cerrar y abrir nuevamente la terminal, VS Code o Windows Terminal.
-
-Validar:
+Para compilar con lo que haya cacheado sin tocar Azure:
 
 ```powershell
-az --version
+npm run env:offline -- --env desa
 ```
 
-Si el comando no se reconoce, cerrar y volver a abrir la terminal. Si sigue sin funcionar, reiniciar la PC.
-
-Ruta estándar esperada en Windows:
-
-```text
-C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd
-```
-
----
-
-## 3. Iniciar sesión en Azure
-
-Ejecutar:
+Para cambiar el TTL en una corrida:
 
 ```powershell
-az login
+npm run env:sync -- --env desa --cache-ttl-minutes 15
 ```
 
-Se abrirá el navegador para iniciar sesión con el usuario institucional.
-
-Si Azure CLI pide seleccionar una suscripción, ingresar el número correspondiente. Por ejemplo:
-
-```text
-[1] ORT - MAI
-```
-
-Escribir:
-
-```text
-1
-```
-
-y presionar Enter.
-
-Validar que el login quedó correcto:
+Para limpiar cache y contador local:
 
 ```powershell
-az account show
+npm run env:cache:clear
 ```
 
-Si aparece una suscripción incorrecta, seleccionar la correcta:
-
-```powershell
-az account set --subscription "ORT - MAI"
-```
-
----
-
-## 4. Pedir permisos si corresponde
-
-Para consumir environments desde Azure App Configuration, el usuario debe tener rol de lectura sobre el recurso:
-
-```text
-App Configuration Data Reader
-```
-
-También sirve:
-
-```text
-App Configuration Data Owner
-```
-
-pero ese rol solo debería usarse para usuarios que crean o modifican configuraciones.
-
-Si el usuario no tiene permisos, pedir que se le asigne acceso sobre:
-
-```text
-AppConfigurationDesarrolloIA
-```
-
-Rol solicitado:
-
-```text
-App Configuration Data Reader
-```
-
-Ruta en Azure Portal:
-
-```text
-AppConfigurationDesarrolloIA
-  → Control de acceso (IAM)
-  → Agregar asignación de roles
-  → App Configuration Data Reader
-  → Seleccionar usuario o grupo
-```
-
-Para verificar el acceso:
-
-```text
-AppConfigurationDesarrolloIA
-  → Control de acceso (IAM)
-  → Comprobar acceso
-  → Buscar usuario
-```
-
-Puede demorar algunos minutos en propagarse después de asignar el rol.
-
----
-
-## 5. Instalar dependencias del proyecto
-
-Desde el repo:
-
-```powershell
-cd C:\GIT\admisiones
-npm install
-```
-
-El proyecto utiliza estas dependencias para leer Azure App Configuration:
-
-```bash
-npm install -D @azure/app-configuration @azure/identity
-```
-
-Normalmente ya deberían estar en `package.json`; no hace falta volver a instalarlas si `npm install` terminó correctamente.
-
----
-
-## 6. Archivos relevantes del repo
-
-### Script de sincronización
-
-```text
-tools/env/sync-azure-environment.mjs
-```
-
-Este script:
-
-1. Busca Azure CLI en el PATH.
-2. En Windows, si no está en el PATH, intenta agregar automáticamente la ruta estándar:
-   ```text
-   C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin
-   ```
-3. Usa la sesión de `az login`.
-4. Lee la key de Azure App Configuration.
-5. Compara el `ETag` de Azure contra la cache local.
-6. Si cambió, regenera:
-   ```text
-   src/environments/generated-environment.ts
-   ```
-7. Si no cambió, no regenera nada.
-
-### Environment de Angular
+## Environment de Angular
 
 ```ts
-import { generatedEnvironment } from './generated-environment';
-
-export const environment = generatedEnvironment;
+export { generatedEnvironment as environment } from './generated-environment';
 ```
 
-Ubicación esperada:
+Ubicación:
 
 ```text
 src/environments/environment.ts
 ```
 
-### Archivos ignorados por Git
-
-El archivo generado y la cache local no deben subirse al repositorio.
-
-`.gitignore`:
+Ignorados por Git:
 
 ```gitignore
 src/environments/generated-environment.ts
-.ort/env-cache/
+src/web.config
 ```
 
----
+El cache vive bajo `tmp/`, que también está ignorado por Git.
 
-## 7. Ejecutar el proyecto
+## CSP y `web.config`
 
-Ejecutar:
+La CSP del ambiente debe estar en Azure dentro del JSON, como `CSP_POLICY_TEMPLATE`.
+El script falla si no existe. `CSP_POLICY_TEMPLATE` acepta los placeholders `{{API_URL}}` y
+`{{FDP_API_URL}}`, que `@desarrolloort/azure-env-sync` reemplaza por los valores reales del
+ambiente antes de generar `CSP_POLICY`; si queda algun placeholder sin resolver, tambien falla.
+`src/web.config` se genera desde ese `CSP_POLICY` ya resuelto y Angular lo copia al root del
+build por la entrada `assets` de `angular.json`.
 
-```powershell
-npm start
-```
-
-Esto ejecuta internamente:
+El `web.config` generado agrega estos headers:
 
 ```text
-npm run env:desa && ng serve
+Cache-Control: no-cache
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Content-Security-Policy: <CSP_POLICY del ambiente>
+Referrer-Policy: no-referrer
+Permissions-Policy: camera=(), geolocation=(), microphone=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains
 ```
 
-Script esperado en `package.json`:
+Tambien mantiene los MIME types de `.json` y `.webmanifest`, y la regla de rewrite que manda rutas Angular no fisicas a `/index.html`.
+
+Ejemplo minimo. Notar que `API_URL` y `FDP_API_URL` no se declaran aca: el propio paquete los
+resuelve desde `frontend:<proyecto>:api_base` y `frontend:fdp:api_base` y los inyecta en el
+template.
 
 ```json
 {
-  "scripts": {
-    "env:desa": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io",
-    "env:desa:force": "node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io --force",
-    "start": "npm run env:desa && ng serve"
-  }
+  "RECAPTCHA_KEY": "site-key-publica",
+  "RECAPTCHA_NONCE": "admisiones-recaptcha-2026",
+  "CSP_POLICY_TEMPLATE": "default-src 'self'; script-src 'self' 'nonce-admisiones-recaptcha-2026' 'strict-dynamic' https://www.google.com https://www.gstatic.com; connect-src 'self' {{API_URL}} https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com {{FDP_API_URL}}; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
 }
 ```
 
----
+`RECAPTCHA_KEY` es la site key publica usada por el navegador. El secret de reCAPTCHA nunca debe estar en frontend. Si `RECAPTCHA_KEY` tiene valor, `CSP_POLICY_TEMPLATE` debe permitir los origenes de Google indicados en el ejemplo; si el ambiente no usa captcha, no hace falta permitirlos ni definir `RECAPTCHA_NONCE`.
 
-## 8. Forzar regeneración del environment
+`RECAPTCHA_NONCE` debe coincidir exactamente con el nonce incluido en `script-src` (`'nonce-<valor>'`). Angular lo pasa al `<script>` que carga `api.js` de Google (via `RECAPTCHA_LOADER_OPTIONS.onBeforeLoad`), y Google propaga ese mismo nonce a los scripts inline que agrega despues. Como el sitio se sirve como archivos estaticos desde IIS (sin render por request), no es posible generar un nonce distinto por response; por eso se usa un valor fijo por ambiente combinado con `'strict-dynamic'` en vez de los hashes `sha256-...` que se usaban antes. Los hashes se rompen sin aviso cuando Google cambia el contenido del script inline; el nonce fijo + `strict-dynamic` no depende de ese contenido.
 
-Si se quiere forzar la descarga desde Azure y regenerar el archivo local:
+## Problemas comunes
 
-```powershell
-npm run env:desa:force
-```
+### No se abre el navegador para el login
 
-o directamente:
+Ejecutar el sync con device code y seguir las instrucciones en consola:
 
 ```powershell
-node tools/env/sync-azure-environment.mjs --project admisiones --env desa --endpoint https://appconfigurationdesarrolloia.azconfig.io --force
+npm run env:sync -- --env desa --device-code
 ```
 
----
+### No hay sesión válida o el login falla
 
-## 9. Solución de problemas
-
-### Error: `az` no se reconoce
-
-Mensaje típico:
-
-```text
-az no se reconoce como un comando interno o externo
-```
-
-o:
-
-```text
-az: The term 'az' is not recognized
-```
-
-Solución:
-
-1. Confirmar que Azure CLI esté instalada:
-   ```powershell
-   az --version
-   ```
-2. Cerrar y reabrir PowerShell, CMD, VS Code o Windows Terminal.
-3. Validar que exista:
-   ```powershell
-   Test-Path "C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd"
-   ```
-4. Si no existe, reinstalar Azure CLI:
-   ```powershell
-   winget install --exact --id Microsoft.AzureCLI
-   ```
-
-El script intenta agregar automáticamente esa ruta al PATH del proceso Node, pero Azure CLI debe estar instalada.
-
----
-
-### Error: `ChainedTokenCredential authentication failed`
-
-Causa probable: no hay sesión válida de Azure CLI o Node no puede ejecutar `az`.
-
-Validar:
+Borrar la sesión local y reintentar (vuelve a pedir login por navegador):
 
 ```powershell
-az account show
+npm run env:cache:clear
+npm run env:sync -- --env desa --refresh
 ```
 
-Luego validar que Node pueda ejecutar Azure CLI:
+Si aparece un error `AADSTS...` de Entra ID, reportarlo a operaciones: puede ser una política del tenant bloqueando el flujo interactivo.
 
-```powershell
-node -e "require('node:child_process').execFileSync('az', ['account', 'show'], { stdio: 'inherit', shell: true })"
-```
+### `403 Forbidden`
 
-Si falla, cerrar y reabrir la terminal o reiniciar VS Code.
+El usuario no tiene permisos suficientes. Pedir `App Configuration Data Reader` sobre `AppConfigurationDesarrolloIA`.
 
----
-
-### Error: `403 Forbidden`
-
-Causa: el usuario autenticado no tiene permisos suficientes sobre App Configuration.
-
-Acción:
-
-```text
-Pedir permisos: App Configuration Data Reader sobre AppConfigurationDesarrolloIA.
-```
-
-Verificar en:
-
-```text
-AppConfigurationDesarrolloIA
-  → Control de acceso (IAM)
-  → Comprobar acceso
-```
-
----
-
-### Error: no encuentra la key o el label
+### No existe la key o el label
 
 Debe existir exactamente:
 
@@ -351,112 +206,6 @@ Key: frontend:admisiones:environment
 Label: desa
 ```
 
-Revisar en Azure Portal:
+### El value no es JSON válido
 
-```text
-AppConfigurationDesarrolloIA
-  → Explorador de configuración
-```
-
----
-
-### Error: el value no es JSON válido
-
-El value en Azure debe ser un objeto JSON válido.
-
-Correcto:
-
-```json
-{
-  "environment": "desa",
-  "project": "admisiones",
-  "apiUrl": "https://apiadmisionesdesa.ort.edu.uy"
-}
-```
-
-Incorrecto:
-
-```text
-environment=desa
-```
-
-También es incorrecto dejar el value vacío si el content type es `application/json`.
-
----
-
-## 10. Cómo funciona la detección de cambios
-
-No usamos una `sentinel`.
-
-Como todo el environment está en una única key JSON, el script usa el `ETag` de Azure App Configuration.
-
-Flujo:
-
-```text
-npm start
-  → lee frontend:admisiones:environment / label=desa
-  → obtiene ETag remoto
-  → compara contra .ort/env-cache/admisiones-desa.json
-  → si el ETag es igual, no regenera
-  → si el ETag cambió, regenera generated-environment.ts
-```
-
-Esto evita mantener una segunda key de versión manual.
-
----
-
-## 11. Regla operativa
-
-Los desarrolladores no editan:
-
-```text
-src/environments/generated-environment.ts
-```
-
-Los cambios de configuración se realizan en:
-
-```text
-Azure App Configuration
-```
-
-y luego cada dev recibe la actualización automáticamente al ejecutar:
-
-```powershell
-npm start
-```
-
-si el `ETag` cambió.
-
----
-
-## 12. Resumen para un dev nuevo
-
-1. Instalar Azure CLI:
-   ```powershell
-   winget install --exact --id Microsoft.AzureCLI
-   ```
-2. Cerrar y abrir la terminal.
-3. Ejecutar:
-   ```powershell
-   az login
-   ```
-4. Validar:
-   ```powershell
-   az account show
-   ```
-5. Pedir permisos si no tiene:
-   ```text
-   App Configuration Data Reader sobre AppConfigurationDesarrolloIA
-   ```
-6. Ir al repo:
-   ```powershell
-   cd C:\GIT\admisiones
-   ```
-7. Instalar dependencias:
-   ```powershell
-   npm install
-   ```
-8. Arrancar:
-   ```powershell
-   npm start
-   ```
+El value en Azure debe ser un objeto JSON completo, no formato `.env`.

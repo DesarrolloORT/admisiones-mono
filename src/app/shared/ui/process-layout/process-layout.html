@@ -1,4 +1,10 @@
-<div class="process-layout" [class.process-layout--without-stepper]="!showStepper()">
+<div
+  class="process-layout"
+  [class.process-layout--compact]="viewport() === 'compact'"
+  [class.process-layout--desktop]="viewport() === 'desktop'"
+  [class.process-layout--tablet]="viewport() === 'tablet'"
+  [class.process-layout--wide-mobile]="viewport() === 'wide-mobile'"
+  [class.process-layout--without-stepper]="!showStepper()">
   <div class="process-layout__top">
     <header class="process-layout__header">
       <div
@@ -8,9 +14,9 @@
         <div class="process-layout__header-action">
           @if (showBack()) {
           <button
-            aria-label="Volver al paso anterior"
             class="process-layout__icon-button"
             type="button"
+            [attr.aria-label]="backLabel()"
             (click)="backClick()">
             <ort-icon aria-hidden="true">arrow_back_ios</ort-icon>
           </button>
@@ -20,8 +26,8 @@
         <div class="process-layout__brand">
           <img
             class="process-layout__logo"
-            height="36"
-            width="53"
+            height="25"
+            width="56"
             [alt]="logoAlt()"
             [ngSrc]="logoSrc()" />
           <span aria-hidden="true" class="process-layout__brand-divider"></span>
@@ -50,7 +56,7 @@
         profileMenuOpen() ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'
       "
               (click)="toggleProfileMenu()">
-              <ort-icon aria-hidden="true">person</ort-icon>
+              <ort-icon aria-hidden="true" filled>person</ort-icon>
             </button>
 
             @if (profileMenuOpen()) {
@@ -64,9 +70,7 @@
               [cdkTrapFocusAutoCapture]="true"
               (keydown.escape)="closeProfileMenu(true)">
               <div class="process-layout__profile-menu-sheet" tabindex="-1">
-                <h2 class="process-layout__profile-menu-title" id="process-profile-menu-title">
-                  Menú de usuario
-                </h2>
+                <h2 class="sr-only" id="process-profile-menu-title">Menú de usuario</h2>
 
                 <nav aria-label="Opciones de usuario" class="process-layout__profile-menu-list">
                   <a
@@ -104,11 +108,16 @@
       </div>
     </header>
 
-    @if (showStepper()) {
+    @if (showStepper() && viewport() !== 'desktop') {
+    <p aria-live="polite" class="sr-only" role="status">
+      {{ processTitle() }}. {{ stepperSubtitle() }}
+    </p>
     <div class="process-layout__mobile-stepper">
       <ort-expandable-stepper
         [allowStepNavigation]="false"
         [ariaLabel]="stepperAriaLabel()"
+        [attr.aria-expanded]="stepperExpanded()"
+        [attr.aria-haspopup]="true"
         [currentStepId]="currentStepId()"
         [expanded]="stepperExpanded()"
         [interactiveSteps]="false"
@@ -121,12 +130,14 @@
   </div>
 
   <div class="process-layout__body">
-    @if (showStepper()) {
+    @if (showStepper() && viewport() === 'desktop') {
     <aside aria-label="Progreso del proceso" class="process-layout__rail">
       <div class="process-layout__rail-inner">
         <ort-expandable-stepper
           [allowStepNavigation]="false"
           [ariaLabel]="stepperAriaLabel()"
+          [attr.aria-expanded]="true"
+          [attr.aria-haspopup]="true"
           [currentStepId]="currentStepId()"
           [expanded]="true"
           [interactiveSteps]="false"

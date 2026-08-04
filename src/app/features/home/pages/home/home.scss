@@ -61,7 +61,7 @@
   overflow: hidden;
   border: 1px solid var(--home-border);
   border-radius: var(--ort-sys-border-radius-12);
-  background: var(--home-surface);
+  background: var(--ort-sys-base-surface-background);
   box-shadow: var(--home-shadow);
 }
 
@@ -82,14 +82,14 @@
     '. description'
     '. button';
   grid-template-columns: 32px minmax(0, 1fr);
-  gap: 4px var(--ort-sys-spacing-16);
+  gap: var(--ort-sys-spacing-4) var(--ort-sys-spacing-16);
   align-items: center;
   padding: var(--ort-sys-spacing-24);
 }
 
 .home-action-card__icon {
   grid-area: icon;
-  color: var(--ort-sys-base-icon-color-subtle, #697586);
+  color: var(--ort-sys-base-icon-color-subtle);
   font-size: 32px;
 }
 
@@ -115,7 +115,11 @@
     'button' / 1fr;
   gap: var(--ort-sys-spacing-8);
   align-content: end;
-  background: linear-gradient(to bottom, rgb(255 255 255 / 0%) 0%, var(--home-surface) 57%);
+  background: linear-gradient(
+    to bottom,
+    var(--ort-sys-color-white-a00) 0%,
+    var(--ort-sys-base-surface-background) 57%
+  );
 }
 
 .home-action-card__primary {
@@ -124,15 +128,15 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 48px;
-  margin-top: 10px;
+  min-height: var(--ort-sys-size-56);
+  margin-top: var(--ort-sys-spacing-16);
 }
 
 @media (width <=760px) {
   .home-main {
-    gap: 24px;
+    gap: var(--ort-sys-spacing-24);
     width: 100%;
-    padding: 24px 16px;
+    padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
   }
 
   .home-welcome {
@@ -141,7 +145,7 @@
 
   .home-actions {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--ort-sys-spacing-12);
   }
 
   .home-action-card,
@@ -162,10 +166,10 @@
       'title'
       'description'
       'button' / 1fr;
-    gap: 8px;
+    gap: var(--ort-sys-spacing-8);
     align-content: start;
     min-height: 240px;
-    padding: 24px 16px;
+    padding: var(--ort-sys-spacing-24) var(--ort-sys-spacing-16);
     background: transparent;
   }
 
@@ -175,7 +179,7 @@
   }
 
   .home-action-card__primary {
-    min-height: 56px;
-    margin-top: 8px;
+    min-height: var(--ort-sys-size-56);
+    margin-top: var(--ort-sys-spacing-8);
   }
 }

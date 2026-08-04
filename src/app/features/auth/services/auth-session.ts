@@ -1,10 +1,7 @@
-import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { CacheService } from '@desarrolloort/ngx-utils';
 import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
-import { storageKeys } from 'src/app/core/storage/keys';
 
 import { AuthEndpoint, LoginResult, ResendTwoFactorCodeResult } from '../endpoints/auth.endpoint';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
@@ -17,8 +14,14 @@ import { AccountService } from './account';
  * - `twoFactorRequired`: caller must navigate to the 2FA page and complete verification.
  */
 export type LoginOutcome =
-  | { kind: 'authenticated'; session: AuthSession }
-  | { kind: 'twoFactorRequired'; sessionId: string; maskedEmail: string; message: string };
+  { kind: 'authenticated'; session: AuthSession } | { kind: 'twoFactorRequired' };
+
+interface PendingTwoFactorContext {
+  documentNumber: string;
+  documentType: string;
+  email: string;
+  sessionId: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -26,10 +29,9 @@ export type LoginOutcome =
 export class AuthSessionService {
   private readonly endpoint = inject(AuthEndpoint);
   private readonly account = inject(AccountService);
-  private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
-  private readonly cache = inject(CacheService);
-  private readonly sessionState = signal<AuthSession | null>(this.restoreSession());
+  private readonly sessionState = signal<AuthSession | null>(null);
+  private pendingTwoFactorContext: PendingTwoFactorContext | null = null;
 
   public readonly session = this.sessionState.asReadonly();
   public readonly isAuthenticated = computed(() => this.sessionState() !== null);
@@ -72,14 +74,18 @@ export class AuthSessionService {
     return this.endpoint.resendTwoFactorCode({ sessionId });
   }
 
+  public takePendingTwoFactorContext(): PendingTwoFactorContext | null {
+    const context = this.pendingTwoFactorContext;
+    this.pendingTwoFactorContext = null;
+    return context;
+  }
+
   public hydrateAuthenticatedSession(): Observable<AuthSession> {
     return this.account.getPersonalData().pipe(
       map(personalData => ({
-        token: null,
         documentType: personalData.documentType,
         documentNumber: personalData.documentNumber,
         primerNombre: personalData.firstName,
-        expiresAt: null,
       })),
       tap(session => this.storeSession(session))
     );
@@ -100,10 +106,9 @@ export class AuthSessionService {
   }
 
   public clearSession(): void {
-    this.clearLocalSession();
-    this.cache.clear();
+    this.sessionState.set(null);
+    this.pendingTwoFactorContext = null;
     this.endpoint.clearCache();
-    this.clearUserSessionStorage();
   }
 
   public logout(): void {
@@ -121,12 +126,13 @@ export class AuthSessionService {
 
   private toOutcome(result: LoginResult, payload: AuthLoginRequest): LoginOutcome {
     if (result.kind === 'twoFactorRequired') {
-      return {
-        kind: 'twoFactorRequired',
+      this.pendingTwoFactorContext = {
+        documentNumber: payload.documentNumber,
+        documentType: payload.documentType,
+        email: result.maskedEmail,
         sessionId: result.sessionId,
-        maskedEmail: result.maskedEmail,
-        message: result.message,
       };
+      return { kind: 'twoFactorRequired' };
     }
 
     const session = this.toSession(result, payload);
@@ -139,72 +145,13 @@ export class AuthSessionService {
     payload: AuthLoginRequest
   ): AuthSession {
     return {
-      token: null,
       documentType: payload.documentType,
       documentNumber: result.documento || payload.documentNumber,
       primerNombre: result.primerNombre,
-      expiresAt: null,
     };
   }
 
   private storeSession(session: AuthSession): void {
     this.sessionState.set(session);
-    this.storage?.setItem(storageKeys.session, JSON.stringify(session));
-
-    if (session.token) {
-      this.storage?.setItem(storageKeys.token, session.token);
-    }
-  }
-
-  private clearLocalSession(): void {
-    this.sessionState.set(null);
-    this.storage?.removeItem(storageKeys.token);
-    this.storage?.removeItem(storageKeys.session);
-  }
-
-  private clearUserSessionStorage(): void {
-    const storage = this.document.defaultView?.sessionStorage;
-
-    if (!storage) {
-      return;
-    }
-
-    for (let index = storage.length - 1; index >= 0; index--) {
-      const key = storage.key(index);
-
-      if (key?.startsWith(`${storageKeys.inscriptionDraft}:`)) {
-        storage.removeItem(key);
-      }
-    }
-  }
-
-  private restoreSession(): AuthSession | null {
-    const rawSession = this.storage?.getItem(storageKeys.session);
-
-    if (!rawSession) {
-      return null;
-    }
-
-    try {
-      const parsed = JSON.parse(rawSession) as Partial<AuthSession>;
-
-      if (typeof parsed.documentType !== 'string' || typeof parsed.documentNumber !== 'string') {
-        return null;
-      }
-
-      return {
-        token: typeof parsed.token === 'string' ? parsed.token : null,
-        documentType: parsed.documentType,
-        documentNumber: parsed.documentNumber,
-        primerNombre: typeof parsed.primerNombre === 'string' ? parsed.primerNombre : '',
-        expiresAt: typeof parsed.expiresAt === 'string' ? parsed.expiresAt : null,
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  private get storage(): Storage | null {
-    return this.document.defaultView?.localStorage ?? null;
   }
 }

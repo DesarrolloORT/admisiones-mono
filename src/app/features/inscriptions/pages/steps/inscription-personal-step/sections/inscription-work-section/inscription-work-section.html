@@ -1,0 +1,26 @@
+<div class="inscription-accordion__content" [formGroup]="facade.workForm">
+  <ort-radio-group
+    class="inscription-choice-list"
+    formControlName="isCorporate"
+    legend="¿A título de quién deseás realizar la inscripción?"
+    name="isCorporate"
+    [aria-describedby]="
+      facade.workForm.controls.isCorporate.touched &&
+      facade.workForm.controls.isCorporate.hasError('required')
+        ? 'corporate-inscription-error'
+        : null
+    "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button [value]="false">Inscripción a título personal</ort-radio-button>
+    <ort-radio-button [value]="true">Inscripción corporativa</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.workForm.controls.isCorporate.touched &&
+  facade.workForm.controls.isCorporate.hasError('required')) {
+  <p class="inscription-field-error" id="corporate-inscription-error" role="alert">
+    Seleccioná una opción
+  </p>
+  }
+</div>

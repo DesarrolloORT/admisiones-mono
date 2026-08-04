@@ -1,0 +1,117 @@
+<ort-card
+  class="academic-proposal-select__card"
+  variant="elevated"
+  [class.academic-proposal-select__card--mobile]="isMobile()">
+  <ort-card-content>
+    <div
+      class="academic-proposal-select"
+      [class.academic-proposal-select--desktop]="!isMobile()"
+      [formGroup]="form()">
+      <ort-radio-group
+        formControlName="tipoPropuesta"
+        legend="Propuesta académica"
+        name="proposal"
+        orientation="vertical"
+        [aria-describedby]="proposalTypeErrorId()"
+        [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
+        [divider]="true"
+        [indicatorPosition]="isMobile() ? 'right' : 'left'"
+        [required]="true">
+        @for (option of selection().proposalOptions(); track option.value) {
+        <ort-radio-card-button
+          class="academic-proposal-select__type"
+          [attr.aria-describedby]="proposalTypeOptionDescription(option.value)"
+          [attr.aria-invalid]="proposalTypeInvalid() ? 'true' : null"
+          [value]="option.value">
+          @if (isMobile()) {
+          <ort-icon aria-hidden="true" class="academic-proposal-select__icon" ortRadioCardIcon>
+            {{ option.icon }}
+          </ort-icon>
+          }
+          <span class="academic-proposal-select__label">{{ option.label }}</span>
+          @if (!isMobile()) {
+          <span
+            class="academic-proposal-select__hint"
+            ortRadioSupportingText
+            [id]="'academic-proposal-type-hint-' + option.value">
+            {{ option.hint }}
+          </span>
+          }
+        </ort-radio-card-button>
+        }
+      </ort-radio-group>
+      @if (proposalTypeInvalid()) {
+      <p class="academic-proposal-select__error" id="academic-proposal-type-error" role="alert">
+        Seleccioná una propuesta académica
+      </p>
+      }
+
+      <div class="academic-proposal-select__fields">
+        <output class="academic-proposal-select__loading" [hidden]="!selection().loadingCareers()">
+          <ort-spinner size="sm" [attr.aria-label]="selection().terminology().careerLoadingLabel" />
+          <span>{{ selection().careersLoadingMessage() }}</span>
+        </output>
+
+        <app-responsive-select
+          formControlName="carrera"
+          id="academic-proposal-career"
+          [aria-label]="selection().terminology().careerLabel"
+          [disabled]="!selection().canSelectCareer()"
+          [errorText]="selection().terminology().careerErrorText"
+          [label]="selection().terminology().careerLabel"
+          [optionGroups]="careerOptionGroups()"
+          [searchable]="true" />
+
+        <output
+          class="academic-proposal-select__loading"
+          [hidden]="!selection().loadingStarts() && !selection().loadingSeminars()">
+          <ort-spinner size="sm" [attr.aria-label]="selection().terminology().startLoadingLabel" />
+          <span>{{ selection().startsLoadingMessage() }}</span>
+        </output>
+
+        @if (selection().isProfessionalUpdate()) { @if (hasProgramSelected()) {
+        <app-responsive-select
+          formControlName="seminarios"
+          id="academic-proposal-seminars"
+          [aria-label]="selection().terminology().startLabel"
+          [disabled]="!selection().canSelectSeminars()"
+          [errorText]="selection().terminology().startErrorText"
+          [label]="selection().terminology().startLabel"
+          [multiple]="selection().allowsMultipleSeminars()"
+          [options]="selection().seminarOptions()" />
+        } } @else {
+        <div class="academic-proposal-select__row">
+          <div class="academic-proposal-select__field-stack">
+            <app-responsive-select
+              formControlName="comienzo"
+              id="academic-proposal-start"
+              [aria-label]="selection().terminology().startLabel"
+              [disabled]="!selection().canSelectStart()"
+              [errorText]="selection().terminology().startErrorText"
+              [label]="selection().terminology().startLabel"
+              [options]="selection().startOptions()"
+              [searchable]="true" />
+
+            <output
+              class="academic-proposal-select__loading"
+              [hidden]="!selection().loadingShifts()">
+              <ort-spinner aria-label="Cargando turnos" size="sm" />
+              <span>{{ selection().shiftsLoadingMessage() }}</span>
+            </output>
+          </div>
+
+          <app-responsive-select
+            aria-label="Turno"
+            errorText="Seleccioná un turno"
+            formControlName="turno"
+            id="academic-proposal-shift"
+            label="Turno"
+            [disabled]="!selection().canSelectShift()"
+            [options]="selection().shiftOptions()"
+            [searchable]="true" />
+        </div>
+        }
+      </div>
+    </div>
+  </ort-card-content>
+</ort-card>

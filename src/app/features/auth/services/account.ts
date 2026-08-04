@@ -5,12 +5,14 @@ import {
   AccountChangePasswordPayload,
   AccountEndpoint,
   AccountPersonalData,
+  AccountPhoneValidationPayload,
   UpdateAccountPersonalDataPayload,
 } from '../endpoints/account.endpoint';
 
 export type PersonalDataRecord = AccountPersonalData;
 export type UpdatePersonalDataPayload = UpdateAccountPersonalDataPayload;
 export type ChangePasswordPayload = AccountChangePasswordPayload;
+export type PhoneValidationPayload = AccountPhoneValidationPayload;
 
 @Injectable({
   providedIn: 'root',
@@ -26,7 +28,11 @@ export class AccountService {
     return this.endpoint.updatePersonalData(payload);
   }
 
-  public changePassword(payload: ChangePasswordPayload): Observable<unknown> {
+  public changePassword(payload: ChangePasswordPayload): Observable<void> {
     return this.endpoint.changePassword(payload);
+  }
+
+  public validatePhone(payload: PhoneValidationPayload): Observable<boolean> {
+    return this.endpoint.validatePhone(payload);
   }
 }

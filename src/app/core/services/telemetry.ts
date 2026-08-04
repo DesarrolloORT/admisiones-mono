@@ -104,7 +104,7 @@ export class TelemetryService {
       http_path: this.pathOnly(request.urlWithParams),
       http_status_code: httpError?.status ?? null,
       duration_ms: this.elapsedMs(startedAt),
-      error_message: httpError?.message ?? this.errorMessage(error),
+      error_name: httpError?.name ?? this.errorName(error),
       trace_id: this.traceIdFromRequest(request),
     });
   }
@@ -185,18 +185,13 @@ export class TelemetryService {
 
     win.addEventListener('error', event => {
       this.trackEvent('admisiones.javascript.error', {
-        error_message: event.message,
-        error_source: event.filename || null,
-        error_line: event.lineno || null,
-        error_column: event.colno || null,
         error_name: event.error instanceof Error ? event.error.name : null,
       });
     });
 
     win.addEventListener('unhandledrejection', event => {
       this.trackEvent('admisiones.javascript.unhandled_rejection', {
-        error_message: this.errorMessage(event.reason),
-        error_name: event.reason instanceof Error ? event.reason.name : null,
+        error_name: this.errorName(event.reason),
       });
     });
   }
@@ -211,8 +206,7 @@ export class TelemetryService {
 
     const capture = (): void => {
       const navigation = performance.getEntriesByType('navigation')[0] as
-        | PerformanceNavigationTiming
-        | undefined;
+        PerformanceNavigationTiming | undefined;
 
       if (!navigation) {
         return;
@@ -433,16 +427,12 @@ export class TelemetryService {
     return value.replace(/[\r\n]/g, ' ').slice(0, HEADER_VALUE_LIMIT);
   }
 
-  private errorMessage(error: unknown): string {
+  private errorName(error: unknown): string {
     if (error instanceof Error) {
-      return error.message;
+      return error.name;
     }
 
-    if (typeof error === 'string') {
-      return error;
-    }
-
-    return 'Unknown error';
+    return 'UnknownError';
   }
 
   private elapsedMs(startedAt: number): number {

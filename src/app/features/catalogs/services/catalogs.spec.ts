@@ -13,6 +13,8 @@ describe('Catalogs', () => {
     getCareers: ReturnType<typeof vi.fn>;
     getComienzos: ReturnType<typeof vi.fn>;
     getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
+    getBancos: ReturnType<typeof vi.fn>;
+    getInstituciones: ReturnType<typeof vi.fn>;
     getTurnos: ReturnType<typeof vi.fn>;
     clearCache: ReturnType<typeof vi.fn>;
   };
@@ -24,6 +26,8 @@ describe('Catalogs', () => {
       getCareers: vi.fn(),
       getComienzos: vi.fn(),
       getInitialSurveyCatalogs: vi.fn(),
+      getBancos: vi.fn(),
+      getInstituciones: vi.fn(),
       getTurnos: vi.fn(),
       clearCache: vi.fn(),
     };
@@ -71,11 +75,11 @@ describe('Catalogs', () => {
     ];
     endpointMock.getCareers.mockReturnValue(of(result));
 
-    service.getCareers().subscribe(data => {
+    service.getCareers(2).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getCareers).toHaveBeenCalledOnce();
+    expect(endpointMock.getCareers).toHaveBeenCalledWith(2);
   });
 
   it('should delegate getComienzos to the endpoint', () => {
@@ -91,13 +95,21 @@ describe('Catalogs', () => {
 
   it('should delegate getInitialSurveyCatalogs to the endpoint', () => {
     const result = {
-      aniosAprobadosEducacionSuperior: [],
-      compartidoCon: [],
-      decisionCarrera: [],
-      decisionUniversidad: [],
-      estadoEducacionSuperior: [],
-      formacionTutores: [],
-      nivelConocimiento: [],
+      educacion: {
+        ubicacionesUltimoAnioSecundaria: [],
+        aniosBachillerato: [],
+        estadosEducacionSuperiorPrevia: [],
+        universidades: [],
+        nivelesFormacionTutores: [],
+      },
+      decisionAcademica: {
+        aniosEducacionMediaSuperior: [],
+        apoyosDecision: [],
+        nivelesDecision: [],
+        universidades: [],
+        motivosEleccionOrt: [],
+      },
+      experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
     };
     endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
 
@@ -106,6 +118,28 @@ describe('Catalogs', () => {
     });
 
     expect(endpointMock.getInitialSurveyCatalogs).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getBancos to the endpoint', () => {
+    const result = [{ id: 1, label: 'BROU', code: 'brou' }];
+    endpointMock.getBancos.mockReturnValue(of(result));
+
+    service.getBancos().subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getBancos).toHaveBeenCalledOnce();
+  });
+
+  it('should delegate getInstituciones to the endpoint', () => {
+    const result = [{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }];
+    endpointMock.getInstituciones.mockReturnValue(of(result));
+
+    service.getInstituciones(1, 10).subscribe(data => {
+      expect(data).toEqual(result);
+    });
+
+    expect(endpointMock.getInstituciones).toHaveBeenCalledWith(1, 10);
   });
 
   it('should delegate getTurnos to the endpoint', () => {
@@ -124,6 +158,32 @@ describe('Catalogs', () => {
     });
 
     expect(endpointMock.getTurnos).toHaveBeenCalledWith(20, 10);
+  });
+
+  it('should map seminars using the offer description and reference date', () => {
+    endpointMock.getTurnos.mockReturnValue(
+      of([
+        {
+          idOferta: 30,
+          idTurno: 2,
+          nombreTurno: 'Nocturno',
+          horarioReferencia: '19:00',
+          descripcionOferta: 'Seminario de marco legal',
+          fechaReferencia: '19/05/2026',
+        },
+      ])
+    );
+
+    service.getSeminarios(20, 10).subscribe(data => {
+      expect(data).toEqual([
+        {
+          idOferta: 30,
+          idProceso: 10,
+          nombre: 'Seminario de marco legal',
+          fechaComienzo: '19/05/2026',
+        },
+      ]);
+    });
   });
 
   it('should delegate clearCache to the endpoint', () => {

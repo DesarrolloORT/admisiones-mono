@@ -14,6 +14,22 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - Ponytail (lazy senior dev): .github/instructions/toolkit/ponytail.instructions.md
 - Respuesta breve: .github/instructions/toolkit/response-economy.instructions.md
 - Seguridad: .github/instructions/toolkit/secure-code.instructions.md
+- UI/SCSS: antes de entregar, respeta `.stylelintrc.json`; no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`. Usa tokens `--ort-sys-*` o `rem` permitido.
+
+## Arquitectura Angular/API
+
+- Solo los adapters en `endpoints/` pueden importar contratos generados desde `src/app/shared/api/generated/**`.
+- Los metodos publicos de adapters deben exponer tipos propios de la feature y mapear explicitamente request/response; nunca retornar ni aceptar DTOs generados.
+- `services/`, `facades/`, `models/`, componentes y specs de feature dependen de tipos propios de la feature o del adapter, no de DTOs generados.
+- Las fechas de API permanecen como `string | null` en contratos de feature; la conversion a `Date` se hace explicitamente en facades/UI.
+- `npm run update-api` y `npm run check-api-contracts` deben fallar si un adapter filtra generated o un endpoint se genera con `response: unknown`.
+
+## Knowledge hub
+
+- `docs/index.md` es el catalogo central de comportamiento y autoridades.
+- Antes de cambiar logica de login, registro o inscripciones, leer la pagina con el `businessId` correspondiente en `docs/flujos/`.
+- Actualizar la pagina canonica en el mismo PR o declarar `docs-none: <motivo>`.
+- Usar CodeGraph para codigo frontend y los enlaces configurados por el portal para evidencia backend; no duplicar DTOs ni reglas internas.
 
 ## Perfiles
 

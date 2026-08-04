@@ -20,11 +20,9 @@ describe('Home', () => {
           useValue: {
             logout: vi.fn(),
             session: signal<AuthSession | null>({
-              token: null,
               documentType: 'CI',
               documentNumber: '12345678',
               primerNombre: 'Ana',
-              expiresAt: null,
             }),
           },
         },
@@ -47,13 +45,17 @@ describe('Home', () => {
     fixture = createComponent({
       inscripciones: [
         {
+          idInscripto: 100,
+          idOfertas: [300],
           idProducto: 1,
+          idProceso: 4,
           idComienzo: 2,
           idTurno: 3,
           nombreProducto: 'Analista Programador',
           nombreComienzo: 'Marzo 2027',
           nombreTurno: 'Noche',
           estado: 'Confirmada',
+          seminarios: [],
         },
       ],
       becas: [],

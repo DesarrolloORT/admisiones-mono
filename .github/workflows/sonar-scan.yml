@@ -1,0 +1,61 @@
+name: SonarQube scan (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: true
+      # true en PRs: el quality gate se valida con la action que decora el PR,
+      # en lugar de bloquear dentro del scanner con sonar.qualitygate.wait.
+      pr-mode:
+        type: boolean
+        default: false
+      checkout-repository:
+        type: string
+        default: ''
+      checkout-ref:
+        type: string
+        default: ''
+
+jobs:
+  sonar-scan:
+    name: SonarQube Scan
+    runs-on: sonar-runner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.checkout-repository || github.repository }}
+          ref: ${{ inputs.checkout-ref }}
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Download coverage files
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: coverage
+
+      # La configuracion de analisis (sources, exclusions, lcov, encoding)
+      # vive en sonar-project.properties; aca solo va lo dependiente del contexto.
+      - name: SonarQube Scan
+        if: ${{ !inputs.pr-mode }}
+        shell: cmd
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File C:\sonar-scanner\run.ps1 ^
+            -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
+            -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
+            -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
+            -D "sonar.branch.name=${{ inputs.branch }}" ^
+            -D "sonar.qualitygate.wait=true" ^
+            -D "sonar.qualitygate.timeout=300"
+
+      - name: SonarQube Scan (PR)
+        if: ${{ inputs.pr-mode }}
+        shell: cmd
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File C:\sonar-scanner\run.ps1 ^
+            -D "sonar.host.url=${{ secrets.SONAR_HOST_URL }}" ^
+            -D "sonar.token=${{ secrets.SONAR_TOKEN }}" ^
+            -D "sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}" ^
+            -D "sonar.branch.name=${{ inputs.branch }}"

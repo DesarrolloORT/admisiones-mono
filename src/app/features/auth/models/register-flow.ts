@@ -1,9 +1,5 @@
 export type RegisterFlowKind =
-  | 'new-person'
-  | 'existing-person'
-  | 'new-application'
-  | 'user-exists'
-  | 'application-exists';
+  'new-person' | 'existing-person' | 'new-application' | 'user-exists' | 'application-exists';
 
 export type RegisterContinuableFlowKind = Extract<
   RegisterFlowKind,
@@ -19,14 +15,6 @@ export interface RegisterDocumentEvaluation {
   solicitudAltaExistente: boolean;
   usuarioExistente: boolean;
 }
-
-export const REGISTER_TERMINAL_FLOW_MESSAGES: Record<
-  Extract<RegisterFlowKind, 'user-exists' | 'application-exists'>,
-  string
-> = {
-  'user-exists': 'Ya existe un usuario registrado con este documento.',
-  'application-exists': 'Ya existe una solicitud de alta pendiente para este documento.',
-};
 
 export function resolveRegisterFlow(
   documentType: string,

@@ -8,9 +8,9 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
 ## Entorno de referencia
 
-- Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json).
+- Node.js 22 como entorno base recomendado. Es la version usada por [`.devcontainer/devcontainer.json`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.devcontainer/devcontainer.json).
 - `npm` para instalar dependencias y ejecutar scripts.
-- Java si se va a usar `npm run update-models` o `npm run update-api`.
+- Java si se va a usar `npm run update-api`.
 - Docker Desktop y la extension Dev Containers de VS Code si se quiere trabajar dentro del contenedor.
 
 ## Instalacion
@@ -21,16 +21,11 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Configurar `envs-cli` (una sola vez por maquina):
+2. Iniciar sesion con la cuenta ORT (una sola vez por maquina): la primera vez que se ejecute el sync de environment se abre el navegador para autenticarse con Entra ID. La sesion queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`); no se necesita Azure CLI. Para forzar un nuevo login: `npm run env:cache:clear`. En entornos donde no se pueda abrir el navegador, usar `npm run env:sync -- --env desa --device-code`.
 
-   ```bash
-   envs config --repo-url https://github.com/DesarrolloORT/front-envs.git
-   envs login
-   ```
+   `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
 
-   Los scripts `npm run start`, `start:local` y `start:preprod` generan automaticamente `src/environments/environment.generated.ts` mediante `envs run`.
-
-   El archivo `src/environments/environment.generated.ts` esta ignorado por [`.gitignore`](../.gitignore).
+   Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
 3. Actualizar contratos generados si el backend Swagger ya esta disponible:
 
@@ -48,18 +43,17 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    Si el Swagger vive en otra ruta:
 
    ```bash
-   npm run update-models -- --swagger-path /swagger/v2/swagger.json
-   npm run update-endpoints -- --swagger-path /swagger/v2/swagger.json
+   npm run update-api -- --swagger-path /swagger/v2/swagger.json
    ```
 
    Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints
    tecnicos en `src/app/shared/api/generated/endpoints/`. Esos archivos son
    locales, estan ignorados por Git y no deben editarse manualmente.
 
-   Para descubrir los endpoints reales disponibles en tu ambiente local:
+   Para actualizar los endpoints reales disponibles en tu ambiente local:
 
    ```bash
-   npm run api:endpoints
+   npm run update-api
    ```
 
 4. Ajustar la base del repositorio nuevo:
@@ -78,24 +72,28 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 Antes del primer PR del repositorio nuevo conviene ejecutar:
 
 ```bash
-npm run lint:check
-npm run test
-npm run build
+npm run quality:local
 ```
 
-Cuando el PR depende de cambios en Swagger, tambien conviene validar si el
-Swagger local elimina o renombra endpoints consumidos por adapters:
+Antes de abrir un PR, validar que los adapters mantengan encapsulados los contratos
+generados y no expongan tipos ambiguos:
 
 ```bash
-npm run check-endpoints
+npm run check-api-contracts
 ```
 
-Ese comando es de solo lectura: compara el Swagger actual contra los endpoints
-generados locales y reporta breaking changes o imports obsoletos.
+Ese comando es de solo lectura: revisa los endpoints generados locales y las
+firmas publicas de adapters.
+
+Si se quiere anticipar el Quality Gate antes del PR, configurar `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y un `sonar-scanner` local, y ejecutar:
+
+```bash
+npm run sonar:local
+```
 
 ## Dev Container
 
-La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json) con:
+La plantilla incluye [`.devcontainer/devcontainer.json`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.devcontainer/devcontainer.json) con:
 
 - imagen base `mcr.microsoft.com/vscode/devcontainers/typescript-node:22`;
 - Angular CLI 20;
@@ -104,7 +102,5 @@ La plantilla incluye [`.devcontainer/devcontainer.json`](../.devcontainer/devcon
 
 ## Referencias relacionadas
 
-- [README.md](../README.md)
+- [README.md](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/README.md)
 - [docs/WORKFLOW.md](./WORKFLOW.md)
-- [docs/EXTENSIONS.md](./EXTENSIONS.md)
-- [docs/codegen/update-endpoints.md](./codegen/update-endpoints.md)

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
-import type { PhoneInputValue } from '@desarrolloort/components';
+import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { NEVER, of } from 'rxjs';
 import { AccountService } from 'src/app/features/auth/services/account';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
@@ -22,7 +22,7 @@ interface TestPersonalDataForm {
   stateCode: FormControl<string>;
   cityCode: FormControl<string>;
   address: FormControl<string>;
-  phone: FormControl<PhoneInputValue | null>;
+  phone: FormControl<OrtPhoneInputValue | null>;
   email: FormControl<string>;
   emailConfirmation: FormControl<string>;
 }
@@ -38,6 +38,7 @@ describe('PersonalData', () => {
   let service: {
     getPersonalData: ReturnType<typeof vi.fn>;
     updatePersonalData: ReturnType<typeof vi.fn>;
+    validatePhone: ReturnType<typeof vi.fn>;
   };
   let snackbar: { success: ReturnType<typeof vi.fn> };
 
@@ -63,6 +64,7 @@ describe('PersonalData', () => {
         })
       ),
       updatePersonalData: vi.fn().mockReturnValue(of(true)),
+      validatePhone: vi.fn().mockReturnValue(of(true)),
     };
     snackbar = { success: vi.fn() };
 
@@ -125,12 +127,60 @@ describe('PersonalData', () => {
     });
   });
 
+  it('should render the fdp organism when the identity is restricted', () => {
+    service.getPersonalData.mockReturnValue(
+      of({
+        documentType: 'CI',
+        documentNumber: '4123456-9',
+        firstName: 'Gabriela',
+        secondName: '',
+        firstLastName: 'Ortiz',
+        secondLastName: 'Morales',
+        birthDate: '1988-05-31',
+        sex: 'F',
+        countryCode: 1,
+        stateCode: 10,
+        cityCode: 100,
+        address: 'Av. 18 de Julio 1360',
+        phone: '99123456',
+        email: 'gabrielaortiz@gmail.com',
+        emailVerification: 'gabrielaortiz@gmail.com',
+        identityRestricted: true,
+      })
+    );
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('fdp-datos-personales')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('form.personal-data-form')).toBeNull();
+  });
+
   it('should render skeletons while personal data is loading', () => {
     service.getPersonalData.mockReturnValue(NEVER);
 
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('ort-skeleton')).toHaveLength(6);
+  });
+
+  it('should validate phone on blur through the backend validator', () => {
+    fixture.detectChanges();
+    service.validatePhone.mockClear();
+
+    expect(component.form.controls.phone.updateOn).toBe('blur');
+
+    component.form.controls.phone.setValue({
+      iso2: 'UY',
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
+
+    expect(service.validatePhone).toHaveBeenCalledWith({
+      iso2: 'UY',
+      countryPrefix: 598,
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
   });
 
   it('should submit editable fields to the backend service', () => {

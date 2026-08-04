@@ -4,6 +4,9 @@ import type { RegisterFlowKind } from '../../src/app/features/auth/models/regist
 import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scenarios';
 
 export interface MockApiOptions {
+  initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
+  identityPreload?: 'none' | 'complete';
+  inscriptionDetail?: 'offers-missing' | 'pending-payment';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -71,23 +74,76 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     if (path === '/Catalogos/PaisesEstadosCiudades') {
       return fulfillOperation(route, countryLocations());
     }
-
     if (path === '/Catalogos/Carreras') {
-      return fulfillOperation(route, [
-        {
-          idProducto: 20,
-          idNivelProducto: 1,
-          nombreProducto: 'Licenciatura en Diseño Gráfico',
-          nombreNivelProducto: 'Carrera universitaria',
-        },
-      ]);
+      if (url.searchParams.get('propuestaAcademica') === '1') {
+        return fulfillOperation(route, [
+          {
+            idNivelProducto: 1,
+            nombreNivelProducto: 'Carrera universitaria',
+            escuelas: [
+              {
+                nombreEscuela: 'Facultad de Diseño',
+                productos: [{ idProducto: 20, nombreProducto: 'Licenciatura en Diseño Gráfico' }],
+              },
+            ],
+          },
+        ]);
+      }
+
+      if (url.searchParams.get('propuestaAcademica') === '3') {
+        return fulfillOperation(route, [
+          {
+            idNivelProducto: 3,
+            nombreNivelProducto: 'Actualización profesional',
+            escuelas: [
+              {
+                nombreEscuela: 'Facultad de Administración',
+                seminarios: [
+                  {
+                    tieneSeminario: true,
+                    productos: [
+                      {
+                        idProducto: 40,
+                        idProceso: 210,
+                        nombreProducto: 'Programa de Asesoramiento Financiero',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      }
+
+      return fulfillOperation(route, []);
     }
 
     if (path === '/Catalogos/Comienzos') {
+      // El producto 40 (Actualización profesional) devuelve sus seminarios como
+      // procesos; el resto conserva el comienzo único del flujo tradicional.
       return fulfillOperation(route, [{ idProceso: 200, nombreProceso: 'Marzo 2027' }]);
     }
 
     if (path === '/Catalogos/Turnos') {
+      if (url.searchParams.get('idCarrera') === '40') {
+        return fulfillOperation(route, [
+          {
+            idOferta: 310,
+            descripcionOferta: 'Marco legal y tributario',
+            fechaReferencia: '2027-03-10',
+            horarioReferencia: '',
+            turno: { idTurno: 11, nombreTurno: 'Marco legal y tributario' },
+          },
+          {
+            idOferta: 311,
+            descripcionOferta: 'Renta fija y renta variable',
+            fechaReferencia: '2027-04-10',
+            horarioReferencia: '',
+            turno: { idTurno: 12, nombreTurno: 'Renta fija y renta variable' },
+          },
+        ]);
+      }
       return fulfillOperation(route, [
         {
           idOferta: 300,
@@ -101,6 +157,50 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, initialSurveyCatalogs());
     }
 
+    if (path === '/Catalogos/Instituciones') {
+      return fulfillOperation(route, [
+        { codigoEmpresa: 500, nombre: 'Liceo Nº 1', codigoPais: 1, codigoEstado: 10 },
+      ]);
+    }
+
+    if (path === '/Persona/SubirDocumento' || path === '/Persona/SubirFoto') {
+      return fulfillOperation(route, true);
+    }
+
+    if (path === '/Persona/Documento' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.identityPreload === 'complete'
+          ? {
+              frente: {
+                nombreArchivo: 'documento-frente.png',
+                archivo:
+                  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+              },
+              dorso: {
+                nombreArchivo: 'documento-dorso.png',
+                archivo:
+                  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+              },
+              fechaVencimiento: '2030-02-04',
+            }
+          : {}
+      );
+    }
+
+    if (path === '/Persona/Foto' && request.method() === 'GET') {
+      return route.fulfill({
+        contentType: 'image/png',
+        headers: corsHeaders(route),
+        body:
+          options.identityPreload === 'complete'
+            ? Buffer.from(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
+                'base64'
+              )
+            : Buffer.alloc(0),
+      });
+    }
     if (path === '/Persona/DatosPersona' && request.method() === 'GET') {
       return fulfillOperation(route, profileData());
     }
@@ -109,12 +209,174 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, true);
     }
 
+    if (path === '/Persona/Inscripciones' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.inscriptionDetail
+          ? [
+              {
+                idProducto: 20,
+                nombreExtensoProducto: 'Licenciatura en Diseño Gráfico',
+                idProceso: 200,
+                idNivelProducto: 1,
+                estadoInscripcion: 'Pago pendiente',
+                progConSeminariosProducto: 'N',
+                inscripciones: [
+                  {
+                    idInscripto: 7001,
+                    idOferta: 300,
+                    descripcionOferta: 'Licenciatura en Diseño Gráfico',
+                    idTurno: 3,
+                    idComienzo: 2,
+                    fechaInicioComienzo: '2027-03-01',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Matutino',
+                    fechaReferencia: '2027-03-01',
+                  },
+                ],
+              },
+              {
+                idProducto: 40,
+                nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
+                idProceso: 210,
+                idNivelProducto: 3,
+                estadoInscripcion: 'En proceso',
+                progConSeminariosProducto: 'S',
+                inscripciones: [
+                  {
+                    idInscripto: 7010,
+                    idOferta: 310,
+                    descripcionOferta: 'Marco legal y tributario',
+                    idTurno: 11,
+                    idComienzo: 21,
+                    fechaInicioComienzo: '2027-03-10',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Matutino',
+                    fechaReferencia: '2027-03-10',
+                  },
+                  {
+                    idInscripto: 7011,
+                    idOferta: 311,
+                    descripcionOferta: 'Renta fija y renta variable',
+                    idTurno: 12,
+                    idComienzo: 22,
+                    fechaInicioComienzo: '2027-04-10',
+                    nombreComienzo: 'Marzo 2027',
+                    nombreTurno: 'Nocturno',
+                    fechaReferencia: '2027-04-10',
+                  },
+                ],
+              },
+            ]
+          : []
+      );
+    }
+
+    if (path === '/Persona/Becas' && request.method() === 'GET') {
+      return fulfillOperation(route, []);
+    }
+
     if (path === '/Inscripciones/MisInscripciones') {
       return fulfillOperation(route, []);
     }
 
     if (path === '/Inscripciones/InteresProducto') {
       return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/Detalle' && request.method() === 'GET') {
+      // Producto que el mock no conoce: el Detalle falla, como pasa con productos fuera
+      // del catálogo. Retomar tiene que aguantar igual (nunca paso 1).
+      if (!['20', '40'].includes(url.searchParams.get('idProducto') ?? '')) {
+        return fulfillApiError(route, 'No se encontró la inscripción.');
+      }
+
+      // Actualización profesional en proceso: la cabecera no trae idComienzo/idTurno y
+      // las ofertas elegidas llegan en `detalle.intereses` (una por seminario).
+      if (url.searchParams.get('idProducto') === '40') {
+        return fulfillOperation(route, {
+          estado: 'En proceso',
+          detalle: {
+            resumen: { idProducto: 40, carrera: 'Programa de Asesoramiento Financiero' },
+            intereses:
+              options.inscriptionDetail === 'offers-missing'
+                ? []
+                : [
+                    {
+                      idOferta: 310,
+                      descripcionOferta: 'Marco legal y tributario',
+                      comienzo: 'Marzo 2027',
+                      turno: 'Matutino',
+                    },
+                    {
+                      idOferta: 311,
+                      descripcionOferta: 'Renta fija y renta variable',
+                      comienzo: 'Marzo 2027',
+                      turno: 'Nocturno',
+                    },
+                  ],
+          },
+        });
+      }
+
+      return fulfillOperation(route, {
+        estado: 'Pago pendiente',
+        pagoPendiente: {
+          inscripciones: [
+            {
+              idInscripcion: 7001,
+              idOferta: 300,
+              comienzo: 'Marzo 2027',
+              turno: 'Matutino',
+            },
+          ],
+          pagoReserva: 15500,
+          resumen: {
+            idProducto: 20,
+            carrera: 'Licenciatura en Diseño Gráfico',
+            fechaVencimientoPago: '2027-03-04',
+          },
+        },
+        reservaMinima: {
+          tipoPago: 'ABITAB',
+          cedula: '12345678',
+          codigoPersona: 7001,
+          pagoReserva: 15500,
+        },
+      });
+    }
+
+    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'GET') {
+      return fulfillOperation(route, initialSurvey(options.initialSurvey ?? 'empty'));
+    }
+
+    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'POST') {
+      return fulfillOperation(route, true);
+    }
+
+    if (path === '/Inscripciones/Pagar') {
+      return fulfillOperation(route, { resultado: 'Confirmada' });
+    }
+
+    if (path === '/Inscripciones/ConfirmarPreInscripcion') {
+      return fulfillOperation(route, {
+        confirmada: true,
+        pagoReserva: 15500,
+        estadoCuenta: { saldoActual: 20000 },
+        inscripciones: [
+          {
+            idInscripcion: 7001,
+            idOferta: 300,
+            comienzo: 'Marzo 2027',
+            turno: 'Matutino',
+          },
+        ],
+        resumen: {
+          idProducto: 20,
+          carrera: 'Licenciatura en Diseño Gráfico',
+          fechaVencimientoPago: '2027-03-04',
+        },
+      });
     }
 
     if (path === '/Registro/EvaluarDocumento') {
@@ -285,12 +547,76 @@ function profileData(): unknown {
 
 function initialSurveyCatalogs(): unknown {
   return {
-    aniosAprobadosEducacionSuperior: [{ value: 1, label: 'Un año' }],
-    compartidoCon: [{ value: 1, label: 'Familia' }],
-    decisionCarrera: [{ value: 1, label: 'Durante secundaria' }],
-    decisionUniversidad: [{ value: 1, label: 'Propuesta académica' }],
-    estadoEducacionSuperior: [{ value: 3, label: 'No cursé estudios superiores' }],
-    formacionTutores: [{ value: 4, label: 'Universitaria completa' }],
-    nivelConocimiento: [{ value: 1, label: 'Conocía bien la propuesta' }],
+    educacion: {
+      ubicacionesUltimoAnioSecundaria: [
+        { value: 1, label: 'Uruguay' },
+        { value: 2, label: 'En el exterior' },
+      ],
+      aniosBachillerato: [
+        {
+          value: 11,
+          label: 'Durante secundaria',
+          orientaciones: [{ value: 12, label: 'Científico', orientacion: 'Matemática' }],
+        },
+      ],
+      estadosEducacionSuperiorPrevia: [{ value: 3, label: 'No cursé estudios superiores' }],
+      universidades: [],
+      nivelesFormacionTutores: [{ value: 5, label: 'Universitaria completa' }],
+    },
+    decisionAcademica: {
+      aniosEducacionMediaSuperior: [
+        { value: 1, label: 'Durante secundaria' },
+        { value: 2, label: '2º EMS (5º año)' },
+      ],
+      apoyosDecision: [{ value: 1, label: 'Familia' }],
+      nivelesDecision: [{ value: 1, label: 'Decidido/a' }],
+      universidades: [],
+      motivosEleccionOrt: [{ value: 1, label: 'Propuesta académica' }],
+    },
+    experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+  };
+}
+
+function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unknown {
+  if (kind === 'no-right') {
+    return { tieneDerechoEncuesta: false, encuesta: null };
+  }
+
+  if (kind === 'empty') {
+    return { tieneDerechoEncuesta: true, encuesta: null };
+  }
+
+  const encuesta = {
+    idEncuestaIni: 1,
+    idProducto: 20,
+    idProceso: 200,
+    idTurno: 10,
+    estadoEncuestaIniAdmision: kind === 'complete' ? 'completa' : 'decision-academica',
+    fechaProcesadoEncuestaIni: kind === 'complete' ? '2027-02-01T00:00:00' : null,
+    ultimoanioSecundariaEncuestaIni: true,
+    codigoInstitucionBac: 1,
+    tieneEducacionSuperiorEncuestaIni: 'N',
+    instruccionMadreEncuestaIni: '4',
+    instruccionPadreEncuestaIni: '4',
+    ...(kind === 'complete'
+      ? {
+          decisionCarreraEncuestaIni: '1',
+          decisionUniverEncuestaIni: '2-ems',
+          inforOtrasAntesEncuestaIni: 'S',
+          nivelDecisionEncuestaIni: true,
+          asesoramientoOrtEncuestaIni: 'S',
+          vistaSitioWebOrtEncuestaIni: 'S',
+          vistaInstalacionesOrtEncuestaIni: 'S',
+          publicidadOrtEncuestaIni: 'S',
+        }
+      : {}),
+    producto: { idNivelProducto: 1 },
+  };
+
+  return {
+    tieneDerechoEncuesta: true,
+    encuesta,
+    opcionesMotivosSeleccionados:
+      kind === 'complete' ? [{ idMotivo: 1, nombreMotivo: 'Propuesta académica' }] : [],
   };
 }

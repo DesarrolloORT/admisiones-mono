@@ -28,7 +28,7 @@
           profileMenuOpen() ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'
         "
         (click)="toggleProfileMenu()">
-        <ort-icon aria-hidden="true">person</ort-icon>
+        <ort-icon aria-hidden="true" filled>person</ort-icon>
       </button>
 
       @if (profileMenuOpen() && !isMobile()) {
@@ -42,7 +42,7 @@
         [cdkTrapFocusAutoCapture]="true"
         (keydown.escape)="closeProfileMenu(true)">
         <div class="home-profile-menu__sheet" tabindex="-1">
-          <h2 class="home-profile-menu__title" id="home-profile-menu-title">Menú de usuario</h2>
+          <h2 class="sr-only" id="home-profile-menu-title">Menú de usuario</h2>
           <ng-container [ngTemplateOutlet]="profileMenuItems" />
         </div>
       </div>
@@ -51,8 +51,9 @@
   </div>
 </header>
 
+<!-- Binding en vez de atributo estático: el atributo quedaría en el host sin rol (axe aria-prohibited-attr). -->
 <ort-drawer
-  aria-label="Menú de usuario"
+  [aria-label]="'Menú de usuario'"
   [open]="profileMenuOpen() && isMobile()"
   [showTracker]="true"
   (closed)="onDrawerClosed($event)"

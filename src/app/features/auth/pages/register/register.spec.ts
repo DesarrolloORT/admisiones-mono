@@ -109,6 +109,22 @@ describe('Register', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should focus #main-content and scroll to top when the step changes', () => {
+    const ownerDocument = fixture.nativeElement.ownerDocument as Document;
+    const mainContent = fixture.nativeElement.querySelector('#main-content') as HTMLElement;
+    const focusSpy = vi.spyOn(mainContent, 'focus');
+    const scrollToSpy = vi
+      .spyOn(ownerDocument.defaultView as Window, 'scrollTo')
+      .mockImplementation(() => undefined);
+
+    component['focusCurrentStep']();
+
+    expect(focusSpy).toHaveBeenCalled();
+    expect(scrollToSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'instant', left: 0, top: 0 })
+    );
+  });
+
   it('should continue from identity to personal step', async () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
@@ -130,16 +146,8 @@ describe('Register', () => {
   it('should preload returned document fields', async () => {
     const facade = component['facade'];
     const file = new File(['binary-content'], 'cedula.pdf', { type: 'application/pdf' });
-    const input = document.createElement('input');
 
-    Object.defineProperty(input, 'files', {
-      configurable: true,
-      value: {
-        item: (index: number) => (index === 0 ? file : null),
-      },
-    });
-
-    await facade.onDocumentSelected({ target: input } as unknown as Event);
+    await facade.onDocumentSelected(file);
 
     expect(documentPrefillMock.preload).toHaveBeenCalledWith(file);
     expect(facade.selectedFileName()).toBe('cedula.pdf');

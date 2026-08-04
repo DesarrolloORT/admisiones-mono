@@ -15,14 +15,13 @@ describe('Becas', () => {
     fixture = TestBed.createComponent(Becas);
   });
 
-  it('renders the scholarships shell title and first step', () => {
+  it('renders the scholarships catalogue', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
 
     expect(text).toContain('Admisiones');
     expect(text).toContain('Postulación a becas');
-    expect(text).toContain('Paso 1 de 3 - Oportunidades');
-    expect(text).toContain('Oportunidades');
+    expect(text).toContain('Beca de Reválidas');
   });
 });

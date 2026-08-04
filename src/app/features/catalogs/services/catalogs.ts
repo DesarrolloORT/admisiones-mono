@@ -1,19 +1,23 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
+import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
+  Bank,
   Career,
   Comienzo,
   Country,
   DocumentType,
+  EducationalInstitution,
   InitialSurveyCatalogs,
   LocationCountry,
+  Seminario,
   Turno,
 } from '../models/catalog.interface';
 
-// TODO: reemplazar cuando el endpoint getCatalogosTiposDocumentos vuelva al API.
-const STATIC_DOCUMENT_TYPES: DocumentType[] = [
+const DOCUMENT_TYPES: DocumentType[] = [
   { id: 1, label: 'Cédula', code: 'CI' },
   { id: 2, label: 'Pasaporte', code: 'PS' },
   { id: 3, label: 'Documento extranjero', code: 'DE' },
@@ -26,7 +30,7 @@ export class Catalogs {
   private readonly endpoint = inject(CatalogsEndpoint);
 
   public getDocumentTypes(): Observable<DocumentType[]> {
-    return of(STATIC_DOCUMENT_TYPES);
+    return of(DOCUMENT_TYPES);
   }
 
   public getCountries(): Observable<Country[]> {
@@ -37,8 +41,8 @@ export class Catalogs {
     return this.endpoint.getCountryLocations();
   }
 
-  public getCareers(): Observable<Career[]> {
-    return this.endpoint.getCareers();
+  public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
+    return this.endpoint.getCareers(propuestaAcademica);
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
@@ -49,8 +53,32 @@ export class Catalogs {
     return this.endpoint.getInitialSurveyCatalogs();
   }
 
+  public getBancos(): Observable<Bank[]> {
+    return this.endpoint.getBancos();
+  }
+
+  public getInstituciones(
+    codigoPais: number,
+    codigoEstado: number
+  ): Observable<EducationalInstitution[]> {
+    return this.endpoint.getInstituciones(codigoPais, codigoEstado);
+  }
+
   public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
     return this.endpoint.getTurnos(idCarrera, idProceso);
+  }
+
+  public getSeminarios(idPrograma: number, idProceso: number): Observable<Seminario[]> {
+    return this.endpoint.getTurnos(idPrograma, idProceso).pipe(
+      map(turnos =>
+        turnos.map(turno => ({
+          idOferta: turno.idOferta,
+          idProceso,
+          nombre: turno.descripcionOferta,
+          fechaComienzo: turno.fechaReferencia,
+        }))
+      )
+    );
   }
 
   public clearCache(): void {
