@@ -297,7 +297,7 @@ export class PersonalData implements OnInit {
     }
 
     if (trimmed.startsWith('+')) {
-      const digits = trimmed.replace(/\D/g, '');
+      const digits = trimmed.replaceAll(/\D/g, '');
       const country = this.findPhoneCountryByPrefix(digits);
 
       if (country) {
@@ -306,7 +306,7 @@ export class PersonalData implements OnInit {
       }
     }
 
-    const number = trimmed.replace(/\D/g, '');
+    const number = trimmed.replaceAll(/\D/g, '');
     return { iso2: 'UY', number, numberE164: `+598${number}` };
   }
 
@@ -376,7 +376,7 @@ export class PersonalData implements OnInit {
       return value;
     }
 
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replaceAll(/\D/g, '');
 
     if (cleaned.length < 2) {
       return value;

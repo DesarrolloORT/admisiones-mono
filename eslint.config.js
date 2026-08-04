@@ -17,6 +17,7 @@ export default tseslint.config(
       '**/.angular/',
       '**/index.html',
       '**/playwright-report/',
+      'tmp/',
       '.*/',
     ],
   },
