@@ -103,6 +103,6 @@ export class RecoverAccess {
   }
 
   private completeRequest(): void {
-    void this.router.navigateByUrl('/confirmacion-correo/recuperar-acceso');
+    this.router.navigateByUrl('/confirmacion-correo/recuperar-acceso');
   }
 }

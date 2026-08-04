@@ -105,7 +105,7 @@ export class InscripcionProcessFacade {
 
     if (!this.survey.hasInitialSurveyRight()) {
       this.exitConfirmationOpen.set(false);
-      void this.router.navigateByUrl('/inicio');
+      this.router.navigateByUrl('/inicio');
       return;
     }
 
@@ -124,7 +124,7 @@ export class InscripcionProcessFacade {
             return;
           }
           this.exitConfirmationOpen.set(false);
-          void this.router.navigateByUrl('/inicio');
+          this.router.navigateByUrl('/inicio');
         },
         error: () =>
           this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.'),

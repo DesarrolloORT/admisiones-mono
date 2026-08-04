@@ -93,7 +93,7 @@ export class DashboardQuickActions {
     this.homeService.reactivarInscripcion(idInscripto).subscribe({
       next: () => {
         this.saveResumeContext();
-        void this.router.navigate(['/inscripciones'], { queryParams: this.resumeQueryParams() });
+        this.router.navigate(['/inscripciones'], { queryParams: this.resumeQueryParams() });
       },
       error: () => this.isReactivating.set(false),
     });

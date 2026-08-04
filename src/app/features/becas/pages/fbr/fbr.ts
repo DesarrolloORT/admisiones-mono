@@ -32,7 +32,7 @@ export class Fbr {
   protected readonly process = inject(ScholarshipProcessFacade);
 
   protected goHome(): void {
-    void this.router.navigate(['/inicio']);
+    this.router.navigate(['/inicio']);
   }
 
   protected logout(): void {

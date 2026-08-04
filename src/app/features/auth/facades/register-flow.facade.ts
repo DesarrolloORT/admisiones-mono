@@ -148,7 +148,7 @@ export class RegisterFlowFacade {
   }
 
   public navigateToLogin(): void {
-    void this.router.navigateByUrl('/iniciar-sesion');
+    this.router.navigateByUrl('/iniciar-sesion');
   }
 
   public submitPersonalData(): void {
@@ -323,14 +323,14 @@ export class RegisterFlowFacade {
       actionLabel: 'Iniciar sesión',
       duration: 10000,
       action: () => {
-        void this.router.navigateByUrl('/iniciar-sesion');
+        this.router.navigateByUrl('/iniciar-sesion');
       },
     });
   }
 
   private navigateToEmailConfirmation(): void {
     this.isCompleted.set(true);
-    void this.router.navigateByUrl('/confirmacion-correo/registro');
+    this.router.navigateByUrl('/confirmacion-correo/registro');
   }
 
   private handleDocumentRecognitionError(error: unknown): void {
