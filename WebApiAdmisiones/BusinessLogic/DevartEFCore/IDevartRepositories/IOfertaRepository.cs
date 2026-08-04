@@ -5,11 +5,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BusinessLogic.Entities;
 
 namespace BusinessLogic.IDevartRepositories
 {
     public partial interface IOfertaRepository
     {
-        ICollection<BusinessLogic.Entities.Oferta> GetOfertasParaInscripcionConProceso(long idProducto, long idProceso, long idTurno);
+        Oferta GetByKeyWithRelated(long idOferta);
     }
 }

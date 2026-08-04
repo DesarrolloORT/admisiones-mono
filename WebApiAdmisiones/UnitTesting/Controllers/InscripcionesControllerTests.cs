@@ -1,11 +1,12 @@
-using AppLogic.DTOs;
-using AppLogic.IServices;
+using AppLogic.Inscripciones.Dtos;
+using AppLogic.Inscripciones.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 using Xunit;
 
 namespace UnitTesting.Controllers
@@ -13,40 +14,136 @@ namespace UnitTesting.Controllers
     public class InscripcionesControllerTests
     {
         [Fact]
-        public void ObtenerUltimaInscripcionActiva_ReturnsOk()
+        public async Task ConfirmarPreInscripcion_DelegatesToServiceWithAuthenticatedUser()
         {
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoConfirmarPreInscripcionRequest
+            {
+                AceptoReglamento = true,
+                IdsOfertasSeleccionadas = [10]
+            };
+            var responseDto = new DtoConfirmarPreInscripcionResponse
+            {
+                Confirmada = true,
+                Resumen = new DtoCabeceraInscripcion { FechaVencimientoPago = new DateTime(2026, 6, 30) },
+                Inscripciones =
+                [
+                    new DtoInscripcionOferta
+                    {
+                        IdOferta = 10,
+                        IdInscripcion = 100
+                    }
+                ],
+                PagoReserva = 1500
+            };
+
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ConfirmarPreInscripcion(1, request))
+                .ReturnsAsync(OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(responseDto, nameof(IInscripcionesService.ConfirmarPreInscripcion)));
+
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerUltimaInscripcionActiva(1))
-                .Returns(OperationResult<DtoUltimaInscripcion>.Ok(new DtoUltimaInscripcion(), nameof(IInscripcionesService.ObtenerUltimaInscripcionActiva)));
-
-            var response = controller.ObtenerUltimaInscripcionActiva();
+            var response = await controller.ConfirmarPreInscripcion(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ConfirmarPreInscripcion(1, request), Times.Once);
         }
 
         [Fact]
-        public void RegistrarInteresProducto_ReturnsOk()
+        public async Task ReactivarInscripcion_DelegatesToServiceWithAuthenticatedUser()
         {
             var serviceMock = new Mock<IInscripcionesService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoReactivarInscripcionRequest { IdInscripcion = 555 };
+            var responseDto = new DtoConfirmarPreInscripcionResponse
+            {
+                Confirmada = true,
+                Inscripciones =
+                [
+                    new DtoInscripcionOferta { IdOferta = 10, IdInscripcion = 100 }
+                ],
+                PagoReserva = 1500
+            };
+
             currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ReactivarInscripcion(1, request))
+                .ReturnsAsync(OperationResult<DtoConfirmarPreInscripcionResponse>.Ok(responseDto, nameof(IInscripcionesService.ReactivarInscripcion)));
+
             var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-            var request = new InteresProductoRequest { IdProducto = 10, IdProcesoSeleccionado = 20 };
 
-            serviceMock.Setup(s => s.RegistrarInteresProducto(1, request))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IInscripcionesService.RegistrarInteresProducto)));
-
-            var response = controller.RegistrarInteresProducto(request);
+            var response = await controller.ReactivarInscripcion(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ReactivarInscripcion(1, request), Times.Once);
         }
+
+        [Fact]
+        public async Task Pagar_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var request = new DtoPagarRequest { IdsInscripcion = [555], TipoPago = "BANRED" };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.Pagar(1, request))
+                .ReturnsAsync(OperationResult<DtoPagarResponse>.Ok(
+                    new DtoPagarResponse { Resultado = "URL_GENERADA", UrlPago = "https://pagos.test" },
+                    nameof(IInscripcionesService.Pagar)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = await controller.Pagar(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.Pagar(1, request), Times.Once);
+        }
+
+        [Fact]
+        public void ReglamentoEstudiantil_PostEndpoint_IsNotExposed()
+        {
+            var postRoutes = typeof(InscripcionesController)
+                .GetMethods()
+                .SelectMany(method => method.GetCustomAttributes(typeof(HttpPostAttribute), inherit: false).Cast<HttpPostAttribute>())
+                .Select(attribute => attribute.Template);
+
+            Assert.DoesNotContain("ReglamentoEstudiantil", postRoutes);
+        }
+
+        [Fact]
+        public void ObtenerAceptacionReglamentoEstudiantil_DelegatesToServiceWithAuthenticatedUser()
+        {
+            var serviceMock = new Mock<IInscripcionesService>();
+            var currentUserMock = new Mock<ICurrentUserService>();
+            var loggerMock = new Mock<ILogger<InscripcionesController>>();
+            var responseDto = new DtoAceptacionReglamentoEstudiantilResponse
+            {
+                AceptoReglamentoEstudiantil = true,
+                FechaAceptacion = new DateTime(2026, 6, 1)
+            };
+
+            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
+            serviceMock
+                .Setup(s => s.ObtenerAceptacionReglamentoEstudiantil(1))
+                .Returns(OperationResult<DtoAceptacionReglamentoEstudiantilResponse>.Ok(
+                    responseDto,
+                    nameof(IInscripcionesService.ObtenerAceptacionReglamentoEstudiantil)));
+            var controller = new InscripcionesController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+
+            var response = controller.ObtenerAceptacionReglamentoEstudiantil();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            serviceMock.Verify(s => s.ObtenerAceptacionReglamentoEstudiantil(1), Times.Once);
+        }
+
     }
 }

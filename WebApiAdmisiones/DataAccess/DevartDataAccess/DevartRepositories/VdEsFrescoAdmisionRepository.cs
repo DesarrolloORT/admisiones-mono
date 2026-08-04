@@ -13,23 +13,16 @@ namespace DataAccess.DevartRepositories
 {
     public partial class VdEsFrescoAdmisionRepository
     {
-        /// <summary>
-        /// Devuelve true si la persona tiene una inscripción activa en VD_ES_FRESCO_ADMISION
-        /// para el producto y proceso indicados (proceso habilitado y comienzo vigente).
-        /// </summary>
-        public virtual bool TieneInscripcionActivaParaProceso(long codigoPersona, long idProducto, long idProceso)
+        public virtual bool ExistePorDocumento(string tipoDocumento, string documento)
         {
-            return objectSet.Any(v =>
-                v.CodigoPersona == codigoPersona
-                && v.IdProducto == idProducto
-                && Context.Set<BusinessLogic.Entities.ProcesoProducto>().Any(pp =>
-                    pp.IdProducto == v.IdProducto
-                    && pp.IdProceso == idProceso
-                    && pp.Proceso.HabilitadoInteresSitio == "SI")
-                && Context.Set<BusinessLogic.Entities.ProcesoComienzo>().Any(pc =>
-                    pc.IdComienzo == v.IdComienzo
-                    && pc.IdProceso == idProceso
-                    && pc.Proceso.HabilitadoInteresSitio == "SI"));
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet.Count(f =>
+                f.TipoDocumento != null
+                && f.Documento != null
+                && f.TipoDocumento.Trim() == normalizedTipoDocumento
+                && f.Documento.Trim() == normalizedDocumento) > 0;
         }
     }
 }

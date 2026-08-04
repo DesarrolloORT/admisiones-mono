@@ -29,6 +29,19 @@ namespace DataAccess.DevartRepositories
         }
 
         /// <summary>
+        /// Devuelve la primera aceptación del reglamento estudiantil de la persona.
+        /// </summary>
+        public virtual BusinessLogic.Entities.AceptacionReglamentoEst GetPrimeraByPersona(long codigoPersona)
+        {
+            return objectSet
+                .Where(a => a.CodigoPersona == codigoPersona)
+                .OrderBy(a => a.FechaIngreso)
+                .ThenBy(a => a.HoraIngreso)
+                .ThenBy(a => a.IdAceptacionReglamentoEst)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
         /// Devuelve la aceptación del reglamento para la persona, producto y comienzo indicados.
         /// </summary>
         public virtual BusinessLogic.Entities.AceptacionReglamentoEst GetByPersonaProductoComienzo(long codigoPersona, long idProducto, long idComienzo)

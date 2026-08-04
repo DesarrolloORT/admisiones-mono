@@ -45,14 +45,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(200)]
         public string? ObservacionesSupraoferta { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(1)]
         public string? EstadoSupraoferta { get; set; }
 

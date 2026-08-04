@@ -1,13 +1,11 @@
-using AppLogic.Interfaces;
-using AppLogic.IServices;
-using AppLogic.Services;
+using AppLogic.Common.Email;
+using AzureService.Interfaces;
+using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
-using BusinessLogic.IGenericRepository;
 using BusinessLogic.IServices;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
-using DataAccess.GenericAccess.Services;
 using DataAccess.Services;
 using LdapService.Interfaces;
 using LdapService.Services;
@@ -17,7 +15,25 @@ using ModBandejaAppLogic.Interfaces;
 using ModBandejaAppLogic.Services;
 using ModBandejaDataAccess;
 using ModGenericBaseDataAccess;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Captcha;
+using WebApiAdmisiones.Security.Cache;
+using WebApiAdmisiones.Security.Observability;
+using AppLogic.Autenticacion.Services;
+using AppLogic.Registro.Services;
+using AppLogic.Personas.Services;
+using AppLogic.Inscripciones.Services;
+using AppLogic.Inscripciones.Encuesta.Services;
+using AppLogic.Becas.Services;
+using AppLogic.Catalogos.Services;
+using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Becas.Interfaces;
+using AppLogic.Catalogos.Interfaces;
+using AppLogic.Inscripciones.Interfaces;
+using AppLogic.Personas.Interfaces;
+using AppLogic.Registro.Interfaces;
+using AppLogic.Tivenos.Interfaces;
+using AppLogic.Tivenos.Services;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -81,7 +97,6 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Repositorios y UoW.
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<IUnitOfWorkFactory, EntityFrameworkUnitOfWorkFactory>();
             services.AddScoped<ModBandejaBusinessLogic.IDevartRepositories.IUnitOfWorkFactory,
                                ModBandejaDataAccess.DevartRepositories.EntityFrameworkUnitOfWorkFactory>();
@@ -94,21 +109,43 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de aplicación.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IGeneralService, GeneralService>();
-            services.AddScoped<ICatalogosService, CatalogosService>();
+            services.AddScoped<CatalogosService>();
+            services.AddScoped<ICatalogosService>(sp => new CatalogosCacheDecorator(
+                sp.GetRequiredService<CatalogosService>(),
+                sp.GetRequiredService<IRedisCacheService>(),
+                sp.GetRequiredService<IConfiguration>()));
             services.AddScoped<IRegistroService, RegistroService>();
+            services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
             services.AddScoped<IInscripcionesService, InscripcionesService>();
-            services.AddScoped<IPreinscripcionService, PreinscripcionService>();
-            services.AddScoped<IPersonaAdmisionService, PersonaAdmisionService>();
+            services.AddScoped<IEncuestaInicialService, EncuestaInicialService>();
+            services.AddScoped<IPersonaService, PersonaService>();
             services.AddScoped<IBecasService, BecasService>();
-            services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<ITokenService, AppLogic.Services.TokenService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPendingPersonaStore, PendingPersonaRedisStore>();
+            services.AddScoped<IPasswordActivationService, PasswordActivationService>();
+            services.AddScoped<IHashTokenStore, RedisHashTokenStore>();
+            services.AddScoped<IRegistroFlowService, RegistroFlowService>();
+            services.AddScoped<IRegistroDocumentoImagenCacheService, RegistroDocumentoImagenCacheService>();
+            services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-            services.AddScoped<IFondoDeBecaServices, FondoDeBecaService>();
+            services.AddHttpClient<IRecaptchaService, RecaptchaService>();
+            services.AddScoped<IFondoDeBecaService, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
 
             // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
+
+            // Abstracciones de infraestructura para los servicios de AppLogic.
+            services.AddScoped<IEmailSender, AppLogic.Common.Email.EnvioMailEmailSender>();
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ITwoFactorSessionStore, AppLogic.Autenticacion.Services.RedisTwoFactorSessionStore>();
+
+            // Servicio de autenticación de dos factores (2FA) por email.
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.IDosFactoresAuthService, AppLogic.Autenticacion.Services.DosFactoresAuthService>();
+
+            // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
+            services.AddScoped<AppLogic.Autenticacion.Interfaces.ILoginFlowService, AppLogic.Autenticacion.Services.LoginFlowService>();
 
             return services;
         }

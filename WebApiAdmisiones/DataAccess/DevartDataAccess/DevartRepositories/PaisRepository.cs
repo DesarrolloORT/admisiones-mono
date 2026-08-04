@@ -15,20 +15,31 @@ namespace DataAccess.DevartRepositories
     {
         public virtual ICollection<BusinessLogic.Entities.Pais> GetPaisesConEstadosYCiudades()
         {
-            return objectSet
+            var paises = objectSet
                 .Include(p => p.Estado)
                 .ThenInclude(e => e.Ciudad)
                 .OrderBy(p => p.CodigoPais == 1 ? 0 : 1)
                 .ThenBy(p => p.Nombre)
                 .ToList();
-        }
 
-        public virtual ICollection<BusinessLogic.Entities.Pais> GetPaisesOrdenados()
-        {
-            return objectSet
-                .OrderBy(p => p.CodigoPais == 1 ? 0 : 1)
-                .ThenBy(p => p.Nombre)
-                .ToList();
+            foreach (var pais in paises)
+            {
+                if (pais.Estado == null)
+                {
+                    continue;
+                }
+
+                pais.Estado = pais.Estado.OrderBy(e => e.Nombre).ToList();
+                foreach (var estado in pais.Estado)
+                {
+                    if (estado.Ciudad != null)
+                    {
+                        estado.Ciudad = estado.Ciudad.OrderBy(c => c.Nombre).ToList();
+                    }
+                }
+            }
+
+            return paises;
         }
 
         public virtual BusinessLogic.Entities.Pais GetPaisConEstadosYCiudades(long codigoPais)

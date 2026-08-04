@@ -51,14 +51,6 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public string IsActive { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         #endregion
 
         #region Navigation Properties

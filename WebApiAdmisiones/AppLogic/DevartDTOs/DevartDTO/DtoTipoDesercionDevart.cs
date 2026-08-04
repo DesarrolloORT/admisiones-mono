@@ -34,14 +34,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(200)]
         public string? ObservacionesTipoDesercion { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         #endregion
     }
 

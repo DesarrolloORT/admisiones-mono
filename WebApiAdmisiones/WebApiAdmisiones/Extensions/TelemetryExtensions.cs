@@ -2,12 +2,16 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using System.Diagnostics.CodeAnalysis;
+using WebApiAdmisiones.Security.Observability;
+using WebApiAdmisiones.Security.Observability;
 
 namespace WebApiAdmisiones.Extensions
 {
     /// <summary>
     /// Métodos de extensión para configurar telemetría (OpenTelemetry y Serilog).
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public static class TelemetryExtensions
     {
         /// <summary>
@@ -44,7 +48,10 @@ namespace WebApiAdmisiones.Extensions
             {
                 otBuilder.WithTracing(tb => tb
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otlpServiceName))
-                    .AddAspNetCoreInstrumentation()
+                    .AddAspNetCoreInstrumentation(options =>
+                    {
+                        options.EnrichWithHttpRequest = ClientTelemetryHeaders.EnrichActivity;
+                    })
                     .AddHttpClientInstrumentation()
                     .AddOtlpExporter(o =>
                     {
@@ -64,7 +71,7 @@ namespace WebApiAdmisiones.Extensions
             IConfiguration configuration)
         {
             var enableLogs = configuration.GetValue<bool>("Telemetry:EnableLogs");
-            
+
             if (!enableLogs)
                 return hostBuilder;
 
@@ -78,9 +85,9 @@ namespace WebApiAdmisiones.Extensions
                     .ReadFrom.Configuration(context.Configuration)
                     .Enrich.WithProperty("app", otlpServiceName)
                     .Enrich.WithProperty("timestamp", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
-                    // Filtrar logs internos de ASP.NET Core y EF Core que no usan nuestro formato
-                    // Esto evita logs "crudos" sin CorrelationId (ej: "Connection id ... An unhandled exception")
-                    // Usamos Fatal para suprimir TODOS los logs (incluyendo Error) de estas categor�as
+                    // Filtra logs internos de ASP.NET Core y EF Core que no usan nuestro formato.
+                    // Esto evita logs "crudos" sin CorrelationId.
+                    // Usamos Fatal para suprimir todos los logs de estas categorías.
                     .MinimumLevel.Override("Microsoft.AspNetCore.Server.Kestrel", Serilog.Events.LogEventLevel.Fatal)
                     .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Fatal)
                     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Fatal)

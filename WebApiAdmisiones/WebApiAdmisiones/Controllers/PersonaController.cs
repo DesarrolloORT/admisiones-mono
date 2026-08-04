@@ -1,11 +1,12 @@
-using AppLogic.DevartDTOs;
-using AppLogic.IServices;
-using AppLogic.Requests;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Becas.Dtos;
+using AppLogic.Personas.Dtos;
+using AppLogic.Personas.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
 using WebApiAdmisiones.Models;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -13,7 +14,7 @@ namespace WebApiAdmisiones.Controllers
     [ApiController]
     [Route("[controller]")]
     public class PersonaController(
-        IPersonaAdmisionService personaAdmisionService,
+        IPersonaService personaService,
         ILogger<PersonaController> logger,
         ICurrentUserService currentUser)
         : ApiBaseController<PersonaController>(logger, currentUser)
@@ -25,160 +26,246 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <returns>Datos de la persona.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("Persona")]
-        [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DtoPersonaDevart>), 400)]
-        public IActionResult ObtenerPersona()
+        /// <response code="404">No se encontró la persona autenticada.</response>
+        [HttpGet("DatosPersona")]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPersona>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDatosPersona>), 404)]
+        public IActionResult ObtenerDatosPersona()
         {
-            var result = personaAdmisionService.ObtenerPersona(_currentUser.GetUserId());
+            var result = personaService.ObtenerDatosPersona(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Actualiza los datos personales editables de la persona autenticada.
+        /// Actualiza los datos editables de la persona autenticada.
         /// </summary>
-        /// <param name="request">Datos personales a actualizar.</param>
-        /// <returns>`true` si la actualización se realizó correctamente.</returns>
+        /// <param name="request">Datos editables de la persona.</param>
+        /// <returns><c>true</c> si la actualización se realizó correctamente.</returns>
         /// <response code="200">Datos actualizados correctamente.</response>
         /// <response code="400">Los datos enviados son inválidos.</response>
         /// <response code="404">No se encontró la persona autenticada.</response>
-        [HttpPut("Persona")]
+        [HttpPut("DatosPersona")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult ActualizarPersona([FromBody] ActualizarPersonaRequest request)
+        public IActionResult ActualizarDatosPersona([FromBody] DtoActualizarDatosPersonaRequest request)
         {
-            var result = personaAdmisionService.ActualizarPersona(_currentUser.GetUserId(), request);
+            var result = personaService.ActualizarDatosPersona(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
+        /// Valida un telefono informado por el front para los datos de la persona.
         /// </summary>
-        /// <returns>Datos de preinscripción.</returns>
+        /// <param name="telefonoValidar">Telefono normalizado o ingresado por el usuario.</param>
+        /// <param name="telefono1">Indica si se valida como telefono principal.</param>
+        /// <returns><c>true</c> si el telefono es valido para guardar.</returns>
+        /// <response code="200">Telefono validado correctamente.</response>
+        /// <response code="400">Telefono invalido o solicitud incompleta.</response>
+        [HttpPost("ValidarTelefono")]
+        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        public IActionResult ValidarTelefono(DtoTelefono telefonoValidar, [FromQuery] bool telefono1)
+        {
+            var result = personaService.EsTelefonoValidoFront(telefonoValidar, telefono1);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.
+        /// </summary>
+        /// <returns>Lista de inscripciones con todos los campos expuestos por la vista.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("EncuestaInicialAdmision")]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DtoEncuestaIniAdmisionDevart>), 400)]
-        public IActionResult ObtenerEncuestaInicialAdmision()
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("Inscripciones")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>), 200)]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>), 400)]
+        public IActionResult ObtenerMisInscripciones()
         {
-            var result = personaAdmisionService.ObtenerEncuestaInicialAdmision(_currentUser.GetUserId());
+            var result = personaService.ObtenerMisInscripciones(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Guarda los datos de la persona y registra la encuesta inicial de admisión.
+        /// Obtiene las becas de la persona autenticada.
         /// </summary>
-        /// <param name="request">Datos de persona y encuesta a registrar.</param>
-        /// <returns>`true` si la encuesta se guardó correctamente.</returns>
-        /// <response code="200">Encuesta guardada correctamente.</response>
-        /// <response code="400">Los datos enviados son inválidos.</response>
-        /// <response code="404">No se encontró la persona, el producto o el proceso indicado.</response>
-        /// <response code="409">Ya existe una encuesta para la misma persona, producto y comienzo.</response>
-        [HttpPost("DatosPersonaEncuesta")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult GuardarDatosPersonaEncuesta([FromBody] GuardarDatosPersonaEncuestaRequest request)
+        /// <returns>Lista mock de becas para la vista del front.</returns>
+        /// <response code="200">Datos obtenidos correctamente.</response>
+        [HttpGet("Becas")]
+        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoBecaPersona>>), 200)]
+        public IActionResult ObtenerMisBecas()
         {
-            var result = personaAdmisionService.GuardarDatosPersonaEncuesta(_currentUser.GetUserId(), request);
+            var becas = new List<DtoBecaPersona>
+            {
+                new()
+                {
+                    IdBeca = 1,
+                    IdPostulacion = 1001,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseño Grafico",
+                    Estado = "En proceso",
+                    FechaCierrePostulacion = new DateTime(2026, 5, 26, 0, 0, 0, DateTimeKind.Local),
+                    FechaPrueba = new DateTime(2026, 6, 13, 0, 0, 0, DateTimeKind.Local),
+                    AccionPrincipal = "Continuar postulación",
+                    PuedeContinuarPostulacion = true,
+                    PuedeDescargarMaterialEstudio = false
+                },
+                new()
+                {
+                    IdBeca = 2,
+                    IdPostulacion = 1002,
+                    Nombre = "Fondo de Excelencia Academica",
+                    Carrera = "Licenciatura en Diseño Grafico",
+                    FechaPrueba = new DateTime(2026, 6, 13, 0, 0, 0, DateTimeKind.Local),
+                    FechaResultados = new DateTime(2025, 7, 24, 0, 0, 0, DateTimeKind.Local),
+                    AccionPrincipal = "Descargar material de estudio",
+                    PuedeContinuarPostulacion = false,
+                    PuedeDescargarMaterialEstudio = true,
+                    UrlMaterialEstudio = "#"
+                }
+            };
+
+            var result = OperationResult<IEnumerable<DtoBecaPersona>>.Ok(becas, nameof(ObtenerMisBecas));
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Obtiene la foto de perfil del alumno autenticado.
+        /// Cambia la contraseña del usuario autenticado.
+        /// </summary>
+        /// <param name="request">Password actual y nueva password.</param>
+        /// <returns>Resultado del cambio de contraseña.</returns>
+        /// <response code="200">Contraseña actualizada correctamente.</response>
+        /// <response code="400">Error de validación o de negocio.</response>
+        /// <response code="401">Usuario no autenticado.</response>
+        /// <response code="500">Error interno no controlado.</response>
+        [HttpPost("CambiarPassword")]
+        [ProducesResponseType(typeof(OperationResult<object>), 200)]
+        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 401)]
+        [ProducesResponseType(typeof(OperationResult<object>), 500)]
+        public async Task<IActionResult> CambiarPassword([FromBody] DtoCambiarPasswordRequest request)
+        {
+            var result = await personaService.CambiarPasswordAsync(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Obtiene la foto de perfil de la persona autenticada.
         /// </summary>
         /// <returns>Imagen JPEG de la foto.</returns>
         /// <response code="200">Foto obtenida correctamente.</response>
         /// <response code="404">Foto no encontrada o sin imagen.</response>
-        [HttpGet("FotoAlumno")]
+        [HttpGet("Foto")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
-        public IActionResult ObtenerFotoAlumno()
+        public IActionResult ObtenerFotoPersona()
         {
-            var result = personaAdmisionService.ObtenerFotoAlumno(_currentUser.GetUserId());
+            var result = personaService.ObtenerFotoPersona(_currentUser.GetUserId());
             if (!result.Success)
+            {
                 return ValidateResponse(result);
+            }
 
             if (result.Data is null)
-                return NotFound();
+            {
+                return ValidateResponse(OperationResult<byte[]>.IsFailed(
+                    "GEN_FA_03",
+                    nameof(ObtenerFotoPersona),
+                    "Foto no encontrada.",
+                    404));
+            }
 
             return File(result.Data, "image/jpeg");
         }
 
         /// <summary>
-        /// Obtiene el documento de identidad (cédula) del alumno autenticado.
+        /// Obtiene el documento de identidad de la persona autenticada.
         /// </summary>
-        /// <param name="tipo">Cara del documento: 1 = frente, 2 = dorso.</param>
-        /// <returns>Imagen JPEG del documento.</returns>
+        /// <returns>Frente y dorso del documento disponibles.</returns>
         /// <response code="200">Imagen obtenida correctamente.</response>
-        /// <response code="204">El documento está vencido.</response>
-        /// <response code="400">Tipo de documento inválido.</response>
         /// <response code="404">Documento no encontrado o sin imagen.</response>
-        [HttpGet("DocumentoAlumno")]
-        [ProducesResponseType(typeof(FileContentResult), 200)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 204)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 400)]
-        [ProducesResponseType(typeof(OperationResult<byte[]>), 404)]
-        public IActionResult ObtenerDocumentoAlumno([FromQuery] int tipo)
+        /// <response code="409">El documento existe pero no esta en un estado valido para ser devuelto.</response>
+        [HttpGet("Documento")]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoDocumentoPersonaResponse>), 409)]
+        public IActionResult ObtenerDocumentoPersona()
         {
-            var result = personaAdmisionService.ObtenerDocumentoAlumno(_currentUser.GetUserId(), tipo);
-            if (!result.Success)
-                return ValidateResponse(result);
-
-            if (result.Data is null)
-                return NotFound();
-
-            return File(result.Data, "image/jpeg");
+            var result = personaService.ObtenerDocumentoPersona(_currentUser.GetUserId());
+            return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Sube la foto del alumno autenticado.
+        /// Sube la foto de la persona autenticada.
         /// </summary>
         /// <param name="request">JSON con el nombre del archivo y los bytes de la imagen.</param>
-        /// <returns>true si la foto se guardó correctamente.</returns>
+        /// <returns><c>true</c> si la foto se guardo correctamente.</returns>
         /// <response code="200">Archivo guardado correctamente.</response>
-        /// <response code="400">Request inválido o archivo no permitido.</response>
-        /// <response code="404">No se encontró la persona autenticada.</response>
-        [HttpPost("SubirFotoAlumno")]
+        /// <response code="400">Request invalido o archivo no permitido.</response>
+        /// <response code="404">No se encontro la persona autenticada.</response>
+        [HttpPost("SubirFoto")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult SubirFotoAlumno([FromBody] SubirFotoAlumnoRequest request)
+        public IActionResult SubirFotoPersona([FromBody] SubirFotoPersonaRequest? request)
         {
+            if (request?.ArchivoAdjunto is null)
+            {
+                return ValidateResponse(OperationResult<bool>.IsFailed(
+                    "SUB_FOT_01",
+                    nameof(SubirFotoPersona),
+                    "No se recibió el archivo adjunto.",
+                    400,
+                    default!));
+            }
+
             var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
             var fileName = string.IsNullOrWhiteSpace(request.ArchivoAdjunto.NombreArchivo)
                 ? "image.jpg"
                 : request.ArchivoAdjunto.NombreArchivo;
 
-            var result = personaAdmisionService.SubirFotoAlumno(_currentUser.GetUserId(), fileContent, fileName);
+            var result = personaService.SubirFotoPersona(_currentUser.GetUserId(), fileContent, fileName);
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Sube un documento del alumno autenticado para el tipo y fecha de vencimiento indicados.
+        /// Sube frente y dorso del documento de la persona autenticada para la fecha de vencimiento indicada.
         /// </summary>
-        /// <param name="request">JSON con tipo, fecha de vencimiento, nombre del archivo y bytes del documento.</param>
-        /// <returns>true si el documento se guardó correctamente.</returns>
+        /// <param name="request">JSON con fecha de vencimiento, frente y dorso del documento.</param>
+        /// <returns><c>true</c> si el documento se guardo correctamente.</returns>
         /// <response code="200">Archivo guardado correctamente.</response>
-        /// <response code="400">Request inválido o archivo no permitido.</response>
-        /// <response code="404">No se encontró la persona autenticada.</response>
-        [HttpPost("SubirDocumentoAlumno")]
+        /// <response code="400">Request invalido o archivo no permitido.</response>
+        /// <response code="404">No se encontro la persona autenticada.</response>
+        [HttpPost("SubirDocumento")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
-        public IActionResult SubirDocumentoAlumno([FromBody] UploadDocumentoAlumnoRequest request)
+        [ProducesResponseType(typeof(OperationResult<bool>), 409)]
+        public IActionResult SubirDocumentoPersona([FromBody] UploadDocumentoPersonaRequest? request)
         {
-            var fileContent = request.ArchivoAdjunto.Archivo ?? Array.Empty<byte>();
-            var fileName = request.ArchivoAdjunto.NombreArchivo ?? string.Empty;
-            var result = personaAdmisionService.SubirDocumentoAlumno(_currentUser.GetUserId(), request.Tipo, request.Fecha, fileContent, fileName);
+            if (request?.Frente is null || request.Dorso is null)
+            {
+                return ValidateResponse(OperationResult<bool>.IsFailed(
+                    "SUB_DOC_01",
+                    nameof(SubirDocumentoPersona),
+                    "No se recibió el frente o el dorso del documento.",
+                    400,
+                    default!));
+            }
+
+            var result = personaService.SubirDocumentoPersona(
+                _currentUser.GetUserId(),
+                request.Fecha,
+                new DtoDocumentoPersonaArchivo
+                {
+                    NombreArchivo = request.Frente.NombreArchivo,
+                    Archivo = request.Frente.Archivo
+                },
+                new DtoDocumentoPersonaArchivo
+                {
+                    NombreArchivo = request.Dorso.NombreArchivo,
+                    Archivo = request.Dorso.Archivo
+                });
             return ValidateResponse(result);
         }
 

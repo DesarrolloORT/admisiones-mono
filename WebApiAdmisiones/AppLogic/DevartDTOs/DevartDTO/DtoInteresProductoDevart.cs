@@ -37,15 +37,7 @@ namespace AppLogic.DevartDTOs
         [Required()]
         public decimal IdGradoInteres { get; set; }
 
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
         public DateTime? FechaInteresProd { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
 
         [StringLength(200)]
         public string? ObservacionesInteresProd { get; set; }

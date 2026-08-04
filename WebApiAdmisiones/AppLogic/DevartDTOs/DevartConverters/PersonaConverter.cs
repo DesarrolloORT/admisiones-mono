@@ -221,7 +221,6 @@ namespace AppLogic.DevartDTOs
               target.InstanciaWorkflows = source.InstanciaWorkflows.ToDtosWithRelated(level - 1);
               target.AccesoSitiosantanders = source.AccesoSitiosantanders.ToDtosWithRelated(level - 1);
               target.BachilleratoPersona = source.BachilleratoPersona.ToDtoWithRelated(level - 1);
-              target.Accions = source.Accions.ToDtosWithRelated(level - 1);
               target.DeclaracionJuradaWebs = source.DeclaracionJuradaWebs.ToDtosWithRelated(level - 1);
               target.InscriptoPruebas = source.InscriptoPruebas.ToDtosWithRelated(level - 1);
               target.AceptacionReglamentoEsts = source.AceptacionReglamentoEsts.ToDtosWithRelated(level - 1);
@@ -229,6 +228,10 @@ namespace AppLogic.DevartDTOs
               target.CaracteristicaPai_IdCaracteristicaPaisTel2 = source.CaracteristicaPai_IdCaracteristicaPaisTel2.ToDtoWithRelated(level - 1);
               target.PersonaAdmite = source.PersonaAdmite.ToDtoWithRelated(level - 1);
               target.RefreshTokens = source.RefreshTokens.ToDtosWithRelated(level - 1);
+              target.EmpresaConsideradaAdmisions = source.EmpresaConsideradaAdmisions.ToDtosWithRelated(level - 1);
+              target.EducacionSuperiorAdmisions = source.EducacionSuperiorAdmisions.ToDtosWithRelated(level - 1);
+              target.MotivoEleccionAdmisions = source.MotivoEleccionAdmisions.ToDtosWithRelated(level - 1);
+              target.PublicidadEleccionAdmisions = source.PublicidadEleccionAdmisions.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

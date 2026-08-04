@@ -39,9 +39,6 @@ namespace AppLogic.DevartDTOs
             target.NombreExtensoEscuela = source.NombreExtensoEscuela;
             target.ObservacionesEscuela = source.ObservacionesEscuela;
             target.FechaCreacionEscuela = source.FechaCreacionEscuela;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.DescripcionEscuela = source.DescripcionEscuela;
             target.UsernameResponsable = source.UsernameResponsable;
             target.OrdenListadoEscuela = source.OrdenListadoEscuela;
@@ -77,9 +74,6 @@ namespace AppLogic.DevartDTOs
             target.NombreExtensoEscuela = source.NombreExtensoEscuela;
             target.ObservacionesEscuela = source.ObservacionesEscuela;
             target.FechaCreacionEscuela = source.FechaCreacionEscuela;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.DescripcionEscuela = source.DescripcionEscuela;
             target.UsernameResponsable = source.UsernameResponsable;
             target.OrdenListadoEscuela = source.OrdenListadoEscuela;

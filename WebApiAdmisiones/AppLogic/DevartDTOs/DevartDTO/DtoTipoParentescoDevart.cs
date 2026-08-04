@@ -30,14 +30,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(15)]
         public string? DescripcionTp { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         #endregion
 
         #region Navigation Properties

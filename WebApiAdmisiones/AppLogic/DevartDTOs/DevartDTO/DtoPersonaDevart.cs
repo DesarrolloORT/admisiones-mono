@@ -514,8 +514,6 @@ namespace AppLogic.DevartDTOs
 
         public DtoBachilleratoPersonaDevart BachilleratoPersona { get; set; }
 
-        public List<DtoAccionDevart> Accions { get; set; }
-
         public List<DtoDeclaracionJuradaWebDevart> DeclaracionJuradaWebs { get; set; }
 
         public List<DtoInscriptoPruebaDevart> InscriptoPruebas { get; set; }
@@ -529,6 +527,14 @@ namespace AppLogic.DevartDTOs
         public DtoPersonaAdmiteDevart PersonaAdmite { get; set; }
 
         public List<DtoRefreshTokenDevart> RefreshTokens { get; set; }
+
+        public List<DtoEmpresaConsideradaAdmisionDevart> EmpresaConsideradaAdmisions { get; set; }
+
+        public List<DtoEducacionSuperiorAdmisionDevart> EducacionSuperiorAdmisions { get; set; }
+
+        public List<DtoMotivoEleccionAdmisionDevart> MotivoEleccionAdmisions { get; set; }
+
+        public List<DtoPublicidadEleccionAdmisionDevart> PublicidadEleccionAdmisions { get; set; }
 
         #endregion
     }

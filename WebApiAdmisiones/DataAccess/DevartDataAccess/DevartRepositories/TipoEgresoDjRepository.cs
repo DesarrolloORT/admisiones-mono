@@ -7,10 +7,18 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using BusinessLogic.IDevartRepositories;
 
-namespace BusinessLogic.Entities
+namespace DataAccess.DevartRepositories
 {
     public partial class TipoEgresoDjRepository
     {
+        public virtual ICollection<BusinessLogic.Entities.TipoEgresoDj> GetActivosOrdenados()
+        {
+            return objectSet
+                .Where(e => e.Activo == "SI")
+                .OrderBy(e => e.Orden)
+                .ToList();
+        }
     }
 }

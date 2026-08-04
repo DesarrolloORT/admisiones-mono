@@ -1,10 +1,11 @@
+using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Inscripciones.Dtos;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
-using AppLogic.IServices;
+using AppLogic.Inscripciones.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -20,29 +21,12 @@ namespace WebApiAdmisiones.Controllers
         #region INSCRIPCIONES
 
         /// <summary>
-        /// Obtiene la última inscripción de la persona autenticada.
+        /// Registra o actualiza el interes de la persona autenticada para un producto, proceso y oferta habilitados.
         /// </summary>
-        /// <returns>Última inscripción del alumno.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("UltimaInscripcionActiva")]
-        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 204)]
-        [ProducesResponseType(typeof(OperationResult<DtoUltimaInscripcion>), 400)]
-        public IActionResult ObtenerUltimaInscripcionActiva()
-        {
-            var result = inscripcionesService.ObtenerUltimaInscripcionActiva(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Registra o actualiza el interes de la persona autenticada para un producto y proceso habilitado.
-        /// </summary>
-        /// <param name="request">Producto y proceso seleccionados.</param>
-        /// <returns>Resultado de la actualizacion del interes.</returns>
+        /// <param name="request">Producto, proceso y oferta seleccionados.</param>
+        /// <returns><c>true</c> si el interes se registro correctamente.</returns>
         /// <response code="200">Interes registrado correctamente.</response>
-        /// <response code="400">Producto o proceso invalido.</response>
+        /// <response code="400">Producto, proceso, oferta o solicitud invalida.</response>
         /// <response code="404">Persona no encontrada.</response>
         /// <response code="409">La persona ya tuvo inscripcion o tiene una pendiente para ese producto.</response>
         [HttpPost("InteresProducto")]
@@ -50,125 +34,140 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
         [ProducesResponseType(typeof(OperationResult<bool>), 404)]
         [ProducesResponseType(typeof(OperationResult<bool>), 409)]
-        public IActionResult RegistrarInteresProducto([FromBody] InteresProductoRequest request)
+        public IActionResult RegistrarInteresProducto([FromBody] DtoInteresProductoRequest request)
         {
             var result = inscripcionesService.RegistrarInteresProducto(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Obtiene los productos vigentes con oferta abierta donde la persona tiene interés registrado y no está inscripta.
+        /// Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.
         /// </summary>
-        /// <returns>Lista de productos vigentes con interés.</returns>
+        /// <returns>Datos de preinscripción.</returns>
         /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("ProductosVigentesConInteres")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
-        public IActionResult ObtenerProductosVigentesConInteres()
+        /// <response code="404">No se encontraron datos de preinscripción para la persona.</response>
+        /// <response code="400">Solicitud inválida.</response>
+        [HttpGet("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoObtenerEncuestaInicialResponse>), 404)]
+        public IActionResult ObtenerEncuestaInicialAdmision()
         {
-            var result = inscripcionesService.ObtenerProductosVigentesConInteres(_currentUser.GetUserId());
+            var result = inscripcionesService.ObtenerEncuestaInicial(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Obtiene los productos de interés de la persona autenticada que aún no tienen inscripción confirmada.
+        /// Guarda parcial o completamente la encuesta inicial de admision.
         /// </summary>
-        /// <returns>Lista de productos de interés.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="204">Sin datos.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("ProductosConInteresActivo")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 204)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoProductoAdmisiones>>), 400)]
-        public IActionResult ObtenerProductosConInteresActivo()
+        /// <param name="request">Campos de encuesta enviados por el front.</param>
+        /// <returns>Estado actualizado y campos pendientes de la encuesta.</returns>
+        /// <response code="200">Encuesta guardada correctamente.</response>
+        /// <response code="400">Los datos enviados son invalidos.</response>
+        /// <response code="404">No se encontro la persona, producto o proceso indicado.</response>
+        [HttpPost("EncuestaInicial")]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoGuardarEncuestaInicialResponse>), 404)]
+        public IActionResult GuardarEncuestaInicial([FromBody] DtoGuardarEncuestaInicialRequest request)
         {
-            var result = inscripcionesService.ObtenerProductosConInteresActivo(_currentUser.GetUserId());
+            var result = inscripcionesService.GuardarEncuestaInicial(_currentUser.GetUserId(), request);
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Indica si la persona autenticada tiene una inscripción activa en VD_ES_FRESCO_ADMISION
-        /// para el producto y proceso dados.
+        /// Confirma la preinscripcion de la persona autenticada como cierre del paso 2.
+        /// Valida encuesta definitiva, documentos frente y dorso, aceptacion del reglamento y confirma contra la API interna.
+        /// Para productos de nivel 1 y 2 debe indicarse una unica oferta; para nivel 3 y 4 pueden indicarse varias.
         /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe inscripción activa; false en caso contrario.</returns>
+        /// <param name="request">Ofertas seleccionadas y aceptacion del reglamento.</param>
+        /// <returns>Confirmacion, resumen de carrera/comienzo/turno y un resultado (id de inscripcion, sena, vencimiento de pago) por cada oferta.</returns>
+        /// <response code="200">Preinscripcion confirmada correctamente.</response>
+        /// <response code="400">Solicitud invalida o datos incompletos para confirmar.</response>
+        /// <response code="404">No se encontro la persona, encuesta o documento requerido.</response>
+        /// <response code="409">La encuesta o el documento no estan vigentes o en estado valido.</response>
+        [HttpPost("ConfirmarPreInscripcion")]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ConfirmarPreInscripcion([FromBody] DtoConfirmarPreInscripcionRequest request)
+        {
+            var result = await inscripcionesService.ConfirmarPreInscripcion(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Reactiva una inscripcion dada de baja de la persona autenticada, creando una nueva
+        /// inscripcion para la misma oferta.
+        /// </summary>
+        /// <param name="request">Id de la inscripcion dada de baja a reactivar.</param>
+        /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
+        /// <response code="200">Inscripcion reactivada correctamente.</response>
+        /// <response code="400">Solicitud invalida.</response>
+        /// <response code="404">No se encontro la inscripcion para la persona.</response>
+        /// <response code="409">La inscripcion indicada no esta dada de baja, o no esta en un estado valido para reactivar.</response>
+        [HttpPost("Reactivar")]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoConfirmarPreInscripcionResponse>), 409)]
+        public async Task<IActionResult> ReactivarInscripcion([FromBody] DtoReactivarInscripcionRequest request)
+        {
+            var result = await inscripcionesService.ReactivarInscripcion(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Inicia o confirma el pago de una inscripcion de la persona autenticada.
+        /// </summary>
+        /// <remarks>
+        /// Tipos de pago admitidos: <c>CUENTA_PERSONAL</c>, <c>ABITAB</c>, <c>PAGANZA</c>, <c>BANRED</c>, <c>GEOPAY</c> y <c>SISTARBANC</c>. Para <c>SISTARBANC</c> se debe enviar <c>IdBancoSistarbanc</c>.
+        /// </remarks>
+        /// <param name="request">Inscripcion y tipo de pago seleccionado por el front.</param>
+        /// <returns>Resultado del pago, metodo guardado o URL generada para continuar el pago externo.</returns>
+        /// <response code="200">Pago procesado, metodo guardado o URL de pago generada correctamente.</response>
+        /// <response code="400">Solicitud invalida o tipo de pago no admitido.</response>
+        /// <response code="404">No se encontro la inscripcion de la persona autenticada.</response>
+        /// <response code="409">La inscripcion no esta en un estado valido para pagar.</response>
+        [HttpPost("Pagar")]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<DtoPagarResponse>), 409)]
+        public async Task<IActionResult> Pagar([FromBody] DtoPagarRequest request)
+        {
+            var result = await inscripcionesService.Pagar(_currentUser.GetUserId(), request);
+            return ValidateResponse(result);
+        }
+
+        /// <summary>
+        /// Indica si la persona autenticada ya aceptó el reglamento estudiantil.
+        /// </summary>
+        /// <returns>Estado de aceptación del reglamento y fecha de primera aceptación.</returns>
         /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionActivaParaProceso")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        public IActionResult TieneInscripcionActivaParaProceso([FromQuery] long idProducto, [FromQuery] long idProceso)
+        [HttpGet("ReglamentoEstudiantil")]
+        [ProducesResponseType(typeof(OperationResult<DtoAceptacionReglamentoEstudiantilResponse>), 200)]
+        public IActionResult ObtenerAceptacionReglamentoEstudiantil()
         {
-            var result = inscripcionesService.TieneInscripcionActivaParaProceso(_currentUser.GetUserId(), idProducto, idProceso);
+            var result = inscripcionesService.ObtenerAceptacionReglamentoEstudiantil(_currentUser.GetUserId());
             return ValidateResponse(result);
         }
 
         /// <summary>
-        /// Obtiene las inscripciones en curso (workflow sin finalizar ni cancelar) de la persona autenticada.
+        /// Obtiene el detalle de una inscripción de "Mis carreras" según su estado.
         /// </summary>
-        /// <returns>Lista de instancias de workflow pendientes, cada una con sus datos de inscripción.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesPendientes")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
-        public IActionResult ObtenerInscripcionesPendientes()
+        /// <param name="idProducto">ID del producto de la tarjeta.</param>
+        /// <param name="idProceso">ID del proceso de la tarjeta.</param>
+        /// <returns>Estado de la inscripción y, si corresponde, la oferta seleccionada.</returns>
+        /// <response code="200">Detalle obtenido correctamente.</response>
+        /// <response code="404">No se encontró la inscripción para la persona.</response>
+        [HttpGet("Detalle")]
+        [ProducesResponseType(typeof(OperationResult<DtoDetalleInscripcionResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<DtoDetalleInscripcionResponse>), 404)]
+        public async Task<IActionResult> ObtenerDetalleInscripcion([FromQuery] long idProducto, [FromQuery] long idProceso)
         {
-            var result = inscripcionesService.ObtenerInscripcionesPendientes(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene las inscripciones canceladas de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista de instancias de workflow canceladas, cada una con sus datos de inscripción.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesCanceladas")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInstanciaWorkflowDevart>>), 400)]
-        public IActionResult ObtenerInscripcionesCanceladas()
-        {
-            var result = inscripcionesService.ObtenerInscripcionesCanceladas(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Obtiene el historial de inscripciones realizadas por la persona autenticada,
-        /// en productos de nivel 1 o 2 con proceso habilitado. Una entrada por producto (la más antigua).
-        /// </summary>
-        /// <returns>Lista de inscripciones realizadas.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionesRealizadas")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 200)]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<DtoInscripcionRealizada>>), 400)]
-        public IActionResult ObtenerInscripcionesRealizadas()
-        {
-            var result = inscripcionesService.ObtenerInscripcionesRealizadas(_currentUser.GetUserId());
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
-        /// Indica si la persona autenticada tiene una inscripción en T_INSCRIPTO (sin baja)
-        /// para el producto y proceso dados.
-        /// </summary>
-        /// <param name="idProducto">ID del producto.</param>
-        /// <param name="idProceso">ID del proceso.</param>
-        /// <returns>true si existe la inscripción; false en caso contrario.</returns>
-        /// <response code="200">Consulta realizada correctamente.</response>
-        /// <response code="400">Error interno del servidor.</response>
-        [HttpGet("InscripcionPorProductoProceso")]
-        [ProducesResponseType(typeof(OperationResult<bool>), 200)]
-        [ProducesResponseType(typeof(OperationResult<bool>), 400)]
-        public IActionResult TieneInscripcionAdmisiones([FromQuery] long idProducto, [FromQuery] long idProceso)
-        {
-            var result = inscripcionesService.TieneInscripcionAdmisiones(_currentUser.GetUserId(), idProducto, idProceso);
+            var result = await inscripcionesService.ObtenerDetalleInscripcion(_currentUser.GetUserId(), idProducto, idProceso);
             return ValidateResponse(result);
         }
 

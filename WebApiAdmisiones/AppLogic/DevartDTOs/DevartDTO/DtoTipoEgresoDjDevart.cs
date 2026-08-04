@@ -30,14 +30,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(300)]
         public string? NombreTipoEgresoDj { get; set; }
 
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
         [StringLength(20)]
         public string? AliasTipoEgresoDj { get; set; }
 

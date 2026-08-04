@@ -37,9 +37,6 @@ namespace AppLogic.DevartDTOs
             target.IdLocalidad = source.IdLocalidad;
             target.NombreLocalidad = source.NombreLocalidad;
             target.ObservacionesLocalidad = source.ObservacionesLocalidad;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.AliasLocalidad = source.AliasLocalidad;
             target.DireccionLocalidad = source.DireccionLocalidad;
 
@@ -65,9 +62,6 @@ namespace AppLogic.DevartDTOs
             target.IdLocalidad = source.IdLocalidad;
             target.NombreLocalidad = source.NombreLocalidad;
             target.ObservacionesLocalidad = source.ObservacionesLocalidad;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.AliasLocalidad = source.AliasLocalidad;
             target.DireccionLocalidad = source.DireccionLocalidad;
 

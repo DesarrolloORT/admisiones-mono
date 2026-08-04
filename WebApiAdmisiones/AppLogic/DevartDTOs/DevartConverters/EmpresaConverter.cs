@@ -82,6 +82,9 @@ namespace AppLogic.DevartDTOs
               target.Inscriptos = source.Inscriptos.ToDtosWithRelated(level - 1);
               target.BachilleratoPersonas = source.BachilleratoPersonas.ToDtosWithRelated(level - 1);
               target.InscriptoPruebas = source.InscriptoPruebas.ToDtosWithRelated(level - 1);
+              target.EncuestaInis = source.EncuestaInis.ToDtosWithRelated(level - 1);
+              target.EmpresaConsideradaAdmisions = source.EmpresaConsideradaAdmisions.ToDtosWithRelated(level - 1);
+              target.EducacionSuperiorAdmisions = source.EducacionSuperiorAdmisions.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method

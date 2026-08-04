@@ -9,8 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
 
 namespace UnitTesting.Security
 {
@@ -61,10 +61,10 @@ namespace UnitTesting.Security
             Assert.True(jwtOptions.TokenValidationParameters.ValidateLifetime);
             Assert.True(jwtOptions.TokenValidationParameters.ValidateIssuerSigningKey);
 
-            Assert.Contains("https://webapiadmisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
-            Assert.Contains("https://webapiadmisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidAudiences);
+            Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidIssuers);
+            Assert.Contains("https://admisiones.ort.edu.uy", jwtOptions.TokenValidationParameters.ValidAudiences);
 
-            var token = CreateTestJwt("https://webapiadmisiones.ort.edu.uy");
+            var token = CreateTestJwt("https://admisiones.ort.edu.uy");
             var keys = jwtOptions.TokenValidationParameters.IssuerSigningKeyResolver(
                 token, null, null, jwtOptions.TokenValidationParameters);
 
@@ -140,145 +140,5 @@ namespace UnitTesting.Security
             Assert.Equal(expectedToken, context.Token);
         }
 
-        // ===== Tests para ShouldRefreshToken =====
-        // NOTA: Estos tests fueron deshabilitados porque ShouldRefreshToken fue eliminado.
-        // El refresh de tokens ahora se maneja mediante el endpoint /RefreshToken en PersonaController
-        // que valida el refresh token contra la base de datos.
-
-        /*
-        [Fact]
-        public void ShouldRefreshToken_WithNullUser_ReturnsFalse()
-        {
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(null!);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithUnauthenticatedUser_ReturnsFalse()
-        {
-            // Arrange
-            var identity = new ClaimsIdentity(); // No authenticated
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithoutExpClaim_ReturnsFalse()
-        {
-            // Arrange
-            var claims = new List<Claim>
-            {
-                new Claim("sub", "12345")
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithInvalidExpClaim_ReturnsFalse()
-        {
-            // Arrange
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Exp, "invalid")
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithTokenExpiringInFuture_ReturnsFalse()
-        {
-            // Arrange
-            var expirationTime = DateTimeOffset.UtcNow.AddHours(1);
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Exp, expirationTime.ToUnixTimeSeconds().ToString())
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 15);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithTokenExpiringWithinThreshold_ReturnsTrue()
-        {
-            // Arrange
-            var expirationTime = DateTimeOffset.UtcNow.AddMinutes(10);
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Exp, expirationTime.ToUnixTimeSeconds().ToString())
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 15);
-
-            // Assert
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithExpiredToken_ReturnsTrue()
-        {
-            // Arrange
-            var expirationTime = DateTimeOffset.UtcNow.AddMinutes(-5);
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Exp, expirationTime.ToUnixTimeSeconds().ToString())
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act
-            var result = AuthenticationExtensions.ShouldRefreshToken(user);
-
-            // Assert
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void ShouldRefreshToken_WithCustomThreshold_UsesCorrectThreshold()
-        {
-            // Arrange
-            var expirationTime = DateTimeOffset.UtcNow.AddMinutes(25);
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Exp, expirationTime.ToUnixTimeSeconds().ToString())
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var user = new ClaimsPrincipal(identity);
-
-            // Act & Assert
-            Assert.False(AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 20));
-            Assert.True(AuthenticationExtensions.ShouldRefreshToken(user, refreshThresholdMinutes: 30));
-        }
-        */
     }
 }

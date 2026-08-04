@@ -12,5 +12,6 @@ namespace BusinessLogic.IDevartRepositories
     public partial interface IIntereRepository
     {
         ICollection<Intere> GetInteresesPersonaProcesosHabilitados(long codigoPersona);
+        Proceso GetProcesoPorInteresActivo(long codigoPersona, long idProducto);
     }
 }

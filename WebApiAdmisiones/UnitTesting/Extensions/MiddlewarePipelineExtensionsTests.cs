@@ -13,7 +13,6 @@ using Microsoft.Extensions.Hosting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using WebApiAdmisiones.Extensions;
-using WebApiAdmisiones.Security;
 using Xunit;
 
 namespace UnitTesting.Extensions
@@ -141,6 +140,7 @@ namespace UnitTesting.Extensions
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer();
             builder.Services.AddAuthorization();
+            builder.Services.AddRateLimiter(_ => { });
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

@@ -12,45 +12,20 @@ namespace DataAccess.DevartRepositories
 {
     public partial class InstanciaWorkflowRepository
     {
-        /// <summary>
-        /// Inscripciones en curso (sin fecha final ni cancelación) de la persona,
-        /// para los procesos de inscripción de alumnos frescos (75 y 82).
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesPendientes(long codigoPersona)
-        {
-            return objectSet
-                .Where(iw =>
-                    (iw.IdProceso == 75 || iw.IdProceso == 82)
-                    && iw.SolicitanteInstanciaWorkflow == codigoPersona
-                    && iw.FechaCanceladoInstanciaWf == null
-                    && iw.FechaFinalInstanciaWf == null)
-                .ToList();
-        }
-
-        /// <summary>
-        /// Inscripciones canceladas (con fecha de cancelación) de la persona,
-        /// para los procesos de inscripción de alumnos frescos (75 y 82).
-        /// </summary>
-        public virtual ICollection<BusinessLogic.Entities.InstanciaWorkflow> GetInscripcionesCanceladas(long codigoPersona)
-        {
-            return objectSet
-                .Where(iw =>
-                    (iw.IdProceso == 75 || iw.IdProceso == 82)
-                    && iw.IdObjetoInstanciaWorkflow == (decimal?)codigoPersona
-                    && iw.FechaCanceladoInstanciaWf != null)
-                .ToList();
-        }
-
         public virtual bool TieneInscripcionPendienteParaProducto(long codigoPersona, long idProducto)
         {
-            return objectSet.Any(iw =>
-                (iw.IdProceso == 75 || iw.IdProceso == 82)
-                && iw.SolicitanteInstanciaWorkflow == codigoPersona
-                && iw.FechaCanceladoInstanciaWf == null
-                && iw.FechaFinalInstanciaWf == null
-                && Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>().Any(iwi =>
-                    iwi.IdInstanciaWorkflow == iw.IdInstanciaWorkflow
-                    && iwi.IdProducto == (decimal?)idProducto));
+            return
+            (
+                from instancia in objectSet
+                join inscripcion in Context.Set<BusinessLogic.Entities.InstWorkflowInscripcion>()
+                    on instancia.IdInstanciaWorkflow equals inscripcion.IdInstanciaWorkflow
+                where (instancia.IdProceso == 75 || instancia.IdProceso == 89)
+                      && instancia.IdObjetoInstanciaWorkflow == (decimal?)codigoPersona
+                      && instancia.FechaCanceladoInstanciaWf == null
+                      && instancia.FechaFinalInstanciaWf == null
+                      && inscripcion.IdProducto == (decimal?)idProducto
+                select instancia.IdInstanciaWorkflow
+            ).Count() > 0;
         }
     }
 }

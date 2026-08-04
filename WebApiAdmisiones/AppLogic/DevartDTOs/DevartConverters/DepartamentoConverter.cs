@@ -41,9 +41,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionDepartamento = source.FechaCreacionDepartamento;
             target.IdEscuela = source.IdEscuela;
             target.ObservacionesDepartamento = source.ObservacionesDepartamento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ClaveDeptoRpg = source.ClaveDeptoRpg;
             target.UsernameResponsable = source.UsernameResponsable;
             target.Ptoid = source.Ptoid;
@@ -71,6 +68,7 @@ namespace AppLogic.DevartDTOs
             if (level > 0) {
               target.Productos = source.Productos.ToDtosWithRelated(level - 1);
               target.Escuela = source.Escuela.ToDtoWithRelated(level - 1);
+              target.Materias = source.Materias.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method
@@ -94,9 +92,6 @@ namespace AppLogic.DevartDTOs
             target.FechaCreacionDepartamento = source.FechaCreacionDepartamento;
             target.IdEscuela = source.IdEscuela;
             target.ObservacionesDepartamento = source.ObservacionesDepartamento;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.ClaveDeptoRpg = source.ClaveDeptoRpg;
             target.UsernameResponsable = source.UsernameResponsable;
             target.Ptoid = source.Ptoid;

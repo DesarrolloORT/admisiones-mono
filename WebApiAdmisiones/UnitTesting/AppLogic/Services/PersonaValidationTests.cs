@@ -1,5 +1,5 @@
 using System;
-using AppLogic.Utilities;
+using AppLogic.Personas.Validators;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;
@@ -11,33 +11,17 @@ namespace UnitTesting.AppLogic.Services
     public class PersonaValidationTests
     {
         [Fact]
-        public void AuditarPersona_WithoutConfirmacionDatosPersonales_SetsAuditFields()
+        public void AuditarPersona_SetsAuditFields()
         {
             var persona = new Persona();
             var uow = new Mock<IUnitOfWork>();
             uow.Setup(u => u.ObtenerDbUserId()).Returns("testuser");
 
-            PersonaValidation.AuditarPersona(persona, 123, uow.Object, false);
+            PersonaValidation.AuditarPersona(persona, 123, uow.Object);
 
             Assert.Equal("123", persona.UsuarioModifFdp);
             Assert.Equal("testuser", persona.UsuarioUltimaActualizacion);
             Assert.True(persona.FechaUltimaActualizacion.HasValue);
-        }
-
-        [Fact]
-        public void AuditarPersona_WithConfirmacionDatosPersonales_SetsConfirmationFields()
-        {
-            var persona = new Persona();
-            var uow = new Mock<IUnitOfWork>();
-            uow.Setup(u => u.ObtenerDbUserId()).Returns("testuser");
-
-            PersonaValidation.AuditarPersona(persona, 123, uow.Object, true);
-
-            Assert.Equal("123", persona.UsuarioModifFdp);
-            Assert.Equal("testuser", persona.UsuarioUltimaActualizacion);
-            Assert.True(persona.FechaUltimaActualizacion.HasValue);
-            Assert.True(persona.FechaConfDatosPersona.HasValue);
-            Assert.Equal("testuser", persona.UsuarioConfDatosPersona);
         }
 
         [Fact]

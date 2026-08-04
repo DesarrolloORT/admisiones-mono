@@ -39,9 +39,6 @@ namespace AppLogic.DevartDTOs
             target.HoraDesdeFeriado = source.HoraDesdeFeriado;
             target.HoraHastaFeriado = source.HoraHastaFeriado;
             target.ObservacionesFeriado = source.ObservacionesFeriado;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.VtoCuotasFeriado = source.VtoCuotasFeriado;
             target.ClaseFeriado = source.ClaseFeriado;
             target.AbreFeriado = source.AbreFeriado;
@@ -66,9 +63,6 @@ namespace AppLogic.DevartDTOs
             target.HoraDesdeFeriado = source.HoraDesdeFeriado;
             target.HoraHastaFeriado = source.HoraHastaFeriado;
             target.ObservacionesFeriado = source.ObservacionesFeriado;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.VtoCuotasFeriado = source.VtoCuotasFeriado;
             target.ClaseFeriado = source.ClaseFeriado;
             target.AbreFeriado = source.AbreFeriado;

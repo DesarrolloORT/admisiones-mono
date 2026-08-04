@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Utilities;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Authentication;
+using WebApiAdmisiones.Security.Observability;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -12,10 +13,7 @@ namespace WebApiAdmisiones.Controllers
 
         protected IActionResult ValidateResponse<TData>(OperationResult<TData> retorno)
         {
-            // Obtener correlationId del HttpContext (generado en middleware/filtro), o generar uno nuevo si no existe
-            var correlationId = HttpContext?.Items?.TryGetValue(LoggingHelper.CorrelationIdKey, out var storedId) == true
-                ? storedId as Guid? ?? Guid.NewGuid()
-                : Guid.NewGuid();
+            var correlationId = LoggingHelper.EnsureCorrelationId(HttpContext);
             var codigoPersona = _currentUser.UserId?.ToString();
             var origin = typeof(T).Name;
             

@@ -77,6 +77,8 @@ namespace AppLogic.DevartDTOs
 
         public DtoAnioBachillerDevart AnioBachiller { get; set; }
 
+        public List<DtoMateriaDevart> Materias { get; set; }
+
         #endregion
     }
 

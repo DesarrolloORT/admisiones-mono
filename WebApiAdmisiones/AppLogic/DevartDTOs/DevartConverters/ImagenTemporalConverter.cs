@@ -38,9 +38,6 @@ namespace AppLogic.DevartDTOs
             target.NombreImagen = source.NombreImagen;
             target.CodigoPersona = source.CodigoPersona;
             target.TipoImagen = source.TipoImagen;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.BlobImagen = source.BlobImagen;
             target.FechaVtoDocumentoPersona = source.FechaVtoDocumentoPersona;
 
@@ -62,9 +59,6 @@ namespace AppLogic.DevartDTOs
             target.NombreImagen = source.NombreImagen;
             target.CodigoPersona = source.CodigoPersona;
             target.TipoImagen = source.TipoImagen;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
             target.BlobImagen = source.BlobImagen;
             target.FechaVtoDocumentoPersona = source.FechaVtoDocumentoPersona;
 

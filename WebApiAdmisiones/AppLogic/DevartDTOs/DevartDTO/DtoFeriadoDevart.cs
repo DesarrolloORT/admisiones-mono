@@ -39,14 +39,6 @@ namespace AppLogic.DevartDTOs
         [StringLength(255)]
         public string? ObservacionesFeriado { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(2)]
         public string? VtoCuotasFeriado { get; set; }
 

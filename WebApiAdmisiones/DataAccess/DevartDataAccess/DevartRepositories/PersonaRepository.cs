@@ -13,16 +13,33 @@ namespace DataAccess.DevartRepositories
 {
     public partial class PersonaRepository
     {
-        /// <summary>
-        /// Devuelve la persona con sus relaciones principales cargadas.
-        /// </summary>
-        public virtual BusinessLogic.Entities.Persona GetPersonaWithRelated(long codigoPersona)
+        public virtual bool ExistePersona(long codigoPersona)
         {
-            return objectSet
-                .Where(p => p.CodigoPersona == codigoPersona)
-                .Include(p => p.Imagens)
-                .Include(p => p.Inscriptos)
-                .FirstOrDefault();
+            return objectSet.Count(p => p.CodigoPersona == codigoPersona) > 0;
         }
+
+        public virtual BusinessLogic.Entities.Persona GetByDocumento(string documento)
+        {
+            var normalized = documento?.Trim() ?? string.Empty;
+
+            return objectSet
+                .Include(p => p.Ciudad)
+                .FirstOrDefault(p => p.Documento != null && p.Documento.Trim() == normalized);
+        }
+
+        public virtual BusinessLogic.Entities.Persona GetByTipoDocumentoYDocumento(string tipoDocumento, string documento)
+        {
+            var normalizedTipoDocumento = tipoDocumento?.Trim() ?? string.Empty;
+            var normalizedDocumento = documento?.Trim() ?? string.Empty;
+
+            return objectSet
+                .Include(p => p.Ciudad)
+                .FirstOrDefault(p =>
+                    p.TipoDocumento != null
+                    && p.Documento != null
+                    && p.TipoDocumento.Trim() == normalizedTipoDocumento
+                    && p.Documento.Trim() == normalizedDocumento);
+        }
+
     }
 }

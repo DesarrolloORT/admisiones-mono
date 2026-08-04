@@ -56,12 +56,14 @@ namespace AppLogic.DevartDTOs
             target.GrupoRpg = source.GrupoRpg;
             target.FechaNormal = source.FechaNormal;
             target.CupoRestringidoOferta = source.CupoRestringidoOferta;
+            target.IncompanyOferta = source.IncompanyOferta;
 
             // Navigation Properties
             if (level > 0) {
               target.Supraoferta = source.Supraoferta.ToDtoWithRelated(level - 1);
               target.Localidad = source.Localidad.ToDtoWithRelated(level - 1);
               target.Turno = source.Turno.ToDtoWithRelated(level - 1);
+              target.OfertaCreditos = source.OfertaCreditos.ToDtosWithRelated(level - 1);
             }
 
             // User-defined partial method
@@ -100,6 +102,7 @@ namespace AppLogic.DevartDTOs
             target.GrupoRpg = source.GrupoRpg;
             target.FechaNormal = source.FechaNormal;
             target.CupoRestringidoOferta = source.CupoRestringidoOferta;
+            target.IncompanyOferta = source.IncompanyOferta;
 
             // User-defined partial method
             OnEntityCreating(source, target);

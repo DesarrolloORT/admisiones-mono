@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using WebApiAdmisiones.Security;
 using Xunit;
-using Sanitization.Code;
 using Utilities;
 using Microsoft.Extensions.FileProviders;
 using System.Security.Claims;
+using WebApiAdmisiones.Security.RequestValidation;
+using WebApiAdmisiones.Security.Observability;
+using WebApiAdmisiones.Security.Middleware;
 
 namespace UnitTesting.Security
 {
@@ -109,6 +110,29 @@ namespace UnitTesting.Security
             Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
             Assert.Contains("SANITIZATION_ERROR", responseBody);
             Assert.Contains("Invalid input", responseBody);
+        }
+
+        [Fact]
+        public async Task Invoke_WhenUnauthorizedAccessException_ReturnsUnauthorized()
+        {
+            // Arrange
+            var context = CreateContext();
+            var logger = new FakeLogger<ExceptionHandlingMiddleware>();
+
+            var middleware = new ExceptionHandlingMiddleware(
+                _ => throw new UnauthorizedAccessException("UserId is not available."),
+                logger,
+                new FakeEnvironment(isDevelopment: false)
+            );
+
+            // Act
+            await middleware.Invoke(context);
+            var responseBody = await GetResponseBody(context.Response);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+            Assert.StartsWith("application/json", context.Response.ContentType);
+            Assert.Contains("AUTH_UNAUTHORIZED", responseBody);
         }
 
         [Fact]

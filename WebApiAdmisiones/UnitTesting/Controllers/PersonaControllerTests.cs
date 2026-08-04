@@ -1,121 +1,285 @@
-using AppLogic.DevartDTOs;
-using AppLogic.IServices;
-using AppLogic.Requests;
+using AppLogic.Autenticacion.Dtos;
+using AppLogic.Becas.Dtos;
+using AppLogic.Personas.Dtos;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
 using WebApiAdmisiones.Controllers;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Authentication;
+using AppLogic.Personas.Interfaces;
+using WebApiAdmisiones.Models;
 
 namespace UnitTesting.Controllers
 {
     public class PersonaControllerTests
     {
-        [Fact]
-        public void ObtenerPersona_ReturnsOk()
+        private readonly Mock<IPersonaService> _personaServiceMock;
+        private readonly Mock<ICurrentUserService> _currentUserMock;
+        private readonly PersonaController _controller;
+
+        public PersonaControllerTests()
         {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
+            _personaServiceMock = new Mock<IPersonaService>();
+            _currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.ObtenerPersona(1))
-                .Returns(OperationResult<DtoPersonaDevart>.Ok(new DtoPersonaDevart(), nameof(IPersonaAdmisionService.ObtenerPersona)));
-
-            var response = controller.ObtenerPersona();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
+            _controller = new PersonaController(
+                _personaServiceMock.Object,
+                loggerMock.Object,
+                _currentUserMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Fact]
-        public void ActualizarPersona_ReturnsOk()
+        public void ObtenerDatosPersona_UsesAuthenticatedUserAndReturnsOk()
         {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerDatosPersona(123))
+                .Returns(OperationResult<DtoDatosPersona>.Ok(new DtoDatosPersona(), nameof(IPersonaService.ObtenerDatosPersona)));
 
-            serviceMock.Setup(s => s.ActualizarPersona(1, It.IsAny<ActualizarPersonaRequest>()))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaAdmisionService.ActualizarPersona)));
+            var response = _controller.ObtenerDatosPersona();
 
-            var response = controller.ActualizarPersona(new ActualizarPersonaRequest
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ObtenerDatosPersona(123), Times.Once);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var request = new DtoActualizarDatosPersonaRequest
             {
-                PrimerApellido = "Perez",
-                PrimerNombre = "Ana",
-                Mail = "ana@test.com",
-                VerificacionMail = "ana@test.com",
-                Direccion = "18 de julio 1234",
-                Sexo = "F",
-                FechaNacimiento = new DateTime(2000, 1, 1),
                 CodigoPais = 1,
-                CodigoEstado = 1,
-                CodigoCiudad = 1
-            });
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-        }
-
-        [Fact]
-        public void GuardarDatosPersonaEncuesta_ReturnsOk()
-        {
-            var serviceMock = new Mock<IPersonaAdmisionService>();
-            var currentUserMock = new Mock<ICurrentUserService>();
-            var loggerMock = new Mock<ILogger<PersonaController>>();
-            currentUserMock.Setup(c => c.GetUserId()).Returns(1);
-            var controller = new PersonaController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
-
-            serviceMock.Setup(s => s.GuardarDatosPersonaEncuesta(1, It.IsAny<GuardarDatosPersonaEncuestaRequest>()))
-                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaAdmisionService.GuardarDatosPersonaEncuesta)));
-
-            var response = controller.GuardarDatosPersonaEncuesta(new GuardarDatosPersonaEncuestaRequest
-            {
-                PrimerApellido = "Perez",
-                PrimerNombre = "Ana",
-                Mail = "ana@test.com",
-                VerificacionMail = "ana@test.com",
+                CodigoEstado = 2,
+                CodigoCiudad = 3,
                 Direccion = "18 de julio 1234",
-                Sexo = "F",
-                FechaNacimiento = new DateTime(2000, 1, 1),
                 Telefono1 = "24001234",
-                CodigoPais = 1,
-                CodigoEstado = 1,
-                CodigoCiudad = 1,
-                Documento = "12345678",
-                TipoDocumento = "CI",
-                IdProducto = 10,
-                IdProceso = 20,
-                UltimoAnioSexto = 5,
-                VecesSexto = 0,
-                InstruccionPadre = 3,
-                InstruccionMadre = 3,
-                DecisionCarrera = 2,
-                DecisionUniversidad = 2,
-                InfoOtrasUniversidadesAntes = "NO",
-                CompartidoCon = 1,
-                CodigoInstitucionBac = 100,
-                InformarEncuesta = "SI",
-                UltimoAnioSecundaria = 1,
-                TieneEducacionSuperior = false,
-                NivelDecision = 1,
-                AsesoramientoOrt = true,
-                ValoracionAsesoramientoOrt = 4,
-                VistaSitioWebOrt = true,
-                ValoracionSitioWeb = 4,
-                VistaInstalacionesOrt = true,
-                ValoracionInstalacionesOrt = 4,
-                PublicidadOrt = true,
-                OpcionesPublicidadSeleccionadas = [new PublicidadEncuestaRequest { IdPublicidad = 1, NombrePublicidad = "Web" }],
-                OpcionesMotivosSeleccionados = [new MotivoEncuestaRequest { IdMotivo = 1, NombreMotivo = "Prestigio" }]
-            });
+                Mail = "ana@test.com",
+                VerificacionMail = "ana@test.com"
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ActualizarDatosPersona(123, request))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaService.ActualizarDatosPersona)));
+
+            var response = _controller.ActualizarDatosPersona(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ActualizarDatosPersona(123, request), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerMisInscripciones_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var inscripciones = new List<DtoInscripcionesPorProductoProcesoResponse>
+            {
+                new() { IdProducto = 10 }
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerMisInscripciones(123))
+                .Returns(OperationResult<IEnumerable<DtoInscripcionesPorProductoProcesoResponse>>.Ok(
+                    inscripciones,
+                    nameof(IPersonaService.ObtenerMisInscripciones)));
+
+            var response = _controller.ObtenerMisInscripciones();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.ObtenerMisInscripciones(123), Times.Once);
+        }
+
+        [Fact]
+        public void ObtenerMisBecas_ReturnsMockBecas()
+        {
+            var response = _controller.ObtenerMisBecas();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<IEnumerable<DtoBecaPersona>>>(okResult.Value);
+            Assert.True(operationResult.Success);
+            var becas = Assert.IsAssignableFrom<IEnumerable<DtoBecaPersona>>(operationResult.Data);
+            Assert.Equal(2, becas.Count());
+        }
+
+        [Fact]
+        public async Task CambiarPassword_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+            var result = OperationResult<object>.Ok(
+                "Se actualizó tu contraseña",
+                nameof(IPersonaService.CambiarPasswordAsync));
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.CambiarPasswordAsync(123, request))
+                .ReturnsAsync(result);
+
+            var response = await _controller.CambiarPassword(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.Verify(s => s.CambiarPasswordAsync(123, request), Times.Once);
+        }
+
+        [Fact]
+        public async Task CambiarPassword_WithoutAuthenticatedUser_ThrowsUnauthorizedAccessException()
+        {
+            // GetUserId() lanza cuando el token no trae el claim de usuario; el middleware
+            // global (ExceptionHandlingMiddleware) es quien la convierte en 401 (CTL-02).
+            var request = new DtoCambiarPasswordRequest
+            {
+                PasswordActual = "Password123!",
+                PasswordNueva = "NuevaPassword1!"
+            };
+            _currentUserMock.Setup(c => c.GetUserId()).Throws<UnauthorizedAccessException>();
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _controller.CambiarPassword(request));
+
+            _personaServiceMock.Verify(
+                s => s.CambiarPasswordAsync(It.IsAny<long>(), It.IsAny<DtoCambiarPasswordRequest>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceSucceeds_ReturnsFileContentResult()
+        {
+            var bytes = new byte[] { 1, 2, 3 };
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.Ok(bytes, nameof(IPersonaService.ObtenerFotoPersona)));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var fileResult = Assert.IsType<FileContentResult>(response);
+            Assert.Equal("image/jpeg", fileResult.ContentType);
+            Assert.Equal(bytes, fileResult.FileContents);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceFails_ReturnsOperationResultBody()
+        {
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.IsFailed(
+                    "GEN_FA_01",
+                    nameof(IPersonaService.ObtenerFotoPersona),
+                    "Foto no encontrada.",
+                    404));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var notFoundResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(404, notFoundResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<byte[]>>(notFoundResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("GEN_FA_01", operationResult.ErrorCode);
+        }
+
+        [Fact]
+        public void ObtenerFotoPersona_WhenServiceSucceedsWithNullData_ReturnsOperationResultBody()
+        {
+            // ⚠️ CONTRATO: antes este caso devolvía 404 sin body (NotFoundResult); ahora cumple
+            // el ProducesResponseType(typeof(OperationResult<byte[]>), 404) declarado en el endpoint.
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerFotoPersona(123))
+                .Returns(OperationResult<byte[]>.Ok(null, nameof(IPersonaService.ObtenerFotoPersona)));
+
+            var response = _controller.ObtenerFotoPersona();
+
+            var notFoundResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(404, notFoundResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<byte[]>>(notFoundResult.Value);
+            Assert.False(operationResult.Success);
+            Assert.Equal("GEN_FA_03", operationResult.ErrorCode);
+        }
+
+        [Fact]
+        public void ObtenerDocumentoPersona_UsesAuthenticatedUserAndReturnsOk()
+        {
+            var fechaVencimiento = DateTime.Today.AddYears(1);
+            var documento = new DtoDocumentoPersonaResponse
+            {
+                Frente = new DtoDocumentoPersonaArchivo
+                {
+                    NombreArchivo = "123_1.pdf",
+                    Archivo = new byte[] { 1, 2, 3 }
+                },
+                FechaVencimiento = fechaVencimiento
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.ObtenerDocumentoPersona(123))
+                .Returns(OperationResult<DtoDocumentoPersonaResponse>.Ok(
+                    documento,
+                    nameof(IPersonaService.ObtenerDocumentoPersona)));
+
+            var response = _controller.ObtenerDocumentoPersona();
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            var operationResult = Assert.IsType<OperationResult<DtoDocumentoPersonaResponse>>(okResult.Value);
+            Assert.Equal(fechaVencimiento, operationResult.Data!.FechaVencimiento);
+            _personaServiceMock.Verify(s => s.ObtenerDocumentoPersona(123), Times.Once);
+        }
+
+        [Fact]
+        public void SubirDocumentoPersona_MapsFrenteDorsoAndFecha()
+        {
+            var fecha = DateTime.Today.AddYears(1);
+            var request = new UploadDocumentoPersonaRequest
+            {
+                Fecha = fecha,
+                Frente = new ArchivoPayload
+                {
+                    NombreArchivo = "frente.pdf",
+                    Archivo = new byte[] { 1, 2, 3 }
+                },
+                Dorso = new ArchivoPayload
+                {
+                    NombreArchivo = "dorso.pdf",
+                    Archivo = new byte[] { 4, 5, 6 }
+                }
+            };
+
+            _currentUserMock.Setup(c => c.GetUserId()).Returns(123);
+            _personaServiceMock
+                .Setup(s => s.SubirDocumentoPersona(
+                    123,
+                    fecha,
+                    It.Is<DtoDocumentoPersonaArchivo>(d =>
+                        d.NombreArchivo == "frente.pdf" &&
+                        d.Archivo!.SequenceEqual(new byte[] { 1, 2, 3 })),
+                    It.Is<DtoDocumentoPersonaArchivo>(d =>
+                        d.NombreArchivo == "dorso.pdf" &&
+                        d.Archivo!.SequenceEqual(new byte[] { 4, 5, 6 }))))
+                .Returns(OperationResult<bool>.Ok(true, nameof(IPersonaService.SubirDocumentoPersona)));
+
+            var response = _controller.SubirDocumentoPersona(request);
+
+            var okResult = Assert.IsType<ObjectResult>(response);
+            Assert.Equal(200, okResult.StatusCode);
+            _personaServiceMock.VerifyAll();
         }
     }
 }

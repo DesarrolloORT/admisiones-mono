@@ -18,14 +18,14 @@ namespace DataAccess.DevartRepositories
     public partial class AnioBachillerRepository
     {
         /// <summary>
-        /// Devuelve el año de bachillerato con los títulos asociados.
+        /// Devuelve todos los años de bachiller con sus bachilleratos (títulos) asociados.
         /// </summary>
-        public virtual BusinessLogic.Entities.AnioBachiller GetWithRelated(long idAnioBachillerato)
+        public virtual ICollection<BusinessLogic.Entities.AnioBachiller> GetAllWithRelated()
         {
             return objectSet
-                .Where(a => a.IdAnioBachiller == (decimal)idAnioBachillerato)
-                .Include(a => a.Titulos)
-                .FirstOrDefault();
+                .Include(a => a.Titulos.Where(t => t.Bachillerato == "SI" && t.OrientacionTitulo != null))
+                .OrderBy(a => a.CantAniosAnioBachiller)
+                .ToList();
         }
     }
 }

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
-using AppLogic.Services;
 using BusinessLogic.Entities;
+using AppLogic.Autenticacion.Services;
 
 namespace UnitTesting.AppLogic.Services
 {

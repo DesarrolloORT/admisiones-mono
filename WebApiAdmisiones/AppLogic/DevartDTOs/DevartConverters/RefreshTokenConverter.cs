@@ -42,9 +42,6 @@ namespace AppLogic.DevartDTOs
             target.RevokedAt = source.RevokedAt;
             target.RemplaceByTokenId = source.RemplaceByTokenId;
             target.IsActive = source.IsActive;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // Navigation Properties
             if (level > 0) {
@@ -73,9 +70,6 @@ namespace AppLogic.DevartDTOs
             target.RevokedAt = source.RevokedAt;
             target.RemplaceByTokenId = source.RemplaceByTokenId;
             target.IsActive = source.IsActive;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-            target.UsuarioIngreso = source.UsuarioIngreso;
 
             // User-defined partial method
             OnEntityCreating(source, target);

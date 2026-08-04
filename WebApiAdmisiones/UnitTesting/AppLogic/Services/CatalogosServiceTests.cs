@@ -1,13 +1,18 @@
+﻿using AppLogic.Catalogos.Dtos;
+using System.Net;
+using System.Text;
+using AppLogic.ApiClients.Interfaces;
+using AppLogic.ApiClients.Services;
 using AppLogic.DevartDTOs;
-using AppLogic.DTOs;
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Collections.Generic;
 using Xunit;
+using AppLogic.Catalogos.Services;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -22,184 +27,457 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new CatalogosService(_uowFactoryMock.Object);
+            _service = new CatalogosService(_uowFactoryMock.Object, Mock.Of<IInscripcionesyPagosApiClient>());
+
+            SetupEncuestaInicialCatalogos();
+        }
+
+        private void SetupEncuestaInicialCatalogos()
+        {
+            var motivoRepo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
+            motivoRepo.Setup(r => r.GetAll()).Returns(new List<MotivoOpcionesAdmision>());
+            _uowMock.Setup(u => u.MotivoOpcionesAdmisions).Returns(motivoRepo.Object);
+
+            var publicidadRepo = new Mock<BusinessLogic.IDevartRepositories.IPublicidadOpcionesAdmisionRepository>();
+            publicidadRepo.Setup(r => r.GetAll()).Returns(new List<PublicidadOpcionesAdmision>());
+            _uowMock.Setup(u => u.PublicidadOpcionesAdmisions).Returns(publicidadRepo.Object);
+
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(new List<AnioBachiller>());
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(new List<Empresa>());
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
         }
 
         [Fact]
-        public void ObtenerPaises_ReturnsSortedPaises()
+        public async Task ObtenerPaisesEstadosCiudades_ReturnsSlimPaisesEstadosCiudades()
         {
             var paisRepo = new Mock<IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisesOrdenados()).Returns(new List<Pais>
+            paisRepo.Setup(r => r.GetPaisesConEstadosYCiudades()).Returns(new List<Pais>
             {
-                new Pais { CodigoPais = 1, Nombre = "Uruguay" },
-                new Pais { CodigoPais = 2, Nombre = "Argentina" }
+                new Pais
+                {
+                    CodigoPais = 1,
+                    Nombre = "Uruguay",
+                    Estado =
+                    [
+                        new Estado
+                        {
+                            CodigoPais = 1,
+                            CodigoEstado = 10,
+                            Nombre = "Montevideo",
+                            Ciudad =
+                            [
+                                new Ciudad
+                                {
+                                    CodigoPais = 1,
+                                    CodigoEstado = 10,
+                                    CodigoCiudad = 100,
+                                    Nombre = "Montevideo"
+                                }
+                            ]
+                        }
+                    ]
+                }
             });
             _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
 
-            var result = _service.ObtenerPaises();
+            var result = await _service.ObtenerPaisesEstadosCiudadesAsync();
 
             Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            var list = new List<DtoPaisDevart>(result.Data);
-            Assert.Equal(2, list.Count);
-            Assert.Equal(1, list[0].CodigoPais);
+            Assert.Equal("ObtenerPaisesEstadosCiudades", result.Method);
+            var pais = Assert.Single(result.Data!);
+            Assert.Equal(1, pais.CodigoPais);
+            Assert.Equal("Uruguay", pais.Nombre);
+            Assert.NotNull(pais.Estado);
+            var estado = Assert.Single(pais.Estado);
+            Assert.Equal(1, estado.CodigoPais);
+            Assert.Equal(10, estado.CodigoEstado);
+            Assert.Equal("Montevideo", estado.Nombre);
+            Assert.NotNull(pais.Estado[0].Ciudad);
+            var ciudad = Assert.Single(pais.Estado[0].Ciudad);
+            Assert.Equal(1, ciudad.CodigoPais);
+            Assert.Equal(10, ciudad.CodigoEstado);
+            Assert.Equal(100, ciudad.CodigoCiudad);
+            Assert.Equal("Montevideo", ciudad.Nombre);
+            Assert.Null(typeof(DtoPaisEstadoCiudadResponse).GetProperty("DgiPais"));
+            Assert.Null(typeof(DtoEstadoCiudadResponse).GetProperty("Pai"));
+            Assert.Null(typeof(DtoEstadoCiudadResponse).GetProperty("SolicitudAltas"));
+            Assert.Null(typeof(DtoCiudadResponse).GetProperty("Empresas"));
+            Assert.Null(typeof(DtoCiudadResponse).GetProperty("Personas"));
         }
 
         [Fact]
-        public void ObtenerPais_PaisNotFound_ReturnsFailed()
+        public async Task ObtenerEncuestaInicial_ReturnsAllStaticCatalogs()
         {
-            var paisRepo = new Mock<IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisConEstadosYCiudades(It.IsAny<long>())).Returns((Pais)null);
-            _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
+            var result = await _service.ObtenerEncuestaInicialAsync();
 
-            var result = _service.ObtenerPais(99);
+            Assert.True(result.Success);
+            Assert.Equal("ObtenerEncuestaInicial", result.Method);
+            Assert.NotNull(result.Data);
+            Assert.Equal(2, result.Data.Educacion.OpcionesSiNo.Count);
+            Assert.Equal(2, result.Data.Educacion.UbicacionesUltimoAnioSecundaria.Count);
+            Assert.Equal(3, result.Data.Educacion.EstadosEducacionSuperiorPrevia.Count);
+            Assert.Equal(7, result.Data.Educacion.NivelesFormacionTutores.Count);
+            Assert.Equal(4, result.Data.DecisionAcademica.AniosEducacionMediaSuperior.Count);
+            Assert.Equal(5, result.Data.DecisionAcademica.ApoyosDecision.Count);
+            Assert.Equal(2, result.Data.DecisionAcademica.NivelesDecision.Count);
+            Assert.Equal(5, result.Data.ExperienciaOrt.Valoraciones.Count);
+        }
+
+        [Fact]
+        public async Task ObtenerEncuestaInicial_UsesEmsLabelsForSecondaryDecisionOptions()
+        {
+            var result = await _service.ObtenerEncuestaInicialAsync();
+
+            var decisionCarrera = result.Data!.DecisionAcademica.AniosEducacionMediaSuperior.ToList();
+            Assert.Collection(
+                decisionCarrera,
+                item =>
+                {
+                    Assert.Equal(2, item.Value);
+                    Assert.Equal("1\u00b0 EMS (4\u00b0 a\u00f1o)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(3, item.Value);
+                    Assert.Equal("2\u00b0 EMS (5\u00b0 a\u00f1o)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(4, item.Value);
+                    Assert.Equal("3\u00b0 EMS (6\u00b0 a\u00f1o)", item.Label);
+                },
+                item =>
+                {
+                    Assert.Equal(0, item.Value);
+                    Assert.Equal("Otro", item.Label);
+                });
+        }
+
+        [Fact]
+        public async Task ObtenerEncuestaInicial_IncludesDynamicCatalogsBySection()
+        {
+            var anioRepo = new Mock<IAnioBachillerRepository>();
+            anioRepo.Setup(r => r.GetAllWithRelated()).Returns(
+            [
+                new AnioBachiller
+                {
+                    IdAnioBachiller = 6,
+                    CantAniosAnioBachiller = 12,
+                    NombreAnioBachiller = "6 anio",
+                    Titulos =
+                    [
+                        new Titulo
+                        {
+                            CodigoTitulo = 20,
+                            Nombre = "Ingenieria",
+                            OrientacionTitulo = "Fisico Matematica",
+                            OrientacionNewTitulo = "Fisico-Matematica"
+                        }
+                    ]
+                }
+            ]);
+            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
+
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetUniversidades()).Returns(
+            [
+                new Empresa { CodigoEmpresa = 30, Nombre = "Universidad ejemplo" }
+            ]);
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+
+            var result = await _service.ObtenerEncuestaInicialAsync();
+
+            var anio = Assert.Single(result.Data!.Educacion.AniosBachillerato);
+            Assert.Equal(12, anio.Value);
+            Assert.Equal("6 anio", anio.Label);
+            var orientacion = Assert.Single(anio.Orientaciones);
+            Assert.Equal(20, orientacion.Value);
+            Assert.Equal("Ingenieria", orientacion.Label);
+
+            Assert.Equal(2, result.Data.Educacion.Universidades.Count);
+            var universidadEducacion = result.Data.Educacion.Universidades[0];
+            var universidadDecision = result.Data.DecisionAcademica.Universidades[0];
+            Assert.Equal(30, universidadEducacion.Value);
+            Assert.Equal("Universidad ejemplo", universidadEducacion.Label);
+            Assert.Equal(universidadEducacion.Value, universidadDecision.Value);
+            Assert.Equal(universidadEducacion.Label, universidadDecision.Label);
+
+            var otroEducacion = result.Data.Educacion.Universidades[1];
+            Assert.Equal(0, otroEducacion.Value);
+            Assert.Equal("Otro", otroEducacion.Label);
+        }
+
+        [Fact]
+        public void ObtenerComienzos_ReturnsMappedItems()
+        {
+            var repo = new Mock<IVdProcesosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProcesosDisponibles(10)).Returns(
+            [
+                new VdProcesosDisponibles1y2 { IdProceso = 20, NombreProceso = "Marzo" }
+            ]);
+            _uowMock.Setup(u => u.VdProcesosDisponibles1y2s).Returns(repo.Object);
+
+            var result = _service.ObtenerComienzos(10);
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerComienzos), result.Method);
+            var item = Assert.Single(result.Data!);
+            Assert.Equal(20, item.IdProceso);
+            Assert.Equal("Marzo", item.NombreProceso);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel1o2_FiltraPorNivelYNoConsultaVista3y4()
+        {
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99, 1)).Returns(
+            [
+                new VdProductosDisponibles1y2
+                {
+                    IdProducto = 11,
+                    NombreWebProducto = "Comunicacion",
+                    IdNivelProducto = 1,
+                    NombreNivelProducto = "Tecnico",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Comunicacion",
+                    OrdenListadoEscuela = 1,
+                    OrdenListadoNivelProducto = 1
+                }
+            ]);
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
+
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.ObtenerCarreras(99, PropuestaAcademica.CarreraUniversitaria);
+
+            Assert.True(result.Success);
+            Assert.Equal(nameof(CatalogosService.ObtenerCarreras), result.Method);
+
+            var nivel = Assert.Single(result.Data!);
+            Assert.Equal(1, nivel.IdNivelProducto);
+            Assert.Equal("Tecnico", nivel.NombreNivelProducto);
+            var escuela = Assert.Single(nivel.Escuelas);
+            Assert.Equal(7, escuela.IdEscuela);
+            Assert.Equal("Facultad de Comunicacion", escuela.NombreEscuela);
+            var producto = Assert.Single(escuela.Productos!);
+            Assert.Equal(11, producto.IdProducto);
+            Assert.Equal("Comunicacion", producto.NombreProducto);
+            Assert.Null(escuela.Seminarios);
+
+            vistaRepo.Verify(r => r.GetProductosDisponibles(), Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel3o4_DevuelveAmbosNivelesCombinados()
+        {
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
+            [
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 50,
+                    NombreWebProducto = "MBA",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion"
+                },
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 50,
+                    NombreWebProducto = "MBA duplicado",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion"
+                },
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 51,
+                    NombreWebProducto = "MBA con seminario",
+                    IdNivelProducto = 3,
+                    NombreNivelProducto = "Postgrado",
+                    IdEscuela = 7,
+                    NombreExtensoEscuela = "Facultad de Administracion",
+                    ConSeminarios = "SI"
+                },
+                new VdOfertasDisponibles3y4
+                {
+                    IdProducto = 60,
+                    NombreWebProducto = "Curso corto",
+                    IdNivelProducto = 4,
+                    NombreNivelProducto = "Actualizacion",
+                    IdEscuela = 9,
+                    NombreExtensoEscuela = "Facultad de Negocios"
+                }
+            ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
+
+            var result = _service.ObtenerCarreras(99, PropuestaAcademica.ActualizacionProfesional);
+
+            Assert.True(result.Success);
+            var niveles = result.Data!.ToList();
+            Assert.Collection(
+                niveles,
+                nivel =>
+                {
+                    Assert.Equal(3, nivel.IdNivelProducto);
+                    var escuela = Assert.Single(nivel.Escuelas);
+                    Assert.Equal("Facultad de Administracion", escuela.NombreEscuela);
+                    Assert.Null(escuela.Productos);
+                    Assert.Collection(
+                        escuela.Seminarios!,
+                        sinSeminario =>
+                        {
+                            Assert.False(sinSeminario.TieneSeminario);
+                            var producto = Assert.Single(sinSeminario.Productos);
+                            Assert.Equal(50, producto.IdProducto);
+                            Assert.Equal("MBA", producto.NombreProducto);
+                        },
+                        conSeminario =>
+                        {
+                            Assert.True(conSeminario.TieneSeminario);
+                            var producto = Assert.Single(conSeminario.Productos);
+                            Assert.Equal(51, producto.IdProducto);
+                        });
+                },
+                nivel =>
+                {
+                    Assert.Equal(4, nivel.IdNivelProducto);
+                    var escuela = Assert.Single(nivel.Escuelas);
+                    var sinSeminario = Assert.Single(escuela.Seminarios!);
+                    Assert.False(sinSeminario.TieneSeminario);
+                    var producto = Assert.Single(sinSeminario.Productos);
+                    Assert.Equal(60, producto.IdProducto);
+                });
+
+            repo.Verify(r => r.GetProductosDisponibles(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
+        }
+
+        [Fact]
+        public void ObtenerCarreras_PropuestaAcademicaInvalida_DevuelveBadRequest()
+        {
+            var result = _service.ObtenerCarreras(99, (PropuestaAcademica)99);
 
             Assert.False(result.Success);
-            Assert.Equal("FDP_GPAC_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
         }
 
         [Fact]
-        public void ObtenerPais_WhenFound_SortsEstadosAndCiudades()
+        public async Task ObtenerTurnos_Nivel1o2_UsesInscripcionesYPagosApi()
         {
-            var paisRepo = new Mock<IPaisRepository>();
-            paisRepo.Setup(r => r.GetPaisConEstadosYCiudades(54)).Returns(new Pais
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
             {
-                CodigoPais = 54,
-                Nombre = "Argentina",
-                Estado =
+                IdProducto = 10,
+                IdNivelProducto = 2,
+                NombreProducto = "ATI",
+                NombreExtensoProducto = "Analista en TI"
+            });
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ =>
+                JsonResponse(HttpStatusCode.OK, """
                 [
-                    new Estado
-                    {
-                        CodigoPais = 54,
-                        CodigoEstado = 2,
-                        Nombre = "Buenos Aires",
-                        Ciudad =
-                        [
-                            new Ciudad { CodigoPais = 54, CodigoEstado = 2, CodigoCiudad = 2, Nombre = "Zarate" },
-                            new Ciudad { CodigoPais = 54, CodigoEstado = 2, CodigoCiudad = 1, Nombre = "Avellaneda" }
-                        ]
-                    },
-                    new Estado
-                    {
-                        CodigoPais = 54,
-                        CodigoEstado = 1,
-                        Nombre = "Cordoba",
-                        Ciudad =
-                        [
-                            new Ciudad { CodigoPais = 54, CodigoEstado = 1, CodigoCiudad = 2, Nombre = "Villa Carlos Paz" },
-                            new Ciudad { CodigoPais = 54, CodigoEstado = 1, CodigoCiudad = 1, Nombre = "Cordoba Capital" }
-                        ]
-                    }
+                  {
+                    "idOferta": 57319,
+                    "horarioReferencia": "Lunes 19:00",
+                    "idTurno": 1,
+                    "nombreTurno": "Nocturno"
+                  }
                 ]
-            });
-            _uowMock.Setup(u => u.Paises).Returns(paisRepo.Object);
+                """));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
 
-            var result = _service.ObtenerPais(54);
+            var result = await service.ObtenerTurnos(10, 20);
 
             Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal("Buenos Aires", result.Data.Estado[0].Nombre);
-            Assert.Equal("Cordoba", result.Data.Estado[1].Nombre);
-            Assert.Equal("Avellaneda", result.Data.Estado[0].Ciudad[0].Nombre);
-            Assert.Equal("Zarate", result.Data.Estado[0].Ciudad[1].Nombre);
-            Assert.Equal("Cordoba Capital", result.Data.Estado[1].Ciudad[0].Nombre);
-            Assert.Equal("Villa Carlos Paz", result.Data.Estado[1].Ciudad[1].Nombre);
+            var oferta = Assert.Single(result.Data!);
+            Assert.Equal(57319, oferta.IdOferta);
+            Assert.Equal(1, oferta.Turno.IdTurno);
+            Assert.Equal("Nocturno", oferta.Turno.NombreTurno);
+            Assert.Equal("Lunes 19:00", oferta.HorarioReferencia);
+
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("OfertasParaInscripcionAdmisionesConProceso?idProducto=10&idProceso=20", request.RequestUri);
         }
 
         [Fact]
-        public void ObtenerTipoDocumentos_ReturnsMappedItems()
+        public async Task ObtenerTurnos_Nivel3o4_UsesVistaAndDoesNotCallApi()
         {
-            var repo = new Mock<IAcaTipoDocumentoRepository>();
-            repo.Setup(r => r.GetAll()).Returns(
-            [
-                new AcaTipoDocumento { CodTipoDocumento = 1, Descripcion = "Cedula", DescrTd = "CI" },
-                new AcaTipoDocumento { CodTipoDocumento = 2, Descripcion = "Pasaporte", DescrTd = "PA" }
-            ]);
-            _uowMock.Setup(u => u.AcaTipoDocumentos).Returns(repo.Object);
-
-            var result = _service.ObtenerTipoDocumentos();
-
-            Assert.True(result.Success);
-            var list = result.Data!.ToList();
-            Assert.Equal(2, list.Count);
-            Assert.Equal((decimal)1, list[0].CodTipoDocumento);
-            Assert.Equal("Cedula", list[0].Descripcion);
-        }
-
-        [Fact]
-        public void ObtenerMotivosEleccion_ReturnsMappedItems()
-        {
-            var repo = new Mock<BusinessLogic.IDevartRepositories.IMotivoOpcionesAdmisionRepository>();
-            repo.Setup(r => r.GetAll()).Returns(
-            [
-                new MotivoOpcionesAdmision
-                {
-                    IdMotivo = 5,
-                    NombreMotivo = "Prestigio",
-                    FechaIngreso = DateTime.Today,
-                    HoraIngreso = "10:00:00",
-                    UsuarioIngreso = "USR"
-                }
-            ]);
-            _uowMock.Setup(u => u.MotivoOpcionesAdmisions).Returns(repo.Object);
-
-            var result = _service.ObtenerMotivosEleccion();
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(5, item.IdMotivo);
-            Assert.Equal("Prestigio", item.NombreMotivo);
-        }
-
-        [Fact]
-        public void ObtenerPublicidadesEleccion_ReturnsMappedItems()
-        {
-            var repo = new Mock<BusinessLogic.IDevartRepositories.IPublicidadOpcionesAdmisionRepository>();
-            repo.Setup(r => r.GetAll()).Returns(new List<PublicidadOpcionesAdmision>
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
             {
-                new PublicidadOpcionesAdmision
-                {
-                    IdPublicidad = 7,
-                    NombrePublicidad = "Redes",
-                    FechaIngreso = DateTime.Today,
-                    HoraIngreso = "10:00:00",
-                    UsuarioIngreso = "USR"
-                }
+                IdProducto = 10,
+                IdNivelProducto = 3,
+                NombreProducto = "POS",
+                NombreExtensoProducto = "Postgrado"
             });
-            _uowMock.Setup(u => u.PublicidadOpcionesAdmisions).Returns(repo.Object);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var result = _service.ObtenerPublicidadesEleccion();
+            var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            ofertasRepo
+                .Setup(r => r.GetOfertasDisponibles(10))
+                .Returns(
+                [
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 1 },
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 99 },
+                    new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 101, IdTurno = 2, IdMateria = 2 }
+                ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(ofertasRepo.Object);
+
+            var turnoRepo = new Mock<ITurnoRepository>();
+            turnoRepo
+                .Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()))
+                .Returns(
+                [
+                    new Turno { IdTurno = 1, NombreTurno = "Matutino" },
+                    new Turno { IdTurno = 2, NombreTurno = "Nocturno" }
+                ]);
+            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+
+            var result = await service.ObtenerTurnos(10, 20);
 
             Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(7, item.IdPublicidad);
-            Assert.Equal("Redes", item.NombrePublicidad);
+            Assert.Equal(2, result.Data!.Count);
+            Assert.Equal(100, result.Data[0].IdOferta);
+            Assert.Equal(1, result.Data[0].Turno.IdTurno);
+            Assert.Equal("Matutino", result.Data[0].Turno.NombreTurno);
+            Assert.Null(result.Data[0].HorarioReferencia);
+            Assert.Equal(101, result.Data[1].IdOferta);
+            Assert.Equal(2, result.Data[1].Turno.IdTurno);
+            Assert.Equal("Nocturno", result.Data[1].Turno.NombreTurno);
+            Assert.Empty(handler.Requests);
+            _uowMock.Verify(u => u.ProcesoComienzos, Times.Never);
         }
 
         [Fact]
-        public void ObtenerBachilleratos_ReturnsMappedItems()
+        public async Task ObtenerTurnos_WhenProductoDoesNotExist_ReturnsFailureWithoutCallingApi()
         {
-            var repo = new Mock<ITituloRepository>();
-            repo.Setup(r => r.GetBachilleratosPorAnio(6)).Returns(
-            [
-                new Titulo
-                {
-                    CodigoTitulo = 10,
-                    Nombre = "Informatica",
-                    UsuarioIngreso = "USR",
-                    FechaIngreso = DateTime.Today,
-                    HoraIngreso = "10:00:00",
-                    Bachillerato = "SI"
-                }
-            ]);
-            _uowMock.Setup(u => u.Titulos).Returns(repo.Object);
+            var productoRepo = new Mock<IProductoRepository>();
+            productoRepo.Setup(r => r.GetByKey(99)).Returns((Producto)null);
+            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var result = _service.ObtenerBachilleratos(6);
+            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
+            var service = new CatalogosService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
 
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(10, item.CodigoTitulo);
-            Assert.Equal("Informatica", item.Nombre);
+            var result = await service.ObtenerTurnos(99, 20);
+
+            Assert.False(result.Success);
+            Assert.Equal("CAT_TURNOS_02", result.ErrorCode);
+            Assert.Equal(404, result.HttpCode);
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
@@ -225,41 +503,6 @@ namespace UnitTesting.AppLogic.Services
             var item = Assert.Single(result.Data!);
             Assert.Equal(3, item.IdTipoDescuento);
             Assert.Equal("Fondo A", item.NombreTipoDescuento);
-        }
-
-        [Fact]
-        public void ObtenerAnioBachiller_NotFound_ReturnsFailed()
-        {
-            var anioRepo = new Mock<IAnioBachillerRepository>();
-            anioRepo.Setup(r => r.GetWithRelated(10)).Returns((AnioBachiller)null);
-            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
-
-            var result = _service.ObtenerAnioBachiller(10);
-
-            Assert.False(result.Success);
-            Assert.Equal("GEN_ANB_01", result.ErrorCode);
-            Assert.Equal(204, result.HttpCode);
-        }
-
-        [Fact]
-        public void ObtenerAnioBachiller_ReturnsDto()
-        {
-            var anioRepo = new Mock<IAnioBachillerRepository>();
-            anioRepo.Setup(r => r.GetWithRelated(10)).Returns(new AnioBachiller
-            {
-                IdAnioBachiller = 10,
-                NombreAnioBachiller = "Sexto",
-                UsuarioIngreso = "USR",
-                FechaIngreso = DateTime.Today,
-                HoraIngreso = "10:00:00"
-            });
-            _uowMock.Setup(u => u.AnioBachillers).Returns(anioRepo.Object);
-
-            var result = _service.ObtenerAnioBachiller(10);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.Equal((decimal)10, result.Data.IdAnioBachiller);
         }
 
         [Fact]
@@ -291,309 +534,44 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Instituto Ejemplo", item.Nombre);
         }
 
-        [Fact]
-        public void ObtenerUniversidades_ReturnsMappedItems()
+        private static InscripcionesyPagosApiClient CrearInscripcionesClient(HttpMessageHandler handler)
         {
-            var repo = new Mock<IEmpresaRepository>();
-            repo.Setup(r => r.GetUniversidades()).Returns(
-            [
-                new Empresa
-                {
-                    CodigoEmpresa = 200,
-                    Nombre = "Universidad Ejemplo",
-                    UsuarioUltimaActualizacion = "USR",
-                    FechaUltimaActualizacion = DateTime.Today,
-                    HoraUltimaActualizacion = "10:00:00",
-                    UsuarioIngreso = "USR",
-                    FechaIngreso = DateTime.Today,
-                    HoraIngreso = "10:00:00",
-                    CodigoTipoEmpresa = 9
-                }
-            ]);
-            _uowMock.Setup(u => u.Empresas).Returns(repo.Object);
-
-            var result = _service.ObtenerUniversidades();
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(200, item.CodigoEmpresa);
-            Assert.Equal("Universidad Ejemplo", item.Nombre);
-        }
-
-        [Fact]
-        public void ObtenerProductosBeca_ReturnsDistinctItemsByProduct()
-        {
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>
+            var httpClient = new HttpClient(handler)
             {
-                new Inscripto
-                {
-                    FechaInscr = new System.DateTime(2024, 1, 1),
-                    Oferta = new Oferta
-                    {
-                        Turno = new Turno { NombreTurno = "Matutino" },
-                        Supraoferta = new Supraoferta
-                        {
-                            Comienzo = new Comienzo
-                            {
-                                NombreComienzo = "Marzo",
-                                ProcesoComienzos = new List<ProcesoComienzo> { new ProcesoComienzo { IdProceso = 8 } }
-                            },
-                            Paquete = new Paquete
-                            {
-                                Producto = new Producto
-                                {
-                                    IdProducto = 10,
-                                    IdNivelProducto = 2,
-                                    NombreExtensoProducto = "Producto A"
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+                BaseAddress = new Uri("https://internal.test/")
+            };
 
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(new List<InstanciaWorkflow>());
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
-            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
-            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
-            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
-
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerProductosBeca(123);
-
-            Assert.True(result.Success);
-            Assert.Single(result.Data!);
-            Assert.Equal(10, new List<DtoProductoBeca>(result.Data!)[0].IdProducto);
+            return new InscripcionesyPagosApiClient(
+                httpClient,
+                NullLogger<InscripcionesyPagosApiClient>.Instance);
         }
 
-        [Fact]
-        public void ObtenerProductosBeca_RealizadaConOfertaNula_UsaValoresPorDefecto()
+        private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
         {
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(
-            [
-                new Inscripto
-                {
-                    FechaInscr = null,
-                    Oferta = null
-                }
-            ]);
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(new List<InstanciaWorkflow>());
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(new List<InstWorkflowInscripcion>());
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
-            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
-            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
-            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
-
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerProductosBeca(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(0, item.IdProducto);
-            Assert.Equal(0, item.IdNivelProducto);
-            Assert.Null(item.NombreProducto);
-            Assert.Null(item.NombreComienzo);
-            Assert.Null(item.NombreTurno);
+            return new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
         }
 
-        [Fact]
-        public void ObtenerProductosBeca_CubrePendientesEInteresesConValoresFaltantes()
+        private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
+            : HttpMessageHandler
         {
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>());
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+            public List<CapturedRequest> Requests { get; } = [];
 
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
-            [
-                new InstanciaWorkflow { IdInstanciaWorkflow = 1, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 1) },
-                new InstanciaWorkflow { IdInstanciaWorkflow = 2, IdProceso = 6, FechaInicialInstanciaWf = new DateTime(2026, 1, 2) },
-                new InstanciaWorkflow { IdInstanciaWorkflow = 3, IdProceso = 7, FechaInicialInstanciaWf = new DateTime(2026, 1, 3) }
-            ]);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                Requests.Add(new CapturedRequest(
+                    request.Method,
+                    request.RequestUri?.ToString() ?? string.Empty,
+                    request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken)));
 
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(
-            [
-                new InstWorkflowInscripcion { IdInstanciaWorkflow = 2, IdProducto = null },
-                new InstWorkflowInscripcion { IdInstanciaWorkflow = 3, IdProducto = 20, IdComienzo = null, IdTurno = null }
-            ]);
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(
-            [
-                new Producto { IdProducto = 20, IdNivelProducto = 4, NombreExtensoProducto = "Producto pendiente" }
-            ]);
-            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(
-            [
-                new Producto
-                {
-                    IdProducto = 30,
-                    IdNivelProducto = 2,
-                    NombreExtensoProducto = "Producto interes",
-                    ProcesoProductos = null
-                }
-            ]);
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
-            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
-            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
-
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerProductosBeca(123);
-
-            Assert.True(result.Success);
-            var list = result.Data!.OrderBy(x => x.IdProducto).ToList();
-            Assert.Equal(2, list.Count);
-            Assert.Equal(20, list[0].IdProducto);
-            Assert.Null(list[0].NombreComienzo);
-            Assert.Null(list[0].NombreTurno);
-            Assert.Equal(30, list[1].IdProducto);
-            Assert.Equal(0, list[1].IdProceso);
+                return handler(request);
+            }
         }
 
-        [Fact]
-        public void ObtenerProductosBeca_PendientesConIdsRepetidos_UsaCargaBatchYMantieneResultado()
-        {
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>());
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
-            [
-                new InstanciaWorkflow { IdInstanciaWorkflow = 1, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 2) },
-                new InstanciaWorkflow { IdInstanciaWorkflow = 2, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 1) }
-            ]);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(
-            [
-                new InstWorkflowInscripcion { IdInstanciaWorkflow = 1, IdProducto = 20, IdComienzo = 30, IdTurno = 40 },
-                new InstWorkflowInscripcion { IdInstanciaWorkflow = 2, IdProducto = 20, IdComienzo = 30, IdTurno = 40 }
-            ]);
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 20))).Returns(
-            [
-                new Producto { IdProducto = 20, IdNivelProducto = 4, NombreExtensoProducto = "Producto pendiente" }
-            ]);
-            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
-            comienzoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 30))).Returns(
-            [
-                new Comienzo { IdComienzo = 30, NombreComienzo = "Marzo" }
-            ]);
-            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
-
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetByKeys(It.Is<IEnumerable<long>>(ids => ids.Single() == 40))).Returns(
-            [
-                new Turno { IdTurno = 40, NombreTurno = "Matutino" }
-            ]);
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerProductosBeca(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(20, item.IdProducto);
-            Assert.Equal("Producto pendiente", item.NombreProducto);
-            Assert.Equal("Marzo", item.NombreComienzo);
-            Assert.Equal("Matutino", item.NombreTurno);
-            Assert.Equal(new DateTime(2026, 1, 1), item.FechaInscripcion);
-
-            productoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
-            productoRepo.Verify(r => r.GetByKey(It.IsAny<long>()), Times.Never);
-            comienzoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
-            turnoRepo.Verify(r => r.GetByKeys(It.IsAny<IEnumerable<long>>()), Times.Once);
-        }
-
-        [Fact]
-        public void ObtenerProductosBeca_PendientesConRelacionFaltanteMantieneDefaults()
-        {
-            var inscriptoRepo = new Mock<IInscriptoRepository>();
-            inscriptoRepo.Setup(r => r.GetInscripcionesRealizadas(123)).Returns(new List<Inscripto>());
-            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
-
-            var workflowRepo = new Mock<IInstanciaWorkflowRepository>();
-            workflowRepo.Setup(r => r.GetInscripcionesPendientes(123)).Returns(
-            [
-                new InstanciaWorkflow { IdInstanciaWorkflow = 1, IdProceso = 5, FechaInicialInstanciaWf = new DateTime(2026, 1, 2) }
-            ]);
-            _uowMock.Setup(u => u.InstanciaWorkflows).Returns(workflowRepo.Object);
-
-            var instWorkflowInscripcionRepo = new Mock<IInstWorkflowInscripcionRepository>();
-            instWorkflowInscripcionRepo.Setup(r => r.GetByInstanciaIds(It.IsAny<IEnumerable<decimal>>())).Returns(
-            [
-                new InstWorkflowInscripcion { IdInstanciaWorkflow = 1, IdProducto = 20, IdComienzo = 30, IdTurno = 40 }
-            ]);
-            _uowMock.Setup(u => u.InstWorkflowInscripcions).Returns(instWorkflowInscripcionRepo.Object);
-
-            var productoRepo = new Mock<IProductoRepository>();
-            productoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Producto>());
-            productoRepo.Setup(r => r.GetProductosConInteresActivo(123)).Returns(new List<Producto>());
-            _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
-
-            var comienzoRepo = new Mock<BusinessLogic.IDevartRepositories.IComienzoRepository>();
-            comienzoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Comienzo>());
-            _uowMock.Setup(u => u.Comienzos).Returns(comienzoRepo.Object);
-
-            var turnoRepo = new Mock<ITurnoRepository>();
-            turnoRepo.Setup(r => r.GetByKeys(It.IsAny<IEnumerable<long>>())).Returns(new List<Turno>());
-            _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
-
-            var result = _service.ObtenerProductosBeca(123);
-
-            Assert.True(result.Success);
-            var item = Assert.Single(result.Data!);
-            Assert.Equal(20, item.IdProducto);
-            Assert.Equal(0, item.IdNivelProducto);
-            Assert.Null(item.NombreProducto);
-            Assert.Null(item.NombreComienzo);
-            Assert.Null(item.NombreTurno);
-            Assert.Equal(5, item.IdProceso);
-        }
+        private sealed record CapturedRequest(HttpMethod Method, string RequestUri, string Body);
     }
 }

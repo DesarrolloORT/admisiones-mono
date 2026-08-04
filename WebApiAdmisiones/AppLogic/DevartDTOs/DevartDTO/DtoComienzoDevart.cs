@@ -37,14 +37,6 @@ namespace AppLogic.DevartDTOs
 
         public DateTime? FechaFinComienzo { get; set; }
 
-        [StringLength(30)]
-        public string? UsuarioIngreso { get; set; }
-
-        public DateTime? FechaIngreso { get; set; }
-
-        [StringLength(12)]
-        public string? HoraIngreso { get; set; }
-
         [StringLength(8)]
         public string? AliasComienzo { get; set; }
 

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Prometheus;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using WebApiAdmisiones.Security;
+using WebApiAdmisiones.Security.Observability;
+using WebApiAdmisiones.Security.Middleware;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -44,6 +46,30 @@ namespace WebApiAdmisiones.Extensions
             // Headers de seguridad
             app.UseSecurityHeaders();
 
+            // Contratos para el front: publicos solo en Development.
+            if (app.Environment.IsDevelopment())
+            {
+                var contractsPath = Path.Combine(app.Environment.ContentRootPath, "Docs", "contracts");
+                if (Directory.Exists(contractsPath))
+                {
+                    app.UseStaticFiles(new StaticFileOptions
+                    {
+                        FileProvider = new PhysicalFileProvider(contractsPath),
+                        RequestPath = "/contracts"
+                    });
+
+                    app.MapGet("/contracts", () =>
+                        Directory
+                            .EnumerateFiles(contractsPath, "*.json", SearchOption.TopDirectoryOnly)
+                            .OrderBy(Path.GetFileName)
+                            .Select(path => new
+                            {
+                                name = Path.GetFileName(path),
+                                url = $"/contracts/{Path.GetFileName(path)}"
+                            }));
+                }
+            }
+
             // Middleware para OPTIONS (CORS preflight)
             app.UseOptionsPreflight();
 
@@ -52,13 +78,22 @@ namespace WebApiAdmisiones.Extensions
 
             // Autenticación y Autorización
             app.UseAuthentication();
+            app.UseRateLimiter();  // Rate limiting por endpoint (ver atributo [EnableRateLimiting])
             app.UseAuthorization();
 
             // Model binding error handling
             app.UseMiddleware<ModelBindingErrorLoggingMiddleware>();
 
             // Métricas Prometheus
-            app.UseHttpMetrics();
+            app.UseHttpMetrics(options =>
+            {
+                options.AddCustomLabel("client_service", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientService));
+                options.AddCustomLabel("client_environment", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientEnvironment));
+                options.AddCustomLabel("client_version", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.ClientVersion));
+                options.AddCustomLabel("client_device", ClientTelemetryHeaders.ClientDeviceMetricLabel);
+                options.AddCustomLabel("client_route", ClientTelemetryHeaders.ClientRouteMetricLabel);
+                options.AddCustomLabel("test_run_id", context => ClientTelemetryHeaders.MetricLabel(context, ClientTelemetryHeaders.TestRunId));
+            });
             app.MapMetrics();
 
             // Endpoints de la API

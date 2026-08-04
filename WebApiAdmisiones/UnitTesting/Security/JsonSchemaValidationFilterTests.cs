@@ -12,8 +12,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NJsonSchema;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.RequestValidation;
 
 namespace UnitTesting.Security
 {

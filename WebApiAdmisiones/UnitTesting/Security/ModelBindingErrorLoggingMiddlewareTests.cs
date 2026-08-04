@@ -10,8 +10,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
-using WebApiAdmisiones.Security;
 using Xunit;
+using WebApiAdmisiones.Security.Middleware;
 
 namespace UnitTesting.Security
 {
@@ -344,7 +344,7 @@ namespace UnitTesting.Security
                 await CaptureResponseBodyAsync(context, () => middleware.Invoke(context))
             );
 
-            // Verificar que NO se logueó warning (se eliminó el log redundante)
+            // Verificar que NO se logueï¿½ warning (se eliminï¿½ el log redundante)
             // Solo se debe loguear la entrada como Information si no fue logueada antes
             logger.Verify(
                 l => l.Log(

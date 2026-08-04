@@ -1,8 +1,8 @@
-using AppLogic.Services;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Moq;
 using Xunit;
+using AppLogic.Catalogos.Services;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -29,7 +29,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Proceso { IdProceso = 2, ComienzoSemestre1Proceso = null });
             _uowMock.Setup(u => u.Procesos).Returns(procesoRepo.Object);
 
-            var result = _service.CalcularFechaVencimientoAdmisiones(1, 2);
+            var result = _service.CalcularFechaVencimientoAdmisiones(_uowMock.Object, 1, 2);
 
             Assert.False(result.Success);
             Assert.Equal("GEN_FVA_01", result.ErrorCode);
@@ -57,7 +57,7 @@ namespace UnitTesting.AppLogic.Services
             feriadoRepo.Setup(r => r.EsFeriado(It.IsAny<DateTime>())).Returns(false);
             _uowMock.Setup(u => u.Feriados).Returns(feriadoRepo.Object);
 
-            var result = _service.CalcularFechaVencimientoAdmisiones(1, 2);
+            var result = _service.CalcularFechaVencimientoAdmisiones(_uowMock.Object, 1, 2);
 
             Assert.True(result.Success);
             Assert.Equal(DateTime.Today.AddDays(2), result.Data);

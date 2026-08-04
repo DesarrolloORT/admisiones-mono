@@ -50,11 +50,6 @@ namespace AppLogic.DevartDTOs
             target.IdDepartamento = source.IdDepartamento;
             target.IdCategoriaWorkflow = source.IdCategoriaWorkflow;
 
-            // Navigation Properties
-            if (level > 0) {
-              target.InstWorkflowInscripcion = source.InstWorkflowInscripcion.ToDtoWithRelated(level - 1);
-            }
-
             // User-defined partial method
             OnDtoCreating(source, target);
 

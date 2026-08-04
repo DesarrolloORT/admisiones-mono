@@ -33,22 +33,7 @@ namespace AppLogic.DevartDTOs
 
         public decimal? IdProducto { get; set; }
 
-        [StringLength(30)]
-        [Required()]
-        public string UsuarioIngreso { get; set; }
-
-        [Required()]
-        public DateTime FechaIngreso { get; set; }
-
-        [StringLength(8)]
-        [Required()]
-        public string HoraIngreso { get; set; }
-
-        #endregion
-
-        #region Navigation Properties
-
-        public DtoInstanciaWorkflowDevart InstanciaWorkflow { get; set; }
+        public long? IdOferta { get; set; }
 
         #endregion
     }

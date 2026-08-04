@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using WebApiAdmisiones.Security;
-using AppLogic.Helpers;
+using AppLogic.Common.Security;
+using WebApiAdmisiones.Security.Observability;
 
 namespace UnitTesting.Security
 {
@@ -157,6 +157,19 @@ namespace UnitTesting.Security
             Assert.NotNull(result);
             var resultList = Assert.IsType<List<object?>>(result);
             Assert.Equal(3, resultList.Count);
+        }
+
+        [Fact]
+        public void Redact_ByteArrayWithoutAttribute_ReturnsBinaryLength()
+        {
+            // Arrange
+            var bytes = new byte[] { 1, 2, 3, 4, 5 };
+
+            // Act
+            var result = ResponseRedactionHelper.Redact(bytes);
+
+            // Assert
+            Assert.Equal("<bin:5>", result);
         }
 
         [Fact]

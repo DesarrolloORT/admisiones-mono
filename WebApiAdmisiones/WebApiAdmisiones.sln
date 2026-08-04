@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11520.95 d18.3
+VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessLogic", "BusinessLogic\BusinessLogic.csproj", "{1902A236-E0E4-4D38-8D46-69642655DD03}"
 EndProject
@@ -51,7 +51,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utilities", "..\Core\Utilit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiAdmisiones", "WebApiAdmisiones\WebApiAdmisiones.csproj", "{64DA78D5-47A1-4E49-9446-31F001E62F28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LdapService", "..\Core\LdapService\LdapService.csproj", "{9D9F97F6-220D-681F-9E2C-FA4073A1C706}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LdapService", "..\Core\LdapService\LdapService.csproj", "{9D9F97F6-220D-681F-9E2C-FA4073A1C706}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureService", "..\Core\AzureService\AzureService.csproj", "{E44BDFA8-047A-7594-36DD-F31D09482456}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -119,6 +121,10 @@ Global
 		{9D9F97F6-220D-681F-9E2C-FA4073A1C706}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D9F97F6-220D-681F-9E2C-FA4073A1C706}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D9F97F6-220D-681F-9E2C-FA4073A1C706}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E44BDFA8-047A-7594-36DD-F31D09482456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E44BDFA8-047A-7594-36DD-F31D09482456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E44BDFA8-047A-7594-36DD-F31D09482456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E44BDFA8-047A-7594-36DD-F31D09482456}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +147,7 @@ Global
 		{E29E7546-C5F8-EB44-97C7-A4976384DAAB} = {934DF422-806C-4D1A-9929-15B5812C18B5}
 		{64DA78D5-47A1-4E49-9446-31F001E62F28} = {43AAACF7-4C2F-42C5-8CD3-10D7D3DEEB41}
 		{9D9F97F6-220D-681F-9E2C-FA4073A1C706} = {934DF422-806C-4D1A-9929-15B5812C18B5}
+		{E44BDFA8-047A-7594-36DD-F31D09482456} = {934DF422-806C-4D1A-9929-15B5812C18B5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {389AB853-5490-4A0D-8BD3-A6AAD4FDFFFC}

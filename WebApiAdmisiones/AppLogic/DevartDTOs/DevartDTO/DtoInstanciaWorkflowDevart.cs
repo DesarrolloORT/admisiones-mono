@@ -61,12 +61,6 @@ namespace AppLogic.DevartDTOs
         public long? IdCategoriaWorkflow { get; set; }
 
         #endregion
-
-        #region Navigation Properties
-
-        public DtoInstWorkflowInscripcionDevart InstWorkflowInscripcion { get; set; }
-
-        #endregion
     }
 
 }

@@ -38,14 +38,7 @@ namespace AppLogic.DevartDTOs
             target.IdTurno = source.IdTurno;
             target.IdComienzo = source.IdComienzo;
             target.IdProducto = source.IdProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
-
-            // Navigation Properties
-            if (level > 0) {
-              target.InstanciaWorkflow = source.InstanciaWorkflow.ToDtoWithRelated(level - 1);
-            }
+            target.IdOferta = source.IdOferta;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -65,9 +58,7 @@ namespace AppLogic.DevartDTOs
             target.IdTurno = source.IdTurno;
             target.IdComienzo = source.IdComienzo;
             target.IdProducto = source.IdProducto;
-            target.UsuarioIngreso = source.UsuarioIngreso;
-            target.FechaIngreso = source.FechaIngreso;
-            target.HoraIngreso = source.HoraIngreso;
+            target.IdOferta = source.IdOferta;
 
             // User-defined partial method
             OnEntityCreating(source, target);
