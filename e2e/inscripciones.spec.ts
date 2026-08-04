@@ -110,9 +110,9 @@ test.describe('Inscripción inicial', () => {
     await inscription.acceptRegulation();
 
     expect((await surveyRequest).postDataJSON()).toMatchObject({
-      idProducto: 20,
-      idProceso: 200,
-      ultimoAnioSecundaria: 1,
+      carreraId: 20,
+      procesoId: 200,
+      ubicacionUltimoAnioSecundariaId: 1,
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       aceptoReglamento: true,
@@ -123,6 +123,8 @@ test.describe('Inscripción inicial', () => {
     await expect(
       page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
     ).toBeVisible();
+    await inscription.selectPayment('cuenta-personal');
+    await inscription.confirmPayment();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 

@@ -68,7 +68,9 @@ export class RegisterPage {
       data.city
     );
     await this.page.getByRole('textbox', { name: 'Dirección' }).fill(data.address);
-    await this.page.getByRole('textbox', { exact: true, name: 'Número' }).fill(data.phone);
+    await this.page
+      .getByRole('textbox', { exact: true, name: 'Número de teléfono' })
+      .fill(data.phone);
     await this.page.getByRole('textbox', { exact: true, name: 'E-mail' }).fill(data.email);
     await this.page.getByRole('textbox', { name: 'Confirmar e-mail' }).fill(data.email);
   }
