@@ -20,7 +20,7 @@ export async function selectOrtOption(
   });
 
   await expect(optionByText).toBeVisible();
-  await optionByText.first().click();
+  await optionByText.first().evaluate((element: HTMLElement) => element.click());
   await page.keyboard.press('Escape');
 }
 

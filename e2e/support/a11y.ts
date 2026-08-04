@@ -41,14 +41,18 @@ export async function expectNoAxeViolations(page: Page, options: AxeOptions = {}
 // Los colores medidos durante un fade-in producen falsos positivos de contraste.
 // Se esperan solo las animaciones finitas: las infinitas (spinners) no bloquean.
 async function waitForFiniteAnimations(page: Page): Promise<void> {
-  await page.evaluate(() =>
-    Promise.all(
+  await page.evaluate(async () => {
+    await new Promise<void>(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+
+    await Promise.all(
       document
         .getAnimations()
         .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
         .map(animation => animation.finished.catch(() => undefined))
-    )
-  );
+    );
+  });
 }
 
 function isKnownAxeIssue(

@@ -342,6 +342,9 @@ export class InscripcionPage {
 
   private async select(controlName: string, option: string): Promise<void> {
     const responsiveSelect = this.responsiveSelect(controlName);
+    const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
+    await expect(responsiveSelect.or(combobox).first()).toBeAttached();
+
     if ((await responsiveSelect.count()) > 0) {
       const mobileTrigger = responsiveSelect.locator('.responsive-select__mobile-trigger');
       if (await mobileTrigger.isVisible()) {
@@ -355,7 +358,6 @@ export class InscripcionPage {
       return;
     }
 
-    const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
     await this.expectOrtSelectEnabled(combobox);
     await selectOrtOption(this.page, combobox, option);
   }
@@ -368,6 +370,9 @@ export class InscripcionPage {
 
   private async selectWithKeyboard(controlName: string, option: string): Promise<void> {
     const responsiveSelect = this.responsiveSelect(controlName);
+    const combobox = this.page.locator(`ort-select[formcontrolname="${controlName}"]`);
+    await expect(responsiveSelect.or(combobox).first()).toBeAttached();
+
     if ((await responsiveSelect.count()) > 0) {
       const mobileTrigger = responsiveSelect.locator('.responsive-select__mobile-trigger');
       if (await mobileTrigger.isVisible()) {
@@ -379,10 +384,7 @@ export class InscripcionPage {
       return;
     }
 
-    await this.selectOrtWithKeyboard(
-      this.page.locator(`ort-select[formcontrolname="${controlName}"]`),
-      option
-    );
+    await this.selectOrtWithKeyboard(combobox, option);
   }
 
   private async selectOrtWithKeyboard(combobox: Locator, option: string): Promise<void> {
