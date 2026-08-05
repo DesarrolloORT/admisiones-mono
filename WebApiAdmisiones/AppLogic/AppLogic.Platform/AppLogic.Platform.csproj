@@ -1,16 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<!--
-		Nivel 2. Infraestructura técnica transversal: mail, serialización, rate limiting.
-		Nunca reglas de negocio: si un tipo tiene un if de dominio, no va acá.
+		Nivel 2. Infraestructura tÃ©cnica transversal: mail, serializaciÃ³n, rate limiting.
+		Nunca reglas de negocio: si un tipo tiene un if de dominio, no va acÃ¡.
 	-->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\MailORT\MailORT.csproj" />
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\..\Core\MailORT\MailORT.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>

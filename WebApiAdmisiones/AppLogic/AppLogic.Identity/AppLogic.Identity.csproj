@@ -1,18 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<!--
-		Nivel 3. Identidad de la persona: documento de identidad, imágenes temporales del documento
+		Nivel 3. Identidad de la persona: documento de identidad, imÃ¡genes temporales del documento
 		y persona pendiente de alta. Existe porque Authentication, Registration, People y Enrollments
-		compartían este código y se referenciaban en círculo.
+		compartÃ­an este cÃ³digo y se referenciaban en cÃ­rculo.
 	-->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.Platform\AppLogic.Platform.csproj" />
 	</ItemGroup>

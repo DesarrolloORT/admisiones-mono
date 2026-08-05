@@ -1,15 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	<!-- Nivel 5. Interés por producto, encuesta inicial, preinscripción y pagos. -->
+	<!-- Nivel 5. InterÃ©s por producto, encuesta inicial, preinscripciÃ³n y pagos. -->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
-		<ProjectReference Include="..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
 		<ProjectReference Include="..\AppLogic.Identity\AppLogic.Identity.csproj" />

@@ -1,20 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<!--
-		Nivel 4. LDAP, JWT, 2FA y activación de password.
-		Define IPendingRegistrationCompletion, que implementa Registration: así Authentication
+		Nivel 4. LDAP, JWT, 2FA y activaciÃ³n de password.
+		Define IPendingRegistrationCompletion, que implementa Registration: asÃ­ Authentication
 		no necesita referenciar Registration.
 	-->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
-		<ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />
-		<ProjectReference Include="..\..\Core\MailORT\MailORT.csproj" />
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\..\Core\LdapService\LdapService.csproj" />
+		<ProjectReference Include="..\..\..\Core\MailORT\MailORT.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.Identity\AppLogic.Identity.csproj" />
 		<ProjectReference Include="..\AppLogic.Platform\AppLogic.Platform.csproj" />

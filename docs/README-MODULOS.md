@@ -32,18 +32,18 @@ nivel 1   Contracts    DevartDtos
 
 | Módulo | Nivel | Qué resuelve | README |
 |---|---|---|---|
-| `AppLogic.Contracts` | 1 | lo poquísimo que comparten todos: `EnrollmentStatus`, `ComboOption`, `TextNormalization`, `[Redact]` | [→](../WebApiAdmisiones/AppLogic.Contracts/README.md) |
-| `AppLogic.DevartDtos` | 1 | **código generado, no se edita** | [→](../WebApiAdmisiones/AppLogic.DevartDtos/README.md) |
-| `AppLogic.Platform` | 2 | infraestructura sin dominio: mail, rate limiting, serialización | [→](../WebApiAdmisiones/AppLogic.Platform/README.md) |
-| `AppLogic.Integrations.Tivenos` | 2 | encola avisos al CRM (por tabla, no HTTP) | [→](../WebApiAdmisiones/AppLogic.Integrations.Tivenos/README.md) |
-| `AppLogic.Integrations.EnrollmentsAndPayments` | 2 | cliente HTTP de la API interna de Inscripciones y Pagos | [→](../WebApiAdmisiones/AppLogic.Integrations.EnrollmentsAndPayments/README.md) |
-| `AppLogic.Identity` | 3 | documento de identidad y stores de Redis del registro | [→](../WebApiAdmisiones/AppLogic.Identity/README.md) |
-| `AppLogic.People` | 4 | datos de la persona ya autenticada | [→](../WebApiAdmisiones/AppLogic.People/README.md) |
-| `AppLogic.Authentication` | 4 | login, 2FA, tokens, contraseña inicial, recupero | [→](../WebApiAdmisiones/AppLogic.Authentication/README.md) |
-| `AppLogic.Scholarships` | 4 | becas (⚠️ fondo de beca sin conectar) | [→](../WebApiAdmisiones/AppLogic.Scholarships/README.md) |
-| `AppLogic.Registration` | 5 | onboarding: documento → persona con usuario | [→](../WebApiAdmisiones/AppLogic.Registration/README.md) |
-| `AppLogic.Enrollments` | 5 | interés, preinscripción, pagos, encuesta inicial | [→](../WebApiAdmisiones/AppLogic.Enrollments/README.md) |
-| `AppLogic.Catalogs` | 6 | combos de solo lectura para el front | [→](../WebApiAdmisiones/AppLogic.Catalogs/README.md) |
+| `AppLogic.Contracts` | 1 | lo poquísimo que comparten todos: `EnrollmentStatus`, `ComboOption`, `TextNormalization`, `[Redact]` | [→](../WebApiAdmisiones/AppLogic/AppLogic.Contracts/README.md) |
+| `AppLogic.DevartDtos` | 1 | **código generado, no se edita** | [→](../WebApiAdmisiones/AppLogic/AppLogic.DevartDtos/README.md) |
+| `AppLogic.Platform` | 2 | infraestructura sin dominio: mail, rate limiting, serialización | [→](../WebApiAdmisiones/AppLogic/AppLogic.Platform/README.md) |
+| `AppLogic.Integrations.Tivenos` | 2 | encola avisos al CRM (por tabla, no HTTP) | [→](../WebApiAdmisiones/AppLogic/AppLogic.Integrations.Tivenos/README.md) |
+| `AppLogic.Integrations.EnrollmentsAndPayments` | 2 | cliente HTTP de la API interna de Inscripciones y Pagos | [→](../WebApiAdmisiones/AppLogic/AppLogic.Integrations.EnrollmentsAndPayments/README.md) |
+| `AppLogic.Identity` | 3 | documento de identidad y stores de Redis del registro | [→](../WebApiAdmisiones/AppLogic/AppLogic.Identity/README.md) |
+| `AppLogic.People` | 4 | datos de la persona ya autenticada | [→](../WebApiAdmisiones/AppLogic/AppLogic.People/README.md) |
+| `AppLogic.Authentication` | 4 | login, 2FA, tokens, contraseña inicial, recupero | [→](../WebApiAdmisiones/AppLogic/AppLogic.Authentication/README.md) |
+| `AppLogic.Scholarships` | 4 | becas (⚠️ fondo de beca sin conectar) | [→](../WebApiAdmisiones/AppLogic/AppLogic.Scholarships/README.md) |
+| `AppLogic.Registration` | 5 | onboarding: documento → persona con usuario | [→](../WebApiAdmisiones/AppLogic/AppLogic.Registration/README.md) |
+| `AppLogic.Enrollments` | 5 | interés, preinscripción, pagos, encuesta inicial | [→](../WebApiAdmisiones/AppLogic/AppLogic.Enrollments/README.md) |
+| `AppLogic.Catalogs` | 6 | combos de solo lectura para el front | [→](../WebApiAdmisiones/AppLogic/AppLogic.Catalogs/README.md) |
 | `WebApiAdmisiones` | host | controllers, DI, seguridad HTTP | [→](../WebApiAdmisiones/WebApiAdmisiones/README.md) |
 
 ## Convenciones que valen para todos

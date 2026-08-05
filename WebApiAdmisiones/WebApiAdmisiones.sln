@@ -54,29 +54,29 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LdapService", "..\Core\Ldap
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureService", "..\Core\AzureService\AzureService.csproj", "{E44BDFA8-047A-7594-36DD-F31D09482456}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Contracts", "AppLogic.Contracts\AppLogic.Contracts.csproj", "{26EF4BEF-2C8D-4776-9E1B-B61EA07FCE8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Contracts", "AppLogic\AppLogic.Contracts\AppLogic.Contracts.csproj", "{26EF4BEF-2C8D-4776-9E1B-B61EA07FCE8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Platform", "AppLogic.Platform\AppLogic.Platform.csproj", "{A1E9672C-F732-4BE6-94D8-D2AB88AC37BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Platform", "AppLogic\AppLogic.Platform\AppLogic.Platform.csproj", "{A1E9672C-F732-4BE6-94D8-D2AB88AC37BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.DevartDtos", "AppLogic.DevartDtos\AppLogic.DevartDtos.csproj", "{59421662-1D2A-449F-9C8B-B4F161007F9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.DevartDtos", "AppLogic\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj", "{59421662-1D2A-449F-9C8B-B4F161007F9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Integrations.Tivenos", "AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj", "{D1C75691-15FC-40E9-BA8E-84CA1FC1E17B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Integrations.Tivenos", "AppLogic\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj", "{D1C75691-15FC-40E9-BA8E-84CA1FC1E17B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Integrations.EnrollmentsAndPayments", "AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj", "{0253422D-EB09-4C73-818D-BCED2FB465C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Integrations.EnrollmentsAndPayments", "AppLogic\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj", "{0253422D-EB09-4C73-818D-BCED2FB465C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Identity", "AppLogic.Identity\AppLogic.Identity.csproj", "{7B70DF20-B017-4556-BDAC-9D9A8BBBCCC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Identity", "AppLogic\AppLogic.Identity\AppLogic.Identity.csproj", "{7B70DF20-B017-4556-BDAC-9D9A8BBBCCC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.People", "AppLogic.People\AppLogic.People.csproj", "{F01B0104-303F-4E95-9E8E-6A9482C11D08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.People", "AppLogic\AppLogic.People\AppLogic.People.csproj", "{F01B0104-303F-4E95-9E8E-6A9482C11D08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Scholarships", "AppLogic.Scholarships\AppLogic.Scholarships.csproj", "{C01479B4-9C63-454D-AC05-E2B50E65AF0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Scholarships", "AppLogic\AppLogic.Scholarships\AppLogic.Scholarships.csproj", "{C01479B4-9C63-454D-AC05-E2B50E65AF0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Authentication", "AppLogic.Authentication\AppLogic.Authentication.csproj", "{891FDC4E-19FF-4A14-AC4E-1FA4D3D323EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Authentication", "AppLogic\AppLogic.Authentication\AppLogic.Authentication.csproj", "{891FDC4E-19FF-4A14-AC4E-1FA4D3D323EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Registration", "AppLogic.Registration\AppLogic.Registration.csproj", "{E956D255-F5EE-4EA3-B8CA-51DD60590B1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Registration", "AppLogic\AppLogic.Registration\AppLogic.Registration.csproj", "{E956D255-F5EE-4EA3-B8CA-51DD60590B1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Enrollments", "AppLogic.Enrollments\AppLogic.Enrollments.csproj", "{33417EA0-C390-4A68-A664-5DCF9D107BAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Enrollments", "AppLogic\AppLogic.Enrollments\AppLogic.Enrollments.csproj", "{33417EA0-C390-4A68-A664-5DCF9D107BAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Catalogs", "AppLogic.Catalogs\AppLogic.Catalogs.csproj", "{215E245A-A2D8-422F-BF47-FC4FF770E2E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppLogic.Catalogs", "AppLogic\AppLogic.Catalogs\AppLogic.Catalogs.csproj", "{215E245A-A2D8-422F-BF47-FC4FF770E2E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

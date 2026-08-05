@@ -19,18 +19,18 @@ READMEs por módulo:
 
 | Módulo | Nivel | Qué resuelve |
 |---|---|---|
-| [AppLogic.Contracts](WebApiAdmisiones/AppLogic.Contracts/README.md) | 1 | lo poco que comparten todos los módulos |
-| [AppLogic.DevartDtos](WebApiAdmisiones/AppLogic.DevartDtos/README.md) | 1 | **código generado, no se edita** |
-| [AppLogic.Platform](WebApiAdmisiones/AppLogic.Platform/README.md) | 2 | mail, rate limiting, serialización |
-| [AppLogic.Integrations.Tivenos](WebApiAdmisiones/AppLogic.Integrations.Tivenos/README.md) | 2 | encola avisos al CRM |
-| [AppLogic.Integrations.EnrollmentsAndPayments](WebApiAdmisiones/AppLogic.Integrations.EnrollmentsAndPayments/README.md) | 2 | cliente de la API interna de Inscripciones y Pagos |
-| [AppLogic.Identity](WebApiAdmisiones/AppLogic.Identity/README.md) | 3 | documento de identidad y stores de Redis |
-| [AppLogic.People](WebApiAdmisiones/AppLogic.People/README.md) | 4 | datos de la persona autenticada |
-| [AppLogic.Authentication](WebApiAdmisiones/AppLogic.Authentication/README.md) | 4 | login, 2FA, tokens, contraseña inicial |
-| [AppLogic.Scholarships](WebApiAdmisiones/AppLogic.Scholarships/README.md) | 4 | becas |
-| [AppLogic.Registration](WebApiAdmisiones/AppLogic.Registration/README.md) | 5 | onboarding |
-| [AppLogic.Enrollments](WebApiAdmisiones/AppLogic.Enrollments/README.md) | 5 | interés, preinscripción, pagos, encuesta inicial |
-| [AppLogic.Catalogs](WebApiAdmisiones/AppLogic.Catalogs/README.md) | 6 | combos de solo lectura |
+| [AppLogic.Contracts](WebApiAdmisiones/AppLogic/AppLogic.Contracts/README.md) | 1 | lo poco que comparten todos los módulos |
+| [AppLogic.DevartDtos](WebApiAdmisiones/AppLogic/AppLogic.DevartDtos/README.md) | 1 | **código generado, no se edita** |
+| [AppLogic.Platform](WebApiAdmisiones/AppLogic/AppLogic.Platform/README.md) | 2 | mail, rate limiting, serialización |
+| [AppLogic.Integrations.Tivenos](WebApiAdmisiones/AppLogic/AppLogic.Integrations.Tivenos/README.md) | 2 | encola avisos al CRM |
+| [AppLogic.Integrations.EnrollmentsAndPayments](WebApiAdmisiones/AppLogic/AppLogic.Integrations.EnrollmentsAndPayments/README.md) | 2 | cliente de la API interna de Inscripciones y Pagos |
+| [AppLogic.Identity](WebApiAdmisiones/AppLogic/AppLogic.Identity/README.md) | 3 | documento de identidad y stores de Redis |
+| [AppLogic.People](WebApiAdmisiones/AppLogic/AppLogic.People/README.md) | 4 | datos de la persona autenticada |
+| [AppLogic.Authentication](WebApiAdmisiones/AppLogic/AppLogic.Authentication/README.md) | 4 | login, 2FA, tokens, contraseña inicial |
+| [AppLogic.Scholarships](WebApiAdmisiones/AppLogic/AppLogic.Scholarships/README.md) | 4 | becas |
+| [AppLogic.Registration](WebApiAdmisiones/AppLogic/AppLogic.Registration/README.md) | 5 | onboarding |
+| [AppLogic.Enrollments](WebApiAdmisiones/AppLogic/AppLogic.Enrollments/README.md) | 5 | interés, preinscripción, pagos, encuesta inicial |
+| [AppLogic.Catalogs](WebApiAdmisiones/AppLogic/AppLogic.Catalogs/README.md) | 6 | combos de solo lectura |
 
 ## Estructura
 
@@ -182,7 +182,7 @@ k6 run loadtest/get-endpoints.k6.js
 1. **`Core/`, `BusinessLogic`, `DataAccess` y `AppLogic.DevartDtos` no se modifican.** Los primeros
    son submódulo compartido; los otros, código generado por Devart.
 2. **`dotnet build` regenera ~280 archivos de `AppLogic.DevartDtos`** con timestamp nuevo. Antes de
-   commitear: `git diff --numstat -- WebApiAdmisiones/AppLogic.DevartDtos | awk '$1!="0"||$2!="0"'`.
+   commitear: `git diff --numstat -- WebApiAdmisiones/AppLogic/AppLogic.DevartDtos | awk '$1!="0"||$2!="0"'`.
 3. **Los DTOs y las claves de query de `AppLogic.Integrations.*` van en español.** Modelan formatos
    de sistemas ajenos: traducirlos rompe la integración sin dar error de compilación.
 4. **Un `sed -i` recursivo sobre `*.cs` es peligroso**: pisa código generado y literales de string

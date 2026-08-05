@@ -1,12 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	<!-- Nivel 2. Encolado hacia Tivenos. No conoce ningún módulo de negocio. -->
+	<!-- Nivel 2. Encolado hacia Tivenos. No conoce ningÃºn mÃ³dulo de negocio. -->
 	<ItemGroup>
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>

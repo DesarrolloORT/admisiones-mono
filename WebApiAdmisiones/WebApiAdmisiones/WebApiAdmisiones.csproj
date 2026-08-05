@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">  
+<Project Sdk="Microsoft.NET.Sdk.Web">  
  <PropertyGroup>  
    <TargetFramework>net10.0</TargetFramework>  
    <Nullable>enable</Nullable>  
@@ -47,18 +47,18 @@
    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />  
    <ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />  
    <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModDataAccess\ModGenericBaseDataAccess.csproj" />  
-   <ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />  
-   <ProjectReference Include="..\AppLogic.Platform\AppLogic.Platform.csproj" />  
-   <ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />  
-   <ProjectReference Include="..\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />  
-   <ProjectReference Include="..\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />  
-   <ProjectReference Include="..\AppLogic.Identity\AppLogic.Identity.csproj" />  
-   <ProjectReference Include="..\AppLogic.People\AppLogic.People.csproj" />  
-   <ProjectReference Include="..\AppLogic.Scholarships\AppLogic.Scholarships.csproj" />  
-   <ProjectReference Include="..\AppLogic.Authentication\AppLogic.Authentication.csproj" />  
-   <ProjectReference Include="..\AppLogic.Registration\AppLogic.Registration.csproj" />  
-   <ProjectReference Include="..\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />  
-   <ProjectReference Include="..\AppLogic.Catalogs\AppLogic.Catalogs.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Contracts\AppLogic.Contracts.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Platform\AppLogic.Platform.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Identity\AppLogic.Identity.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.People\AppLogic.People.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Scholarships\AppLogic.Scholarships.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Authentication\AppLogic.Authentication.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Registration\AppLogic.Registration.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Catalogs\AppLogic.Catalogs.csproj" />  
  </ItemGroup>  
  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>

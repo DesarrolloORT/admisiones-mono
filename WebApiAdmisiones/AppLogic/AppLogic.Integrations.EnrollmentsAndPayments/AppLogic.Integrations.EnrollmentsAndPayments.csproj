@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -6,11 +6,11 @@
 	</PropertyGroup>
 	<!--
 		Nivel 2. Cliente HTTP de la API interna de Inscripciones y Pagos.
-		Es dueño de sus propios DTOs de cable: ningún módulo de negocio le presta tipos.
+		Es dueÃ±o de sus propios DTOs de cable: ningÃºn mÃ³dulo de negocio le presta tipos.
 	-->
 	<ItemGroup>
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />

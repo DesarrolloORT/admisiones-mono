@@ -28,7 +28,7 @@ api-admisiones/
 │   └── Utilities/                     # OperationResult<T>, Constantes, Encriptador
 └── WebApiAdmisiones/
     ├── WebApiAdmisiones/              # Entrypoint: Program.cs, Controllers/, Extensions/, Security/
-    ├── AppLogic.*/                    # 12 módulos, uno por área (ver docs/README-MODULOS.md)
+    ├── AppLogic/AppLogic.*/          # 12 módulos, uno por área (ver docs/README-MODULOS.md)
     ├── BusinessLogic/                 # DevartEFCore/, IGenericRepository/, IServices/
     ├── DataAccess/                    # DevartDataAccess/, GenericRepository/, Services/
     └── UnitTesting/                   # xUnit + Moq (Controllers/, Services/, Security/...)

@@ -28,13 +28,13 @@ Los archivos `*.Extensions.cs` (por ejemplo `DtoVdInscripcionesFresco1y2Devart.E
 cambie. Antes de commitear, verificá qué cambió de verdad:
 
 ```bash
-git diff --numstat -- WebApiAdmisiones/AppLogic.DevartDtos | awk '$1!="0"||$2!="0"'
+git diff --numstat -- WebApiAdmisiones/AppLogic/AppLogic.DevartDtos | awk '$1!="0"||$2!="0"'
 ```
 
 Si aparecen archivos con líneas cambiadas que no tocaste a propósito, revertilos:
 
 ```bash
-git checkout -- WebApiAdmisiones/AppLogic.DevartDtos
+git checkout -- WebApiAdmisiones/AppLogic/AppLogic.DevartDtos
 ```
 
 ## Trampa: los renames masivos lo pisan

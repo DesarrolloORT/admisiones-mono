@@ -7,7 +7,7 @@ esta guía cubre lo que ninguna herramienta puede decidir por vos: **cómo se le
 
 El norte es simple: un endpoint se tiene que poder leer de arriba a abajo, una vez, y entender.
 La referencia de "así se ve bien" es
-[`FondoDeBecaService.cs`](../WebApiAdmisiones/AppLogic/Becas/Services/FondoDeBecaService.cs).
+[`ScholarshipFundService.cs`](../WebApiAdmisiones/AppLogic/AppLogic.Scholarships/Services/ScholarshipFundService.cs).
 
 ---
 
@@ -18,7 +18,7 @@ Todo devuelve `OperationResult<T>`. Cuando un método llama a un helper que ya d
 
 - Si el tipo de dato **no cambia**, devolvé el resultado tal cual: `return resultado;`
 - Si el tipo **cambia**, reproyectá el error con el helper
-  [`OperationResultExtensions`](../WebApiAdmisiones/AppLogic/Helpers/OperationResultExtensions.cs):
+  [`OperationResultExtensions`](../WebApiAdmisiones/AppLogic/AppLogic.Contracts/OperationResultExtensions.cs):
   `return resultado.Failure().As<TipoDestino>();`
 
 ```csharp

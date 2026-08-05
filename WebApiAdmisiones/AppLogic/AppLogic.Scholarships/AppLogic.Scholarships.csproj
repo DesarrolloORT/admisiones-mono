@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	<!-- Nivel 4. Becas y fondo de beca. No depende de ningún otro módulo de negocio. -->
+	<!-- Nivel 4. Becas y fondo de beca. No depende de ningÃºn otro mÃ³dulo de negocio. -->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
 	</ItemGroup>

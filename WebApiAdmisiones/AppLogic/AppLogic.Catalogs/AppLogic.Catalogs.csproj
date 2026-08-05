@@ -1,17 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<!--
-		Nivel 6. Read-models de catálogos para el front.
-		Depende de Enrollments porque publica las opciones de la encuesta inicial, cuyo dueño
-		es Enrollments (ahí se validan). La dependencia es en un solo sentido.
+		Nivel 6. Read-models de catÃ¡logos para el front.
+		Depende de Enrollments porque publica las opciones de la encuesta inicial, cuyo dueÃ±o
+		es Enrollments (ahÃ­ se validan). La dependencia es en un solo sentido.
 	-->
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
 		<ProjectReference Include="..\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />
