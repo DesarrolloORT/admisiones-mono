@@ -105,19 +105,21 @@ del backend— y devuelve `InscripcionEntryResolved`:
 
 - `nueva`: sin query params. Paso 1 **siempre** virgen y editable.
 - `retomar`: con `idProducto`+`idProceso` (desde el panel); carga el detalle.
-- `reactivar`: agrega `modo=reactivar` (futuro botón de una inscripción cancelada;
-  reglas TBD, hoy deriva igual que `nueva`). El botón "Reactivar inscripción" del
-  dashboard (home) no usa este `modo`: hace `POST /Inscripciones/Reactivar` y
-  navega a `retomar` con la inscripción nueva ya creada.
+- `reactivar`: agrega `modo=reactivar`. El botón del dashboard hace
+  `POST /Inscripciones/Reactivar`, guarda transitoriamente su respuesta y navega con
+  esta intención. El resolver consume esa respuesta para iniciar el pago sin repetir
+  `GET /Inscripciones/Detalle`; si falta por recarga o acceso directo, carga el detalle
+  como fallback.
 
-Si el detalle falla, la intención degrada a comportamiento `nueva` (`detail:null`).
+Si el detalle de fallback falla, la intención se conserva con `detail:null` y el flujo
+continúa con la precarga mínima de los parámetros.
 
 ### 7. `models/inscription-entry.ts` — derivación pura del estado inicial
 
 `deriveInitialInscripcionState(context)` es una **función pura sin efectos** que,
-dado `(intención, detalle, encuesta)`, devuelve el estado inicial completo: paso,
-slice de encuesta, slice de pago y si reanuda `En proceso`. Es la **única fuente de
-verdad** de "en qué estado arranca la inscripción". Su contrato de negocio es la
+dado `(intención, detalle/respuesta de reactivación, encuesta)`, devuelve el estado
+inicial completo: paso, slice de encuesta, slice de pago y si reanuda `En proceso`. Es
+la **única fuente de verdad** de "en qué estado arranca la inscripción". Su contrato de negocio es la
 tabla ejecutable `inscription-entry.spec.ts` (intención × estado × encuesta). El
 backend manda sobre los datos; la intención manda sobre presentación/navegación
 (por eso `nueva` nunca precarga el paso 1 aunque exista una encuesta previa).

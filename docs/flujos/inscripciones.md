@@ -33,7 +33,7 @@ el contrato backend sale de `inscription-flow-mappers.ts`.
 | Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /Inscripciones/InteresProducto`                                     | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/InscripcionesController.cs">InscripcionesController</SourceLink> → <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Inscripciones/Services/InscripcionesService.cs">InscripcionesService</SourceLink> |
 | Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /Inscripciones/ConfirmarPreInscripcion` | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/PersonaController.cs">PersonaController</SourceLink> + InscripcionesController                                                                                                                                  |
 | Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /Inscripciones/Pagar`                                               | InscripcionesController → InscripcionesService → API interna de pagos                                                                                                                                                                                                                          |
-| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                   | `POST /Inscripciones/Reactivar`                                           | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">InscripcionesEndpoint</SourceLink>                          | `POST /Inscripciones/Reactivar`                                           | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
 
 Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
@@ -76,7 +76,8 @@ flowchart TD
 ## Intención de entrada × estado × encuesta
 
 Cómo arranca el flujo depende de la **intención de entrada** (decidida por la URL,
-no por el backend) combinada con el estado de la inscripción (`Detalle`) y el de la
+no por el backend) combinada con el estado de la inscripción (`Detalle` o respuesta
+de `Reactivar`) y el de la
 encuesta inicial (`EncuestaInicial`, que es **por persona**). La derivación es pura
 y está fijada por la tabla ejecutable `models/inscription-entry.spec.ts`; esta
 matriz es su lectura de negocio.
@@ -101,6 +102,9 @@ matriz es su lectura de negocio.
   | Pago pendiente / Pendiente con seña | Pantalla de referencias de pago (reserva)   |
   | Confirmada                          | Pantalla de éxito terminal                  |
   | A la espera / desconocido           | Pantalla "Inscripción en proceso"           |
+
+  En ambas filas, si el monto de la seña es `0`, el Paso 3 muestra directamente la
+  pantalla de reserva con el mensaje de contacto a oficina (ver "Estados frontend").
 
   Los estados terminales pintan su pantalla por `payment` y dejan el flujo en el Paso 3:
   así el Paso 1 no es el paso corriente en ninguna combinación. Solo params **inválidos**
@@ -138,13 +142,15 @@ matriz es su lectura de negocio.
   Los pasos no están en la URL, así que la flecha del navegador no vuelve un paso: sale
   del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
-- **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`):
-  reservado para el futuro botón de una inscripción **cancelada**. Reglas de negocio
-  aún sin definir; hoy deriva igual que **nueva** (Paso 1 virgen). El estado
-  `Cancelada` de `Detalle` queda reservado para esta intención. El botón
-  "Reactivar inscripción" del dashboard (home) no usa este `modo`: hace
-  `POST /Inscripciones/Reactivar` y navega a `retomar` (`idProducto`+`idProceso`)
-  con la inscripción nueva ya creada.
+- **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`): el botón
+  del dashboard hace `POST /Inscripciones/Reactivar`, que devuelve el mismo contrato
+  que `ConfirmarPreInscripcion`. El frontend conserva transitoriamente esa respuesta y
+  los IDs de las nuevas inscripciones: `enEspera` muestra la pantalla informativa,
+  seña `0` muestra la reserva y el resto abre la selección de pago. El resolver no
+  llama a `GET /Inscripciones/Detalle` en esta navegación; si la respuesta ya no está
+  disponible por recarga o acceso directo, usa `Detalle` como fallback. Los
+  `getDetail` posteriores a `Pagar` se mantienen para completar coordinación, materias
+  o referencias de reserva que el POST de reactivación no devuelve.
 
 ## Regla general de valores ocultos
 
@@ -617,6 +623,15 @@ sin repetir las compartidas.
   cédula (Abitab), el número de estudiante y el monto que informa `seniaMinima`.
   En el flujo fresco se consultan con un `getDetail` tras quedar en reserva; si
   falla, se muestra solo el monto.
+- `reserva` con seña 0: si `seniaInscripcion` (o `seniaMinima.senia`/
+  `pagoPendiente.senia` al retomar) es exactamente `0`, no hay nada que cobrar, así
+  que no corresponde pedir medio de pago ni llamar a `Pagar`. El front fuerza el
+  outcome `reserva` directo (en `InscripcionSurveyFacade.finishSurveyStep` para el
+  flujo fresco, en `InscripcionProcessFacade.applyPaymentInit` para el caso
+  `awaiting-method` al retomar) y `buildReservationInstructions` reemplaza fecha
+  límite, cédula, monto y el texto de acreditación por un mensaje que indica
+  comunicarse con la oficina de Admisiones; la resolución queda en manos de la
+  oficina.
 - `pago-pendiente-externo`: Banred, Geopay o Sistarbanc ya salieron a pasarela o
   quedaron esperando definición de acreditación.
 - `editing`: errores de validación o error de backend; el usuario puede corregir
