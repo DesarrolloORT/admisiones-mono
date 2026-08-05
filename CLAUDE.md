@@ -28,11 +28,30 @@ api-admisiones/
 │   └── Utilities/                     # OperationResult<T>, Constantes, Encriptador
 └── WebApiAdmisiones/
     ├── WebApiAdmisiones/              # Entrypoint: Program.cs, Controllers/, Extensions/, Security/
-    ├── AppLogic/                      # IServices/, Services/, DTOs/, Helpers/, ApiClients/
+    ├── AppLogic.*/                    # 12 módulos, uno por área (ver docs/README-MODULOS.md)
     ├── BusinessLogic/                 # DevartEFCore/, IGenericRepository/, IServices/
     ├── DataAccess/                    # DevartDataAccess/, GenericRepository/, Services/
     └── UnitTesting/                   # xUnit + Moq (Controllers/, Services/, Security/...)
 ```
+
+## Documentación
+
+Antes de tocar código de un módulo, lee su `README.md` (está dentro del propio proyecto).
+
+- `docs/README-MODULOS.md` — índice, niveles de dependencia y reglas que no se rompen.
+- `docs/GLOSARIO-DOMINIO.md` — español→inglés; qué se traduce y qué no.
+- `docs/MATRIZ-TRAZABILIDAD.md` — por qué las cosas están como están; breaking changes con el front.
+- `docs/GUIA-ESTILO-CODIGO.md` — cómo escribir código nuevo.
+
+Reglas que cuestan caro si se ignoran:
+
+1. `Core/` (submódulo), `BusinessLogic`, `DataAccess` y `AppLogic.DevartDtos` (generado) **no se tocan**.
+2. Los DTOs y las claves de query de `AppLogic.Integrations.*` **quedan en español**: modelan formatos
+   ajenos y traducirlos rompe la integración sin dar error de compilación.
+3. Ningún tipo de Devart ni de `Core` sale al front: cada módulo mapea a su DTO propio.
+4. Un `sed -i` recursivo sobre `*.cs` pisa código generado y literales de string. Excluye
+   `AppLogic.DevartDtos/`, `BusinessLogic/`, `DataAccess/` y `Core/`, y revisa después que no hayan
+   cambiado mensajes de error ni URLs.
 
 ## Loadtest
 

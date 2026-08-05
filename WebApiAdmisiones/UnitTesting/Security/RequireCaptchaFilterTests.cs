@@ -44,7 +44,7 @@ namespace UnitTesting.Security
             using var scope = new UnitTesting.AppLogic.Services.EnvironmentVariableScope(("RECAPTCHA_SCORE", "0.5"));
             var recaptchaMock = new Mock<IRecaptchaService>();
             recaptchaMock
-                .Setup(s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluarDocumento))
+                .Setup(s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluateDocument))
                 .ReturnsAsync(OperationResult<double>.Ok(0.8, nameof(IRecaptchaService.ValidarConScoreAsync)));
 
             var context = CreateContext("token");
@@ -52,14 +52,14 @@ namespace UnitTesting.Security
                 recaptchaMock.Object,
                 CreateConfiguration(),
                 CaptchaValidationMode.RequireMinimumScore,
-                CaptchaActions.EvaluarDocumento);
+                CaptchaActions.EvaluateDocument);
 
             await filter.OnActionExecutionAsync(context, () =>
                 Task.FromResult(CreateExecutedContext(context)));
 
             Assert.Null(context.Result);
             recaptchaMock.Verify(
-                s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluarDocumento),
+                s => s.ValidarConScoreAsync("token", CaptchaActions.EvaluateDocument),
                 Times.Once);
         }
 

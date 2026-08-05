@@ -15,7 +15,7 @@
 ```powershell
 # Variables
 $baseUrl = "https://localhost:7150"
-$endpoint = "/Auth/Login"
+$endpoint = "/auth/login"
 
 # Hacer 6 intentos de login (5 permitidos + 1 bloqueado)
 for ($i = 1; $i -le 6; $i++) {
@@ -70,7 +70,7 @@ for ($i = 1; $i -le 6; $i++) {
 #!/bin/bash
 
 BASE_URL="https://localhost:7150"
-ENDPOINT="/Auth/Login"
+ENDPOINT="/auth/login"
 
 for i in {1..6}; do
 	echo ""
@@ -134,7 +134,7 @@ done
 
 ```powershell
 $baseUrl = "https://localhost:7150"
-$endpoint = "/Registro/AnalizarAdjunto"
+$endpoint = "/registration/analyze-attachment"
 
 # Crear un archivo base64 fake (imagen pequeña)
 $fakeImageBytes = [System.Text.Encoding]::UTF8.GetBytes("fake-image-data")
@@ -293,7 +293,7 @@ redis-cli -h 192.168.35.13 -a Desarrollo2026 --scan --pattern "ratelimit:*" | \
 # Simular usuario que olvidó su contraseña
 for ($i = 1; $i -le 5; $i++) {
 	# Intentos con contraseña incorrecta
-	Invoke-WebRequest -Uri "https://localhost:7150/Auth/Login" `
+	Invoke-WebRequest -Uri "https://localhost:7150/auth/login" `
 		-Method POST -Body '{"codigoPersona":"54321","password":"wrong"}' `
 		-ContentType "application/json" -SkipCertificateCheck
 }

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<!--
+		Nivel 3. Identidad de la persona: documento de identidad, imágenes temporales del documento
+		y persona pendiente de alta. Existe porque Authentication, Registration, People y Enrollments
+		compartían este código y se referenciaban en círculo.
+	-->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
+		<ProjectReference Include="..\AppLogic.Platform\AppLogic.Platform.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
+	</ItemGroup>
+</Project>

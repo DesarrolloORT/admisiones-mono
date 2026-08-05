@@ -16,7 +16,7 @@ namespace UnitTesting.Security
             string? path = "/test/endpoint",
             bool authenticated = false,
             string? issuer = null,
-            string? codigoPersona = null,
+            string? personId = null,
             string? ipAddress = null,
             string? userAgent = null)
         {
@@ -35,8 +35,8 @@ namespace UnitTesting.Security
                 if (issuer != null)
                     claims.Add(new Claim("iss", issuer));
                 
-                if (codigoPersona != null)
-                    claims.Add(new Claim("usuario", codigoPersona));
+                if (personId != null)
+                    claims.Add(new Claim("usuario", personId));
                 
                 var identity = new ClaimsIdentity(claims, "TestAuthType");
                 context.User = new ClaimsPrincipal(identity);
@@ -159,8 +159,8 @@ namespace UnitTesting.Security
             var result = LoggingHelper.FormatEntrada(
                 context,
                 "TestController",
-                codigoPersona: "12345",
-                data: new { mensaje = "test" },
+                personId: "12345",
+                data: new { message = "test" },
                 correlationId: correlationId);
 
             // Assert
@@ -478,7 +478,7 @@ namespace UnitTesting.Security
         public void GetCodigoPersonaFromContext_WithUsuarioClaim_ReturnsValue()
         {
             // Arrange
-            var context = CreateHttpContext(authenticated: true, codigoPersona: "USR123");
+            var context = CreateHttpContext(authenticated: true, personId: "USR123");
 
             // Act
             var result = LoggingHelper.GetCodigoPersonaFromContext(context);
@@ -569,7 +569,7 @@ namespace UnitTesting.Security
             // Arrange
             var context = CreateHttpContext(
                 authenticated: true,
-                codigoPersona: "USR999",
+                personId: "USR999",
                 ipAddress: "10.0.0.1",
                 userAgent: "CustomAgent/2.0");
             context.Request.Headers["X-Client-Host"] = "client-machine-name";
@@ -654,7 +654,7 @@ namespace UnitTesting.Security
                 path: "/test",
                 authenticated: true,
                 issuer: "https://funcionarios.ort.edu.uy",
-                codigoPersona: "123",
+                personId: "123",
                 ipAddress: "1.2.3.4",
                 userAgent: "Agent");
             var correlationId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -662,7 +662,7 @@ namespace UnitTesting.Security
             // Act
             var result = LoggingHelper.FormatEntrada(
                 context, "TestClass",
-                codigoPersona: "123",
+                personId: "123",
                 data: "data",
                 correlationId: correlationId);
 

@@ -237,9 +237,9 @@ namespace WebApiAdmisiones.Security.RequestValidation
         }
         private void LoadSchemas()
         {
-            var ejemploPersona = JsonSchema.FromSampleJson("{\"codigoPersona\":123}");
-            ejemploPersona.RequiredProperties.Add("codigoPersona");
-            _schemas[BuildKey("POST", "/api/datospersonales")] = ejemploPersona;
+            var samplePerson = JsonSchema.FromSampleJson("{\"personId\":123}");
+            samplePerson.RequiredProperties.Add("personId");
+            _schemas[BuildKey("POST", "/api/datospersonales")] = samplePerson;
         }
         public bool TryGet(string key, out JsonSchema schema) => _schemas.TryGetValue(key, out schema!);
         public static string BuildKey(string method, string path) => method.ToUpperInvariant() + " " + path.ToLowerInvariant();

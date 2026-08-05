@@ -9,13 +9,13 @@ Implementación de **rate limiting distribuido** usando **Redis** como backend, 
 ## 🎯 **Políticas Configuradas**
 
 ### 1️⃣ **Login (Autenticación)**
-- **Endpoint:** `POST /Auth/Login`
+- **Endpoint:** `POST /auth/login`
 - **Límite:** 5 intentos cada 15 minutos por IP
 - **Algoritmo:** Sliding Window (Redis)
 - **Objetivo:** Prevenir ataques de fuerza bruta según estándares OWASP
 
 ### 2️⃣ **Reconocimiento de Documentos**
-- **Endpoint:** `POST /Registro/AnalizarAdjunto`
+- **Endpoint:** `POST /registration/analyze-attachment`
 - **Límite:** 5 solicitudes por minuto
 - **Algoritmo:** Fixed Window (in-memory)
 - **Objetivo:** Controlar costos de Azure Document Intelligence
@@ -206,13 +206,13 @@ increase(login_rate_limit_rejections_total[24h])
 ```bash
 # 1. Hacer 5 requests exitosos
 for i in {1..5}; do
-  curl -X POST https://api-admisiones/Auth/Login \
+  curl -X POST https://api-admisiones/auth/login \
 	-H "Content-Type: application/json" \
 	-d '{"codigoPersona":"12345","password":"wrong"}'
 done
 
 # 2. El 6to debe retornar 429
-curl -v -X POST https://api-admisiones/Auth/Login \
+curl -v -X POST https://api-admisiones/auth/login \
   -H "Content-Type: application/json" \
   -d '{"codigoPersona":"12345","password":"wrong"}'
 ```

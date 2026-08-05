@@ -10,13 +10,13 @@
    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>  
  </PropertyGroup>  
  <ItemGroup>  
-   <PackageReference Include="HtmlSanitizer" Version="9.1.923-beta" />
+   <PackageReference Include="HtmlSanitizer" Version="9.1.982" />
    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
      <PrivateAssets>all</PrivateAssets>  
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>  
    </PackageReference>  
-   <PackageReference Include="Microsoft.OpenApi" Version="2.4.2" />
+   <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
    <PackageReference Include="OpenTelemetry" Version="1.15.3" />
    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
@@ -44,10 +44,21 @@
    <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModBusinessLogic\ModBandejaBusinessLogic.csproj" />  
    <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModDataAccess\ModBandejaDataAccess.csproj" />  
    <ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />  
-   <ProjectReference Include="..\AppLogic\AppLogic.csproj" />  
    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />  
    <ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />  
    <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModDataAccess\ModGenericBaseDataAccess.csproj" />  
+   <ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />  
+   <ProjectReference Include="..\AppLogic.Platform\AppLogic.Platform.csproj" />  
+   <ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />  
+   <ProjectReference Include="..\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />  
+   <ProjectReference Include="..\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />  
+   <ProjectReference Include="..\AppLogic.Identity\AppLogic.Identity.csproj" />  
+   <ProjectReference Include="..\AppLogic.People\AppLogic.People.csproj" />  
+   <ProjectReference Include="..\AppLogic.Scholarships\AppLogic.Scholarships.csproj" />  
+   <ProjectReference Include="..\AppLogic.Authentication\AppLogic.Authentication.csproj" />  
+   <ProjectReference Include="..\AppLogic.Registration\AppLogic.Registration.csproj" />  
+   <ProjectReference Include="..\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />  
+   <ProjectReference Include="..\AppLogic.Catalogs\AppLogic.Catalogs.csproj" />  
  </ItemGroup>  
  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>

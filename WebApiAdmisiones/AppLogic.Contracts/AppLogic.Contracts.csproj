@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<!--
+		Nivel 1. Solo tipos sin lógica usados por dos o más módulos.
+		No agregar nada acá sin justificar en el PR por qué es transversal:
+		si lo usa un solo módulo, va en ese módulo.
+	-->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
+	</ItemGroup>
+</Project>

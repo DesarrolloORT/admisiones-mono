@@ -85,7 +85,7 @@ Representa la carrera/producto seleccionado.
 | Propiedad | Valor |
 |---|---|
 | Tipo | `number` |
-| Origen | `Catalogos/Carreras` |
+| Origen | `catalogs/degree-programs` |
 | Campo destino | `ID_PRODUCTO` |
 | Obligatorio | Sí |
 

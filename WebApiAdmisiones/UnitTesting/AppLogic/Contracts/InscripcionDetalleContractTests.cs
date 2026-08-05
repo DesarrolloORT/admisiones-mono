@@ -1,4 +1,4 @@
-using AppLogic.Inscripciones.Dtos;
+using AppLogic.Enrollments.Dtos;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -23,13 +23,13 @@ namespace UnitTesting.AppLogic.Contracts
         }
 
         [Theory]
-        [InlineData("DtoCabeceraInscripcion", typeof(DtoCabeceraInscripcion))]
-        [InlineData("DtoInscripcionOferta", typeof(DtoInscripcionOferta))]
-        [InlineData("DtoEstadoCuenta", typeof(DtoEstadoCuenta))]
-        [InlineData("DtoReservaMinima", typeof(DtoReservaMinima))]
-        [InlineData("DtoInscripcionConfirmada", typeof(DtoInscripcionConfirmada))]
-        [InlineData("DtoCoordinador", typeof(DtoCoordinador))]
-        [InlineData("DtoMateria", typeof(DtoMateria))]
+        [InlineData("EnrollmentHeader", typeof(EnrollmentHeader))]
+        [InlineData("EnrollmentOffering", typeof(EnrollmentOffering))]
+        [InlineData("CurrentAccountBalance", typeof(CurrentAccountBalance))]
+        [InlineData("MinimumDepositDetails", typeof(MinimumDepositDetails))]
+        [InlineData("ConfirmedEnrollment", typeof(ConfirmedEnrollment))]
+        [InlineData("Coordinator", typeof(Coordinator))]
+        [InlineData("Subject", typeof(Subject))]
         public void Contract_TypeFieldsMatchDto(string typeName, Type dtoType)
         {
             var documented = Contract["types"]![typeName]!["fields"]!.AsObject()
@@ -44,7 +44,7 @@ namespace UnitTesting.AppLogic.Contracts
             var documented = Contract["endpoints"]!["confirmarPreInscripcion"]!["data"]!.AsObject()
                 .Select(f => f.Key).Order().ToList();
 
-            Assert.Equal(JsonProperties(typeof(DtoConfirmarPreInscripcionResponse)), documented);
+            Assert.Equal(JsonProperties(typeof(ConfirmPreEnrollmentResponse)), documented);
         }
 
         [Fact]
@@ -53,16 +53,16 @@ namespace UnitTesting.AppLogic.Contracts
             var documented = Contract["endpoints"]!["obtenerDetalleInscripcion"]!["data"]!.AsObject()
                 .Select(f => f.Key).Order().ToList();
 
-            Assert.Equal(JsonProperties(typeof(DtoDetalleInscripcionResponse)), documented);
+            Assert.Equal(JsonProperties(typeof(EnrollmentDetailsResponse)), documented);
         }
 
         [Fact]
         public void Contract_ConfirmadaEstadoMatchesDto()
         {
-            var documented = Contract["endpoints"]!["obtenerDetalleInscripcion"]!["estados"]!["Confirmada"]!["confirmada"]!["fields"]!.AsObject()
+            var documented = Contract["endpoints"]!["obtenerDetalleInscripcion"]!["estados"]!["Confirmada"]!["confirmed"]!["fields"]!.AsObject()
                 .Select(f => f.Key).Order().ToList();
 
-            Assert.Equal(JsonProperties(typeof(DtoConfirmadaDetalle)), documented);
+            Assert.Equal(JsonProperties(typeof(ConfirmedEnrollmentDetailsResponse)), documented);
         }
 
         [Fact]

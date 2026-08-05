@@ -1,4 +1,4 @@
-using AppLogic.Helpers;
+using AppLogic.Contracts;
 using Utilities;
 
 namespace UnitTesting.AppLogic.Helpers;
@@ -8,13 +8,13 @@ public class OperationResultExtensionsTests
     [Fact]
     public void FailureAs_ConResultadoFallido_PreservaCamposYCambiaTipo()
     {
-        var original = OperationResult<string>.IsFailed("FDB_SAI_01", "SubirArchivoIngreso", "No se encontró el ingreso.", 404);
+        var original = OperationResult<string>.IsFailed("FDB_SAI_01", "UploadIncomeFile", "No se encontró el ingreso.", 404);
 
         OperationResult<bool> propagado = original.Failure().As<bool>();
 
         Assert.False(propagado.Success);
         Assert.Equal("FDB_SAI_01", propagado.ErrorCode);
-        Assert.Equal("SubirArchivoIngreso", propagado.Method);
+        Assert.Equal("UploadIncomeFile", propagado.Method);
         Assert.Equal("No se encontró el ingreso.", propagado.Message);
         Assert.Equal(404, propagado.HttpCode);
     }

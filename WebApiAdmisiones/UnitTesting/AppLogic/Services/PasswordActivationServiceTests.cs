@@ -1,7 +1,9 @@
-using AppLogic.Autenticacion.Dtos;
-using AppLogic.Common.Email;
-using AppLogic.Registro.Dtos;
-using AppLogic.Registro.Interfaces;
+using AppLogic.Identity.Interfaces;
+using AppLogic.Identity.Dtos;
+using AppLogic.Authentication.Dtos;
+using AppLogic.Platform.Email;
+using AppLogic.Registration.Dtos;
+using AppLogic.Registration.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using Microsoft.Extensions.Configuration;
@@ -14,8 +16,8 @@ using System.Text.Json;
 using Moq;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
-using AppLogic.Autenticacion.Services;
-using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Authentication.Services;
+using AppLogic.Authentication.Interfaces;
 
 namespace UnitTesting.AppLogic.Services
 {
@@ -35,34 +37,34 @@ namespace UnitTesting.AppLogic.Services
             IUnitOfWorkFactory? uowFactory = null,
             IEmailSender? emailSender = null,
             Mock<IHashTokenStore>? hashStoreMock = null,
-            Mock<IPendingPersonaStore>? pendingPersonaStoreMock = null)
+            Mock<IPendingPersonStore>? pendingPersonaStoreMock = null)
         {
             return new PasswordActivationService(
                 uowFactory ?? Mock.Of<IUnitOfWorkFactory>(),
                 CrearConfiguracion(),
                 emailSender ?? new TestEmailSender(),
                 hashStoreMock?.Object ?? Mock.Of<IHashTokenStore>(),
-                pendingPersonaStoreMock?.Object ?? Mock.Of<IPendingPersonaStore>(),
+                pendingPersonaStoreMock?.Object ?? Mock.Of<IPendingPersonStore>(),
                 Mock.Of<ILogger<PasswordActivationService>>());
         }
 
         [Fact]
         public async Task EnviarMailLinkPasswordAsync_StoresHashInRedisAndSendsMail()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            var result = await service.EnviarMailLinkPasswordAsync(persona, "Test");
+            var result = await service.SendPasswordLinkMailAsync(person, "Test");
 
             Assert.True(result.Success);
             hashStoreMock.Verify(h => h.StoreAsync(
@@ -78,7 +80,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var service = CrearServicio();
 
-            var result = await service.EnviarMailLinkPasswordAsync(null!, "Test");
+            var result = await service.SendPasswordLinkMailAsync(null!, "Test");
 
             Assert.False(result.Success);
             Assert.Equal("ACT_PAS_01", result.ErrorCode);
@@ -88,11 +90,11 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EnviarMailLinkPasswordAsync_WithPersonaWithoutEmail_ReturnsBadRequest()
         {
-            var persona = CrearPersona();
-            persona.Email = " ";
+            var person = CreatePerson();
+            person.Email = " ";
             var service = CrearServicio();
 
-            var result = await service.EnviarMailLinkPasswordAsync(persona, "Test");
+            var result = await service.SendPasswordLinkMailAsync(person, "Test");
 
             Assert.False(result.Success);
             Assert.Equal("ACT_PAS_02", result.ErrorCode);
@@ -105,7 +107,7 @@ namespace UnitTesting.AppLogic.Services
             var emailSender = new TestEmailSender();
             var service = CrearServicio(emailSender: emailSender);
 
-            var result = await service.EnviarMailNuevaPersonaAsync("flow-1", " nueva@example.com ", "token-1");
+            var result = await service.SendNewPersonMailAsync("flow-1", " nueva@example.com ", "token-1");
 
             Assert.True(result.Success);
             Assert.Equal(1, emailSender.SendCount);
@@ -124,7 +126,7 @@ namespace UnitTesting.AppLogic.Services
                 .ThrowsAsync(new InvalidOperationException("Mail unavailable"));
             var service = CrearServicio(emailSender: emailSenderMock.Object);
 
-            var result = await service.EnviarMailNuevaPersonaAsync("flow-1", "nueva@example.com", "token-1");
+            var result = await service.SendNewPersonMailAsync("flow-1", "nueva@example.com", "token-1");
 
             Assert.False(result.Success);
             Assert.Equal("ACT_NUP_99", result.ErrorCode);
@@ -138,20 +140,20 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task EnviarMailRecuperacionPasswordAsync_StoresHashInRedisAndSendsRecoveryMail()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            var result = await service.EnviarMailRecuperacionPasswordAsync(persona, "Test");
+            var result = await service.SendPasswordRecoveryMailAsync(person, "Test");
             var token = ExtraerToken(mail.Body);
             var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
@@ -168,14 +170,14 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ActivarLinkPasswordAsync_WithValidToken_ReturnsSession()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
@@ -188,27 +190,27 @@ namespace UnitTesting.AppLogic.Services
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            await service.EnviarMailLinkPasswordAsync(persona, "Test");
+            await service.SendPasswordLinkMailAsync(person, "Test");
             var token = ExtraerToken(mail.Body);
 
-            var result = await service.ActivarLinkPasswordAsync(token);
+            var result = await service.ActivatePasswordLinkAsync(token);
 
             Assert.True(result.Success);
-            Assert.Equal(persona.CodigoPersona, result.Data!.CodigoPersona);
+            Assert.Equal(person.CodigoPersona, result.Data!.PersonId);
             Assert.False(string.IsNullOrWhiteSpace(result.Data.SessionToken));
         }
 
         [Fact]
         public async Task ActivarLinkPasswordAsync_WithRecoveryToken_ReturnsSession()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
@@ -221,13 +223,13 @@ namespace UnitTesting.AppLogic.Services
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            await service.EnviarMailRecuperacionPasswordAsync(persona, "Test");
+            await service.SendPasswordRecoveryMailAsync(person, "Test");
             var token = ExtraerToken(mail.Body);
 
-            var result = await service.ActivarLinkPasswordAsync(token);
+            var result = await service.ActivatePasswordLinkAsync(token);
 
             Assert.True(result.Success);
-            Assert.Equal(persona.CodigoPersona, result.Data!.CodigoPersona);
+            Assert.Equal(person.CodigoPersona, result.Data!.PersonId);
             Assert.False(string.IsNullOrWhiteSpace(result.Data.SessionToken));
         }
 
@@ -235,18 +237,18 @@ namespace UnitTesting.AppLogic.Services
         public async Task ActivarLinkPasswordAsync_WithNuevaPersonaToken_ReturnsDocumentoWithoutCodigoPersona()
         {
             var flowId = Guid.NewGuid().ToString("N");
-            var documento = "12345672";
-            var token = GenerarTokenFlowId(flowId, "nueva-persona-activacion", TimeSpan.FromHours(1));
-            var pending = new DtoRegistroPendingPersona
+            var document = "12345672";
+            var token = GenerateFlowIdToken(flowId, "nueva-persona-activacion", TimeSpan.FromHours(1));
+            var pending = new PendingPerson
             {
                 FlowId = flowId,
-                TipoDocumento = "CI",
-                Documento = documento,
+                DocumentType = "CI",
+                DocumentNumber = document,
                 Email = "ana@example.com",
                 TokenHash = HashTokenForTest(token),
                 CreatedAt = DateTime.UtcNow
             };
-            var pendingPersonaStoreMock = new Mock<IPendingPersonaStore>();
+            var pendingPersonaStoreMock = new Mock<IPendingPersonStore>();
             pendingPersonaStoreMock
                 .Setup(s => s.GetRawAsync(flowId))
                 .ReturnsAsync(JsonSerializer.Serialize(pending, new JsonSerializerOptions
@@ -256,25 +258,25 @@ namespace UnitTesting.AppLogic.Services
 
             var service = CrearServicio(pendingPersonaStoreMock: pendingPersonaStoreMock);
 
-            var result = await service.ActivarLinkPasswordAsync(token);
+            var result = await service.ActivatePasswordLinkAsync(token);
 
             Assert.True(result.Success);
-            Assert.Null(result.Data!.CodigoPersona);
-            Assert.Equal(documento, result.Data.Documento);
+            Assert.Null(result.Data!.PersonId);
+            Assert.Equal(document, result.Data.DocumentNumber);
             Assert.False(string.IsNullOrWhiteSpace(result.Data.SessionToken));
         }
 
         [Fact]
         public async Task ActivarLinkPasswordAsync_WithTamperedToken_ReturnsFailure()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
@@ -287,10 +289,10 @@ namespace UnitTesting.AppLogic.Services
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            await service.EnviarMailLinkPasswordAsync(persona, "Test");
+            await service.SendPasswordLinkMailAsync(person, "Test");
             var token = ExtraerToken(mail.Body);
 
-            var result = await service.ActivarLinkPasswordAsync(token + "x");
+            var result = await service.ActivatePasswordLinkAsync(token + "x");
 
             Assert.False(result.Success);
             Assert.Equal(401, result.HttpCode);
@@ -301,7 +303,7 @@ namespace UnitTesting.AppLogic.Services
         {
             var service = CrearServicio();
 
-            var result = await service.ActivarLinkPasswordAsync(" ");
+            var result = await service.ActivatePasswordLinkAsync(" ");
 
             Assert.False(result.Success);
             Assert.Equal("ACT_LINK_01", result.ErrorCode);
@@ -311,14 +313,14 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public async Task ValidarSessionToken_WithSessionToken_ReturnsDtoValidatedSession()
         {
-            var persona = CrearPersona();
+            var person = CreatePerson();
             var personaRepoMock = new Mock<IPersonaRepository>();
             var uowMock = new Mock<IUnitOfWork>();
             var uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             var hashStoreMock = new Mock<IHashTokenStore>();
             var mail = new TestEmailSender();
 
-            personaRepoMock.Setup(r => r.GetByKey(persona.CodigoPersona)).Returns(persona);
+            personaRepoMock.Setup(r => r.GetByKey(person.CodigoPersona)).Returns(person);
             uowMock.Setup(u => u.Personas).Returns(personaRepoMock.Object);
             uowFactoryMock.Setup(f => f.Create()).Returns(uowMock.Object);
 
@@ -331,13 +333,13 @@ namespace UnitTesting.AppLogic.Services
 
             var service = CrearServicio(uowFactoryMock.Object, mail, hashStoreMock);
 
-            await service.EnviarMailLinkPasswordAsync(persona, "Test");
-            var activation = await service.ActivarLinkPasswordAsync(ExtraerToken(mail.Body));
+            await service.SendPasswordLinkMailAsync(person, "Test");
+            var activation = await service.ActivatePasswordLinkAsync(ExtraerToken(mail.Body));
 
-            var result = service.ValidarSessionToken(activation.Data!.SessionToken!);
+            var result = service.ValidateSessionToken(activation.Data!.SessionToken!);
 
             Assert.True(result.Success);
-            Assert.Equal(persona.CodigoPersona, result.Data!.CodigoPersona);
+            Assert.Equal(person.CodigoPersona, result.Data!.PersonId);
             Assert.Equal("password-activation-session", result.Data.Purpose);
         }
 
@@ -346,14 +348,14 @@ namespace UnitTesting.AppLogic.Services
         {
             var service = CrearServicio();
 
-            var result = service.ValidarSessionToken(" ");
+            var result = service.ValidateSessionToken(" ");
 
             Assert.False(result.Success);
             Assert.Equal("ACT_SES_01", result.ErrorCode);
             Assert.Equal(401, result.HttpCode);
         }
 
-        private static Persona CrearPersona()
+        private static Persona CreatePerson()
         {
             return new Persona
             {
@@ -393,7 +395,7 @@ namespace UnitTesting.AppLogic.Services
             return Uri.UnescapeDataString(encodedToken);
         }
 
-        private static string GenerarTokenFlowId(string flowId, string purpose, TimeSpan duration)
+        private static string GenerateFlowIdToken(string flowId, string purpose, TimeSpan duration)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Secret));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

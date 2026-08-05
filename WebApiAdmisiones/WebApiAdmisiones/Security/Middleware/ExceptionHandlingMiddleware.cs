@@ -58,11 +58,11 @@ namespace WebApiAdmisiones.Security.Middleware
 
         private async Task HandleUnauthorizedExceptionAsync(HttpContext context, UnauthorizedAccessException e, Guid correlationId)
         {
-            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
             var logMessage = LoggingHelper.FormatError(
                 context,
                 nameof(ExceptionHandlingMiddleware),
-                codigoPersona,
+                personId,
                 "Token válido sin claim de usuario",
                 correlationId);
 
@@ -73,11 +73,11 @@ namespace WebApiAdmisiones.Security.Middleware
 
         private async Task HandleSanitizationExceptionAsync(HttpContext context, InputSanitizationException e, Guid correlationId)
         {
-                var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+                var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
                 var logMessage = LoggingHelper.FormatError(
                     context,
                     nameof(ExceptionHandlingMiddleware),
-                    codigoPersona,
+                    personId,
                 "Error de sanitización de entrada",
                 correlationId);
 
@@ -88,9 +88,9 @@ namespace WebApiAdmisiones.Security.Middleware
 
         private async Task HandleGeneralExceptionAsync(HttpContext context, Exception ex, Guid correlationId)
                 {
-            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
             
-            LogGeneralException(context, ex, codigoPersona, correlationId);
+            LogGeneralException(context, ex, personId, correlationId);
 
             if (context.Response.HasStarted)
             {
@@ -101,7 +101,7 @@ namespace WebApiAdmisiones.Security.Middleware
             await WriteErrorResponseAsync(context, "INTERNAL_ERROR", StatusCodes.Status500InternalServerError, ex.Message);
             }
 
-        private void LogGeneralException(HttpContext context, Exception ex, string? codigoPersona, Guid correlationId)
+        private void LogGeneralException(HttpContext context, Exception ex, string? personId, Guid correlationId)
             {
             var dbErrorAlreadyLogged = context.Items.TryGetValue(LoggingHelper.DbErrorLoggedKey, out var dbErrorMsg);
             
@@ -112,7 +112,7 @@ namespace WebApiAdmisiones.Security.Middleware
                 var logMessage = LoggingHelper.FormatError(
                     context,
                     nameof(ExceptionHandlingMiddleware),
-                    codigoPersona,
+                    personId,
                 errorData,
                 correlationId);
 

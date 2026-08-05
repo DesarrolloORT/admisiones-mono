@@ -1,6 +1,11 @@
+using AppLogic.Authentication.Contracts;
+using AppLogic.Authentication.UseCases;
+using AppLogic.People.UseCases;
+using AppLogic.Enrollments.Contracts;
+using AppLogic.Enrollments.UseCases;
 using BusinessLogic.IDevartRepositories;
 using BusinessLogic.IServices;
-using AppLogic.Common.Email;
+using AppLogic.Platform.Email;
 using ConnectionContext;
 using DataAccess;
 using DataAccess.DevartRepositories;
@@ -18,18 +23,17 @@ using Moq;
 using WebApiAdmisiones.Extensions;
 using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Observability;
-using AppLogic.Autenticacion.Services;
-using AppLogic.Personas.Services;
-using AppLogic.Inscripciones.Services;
-using AppLogic.Becas.Services;
-using AppLogic.Catalogos.Services;
-using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Becas.Interfaces;
-using AppLogic.Catalogos.Interfaces;
-using AppLogic.Inscripciones.Interfaces;
-using AppLogic.Personas.Interfaces;
-using AppLogic.Tivenos.Interfaces;
-using AppLogic.Tivenos.Services;
+using AppLogic.Authentication.Services;
+using AppLogic.Enrollments.Services;
+using AppLogic.Scholarships.Services;
+using AppLogic.Catalogs.Services;
+using AppLogic.Authentication.Interfaces;
+using AppLogic.Scholarships.Interfaces;
+using AppLogic.Catalogs.Interfaces;
+using AppLogic.Enrollments.Interfaces;
+using AppLogic.People.Contracts;
+using AppLogic.Integrations.Tivenos.Interfaces;
+using AppLogic.Integrations.Tivenos.Services;
 
 namespace UnitTesting.Extensions
 {
@@ -293,8 +297,8 @@ namespace UnitTesting.Extensions
 
             // Assert
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(IAuthService) &&
-                sd.ImplementationType == typeof(AuthService) &&
+                sd.ServiceType == typeof(IAuthenticateWithLdap) &&
+                sd.ImplementationType == typeof(AuthenticateWithLdap) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
         }
@@ -307,16 +311,16 @@ namespace UnitTesting.Extensions
 
             _serviceCollection.AddDomainServices(configuration, _environmentMock.Object);
 
-            // ICatalogosService ahora resuelve a CatalogosCacheDecorator (agrega cache Redis a
-            // ObtenerPaisesEstadosCiudadesAsync); CatalogosService sigue registrado por separado
+            // ICatalogService ahora resuelve a CatalogCacheDecorator (agrega cache Redis a
+            // GetCountriesStatesCitiesAsync); CatalogService sigue registrado por separado
             // como clase concreta para que el decorator pueda envolverlo.
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(ICatalogosService) && sd.ImplementationFactory != null));
+                sd.ServiceType == typeof(ICatalogService) && sd.ImplementationFactory != null));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd =>
-                sd.ServiceType == typeof(CatalogosService) && sd.ImplementationType == typeof(CatalogosService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService) && sd.ImplementationType == typeof(InscripcionesService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITivenosEnvioService) && sd.ImplementationType == typeof(TivenosEnvioService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService) && sd.ImplementationType == typeof(BecasService)));
+                sd.ServiceType == typeof(CatalogService) && sd.ImplementationType == typeof(CatalogService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IConfirmPreEnrollment) && sd.ImplementationType == typeof(ConfirmPreEnrollment)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITivenosQueueService) && sd.ImplementationType == typeof(TivenosQueueService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IScholarshipService) && sd.ImplementationType == typeof(ScholarshipService)));
         }
 
         [Fact]
@@ -445,7 +449,7 @@ namespace UnitTesting.Extensions
 
             var descriptor = _serviceCollection.FirstOrDefault(sd =>
                 sd.ServiceType == typeof(IEmailSender) &&
-                sd.ImplementationType == typeof(EnvioMailEmailSender) &&
+                sd.ImplementationType == typeof(OrtEmailSender) &&
                 sd.Lifetime == ServiceLifetime.Scoped);
             Assert.NotNull(descriptor);
         }
@@ -545,9 +549,9 @@ namespace UnitTesting.Extensions
             // Assert - Verify all application services are registered
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICurrentUserService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBandejaService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogosService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IInscripcionesService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IBecasService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ICatalogService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IConfirmPreEnrollment)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IScholarshipService)));
             
         }
 
@@ -582,7 +586,7 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ILdap)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(ITokenService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IRefreshTokenService)));
-            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IAuthService)));
+            Assert.NotNull(_serviceCollection.FirstOrDefault(sd => sd.ServiceType == typeof(IIssueTokensForPerson)));
         }
 
         #endregion
@@ -607,13 +611,13 @@ namespace UnitTesting.Extensions
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ICurrentUserService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IAuthService)));
+                sd.ServiceType == typeof(IIssueTokensForPerson)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(ICatalogosService)));
+                sd.ServiceType == typeof(ICatalogService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IInscripcionesService)));
+                sd.ServiceType == typeof(IConfirmPreEnrollment)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
-                sd.ServiceType == typeof(IBecasService)));
+                sd.ServiceType == typeof(IScholarshipService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
                 sd.ServiceType == typeof(ITokenService)));
             Assert.NotNull(_serviceCollection.FirstOrDefault(sd => 
