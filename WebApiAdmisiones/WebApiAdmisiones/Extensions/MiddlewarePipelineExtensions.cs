@@ -46,8 +46,8 @@ namespace WebApiAdmisiones.Extensions
             // Headers de seguridad
             app.UseSecurityHeaders();
 
-            // Contratos para el front: publicos solo en Development.
-            if (app.Environment.IsDevelopment())
+            // Contratos para el front: publicos donde hay Swagger (LocalHost/Development/Testing), NO en Preproduction ni Production.
+            if (!app.Environment.IsProductionLike())
             {
                 var contractsPath = Path.Combine(app.Environment.ContentRootPath, "Docs", "contracts");
                 if (Directory.Exists(contractsPath))
