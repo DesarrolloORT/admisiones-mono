@@ -532,6 +532,25 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.preEnrollmentError()).toBeNull();
   });
 
+  it('sets the reserva outcome and skips payment method selection when the deposit is 0', () => {
+    confirmPreEnrollment.mockReturnValue(
+      of({
+        confirmada: false,
+        enEspera: false,
+        fechaVencimientoPago: null,
+        seniaInscripcion: 0,
+        saldoCuenta: null,
+        resumen: null,
+      })
+    );
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBe('reserva');
+  });
+
   it('shows the in-process outcome when pre-enrollment is waiting for manual review', () => {
     confirmPreEnrollment.mockReturnValue(
       of({
