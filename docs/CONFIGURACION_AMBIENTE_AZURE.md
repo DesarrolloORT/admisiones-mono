@@ -39,6 +39,8 @@ App Configuration Data Reader
 4. Abrir [http://localhost:4200/](http://localhost:4200/).
 
 `npm start` pregunta el ambiente si no recibe `--env`, genera `src/environments/generated-environment.ts`, actualiza `src/web.config` con la CSP elegida y ejecuta `ng serve`.
+Si se elige `local`, también pregunta qué label (`desa`, `preprod` o `testing`) usar para
+`frontend:fdp:api_base`.
 
 El archivo generado no debe editarse manualmente.
 
@@ -85,6 +87,8 @@ npm start -- testing
 npm run build -- prod
 npm run env:sync -- local
 ```
+
+Los comandos interactivos con `local` solicitan el label de FDP antes de sincronizar.
 
 ## Forzar o evitar Azure
 
