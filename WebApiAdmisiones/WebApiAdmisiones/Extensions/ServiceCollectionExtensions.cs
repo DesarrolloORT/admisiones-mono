@@ -149,7 +149,8 @@ namespace WebApiAdmisiones.Extensions
                 "https://admisionespreprod.ort.edu.uy",
                 "https://admisionestesting.ort.edu.uy",
                 "https://admisionesdesa.ort.edu.uy",
-                "https://admisionesdesa2.ort.edu.uy"
+                "https://admisionesdesa2.ort.edu.uy",
+                "https://admisionestesting2.ort.edu.uy"
             };
 
             const string corsPolicy = "AllowAngularApp";
