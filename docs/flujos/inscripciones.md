@@ -103,8 +103,8 @@ matriz es su lectura de negocio.
   | Confirmada                          | Pantalla de éxito terminal                  |
   | A la espera / desconocido           | Pantalla "Inscripción en proceso"           |
 
-  En ambas filas, si el monto de la seña es `0`, el Paso 3 muestra directamente la
-  pantalla de reserva con el mensaje de contacto a oficina (ver "Estados frontend").
+  En ambas filas, si el monto de la seña es `0`, el flujo omite la selección de pago y
+  muestra directamente la pantalla con el mensaje de contacto a oficina (ver "Estados frontend").
 
   Los estados terminales pintan su pantalla por `payment` y dejan el flujo en el Paso 3:
   así el Paso 1 no es el paso corriente en ninguna combinación. Solo params **inválidos**
@@ -625,8 +625,8 @@ sin repetir las compartidas.
   falla, se muestra solo el monto.
 - `reserva` con seña 0: si `seniaInscripcion` (o `seniaMinima.senia`/
   `pagoPendiente.senia` al retomar) es exactamente `0`, no hay nada que cobrar, así
-  que no corresponde pedir medio de pago ni llamar a `Pagar`. El front fuerza el
-  outcome `reserva` directo (en `InscripcionSurveyFacade.finishSurveyStep` para el
+  que no corresponde mostrar el paso de pago ni llamar a `Pagar`. El front fuerza el
+  outcome `reserva` directo y corta la navegación (en `InscripcionSurveyFacade.finishSurveyStep` para el
   flujo fresco, en `InscripcionProcessFacade.applyPaymentInit` para el caso
   `awaiting-method` al retomar) y `buildReservationInstructions` reemplaza fecha
   límite, cédula, monto y el texto de acreditación por un mensaje que indica

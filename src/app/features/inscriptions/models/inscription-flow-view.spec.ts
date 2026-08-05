@@ -111,8 +111,9 @@ describe('inscription flow view', () => {
     expect(formatPaymentDeadline(null)).toBe('No informado');
     expect(formatPaymentDeadline('2027-02-30')).toBe('No informado');
     expect(formatPaymentDeadline('not-a-date')).toBe('No informado');
-    expect(formatInscriptionAmount(null)).toBe('No informado');
-    expect(formatInscriptionAmount(-1)).toBe('No informado');
+    expect(formatInscriptionAmount(null)).toBe('');
+    expect(formatInscriptionAmount(-1)).toBe('');
+    expect(formatInscriptionAmount(0)).toBe('$ 0');
   });
 
   it('builds abitab reservation instructions with the real backend data', () => {
@@ -152,7 +153,9 @@ describe('inscription flow view', () => {
     );
 
     expect(instructions.title).toBe('¡Inscripción reservada!');
-    expect(instructions.description).toContain('comunicarse con la oficina');
+    expect(instructions.description).toBe(
+      'Para continuar el proceso de inscripciones debe comunicarse con la oficina de Admisiones.'
+    );
     expect(instructions.intro).toBe('');
     expect(instructions.items).toEqual([]);
     expect(instructions.help).toBe('');

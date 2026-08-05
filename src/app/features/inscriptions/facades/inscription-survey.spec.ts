@@ -517,7 +517,7 @@ describe('InscripcionSurveyFacade', () => {
         confirmada: false,
         enEspera: false,
         fechaVencimientoPago: null,
-        seniaInscripcion: null,
+        seniaInscripcion: 15500,
         saldoCuenta: null,
         resumen: null,
       })
@@ -547,7 +547,7 @@ describe('InscripcionSurveyFacade', () => {
 
     survey.continue();
 
-    expect(process.flow.currentStep()).toBe('pago');
+    expect(process.flow.currentStep()).toBe('encuesta');
     expect(payment.outcome()).toBe('reserva');
   });
 
@@ -558,7 +558,7 @@ describe('InscripcionSurveyFacade', () => {
         enEspera: true,
         idInscripcion: null,
         fechaVencimientoPago: null,
-        seniaInscripcion: 0,
+        seniaInscripcion: 15500,
         saldoCuenta: null,
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Noche' },
       })

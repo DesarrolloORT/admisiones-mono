@@ -63,7 +63,7 @@ export function buildSeminariosSummary(
 }
 
 export function formatInscriptionAmount(value: number | null | undefined): string {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 'No informado';
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '';
 
   return `$ ${new Intl.NumberFormat('es-UY', { maximumFractionDigits: 0 }).format(value)}`;
 }
@@ -92,7 +92,6 @@ export function formatPaymentDeadline(value: string | null | undefined): string 
 const RESERVATION_HELP =
   'El pago puede demorar hasta 24 horas hábiles en acreditarse en el sistema.';
 
-// TODO: confirmar con negocio el nombre de oficina/contacto exacto antes de mergear.
 const ZERO_DEPOSIT_CONTACT_MESSAGE =
   'Para continuar el proceso de inscripciones debe comunicarse con la oficina de Admisiones.';
 
@@ -133,8 +132,9 @@ export function buildReservationInstructions(
   const studentItem: ItemInstruccionReserva[] = studentNumber
     ? [{ label: 'Número de estudiante', value: studentNumber }]
     : [];
-  const amountItem: ItemInstruccionReserva[] =
-    amount === 'No informado' ? [] : [{ label: 'Monto a pagar', value: amount }];
+  const amountItem: ItemInstruccionReserva[] = amount
+    ? [{ label: 'Monto a pagar', value: amount }]
+    : [];
 
   if (method === 'paganza') {
     return {

@@ -425,6 +425,11 @@ export class InscripcionSurveyFacade {
         next: response => {
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('completa');
+          // Seña 0: no hay nada que pagar; la pantalla terminal explica cómo continuar.
+          if (response.seniaInscripcion === 0) {
+            this.payment.outcome.set('reserva');
+            return;
+          }
           if (confirmPayload.esInscripcionCorporativa) {
             this.payment.outcome.set('inscription-en-proceso');
             return;
@@ -432,10 +437,6 @@ export class InscripcionSurveyFacade {
           if (response.enEspera === true) {
             this.payment.outcome.set('inscription-en-proceso');
             return;
-          }
-          // Seña 0: no hay nada que cobrar, se salta la elección de medio de pago.
-          if (response.seniaInscripcion === 0) {
-            this.payment.outcome.set('reserva');
           }
           this.process.flow.next();
         },
