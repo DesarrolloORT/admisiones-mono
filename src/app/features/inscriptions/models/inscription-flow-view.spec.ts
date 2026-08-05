@@ -141,6 +141,23 @@ describe('inscription flow view', () => {
     expect(instructions.items).toEqual([{ label: 'Monto a pagar', value: '$ 15.500' }]);
   });
 
+  it('replaces payment instructions with the office contact message when the deposit is 0', () => {
+    const instructions = buildReservationInstructions(
+      'abitab',
+      {
+        ...PRE_ENROLLMENT,
+        seniaInscripcion: 0,
+      },
+      RESERVATION
+    );
+
+    expect(instructions.title).toBe('¡Inscripción reservada!');
+    expect(instructions.description).toContain('comunicarse con la oficina');
+    expect(instructions.intro).toBe('');
+    expect(instructions.items).toEqual([]);
+    expect(instructions.help).toBe('');
+  });
+
   it('omits unknown reservation data instead of inventing it', () => {
     const instructions = buildReservationInstructions(null, null, null);
 

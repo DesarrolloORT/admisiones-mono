@@ -92,6 +92,10 @@ export function formatPaymentDeadline(value: string | null | undefined): string 
 const RESERVATION_HELP =
   'El pago puede demorar hasta 24 horas hábiles en acreditarse en el sistema.';
 
+// TODO: confirmar con negocio el nombre de oficina/contacto exacto antes de mergear.
+const ZERO_DEPOSIT_CONTACT_MESSAGE =
+  'Para continuar el proceso de inscripciones debe comunicarse con la oficina de Admisiones.';
+
 // Las instrucciones se arman con la fecha, el monto, la cédula y el número de
 // estudiante (código de persona) reales que informa el backend. Los ítems sin
 // dato real no se muestran (nunca se inventa un placeholder).
@@ -100,6 +104,18 @@ export function buildReservationInstructions(
   response: InscripcionPreEnrollmentResponse | null,
   reservation: InscripcionReservationData | null
 ): InstruccionReserva {
+  // Seña 0: no hay nada que cobrar, así que no corresponde pedir medio de pago ni
+  // mostrar fecha límite/monto/cédula. El proceso queda en manos de la oficina.
+  if (response?.seniaInscripcion === 0) {
+    return {
+      title: '¡Inscripción reservada!',
+      description: ZERO_DEPOSIT_CONTACT_MESSAGE,
+      intro: '',
+      items: [],
+      help: '',
+    };
+  }
+
   const deadline = formatPaymentDeadline(response?.fechaVencimientoPago);
   const description =
     deadline === 'No informado'
