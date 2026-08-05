@@ -3,19 +3,45 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
-import { HomeService } from '../../services/home';
+import { Inscripciones } from '../../../inscriptions/services/inscriptions';
 import { DashboardQuickActions } from './dashboard-quick-actions';
 
+const REACTIVATION_RESPONSE = {
+  confirmada: false,
+  enEspera: false,
+  idInscripcion: 7010,
+  fechaVencimientoPago: '2027-03-04',
+  seniaInscripcion: 15500,
+  saldoCuenta: 1200,
+  resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+  seminarios: [
+    {
+      idInscripcion: 7010,
+      idOferta: 310,
+      nombre: 'Seminario de Liderazgo',
+      comienzo: 'Marzo 2027',
+      turno: 'Noche',
+    },
+    {
+      idInscripcion: 7011,
+      idOferta: 311,
+      nombre: 'Seminario de Finanzas',
+      comienzo: 'Abril 2027',
+      turno: 'Noche',
+    },
+  ],
+};
+
 describe('DashboardQuickActions', () => {
-  let homeService: { reactivarInscripcion: ReturnType<typeof vi.fn> };
+  let inscriptions: { reactivate: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     sessionStorage.clear();
-    homeService = { reactivarInscripcion: vi.fn().mockReturnValue(of(true)) };
+    inscriptions = { reactivate: vi.fn().mockReturnValue(of(REACTIVATION_RESPONSE)) };
 
     TestBed.configureTestingModule({
       imports: [DashboardQuickActions],
-      providers: [provideRouter([]), { provide: HomeService, useValue: homeService }],
+      providers: [provideRouter([]), { provide: Inscripciones, useValue: inscriptions }],
     });
   });
 
@@ -87,16 +113,19 @@ describe('DashboardQuickActions', () => {
     expect(button).not.toBeNull();
     button.click();
 
-    expect(homeService.reactivarInscripcion).toHaveBeenCalledWith(100);
+    expect(inscriptions.reactivate).toHaveBeenCalledWith(100);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
-      queryParams: { idProducto: 20, idProceso: 200 },
+      queryParams: { idProducto: 20, idProceso: 200, modo: 'reactivar' },
     });
-    expect(TestBed.inject(InscriptionResumeContextStore).read(20, 200)).toEqual({
+    const store = TestBed.inject(InscriptionResumeContextStore);
+    expect(store.read(20, 200)).toEqual({
       idProducto: 20,
       idProceso: 200,
-      idOfertas: [300],
-      idInscripciones: [100],
+      idOfertas: [310, 311],
+      idInscripciones: [7010, 7011],
     });
+    expect(store.takeReactivation(20, 200)).toEqual(REACTIVATION_RESPONSE);
+    expect(store.takeReactivation(20, 200)).toBeNull();
   });
 
   it('keeps Dada de baja inert without an idInscripto', async () => {
@@ -107,7 +136,7 @@ describe('DashboardQuickActions', () => {
     expect(fixture.nativeElement.querySelector('button')).not.toBeNull();
     fixture.nativeElement.querySelector('button')?.click();
 
-    expect(homeService.reactivarInscripcion).not.toHaveBeenCalled();
+    expect(inscriptions.reactivate).not.toHaveBeenCalled();
   });
 
   function createComponent(

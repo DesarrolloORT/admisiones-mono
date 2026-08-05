@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
+import type { InscripcionPreEnrollmentResponse } from '../../../inscriptions/models/inscription-flow';
 import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
-import { HomeService } from '../../services/home';
+import { Inscripciones } from '../../../inscriptions/services/inscriptions';
 
 type CardType = 'careers' | 'scholarships';
 
@@ -41,7 +42,7 @@ const DEFAULT_ACTION: ActionConfig = { type: 'secondary', label: 'Ver detalle' }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardQuickActions {
-  private readonly homeService = inject(HomeService);
+  private readonly inscriptions = inject(Inscripciones);
   private readonly router = inject(Router);
   private readonly resumeContext = inject(InscriptionResumeContextStore);
 
@@ -90,10 +91,12 @@ export class DashboardQuickActions {
     const idInscripto = this.idInscripto();
     if (this.isReactivating() || !idInscripto) return;
     this.isReactivating.set(true);
-    this.homeService.reactivarInscripcion(idInscripto).subscribe({
-      next: () => {
-        this.saveResumeContext();
-        this.router.navigate(['/inscripciones'], { queryParams: this.resumeQueryParams() });
+    this.inscriptions.reactivate(idInscripto).subscribe({
+      next: response => {
+        this.saveReactivationContext(response);
+        this.router.navigate(['/inscripciones'], {
+          queryParams: { ...this.resumeQueryParams(), modo: 'reactivar' },
+        });
       },
       error: () => this.isReactivating.set(false),
     });
@@ -116,4 +119,37 @@ export class DashboardQuickActions {
       idInscripciones: [...this.idInscripciones()],
     });
   }
+
+  private saveReactivationContext(response: InscripcionPreEnrollmentResponse): void {
+    const idProducto = this.idProducto();
+    const idProceso = this.idProceso();
+    if (!idProducto || !idProceso) return;
+
+    const responseOffers = positiveIds((response.seminarios ?? []).map(item => item.idOferta));
+    const responseInscriptions = positiveIds([
+      response.idInscripcion,
+      ...(response.seminarios ?? []).map(item => item.idInscripcion),
+    ]);
+
+    this.resumeContext.saveReactivation(
+      {
+        idProducto,
+        idProceso,
+        idOfertas: responseOffers.length ? responseOffers : [...this.idOfertas()],
+        idInscripciones: responseInscriptions,
+      },
+      response
+    );
+  }
+}
+
+function positiveIds(values: readonly (number | null | undefined)[]): number[] {
+  return [
+    ...new Set(
+      values.filter(
+        (value): value is number =>
+          typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+      )
+    ),
+  ];
 }
