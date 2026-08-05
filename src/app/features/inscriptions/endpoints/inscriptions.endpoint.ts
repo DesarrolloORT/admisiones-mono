@@ -10,6 +10,7 @@ import {
   postInscripcionesEncuestaInicialEndpoint,
   postInscripcionesInteresProductoEndpoint,
   postInscripcionesPagarEndpoint,
+  postInscripcionesReactivarEndpoint,
 } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaDocumentoEndpoint,
@@ -18,6 +19,7 @@ import {
   postPersonaSubirFotoEndpoint,
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 import type { DtoConfirmadaDetalle } from 'src/app/shared/api/generated/models/dtoConfirmadaDetalle';
+import type { DtoConfirmarPreInscripcionResponse } from 'src/app/shared/api/generated/models/dtoConfirmarPreInscripcionResponse';
 import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
 import type { DtoInscripcionOferta } from 'src/app/shared/api/generated/models/dtoInscripcionOferta';
 
@@ -227,22 +229,19 @@ export class InscripcionesEndpoint {
         showLoader: true,
       })
       .pipe(
-        map(response => ({
-          confirmada: response.confirmada === true,
-          enEspera: 'enEspera' in response && response.enEspera === true,
-          idInscripcion: response.inscripciones?.[0]?.idInscripcion ?? null,
-          fechaVencimientoPago: response.resumen?.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.pagoReserva ?? null,
-          saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
-          resumen: response.resumen
-            ? {
-                carrera: response.resumen.carrera ?? null,
-                comienzo: response.inscripciones?.[0]?.comienzo ?? null,
-                turno: response.inscripciones?.[0]?.turno ?? null,
-              }
-            : null,
-          seminarios: this.toSeminarios(response.inscripciones),
-        })),
+        map(response => this.toPreEnrollmentResponse(response)),
+        tap(() => this.api.clearCache())
+      );
+  }
+
+  public reactivate(idInscripcion: number): Observable<InscripcionPreEnrollmentResponse> {
+    return this.api
+      .request(postInscripcionesReactivarEndpoint, {
+        body: { idInscripcion },
+        showLoader: true,
+      })
+      .pipe(
+        map(response => this.toPreEnrollmentResponse(response)),
         tap(() => this.api.clearCache())
       );
   }
@@ -358,6 +357,27 @@ export class InscripcionesEndpoint {
       comienzo: oferta.comienzo ?? null,
       turno: oferta.turno ?? null,
     }));
+  }
+
+  private toPreEnrollmentResponse(
+    response: DtoConfirmarPreInscripcionResponse
+  ): InscripcionPreEnrollmentResponse {
+    return {
+      confirmada: response.confirmada === true,
+      enEspera: response.enEspera === true,
+      idInscripcion: response.inscripciones?.[0]?.idInscripcion ?? null,
+      fechaVencimientoPago: response.resumen?.fechaVencimientoPago ?? null,
+      seniaInscripcion: response.pagoReserva ?? null,
+      saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
+      resumen: response.resumen
+        ? {
+            carrera: response.resumen.carrera ?? null,
+            comienzo: response.inscripciones?.[0]?.comienzo ?? null,
+            turno: response.inscripciones?.[0]?.turno ?? null,
+          }
+        : null,
+      seminarios: this.toSeminarios(response.inscripciones),
+    };
   }
 
   private toCoordinador(

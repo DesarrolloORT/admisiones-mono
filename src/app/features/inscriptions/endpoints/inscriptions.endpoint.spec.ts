@@ -12,6 +12,7 @@ import {
   postInscripcionesEncuestaInicialEndpoint,
   postInscripcionesInteresProductoEndpoint,
   postInscripcionesPagarEndpoint,
+  postInscripcionesReactivarEndpoint,
 } from '../../../shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaDocumentoEndpoint,
@@ -524,6 +525,55 @@ describe('InscripcionesEndpoint', () => {
     ]);
   });
 
+  it('maps reactivation with the pre-enrollment contract and invalidates cache', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        confirmada: false,
+        enEspera: false,
+        pagoReserva: 15500,
+        estadoCuenta: { saldoActual: 1200 },
+        resumen: { carrera: 'Actualización profesional', fechaVencimientoPago: '2027-03-04' },
+        inscripciones: [
+          {
+            idInscripcion: 1072704,
+            idOferta: 58563,
+            comienzo: 'Marzo',
+            turno: 'Matutino',
+            descripcionOferta: 'Seminario de Liderazgo',
+          },
+        ],
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.reactivate(100))).resolves.toEqual({
+      confirmada: false,
+      enEspera: false,
+      idInscripcion: 1072704,
+      fechaVencimientoPago: '2027-03-04',
+      seniaInscripcion: 15500,
+      saldoCuenta: 1200,
+      resumen: {
+        carrera: 'Actualización profesional',
+        comienzo: 'Marzo',
+        turno: 'Matutino',
+      },
+      seminarios: [
+        {
+          idInscripcion: 1072704,
+          idOferta: 58563,
+          nombre: 'Seminario de Liderazgo',
+          comienzo: 'Marzo',
+          turno: 'Matutino',
+        },
+      ],
+    });
+    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesReactivarEndpoint, {
+      body: { idInscripcion: 100 },
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
   it('maps bank account payment to Sistarbanc payload', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
@@ -684,6 +734,7 @@ describe('InscripcionesEndpoint', () => {
           esInscripcionCorporativa: false,
           idOfertasSeleccionadas: [300],
         }),
+      () => endpoint.reactivate(100),
       () => endpoint.pay({ idsInscripcion: [1], metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 
