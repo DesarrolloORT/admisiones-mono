@@ -3,23 +3,23 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  getInscripcionesDetalleEndpoint,
-  getInscripcionesEncuestaInicialEndpoint,
-  getInscripcionesReglamentoEstudiantilEndpoint,
-  postInscripcionesConfirmarPreInscripcionEndpoint,
-  postInscripcionesEncuestaInicialEndpoint,
-  postInscripcionesInteresProductoEndpoint,
-  postInscripcionesPagarEndpoint,
-} from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
+  getEnrollmentsDetailsEndpoint,
+  getEnrollmentsInitialSurveyEndpoint,
+  getEnrollmentsStudentRegulationsEndpoint,
+  postEnrollmentsConfirmPreEnrollmentEndpoint,
+  postEnrollmentsInitialSurveyEndpoint,
+  postEnrollmentsProductInterestEndpoint,
+  postEnrollmentsStartPaymentEndpoint,
+} from 'src/app/shared/api/generated/endpoints/enrollments.endpoints';
 import {
-  getPersonaDocumentoEndpoint,
-  getPersonaFotoEndpoint,
-  postPersonaSubirDocumentoEndpoint,
-  postPersonaSubirFotoEndpoint,
-} from 'src/app/shared/api/generated/endpoints/persona.endpoints';
-import type { DtoConfirmadaDetalle } from 'src/app/shared/api/generated/models/dtoConfirmadaDetalle';
-import type { DtoEncuestaInicialLectura } from 'src/app/shared/api/generated/models/dtoEncuestaInicialLectura';
-import type { DtoInscripcionOferta } from 'src/app/shared/api/generated/models/dtoInscripcionOferta';
+  getPersonIdentityDocumentEndpoint,
+  getPersonPhotoEndpoint,
+  postPersonIdentityDocumentEndpoint,
+  postPersonPhotoEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import type { ConfirmedEnrollmentDetailsResponse } from 'src/app/shared/api/generated/models/confirmedEnrollmentDetailsResponse';
+import type { EnrollmentOffering } from 'src/app/shared/api/generated/models/enrollmentOffering';
+import type { InitialSurveyDetails } from 'src/app/shared/api/generated/models/initialSurveyDetails';
 
 import type {
   InscripcionConfirmedDetail,
@@ -53,75 +53,84 @@ export class InscripcionesEndpoint {
 
   public getDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail> {
     return this.api
-      .request(getInscripcionesDetalleEndpoint, {
-        queryParams: { idProducto, idProceso },
+      .request(getEnrollmentsDetailsEndpoint, {
+        queryParams: { productId: idProducto, admissionProcessId: idProceso },
         cache: false,
         showLoader: true,
       })
       .pipe(
         map(response => ({
-          estado: response.estado ?? null,
-          detalle: this.toSummary(response.detalle?.resumen, response.detalle?.intereses?.[0]),
-          intereses: this.toSeminarios(response.detalle?.intereses),
-          pagoPendiente: response.pagoPendiente
+          estado: response.status ?? null,
+          detalle: this.toSummary(
+            response.inProgress?.summary,
+            response.inProgress?.interests?.[0]
+          ),
+          intereses: this.toSeminarios(response.inProgress?.interests),
+          pagoPendiente: response.pendingPayment
             ? {
-                idInscripcion: response.pagoPendiente.inscripciones?.[0]?.idInscripcion ?? null,
-                senia: response.pagoPendiente.pagoReserva ?? null,
-                saldoCuenta: response.pagoPendiente.estadoCuenta?.saldoActual ?? null,
-                fechaVencimientoPago: response.pagoPendiente.resumen?.fechaVencimientoPago ?? null,
+                idInscripcion: response.pendingPayment.enrollments?.[0]?.enrollmentId ?? null,
+                senia: response.pendingPayment.depositAmount ?? null,
+                saldoCuenta: response.pendingPayment.currentAccount?.currentBalance ?? null,
+                fechaVencimientoPago: response.pendingPayment.summary?.paymentDueDate ?? null,
                 resumen: this.toSummary(
-                  response.pagoPendiente.resumen,
-                  response.pagoPendiente.inscripciones?.[0]
+                  response.pendingPayment.summary,
+                  response.pendingPayment.enrollments?.[0]
                 ),
-                seminarios: this.toSeminarios(response.pagoPendiente.inscripciones),
+                seminarios: this.toSeminarios(response.pendingPayment.enrollments),
               }
             : null,
-          seniaMinima: response.reservaMinima
+          seniaMinima: response.minimumDeposit
             ? {
-                metodoPago: response.reservaMinima.tipoPago ?? null,
-                cedula: response.reservaMinima.cedula ?? null,
-                codigoPersona: response.reservaMinima.codigoPersona ?? null,
-                senia: response.reservaMinima.pagoReserva ?? null,
+                metodoPago: response.minimumDeposit.paymentType ?? null,
+                cedula: response.minimumDeposit.documentNumber ?? null,
+                codigoPersona: response.minimumDeposit.personId ?? null,
+                senia: response.minimumDeposit.depositAmount ?? null,
               }
             : null,
-          confirmada: this.toConfirmedDetail(response.confirmada),
+          confirmada: this.toConfirmedDetail(response.confirmed),
         }))
       );
   }
 
   public getIdentityDocument(): Observable<InscripcionIdentityDocument> {
-    return this.api.request(getPersonaDocumentoEndpoint, { cache: false }).pipe(
+    return this.api.request(getPersonIdentityDocumentEndpoint, { cache: false }).pipe(
       map(document => ({
-        frente: document.frente
+        frente: document.front
           ? {
-              archivo: document.frente.archivo ?? null,
-              nombreArchivo: document.frente.nombreArchivo ?? null,
+              archivo: document.front.content ?? null,
+              nombreArchivo: document.front.fileName ?? null,
             }
           : null,
-        dorso: document.dorso
+        dorso: document.back
           ? {
-              archivo: document.dorso.archivo ?? null,
-              nombreArchivo: document.dorso.nombreArchivo ?? null,
+              archivo: document.back.content ?? null,
+              nombreArchivo: document.back.fileName ?? null,
             }
           : null,
-        fechaVencimiento: document.fechaVencimiento ?? null,
+        fechaVencimiento: document.expirationDate ?? null,
       }))
     );
   }
 
   public getIdentityPhoto(): Observable<Blob> {
-    return this.api.request(getPersonaFotoEndpoint, { cache: false, responseType: 'blob' });
+    return this.api.request(getPersonPhotoEndpoint, { cache: false, responseType: 'blob' });
   }
 
   public uploadIdentityDocument(
     payload: InscripcionIdentityDocumentUploadPayload
   ): Observable<boolean> {
     return this.api
-      .request(postPersonaSubirDocumentoEndpoint, {
+      .request(postPersonIdentityDocumentEndpoint, {
         body: {
-          fecha: payload.fecha,
-          frente: payload.frente,
-          dorso: payload.dorso,
+          expirationDate: payload.fecha,
+          front: {
+            fileName: payload.frente.nombreArchivo,
+            content: payload.frente.archivo,
+          },
+          back: {
+            fileName: payload.dorso.nombreArchivo,
+            content: payload.dorso.archivo,
+          },
         },
         showLoader: true,
       })
@@ -130,72 +139,77 @@ export class InscripcionesEndpoint {
 
   public uploadIdentityPhoto(payload: InscripcionIdentityPhotoUploadPayload): Observable<boolean> {
     return this.api
-      .request(postPersonaSubirFotoEndpoint, {
-        body: { archivoAdjunto: payload.archivoAdjunto },
+      .request(postPersonPhotoEndpoint, {
+        body: {
+          file: {
+            fileName: payload.archivoAdjunto.nombreArchivo,
+            content: payload.archivoAdjunto.archivo,
+          },
+        },
         showLoader: true,
       })
       .pipe(tap(() => this.api.clearCache()));
   }
 
   public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
-    return this.api.request(getInscripcionesEncuestaInicialEndpoint, { cache: false }).pipe(
+    return this.api.request(getEnrollmentsInitialSurveyEndpoint, { cache: false }).pipe(
       map(response => {
-        const survey = response.encuesta;
+        const survey = response.survey;
 
         return {
-          tieneDerechoEncuesta: response.tieneDerechoEncuesta === true,
+          tieneDerechoEncuesta: response.canAnswerSurvey === true,
           encuesta: survey ? this.toInitialSurvey(survey) : null,
-          universidadesConsideradas: survey?.universidadConsideradaIds ?? [],
-          universidadesConsideradasOtros: survey?.universidadConsideradaOtros ?? [],
-          universidadesEducacionSuperior: survey?.universidadEducacionSuperiorIds ?? [],
-          universidadesEducacionSuperiorOtros: survey?.universidadEducacionSuperiorOtros ?? [],
-          opcionesMotivosSeleccionados: survey?.motivoEleccionOrtIds ?? [],
-          opcionesPublicidadSeleccionadas: survey?.publicidadOrtIds ?? [],
+          universidadesConsideradas: survey?.consideredUniversityIds ?? [],
+          universidadesConsideradasOtros: survey?.consideredUniversityOthers ?? [],
+          universidadesEducacionSuperior: survey?.higherEducationUniversityIds ?? [],
+          universidadesEducacionSuperiorOtros: survey?.higherEducationUniversityOthers ?? [],
+          opcionesMotivosSeleccionados: survey?.ortChoiceReasonIds ?? [],
+          opcionesPublicidadSeleccionadas: survey?.ortAdvertisingIds ?? [],
         };
       })
     );
   }
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     const body = {
-      carreraId: payload.carreraId,
-      procesoId: payload.comienzoId,
-      orientacionBachilleratoId: payload.orientacionBachilleratoId,
-      anioBachillerato: payload.anioBachillerato,
-      cursaSecundariaActualmente: payload.cursaSecundariaActualmente,
-      vecesRecursaAnioBachillerato: payload.vecesRecursaAnioBachillerato,
-      recursaAnioBachillerato: payload.recursaAnioBachillerato,
-      nivelFormacionPadreTutorId: payload.nivelFormacionPadreTutorId,
-      nivelFormacionMadreTutorId: payload.nivelFormacionMadreTutorId,
-      anioDecisionCarreraId: payload.anioDecisionCarreraId,
-      anioDecisionOrtId: payload.anioDecisionOrtId,
-      seInformoEnOtrasUniversidades: payload.seInformoEnOtrasUniversidades,
-      informacionOtrasUniversidadesLinea1: payload.informacionOtrasUniversidadesLinea1,
-      informacionOtrasUniversidadesLinea2: payload.informacionOtrasUniversidadesLinea2,
-      apoyoDecisionId: payload.apoyoDecisionId,
-      institucionSecundariaId: payload.institucionSecundariaId,
-      nombreInstitucionSecundaria: payload.nombreInstitucionSecundaria,
-      ubicacionUltimoAnioSecundariaId: payload.ubicacionUltimoAnioSecundariaId,
-      estadoEducacionSuperiorPreviaId: payload.estadoEducacionSuperiorPreviaId,
-      nivelDecisionId: payload.nivelDecisionId,
-      tuvoAsesoramientoOrt: payload.tuvoAsesoramientoOrt,
-      valoracionAsesoramientoOrtId: payload.valoracionAsesoramientoOrtId,
-      visitoSitioWebOrt: payload.visitoSitioWebOrt,
-      valoracionSitioWebOrtId: payload.valoracionSitioWebOrtId,
-      visitoInstalacionesOrt: payload.visitoInstalacionesOrt,
-      valoracionInstalacionesOrtId: payload.valoracionInstalacionesOrtId,
-      recuerdaPublicidadOrt: payload.recuerdaPublicidadOrt,
-      madreTutorEgresadoOrt: payload.madreTutorEgresadoOrt,
-      padreTutorEgresadoOrt: payload.padreTutorEgresadoOrt,
-      universidadConsideradaIds: payload.universidadConsideradaIds,
-      universidadConsideradaOtros: payload.universidadConsideradaOtros,
-      universidadEducacionSuperiorIds: payload.universidadEducacionSuperiorIds,
-      universidadEducacionSuperiorOtros: payload.universidadEducacionSuperiorOtros,
-      publicidadOrtIds: payload.publicidadOrtIds,
-      motivoEleccionOrtIds: payload.motivoEleccionOrtIds,
+      degreeProgramId: payload.carreraId,
+      admissionProcessId: payload.comienzoId,
+      highSchoolTrackId: payload.orientacionBachilleratoId,
+      highSchoolYear: payload.anioBachillerato,
+      currentlyInSecondary: payload.cursaSecundariaActualmente,
+      highSchoolYearRepeatCount: payload.vecesRecursaAnioBachillerato,
+      repeatsHighSchoolYear: payload.recursaAnioBachillerato,
+      fatherEducationLevelId: payload.nivelFormacionPadreTutorId,
+      motherEducationLevelId: payload.nivelFormacionMadreTutorId,
+      careerDecisionYearId: payload.anioDecisionCarreraId,
+      ortDecisionYearId: payload.anioDecisionOrtId,
+      researchedOtherUniversities: payload.seInformoEnOtrasUniversidades,
+      otherUniversitiesInfoLine1: payload.informacionOtrasUniversidadesLinea1,
+      otherUniversitiesInfoLine2: payload.informacionOtrasUniversidadesLinea2,
+      decisionSupportId: payload.apoyoDecisionId,
+      secondaryInstitutionId: payload.institucionSecundariaId,
+      secondaryInstitutionName: payload.nombreInstitucionSecundaria,
+      lastSecondaryYearLocationId: payload.ubicacionUltimoAnioSecundariaId,
+      previousHigherEducationId: payload.estadoEducacionSuperiorPreviaId,
+      decisionLevelId: payload.nivelDecisionId,
+      hadOrtAdvisory: payload.tuvoAsesoramientoOrt,
+      ortAdvisoryRatingId: payload.valoracionAsesoramientoOrtId,
+      visitedOrtWebsite: payload.visitoSitioWebOrt,
+      ortWebsiteRatingId: payload.valoracionSitioWebOrtId,
+      visitedOrtFacilities: payload.visitoInstalacionesOrt,
+      ortFacilitiesRatingId: payload.valoracionInstalacionesOrtId,
+      recallsOrtAdvertising: payload.recuerdaPublicidadOrt,
+      motherIsOrtGraduate: payload.madreTutorEgresadoOrt,
+      fatherIsOrtGraduate: payload.padreTutorEgresadoOrt,
+      consideredUniversityIds: payload.universidadConsideradaIds,
+      consideredUniversityOthers: payload.universidadConsideradaOtros,
+      higherEducationUniversityIds: payload.universidadEducacionSuperiorIds,
+      higherEducationUniversityOthers: payload.universidadEducacionSuperiorOtros,
+      ortAdvertisingIds: payload.publicidadOrtIds,
+      ortChoiceReasonIds: payload.motivoEleccionOrtIds,
     };
 
     return this.api
-      .request(postInscripcionesEncuestaInicialEndpoint, {
+      .request(postEnrollmentsInitialSurveyEndpoint, {
         body,
         showLoader: true,
       })
@@ -206,10 +220,10 @@ export class InscripcionesEndpoint {
   }
 
   public getStudentRegulationAcceptance(): Observable<InscripcionStudentRegulationAcceptance> {
-    return this.api.request(getInscripcionesReglamentoEstudiantilEndpoint, { cache: false }).pipe(
+    return this.api.request(getEnrollmentsStudentRegulationsEndpoint, { cache: false }).pipe(
       map(acceptance => ({
-        aceptoReglamentoEstudiantil: acceptance.aceptoReglamentoEstudiantil === true,
-        fechaAceptacion: acceptance.fechaAceptacion ?? null,
+        aceptoReglamentoEstudiantil: acceptance.acceptedStudentRegulations === true,
+        fechaAceptacion: acceptance.acceptanceDate ?? null,
       }))
     );
   }
@@ -218,53 +232,57 @@ export class InscripcionesEndpoint {
     payload: InscripcionConfirmPreEnrollmentPayload
   ): Observable<InscripcionPreEnrollmentResponse> {
     return this.api
-      .request(postInscripcionesConfirmarPreInscripcionEndpoint, {
+      .request(postEnrollmentsConfirmPreEnrollmentEndpoint, {
         body: {
-          aceptoReglamento: payload.aceptoReglamento,
-          esInscripcionCorporativa: payload.esInscripcionCorporativa,
-          idsOfertasSeleccionadas: payload.idOfertasSeleccionadas,
+          acceptedRegulations: payload.aceptoReglamento,
+          isCorporateEnrollment: payload.esInscripcionCorporativa,
+          selectedOfferingIds: payload.idOfertasSeleccionadas,
         },
         showLoader: true,
       })
       .pipe(
         map(response => ({
-          confirmada: response.confirmada === true,
-          enEspera: 'enEspera' in response && response.enEspera === true,
-          idInscripcion: response.inscripciones?.[0]?.idInscripcion ?? null,
-          fechaVencimientoPago: response.resumen?.fechaVencimientoPago ?? null,
-          seniaInscripcion: response.pagoReserva ?? null,
-          saldoCuenta: response.estadoCuenta?.saldoActual ?? null,
-          resumen: response.resumen
+          confirmada: response.confirmed === true,
+          enEspera: response.waiting === true,
+          idInscripcion: response.enrollments?.[0]?.enrollmentId ?? null,
+          fechaVencimientoPago: response.summary?.paymentDueDate ?? null,
+          seniaInscripcion: response.depositAmount ?? null,
+          saldoCuenta: response.currentAccount?.currentBalance ?? null,
+          resumen: response.summary
             ? {
-                carrera: response.resumen.carrera ?? null,
-                comienzo: response.inscripciones?.[0]?.comienzo ?? null,
-                turno: response.inscripciones?.[0]?.turno ?? null,
+                carrera: response.summary.degreeProgram ?? null,
+                comienzo: response.enrollments?.[0]?.intake ?? null,
+                turno: response.enrollments?.[0]?.shift ?? null,
               }
             : null,
-          seminarios: this.toSeminarios(response.inscripciones),
+          seminarios: this.toSeminarios(response.enrollments),
         })),
         tap(() => this.api.clearCache())
       );
   }
 
   public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {
-    const body = buildPaymentPayload(payload);
+    const payment = buildPaymentPayload(payload);
     return this.api
-      .request(postInscripcionesPagarEndpoint, {
-        body,
+      .request(postEnrollmentsStartPaymentEndpoint, {
+        body: {
+          enrollmentIds: payment.idsInscripcion,
+          paymentType: payment.tipoPago,
+          sistarbancBankId: payment.idBancoSistarbanc,
+        },
       })
       .pipe(
         map(response => ({
           success: true,
-          resultado: response.resultado ?? null,
-          urlPago: response.urlPago ?? null,
-          parametrosEncriptados: response.parametrosEncriptados ?? null,
+          resultado: response.result ?? null,
+          urlPago: response.paymentUrl ?? null,
+          parametrosEncriptados: response.encryptedParameters ?? null,
           mensajes:
-            response.mensajes?.map(message => ({
-              clave: message.clave ?? null,
-              valor: message.valor ?? null,
+            response.messages?.map(message => ({
+              clave: message.key ?? null,
+              valor: message.value ?? null,
             })) ?? [],
-          confirmada: this.toConfirmedDetail(response.confirmada),
+          confirmada: this.toConfirmedDetail(response.confirmed),
           message: null,
           errorCode: null,
         })),
@@ -274,72 +292,72 @@ export class InscripcionesEndpoint {
 
   public registerProductInterest(payload: InscripcionProductInterestPayload): Observable<boolean> {
     return this.api
-      .request(postInscripcionesInteresProductoEndpoint, {
+      .request(postEnrollmentsProductInterestEndpoint, {
         body: {
-          idsOferta: payload.idOfertas,
-          idProcesoSeleccionado: payload.idProcesoSeleccionado,
-          idProducto: payload.idProducto,
+          offeringIds: payload.idOfertas,
+          admissionProcessId: payload.idProcesoSeleccionado,
+          productId: payload.idProducto,
         },
         showLoader: true,
       })
       .pipe(map(() => true));
   }
 
-  private toInitialSurvey(survey: DtoEncuestaInicialLectura): InscripcionInitialSurvey {
+  private toInitialSurvey(survey: InitialSurveyDetails): InscripcionInitialSurvey {
     return {
-      carreraId: survey.carreraId ?? null,
-      comienzoId: survey.procesoId ?? null,
+      carreraId: survey.degreeProgramId ?? null,
+      comienzoId: survey.admissionProcessId ?? null,
       turnoId: null,
       nivelProductoId: null,
-      completa: survey.estado === 'completa',
-      seccionActiva: toSurveySection(survey.estado),
-      cursaSecundaria: survey.cursaSecundariaActualmente ?? null,
-      orientacionBachilleratoId: survey.orientacionBachilleratoId ?? null,
-      anioBachilleratoId: survey.anioBachillerato ?? null,
-      recursaAnioBachillerato: survey.recursaAnioBachillerato ?? null,
-      vecesRecursaAnioBachillerato: survey.vecesRecursaAnioBachillerato ?? null,
-      institucionSecundariaId: survey.institucionSecundariaId ?? null,
-      ubicacionSecundariaId: survey.ubicacionUltimoAnioSecundariaId ?? null,
-      nombreInstitucionSecundaria: survey.nombreInstitucionSecundaria ?? null,
-      estadoEducacionSuperiorPreviaId: survey.estadoEducacionSuperiorPreviaId ?? null,
-      nivelFormacionMadreId: survey.nivelFormacionMadreTutorId ?? null,
-      nivelFormacionPadreId: survey.nivelFormacionPadreTutorId ?? null,
-      madreEgresadaOrt: survey.madreTutorEgresadoOrt ?? null,
-      padreEgresadoOrt: survey.padreTutorEgresadoOrt ?? null,
-      anioDecisionCarreraId: survey.anioDecisionCarreraId ?? null,
-      anioDecisionOrtId: survey.anioDecisionOrtId ?? null,
-      seInformoEnOtrasUniversidades: survey.seInformoEnOtrasUniversidades ?? null,
-      apoyoDecisionId: survey.apoyoDecisionId ?? null,
-      nivelDecisionId: survey.nivelDecisionId ?? null,
-      tuvoAsesoramientoOrt: survey.tuvoAsesoramientoOrt ?? null,
-      valoracionAsesoramientoOrt: survey.valoracionAsesoramientoOrtId ?? null,
-      visitoSitioWebOrt: survey.visitoSitioWebOrt ?? null,
-      valoracionSitioWebOrt: survey.valoracionSitioWebOrtId ?? null,
-      visitoInstalacionesOrt: survey.visitoInstalacionesOrt ?? null,
-      valoracionInstalacionesOrt: survey.valoracionInstalacionesOrtId ?? null,
-      recuerdaPublicidadOrt: survey.recuerdaPublicidadOrt ?? null,
+      completa: survey.status === 'completa',
+      seccionActiva: toSurveySection(survey.status),
+      cursaSecundaria: survey.currentlyInSecondary ?? null,
+      orientacionBachilleratoId: survey.highSchoolTrackId ?? null,
+      anioBachilleratoId: survey.highSchoolYear ?? null,
+      recursaAnioBachillerato: survey.repeatsHighSchoolYear ?? null,
+      vecesRecursaAnioBachillerato: survey.highSchoolYearRepeatCount ?? null,
+      institucionSecundariaId: survey.secondaryInstitutionId ?? null,
+      ubicacionSecundariaId: survey.lastSecondaryYearLocationId ?? null,
+      nombreInstitucionSecundaria: survey.secondaryInstitutionName ?? null,
+      estadoEducacionSuperiorPreviaId: survey.previousHigherEducationId ?? null,
+      nivelFormacionMadreId: survey.motherEducationLevelId ?? null,
+      nivelFormacionPadreId: survey.fatherEducationLevelId ?? null,
+      madreEgresadaOrt: survey.motherIsOrtGraduate ?? null,
+      padreEgresadoOrt: survey.fatherIsOrtGraduate ?? null,
+      anioDecisionCarreraId: survey.careerDecisionYearId ?? null,
+      anioDecisionOrtId: survey.ortDecisionYearId ?? null,
+      seInformoEnOtrasUniversidades: survey.researchedOtherUniversities ?? null,
+      apoyoDecisionId: survey.decisionSupportId ?? null,
+      nivelDecisionId: survey.decisionLevelId ?? null,
+      tuvoAsesoramientoOrt: survey.hadOrtAdvisory ?? null,
+      valoracionAsesoramientoOrt: survey.ortAdvisoryRatingId ?? null,
+      visitoSitioWebOrt: survey.visitedOrtWebsite ?? null,
+      valoracionSitioWebOrt: survey.ortWebsiteRatingId ?? null,
+      visitoInstalacionesOrt: survey.visitedOrtFacilities ?? null,
+      valoracionInstalacionesOrt: survey.ortFacilitiesRatingId ?? null,
+      recuerdaPublicidadOrt: survey.recallsOrtAdvertising ?? null,
     };
   }
   private toSummary(
     summary:
       | {
-          idOferta?: number;
-          idProducto?: number;
-          carrera?: string | null;
-          comienzo?: string | null;
-          turno?: string | null;
+          offeringId?: number;
+          productId?: number;
+          degreeProgram?: string | null;
+          intake?: string | null;
+          shift?: string | null;
         }
       | null
       | undefined,
-    oferta?: { idOferta?: number; comienzo?: string | null; turno?: string | null } | null
+    oferta?: { offeringId?: number; intake?: string | null; shift?: string | null } | null
   ): InscripcionSummary | null {
     return summary
       ? {
-          idOferta: oferta?.idOferta ?? summary.idOferta ?? null,
-          idProducto: summary.idProducto ?? null,
-          carrera: summary.carrera ?? null,
-          comienzo: oferta?.comienzo ?? summary.comienzo ?? null,
-          turno: oferta?.turno ?? summary.turno ?? null,
+          idOferta: oferta?.offeringId ?? summary.offeringId ?? null,
+          idProducto: summary.productId ?? null,
+          carrera: summary.degreeProgram ?? null,
+          comienzo: oferta?.intake ?? summary.intake ?? null,
+          turno: oferta?.shift ?? summary.shift ?? null,
         }
       : null;
   }
@@ -349,46 +367,46 @@ export class InscripcionesEndpoint {
   // que después se cobra en bloque vía Pagar.idsInscripcion, y en `detalle.intereses`
   // los idOferta son los que reconfirma la preinscripción al retomar.
   private toSeminarios(
-    ofertas: Array<DtoInscripcionOferta> | null | undefined
+    ofertas: Array<EnrollmentOffering> | null | undefined
   ): InscripcionOfertaResumen[] {
     return (ofertas ?? []).map(oferta => ({
-      idInscripcion: oferta.idInscripcion ?? null,
-      idOferta: oferta.idOferta ?? null,
-      nombre: oferta.descripcionOferta ?? null,
-      comienzo: oferta.comienzo ?? null,
-      turno: oferta.turno ?? null,
+      idInscripcion: oferta.enrollmentId ?? null,
+      idOferta: oferta.offeringId ?? null,
+      nombre: oferta.offeringDescription ?? null,
+      comienzo: oferta.intake ?? null,
+      turno: oferta.shift ?? null,
     }));
   }
 
   private toCoordinador(
-    coordinador: { nombre?: string | null; email?: string | null } | null | undefined
+    coordinador: { name?: string | null; email?: string | null } | null | undefined
   ): InscripcionCoordinador | null {
     return coordinador
-      ? { nombre: coordinador.nombre ?? null, email: coordinador.email ?? null }
+      ? { nombre: coordinador.name ?? null, email: coordinador.email ?? null }
       : null;
   }
 
   // La confirmada ya no trae un bloque `resumen`: producto y carrera están en la
   // cabecera y comienzo/turno/materias en cada inscripción confirmada.
   private toConfirmedDetail(
-    confirmada: DtoConfirmadaDetalle | null | undefined
+    confirmada: ConfirmedEnrollmentDetailsResponse | null | undefined
   ): InscripcionConfirmedDetail | null {
     if (!confirmada) return null;
 
-    const inscripciones = confirmada.inscripciones ?? [];
+    const inscripciones = confirmada.enrollments ?? [];
     return {
-      numeroEstudiante: confirmada.codigoPersona ?? null,
+      numeroEstudiante: confirmada.personId ?? null,
       resumen: this.toSummary(confirmada, inscripciones[0]),
-      coordinadorAcademico: this.toCoordinador(confirmada.coordinadorAcademico),
-      coordinadorCursos: this.toCoordinador(confirmada.coordinadorCursos),
+      coordinadorAcademico: this.toCoordinador(confirmada.academicCoordinator),
+      coordinadorCursos: this.toCoordinador(confirmada.courseCoordinator),
       inscripciones: inscripciones.map(inscripcion => ({
-        idInscripcion: inscripcion.idInscripcion ?? null,
-        idOferta: inscripcion.idOferta ?? null,
-        comienzo: inscripcion.comienzo ?? null,
-        turno: inscripcion.turno ?? null,
-        materiasPrimerSemestre: (inscripcion.materiasPrimerSemestre ?? []).map(materia => ({
-          idMateria: materia.idMateria ?? null,
-          nombre: materia.nombre ?? null,
+        idInscripcion: inscripcion.enrollmentId ?? null,
+        idOferta: inscripcion.offeringId ?? null,
+        comienzo: inscripcion.intake ?? null,
+        turno: inscripcion.shift ?? null,
+        materiasPrimerSemestre: (inscripcion.firstSemesterSubjects ?? []).map(materia => ({
+          idMateria: materia.subjectId ?? null,
+          nombre: materia.name ?? null,
         })),
       })),
     };

@@ -40,7 +40,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('login', () => {
-    it('should POST to /Auth/Login and return authenticated outcome with documento', () => {
+    it('should POST to /auth/login and return authenticated outcome with documento', () => {
       endpoint
         .login({ tipoDocumento: 'CI', documento: '12345', password: 'pwd' })
         .subscribe(result => {
@@ -51,12 +51,12 @@ describe('AuthEndpoint', () => {
         });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/Login') && r.method === 'POST'
+        r => r.url.includes('/auth/login') && r.method === 'POST'
       );
 
       expect(req.request.body).toEqual({
-        tipoDocumento: 'CI',
-        documento: '12345',
+        documentType: 'CI',
+        documentNumber: '12345',
         password: 'pwd',
       });
       expect(req.request.withCredentials).toBe(true);
@@ -70,7 +70,7 @@ describe('AuthEndpoint', () => {
       req.flush({
         success: true,
         httpCode: 200,
-        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+        data: { person: { documentNumber: '12345678', firstName: 'Ana' } },
       });
     });
 
@@ -82,8 +82,8 @@ describe('AuthEndpoint', () => {
         }
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/Login'));
-      req.flush({ success: true, httpCode: 200, data: { persona: {} } });
+      const req = httpController.expectOne(r => r.url.includes('/auth/login'));
+      req.flush({ success: true, httpCode: 200, data: { person: {} } });
     });
 
     it('should return twoFactorRequired outcome when response includes sessionId', () => {
@@ -96,7 +96,7 @@ describe('AuthEndpoint', () => {
         }
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/Login'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/login'));
       req.flush(
         {
           success: true,
@@ -124,19 +124,19 @@ describe('AuthEndpoint', () => {
         },
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/Login'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/login'));
       req.flush(null, { status: 401, statusText: 'Unauthorized' });
     });
   });
 
   describe('password activation', () => {
-    it('should POST to /Auth/ActivarLinkPassword and return void', () => {
+    it('should POST to /auth/activate-password-link and return void', () => {
       endpoint.activatePasswordLink({ token: 'token-123' }).subscribe(result => {
         expect(result).toBeUndefined();
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/ActivarLinkPassword') && r.method === 'POST'
+        r => r.url.includes('/auth/activate-password-link') && r.method === 'POST'
       );
 
       expect(req.request.body).toEqual({ token: 'token-123' });
@@ -146,22 +146,22 @@ describe('AuthEndpoint', () => {
       req.flush({ success: true, httpCode: 200, data: { codigoPersona: 1 } });
     });
 
-    it('should POST to /Auth/CompletarPassword and return void', () => {
+    it('should POST to /auth/complete-initial-password and return void', () => {
       endpoint.completePassword({ passwordNueva: 'NuevaPassword1!' }).subscribe(result => {
         expect(result).toBeUndefined();
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/CompletarPassword') && r.method === 'POST'
+        r => r.url.includes('/auth/complete-initial-password') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual({ passwordNueva: 'NuevaPassword1!' });
+      expect(req.request.body).toEqual({ newPassword: 'NuevaPassword1!' });
       expect(req.request.withCredentials).toBe(true);
 
       req.flush({
         success: true,
         httpCode: 200,
-        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+        data: { person: { documentNumber: '12345678', firstName: 'Ana' } },
       });
     });
   });
@@ -181,19 +181,19 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/EvaluarDocumento') && r.method === 'POST'
+        r => r.url.includes('/registration/evaluate-document') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual({ tipoDocumento: 'CI', documento: '12345' });
+      expect(req.request.body).toEqual({ documentType: 'CI', documentNumber: '12345' });
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('EvaluarDocumento');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('EvaluateDocument');
 
       req.flush({
         success: true,
         httpCode: 200,
         data: {
           flowId: 'flow-existing-person',
-          requiereVerificacion: true,
+          requiresIdentityVerification: true,
         },
       });
     });
@@ -208,7 +208,7 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/EvaluarDocumento') && r.method === 'POST'
+        r => r.url.includes('/registration/evaluate-document') && r.method === 'POST'
       );
 
       req.flush({ success: true, httpCode: 200, data: null });
@@ -218,7 +218,7 @@ describe('AuthEndpoint', () => {
       expect(caught).toBeInstanceOf(TypeError);
     });
 
-    it('should POST to /Registro/ConfirmarNuevaPersona and return success', () => {
+    it('should POST to /registration/confirm-new-person and return success', () => {
       const payload = {
         tipoDocumento: 'CI',
         documento: '12345678',
@@ -239,10 +239,26 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/ConfirmarNuevaPersona') && r.method === 'POST'
+        r => r.url.includes('/registration/confirm-new-person') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual(payload);
+      expect(req.request.body).toEqual({
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstName: 'Ana',
+        middleName: null,
+        firstSurname: 'Silva',
+        secondSurname: null,
+        birthDate: '2000-01-01',
+        sex: 'F',
+        countryId: undefined,
+        stateId: undefined,
+        cityId: undefined,
+        address: 'Mercedes 1234',
+        primaryPhone: '099123456',
+        email: 'ana@example.com',
+        emailConfirmation: 'ana@example.com',
+      });
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-person');
       expect(req.request.withCredentials).toBe(true);
 
@@ -279,13 +295,13 @@ describe('AuthEndpoint', () => {
           },
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Registro/ConfirmarNuevaPersona'));
+      const req = httpController.expectOne(r => r.url.includes('/registration/confirm-new-person'));
       req.flush(null, { status: 400, statusText: 'Bad Request' });
     });
   });
 
   describe('confirmApplicationRequest', () => {
-    it('should POST to /Registro/ConfirmarSolicitudAlta and return success', () => {
+    it('should POST to /registration/confirm-registration-request and return success', () => {
       const payload = {
         tipoDocumento: 'PS',
         documento: 'AB123456',
@@ -306,10 +322,26 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/ConfirmarSolicitudAlta') && r.method === 'POST'
+        r => r.url.includes('/registration/confirm-registration-request') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual(payload);
+      expect(req.request.body).toEqual({
+        documentType: 'PS',
+        documentNumber: 'AB123456',
+        firstName: 'Ana',
+        middleName: null,
+        firstSurname: 'Silva',
+        secondSurname: null,
+        birthDate: '2000-01-01',
+        sex: 'F',
+        countryId: undefined,
+        stateId: undefined,
+        cityId: undefined,
+        address: 'Mercedes 1234',
+        primaryPhone: '099123456',
+        email: 'ana@example.com',
+        emailConfirmation: 'ana@example.com',
+      });
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-application');
       expect(req.request.withCredentials).toBe(true);
 
@@ -318,7 +350,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('verifyIdentity', () => {
-    it('should POST to /Registro/VerificarIdentidad with X-Flow-Id and return success', () => {
+    it('should POST to /registration/verify-identity with X-Flow-Id and return success', () => {
       const payload = {
         tipoDocumento: 'CI',
         documento: '12345678',
@@ -331,20 +363,25 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/VerificarIdentidad') && r.method === 'POST'
+        r => r.url.includes('/registration/verify-identity') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual(payload);
+      expect(req.request.body).toEqual({
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
+      });
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-existing-person');
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerificarIdentidad');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerifyIdentity');
 
       req.flush({ success: true, httpCode: 200, data: null });
     });
   });
 
   describe('recognizeDocument', () => {
-    it('should POST to /Registro/AnalizarAdjunto and return response', () => {
+    it('should POST to /registration/analyze-attachment and return response', () => {
       const payload = {
         tipoMime: 'application/pdf',
         archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
@@ -355,14 +392,17 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Registro/AnalizarAdjunto') && r.method === 'POST'
+        r => r.url.includes('/registration/analyze-attachment') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual(payload);
+      expect(req.request.body).toEqual({
+        mimeType: 'application/pdf',
+        file: { fileName: 'doc.pdf', content: 'base64data' },
+      });
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('AnalizarAdjunto');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('AnalyzeAttachment');
 
-      req.flush({ success: true, httpCode: 200, data: { campos: { primerNombre: 'Ana' } } });
+      req.flush({ success: true, httpCode: 200, data: { fields: { firstName: 'Ana' } } });
     });
 
     it('should map only the feature fields and drop extra DTO fields', () => {
@@ -377,25 +417,25 @@ describe('AuthEndpoint', () => {
           result = response;
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+      const req = httpController.expectOne(r => r.url.includes('/registration/analyze-attachment'));
 
       req.flush({
         success: true,
         httpCode: 200,
         data: {
-          campos: {
-            tipoDocumento: 'CI',
-            numeroDocumento: '12345678',
-            primerNombre: 'Ana',
-            segundoNombre: 'María',
-            primerApellido: 'Silva',
-            segundoApellido: 'Pereira',
-            fechaNacimiento: '2000-01-01T00:00:00',
-            lugarNacimiento: 'Montevideo / URY',
-            departamento: 'MONTEVIDEO',
-            sexo: 'F',
-            fechaVencimiento: '2030-01-01T00:00:00',
-            nacionalidad: 'URUGUAYA',
+          fields: {
+            documentType: 'CI',
+            documentNumber: '12345678',
+            firstName: 'Ana',
+            middleName: 'María',
+            firstSurname: 'Silva',
+            secondSurname: 'Pereira',
+            birthDate: '2000-01-01T00:00:00',
+            birthPlace: 'Montevideo / URY',
+            state: 'MONTEVIDEO',
+            sex: 'F',
+            expirationDate: '2030-01-01T00:00:00',
+            nationality: 'URUGUAYA',
           },
         },
       });
@@ -436,8 +476,8 @@ describe('AuthEndpoint', () => {
           });
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
-      req.flush({ success: true, httpCode: 200, data: { campos: { tipoDocumento: 'CI' } } });
+      const req = httpController.expectOne(r => r.url.includes('/registration/analyze-attachment'));
+      req.flush({ success: true, httpCode: 200, data: { fields: { documentType: 'CI' } } });
     });
 
     it('should return undefined campos when the response has no recognized fields', () => {
@@ -452,7 +492,7 @@ describe('AuthEndpoint', () => {
           result = response;
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+      const req = httpController.expectOne(r => r.url.includes('/registration/analyze-attachment'));
       req.flush({ success: true, httpCode: 200, data: {} });
 
       expect(result).toBeDefined();
@@ -476,13 +516,13 @@ describe('AuthEndpoint', () => {
           },
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Registro/AnalizarAdjunto'));
+      const req = httpController.expectOne(r => r.url.includes('/registration/analyze-attachment'));
       req.flush(null, { status: 500, statusText: 'Internal Server Error' });
     });
   });
 
   describe('recoverPassword', () => {
-    it('should POST to /Auth/RecuperarPassword with captcha and return void', () => {
+    it('should POST to /auth/recover-password with captcha and return void', () => {
       const payload = {
         tipoDocumento: 'CI',
         documento: '12345678',
@@ -494,25 +534,29 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/RecuperarPassword') && r.method === 'POST'
+        r => r.url.includes('/auth/recover-password') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual(payload);
+      expect(req.request.body).toEqual({
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstSurname: 'Silva',
+      });
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('RecuperarPassword');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('RecoverPassword');
 
       req.flush({ success: true, httpCode: 200, data: null });
     });
   });
 
   describe('refreshToken', () => {
-    it('should POST to /Auth/RefreshToken without body and suppress global errors', () => {
+    it('should POST to /auth/refresh-token without body and suppress global errors', () => {
       endpoint.refreshToken().subscribe(result => {
         expect(result).toBeUndefined();
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/RefreshToken') && r.method === 'POST'
+        r => r.url.includes('/auth/refresh-token') && r.method === 'POST'
       );
 
       expect(req.request.body).toBeNull();
@@ -522,7 +566,7 @@ describe('AuthEndpoint', () => {
       req.flush({
         success: true,
         httpCode: 200,
-        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+        data: { person: { documentNumber: '12345678', firstName: 'Ana' } },
       });
     });
   });
@@ -534,7 +578,7 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        request => request.url.includes('/Auth/Logout') && request.method === 'POST'
+        request => request.url.includes('/auth/logout') && request.method === 'POST'
       );
 
       expect(req.request.withCredentials).toBe(true);
@@ -550,7 +594,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('verifyTwoFactorCode', () => {
-    it('should POST to /Auth/VerificarCodigo2FA and map persona data', () => {
+    it('should POST to /auth/verify-two-factor-code and map persona data', () => {
       endpoint
         .verifyTwoFactorCode({ sessionId: 'session-123', codigo: '123456' })
         .subscribe(result => {
@@ -558,17 +602,17 @@ describe('AuthEndpoint', () => {
         });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/VerificarCodigo2FA') && r.method === 'POST'
+        r => r.url.includes('/auth/verify-two-factor-code') && r.method === 'POST'
       );
 
-      expect(req.request.body).toEqual({ sessionId: 'session-123', codigo: '123456' });
+      expect(req.request.body).toEqual({ sessionId: 'session-123', code: '123456' });
       expect(req.request.withCredentials).toBe(true);
-      expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerificarCodigo2FA');
+      expect(req.request.context.get(CAPTCHA_ACTION)).toBeNull();
 
       req.flush({
         success: true,
         httpCode: 200,
-        data: { persona: { documento: '12345678', primerNombre: 'Ana' } },
+        data: { person: { documentNumber: '12345678', firstName: 'Ana' } },
       });
     });
 
@@ -579,7 +623,7 @@ describe('AuthEndpoint', () => {
           expect(result).toEqual({ documento: '', primerNombre: '' });
         });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/VerificarCodigo2FA'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/verify-two-factor-code'));
       req.flush({ success: true, httpCode: 200, data: {} });
     });
 
@@ -592,7 +636,7 @@ describe('AuthEndpoint', () => {
         },
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/VerificarCodigo2FA'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/verify-two-factor-code'));
       req.flush(null, { status: 401, statusText: 'Unauthorized' });
 
       expect(isNormalizedApiError(caught)).toBe(true);
@@ -603,7 +647,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('resendTwoFactorCode', () => {
-    it('should POST to /Auth/ReenviarCodigo2FA and return the refreshed session', () => {
+    it('should POST to /auth/resend-two-factor-code and return the refreshed session', () => {
       endpoint.resendTwoFactorCode({ sessionId: 'session-123' }).subscribe(result => {
         expect(result).toEqual({
           sessionId: 'session-456',
@@ -613,7 +657,7 @@ describe('AuthEndpoint', () => {
       });
 
       const req = httpController.expectOne(
-        r => r.url.includes('/Auth/ReenviarCodigo2FA') && r.method === 'POST'
+        r => r.url.includes('/auth/resend-two-factor-code') && r.method === 'POST'
       );
 
       expect(req.request.body).toEqual({ sessionId: 'session-123' });
@@ -640,7 +684,7 @@ describe('AuthEndpoint', () => {
         });
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/ReenviarCodigo2FA'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/resend-two-factor-code'));
       req.flush({
         success: true,
         httpCode: 200,
@@ -657,7 +701,7 @@ describe('AuthEndpoint', () => {
         },
       });
 
-      const req = httpController.expectOne(r => r.url.includes('/Auth/ReenviarCodigo2FA'));
+      const req = httpController.expectOne(r => r.url.includes('/auth/resend-two-factor-code'));
       req.flush(null, { status: 500, statusText: 'Internal Server Error' });
 
       expect(isNormalizedApiError(caught)).toBe(true);
