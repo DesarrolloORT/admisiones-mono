@@ -316,6 +316,10 @@ ort-card h4 {
     justify-content: space-between;
   }
 
+  .inscription-footer:has(> :only-child) {
+    justify-content: center;
+  }
+
   .inscription-regulation-footer__accept {
     order: 1;
   }
@@ -328,10 +332,6 @@ ort-card h4 {
   ort-card a[ort-primary-button] {
     width: auto;
     min-width: 7.5rem;
-  }
-
-  .inscription-in-process .inscription-footer {
-    justify-content: center;
   }
 
   .inscription-in-process .inscription-footer a,
