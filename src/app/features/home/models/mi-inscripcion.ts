@@ -1,4 +1,4 @@
-export type InscripcionEstado = 'Confirmada' | 'Pendiente' | 'Dada de baja';
+export type InscripcionEstado = string;
 
 export interface MiInscripcionSeminario {
   idInscripto: number;
