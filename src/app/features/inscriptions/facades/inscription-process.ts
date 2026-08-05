@@ -177,7 +177,12 @@ export class InscripcionProcessFacade {
   private applyPaymentInit(payment: InscripcionPaymentInit): void {
     switch (payment.kind) {
       case 'none':
+        return;
       case 'awaiting-method':
+        // Seña 0: no hay nada que cobrar, se salta la elección de medio de pago.
+        if (this.process.preEnrollmentResponse()?.seniaInscripcion === 0) {
+          this.payment.outcome.set('reserva');
+        }
         return;
       case 'reserva':
         this.payment.selectedPaymentMethod.set(payment.method);
