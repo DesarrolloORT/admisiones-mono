@@ -1,9 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import { postInscripcionesReactivarEndpoint } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
 import {
   getPersonaBecasEndpoint,
   getPersonaInscripcionesEndpoint,
@@ -28,15 +27,6 @@ export class HomeEndpoint {
 
   public getMisBecas(): Observable<MiBeca[]> {
     return this.api.request(getPersonaBecasEndpoint).pipe(map(data => this.toMisBecas(data)));
-  }
-
-  public reactivarInscripcion(idInscripcion: number): Observable<boolean> {
-    return this.api
-      .request(postInscripcionesReactivarEndpoint, { body: { idInscripcion }, showLoader: true })
-      .pipe(
-        tap(() => this.api.clearCache()),
-        map(() => true)
-      );
   }
 
   private toMisInscripciones(

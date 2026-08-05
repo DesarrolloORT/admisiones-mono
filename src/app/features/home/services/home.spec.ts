@@ -9,14 +9,12 @@ describe('HomeService', () => {
   let endpointMock: {
     getMisInscripciones: ReturnType<typeof vi.fn>;
     getMisBecas: ReturnType<typeof vi.fn>;
-    reactivarInscripcion: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
       getMisInscripciones: vi.fn().mockReturnValue(of([])),
       getMisBecas: vi.fn().mockReturnValue(of([])),
-      reactivarInscripcion: vi.fn().mockReturnValue(of(true)),
     };
 
     TestBed.configureTestingModule({
@@ -65,11 +63,5 @@ describe('HomeService', () => {
 
     await expect(firstValueFrom(service.getMisBecas())).resolves.toEqual(becas);
     expect(endpointMock.getMisBecas).toHaveBeenCalled();
-  });
-
-  it('delegates reactivarInscripcion to the endpoint', async () => {
-    await expect(firstValueFrom(service.reactivarInscripcion(100))).resolves.toBe(true);
-
-    expect(endpointMock.reactivarInscripcion).toHaveBeenCalledWith(100);
   });
 });

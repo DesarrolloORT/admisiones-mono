@@ -18,8 +18,4 @@ export class HomeService {
   public getMisBecas(): Observable<MiBeca[]> {
     return this.endpoint.getMisBecas();
   }
-
-  public reactivarInscripcion(idInscripto: number): Observable<boolean> {
-    return this.endpoint.reactivarInscripcion(idInscripto);
-  }
 }
