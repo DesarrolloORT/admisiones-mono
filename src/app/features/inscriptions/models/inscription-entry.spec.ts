@@ -10,6 +10,7 @@ import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
   InscripcionOfertaResumen,
+  InscripcionPreEnrollmentResponse,
 } from './inscription-flow';
 
 // --- Fixtures ---------------------------------------------------------------
@@ -87,6 +88,25 @@ const FULL_SUMMARY: InscripcionSummary = {
   turno: 'Noche',
 };
 
+const REACTIVATION_RESPONSE: InscripcionPreEnrollmentResponse = {
+  confirmada: false,
+  enEspera: false,
+  idInscripcion: 7010,
+  fechaVencimientoPago: '2027-03-04',
+  seniaInscripcion: 15500,
+  saldoCuenta: 1200,
+  resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+  seminarios: [
+    {
+      idInscripcion: 7010,
+      idOferta: 310,
+      nombre: 'Seminario',
+      comienzo: 'Marzo 2027',
+      turno: 'Noche',
+    },
+  ],
+};
+
 function interes(idOferta: number | null): InscripcionOfertaResumen {
   return { idInscripcion: null, idOferta, nombre: 'Oferta', comienzo: null, turno: null };
 }
@@ -123,12 +143,14 @@ function retomar(
 
 function reactivar(
   detail: InscripcionDetail | null,
+  preEnrollment: InscripcionPreEnrollmentResponse | null = null,
   idNivelProducto: number | null = null,
   idOfertas: number[] = []
 ): InscripcionEntryResolved {
   return {
     intent: 'reactivar',
     detail,
+    preEnrollment,
     idProducto: 2184,
     idProceso: 122,
     idOfertas,
@@ -675,30 +697,69 @@ describe('deriveInitialInscripcionState', () => {
       },
     ],
 
-    // Intención REACTIVAR (provisional = nueva) hasta que negocio defina reglas.
+    // Reactivar usa la respuesta del POST y deja Detalle como fallback.
     [
-      'reactivar Cancelada + detalle full (provisional = nueva)',
-      reactivar(DETAIL.cancelada),
-      RESOLVED.enProgreso('educacion'),
-      {
-        step: 'propuesta',
-        survey: 'prefilled',
-        activeSection: 'educacion',
-        includeAcademic: false,
-        resumeInProgress: false,
-        payment: 'none',
-      },
-    ],
-    [
-      'reactivar sin detalle (Detalle falló)',
-      reactivar(null),
+      'reactivar con seña pendiente',
+      reactivar(null, REACTIVATION_RESPONSE),
       RESOLVED.fresh,
       {
-        step: 'propuesta',
+        step: 'pago',
         survey: 'fresh',
         activeSection: undefined,
         includeAcademic: undefined,
-        resumeInProgress: false,
+        resumeInProgress: true,
+        payment: 'awaiting-method',
+      },
+    ],
+    [
+      'reactivar en espera',
+      reactivar(null, { ...REACTIVATION_RESPONSE, enEspera: true }),
+      RESOLVED.fresh,
+      {
+        step: 'pago',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'en-proceso',
+      },
+    ],
+    [
+      'reactivar con seña cero',
+      reactivar(null, { ...REACTIVATION_RESPONSE, seniaInscripcion: 0 }),
+      RESOLVED.fresh,
+      {
+        step: 'pago',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
+        payment: 'reserva',
+      },
+    ],
+    [
+      'reactivar sin respuesta usa Detalle como fallback',
+      reactivar(DETAIL.cancelada),
+      RESOLVED.enProgreso('educacion'),
+      {
+        step: 'pago',
+        survey: 'prefilled',
+        activeSection: 'educacion',
+        includeAcademic: false,
+        resumeInProgress: true,
+        payment: 'en-proceso',
+      },
+    ],
+    [
+      'reactivar sin respuesta ni Detalle conserva el fallback mínimo',
+      reactivar(null),
+      RESOLVED.fresh,
+      {
+        step: 'encuesta',
+        survey: 'fresh',
+        activeSection: undefined,
+        includeAcademic: undefined,
+        resumeInProgress: true,
         payment: 'none',
       },
     ],
@@ -724,6 +785,15 @@ describe('deriveInitialInscripcionState', () => {
       resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
       seminarios: [],
     });
+  });
+
+  it('keeps the Reactivar response as the payment source', () => {
+    const state = deriveInitialInscripcionState({
+      entry: reactivar(null, REACTIVATION_RESPONSE),
+      survey: RESOLVED.fresh,
+    });
+
+    expect(state.preEnrollment).toBe(REACTIVATION_RESPONSE);
   });
 
   it('maps the chosen deposit method for a reserva outcome', () => {

@@ -48,8 +48,8 @@ export const EMPTY_INITIAL_SURVEY_RESPONSE: InscripcionInitialSurveyResponse = {
  *   válidos YA significa que la inscripción existe, así que el paso 1 nunca se muestra,
  *   ni siquiera con `detail === null` (Detalle caído): la precarga degrada a los params
  *   de la URL y el flujo arranca igual en el paso 2.
- * - `reactivar`: reservado para el futuro botón "Reactivar" de una inscripción
- *   cancelada. Reglas de negocio TBD (ver `deriveInitialInscripcionState`).
+ * - `reactivar`: el POST ya creó la nueva inscripción. Su respuesta evita volver a
+ *   consultar Detalle; si no está disponible, Detalle conserva el fallback.
  */
 export type InscripcionEntryResolved =
   | { intent: 'nueva' }
@@ -64,6 +64,7 @@ export type InscripcionEntryResolved =
   | {
       intent: 'reactivar';
       detail: InscripcionDetail | null;
+      preEnrollment: InscripcionPreEnrollmentResponse | null;
       idProducto: number;
       idProceso: number;
       idOfertas: number[];
@@ -146,14 +147,32 @@ export function deriveInitialInscripcionState(
     case 'nueva':
       return deriveNueva(ctx);
     case 'reactivar':
-      // ponytail: sin reglas de negocio definidas, `reactivar` deriva igual que
-      // `nueva` (paso 1 virgen, sin POST saltado, sin precarga). Es la opción
-      // segura hasta que exista el botón y negocio defina el comportamiento; el
-      // `detail` queda disponible en el contexto para esa derivación futura.
-      return deriveNueva(ctx);
+      return deriveReactivar(ctx, ctx.entry);
     case 'retomar':
       return deriveRetomar(ctx, ctx.entry);
   }
+}
+
+function deriveReactivar(
+  ctx: InscripcionEntryContext,
+  entry: Extract<InscripcionEntryResolved, { intent: 'reactivar' }>
+): InscripcionInitialState {
+  const response = entry.preEnrollment;
+  if (!response) return deriveRetomar(ctx, entry);
+
+  return {
+    step: 'pago',
+    survey: deriveSurvey(ctx, false),
+    payment:
+      response.enEspera === true
+        ? { kind: 'en-proceso' }
+        : response.seniaInscripcion === 0
+          ? { kind: 'reserva', method: null, reservation: null }
+          : { kind: 'awaiting-method' },
+    resumeInProgress: true,
+    preEnrollment: response,
+    academicPrefill: buildAcademicPrefill(entry),
+  };
 }
 
 function deriveNueva(ctx: InscripcionEntryContext): InscripcionInitialState {
