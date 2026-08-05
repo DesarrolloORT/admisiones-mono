@@ -65,8 +65,7 @@ El alcance incluye:
 
 1. Clonar el repositorio.
 2. Instalar dependencias con `npm install`.
-3. `npm run start` genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration; la primera vez abre el navegador para iniciar sesion con la cuenta ORT (la sesion queda persistida, no se necesita Azure CLI).
-4. Ejecutar `npm run start`.
+3. Ejecutar `npm start` y elegir `desa`, `testing`, `preprod`, `local` o `prod`. El comando genera `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration; la primera vez abre el navegador para iniciar sesion con la cuenta ORT.
 
 Si necesitas el flujo completo con autenticacion de packages y detalle de ambientes, seguir la seccion de configuracion de desarrollo local.
 
@@ -95,11 +94,11 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
    ```
 
 4. Configurar el ambiente:
-   Usar `npm run start` para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY_TEMPLATE` del ambiente (con placeholders `{{API_URL}}` y `{{FDP_API_URL}}`).
+   Usar `npm start` y elegir un ambiente para generar automaticamente `src/environments/generated-environment.ts` y `src/web.config` desde Azure App Configuration con cache local. La primera vez se abre el navegador para iniciar sesion con la cuenta ORT (una sola vez por maquina; la sesion queda persistida, no se necesita Azure CLI). La CSP se toma de `CSP_POLICY_TEMPLATE` del ambiente (con placeholders `{{API_URL}}` y `{{FDP_API_URL}}`).
 
 ## Ejecutar la aplicacion en un servidor local
 
-Ejecutar `npm run start` o `ng serve` para iniciar la aplicacion en modo desarrollo (por defecto en el puerto 4200). `npm run start:o` inicializara la aplicacion en el puerto 4200 y abrira el navegador. Ver [Entorno de desarrollo](#entorno-de-desarrollo) para informacion sobre la ejecucion en un servidor local dentro de un contenedor.
+Ejecutar `npm start` para elegir ambiente e iniciar la aplicacion en el puerto 4200. Para abrir el navegador, usar `npm start -- desa -o`.
 
 ## Entorno de desarrollo
 
@@ -115,7 +114,7 @@ Documentacion relacionada:
 - [docs/E2E-GUARDRAILS.md](docs/E2E-GUARDRAILS.md)
 
 > [!IMPORTANT]
-> Al ejecutar el servidor local en un contenedor, los puertos deben ser expuestos y accedidos de una forma especial. El comando `npm run start:dc` esta configurado para esto mismo. Asegurarse de acceder desde `http://localhost:4200/`.
+> El Dev Container ejecuta `npm start -- desa --host=0.0.0.0 --disable-host-check`. Acceder desde `http://localhost:4200/`.
 
 ## Prerequisitos (en caso de no usar el Dev Container)
 
@@ -171,13 +170,8 @@ de validacion, criterios manuales y gaps de ORT Components estan documentados en
 
 Estos son algunos de los scripts disponibles para el proyecto:
 
-- `start`: inicia el servidor local de desarrollo.
-- `start:o`: inicia el servidor local y abre el navegador.
-- `start:dc`: inicia el servidor local para desarrollo dentro de contenedor.
-- `build`: compila la aplicacion para produccion.
-- `build:dev`: compila la aplicacion para desarrollo.
-- `build:staging`: compila la aplicacion para preproduccion (mismas keys inyectadas por CI).
-- `build:prod`: compila la aplicacion para produccion con refresh de env.
+- `start`: pide ambiente, sincroniza su configuracion y ejecuta `ng serve`.
+- `build`: pide ambiente, actualiza la API y compila en `development` para `local`, `desa` y `testing`, o en `production` para `preprod` y `prod`.
 - `lint`: revisa y corrige el estilo del codigo.
 - `lint:check`: valida formato, disables justificados, estilo y contratos sin modificar archivos.
 - `check-disable-comments`: valida que `eslint-disable` y `stylelint-disable` indiquen regla concreta y motivo.
@@ -193,17 +187,14 @@ Estos son algunos de los scripts disponibles para el proyecto:
 - `test:e2e:ui`: abre Playwright UI para elegir y observar cualquier E2E.
 - `test:e2e:report`: abre el reporte HTML de la ultima corrida Playwright.
 - `ci`: ejecuta validaciones principales de CI (`lint:check`, `test:ci`, `build`, `test:a11y`, `test:e2e:smoke`).
-- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, `check-missing-tests`, tests, build dev).
+- `quality:local`: ejecuta la validacion local previa al PR (`lint:check`, `check-missing-tests`, tests y build de `desa`).
 - `check-missing-tests`: verifica que cada fuente tenga su spec asociado.
 - `generate-tests`: genera specs faltantes a partir de las fuentes sin cobertura.
 - `sonar:local`: ejecuta coverage y SonarQube local si estan configurados `SONAR_HOST_URL`, `SONAR_TOKEN`, `SONAR_PROJECT_KEY` y `sonar-scanner`.
 - `sonar:gate-local`: quality gate local (lint, cobertura con umbral y duplicacion) sin servidor ni token.
 - `update-api`: regenera contratos de API desde el swagger.
 - `check-api-contracts`: valida que los adapters no filtren tipos generados.
-- `env:sync`: sincroniza variables de entorno desde Azure App Configuration.
-- `env:refresh`: fuerza refresco del cache de variables de entorno.
-- `env:offline`: usa el cache local sin conectar a Azure.
-- `env:cache:clear`: limpia el cache local de variables de entorno.
+- `env:sync`: pide ambiente y sincroniza variables desde Azure App Configuration; acepta opciones como `refresh` y `offline`.
 - `generate-tests`: genera tests faltantes para archivos fuente sin test asociado.
 - `check-missing-tests`: lista archivos fuente sin test asociado.
 - `update-models`: actualiza modelos de API REST con Swagger Codegen.

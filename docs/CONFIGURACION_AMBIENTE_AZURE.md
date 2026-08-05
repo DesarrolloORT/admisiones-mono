@@ -28,30 +28,32 @@ App Configuration Data Reader
 
    Si GitHub Packages rechaza la instalación, ejecutar `npm login --registry=https://npm.pkg.github.com` con un token que tenga acceso de lectura al paquete y repetir `npm install`.
 
-2. Iniciar sesión con la cuenta ORT: la primera vez que corra el sync se abre el navegador para autenticarse con Entra ID. La sesión queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`), por lo que los siguientes usos son silenciosos. Para cerrar la sesión local: `npm run env:cache:clear`. Si no se puede abrir el navegador, agregar `--device-code` al comando de sync.
+2. Iniciar sesión con la cuenta ORT: la primera vez que corra el sync se abre el navegador para autenticarse con Entra ID. La sesión queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`), por lo que los siguientes usos son silenciosos. Para cerrar la sesión local: `npm run env:sync -- desa clear-cache`. Si no se puede abrir el navegador, agregar `device-code` al comando de sync.
 
 3. Levantar el frontend en `desa`:
 
    ```powershell
-   npm start
+   npm start -- desa
    ```
 
 4. Abrir [http://localhost:4200/](http://localhost:4200/).
 
-`npm start` sincroniza el label `desa`, genera `src/environments/generated-environment.ts`, actualiza `src/web.config` con la CSP del ambiente y ejecuta `ng serve`.
+`npm start` pregunta el ambiente si no recibe `--env`, genera `src/environments/generated-environment.ts`, actualiza `src/web.config` con la CSP elegida y ejecuta `ng serve`.
 
 El archivo generado no debe editarse manualmente.
 
 ## Cambiar de ambiente
 
-Cada label existente en Azure es un ambiente válido. Se selecciona con
-`npm run env:sync -- --env <ambiente>` sin agregar configuración local.
+Los ambientes válidos son `desa`, `testing`, `preprod`, `local` y `prod`.
+`npm run env:sync` pregunta cuál usar; en automatizaciones se pasa
+`npm run env:sync -- <ambiente>`.
 
 ## Flujo interno
 
 ```text
 npm start
-  → npm run env:desa
+  → pregunta el ambiente
+  → ort-azure-env admisiones --env <ambiente>
   → usa cache local si tiene menos de 60 minutos
   → si no hay cache fresco, lee Azure App Configuration una vez
   → genera src/environments/generated-environment.ts
@@ -76,14 +78,12 @@ Autenticación, cache, límites y lectura de Azure pertenecen a
 ## Scripts
 
 ```text
-npm start                # sync cacheado de desa + ng serve
-npm run start:o          # sync cacheado de desa + ng serve -o
-npm run build:dev        # sync cacheado de desa + build development
-npm run build            # refresh de desa + build production
-npm run env:sync -- --env desa
-npm run env:refresh -- --env desa
-npm run env:offline -- --env desa
-npm run env:cache:clear
+npm start
+npm run build
+npm run env:sync
+npm start -- testing
+npm run build -- prod
+npm run env:sync -- local
 ```
 
 ## Forzar o evitar Azure
@@ -91,25 +91,25 @@ npm run env:cache:clear
 Para pedir explícitamente lo último:
 
 ```powershell
-npm run env:refresh -- --env desa
+npm run env:sync -- desa refresh
 ```
 
 Para compilar con lo que haya cacheado sin tocar Azure:
 
 ```powershell
-npm run env:offline -- --env desa
+npm run env:sync -- desa offline
 ```
 
 Para cambiar el TTL en una corrida:
 
 ```powershell
-npm run env:sync -- --env desa --cache-ttl-minutes 15
+npm run env:sync -- desa cache-ttl-minutes=15
 ```
 
 Para limpiar cache y contador local:
 
 ```powershell
-npm run env:cache:clear
+npm run env:sync -- desa clear-cache
 ```
 
 ## Environment de Angular
@@ -179,7 +179,7 @@ template.
 Ejecutar el sync con device code y seguir las instrucciones en consola:
 
 ```powershell
-npm run env:sync -- --env desa --device-code
+npm run env:sync -- desa device-code
 ```
 
 ### No hay sesión válida o el login falla
@@ -187,8 +187,8 @@ npm run env:sync -- --env desa --device-code
 Borrar la sesión local y reintentar (vuelve a pedir login por navegador):
 
 ```powershell
-npm run env:cache:clear
-npm run env:sync -- --env desa --refresh
+npm run env:sync -- desa clear-cache
+npm run env:sync -- desa refresh
 ```
 
 Si aparece un error `AADSTS...` de Entra ID, reportarlo a operaciones: puede ser una política del tenant bloqueando el flujo interactivo.

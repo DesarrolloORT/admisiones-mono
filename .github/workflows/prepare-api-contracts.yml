@@ -53,7 +53,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env ${{ inputs.env-sync-target }} ${{ inputs.env-sync-refresh && '--refresh' || '' }}
+        run: npm run env:sync -- ${{ inputs.env-sync-target }} ${{ inputs.env-sync-refresh && 'refresh' || '' }}
 
       - name: Download API spec snapshot
         uses: actions/download-artifact@v8

@@ -21,9 +21,9 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
    npm install
    ```
 
-2. Iniciar sesion con la cuenta ORT (una sola vez por maquina): la primera vez que se ejecute el sync de environment se abre el navegador para autenticarse con Entra ID. La sesion queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`); no se necesita Azure CLI. Para forzar un nuevo login: `npm run env:cache:clear`. En entornos donde no se pueda abrir el navegador, usar `npm run env:sync -- --env desa --device-code`.
+2. Iniciar sesion con la cuenta ORT (una sola vez por maquina): la primera vez que se ejecute el sync de environment se abre el navegador para autenticarse con Entra ID. La sesion queda persistida (token cache cifrado con DPAPI + `tmp/env/azure-auth-record.json`); no se necesita Azure CLI. Para forzar un nuevo login: `npm run env:sync -- desa clear-cache`. En entornos donde no se pueda abrir el navegador, usar `npm run env:sync -- desa device-code`.
 
-   `npm run start` genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con la CSP del ambiente. Por defecto usa cache local durante 60 minutos y solo vuelve a Azure cuando el cache vence o se ejecuta `npm run env:refresh -- --env desa`.
+   `npm start` pregunta el ambiente, genera automaticamente `src/environments/generated-environment.ts` desde Azure App Configuration y actualiza `src/web.config` con su CSP. Por defecto usa cache local durante 60 minutos; para actualizarlo se usa `npm run env:sync -- desa refresh`.
 
    Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
@@ -63,9 +63,9 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
 ## Ejecucion local
 
-- `npm run start`: levanta la base en `http://localhost:4200/`.
-- `npm run start:o`: levanta la base y abre el navegador.
-- `npm run start:dc`: levanta la base con las opciones necesarias para desarrollo dentro del contenedor.
+- `npm start`: pregunta el ambiente y levanta la base en `http://localhost:4200/`.
+- `npm start -- desa -o`: levanta la base y abre el navegador.
+- `npm start -- desa --host=0.0.0.0 --disable-host-check`: variante para el Dev Container.
 
 ## Validacion minima
 
@@ -98,7 +98,7 @@ La plantilla incluye [`.devcontainer/devcontainer.json`](https://github.com/Desa
 - imagen base `mcr.microsoft.com/vscode/devcontainers/typescript-node:22`;
 - Angular CLI 20;
 - instalacion de dependencias con `postCreateCommand: npm install`;
-- arranque automatico con `postStartCommand: npm run start:dc`.
+- arranque automatico con `postStartCommand: npm start -- desa --host=0.0.0.0 --disable-host-check`.
 
 ## Referencias relacionadas
 

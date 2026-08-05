@@ -56,7 +56,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- --env ${{ inputs.env-sync-target }}
+        run: npm run env:sync -- ${{ inputs.env-sync-target }}
 
       - name: Download API contracts
         uses: actions/download-artifact@v8
