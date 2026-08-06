@@ -9,6 +9,7 @@ import {
 } from 'src/app/shared/api/generated/endpoints/persona.endpoints';
 import type { DtoBecaPersona } from 'src/app/shared/api/generated/models/dtoBecaPersona';
 import type { DtoInscripcionesPorProductoProcesoResponse } from 'src/app/shared/api/generated/models/dtoInscripcionesPorProductoProcesoResponse';
+import type { DtoInscripcionItemResponse } from 'src/app/shared/api/generated/models/dtoInscripcionItemResponse';
 
 import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion';
@@ -62,6 +63,7 @@ export class HomeEndpoint {
           nombreComienzo: primero?.nombreComienzo ?? '',
           nombreTurno: primero?.nombreTurno ?? '',
           estado,
+          fechaVencimientoPago: readFechaVencimientoPago(group, primero),
           seminarios: items.map((item): MiInscripcionSeminario => ({
             idInscripto: item.idInscripto ?? 0,
             idOferta: item.idOferta ?? 0,
@@ -88,6 +90,7 @@ export class HomeEndpoint {
           nombreComienzo: '',
           nombreTurno: '',
           estado,
+          fechaVencimientoPago: readFechaVencimientoPago(group),
           seminarios: [],
         },
       ];
@@ -104,6 +107,7 @@ export class HomeEndpoint {
       nombreComienzo: item.nombreComienzo ?? '',
       nombreTurno: item.nombreTurno ?? '',
       estado,
+      fechaVencimientoPago: readFechaVencimientoPago(group, item),
       seminarios: [],
     }));
   }
@@ -152,4 +156,20 @@ export class HomeEndpoint {
 
 function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+// TODO(api): GET /Persona/Inscripciones todavia no expone la fecha de vencimiento del pago (solo
+// existe en el detalle, DtoCabeceraInscripcion). Se lee de forma tolerante a nivel grupo y, si no
+// esta, del item; hasta que el backend la agregue resuelve a null y la UI cae al texto generico.
+function readFechaVencimientoPago(
+  group: DtoInscripcionesPorProductoProcesoResponse,
+  item?: DtoInscripcionItemResponse
+): string | null {
+  return readOptionalDate(group) ?? readOptionalDate(item);
+}
+
+function readOptionalDate(source: object | undefined): string | null {
+  const value = (source as { fechaVencimientoPago?: unknown } | undefined)?.fechaVencimientoPago;
+
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }

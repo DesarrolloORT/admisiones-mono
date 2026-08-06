@@ -22,6 +22,7 @@ describe('DashboardCard', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      fechaVencimientoPago: null,
       seminarios: [],
     });
 
@@ -72,6 +73,38 @@ describe('DashboardCard', () => {
     );
   });
 
+  it('renders the payment deadline only for a pending payment with an informed date', async () => {
+    TestBed.configureTestingModule({
+      imports: [DashboardCard],
+      providers: [provideRouter([])],
+    });
+    const fixture = TestBed.createComponent(DashboardCard);
+    fixture.componentRef.setInput(
+      'inscripcion',
+      buildInscripcion({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-15' })
+    );
+
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Fecha límite: 15/07/2026');
+
+    fixture.componentRef.setInput(
+      'inscripcion',
+      buildInscripcion({ estado: 'Confirmada', fechaVencimientoPago: '2026-07-15' })
+    );
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Fecha límite');
+
+    fixture.componentRef.setInput(
+      'inscripcion',
+      buildInscripcion({ estado: 'Pago pendiente', fechaVencimientoPago: null })
+    );
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Fecha límite');
+  });
+
   function buildInscripcion(overrides: Partial<MiInscripcion>): MiInscripcion {
     return {
       idInscripto: 100,
@@ -84,6 +117,7 @@ describe('DashboardCard', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      fechaVencimientoPago: null,
       seminarios: [],
       ...overrides,
     };

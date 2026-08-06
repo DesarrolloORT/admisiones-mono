@@ -262,6 +262,35 @@ consumidor hoy) y un array `inscripciones[]` con las ofertas concretas
 > `descripcionOferta` del primer item como título. Ese comportamiento queda
 > superado por `nombreExtensoProducto` + conteo de seminarios.
 
+### Alert de pago pendiente y fecha límite
+
+`MiInscripcion` incluye `fechaVencimientoPago: string | null` (fecha cruda de la
+API; el formateo a `dd/MM/yyyy` se hace en la UI reutilizando
+`formatPaymentDeadline`). El alert del dashboard se muestra cuando alguna
+inscripción está en `Pago pendiente` y su detalle lo arma
+`buildPendingPaymentDetail()` (`src/app/features/home/models/mi-inscripcion.ts`)
+según cuántas fechas usables haya entre las inscripciones pendientes:
+
+| Fechas usables | Detalle del alert                                                                 |
+| -------------- | --------------------------------------------------------------------------------- |
+| 1              | `Realizá el pago antes del 15/07/2026.`                                           |
+| 2              | `Tus inscripciones pendientes de pago vencerán los días 15/07/2026 y 20/07/2026.` |
+| 3+             | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`)                |
+| 0              | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
+
+Además, cada tarjeta en `Pago pendiente` con fecha informada muestra el párrafo
+`Fecha límite: dd/MM/yyyy` (`dashboard-card`), también en las tarjetas de paquete
+AP (niveles 3/4), que no renderizan la fila "Comienzo".
+
+> **Pendiente de backend:** `GET /Persona/Inscripciones` todavía **no** devuelve
+> ninguna fecha de vencimiento de pago (solo `fechaInicioComienzo` y
+> `fechaReferencia`, que son fechas de comienzo del curso). `fechaVencimientoPago`
+> existe únicamente en el detalle (`DtoCabeceraInscripcion`). El adapter la lee de
+> forma tolerante a nivel grupo y, si no está, a nivel item
+> (`readFechaVencimientoPago` en `home.endpoint.ts`), así que hoy resuelve a `null`
+> y el alert cae al texto genérico sin regresión. Cuando el backend agregue el
+> campo el comportamiento se activa sin cambios de código.
+
 ### Drift detectado (resuelto)
 
 El adapter (`HomeEndpoint.toMisInscripciones()`) mapeaba la forma plana vieja

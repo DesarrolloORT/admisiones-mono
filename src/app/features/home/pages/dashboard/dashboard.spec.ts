@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
+import { MiInscripcion } from '../../models/mi-inscripcion';
 import { Dashboard } from './dashboard';
 
 describe('Dashboard', () => {
@@ -29,21 +30,7 @@ describe('Dashboard', () => {
     });
 
     fixture = TestBed.createComponent(Dashboard);
-    fixture.componentRef.setInput('inscripciones', [
-      {
-        idInscripto: 100,
-        idOfertas: [300],
-        idProducto: 1,
-        idProceso: 4,
-        idComienzo: 2,
-        idTurno: 3,
-        nombreProducto: 'Analista Programador',
-        nombreComienzo: 'Marzo 2027',
-        nombreTurno: 'Noche',
-        estado: 'Confirmada',
-        seminarios: [],
-      },
-    ]);
+    fixture.componentRef.setInput('inscripciones', [createEnrollment({ idProducto: 1 })]);
     fixture.componentRef.setInput('becas', [
       {
         id: 4,
@@ -70,4 +57,64 @@ describe('Dashboard', () => {
     expect(text).toContain('Mis becas');
     expect(text).toContain('Fondo de Excelencia Académica');
   });
+
+  it('should not render the pending payment alert without pending enrollments', async () => {
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('ort-alert')).toBeNull();
+  });
+
+  it('should ask for the payment before the deadline of the only pending enrollment', async () => {
+    setPendingEnrollments(['2026-07-15']);
+
+    await fixture.whenStable();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Inscripción pendiente de pago.');
+    expect(text).toContain('Realizá el pago antes del 15/07/2026.');
+  });
+
+  // El texto con varias fechas se cubre en `mi-inscripcion.spec.ts`: con 2+ inscripciones la
+  // sección de carreras monta un Swiper que jsdom no soporta en este entorno de test.
+
+  it('should fall back to the generic detail when no deadline is informed', async () => {
+    setPendingEnrollments([null]);
+
+    await fixture.whenStable();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Inscripción pendiente de pago.');
+    expect(text).toContain('Consultá el detalle desde Mis carreras.');
+  });
+
+  function setPendingEnrollments(deadlines: (string | null)[]): void {
+    fixture.componentRef.setInput(
+      'inscripciones',
+      deadlines.map((fechaVencimientoPago, index) =>
+        createEnrollment({
+          idProducto: index + 1,
+          estado: 'Pago pendiente',
+          fechaVencimientoPago,
+        })
+      )
+    );
+  }
+
+  function createEnrollment(overrides: Partial<MiInscripcion>): MiInscripcion {
+    return {
+      idInscripto: 100,
+      idOfertas: [300],
+      idProducto: 1,
+      idProceso: 4,
+      idComienzo: 2,
+      idTurno: 3,
+      nombreProducto: 'Analista Programador',
+      nombreComienzo: 'Marzo 2027',
+      nombreTurno: 'Noche',
+      estado: 'Confirmada',
+      fechaVencimientoPago: null,
+      seminarios: [],
+      ...overrides,
+    };
+  }
 });

@@ -43,9 +43,17 @@
 
 .dashboard-card__meta {
   display: flex;
+  flex-direction: column;
   grid-area: meta;
   gap: var(--ort-sys-spacing-8);
-  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-card__deadline {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-font-size-14);
+  line-height: var(--ort-sys-line-height-16);
 }
 
 .dashboard-card__meta-icon {

@@ -24,6 +24,8 @@
       [examResult]="beca()?.resultadoPrueba ?? ''"
       [resultsDate]="beca()?.fechaResultados ?? ''"
       [status]="estado()" />
+    } @if (paymentDeadline()) {
+    <p class="dashboard-card__deadline">Fecha límite: {{ paymentDeadline() }}</p>
     }
   </div>
 
