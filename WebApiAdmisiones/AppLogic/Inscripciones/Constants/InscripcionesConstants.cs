@@ -54,8 +54,8 @@ public static class InscripcionesConstants
     public static class BandejaCorporativa
     {
         public const long IdProceso = 89;
-        public const long IdEstadoProcesoInicio = 59643;
-        public const long IdEstadoProcesoSolicitud = 59644;
+        public const long IdEstadoProcesoInicio = 69993;
+        public const long IdEstadoProcesoSolicitud = 69994;
         public const long IdGrupoResponsable = 48;
         public const string UsuarioSistema = "ADMISIONES";
     }
