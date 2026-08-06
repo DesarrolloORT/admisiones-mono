@@ -1135,9 +1135,19 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ReactivarInscripcion_WhenRequestInvalido_ReturnsBadRequest()
+        public async Task ReactivarInscripcion_WhenListaVacia_ReturnsBadRequest()
         {
-            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentId = 0 });
+            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [] });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_REA_00", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_WhenAlgunIdNoEsPositivo_ReturnsBadRequest()
+        {
+            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555, 0] });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_00", result.ErrorCode);
@@ -1151,7 +1161,7 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Setup(r => r.GetDetalleByKey(555, 123)).Returns((Inscripto)null);
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentId = 555 });
+            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555] });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_01", result.ErrorCode);
@@ -1167,7 +1177,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = null });
             _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
 
-            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentId = 555 });
+            var result = await _service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555] });
 
             Assert.False(result.Success);
             Assert.Equal("INS_REA_02", result.ErrorCode);
@@ -1217,7 +1227,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns((AceptacionReglamentoEst)null);
             _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
 
-            var result = await service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentId = 555 });
+            var result = await service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555] });
 
             Assert.True(result.Success);
             Assert.True(result.Data!.Confirmed);
@@ -1225,6 +1235,101 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(10, result.Data.Enrollments[0].OfferingId);
             var requestApi = Assert.Single(handler.Requests);
             Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_ConVariasInscripcionesNivel3y4_ConfirmaTodasLasOfertas()
+        {
+            var handler = ConfirmacionConEstadoCuentaHandler(
+                """
+                {
+                  "confirmada": true,
+                  "resumen": {
+                    "idProducto": 20,
+                    "carrera": "Diploma en Gestion",
+                    "idComienzo": 40,
+                    "comienzo": "Marzo 2026",
+                    "idTurno": 1,
+                    "turno": "Nocturno"
+                  },
+                  "ofertas": [
+                    { "idOferta": 10, "idInscripcion": 88, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorSeniaMinima": 250 },
+                    { "idOferta": 11, "idInscripcion": 89, "fechaVencimientoPago": "2026-07-01T00:00:00", "valorSeniaMinima": 200 }
+                  ]
+                }
+                """);
+            var service = CrearServiceConApi(handler);
+
+            SetupPersona(123);
+            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupDocumentosValidos(123);
+
+            // Dos seminarios del mismo producto: en nivel 3 y 4 pueden diferir en turno y comienzo.
+            var ofertaRepo = new Mock<IOfertaRepository>();
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, productLevelId: 3, nombreTurno: "Nocturno"));
+            ofertaRepo.Setup(r => r.GetByKeyWithRelated(11)).Returns(OfertaValida(11, 20, 41, 3, productLevelId: 3, nombreTurno: "Matutino"));
+            _uowMock.Setup(u => u.Ofertas).Returns(ofertaRepo.Object);
+
+            var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 10)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            interesProductoOfertaRepo.Setup(r => r.GetProcesoPorInteresActivoOferta(123, 20, 11)).Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = FechaBase });
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(556, 123))
+                .Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123, IdOferta = 11, BajaInscr = FechaBase });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo.Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40)).Returns(new AceptacionReglamentoEst
+            {
+                IdAceptacionReglamentoEst = 999,
+                CodigoPersona = 123,
+                IdProducto = 20,
+                IdComienzo = 40
+            });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+
+            var result = await service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555, 556] });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Confirmed);
+            Assert.Equal(2, result.Data.Enrollments.Count);
+            Assert.Equal(88, result.Data.Enrollments[0].EnrollmentId);
+            Assert.Equal(89, result.Data.Enrollments[1].EnrollmentId);
+            // La seña es el total de las dos ofertas: el alumno paga todo junto.
+            Assert.Equal(450m, result.Data.DepositAmount);
+            var requestApi = Assert.Single(handler.Requests);
+            Assert.Contains("idsOfertasSeleccionadas=10", requestApi.RequestUri);
+            Assert.Contains("idsOfertasSeleccionadas=11", requestApi.RequestUri);
+        }
+
+        [Fact]
+        public async Task ReactivarInscripcion_CuandoUnaDeLasInscripcionesNoEstaDeBaja_NoReactivaNinguna()
+        {
+            var handler = ConfirmacionConEstadoCuentaHandler("""{ "confirmada": true, "ofertas": [] }""");
+            var service = CrearServiceConApi(handler);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(555, 123))
+                .Returns(new Inscripto { IdInscripto = 555, CodigoPersona = 123, IdOferta = 10, BajaInscr = FechaBase });
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(556, 123))
+                .Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123, IdOferta = 11, BajaInscr = null });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var result = await service.Reactivate.ExecuteAsync(123, new ReactivateEnrollmentRequest { EnrollmentIds = [555, 556] });
+
+            Assert.False(result.Success);
+            Assert.Equal("INS_REA_02", result.ErrorCode);
+            Assert.Equal(409, result.HttpCode);
+            // Todo o nada: no se llamó a la API interna, así que la oferta 10 tampoco se reactivó.
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]

@@ -72,7 +72,7 @@ namespace UnitTesting.Controllers
             var encuestaMock = new Mock<IInitialSurveyService>();
             var currentUserMock = new Mock<ICurrentUserService>();
             var loggerMock = new Mock<ILogger<EnrollmentsController>>();
-            var request = new ReactivateEnrollmentRequest { EnrollmentId = 555 };
+            var request = new ReactivateEnrollmentRequest { EnrollmentIds = [555, 556] };
             var responseDto = new ConfirmPreEnrollmentResponse
             {
                 Confirmed = true,

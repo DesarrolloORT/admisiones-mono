@@ -102,7 +102,6 @@ estaba **hardcodeado en los 6 `appsettings`, incluido Production**, y versionado
 variable de entorno con `__` como separador de nivel:
 
 ```
-ApiServicioInterno__RutaApi
 ApiServicioInterno__Usuario
 ApiServicioInterno__Password
 ```

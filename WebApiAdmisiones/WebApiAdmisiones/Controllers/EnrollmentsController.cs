@@ -104,15 +104,15 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Reactiva una inscripcion dada de baja de la persona autenticada, creando una nueva
-        /// inscripcion para la misma oferta.
+        /// Reactiva una o varias inscripciones dadas de baja de la persona autenticada, creando
+        /// inscripciones nuevas para las mismas ofertas.
         /// </summary>
-        /// <param name="request">Id de la inscripcion dada de baja a reactivar.</param>
-        /// <returns>Confirmacion, id de inscripcion, sena, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
-        /// <response code="200">Inscripcion reactivada correctamente.</response>
-        /// <response code="400">Solicitud invalida.</response>
-        /// <response code="404">No se encontro la inscripcion para la persona.</response>
-        /// <response code="409">La inscripcion indicada no esta dada de baja, o no esta en un estado valido para reactivar.</response>
+        /// <param name="request">Ids de las inscripciones dadas de baja a reactivar: una para nivel 1 y 2, una por seminario para nivel 3 y 4.</param>
+        /// <returns>Confirmacion, ids de inscripcion, sena total, vencimiento de pago y resumen de carrera, comienzo y turno.</returns>
+        /// <response code="200">Inscripciones reactivadas correctamente.</response>
+        /// <response code="400">Solicitud invalida, o las ofertas indicadas no son compatibles entre si.</response>
+        /// <response code="404">No se encontro alguna de las inscripciones para la persona.</response>
+        /// <response code="409">Alguna de las inscripciones indicadas no esta dada de baja, o no esta en un estado valido para reactivar.</response>
         [HttpPost("reactivate")]
         [ProducesResponseType(typeof(OperationResult<ConfirmPreEnrollmentResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<ConfirmPreEnrollmentResponse>), 400)]

@@ -88,6 +88,18 @@ Además del body, cambian las claves de query string (el front tiene que redespl
 | `enrollments/details` | `?idProducto=&idProceso=` | `?productId=&admissionProcessId=` |
 | `person/validate-phone-number` | `?telefono1=` | `?isPrimaryPhone=` |
 
+### Payloads que cambian de cardinalidad
+
+No es una traducción: el campo pasa de un id a una lista, porque en nivel 3 y 4 una inscripción a un
+producto son N inscripciones (una por seminario/oferta). El front tiene que mandar array.
+
+| Endpoint | Antes | Ahora |
+|---|---|---|
+| `enrollments/reactivate` | `{"enrollmentId": 555}` | `{"enrollmentIds": [555, 556]}` |
+
+Es todo o nada: si alguna inscripción de la lista no existe o no está de baja no se reactiva ninguna
+(`INS_REA_01` / `INS_REA_02`). Si las ofertas no son compatibles entre sí llega `INS_CPI_17`.
+
 ### Rutas: pasan a inglés en kebab-case
 
 Decisión revisada en la fase 4g: las rutas también se traducen. Los controllers pasan de
@@ -269,7 +281,7 @@ que AGENTS.md admite explícitamente.
 | E-07 | Confirmación corporativa (workflow + bandeja) | `ConfirmarInscripcionCorporativa` L376-427 | `UseCases/ConfirmCorporatePreEnrollment` | idem | **Migrado** |
 | E-08 | Confirmación online (API interna) | `ConfirmarInscripcionOnlineAsync` L429-444 | interno de `ConfirmPreEnrollment` | idem | **Migrado** |
 | E-09 | Compatibilidad entre ofertas (nivel 1-2 vs 3-4) | `ValidarOfertasCompatibles` + `EsOfertaCompatibleConSeleccion` + `RequiereMismoTurnoEntreOfertas` + `RequiereMismoComienzoEntreOfertas` L451-507 | `Rules/SelectedOfferingsCompatibility` | idem | **Migrado** |
-| E-10 | Reactivar inscripción dada de baja | `ReactivarInscripcion` L509-536 | `UseCases/ReactivateEnrollment` | idem | **Migrado** |
+| E-10 | Reactivar inscripción dada de baja | `ReactivarInscripcion` L509-536 | `UseCases/ReactivateEnrollment` — **acepta N inscripciones** (nivel 3 y 4), el legacy solo una | idem | **Migrado + ampliado** |
 | E-11 | Despacho de pago por tipo | `Pagar` L542-599 | `UseCases/Payments/StartEnrollmentPayment.ExecuteAsync` | idem | **Migrado** |
 | E-12 | Pago con cuenta personal | `PagarCuentaPersonal` L655-674 | `UseCases/Payments/PayWithPersonalAccount.ExecuteAsync` | idem | **Migrado** |
 | E-13 | Guardar método de pago externo (Abitab/Paganza) | `GuardarMetodoPago` L676-726 | `UseCases/Payments/RegisterExternalPaymentMethod.Execute` | idem | **Migrado** |

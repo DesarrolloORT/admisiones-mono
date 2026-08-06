@@ -99,13 +99,13 @@
     "reactivarInscripcion": {
       "method": "POST",
       "route": "enrollments/reactivate",
-      "requestDto": "DtoReactivarInscripcionRequest",
+      "requestDto": "ReactivateEnrollmentRequest",
       "request": {
-        "enrollmentId": { "type": "long", "desc": "Inscripción dada de baja a reactivar." }
+        "enrollmentIds": { "type": "long[]", "desc": "Inscripciones dadas de baja a reactivar. Una en nivel 1 y 2; una o varias (una por seminario) en nivel 3 y 4. Todas deben ser del mismo producto." }
       },
       "dataDto": "ConfirmPreEnrollmentResponse",
-      "data": "Idéntico a confirmarPreInscripcion.data (delega en ConfirmarPreInscripcion con la oferta de la baja).",
-      "mainErrors": ["INS_REA_00", "INS_REA_01", "INS_REA_02"]
+      "data": "Idéntico a confirmarPreInscripcion.data (delega en ConfirmarPreInscripcion con las ofertas de las bajas).",
+      "mainErrors": ["INS_REA_00", "INS_REA_01", "INS_REA_02", "INS_CPI_15", "INS_CPI_17"]
     },
     "obtenerDetalleInscripcion": {
       "method": "GET",
