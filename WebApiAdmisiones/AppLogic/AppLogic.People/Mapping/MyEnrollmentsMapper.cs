@@ -35,6 +35,9 @@ internal static class MyEnrollmentsMapper
             ProductLevelId = cabecera.IdNivelProducto,
             EnrollmentStatus = cabecera.EstadoInscripcion,
             HasSeminars = cabecera.ProgConSeminariosProducto,
+            // El vencimiento es el mismo para todas las ofertas del grupo, igual que en la
+            // confirmación de preinscripción: se toma de la fila cabecera.
+            PaymentDueDate = cabecera.FechaVtoInscr,
             Enrollments = filas.Select(x => new MyEnrollmentItem
             {
                 EnrollmentId = x.IdInscripto,
@@ -64,8 +67,9 @@ internal static class MyEnrollmentsMapper
         source.NombreComienzo,
         source.NombreTurno,
         source.FechaReferencia,
-        (long?)source.IdOferta,
-        null);
+        source.IdOferta,
+        null,
+        source.FechaVtoInscr);
 
     private static EnrollmentRow ToItem(VdInscripcionesFresco3y4 source) => new(
         source.IdProducto,
@@ -82,7 +86,8 @@ internal static class MyEnrollmentsMapper
         source.NombreTurno,
         source.FechaReferencia,
         source.IdOferta,
-        source.DescripcionOferta);
+        source.DescripcionOferta,
+        source.FechaVtoInscr);
 
     /// <summary>Forma común de las dos vistas fresco, para poder unirlas.</summary>
     private sealed record EnrollmentRow(
@@ -100,5 +105,6 @@ internal static class MyEnrollmentsMapper
         string? NombreTurno,
         DateTime? FechaReferencia,
         long? IdOferta,
-        string? DescripcionOferta);
+        string? DescripcionOferta,
+        DateTime? FechaVtoInscr);
 }

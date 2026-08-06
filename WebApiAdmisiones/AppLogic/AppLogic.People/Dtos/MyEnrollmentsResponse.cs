@@ -29,6 +29,12 @@ public class MyEnrollmentsResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? HasSeminars { get; set; }
 
+    /// <summary>
+    /// Vencimiento del pago de la inscripción (FECHA_VTO_INSCR). Es el mismo para todas las ofertas
+    /// del grupo; null si todavía no hay vencimiento calculado.
+    /// </summary>
+    public DateTime? PaymentDueDate { get; set; }
+
     /// <summary>Ofertas concretas de esta combinación de producto y proceso.</summary>
     public List<MyEnrollmentItem> Enrollments { get; set; } = [];
 }

@@ -2840,7 +2840,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
         }
 
-        private void SetupFresco(string? estado, decimal productId = 10m, decimal admissionProcessId = 20m, decimal idInscripto = 0m, string? productFullName = null, decimal? idOferta = null)
+        private void SetupFresco(string? estado, decimal productId = 10m, decimal admissionProcessId = 20m, decimal idInscripto = 0m, string? productFullName = null, long? idOferta = null)
         {
             var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
             fresco1y2Repo
@@ -2907,7 +2907,7 @@ namespace UnitTesting.AppLogic.Services
                 global::AppLogic.Contracts.Constants.EnrollmentStatus.PaymentPending,
                 idInscripto: 555m,
                 productFullName: "Analista programador",
-                idOferta: 99m);
+                idOferta: 99L);
 
             var enrollment = new Inscripto
             {

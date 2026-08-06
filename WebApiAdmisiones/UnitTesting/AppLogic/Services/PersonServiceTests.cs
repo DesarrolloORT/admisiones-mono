@@ -351,6 +351,7 @@ namespace UnitTesting.AppLogic.Services
                         NombreExtensoProducto = "Carrera nivel 1",
                         IdNivelProducto = 1,
                         FechaReferencia = DateTime.Today,
+                        FechaVtoInscr = new DateTime(2026, 7, 1),
                         VengoDe = "1y2"
                     }
                 });
@@ -367,6 +368,7 @@ namespace UnitTesting.AppLogic.Services
                         NombreExtensoProducto = "Curso nivel 3",
                         IdNivelProducto = 3,
                         FechaReferencia = DateTime.Today,
+                        FechaVtoInscr = new DateTime(2026, 8, 15),
                         VengoDe = "3y4"
                     }
                 });
@@ -377,6 +379,8 @@ namespace UnitTesting.AppLogic.Services
             var grupos = Assert.IsAssignableFrom<IEnumerable<MyEnrollmentsResponse>>(result.Data).ToList();
             Assert.Equal(2, grupos.Count);
             Assert.All(grupos, g => Assert.Single(g.Enrollments));
+            Assert.Equal(new DateTime(2026, 7, 1), grupos[0].PaymentDueDate);
+            Assert.Equal(new DateTime(2026, 8, 15), grupos[1].PaymentDueDate);
             _vdInscripcionesFresco1y2RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
             _vdInscripcionesFresco3y4RepositoryMock.Verify(r => r.GetInscripcionesFrescoHabilitadas(123), Times.Once);
         }
