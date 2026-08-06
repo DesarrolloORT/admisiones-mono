@@ -192,6 +192,8 @@ describe('HomeEndpoint', () => {
     expect(result[0]?.idOfertas).toEqual([310]);
   });
 
+  // El contrato de testing la llamaría `fechaVencimientoPago`; el de desa ya la expone como
+  // `paymentDueDate`. El adapter acepta ambos nombres hasta que quede un único contrato.
   it('reads the payment deadline from the group or, failing that, from the item', async () => {
     api.request.mockReturnValueOnce(
       of([
@@ -202,6 +204,14 @@ describe('HomeEndpoint', () => {
           estadoInscripcion: 'Pago pendiente',
           fechaVencimientoPago: '2026-07-15',
           inscripciones: [{ idInscripto: 100, idOferta: 300 }],
+        },
+        {
+          idProducto: 13,
+          idNivelProducto: 1,
+          idProceso: 28,
+          estadoInscripcion: 'Pago pendiente',
+          paymentDueDate: '2026-07-18',
+          inscripciones: [{ idInscripto: 103, idOferta: 303 }],
         },
         {
           idProducto: 11,
@@ -224,6 +234,7 @@ describe('HomeEndpoint', () => {
 
     expect(result.map(inscripcion => inscripcion.fechaVencimientoPago)).toEqual([
       '2026-07-15',
+      '2026-07-18',
       '2026-07-20',
       null,
     ]);

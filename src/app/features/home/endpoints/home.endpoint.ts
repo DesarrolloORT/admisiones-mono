@@ -158,9 +158,12 @@ function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 
-// TODO(api): GET /Persona/Inscripciones todavia no expone la fecha de vencimiento del pago (solo
-// existe en el detalle, DtoCabeceraInscripcion). Se lee de forma tolerante a nivel grupo y, si no
-// esta, del item; hasta que el backend la agregue resuelve a null y la UI cae al texto generico.
+// TODO(api): el contrato de testing (GET /Persona/Inscripciones) todavia no expone la fecha de
+// vencimiento del pago; el de desa si, como `paymentDueDate` a nivel grupo (MyEnrollmentsResponse).
+// Se leen ambos nombres, a nivel grupo y si no en el item, asi que la fecha aparece en cuanto el
+// entorno la informe. Mientras no llegue resuelve a null y la UI cae al texto generico.
+const DEADLINE_KEYS = ['fechaVencimientoPago', 'paymentDueDate'] as const;
+
 function readFechaVencimientoPago(
   group: DtoInscripcionesPorProductoProcesoResponse,
   item?: DtoInscripcionItemResponse
@@ -169,7 +172,12 @@ function readFechaVencimientoPago(
 }
 
 function readOptionalDate(source: object | undefined): string | null {
-  const value = (source as { fechaVencimientoPago?: unknown } | undefined)?.fechaVencimientoPago;
+  const record = source as Record<string, unknown> | undefined;
 
-  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  for (const key of DEADLINE_KEYS) {
+    const value = record?.[key];
+    if (typeof value === 'string' && value.trim().length > 0) return value;
+  }
+
+  return null;
 }

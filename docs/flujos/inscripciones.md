@@ -282,14 +282,16 @@ Además, cada tarjeta en `Pago pendiente` con fecha informada muestra el párraf
 `Fecha límite: dd/MM/yyyy` (`dashboard-card`), también en las tarjetas de paquete
 AP (niveles 3/4), que no renderizan la fila "Comienzo".
 
-> **Pendiente de backend:** `GET /Persona/Inscripciones` todavía **no** devuelve
-> ninguna fecha de vencimiento de pago (solo `fechaInicioComienzo` y
-> `fechaReferencia`, que son fechas de comienzo del curso). `fechaVencimientoPago`
-> existe únicamente en el detalle (`DtoCabeceraInscripcion`). El adapter la lee de
-> forma tolerante a nivel grupo y, si no está, a nivel item
-> (`readFechaVencimientoPago` en `home.endpoint.ts`), así que hoy resuelve a `null`
-> y el alert cae al texto genérico sin regresión. Cuando el backend agregue el
-> campo el comportamiento se activa sin cambios de código.
+> **Pendiente de entorno:** la fecha depende de contra qué contrato se genere la
+> API. En **testing** (`GET /Persona/Inscripciones` →
+> `DtoInscripcionesPorProductoProcesoResponse`) todavía **no** viene ninguna fecha
+> de vencimiento: solo `fechaInicioComienzo` y `fechaReferencia`, que son fechas de
+> comienzo del curso. En **desa**, con el contrato renombrado a inglés, sí existe:
+> `GET /person/enrollments` → `MyEnrollmentsResponse.paymentDueDate`, a nivel grupo.
+> El adapter (`readFechaVencimientoPago` en `home.endpoint.ts`) acepta ambos nombres
+> (`fechaVencimientoPago` y `paymentDueDate`), a nivel grupo y si no en el item, así
+> que la fecha aparece en cuanto el entorno generado la informe; hasta entonces
+> resuelve a `null` y el alert cae al texto genérico sin regresión.
 
 ### Drift detectado (resuelto)
 
