@@ -29,25 +29,27 @@ describe('CatalogsEndpoint', () => {
     apiMock.request.mockReturnValue(
       of([
         {
-          idNivelProducto: 1,
-          nombreNivelProducto: 'Carreras',
-          escuelas: [
+          productLevelId: 1,
+          productLevelName: 'Carreras',
+          schools: [
             {
-              nombreEscuela: 'Facultad de Diseño',
-              productos: [{ idProducto: 20, idProceso: 10, nombreProducto: 'Diseño' }],
+              schoolName: 'Facultad de Diseño',
+              products: [{ productId: 20, admissionProcessId: 10, productName: 'Diseño' }],
             },
           ],
         },
         {
-          idNivelProducto: 3,
-          nombreNivelProducto: 'Actualización profesional',
-          escuelas: [
+          productLevelId: 3,
+          productLevelName: 'Actualización profesional',
+          schools: [
             {
-              nombreEscuela: 'Escuela de Tecnología',
-              seminarios: [
+              schoolName: 'Escuela de Tecnología',
+              seminars: [
                 {
-                  tieneSeminario: true,
-                  productos: [{ idProducto: 30, idProceso: 11, nombreProducto: 'Ciberseguridad' }],
+                  hasSeminar: true,
+                  products: [
+                    { productId: 30, admissionProcessId: 11, productName: 'Ciberseguridad' },
+                  ],
                 },
               ],
             },
@@ -80,36 +82,36 @@ describe('CatalogsEndpoint', () => {
     });
 
     expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
-      queryParams: { propuestaAcademica: 3 },
+      queryParams: { academicOffer: 3 },
     });
   });
 
   it('should map initial survey catalogs from API data', () => {
     apiMock.request.mockReturnValue(
       of({
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [{ value: 1, label: 'Uruguay' }],
-          estadosEducacionSuperiorPrevia: [{ value: 5, label: 'Sin estudios previos' }],
-          universidades: [{ value: 11, label: 'ORT' }],
-          nivelesFormacionTutores: [{ value: 6, label: 'Universitaria completa' }],
-          aniosBachillerato: [
+        education: {
+          lastSecondaryYearLocations: [{ value: 1, label: 'Uruguay' }],
+          previousHigherEducationOptions: [{ value: 5, label: 'Sin estudios previos' }],
+          universities: [{ value: 11, label: 'ORT' }],
+          educationLevels: [{ value: 6, label: 'Universitaria completa' }],
+          highSchoolYears: [
             {
               value: 11,
               label: '6º año',
-              orientaciones: [{ value: 12, label: 'Científico', orientacion: 'Matemática' }],
+              tracks: [{ value: 12, label: 'Científico', track: 'Matemática' }],
             },
           ],
         },
-        decisionAcademica: {
-          apoyosDecision: [{ value: 2, label: 'Familia' }],
-          aniosEducacionMediaSuperior: [{ value: 3, label: 'Salida laboral' }],
-          nivelesDecision: [{ value: 7, label: 'Alto' }],
-          motivosEleccionOrt: [{ value: 8, label: 'Reputación' }],
-          universidades: [{ value: 10, label: 'Universidad de la República' }],
+        academicDecision: {
+          decisionSupports: [{ value: 2, label: 'Familia' }],
+          upperSecondaryYears: [{ value: 3, label: 'Salida laboral' }],
+          decisionLevels: [{ value: 7, label: 'Alto' }],
+          ortChoiceReasons: [{ value: 8, label: 'Reputación' }],
+          universities: [{ value: 10, label: 'Universidad de la República' }],
         },
-        experienciaOrt: {
-          valoraciones: [{ value: 4, label: 'Muy bueno' }],
-          publicidadesOrt: [{ value: 9, label: 'Redes sociales' }],
+        ortExperience: {
+          ratings: [{ value: 4, label: 'Muy bueno' }],
+          ortAdvertisements: [{ value: 9, label: 'Redes sociales' }],
         },
       })
     );
@@ -146,7 +148,7 @@ describe('CatalogsEndpoint', () => {
 
   it('should map bancos from API data', () => {
     apiMock.request.mockReturnValue(
-      of([{ idBanco: 1, nombreBanco: 'BROU', codigoBanco: 11, idBancoSistarbanc: 'brou' }])
+      of([{ id: 1, name: 'BROU', code: 11, sistarbancBankId: 'brou' }])
     );
 
     endpoint.getBancos().subscribe(result => {
@@ -155,16 +157,14 @@ describe('CatalogsEndpoint', () => {
   });
 
   it('should map instituciones from API data', () => {
-    apiMock.request.mockReturnValue(
-      of([{ codigoEmpresa: 5, nombre: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }])
-    );
+    apiMock.request.mockReturnValue(of([{ id: 5, name: 'Liceo 1' }]));
 
     endpoint.getInstituciones(1, 10).subscribe(result => {
       expect(result).toEqual([{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }]);
     });
 
     expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
-      queryParams: { codigoPais: 1, codigoEstado: 10 },
+      queryParams: { countryId: 1, stateId: 10 },
     });
   });
 
@@ -172,14 +172,14 @@ describe('CatalogsEndpoint', () => {
     apiMock.request.mockReturnValue(
       of([
         {
-          idOferta: 30,
-          turno: {
-            idTurno: 2,
-            nombreTurno: 'Nocturno',
+          offeringId: 30,
+          shift: {
+            shiftId: 2,
+            shiftName: 'Nocturno',
           },
-          horarioReferencia: '19:00 a 23:00',
-          descripcionOferta: 'Seminario de marco legal',
-          fechaReferencia: '19/05/2026',
+          referenceSchedule: '19:00 a 23:00',
+          offeringDescription: 'Seminario de marco legal',
+          referenceDate: '19/05/2026',
         },
       ])
     );

@@ -5,22 +5,22 @@ import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   LoginPayload as GeneratedLoginPayload,
-  postAuthActivarLinkPasswordEndpoint,
-  postAuthCompletarPasswordEndpoint,
+  postAuthActivatePasswordLinkEndpoint,
+  postAuthCompleteInitialPasswordEndpoint,
   postAuthLoginEndpoint,
   postAuthLogoutEndpoint,
-  postAuthRecuperarPasswordEndpoint,
-  postAuthReenviarCodigo2FaEndpoint,
+  postAuthRecoverPasswordEndpoint,
   postAuthRefreshTokenEndpoint,
-  postAuthVerificarCodigo2FaEndpoint,
+  postAuthResendTwoFactorCodeEndpoint,
+  postAuthVerifyTwoFactorCodeEndpoint,
 } from 'src/app/shared/api/generated/endpoints/auth.endpoints';
 import {
-  postRegistroAnalizarAdjuntoEndpoint,
-  postRegistroConfirmarNuevaPersonaEndpoint,
-  postRegistroConfirmarSolicitudAltaEndpoint,
-  postRegistroEvaluarDocumentoEndpoint,
-  postRegistroVerificarIdentidadEndpoint,
-} from 'src/app/shared/api/generated/endpoints/registro.endpoints';
+  postRegistrationAnalyzeAttachmentEndpoint,
+  postRegistrationConfirmNewPersonEndpoint,
+  postRegistrationConfirmRegistrationRequestEndpoint,
+  postRegistrationEvaluateDocumentEndpoint,
+  postRegistrationVerifyIdentityEndpoint,
+} from 'src/app/shared/api/generated/endpoints/registration.endpoints';
 
 import type {
   DocumentRecognitionData,
@@ -174,8 +174,9 @@ export interface VerifyTwoFactorCodeResult {
  * adjustment — the rest of the feature keeps compiling unchanged.
  *
  * @stable Public methods and their input/output types.
- * @unstable Internal usage of `postAuthLoginEndpoint`, `postRegistroConfirmarNuevaPersonaEndpoint`,
- *           `postRegistroAnalizarAdjuntoEndpoint` and generated payload types.
+ * @unstable Internal usage of `postAuthLoginEndpoint`,
+ *           `postRegistrationConfirmNewPersonEndpoint`,
+ *           `postRegistrationAnalyzeAttachmentEndpoint` and generated payload types.
  */
 @Injectable({
   providedIn: 'root',
@@ -186,7 +187,7 @@ export class AuthEndpoint {
   /**
    * Authenticate user credentials.
    *
-   * Behind the scenes: POST /Auth/Login using generated `postAuthLoginEndpoint`.
+   * Behind the scenes: POST /auth/login using generated `postAuthLoginEndpoint`.
    * The backend returns either:
    *   - 200 with `data.persona` → fully authenticated, cookies set.
    *   - 202 with `data.sessionId` + `data.maskedEmail` → 2FA code emailed; caller must verify.
@@ -194,8 +195,8 @@ export class AuthEndpoint {
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
     const body: GeneratedLoginPayload = {
-      tipoDocumento: payload.tipoDocumento,
-      documento: payload.documento,
+      documentType: payload.tipoDocumento,
+      documentNumber: payload.documento,
       password: payload.password,
     };
 
@@ -219,8 +220,8 @@ export class AuthEndpoint {
 
           return {
             kind: 'authenticated',
-            documento: response.persona?.documento ?? '',
-            primerNombre: response.persona?.primerNombre ?? '',
+            documento: response.person?.documentNumber ?? '',
+            primerNombre: response.person?.firstName ?? '',
           } satisfies LoginResult;
         })
       );
@@ -229,11 +230,11 @@ export class AuthEndpoint {
   /**
    * Validate an activation/recovery token and create the temporary password cookie.
    *
-   * Behind the scenes: POST /Auth/ActivarLinkPassword using generated endpoint.
+   * Behind the scenes: POST /auth/activate-password-link using generated endpoint.
    */
   public activatePasswordLink(payload: ActivatePasswordLinkPayload): Observable<void> {
     return this.api
-      .request(postAuthActivarLinkPasswordEndpoint, {
+      .request(postAuthActivatePasswordLinkEndpoint, {
         body: payload,
         withCredentials: true,
         showLoader: true,
@@ -244,12 +245,12 @@ export class AuthEndpoint {
   /**
    * Complete password activation using the temporary cookie created by the link.
    *
-   * Behind the scenes: POST /Auth/CompletarPassword using generated endpoint.
+   * Behind the scenes: POST /auth/complete-initial-password using generated endpoint.
    */
   public completePassword(payload: CompletePasswordPayload): Observable<void> {
     return this.api
-      .request(postAuthCompletarPasswordEndpoint, {
-        body: payload,
+      .request(postAuthCompleteInitialPasswordEndpoint, {
+        body: { newPassword: payload.passwordNueva },
         withCredentials: true,
       })
       .pipe(map(() => undefined));
@@ -258,18 +259,20 @@ export class AuthEndpoint {
   /**
    * Register a new person.
    *
-   * Behind the scenes: POST /Registro/ConfirmarNuevaPersona using generated endpoint.
+   * Behind the scenes: POST /registration/confirm-new-person using generated endpoint.
    * `RegisterPayload` is a direct alias of `ConfirmarNuevaPersonaPayload` so
    * no field mapping is needed — the body is passed through as-is.
    * Response mapped from `ObjectOperationResult` → `RegisterResult`.
    */
   public register(payload: RegisterPayload, flowId: string): Observable<RegisterResult> {
+    const body = this.toRegisterPersonRequest(payload);
+
     return this.api
-      .request(postRegistroConfirmarNuevaPersonaEndpoint, {
-        body: payload,
+      .request(postRegistrationConfirmNewPersonEndpoint, {
+        body,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
-        captchaAction: 'ConfirmarNuevaPersona',
+        captchaAction: 'ConfirmNewPerson',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -277,19 +280,21 @@ export class AuthEndpoint {
   /**
    * Confirm a pending application request.
    *
-   * Behind the scenes: POST /Registro/ConfirmarSolicitudAlta using generated endpoint.
+   * Behind the scenes: POST /registration/confirm-registration-request using generated endpoint.
    * Response mapped from `ObjectOperationResult` → `RegisterResult`.
    */
   public confirmApplicationRequest(
     payload: ConfirmApplicationRequestPayload,
     flowId: string
   ): Observable<RegisterResult> {
+    const body = this.toRegisterPersonRequest(payload);
+
     return this.api
-      .request(postRegistroConfirmarSolicitudAltaEndpoint, {
-        body: payload,
+      .request(postRegistrationConfirmRegistrationRequestEndpoint, {
+        body,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
-        captchaAction: 'ConfirmarSolicitudAlta',
+        captchaAction: 'ConfirmRegistrationRequest',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -297,24 +302,24 @@ export class AuthEndpoint {
   /**
    * Evaluate whether a document can start registration.
    *
-   * Behind the scenes: POST /Registro/EvaluarDocumento using generated endpoint.
+   * Behind the scenes: POST /registration/evaluate-document using generated endpoint.
    * Response mapped from `RegistroEvaluacionResponseOperationResult` → `EvaluateDocumentResult`.
    */
   public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
     return this.api
-      .requestWithMessage(postRegistroEvaluarDocumentoEndpoint, {
-        body: payload,
+      .requestWithMessage(postRegistrationEvaluateDocumentEndpoint, {
+        body: { documentType: payload.tipoDocumento, documentNumber: payload.documento },
         withCredentials: true,
-        captchaAction: 'EvaluarDocumento',
+        captchaAction: 'EvaluateDocument',
       })
       .pipe(
         map(({ data, message }) => ({
           flowId: data.flowId ?? null,
-          requiereAltaPersona: data.requiereAltaPersona ?? false,
-          requiereAltaSolicitud: data.requiereAltaSolicitud ?? false,
-          requiereVerificacion: data.requiereVerificacion ?? false,
-          solicitudAltaExistente: data.solicitudAltaExistente ?? false,
-          usuarioExistente: data.usuarioExistente ?? false,
+          requiereAltaPersona: data.requiresPersonRegistration ?? false,
+          requiereAltaSolicitud: data.requiresRegistrationRequest ?? false,
+          requiereVerificacion: data.requiresIdentityVerification ?? false,
+          solicitudAltaExistente: data.registrationRequestPending ?? false,
+          usuarioExistente: data.userAlreadyRegistered ?? false,
           message,
         }))
       );
@@ -323,31 +328,37 @@ export class AuthEndpoint {
   /**
    * Analyze an uploaded document image via OCR.
    *
-   * Behind the scenes: POST /Registro/AnalizarAdjunto using generated endpoint.
+   * Behind the scenes: POST /registration/analyze-attachment using generated endpoint.
    * Response mapped from `ReconocimientoDocumentoResponseOperationResult` → `DocumentRecognitionData`.
    */
   public recognizeDocument(
     payload: DocumentRecognitionRequest
   ): Observable<DocumentRecognitionData> {
     return this.api
-      .request(postRegistroAnalizarAdjuntoEndpoint, {
-        body: payload,
+      .request(postRegistrationAnalyzeAttachmentEndpoint, {
+        body: {
+          mimeType: payload.tipoMime,
+          file: {
+            fileName: payload.archivoAdjunto.nombreArchivo,
+            content: payload.archivoAdjunto.archivo,
+          },
+        },
         withCredentials: true,
-        captchaAction: 'AnalizarAdjunto',
+        captchaAction: 'AnalyzeAttachment',
       })
       .pipe(
         map(response => ({
-          campos: response?.campos
+          campos: response?.fields
             ? {
-                tipoDocumento: response.campos.tipoDocumento ?? null,
-                numeroDocumento: response.campos.numeroDocumento ?? null,
-                primerNombre: response.campos.primerNombre ?? null,
-                segundoNombre: response.campos.segundoNombre ?? null,
-                primerApellido: response.campos.primerApellido ?? null,
-                segundoApellido: response.campos.segundoApellido ?? null,
-                fechaNacimiento: response.campos.fechaNacimiento ?? null,
-                lugarNacimiento: response.campos.lugarNacimiento ?? null,
-                sexo: response.campos.sexo ?? null,
+                tipoDocumento: response.fields.documentType ?? null,
+                numeroDocumento: response.fields.documentNumber ?? null,
+                primerNombre: response.fields.firstName ?? null,
+                segundoNombre: response.fields.middleName ?? null,
+                primerApellido: response.fields.firstSurname ?? null,
+                segundoApellido: response.fields.secondSurname ?? null,
+                fechaNacimiento: response.fields.birthDate ?? null,
+                lugarNacimiento: response.fields.birthPlace ?? null,
+                sexo: response.fields.sex ?? null,
               }
             : undefined,
         }))
@@ -357,7 +368,7 @@ export class AuthEndpoint {
   /**
    * Verify the identity of a person before completing registration.
    *
-   * Behind the scenes: POST /Registro/VerificarIdentidad using generated endpoint.
+   * Behind the scenes: POST /registration/verify-identity using generated endpoint.
    * Response mapped from `ObjectOperationResult` → `VerifyIdentityResult`.
    */
   public verifyIdentity(
@@ -365,11 +376,16 @@ export class AuthEndpoint {
     flowId: string
   ): Observable<VerifyIdentityResult> {
     return this.api
-      .request(postRegistroVerificarIdentidadEndpoint, {
-        body: payload,
+      .request(postRegistrationVerifyIdentityEndpoint, {
+        body: {
+          documentType: payload.tipoDocumento,
+          documentNumber: payload.documento,
+          firstSurname: payload.primerApellido,
+          email: payload.mail,
+        },
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
-        captchaAction: 'VerificarIdentidad',
+        captchaAction: 'VerifyIdentity',
       })
       .pipe(map(() => ({ success: true })));
   }
@@ -377,15 +393,19 @@ export class AuthEndpoint {
   /**
    * Initiate password recovery. Sends an email with a secure link if data matches.
    *
-   * Behind the scenes: POST /Auth/RecuperarContraseña using generated endpoint.
+   * Behind the scenes: POST /auth/recover-password using generated endpoint.
    * Response is intentionally generic to avoid revealing whether the person exists.
    */
   public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
     return this.api
-      .request(postAuthRecuperarPasswordEndpoint, {
-        body: payload,
+      .request(postAuthRecoverPasswordEndpoint, {
+        body: {
+          documentType: payload.tipoDocumento,
+          documentNumber: payload.documento,
+          firstSurname: payload.primerApellido,
+        },
         withCredentials: true,
-        captchaAction: 'RecuperarPassword',
+        captchaAction: 'RecoverPassword',
       })
       .pipe(map(() => undefined));
   }
@@ -393,7 +413,7 @@ export class AuthEndpoint {
   /**
    * Close the current session on the backend, clearing HttpOnly cookies.
    *
-   * Behind the scenes: POST /Auth/Logout using generated endpoint.
+   * Behind the scenes: POST /auth/logout using generated endpoint.
    */
   public logout(): Observable<void> {
     return this.api
@@ -408,7 +428,7 @@ export class AuthEndpoint {
   /**
    * Refresh the access token using the HttpOnly refresh-token cookie.
    *
-   * Behind the scenes: POST /Auth/RefreshToken using generated endpoint.
+   * Behind the scenes: POST /auth/refresh-token using generated endpoint.
    * The frontend intentionally sends no body; the API validates the refresh
    * cookie and updates authentication cookies on success.
    */
@@ -424,7 +444,7 @@ export class AuthEndpoint {
   /**
    * Verify the 6-digit two-factor code emailed to the user and complete authentication.
    *
-   * Behind the scenes: POST /Auth/VerificarCodigo2FA using generated endpoint.
+   * Behind the scenes: POST /auth/verify-two-factor-code using generated endpoint.
    * Sets the secure HttpOnly cookies on success and returns persona data so the
    * caller can hydrate the local session.
    */
@@ -432,15 +452,14 @@ export class AuthEndpoint {
     payload: VerifyTwoFactorCodePayload
   ): Observable<VerifyTwoFactorCodeResult> {
     return this.api
-      .data(postAuthVerificarCodigo2FaEndpoint, {
-        body: payload,
+      .data(postAuthVerifyTwoFactorCodeEndpoint, {
+        body: { sessionId: payload.sessionId, code: payload.codigo },
         withCredentials: true,
-        captchaAction: 'VerificarCodigo2FA',
       })
       .pipe(
         map(response => ({
-          documento: response.persona?.documento ?? '',
-          primerNombre: response.persona?.primerNombre ?? '',
+          documento: response.person?.documentNumber ?? '',
+          primerNombre: response.person?.firstName ?? '',
         }))
       );
   }
@@ -448,16 +467,15 @@ export class AuthEndpoint {
   /**
    * Resend the two-factor code for an active 2FA session.
    *
-   * Behind the scenes: POST /Auth/ReenviarCodigo2FA using generated endpoint.
+   * Behind the scenes: POST /auth/resend-two-factor-code using generated endpoint.
    */
   public resendTwoFactorCode(
     payload: ResendTwoFactorCodePayload
   ): Observable<ResendTwoFactorCodeResult> {
     return this.api
-      .data(postAuthReenviarCodigo2FaEndpoint, {
+      .data(postAuthResendTwoFactorCodeEndpoint, {
         body: payload,
         withCredentials: true,
-        captchaAction: 'ReenviarCodigo2FA',
         context: suppressGlobalErrorContext(),
       })
       .pipe(
@@ -471,5 +489,25 @@ export class AuthEndpoint {
 
   private getFlowHeaders(flowId: string): Record<string, string> {
     return { [AUTH_FLOW_ID_HEADER]: flowId.trim() };
+  }
+
+  private toRegisterPersonRequest(payload: RegisterPayload) {
+    return {
+      documentType: payload.tipoDocumento,
+      documentNumber: payload.documento,
+      firstName: payload.primerNombre,
+      middleName: payload.segundoNombre,
+      firstSurname: payload.primerApellido,
+      secondSurname: payload.segundoApellido,
+      birthDate: payload.fechaNacimiento,
+      sex: payload.sexo,
+      countryId: payload.codigoPais,
+      stateId: payload.codigoEstado,
+      cityId: payload.codigoCiudad,
+      address: payload.direccion,
+      primaryPhone: payload.telefono1,
+      email: payload.mail,
+      emailConfirmation: payload.verificacionMail,
+    };
   }
 }

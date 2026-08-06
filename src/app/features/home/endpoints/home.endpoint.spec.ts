@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  getPersonaBecasEndpoint,
-  getPersonaInscripcionesEndpoint,
-} from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+  getPersonEnrollmentsEndpoint,
+  getPersonScholarshipsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
 import { HomeEndpoint } from './home.endpoint';
 
@@ -26,19 +26,19 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 10,
-          idNivelProducto: 1,
-          idProceso: 25,
-          nombreExtensoProducto: 'Analista Programador',
-          estadoInscripcion: 'Confirmada',
-          inscripciones: [
+          productId: 10,
+          productLevelId: 1,
+          admissionProcessId: 25,
+          productFullName: 'Analista Programador',
+          enrollmentStatus: 'Confirmada',
+          enrollments: [
             {
-              idInscripto: 100,
-              idOferta: 300,
-              idComienzo: 20,
-              idTurno: 30,
-              nombreComienzo: 'Marzo 2027',
-              nombreTurno: 'Noche',
+              enrollmentId: 100,
+              offeringId: 300,
+              intakeId: 20,
+              shiftId: 30,
+              intakeName: 'Marzo 2027',
+              shiftName: 'Noche',
             },
           ],
         },
@@ -60,36 +60,36 @@ describe('HomeEndpoint', () => {
         seminarios: [],
       },
     ]);
-    expect(api.request).toHaveBeenCalledWith(getPersonaInscripcionesEndpoint);
+    expect(api.request).toHaveBeenCalledWith(getPersonEnrollmentsEndpoint);
   });
 
   it('should group levels 3 and 4 into a single card with seminarios', async () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 15,
-          idNivelProducto: 3,
-          idProceso: 26,
-          nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
-          estadoInscripcion: 'Confirmada',
-          inscripciones: [
+          productId: 15,
+          productLevelId: 3,
+          admissionProcessId: 26,
+          productFullName: 'Programa de Asesoramiento Financiero',
+          enrollmentStatus: 'Confirmada',
+          enrollments: [
             {
-              idInscripto: 200,
-              idOferta: 1,
-              descripcionOferta: 'Marco legal y tributario',
-              idComienzo: 21,
-              idTurno: 31,
-              nombreComienzo: 'Abril 2027',
-              nombreTurno: 'Tarde',
+              enrollmentId: 200,
+              offeringId: 1,
+              offeringDescription: 'Marco legal y tributario',
+              intakeId: 21,
+              shiftId: 31,
+              intakeName: 'Abril 2027',
+              shiftName: 'Tarde',
             },
             {
-              idInscripto: 201,
-              idOferta: 2,
-              descripcionOferta: 'Renta fija y renta variable',
-              idComienzo: 22,
-              idTurno: 32,
-              nombreComienzo: 'Mayo 2027',
-              nombreTurno: 'Noche',
+              enrollmentId: 201,
+              offeringId: 2,
+              offeringDescription: 'Renta fija y renta variable',
+              intakeId: 22,
+              shiftId: 32,
+              intakeName: 'Mayo 2027',
+              shiftName: 'Noche',
             },
           ],
         },
@@ -136,25 +136,25 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 10,
-          idNivelProducto: 2,
-          idProceso: 25,
-          nombreExtensoProducto: 'Analista Programador',
-          estadoInscripcion: 'Confirmada',
-          inscripciones: [
+          productId: 10,
+          productLevelId: 2,
+          admissionProcessId: 25,
+          productFullName: 'Analista Programador',
+          enrollmentStatus: 'Confirmada',
+          enrollments: [
             {
-              idInscripto: 100,
-              idOferta: 300,
-              idComienzo: 20,
-              idTurno: 30,
-              nombreComienzo: 'Marzo 2027',
+              enrollmentId: 100,
+              offeringId: 300,
+              intakeId: 20,
+              shiftId: 30,
+              intakeName: 'Marzo 2027',
             },
             {
-              idInscripto: 101,
-              idOferta: 301,
-              idComienzo: 21,
-              idTurno: 31,
-              nombreComienzo: 'Abril 2027',
+              enrollmentId: 101,
+              offeringId: 301,
+              intakeId: 21,
+              shiftId: 31,
+              intakeName: 'Abril 2027',
             },
           ],
         },
@@ -172,14 +172,14 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 15,
-          idNivelProducto: 4,
-          idProceso: 26,
-          inscripciones: [
-            { idOferta: 310 },
-            { idOferta: 310 },
-            { idOferta: 0 },
-            { idOferta: null },
+          productId: 15,
+          productLevelId: 4,
+          admissionProcessId: 26,
+          enrollments: [
+            { offeringId: 310 },
+            { offeringId: 310 },
+            { offeringId: 0 },
+            { offeringId: null },
           ],
         },
       ])
@@ -194,20 +194,20 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 10,
-          idNivelProducto: 1,
-          idProceso: 25,
-          nombreExtensoProducto: 'Analista Programador',
-          estadoInscripcion: 'Confirmada',
-          inscripciones: null,
+          productId: 10,
+          productLevelId: 1,
+          admissionProcessId: 25,
+          productFullName: 'Analista Programador',
+          enrollmentStatus: 'Confirmada',
+          enrollments: null,
         },
         {
-          idProducto: 11,
-          idNivelProducto: 3,
-          idProceso: 27,
-          nombreExtensoProducto: 'Programa vacío',
-          estadoInscripcion: 'Pendiente',
-          inscripciones: [],
+          productId: 11,
+          productLevelId: 3,
+          admissionProcessId: 27,
+          productFullName: 'Programa vacío',
+          enrollmentStatus: 'Pendiente',
+          enrollments: [],
         },
       ])
     );
@@ -221,14 +221,14 @@ describe('HomeEndpoint', () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idBeca: 40,
-          idPostulacion: 50,
-          nombre: 'Fondo de Excelencia Académica',
-          carrera: 'Licenciatura en Diseño Gráfico',
-          estado: 'En proceso',
-          fechaCierrePostulacion: '2026-07-15T00:00:00Z',
-          fechaPrueba: '2026-07-22T00:00:00Z',
-          fechaResultados: null,
+          scholarshipId: 40,
+          applicationId: 50,
+          name: 'Fondo de Excelencia Académica',
+          degreeProgram: 'Licenciatura en Diseño Gráfico',
+          status: 'En proceso',
+          applicationCloseDate: '2026-07-15T00:00:00Z',
+          testDate: '2026-07-22T00:00:00Z',
+          resultsDate: null,
         },
       ])
     );
@@ -246,6 +246,6 @@ describe('HomeEndpoint', () => {
         fechaResultados: '',
       },
     ]);
-    expect(api.request).toHaveBeenCalledWith(getPersonaBecasEndpoint);
+    expect(api.request).toHaveBeenCalledWith(getPersonScholarshipsEndpoint);
   });
 });

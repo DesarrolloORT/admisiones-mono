@@ -4,11 +4,11 @@ import { map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  getPersonaBecasEndpoint,
-  getPersonaInscripcionesEndpoint,
-} from 'src/app/shared/api/generated/endpoints/persona.endpoints';
-import type { DtoBecaPersona } from 'src/app/shared/api/generated/models/dtoBecaPersona';
-import type { DtoInscripcionesPorProductoProcesoResponse } from 'src/app/shared/api/generated/models/dtoInscripcionesPorProductoProcesoResponse';
+  getPersonEnrollmentsEndpoint,
+  getPersonScholarshipsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
+import type { ScholarshipSummary } from 'src/app/shared/api/generated/models/scholarshipSummary';
 
 import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion';
@@ -21,55 +21,49 @@ export class HomeEndpoint {
 
   public getMisInscripciones(): Observable<MiInscripcion[]> {
     return this.api
-      .request(getPersonaInscripcionesEndpoint)
+      .request(getPersonEnrollmentsEndpoint)
       .pipe(map(data => this.toMisInscripciones(data)));
   }
 
   public getMisBecas(): Observable<MiBeca[]> {
-    return this.api.request(getPersonaBecasEndpoint).pipe(map(data => this.toMisBecas(data)));
+    return this.api.request(getPersonScholarshipsEndpoint).pipe(map(data => this.toMisBecas(data)));
   }
 
   private toMisInscripciones(
-    data:
-      | { data: DtoInscripcionesPorProductoProcesoResponse[] | null }
-      | DtoInscripcionesPorProductoProcesoResponse[]
-      | null
-      | undefined
+    data: { data: MyEnrollmentsResponse[] | null } | MyEnrollmentsResponse[] | null | undefined
   ): MiInscripcion[] {
     const groups = Array.isArray(data) ? data : (data?.data ?? []);
 
     return groups.flatMap(group => this.toMisInscripcionesFromGroup(group));
   }
 
-  private toMisInscripcionesFromGroup(
-    group: DtoInscripcionesPorProductoProcesoResponse
-  ): MiInscripcion[] {
-    const items = group.inscripciones ?? [];
-    const nombreProducto = group.nombreExtensoProducto ?? '';
-    const estado = group.estadoInscripcion ?? '';
+  private toMisInscripcionesFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
+    const items = group.enrollments ?? [];
+    const nombreProducto = group.productFullName ?? '';
+    const estado = group.enrollmentStatus ?? '';
 
-    if (isProfessionalUpdateLevel(group.idNivelProducto)) {
+    if (isProfessionalUpdateLevel(group.productLevelId)) {
       const primero = items[0];
       return [
         {
-          idInscripto: primero?.idInscripto ?? 0,
-          idOfertas: [...new Set(items.map(item => item.idOferta).filter(isPositiveInteger))],
-          idProducto: group.idProducto ?? 0,
-          idProceso: group.idProceso ?? 0,
-          idComienzo: primero?.idComienzo ?? 0,
-          idTurno: primero?.idTurno ?? 0,
+          idInscripto: primero?.enrollmentId ?? 0,
+          idOfertas: [...new Set(items.map(item => item.offeringId).filter(isPositiveInteger))],
+          idProducto: group.productId ?? 0,
+          idProceso: group.admissionProcessId ?? 0,
+          idComienzo: primero?.intakeId ?? 0,
+          idTurno: primero?.shiftId ?? 0,
           nombreProducto,
-          nombreComienzo: primero?.nombreComienzo ?? '',
-          nombreTurno: primero?.nombreTurno ?? '',
+          nombreComienzo: primero?.intakeName ?? '',
+          nombreTurno: primero?.shiftName ?? '',
           estado,
           seminarios: items.map((item): MiInscripcionSeminario => ({
-            idInscripto: item.idInscripto ?? 0,
-            idOferta: item.idOferta ?? 0,
-            descripcionOferta: item.descripcionOferta ?? '',
-            idComienzo: item.idComienzo ?? 0,
-            idTurno: item.idTurno ?? 0,
-            nombreComienzo: item.nombreComienzo ?? '',
-            nombreTurno: item.nombreTurno ?? '',
+            idInscripto: item.enrollmentId ?? 0,
+            idOferta: item.offeringId ?? 0,
+            descripcionOferta: item.offeringDescription ?? '',
+            idComienzo: item.intakeId ?? 0,
+            idTurno: item.shiftId ?? 0,
+            nombreComienzo: item.intakeName ?? '',
+            nombreTurno: item.shiftName ?? '',
           })),
         },
       ];
@@ -80,8 +74,8 @@ export class HomeEndpoint {
         {
           idInscripto: 0,
           idOfertas: [],
-          idProducto: group.idProducto ?? 0,
-          idProceso: group.idProceso ?? 0,
+          idProducto: group.productId ?? 0,
+          idProceso: group.admissionProcessId ?? 0,
           idComienzo: 0,
           idTurno: 0,
           nombreProducto,
@@ -94,35 +88,35 @@ export class HomeEndpoint {
     }
 
     return items.map(item => ({
-      idInscripto: item.idInscripto ?? 0,
-      idOfertas: isPositiveInteger(item.idOferta) ? [item.idOferta] : [],
-      idProducto: group.idProducto ?? 0,
-      idProceso: group.idProceso ?? 0,
-      idComienzo: item.idComienzo ?? 0,
-      idTurno: item.idTurno ?? 0,
+      idInscripto: item.enrollmentId ?? 0,
+      idOfertas: isPositiveInteger(item.offeringId) ? [item.offeringId] : [],
+      idProducto: group.productId ?? 0,
+      idProceso: group.admissionProcessId ?? 0,
+      idComienzo: item.intakeId ?? 0,
+      idTurno: item.shiftId ?? 0,
       nombreProducto,
-      nombreComienzo: item.nombreComienzo ?? '',
-      nombreTurno: item.nombreTurno ?? '',
+      nombreComienzo: item.intakeName ?? '',
+      nombreTurno: item.shiftName ?? '',
       estado,
       seminarios: [],
     }));
   }
 
   private toMisBecas(
-    data: { data: DtoBecaPersona[] | null } | DtoBecaPersona[] | null | undefined
+    data: { data: ScholarshipSummary[] | null } | ScholarshipSummary[] | null | undefined
   ): MiBeca[] {
     const items = Array.isArray(data) ? data : (data?.data ?? []);
 
     return items.map(item => ({
-      id: item.idPostulacion ?? item.idBeca ?? 0,
-      nombreBeca: item.nombre ?? '',
-      nombreCarrera: item.carrera ?? '',
-      estado: item.estado ?? '',
-      cierrePostulacion: this.formatDate(item.fechaCierrePostulacion),
-      fechaPrueba: this.formatDate(item.fechaPrueba),
+      id: item.applicationId ?? item.scholarshipId ?? 0,
+      nombreBeca: item.name ?? '',
+      nombreCarrera: item.degreeProgram ?? '',
+      estado: item.status ?? '',
+      cierrePostulacion: this.formatDate(item.applicationCloseDate),
+      fechaPrueba: this.formatDate(item.testDate),
       resultadoPrueba: '',
       beneficio: '',
-      fechaResultados: this.formatDate(item.fechaResultados),
+      fechaResultados: this.formatDate(item.resultsDate),
     }));
   }
 
