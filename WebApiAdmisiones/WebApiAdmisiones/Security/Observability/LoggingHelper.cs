@@ -65,18 +65,18 @@ namespace WebApiAdmisiones.Security.Observability
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
+        /// <param name="personId">Código de la persona autenticada (opcional).</param>
         /// <param name="data">Datos adicionales a loguear (se redactarán automáticamente).</param>
         /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatEntrada(
             HttpContext? context,
             string origin,
-            string? codigoPersona = null,
+            string? personId = null,
             object? data = null,
             Guid? correlationId = null)
         {
-            return FormatLog("ENTRADA", context, origin, codigoPersona, data, correlationId);
+            return FormatLog("ENTRADA", context, origin, personId, data, correlationId);
         }
 
         /// <summary>
@@ -84,18 +84,18 @@ namespace WebApiAdmisiones.Security.Observability
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
+        /// <param name="personId">Código de la persona autenticada (opcional).</param>
         /// <param name="data">Datos adicionales a loguear (se redactarán automáticamente).</param>
         /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatSalida(
             HttpContext? context,
             string origin,
-            string? codigoPersona = null,
+            string? personId = null,
             object? data = null,
             Guid? correlationId = null)
         {
-            return FormatLog("SALIDA", context, origin, codigoPersona, data, correlationId);
+            return FormatLog("SALIDA", context, origin, personId, data, correlationId);
         }
 
         /// <summary>
@@ -103,25 +103,25 @@ namespace WebApiAdmisiones.Security.Observability
         /// </summary>
         /// <param name="context">Contexto HTTP actual.</param>
         /// <param name="origin">Origen del log (nombre de clase/middleware).</param>
-        /// <param name="codigoPersona">Código de la persona autenticada (opcional).</param>
+        /// <param name="personId">Código de la persona autenticada (opcional).</param>
         /// <param name="data">Datos adicionales a loguear.</param>
         /// <param name="correlationId">ID de correlación (opcional).</param>
         /// <returns>Mensaje de log formateado.</returns>
         public static string FormatError(
             HttpContext? context,
             string origin,
-            string? codigoPersona = null,
+            string? personId = null,
             object? data = null,
             Guid? correlationId = null)
         {
-            return FormatLog("ERROR", context, origin, codigoPersona, data, correlationId);
+            return FormatLog("ERROR", context, origin, personId, data, correlationId);
         }
 
         private static string FormatLog(
             string tipo,
             HttpContext? context,
             string origin,
-            string? codigoPersona,
+            string? personId,
             object? data,
             Guid? correlationId)
         {
@@ -130,7 +130,7 @@ namespace WebApiAdmisiones.Security.Observability
                 $"Tipo: {tipo}",
                 $"Origen: {GetFormattedOrigin()}",
                 $"Clase: {origin}",
-                $"CodigoPersona: {codigoPersona ?? Desconocido}",
+                $"CodigoPersona: {personId ?? Desconocido}",
                 $"Servicio: {GetServicePath(context)}",
                 $"Datos: {SerializeData(data)}",
                 $"IP: {GetIpAddress(context)}",
@@ -241,12 +241,12 @@ namespace WebApiAdmisiones.Security.Observability
         /// </summary>
         public static string GetRequestContextInfo(HttpContext? context)
         {
-            var codigoPersona = GetCodigoPersonaFromContext(context);
+            var personId = GetCodigoPersonaFromContext(context);
             var ip = GetIpAddress(context);
             var userAgent = GetUserAgent(context);
             var hostName = context?.Request.Headers["X-Client-Host"].FirstOrDefault() ?? Desconocido;
 
-            return $"CodigoPersona: {codigoPersona ?? Desconocido}, IP: {ip}, UserAgent: {userAgent}, HostName: {hostName}";
+            return $"CodigoPersona: {personId ?? Desconocido}, IP: {ip}, UserAgent: {userAgent}, HostName: {hostName}";
         }
     }
 }

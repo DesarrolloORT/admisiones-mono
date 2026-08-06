@@ -19,7 +19,7 @@ layer:api:
 layer:app-logic:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*'
 
 # Capa de Negocio (Entidades, Interfaces de repositorio)
 layer:business-logic:
@@ -43,10 +43,10 @@ layer:data-access:
 auto-generated:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/DevartDTOs/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.DevartDtos/**/*'
           - 'WebApiAdmisiones/BusinessLogic/DevartEFCore/**/*'
           - 'WebApiAdmisiones/DataAccess/DevartDataAccess/**/*'
-          - 'WebApiAdmisiones/AppLogic/**/*.Generated.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*.Generated.cs'
           - 'WebApiAdmisiones/BusinessLogic/**/*.Generated.cs'
           - 'WebApiAdmisiones/DataAccess/**/*.Generated.cs'
           - 'WebApiAdmisiones/WebApiAdmisiones/**/*.Generated.cs'
@@ -55,24 +55,24 @@ auto-generated:
 type:dto:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/DTOs/**/*'
-          - 'WebApiAdmisiones/AppLogic/DevartDTOs/**/*'
-          - 'WebApiAdmisiones/AppLogic/**/*Dto*.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/DTOs/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.DevartDtos/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*Dto*.cs'
           - 'WebApiAdmisiones/WebApiAdmisiones/**/*Dto*.cs'
 
 # Servicios de aplicación - solo código fuente, no tests
 type:service:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/Services/**/*.cs'
-          - 'WebApiAdmisiones/AppLogic/**/*Service.cs'
-          - 'WebApiAdmisiones/AppLogic/**/*AppService.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/Services/**/*.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*Service.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*AppService.cs'
 
 # Interfaces - solo código fuente, no tests
 type:interface:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/IServices/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/IServices/**/*'
           - 'WebApiAdmisiones/BusinessLogic/IGenericRepository/**/*'
 
 # Repositorios - solo código fuente, no tests
@@ -93,8 +93,8 @@ type:controller:
 type:helper:
   - changed-files:
       - any-glob-to-any-file:
-          - 'WebApiAdmisiones/AppLogic/Helpers/**/*'
-          - 'WebApiAdmisiones/AppLogic/Utilities/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/Helpers/**/*'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/Utilities/**/*'
           - 'WebApiAdmisiones/WebApiFDP/Helpers/**/*'
           - 'WebApiAdmisiones/WebApiFDP/Utilities/**/*'
 
@@ -159,8 +159,8 @@ security:
           - 'WebApiAdmisiones/WebApiAdmisiones/**/*Token*.cs'
           - 'WebApiAdmisiones/WebApiAdmisiones/**/*Jwt*.cs'
           - 'WebApiAdmisiones/WebApiAdmisiones/**/*Sanitize*.cs'
-          - 'WebApiAdmisiones/AppLogic/**/*Authentication*.cs'
-          - 'WebApiAdmisiones/AppLogic/**/*Authorization*.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*Authentication*.cs'
+          - 'WebApiAdmisiones/AppLogic/AppLogic.*/**/*Authorization*.cs'
 
 # Docker y contenedores
 docker:

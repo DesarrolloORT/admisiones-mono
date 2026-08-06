@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Dtos;
+using AppLogic.Authentication.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -6,7 +6,7 @@ using AzureService.DTOs;
 using Prometheus;
 using Utilities;
 using StackExchange.Redis;
-using AppLogic.Infrastructure.RateLimiting;
+using AppLogic.Platform.RateLimiting;
 using WebApiAdmisiones.Security.RateLimiting;
 using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.RequestValidation;
@@ -127,7 +127,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Registrar servicio de rate limiting
-            services.AddSingleton<AppLogic.Infrastructure.RateLimiting.IRateLimiterService, RedisRateLimiterService>();
+            services.AddSingleton<AppLogic.Platform.RateLimiting.IRateLimiterService, RedisRateLimiterService>();
 
             // Registrar servicio de cache distribuido
             services.AddSingleton<IRedisCacheService, RedisCacheService>();
@@ -169,7 +169,7 @@ namespace WebApiAdmisiones.Extensions
             return services;
         }
 
-        public static IServiceCollection AddReconocimientoDocumentoRateLimiting(
+        public static IServiceCollection AddDocumentRecognitionRateLimiting(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -209,7 +209,7 @@ namespace WebApiAdmisiones.Extensions
             return services;
         }
 
-        private static async Task HandleReconocimientoDocumentoRejected(
+        private static async Task HandleDocumentRecognitionRejected(
             OnRejectedContext context, CancellationToken cancellationToken)
         {
             ReconocimientoDocumentoRateLimitRejections.Inc();
@@ -296,7 +296,7 @@ namespace WebApiAdmisiones.Extensions
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     // Usar Redis Rate Limiter en lugar de in-memory
-                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
+                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.Platform.RateLimiting.IRateLimiterService>();
 
                     return RateLimitPartition.Get(
                         partitionKey,
@@ -318,14 +318,14 @@ namespace WebApiAdmisiones.Extensions
 
                     if (policyName == ReconocimientoDocumentoRateLimitPolicy)
                     {
-                        await HandleReconocimientoDocumentoRejected(context, cancellationToken);
+                        await HandleDocumentRecognitionRejected(context, cancellationToken);
                         return;
                     }
 
                     LoginRateLimitRejections.Inc();
 
                     // Obtener información adicional desde Redis
-                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
+                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Platform.RateLimiting.IRateLimiterService>();
                     var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                     var partitionKey = $"login-ip:{ipAddress}";
 
@@ -351,7 +351,7 @@ namespace WebApiAdmisiones.Extensions
                             ((int)(resetTime.Value - DateTimeOffset.UtcNow).TotalSeconds).ToString();
                     }
 
-                    var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    var result = OperationResult<AuthenticationResponse>.IsFailed(
                         "AUTH_RL_01",
                         LoginRateLimitPolicy,
                         $"Se superó el límite de intentos de inicio de sesión desde esta red ({maxIpAttempts} intentos cada {windowMinutes} minutos). Por tu seguridad, intentá nuevamente más tarde.",

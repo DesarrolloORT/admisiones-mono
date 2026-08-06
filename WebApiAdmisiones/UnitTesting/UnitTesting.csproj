@@ -14,7 +14,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.7" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -32,10 +32,21 @@
     <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModAppLogic\ModGenericBaseAppLogic.csproj" />
     <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModBusinessLogic\ModGenericBaseBusinessLogic.csproj" />
     <ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />
-    <ProjectReference Include="..\AppLogic\AppLogic.csproj" />
     <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
     <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
     <ProjectReference Include="..\WebApiAdmisiones\WebApiAdmisiones.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Contracts\AppLogic.Contracts.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Platform\AppLogic.Platform.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Identity\AppLogic.Identity.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.People\AppLogic.People.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Scholarships\AppLogic.Scholarships.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Authentication\AppLogic.Authentication.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Registration\AppLogic.Registration.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />
+    <ProjectReference Include="..\AppLogic\AppLogic.Catalogs\AppLogic.Catalogs.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

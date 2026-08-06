@@ -16,7 +16,7 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
     {
         var httpContext = context.HttpContext ?? throw new ArgumentNullException(nameof(context), "HttpContext cannot be null");
         var method = httpContext.Request.Method;
-        var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(httpContext);
+        var personId = LoggingHelper.GetCodigoPersonaFromContext(httpContext);
         var origin = nameof(InputRedactionLoggingFilter);
 
         var correlationId = LoggingHelper.EnsureCorrelationId(httpContext);
@@ -29,7 +29,7 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
         {
             if (_logger.IsEnabled(LogLevel.Information))
             {
-            var logMessage = LoggingHelper.FormatEntrada(httpContext, origin, codigoPersona, null, correlationId);
+            var logMessage = LoggingHelper.FormatEntrada(httpContext, origin, personId, null, correlationId);
             _logger.LogInformation("{LogMessage}", logMessage);
             }
             await next();
@@ -42,7 +42,7 @@ public class InputRedactionLoggingFilter : IAsyncActionFilter
 
         if (_logger.IsEnabled(LogLevel.Information))
         {
-        var logMessageWithData = LoggingHelper.FormatEntrada(httpContext, origin, codigoPersona, redactedArgs, correlationId);
+        var logMessageWithData = LoggingHelper.FormatEntrada(httpContext, origin, personId, redactedArgs, correlationId);
         _logger.LogInformation("{LogMessage}", logMessageWithData);
         }
         await next();

@@ -23,7 +23,7 @@
 │                     VALIDACIÓN DE RATE LIMITING                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  Request HTTP POST /Auth/Login                                      │
+│  Request HTTP POST /auth/login                                      │
 │                ↓                                                    │
 │  ┌──────────────────────────────────────────────┐                  │
 │  │ ✅ VALIDACIÓN 1: Middleware Rate Limit IP    │                  │
@@ -141,7 +141,7 @@ sum(rate(login_rate_limit_rejections_total[5m])) + sum(rate(login_account_rate_l
 Write-Host "=== TEST 1: Rate Limit por Cuenta ===" -ForegroundColor Cyan
 for ($i = 1; $i -le 7; $i++) {
 	Write-Host "Intento $i..." -NoNewline
-	$response = Invoke-WebRequest -Uri "http://localhost:5000/Auth/Login" `
+	$response = Invoke-WebRequest -Uri "http://localhost:5000/auth/login" `
 		-Method POST `
 		-ContentType "application/json" `
 		-Body '{"tipoDocumento":"CI","documento":"12345678","password":"wrongpass"}' `
@@ -164,7 +164,7 @@ for ($i = 1; $i -le 12; $i++) {
 		password = "wrongpass"
 	} | ConvertTo-Json
 
-	$response = Invoke-WebRequest -Uri "http://localhost:5000/Auth/Login" `
+	$response = Invoke-WebRequest -Uri "http://localhost:5000/auth/login" `
 		-Method POST `
 		-ContentType "application/json" `
 		-Body $body `

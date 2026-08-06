@@ -11,7 +11,7 @@ public class LoggingHelperClientTelemetryTests
     {
         var context = new DefaultHttpContext();
         context.Request.Method = "POST";
-        context.Request.Path = "/Auth/Login";
+        context.Request.Path = "/auth/login";
         context.Request.Headers[ClientTelemetryHeaders.ClientService] = "admisiones-frontend";
         context.Request.Headers[ClientTelemetryHeaders.ClientEnvironment] = "development";
         context.Request.Headers[ClientTelemetryHeaders.ClientVersion] = "1.2.3";
@@ -37,7 +37,7 @@ public class LoggingHelperClientTelemetryTests
     {
         var context = new DefaultHttpContext();
         context.Request.Method = "POST";
-        context.Request.Path = "/Auth/Login";
+        context.Request.Path = "/auth/login";
 
         var result = LoggingHelper.FormatEntrada(context, "TestFilter");
 

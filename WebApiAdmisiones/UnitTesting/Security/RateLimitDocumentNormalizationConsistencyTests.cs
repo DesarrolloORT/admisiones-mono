@@ -1,8 +1,12 @@
-using AppLogic.Autenticacion.Dtos;
-using AppLogic.Common.Email;
-using AppLogic.Infrastructure.RateLimiting;
-using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Autenticacion.Services;
+using AppLogic.Authentication.Contracts;
+using AppLogic.Identity;
+using AppLogic.Identity.Dtos;
+using AppLogic.Contracts.Text;
+using AppLogic.Authentication.Dtos;
+using AppLogic.Platform.Email;
+using AppLogic.Platform.RateLimiting;
+using AppLogic.Authentication.Interfaces;
+using AppLogic.Authentication.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,9 +15,9 @@ using Utilities;
 namespace UnitTesting.Security
 {
     /// <summary>
-    /// Ambos servicios delegan en DocumentUtils.NormalizarDocumentoParaClave para construir
+    /// Ambos servicios delegan en TextNormalization.NormalizeDocumentForKey para construir
     /// sus claves de rate limiting; este test cruza los dos flujos reales (sin mocks de
-    /// DocumentUtils) para confirmar que el segmento normalizado coincide para el mismo documento.
+    /// IdentityDocumentRules) para confirmar que el segmento normalizado coincide para el mismo documento.
     /// </summary>
     public class RateLimitDocumentNormalizationConsistencyTests
     {
@@ -22,10 +26,10 @@ namespace UnitTesting.Security
         [InlineData("1234567-8")]
         [InlineData("12345678")]
         [InlineData(" 1.234.567-8 ")]
-        public async Task LoginFlowService_And_DosFactoresAuthService_NormalizeDocumentIdentically(string documento)
+        public async Task LoginFlowService_And_DosFactoresAuthService_NormalizeDocumentIdentically(string document)
         {
-            var loginFlowKey = await CaptureLoginFlowFailedAttemptKeyAsync(documento);
-            var dosFactoresKey = await CaptureDosFactoresInitKeyAsync(documento);
+            var loginFlowKey = await CaptureLoginFlowFailedAttemptKeyAsync(document);
+            var dosFactoresKey = await CaptureDosFactoresInitKeyAsync(document);
 
             var loginFlowSegment = loginFlowKey["login-fail-cred-user:".Length..];
             var dosFactoresSegment = dosFactoresKey["2fa-init:".Length..];
@@ -33,31 +37,32 @@ namespace UnitTesting.Security
             Assert.Equal(dosFactoresSegment, loginFlowSegment);
         }
 
-        private static async Task<string> CaptureLoginFlowFailedAttemptKeyAsync(string documento)
+        private static async Task<string> CaptureLoginFlowFailedAttemptKeyAsync(string document)
         {
             string? capturedKey = null;
 
-            var authServiceMock = new Mock<IAuthService>();
-            authServiceMock
-                .Setup(s => s.AutenticarUsuarioLDAPAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(OperationResult<DtoPersonaAuth>.Ok(
-                    new DtoPersonaAuth
+            var authenticateMock = new Mock<IAuthenticateWithLdap>();
+            authenticateMock
+                .Setup(s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<AuthenticatedPerson>.Ok(
+                    new AuthenticatedPerson
                     {
-                        CodigoPersona = 123,
-                        Documento = documento,
+                        PersonId = 123,
+                        DocumentNumber = document,
                         Email = "test@example.com"
                     },
-                    nameof(IAuthService.AutenticarUsuarioLDAPAsync)));
-            authServiceMock
-                .Setup(s => s.GenerarTokensParaPersonaAsync(It.IsAny<long>(), It.IsAny<string>()))
-                .ReturnsAsync((long codigoPersona, string? _) => OperationResult<DtoAuthenticationResponse>.Ok(
-                    new DtoAuthenticationResponse
+                    nameof(IAuthenticateWithLdap)));
+            var issueTokensMock = new Mock<IIssueTokensForPerson>();
+            issueTokensMock
+                .Setup(s => s.ExecuteAsync(It.IsAny<long>(), It.IsAny<string>()))
+                .ReturnsAsync((long personId, string? _) => OperationResult<AuthenticationResponse>.Ok(
+                    new AuthenticationResponse
                     {
-                        Persona = new DtoPersonaAuth { CodigoPersona = codigoPersona, Documento = documento },
+                        Person = new AuthenticatedPerson { PersonId = personId, DocumentNumber = document },
                         AccessToken = "access-token",
                         RefreshToken = "refresh-token"
                     },
-                    nameof(IAuthService.GenerarTokensParaPersonaAsync)));
+                    nameof(IIssueTokensForPerson)));
 
             var rateLimiterMock = new Mock<IRateLimiterService>();
             rateLimiterMock
@@ -77,12 +82,12 @@ namespace UnitTesting.Security
                 .Setup(r => r.ClearAsync(It.IsAny<string>()))
                 .ReturnsAsync(true);
 
-            var dosFactoresMock = new Mock<IDosFactoresAuthService>();
+            var dosFactoresMock = new Mock<ITwoFactorAuthService>();
             dosFactoresMock
-                .Setup(s => s.IniciarAsync(It.IsAny<DtoPersonaAuth>(), It.IsAny<string>()))
-                .ReturnsAsync(OperationResult<DtoLogin2FARequired>.Ok(
-                    new DtoLogin2FARequired { SessionId = "2fa-session" },
-                    nameof(IDosFactoresAuthService.IniciarAsync)));
+                .Setup(s => s.StartAsync(It.IsAny<AuthenticatedPerson>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<TwoFactorRequiredResponse>.Ok(
+                    new TwoFactorRequiredResponse { SessionId = "2fa-session" },
+                    nameof(ITwoFactorAuthService.StartAsync)));
 
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -96,14 +101,15 @@ namespace UnitTesting.Security
                 .Build();
 
             var sut = new LoginFlowService(
-                authServiceMock.Object,
+                authenticateMock.Object,
+                issueTokensMock.Object,
                 rateLimiterMock.Object,
                 dosFactoresMock.Object,
                 configuration,
                 Mock.Of<ILogger<LoginFlowService>>());
 
-            await sut.EjecutarAsync(
-                new DtoAuthRequest { TipoDocumento = "CI", Documento = documento, Password = "Password1!" },
+            await sut.ExecuteAsync(
+                new AuthRequest { DocumentType = "CI", DocumentNumber = document, Password = "Password1!" },
                 "127.0.0.1",
                 0.9);
 
@@ -111,13 +117,13 @@ namespace UnitTesting.Security
             return capturedKey!;
         }
 
-        private static async Task<string> CaptureDosFactoresInitKeyAsync(string documento)
+        private static async Task<string> CaptureDosFactoresInitKeyAsync(string document)
         {
             string? capturedKey = null;
 
             var sessionStoreMock = new Mock<ITwoFactorSessionStore>();
             sessionStoreMock
-                .Setup(s => s.SaveAsync(It.IsAny<string>(), It.IsAny<DtoTwoFactorSession>(), It.IsAny<TimeSpan>()))
+                .Setup(s => s.SaveAsync(It.IsAny<string>(), It.IsAny<TwoFactorSession>(), It.IsAny<TimeSpan>()))
                 .Returns(Task.CompletedTask);
 
             var emailSenderMock = new Mock<IEmailSender>();
@@ -143,23 +149,23 @@ namespace UnitTesting.Security
                 })
                 .Build();
 
-            var sut = new DosFactoresAuthService(
+            var sut = new TwoFactorAuthService(
                 sessionStoreMock.Object,
                 rateLimiterMock.Object,
                 emailSenderMock.Object,
                 configuration,
-                Mock.Of<ILogger<DosFactoresAuthService>>(),
-                Mock.Of<IAuthService>());
+                Mock.Of<ILogger<TwoFactorAuthService>>(),
+                Mock.Of<IIssueTokensForPerson>());
 
-            var pendingPersona = new DtoPersonaAuth
+            var pendingPersona = new AuthenticatedPerson
             {
-                CodigoPersona = 123,
-                Documento = documento,
-                PrimerNombre = "Gabriele",
-                PrimerApellido = "Test"
+                PersonId = 123,
+                DocumentNumber = document,
+                FirstName = "Gabriele",
+                FirstSurname = "Test"
             };
 
-            await sut.IniciarAsync(pendingPersona, "gabriele@ort.edu.uy");
+            await sut.StartAsync(pendingPersona, "gabriele@ort.edu.uy");
 
             Assert.NotNull(capturedKey);
             return capturedKey!;

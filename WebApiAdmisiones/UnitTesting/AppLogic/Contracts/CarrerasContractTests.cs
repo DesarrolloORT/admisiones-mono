@@ -1,4 +1,4 @@
-using AppLogic.Catalogos.Dtos;
+using AppLogic.Catalogs.Dtos;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,20 +16,20 @@ namespace UnitTesting.AppLogic.Contracts
         {
             Assert.Equal(2, Contract["version"]!.GetValue<int>());
             Assert.Equal("GET", Endpoint["method"]!.GetValue<string>());
-            Assert.Equal("Catalogos/Carreras", Endpoint["route"]!.GetValue<string>());
+            Assert.Equal("catalogs/degree-programs", Endpoint["route"]!.GetValue<string>());
         }
 
         [Fact]
         public void CarrerasContract_PropuestaAcademicaMatchesEnum()
         {
-            var options = Endpoint["query"]!["propuestaAcademica"]!["allowedOptions"]!.AsArray();
+            var options = Endpoint["query"]!["academicOffer"]!["allowedOptions"]!.AsArray();
 
             var fromContract = options
                 .Select(o => (Value: o!["value"]!.GetValue<int>(), Name: o["name"]!.GetValue<string>()))
                 .OrderBy(o => o.Value)
                 .ToList();
 
-            var fromEnum = Enum.GetValues<PropuestaAcademica>()
+            var fromEnum = Enum.GetValues<AcademicOffer>()
                 .Select(v => (Value: (int)v, Name: v.ToString()))
                 .OrderBy(v => v.Value)
                 .ToList();
@@ -41,7 +41,7 @@ namespace UnitTesting.AppLogic.Contracts
         public void CarrerasContract_DataFieldsMatchResponseDto()
         {
             var dataFields = Endpoint["data"]!.AsObject().Select(f => f.Key).Order().ToList();
-            var dtoProperties = typeof(DtoCarrerasPorNivelResponse)
+            var dtoProperties = typeof(DegreeProgramsByLevelResponse)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => JsonNamingPolicy.CamelCase.ConvertName(p.Name))
                 .Order()
@@ -51,9 +51,9 @@ namespace UnitTesting.AppLogic.Contracts
         }
 
         [Theory]
-        [InlineData("DtoCarrerasPorEscuelaResponse", typeof(DtoCarrerasPorEscuelaResponse))]
-        [InlineData("DtoCarrerasPorSeminarioResponse", typeof(DtoCarrerasPorSeminarioResponse))]
-        [InlineData("DtoCarreraResponse", typeof(DtoCarreraResponse))]
+        [InlineData("DegreeProgramsBySchoolResponse", typeof(DegreeProgramsBySchoolResponse))]
+        [InlineData("DegreeProgramsBySeminarResponse", typeof(DegreeProgramsBySeminarResponse))]
+        [InlineData("DegreeProgramResponse", typeof(DegreeProgramResponse))]
         public void CarrerasContract_TypeFieldsMatchDto(string typeName, Type dtoType)
         {
             var typeFields = Contract["types"]![typeName]!["fields"]!.AsObject().Select(f => f.Key).Order().ToList();

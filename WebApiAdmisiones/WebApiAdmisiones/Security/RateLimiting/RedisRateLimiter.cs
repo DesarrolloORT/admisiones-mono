@@ -1,4 +1,4 @@
-using AppLogic.Infrastructure.RateLimiting;
+using AppLogic.Platform.RateLimiting;
 using System.Threading.RateLimiting;
 
 namespace WebApiAdmisiones.Security.RateLimiting

@@ -1,5 +1,5 @@
-using AppLogic.Catalogos.Dtos;
-using AppLogic.Inscripciones.Encuesta.Dtos;
+using AppLogic.Catalogs.Dtos;
+using AppLogic.Enrollments.Survey.Dtos;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -15,7 +15,7 @@ namespace UnitTesting.AppLogic.Contracts
         public void EncuestaInicialContract_IsValidJson()
         {
             Assert.Equal(10, Contract["version"]!.GetValue<int>());
-            Assert.Equal("DtoGuardarEncuestaInicialRequest", Contract["request"]!.GetValue<string>());
+            Assert.Equal("SaveInitialSurveyRequest", Contract["request"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
             Assert.NotNull(Contract["sections"]);
         }
@@ -24,7 +24,7 @@ namespace UnitTesting.AppLogic.Contracts
         public void EncuestaInicialContract_CoversRequestProperties()
         {
             var fields = Contract["fields"]!.AsObject();
-            var requestProperties = typeof(DtoGuardarEncuestaInicialRequest)
+            var requestProperties = typeof(SaveInitialSurveyRequest)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
                 .Select(JsonName)
@@ -37,7 +37,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_CatalogSectionsReferenceCatalogResponse()
         {
-            var catalogProperties = typeof(DtoEncuestaInicialCatalogosResponse)
+            var catalogProperties = typeof(InitialSurveyCatalogsResponse)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(JsonName)
                 .ToHashSet();
@@ -90,18 +90,18 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_PrivateAllowedOptionsMatchBackendValidation()
         {
-            Assert.Equal([1, 2], AllowedOptionNumbers("ubicacionUltimoAnioSecundariaId"));
-            Assert.Equal([1, 2, 3], AllowedOptionNumbers("estadoEducacionSuperiorPreviaId"));
-            Assert.Equal([1, 2], AllowedOptionNumbers("nivelDecisionId"));
-            Assert.Equal(["Uruguay", "En el exterior"], AllowedOptionLabels("ubicacionUltimoAnioSecundariaId"));
-            Assert.Equal(["S\u00ed, en Uruguay", "S\u00ed, en el exterior", "No"], AllowedOptionLabels("estadoEducacionSuperiorPreviaId"));
-            Assert.Equal(["Decidido/a", "Con dudas"], AllowedOptionLabels("nivelDecisionId"));
+            Assert.Equal([1, 2], AllowedOptionNumbers("lastSecondaryYearLocationId"));
+            Assert.Equal([1, 2, 3], AllowedOptionNumbers("previousHigherEducationId"));
+            Assert.Equal([1, 2], AllowedOptionNumbers("decisionLevelId"));
+            Assert.Equal(["Uruguay", "En el exterior"], AllowedOptionLabels("lastSecondaryYearLocationId"));
+            Assert.Equal(["S\u00ed, en Uruguay", "S\u00ed, en el exterior", "No"], AllowedOptionLabels("previousHigherEducationId"));
+            Assert.Equal(["Decidido/a", "Con dudas"], AllowedOptionLabels("decisionLevelId"));
         }
 
         [Fact]
         public void EncuestaInicialContract_AnioBachilleratoDisallowsCuartoForNivelUniversitario()
         {
-            var rules = Contract["fields"]!["anioBachillerato"]!["disallowedWhen"]!.AsArray();
+            var rules = Contract["fields"]!["highSchoolYear"]!["disallowedWhen"]!.AsArray();
             var rule = rules.Single(r => r!["code"]!.GetValue<string>() == "INS_EI_64");
 
             Assert.Equal("selectedCarrera.nivel == 1", rule!["condition"]!.GetValue<string>());
@@ -113,10 +113,10 @@ namespace UnitTesting.AppLogic.Contracts
         {
             string[] arrays =
             [
-                "universidadEducacionSuperiorIds",
-                "universidadConsideradaIds",
-                "publicidadOrtIds",
-                "motivoEleccionOrtIds"
+                "higherEducationUniversityIds",
+                "consideredUniversityIds",
+                "ortAdvertisingIds",
+                "ortChoiceReasonIds"
             ];
 
             foreach (var field in arrays)
@@ -126,7 +126,7 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_VecesRecursaHasMinimumOne()
         {
-            Assert.Equal(1, Contract["fields"]!["vecesRecursaAnioBachillerato"]!["min"]!.GetValue<int>());
+            Assert.Equal(1, Contract["fields"]!["highSchoolYearRepeatCount"]!["min"]!.GetValue<int>());
         }
 
         [Fact]

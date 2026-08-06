@@ -1,4 +1,11 @@
-using AppLogic.Common.Email;
+using AppLogic.Authentication.DependencyInjection;
+using AppLogic.Enrollments.DependencyInjection;
+using AppLogic.Identity.DependencyInjection;
+using AppLogic.Integrations.Tivenos.DependencyInjection;
+using AppLogic.People.DependencyInjection;
+using AppLogic.Registration.DependencyInjection;
+using AppLogic.Scholarships.DependencyInjection;
+using AppLogic.Platform.Email;
 using AzureService.Interfaces;
 using AzureService.Services;
 using BusinessLogic.IDevartRepositories;
@@ -19,21 +26,8 @@ using WebApiAdmisiones.Security.Authentication;
 using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.Observability;
-using AppLogic.Autenticacion.Services;
-using AppLogic.Registro.Services;
-using AppLogic.Personas.Services;
-using AppLogic.Inscripciones.Services;
-using AppLogic.Inscripciones.Encuesta.Services;
-using AppLogic.Becas.Services;
-using AppLogic.Catalogos.Services;
-using AppLogic.Autenticacion.Interfaces;
-using AppLogic.Becas.Interfaces;
-using AppLogic.Catalogos.Interfaces;
-using AppLogic.Inscripciones.Interfaces;
-using AppLogic.Personas.Interfaces;
-using AppLogic.Registro.Interfaces;
-using AppLogic.Tivenos.Interfaces;
-using AppLogic.Tivenos.Services;
+using AppLogic.Catalogs.Services;
+using AppLogic.Catalogs.Interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -106,46 +100,34 @@ namespace WebApiAdmisiones.Extensions
             // Servicios de autenticación (Core/Autenticacion).
             services.AddScoped<ILdap, Ldap>();
 
-            // Servicios de aplicación.
+            // Cada módulo de AppLogic registra sus propios servicios: qué clase implementa cada
+            // contrato es asunto del módulo, no del host.
+            services.AddIdentityModule();
+            services.AddTivenosIntegration();
+            services.AddPeople();
+            services.AddAuthenticationModule();
+            services.AddScholarships();
+            services.AddRegistration();
+            services.AddEnrollments();
+
+            // Servicios que dependen de infraestructura del host y por eso no pueden vivir en el módulo.
             services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IGeneralService, GeneralService>();
-            services.AddScoped<CatalogosService>();
-            services.AddScoped<ICatalogosService>(sp => new CatalogosCacheDecorator(
-                sp.GetRequiredService<CatalogosService>(),
+            services.AddScoped<CatalogService>();
+            services.AddScoped<ICatalogService>(sp => new CatalogCacheDecorator(
+                sp.GetRequiredService<CatalogService>(),
                 sp.GetRequiredService<IRedisCacheService>(),
                 sp.GetRequiredService<IConfiguration>()));
-            services.AddScoped<IRegistroService, RegistroService>();
-            services.AddScoped<ITivenosEnvioService, TivenosEnvioService>();
-            services.AddScoped<IInscripcionesService, InscripcionesService>();
-            services.AddScoped<IEncuestaInicialService, EncuestaInicialService>();
-            services.AddScoped<IPersonaService, PersonaService>();
-            services.AddScoped<IBecasService, BecasService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IPendingPersonaStore, PendingPersonaRedisStore>();
-            services.AddScoped<IPasswordActivationService, PasswordActivationService>();
-            services.AddScoped<IHashTokenStore, RedisHashTokenStore>();
-            services.AddScoped<IRegistroFlowService, RegistroFlowService>();
-            services.AddScoped<IRegistroDocumentoImagenCacheService, RegistroDocumentoImagenCacheService>();
             services.AddHttpClient<IReconocimientoDocumento, ReconocimientoDocumento>(client => client.Timeout = TimeSpan.FromSeconds(45));
-            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddHttpClient<IRecaptchaService, RecaptchaService>();
-            services.AddScoped<IFondoDeBecaService, FondoDeBecaService>();
             services.AddScoped<IBandejaService, BandejaService>();
 
             // Servicio de correo.
             services.AddScoped<EnvioMail>(_ =>
                 new EnvioMail(configuration["SoapSettings:ServiosOffice365Url"] ?? string.Empty));
 
-            // Abstracciones de infraestructura para los servicios de AppLogic.
-            services.AddScoped<IEmailSender, AppLogic.Common.Email.EnvioMailEmailSender>();
-            services.AddScoped<AppLogic.Autenticacion.Interfaces.ITwoFactorSessionStore, AppLogic.Autenticacion.Services.RedisTwoFactorSessionStore>();
-
-            // Servicio de autenticación de dos factores (2FA) por email.
-            services.AddScoped<AppLogic.Autenticacion.Interfaces.IDosFactoresAuthService, AppLogic.Autenticacion.Services.DosFactoresAuthService>();
-
-            // Servicio orquestador del flujo de login (reCAPTCHA + rate limiting + LDAP + 2FA).
-            services.AddScoped<AppLogic.Autenticacion.Interfaces.ILoginFlowService, AppLogic.Autenticacion.Services.LoginFlowService>();
+            // Abstracción de mail: la implementación necesita EnvioMail, que se arma con configuración del host.
+            services.AddScoped<IEmailSender, OrtEmailSender>();
 
             return services;
         }

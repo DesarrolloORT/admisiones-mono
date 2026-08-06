@@ -20,8 +20,8 @@ namespace UnitTesting.Utilities
         [InlineData("usuario@@dominio.com", false)]
         public void EsCorreoValido_ValidaCorreos(string correo, bool esperado)
         {
-            var resultado = Util.EsCorreoValido(correo);
-            Assert.Equal(esperado, resultado);
+            var result = Util.EsCorreoValido(correo);
+            Assert.Equal(esperado, result);
         }
 
         [Fact]
@@ -29,8 +29,8 @@ namespace UnitTesting.Utilities
         {
             var texto = "áéíóú ÁÉÍÓÚ";
             var esperado = "aeiou aeiou";
-            var resultado = Util.RemplazarTildes(texto);
-            Assert.Equal(esperado, resultado);
+            var result = Util.RemplazarTildes(texto);
+            Assert.Equal(esperado, result);
         }
 
         [Theory]
@@ -41,8 +41,8 @@ namespace UnitTesting.Utilities
         [InlineData("1234567-a", "La cédula solo puede contener números y un guión.")]
         public void ValidoCI_ValidaCedula(string ci, string esperado)
         {
-            var resultado = Util.ValidoCI(ci);
-            Assert.Equal(esperado, resultado);
+            var result = Util.ValidoCI(ci);
+            Assert.Equal(esperado, result);
         }
 
         [Theory]
@@ -54,8 +54,8 @@ namespace UnitTesting.Utilities
         [InlineData("Password123!", "NuevaPassword1!", "")]
         public void ValidarPassword_ValidaPassword(string actual, string nuevo, string esperado)
         {
-            var resultado = Util.ValidarPassword(actual, nuevo);
-            Assert.Equal(esperado, resultado);
+            var result = Util.ValidarPassword(actual, nuevo);
+            Assert.Equal(esperado, result);
         }
 
         [Theory]
@@ -65,8 +65,8 @@ namespace UnitTesting.Utilities
         [InlineData("Password123456")]
         public void ValidarPasswordNueva_ValidaPasswordInicial(string nuevo)
         {
-            var resultado = Util.ValidarPasswordNueva(nuevo);
-            Assert.Equal(Util.ValidarPassword("ActualPassword1!", nuevo), resultado);
+            var result = Util.ValidarPasswordNueva(nuevo);
+            Assert.Equal(Util.ValidarPassword("ActualPassword1!", nuevo), result);
         }
 
         [Fact]
@@ -74,8 +74,8 @@ namespace UnitTesting.Utilities
         {
             var texto = "Línea1\nLínea2\tLínea3\rLínea4";
             var esperado = "Línea1<br>Línea2&nbsp;Línea3<br>Línea4";
-            var resultado = Util.ConvertirTextoHTML(texto);
-            Assert.Equal(esperado, resultado);
+            var result = Util.ConvertirTextoHTML(texto);
+            Assert.Equal(esperado, result);
         }
 
         [Theory]
@@ -83,8 +83,8 @@ namespace UnitTesting.Utilities
         [InlineData(1.0000001, 1.0000002, false)]
         public void AreDoublesEqual_ValidaDoubles(double v1, double v2, bool esperado)
         {
-            var resultado = Util.AreDoublesEqual(v1, v2);
-            Assert.Equal(esperado, resultado);
+            var result = Util.AreDoublesEqual(v1, v2);
+            Assert.Equal(esperado, result);
         }
 
         [Fact]
@@ -113,8 +113,8 @@ namespace UnitTesting.Utilities
         [InlineData("00", "Número de mes inválido")]
         public void ObtenerNombreMes_DevuelveNombreCorrecto(string numeroMes, string esperado)
         {
-            var resultado = Util.ObtenerNombreMes(numeroMes);
-            Assert.Equal(esperado, resultado);
+            var result = Util.ObtenerNombreMes(numeroMes);
+            Assert.Equal(esperado, result);
         }
     }
 }

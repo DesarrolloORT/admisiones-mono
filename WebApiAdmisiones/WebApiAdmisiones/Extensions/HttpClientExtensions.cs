@@ -1,12 +1,12 @@
-using AppLogic.ApiClients.Interfaces;
-using AppLogic.ApiClients.Services;
+using AppLogic.Integrations.EnrollmentsAndPayments.Interfaces;
+using AppLogic.Integrations.EnrollmentsAndPayments.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using WebApiAdmisiones.HttpHandlers;
-using AppLogic.Autenticacion.Services;
-using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Authentication.Services;
+using AppLogic.Authentication.Interfaces;
 
 namespace WebApiAdmisiones.Extensions
 {
@@ -20,7 +20,7 @@ namespace WebApiAdmisiones.Extensions
         /// Configura el cliente HTTP para la API de Inscripciones y Pagos.
         /// SIN políticas de reintento: las inscripciones deben ser operaciones atómicas (funciona o falla, sin duplicados).
         /// </summary>
-        public static IServiceCollection AddInscripcionesyPagosApiClient(
+        public static IServiceCollection AddEnrollmentsAndPaymentsApiClient(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -40,7 +40,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // 3. Configurar HttpClient tipado SIN políticas de reintento
-            services.AddHttpClient<IInscripcionesyPagosApiClient, InscripcionesyPagosApiClient>(client =>
+            services.AddHttpClient<IEnrollmentsAndPaymentsApiClient, EnrollmentsAndPaymentsApiClient>(client =>
             {
                 var baseUrl = configuration["ApiClients:InscripcionesYPagos:BaseUrl"]
                     ?? throw new InvalidOperationException(

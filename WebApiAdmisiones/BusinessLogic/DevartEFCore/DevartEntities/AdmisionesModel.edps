@@ -741,14 +741,14 @@
           <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <Project />
             <ProjectFolder />
-            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartDTO</DestinationFolder>
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\AppLogic.DevartDtos\DevartDTOs\DevartDTO</DestinationFolder>
           </OutputInfo>
         </ed:Property>
         <ed:Property Name="ConvertersOutput" Type="EntityDeveloper.TemplateEngine.OutputInfo, EntityDeveloper.Common, Version=7.3.235.0, Culture=neutral, PublicKeyToken=09af7300eec23701">
           <OutputInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <Project />
             <ProjectFolder />
-            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\DevartDTOs\DevartConverters</DestinationFolder>
+            <DestinationFolder>C:\GIT\api-admisiones\WebApiAdmisiones\AppLogic\AppLogic.DevartDtos\DevartDTOs\DevartConverters</DestinationFolder>
           </OutputInfo>
         </ed:Property>
         <ed:Property Name="GeneratePartialDtos" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

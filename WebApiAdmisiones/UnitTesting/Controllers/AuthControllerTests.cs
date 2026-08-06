@@ -1,5 +1,7 @@
-using AppLogic.Autenticacion.Dtos;
-using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Authentication.Contracts;
+using AppLogic.Identity.Dtos;
+using AppLogic.Authentication.Dtos;
+using AppLogic.Authentication.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +17,13 @@ namespace UnitTesting.Controllers
 {
     public class AuthControllerTests
     {
-        private readonly Mock<IAuthService> _authServiceMock;
+        private readonly Mock<IRefreshTokens> _refreshTokensMock;
+        private readonly Mock<IRecoverPassword> _recoverPasswordMock;
+        private readonly Mock<ICompletePasswordFlow> _completePasswordFlowMock;
         private readonly Mock<IPasswordActivationService> _passwordActivationServiceMock;
         private readonly Mock<ILogger<AuthController>> _loggerMock;
         private readonly Mock<ICurrentUserService> _currentUserMock;
-        private readonly Mock<IDosFactoresAuthService> _dosFactoresServiceMock;
+        private readonly Mock<ITwoFactorAuthService> _dosFactoresServiceMock;
         private readonly Mock<ILoginFlowService> _loginFlowServiceMock;
         private readonly IConfiguration _configuration;
         private readonly AuthController _controller;
@@ -27,11 +31,13 @@ namespace UnitTesting.Controllers
 
         public AuthControllerTests()
         {
-            _authServiceMock = new Mock<IAuthService>();
+            _refreshTokensMock = new Mock<IRefreshTokens>();
+            _recoverPasswordMock = new Mock<IRecoverPassword>();
+            _completePasswordFlowMock = new Mock<ICompletePasswordFlow>();
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _loggerMock = new Mock<ILogger<AuthController>>();
             _currentUserMock = new Mock<ICurrentUserService>();
-            _dosFactoresServiceMock = new Mock<IDosFactoresAuthService>();
+            _dosFactoresServiceMock = new Mock<ITwoFactorAuthService>();
             _loginFlowServiceMock = new Mock<ILoginFlowService>();
             _httpContext = new DefaultHttpContext();
             _configuration = new ConfigurationBuilder()
@@ -46,20 +52,22 @@ namespace UnitTesting.Controllers
 
             // Setup por defecto: login exitoso sin cookies (los tests de Login lo sobreescriben)
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
-                    OperationResult<DtoAuthenticationResponse>.Ok(
-                        new DtoAuthenticationResponse
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.LoginSucceeded(
+                    OperationResult<AuthenticationResponse>.Ok(
+                        new AuthenticationResponse
                         {
-                            Persona = new DtoPersonaAuth { CodigoPersona = 1 },
+                            Person = new AuthenticatedPerson { PersonId = 1 },
                             AccessToken = "token",
                             RefreshToken = "refresh",
                             RefreshTokenHash = "hash"
                         },
-                        "EjecutarAsync")));
+                        "ExecuteAsync")));
 
             _controller = new AuthController(
-                _authServiceMock.Object,
+                _refreshTokensMock.Object,
+                _recoverPasswordMock.Object,
+                _completePasswordFlowMock.Object,
                 _passwordActivationServiceMock.Object,
                 _configuration,
                 _loggerMock.Object,
@@ -76,7 +84,7 @@ namespace UnitTesting.Controllers
 
         [Theory]
         [InlineData(nameof(AuthController.Login), CaptchaActions.Login, CaptchaValidationMode.ScoreOnly)]
-        [InlineData(nameof(AuthController.RecuperarPassword), CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
+        [InlineData(nameof(AuthController.RecoverPassword), CaptchaActions.RecoverPassword, CaptchaValidationMode.ScoreOnly)]
         public void CaptchaEndpoints_HaveExpectedCaptchaAction(
             string methodName,
             string expectedAction,
@@ -95,20 +103,20 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task ActivarLinkPassword_WithValidToken_ReturnsOkAndSetsTemporaryCookie()
         {
-            var request = new DtoActivarLinkPasswordRequest { Token = "activation-token" };
-            var serviceResult = OperationResult<DtoPasswordActivationSession>.Ok(
-                new DtoPasswordActivationSession
+            var request = new ActivatePasswordLinkRequest { Token = "activation-token" };
+            var serviceResult = OperationResult<PasswordActivationSession>.Ok(
+                new PasswordActivationSession
                 {
-                    CodigoPersona = 12345,
+                    PersonId = 12345,
                     SessionToken = "session-token"
                 },
-                nameof(IPasswordActivationService.ActivarLinkPasswordAsync));
+                nameof(IPasswordActivationService.ActivatePasswordLinkAsync));
 
             _passwordActivationServiceMock
-                .Setup(s => s.ActivarLinkPasswordAsync(request.Token))
+                .Setup(s => s.ActivatePasswordLinkAsync(request.Token))
                 .ReturnsAsync(serviceResult);
 
-            var response = await _controller.ActivarLinkPassword(request);
+            var response = await _controller.ActivatePasswordLink(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
@@ -117,29 +125,29 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task CompletarPassword_WithoutTemporaryCookie_DelegatesWithNullTokenAndReturnsUnauthorized()
         {
-            var request = new DtoCompletarPasswordInicialRequest
+            var request = new CompleteInitialPasswordRequest
             {
-                PasswordNueva = "NuevaPassword1!"
+                NewPassword = "NuevaPassword1!"
             };
 
-            _authServiceMock
-                .Setup(s => s.CompletarPasswordFlowAsync(null, request))
-                .ReturnsAsync(new DtoCompletarPasswordFlowResult
+            _completePasswordFlowMock
+                .Setup(s => s.ExecuteAsync(null, request))
+                .ReturnsAsync(new CompletePasswordFlowResult
                 {
                     ClearActivationCookie = true,
-                    Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    Result = OperationResult<AuthenticationResponse>.IsFailed(
                         "ACT_SES_01",
-                        "CompletarPassword",
+                        "CompleteInitialPassword",
                         "Sesión temporal no encontrada.",
                         401,
                         default!)
                 });
 
-            var response = await _controller.CompletarPassword(request);
+            var response = await _controller.CompleteInitialPassword(request);
 
             var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(unauthorizedResult.Value);
+            var operationResult = Assert.IsType<OperationResult<AuthenticationResponse>>(unauthorizedResult.Value);
             Assert.False(operationResult.Success);
             Assert.Equal("ACT_SES_01", operationResult.ErrorCode);
             Assert.Contains(
@@ -148,57 +156,57 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task CompletarPassword_ReadsSessionCookieAndDelegatesToAuthService()
+        public async Task CompletarPassword_ReadsSessionCookieAndDelegatesToCompletePasswordFlow()
         {
-            var request = new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" };
+            var request = new CompleteInitialPasswordRequest { NewPassword = "NuevaPassword1!" };
             _httpContext.Request.Headers.Cookie =
                 $"{CookieAuthenticationHelper.PasswordActivationCookieName}=activation-token";
 
-            _authServiceMock
-                .Setup(s => s.CompletarPasswordFlowAsync("activation-token", request))
-                .ReturnsAsync(new DtoCompletarPasswordFlowResult
+            _completePasswordFlowMock
+                .Setup(s => s.ExecuteAsync("activation-token", request))
+                .ReturnsAsync(new CompletePasswordFlowResult
                 {
                     ClearActivationCookie = false,
-                    Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    Result = OperationResult<AuthenticationResponse>.IsFailed(
                         "ACT_SES_06",
-                        "CompletarPassword",
+                        "CompleteInitialPassword",
                         "Sesion temporal invalida.",
                         401,
                         default!)
                 });
 
-            var response = await _controller.CompletarPassword(request);
+            var response = await _controller.CompleteInitialPassword(request);
 
             var result = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, result.StatusCode);
-            _authServiceMock.Verify(
-                s => s.CompletarPasswordFlowAsync("activation-token", request),
+            _completePasswordFlowMock.Verify(
+                s => s.ExecuteAsync("activation-token", request),
                 Times.Once);
         }
 
         [Fact]
         public async Task CompletarPassword_WhenFlowSucceeds_ReturnsOkSetsAuthCookiesAndClearsActivationCookie()
         {
-            var request = new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" };
+            var request = new CompleteInitialPasswordRequest { NewPassword = "NuevaPassword1!" };
             _httpContext.Request.Headers.Cookie =
                 $"{CookieAuthenticationHelper.PasswordActivationCookieName}=activation-token";
 
-            var authResponse = new DtoAuthenticationResponse
+            var authResponse = new AuthenticationResponse
             {
-                Persona = new DtoPersonaAuth { CodigoPersona = 12345 },
+                Person = new AuthenticatedPerson { PersonId = 12345 },
                 AccessToken = "new-access-token",
                 RefreshToken = "new-refresh-token"
             };
 
-            _authServiceMock
-                .Setup(s => s.CompletarPasswordFlowAsync("activation-token", request))
-                .ReturnsAsync(new DtoCompletarPasswordFlowResult
+            _completePasswordFlowMock
+                .Setup(s => s.ExecuteAsync("activation-token", request))
+                .ReturnsAsync(new CompletePasswordFlowResult
                 {
                     ClearActivationCookie = true,
-                    Result = OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "GenerarTokensParaPersonaAsync")
+                    Result = OperationResult<AuthenticationResponse>.Ok(authResponse, "IssueTokensForPersonAsync")
                 });
 
-            var response = await _controller.CompletarPassword(request);
+            var response = await _controller.CompleteInitialPassword(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
@@ -213,24 +221,24 @@ namespace UnitTesting.Controllers
         {
             // Caso "nueva persona": si falla la creación, el flujo no limpia la cookie temporal
             // (comportamiento preexistente preservado tras extraer la orquestación al service).
-            var request = new DtoCompletarPasswordInicialRequest { PasswordNueva = "NuevaPassword1!" };
+            var request = new CompleteInitialPasswordRequest { NewPassword = "NuevaPassword1!" };
             _httpContext.Request.Headers.Cookie =
                 $"{CookieAuthenticationHelper.PasswordActivationCookieName}=activation-token";
 
-            _authServiceMock
-                .Setup(s => s.CompletarPasswordFlowAsync("activation-token", request))
-                .ReturnsAsync(new DtoCompletarPasswordFlowResult
+            _completePasswordFlowMock
+                .Setup(s => s.ExecuteAsync("activation-token", request))
+                .ReturnsAsync(new CompletePasswordFlowResult
                 {
                     ClearActivationCookie = false,
-                    Result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    Result = OperationResult<AuthenticationResponse>.IsFailed(
                         "REG_PERSONA_99",
-                        "CompletarPassword",
+                        "CompleteInitialPassword",
                         "Error al crear la persona.",
                         500,
                         default!)
                 });
 
-            var response = await _controller.CompletarPassword(request);
+            var response = await _controller.CompleteInitialPassword(request);
 
             var result = Assert.IsType<ObjectResult>(response);
             Assert.Equal(500, result.StatusCode);
@@ -243,29 +251,29 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthentication_ReturnsOkAndSetsCookies()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "testPassword"
             };
 
-            var authResponse = new DtoAuthenticationResponse
+            var authResponse = new AuthenticationResponse
             {
-                Persona = new DtoPersonaAuth
+                Person = new AuthenticatedPerson
                 {
-                    CodigoPersona = 12345,
-                    PrimerNombre = "Test",
-                    PrimerApellido = "User"
+                    PersonId = 12345,
+                    FirstName = "Test",
+                    FirstSurname = "User"
                 },
                 AccessToken = "test-access-token",
                 RefreshToken = "test-refresh-token"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
-                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.LoginSucceeded(
+                    OperationResult<AuthenticationResponse>.Ok(authResponse, "ExecuteAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -274,8 +282,8 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             _loginFlowServiceMock.Verify(
-                s => s.EjecutarAsync(
-                    It.Is<DtoAuthRequest>(r => r == request),
+                s => s.ExecuteAsync(
+                    It.Is<AuthRequest>(r => r == request),
                     "192.168.1.100",
                     0.9),
                 Times.Once);
@@ -284,10 +292,10 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_WithoutValidatedCaptchaScore_ReturnsServerError()
         {
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "testPassword"
             };
             _httpContext.Items.Clear();
@@ -296,11 +304,11 @@ namespace UnitTesting.Controllers
 
             var result = Assert.IsType<ObjectResult>(response);
             Assert.Equal(500, result.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(result.Value);
+            var operationResult = Assert.IsType<OperationResult<AuthenticationResponse>>(result.Value);
             Assert.False(operationResult.Success);
             Assert.Equal("AUTH_CAPTCHA_99", operationResult.ErrorCode);
             _loginFlowServiceMock.Verify(
-                s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()),
+                s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()),
                 Times.Never);
         }
 
@@ -308,24 +316,24 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessfulAuthenticationWithLoggingEnabled_LogsInformation()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "testPassword"
             };
 
-            var authResponse = new DtoAuthenticationResponse
+            var authResponse = new AuthenticationResponse
             {
-                Persona = new DtoPersonaAuth { CodigoPersona = 12345 },
+                Person = new AuthenticatedPerson { PersonId = 12345 },
                 AccessToken = "test-access-token",
                 RefreshToken = "test-refresh-token"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
-                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.LoginSucceeded(
+                    OperationResult<AuthenticationResponse>.Ok(authResponse, "ExecuteAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -339,19 +347,19 @@ namespace UnitTesting.Controllers
         public async Task Login_FailedAuthentication_ReturnsError()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "wrongPassword"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.Fallo(
-                    OperationResult<DtoAuthenticationResponse>.IsFailed(
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.Failed(
+                    OperationResult<AuthenticationResponse>.IsFailed(
                         errorCode: "AUTH_01",
-                        originMethod: "EjecutarAsync",
+                        originMethod: "ExecuteAsync",
                         message: "Credenciales inv�lidas",
                         httpCode: 401)));
 
@@ -367,17 +375,17 @@ namespace UnitTesting.Controllers
         public async Task Login_SuccessWithNullData_ReturnsResultWithoutSettingCookies()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "testPassword"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
-                    OperationResult<DtoAuthenticationResponse>.Ok(null, "EjecutarAsync")));
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.LoginSucceeded(
+                    OperationResult<AuthenticationResponse>.Ok(null, "ExecuteAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -390,24 +398,24 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task Login_WhenRequiresTwoFactor_ReturnsAcceptedWithOperationResult202()
         {
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "4773331-2",
+                DocumentType = "CI",
+                DocumentNumber = "4773331-2",
                 Password = "testPassword"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.Requiere2FA(
-                    OperationResult<DtoLogin2FARequired>.IsSuccess(
-                        new DtoLogin2FARequired
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.TwoFactorRequired(
+                    OperationResult<TwoFactorRequiredResponse>.IsSuccess(
+                        new TwoFactorRequiredResponse
                         {
                             SessionId = "2fa-session",
                             MaskedEmail = "t**t@example.com",
                             Message = "Se envio un codigo de verificacion a tu correo electronico."
                         },
-                        "EjecutarAsync",
+                        "ExecuteAsync",
                         "Se requiere verificacion de dos factores.",
                         202)));
 
@@ -415,7 +423,7 @@ namespace UnitTesting.Controllers
 
             var acceptedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(202, acceptedResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(acceptedResult.Value);
+            var operationResult = Assert.IsType<OperationResult<TwoFactorRequiredResponse>>(acceptedResult.Value);
             Assert.True(operationResult.Success);
             Assert.Equal(202, operationResult.HttpCode);
             Assert.Equal("2fa-session", operationResult.Data!.SessionId);
@@ -424,28 +432,28 @@ namespace UnitTesting.Controllers
         [Fact]
         public async Task ReenviarCodigo2FA_WhenServiceSucceeds_ReturnsOkAndCallsService()
         {
-            var request = new DtoReenviarCodigo2FARequest { SessionId = "2fa-session" };
-            var serviceResult = OperationResult<DtoLogin2FARequired>.Ok(
-                new DtoLogin2FARequired
+            var request = new ResendTwoFactorCodeRequest { SessionId = "2fa-session" };
+            var serviceResult = OperationResult<TwoFactorRequiredResponse>.Ok(
+                new TwoFactorRequiredResponse
                 {
                     SessionId = request.SessionId,
                     MaskedEmail = "t**t@example.com",
                     Message = "Se reenvió un nuevo código de verificación a tu correo electrónico."
                 },
-                nameof(IDosFactoresAuthService.ReenviarCodigoAsync));
+                nameof(ITwoFactorAuthService.ResendCodeAsync));
 
             _dosFactoresServiceMock
-                .Setup(s => s.ReenviarCodigoAsync(request.SessionId))
+                .Setup(s => s.ResendCodeAsync(request.SessionId))
                 .ReturnsAsync(serviceResult);
 
-            var response = await _controller.ReenviarCodigo2FA(request);
+            var response = await _controller.ResendTwoFactorCode(request);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(okResult.Value);
+            var operationResult = Assert.IsType<OperationResult<TwoFactorRequiredResponse>>(okResult.Value);
             Assert.True(operationResult.Success);
             Assert.Equal(request.SessionId, operationResult.Data!.SessionId);
-            _dosFactoresServiceMock.Verify(s => s.ReenviarCodigoAsync(request.SessionId), Times.Once);
+            _dosFactoresServiceMock.Verify(s => s.ResendCodeAsync(request.SessionId), Times.Once);
         }
 
         [Theory]
@@ -453,21 +461,21 @@ namespace UnitTesting.Controllers
         [InlineData(429)]
         public async Task ReenviarCodigo2FA_WhenServiceFails_ReturnsConfiguredStatusCode(int httpCode)
         {
-            var request = new DtoReenviarCodigo2FARequest { SessionId = "2fa-session" };
+            var request = new ResendTwoFactorCodeRequest { SessionId = "2fa-session" };
             _dosFactoresServiceMock
-                .Setup(s => s.ReenviarCodigoAsync(request.SessionId))
-                .ReturnsAsync(OperationResult<DtoLogin2FARequired>.IsFailed(
+                .Setup(s => s.ResendCodeAsync(request.SessionId))
+                .ReturnsAsync(OperationResult<TwoFactorRequiredResponse>.IsFailed(
                     "AUTH_2FA_RESEND_TEST",
-                    nameof(IDosFactoresAuthService.ReenviarCodigoAsync),
+                    nameof(ITwoFactorAuthService.ResendCodeAsync),
                     "No se pudo reenviar el código.",
                     httpCode,
                     default!));
 
-            var response = await _controller.ReenviarCodigo2FA(request);
+            var response = await _controller.ResendTwoFactorCode(request);
 
             var result = Assert.IsType<ObjectResult>(response);
             Assert.Equal(httpCode, result.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoLogin2FARequired>>(result.Value);
+            var operationResult = Assert.IsType<OperationResult<TwoFactorRequiredResponse>>(result.Value);
             Assert.False(operationResult.Success);
         }
 
@@ -494,24 +502,24 @@ namespace UnitTesting.Controllers
             var refreshToken = "valid-refresh-token";
             _httpContext.Request.Headers.Cookie = $"{CookieAuthenticationHelper.RefreshTokenCookieName}={refreshToken}";
 
-            var authResponse = new DtoAuthenticationResponse
+            var authResponse = new AuthenticationResponse
             {
-                Persona = new DtoPersonaAuth
+                Person = new AuthenticatedPerson
                 {
-                    CodigoPersona = 12345,
-                    PrimerNombre = "Test",
-                    PrimerApellido = "User"
+                    PersonId = 12345,
+                    FirstName = "Test",
+                    FirstSurname = "User"
                 },
                 AccessToken = "new-access-token",
                 RefreshToken = "new-refresh-token"
             };
 
-            var result = OperationResult<DtoAuthenticationResponse>.Ok(
+            var result = OperationResult<AuthenticationResponse>.Ok(
                 authResponse,
-                nameof(IAuthService.RefrescarTokensAsync));
+                nameof(IRefreshTokens));
 
-            _authServiceMock
-                .Setup(s => s.RefrescarTokensAsync(refreshToken))
+            _refreshTokensMock
+                .Setup(s => s.ExecuteAsync(refreshToken))
                 .ReturnsAsync(result);
 
             // Act
@@ -533,7 +541,7 @@ namespace UnitTesting.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(unauthorizedResult.Value);
+            var operationResult = Assert.IsType<OperationResult<AuthenticationResponse>>(unauthorizedResult.Value);
             Assert.False(operationResult.Success);
             Assert.Equal("AUTH_RT_01", operationResult.ErrorCode);
         }
@@ -550,7 +558,7 @@ namespace UnitTesting.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(401, unauthorizedResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<DtoAuthenticationResponse>>(unauthorizedResult.Value);
+            var operationResult = Assert.IsType<OperationResult<AuthenticationResponse>>(unauthorizedResult.Value);
             Assert.False(operationResult.Success);
             Assert.Equal("AUTH_RT_01", operationResult.ErrorCode);
         }
@@ -562,14 +570,14 @@ namespace UnitTesting.Controllers
             var refreshToken = "invalid-refresh-token";
             _httpContext.Request.Headers.Cookie = $"{CookieAuthenticationHelper.RefreshTokenCookieName}={refreshToken}";
 
-            var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+            var result = OperationResult<AuthenticationResponse>.IsFailed(
                 errorCode: "AUTH_02",
-                originMethod: nameof(IAuthService.RefrescarTokensAsync),
+                originMethod: nameof(IRefreshTokens),
                 message: "Refresh token inv�lido",
                 httpCode: 401);
 
-            _authServiceMock
-                .Setup(s => s.RefrescarTokensAsync(refreshToken))
+            _refreshTokensMock
+                .Setup(s => s.ExecuteAsync(refreshToken))
                 .ReturnsAsync(result);
 
             // Act
@@ -587,14 +595,14 @@ namespace UnitTesting.Controllers
             var refreshToken = "valid-token-for-nonexistent-user";
             _httpContext.Request.Headers.Cookie = $"{CookieAuthenticationHelper.RefreshTokenCookieName}={refreshToken}";
 
-            var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+            var result = OperationResult<AuthenticationResponse>.IsFailed(
                 errorCode: "AUTH_03",
-                originMethod: nameof(IAuthService.RefrescarTokensAsync),
+                originMethod: nameof(IRefreshTokens),
                 message: "Usuario no encontrado",
                 httpCode: 404);
 
-            _authServiceMock
-                .Setup(s => s.RefrescarTokensAsync(refreshToken))
+            _refreshTokensMock
+                .Setup(s => s.ExecuteAsync(refreshToken))
                 .ReturnsAsync(result);
 
             // Act
@@ -612,12 +620,12 @@ namespace UnitTesting.Controllers
             var refreshToken = "valid-refresh-token";
             _httpContext.Request.Headers.Cookie = $"{CookieAuthenticationHelper.RefreshTokenCookieName}={refreshToken}";
 
-            var result = OperationResult<DtoAuthenticationResponse>.Ok(
+            var result = OperationResult<AuthenticationResponse>.Ok(
                 null,
-                nameof(IAuthService.RefrescarTokensAsync));
+                nameof(IRefreshTokens));
 
-            _authServiceMock
-                .Setup(s => s.RefrescarTokensAsync(refreshToken))
+            _refreshTokensMock
+                .Setup(s => s.ExecuteAsync(refreshToken))
                 .ReturnsAsync(result);
 
             // Act
@@ -634,20 +642,20 @@ namespace UnitTesting.Controllers
         public async Task Login_ExceedsAccountRateLimit_Returns429()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "12345678",
+                DocumentType = "CI",
+                DocumentNumber = "12345678",
                 Password = "password123"
             };
 
-            var headers = new DtoLoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = DateTimeOffset.UtcNow.AddMinutes(15) };
+            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = DateTimeOffset.UtcNow.AddMinutes(15) };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.FalloConRateLimit(
-                    OperationResult<DtoAuthenticationResponse>.IsFailed(
-                        "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.FailedWithRateLimit(
+                    OperationResult<AuthenticationResponse>.IsFailed(
+                        "LOGIN_RL_01", "ExecuteAsync", "Demasiados intentos fallidos.", 429),
                     headers));
 
             // Act
@@ -659,27 +667,27 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task Login_WithinRateLimit_CallsAuthService()
+        public async Task Login_WithinRateLimit_CallsLoginFlow()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "12345678",
+                DocumentType = "CI",
+                DocumentNumber = "12345678",
                 Password = "password123"
             };
 
-            var authResponse = new DtoAuthenticationResponse
+            var authResponse = new AuthenticationResponse
             {
-                Persona = new DtoPersonaAuth { CodigoPersona = 12345 },
+                Person = new AuthenticatedPerson { PersonId = 12345 },
                 AccessToken = "access-token",
                 RefreshToken = "refresh-token"
             };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.LoginExitoso(
-                    OperationResult<DtoAuthenticationResponse>.Ok(authResponse, "EjecutarAsync")));
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.LoginSucceeded(
+                    OperationResult<AuthenticationResponse>.Ok(authResponse, "ExecuteAsync")));
 
             // Act
             var response = await _controller.Login(request);
@@ -693,21 +701,21 @@ namespace UnitTesting.Controllers
         public async Task Login_RateLimitResponse_IncludesCorrectHeaders()
         {
             // Arrange
-            var request = new DtoAuthRequest
+            var request = new AuthRequest
             {
-                TipoDocumento = "CI",
-                Documento = "12345678",
+                DocumentType = "CI",
+                DocumentNumber = "12345678",
                 Password = "password123"
             };
 
             var resetTime = DateTimeOffset.UtcNow.AddMinutes(15);
-            var headers = new DtoLoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = resetTime };
+            var headers = new LoginRateLimitHeaders { Limit = 5, Remaining = 0, ResetTime = resetTime };
 
             _loginFlowServiceMock
-                .Setup(s => s.EjecutarAsync(It.IsAny<DtoAuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
-                .ReturnsAsync(DtoLoginFlowResult.FalloConRateLimit(
-                    OperationResult<DtoAuthenticationResponse>.IsFailed(
-                        "LOGIN_RL_01", "EjecutarAsync", "Demasiados intentos fallidos.", 429),
+                .Setup(s => s.ExecuteAsync(It.IsAny<AuthRequest>(), It.IsAny<string>(), It.IsAny<double>()))
+                .ReturnsAsync(LoginFlowResult.FailedWithRateLimit(
+                    OperationResult<AuthenticationResponse>.IsFailed(
+                        "LOGIN_RL_01", "ExecuteAsync", "Demasiados intentos fallidos.", 429),
                     headers));
 
             // Act

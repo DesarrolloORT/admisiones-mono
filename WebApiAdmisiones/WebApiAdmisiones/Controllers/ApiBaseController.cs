@@ -14,7 +14,7 @@ namespace WebApiAdmisiones.Controllers
         protected IActionResult ValidateResponse<TData>(OperationResult<TData> retorno)
         {
             var correlationId = LoggingHelper.EnsureCorrelationId(HttpContext);
-            var codigoPersona = _currentUser.UserId?.ToString();
+            var personId = _currentUser.UserId?.ToString();
             var origin = typeof(T).Name;
             
             // Marcar que la salida será logueada por el controlador (evita duplicados en middleware)
@@ -38,7 +38,7 @@ namespace WebApiAdmisiones.Controllers
                 var logMessage = LoggingHelper.FormatSalida(
                     HttpContext,
                     origin,
-                    codigoPersona,
+                    personId,
                     metadataOnly,
                     correlationId);
 
@@ -51,7 +51,7 @@ namespace WebApiAdmisiones.Controllers
                 var logMessage = LoggingHelper.FormatSalida(
                     HttpContext,
                     origin,
-                    codigoPersona,
+                    personId,
                     ResponseRedactionHelper.Redact(retorno),
                     correlationId);
 
